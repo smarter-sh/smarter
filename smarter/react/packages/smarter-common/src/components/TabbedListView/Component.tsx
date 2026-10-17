@@ -27,7 +27,10 @@
  *   SortableHeader): the backend sorts all of the objects, not only the page shown, so a new sort
  *   is a request to the list api, for ?ordering=name or ?ordering=-name, and it returns each tab
  *   to its first page. The list api says which columns it can sort by.
- * - Hydrates the UI from cached results before the initial fetch resolves.
+ * - Narrows both tabs by a named filter of the list api, when the page is opened with
+ *   ?filter=<name>, e.g. the dashboard's pending deployments link, ?filter=pending. A chip shows the
+ *   filter's label, from the tabbedListViewContext's filters, and a button that removes it.
+ * - Hydrates the UI from cached results before the initial fetch resolves, unless a filter applies.
  * - Shows loading and error states during fetches.
  * - Allows switching between list and card views.
  * - Persists the selected view mode in sessionStorage.
@@ -107,6 +110,11 @@ function tabRecord<T>(tabKeys: TabKey[], value: (tab: TabKey) => T): TabRecord<T
   return Object.fromEntries(tabKeys.map((tab) => [tab, value(tab)])) as TabRecord<T>;
 }
 
+/** The named filter that the page's url asks for, e.g. "pending" for ?filter=pending, or "". */
+function filterOfPageUrl(): string {
+  return new URLSearchParams(window.location.search).get("filter")?.trim() ?? "";
+}
+
 /** How long to wait after the last keystroke of a search before it is requested, in milliseconds. */
 export const SEARCH_DELAY_MS = 300;
 
@@ -142,9 +150,12 @@ export default function TabbedListView<TObject>({
   // A list is loading until the first load completes, unless its cache already has its objects.
   // The cache keys are for session-based local caching of each tab's first page, without a search
   // or a sort, to improve perceived load times on repeat visits.
+  // the named filter of both tabs, from the page's url. The cache holds unfiltered objects, so a
+  // filtered list doesn't show them while it loads.
+  const [filter, setFilter] = useState(filterOfPageUrl);
   const [lists, setLists] = useState<TabRecord<TabList>>(() =>
     tabRecord(tabKeys, (tab) => {
-      const cached = readCache<unknown>(makeCacheKey(sessionContext.ApiUrl, tab));
+      const cached = filter ? null : readCache<unknown>(makeCacheKey(sessionContext.ApiUrl, tab));
       return { objects: cached || [], isLoading: cached === null, pagination: null };
     }),
   );
@@ -189,23 +200,25 @@ export default function TabbedListView<TObject>({
       page: number,
       tabSearch: string,
       tabOrdering: string,
+      tabFilter: string,
       invalidateCache: boolean,
       isActive: () => boolean = () => true,
     ): Promise<void> => {
       const request = (latestRequest.current[tab] ?? 0) + 1;
       latestRequest.current[tab] = request;
       console.debug(
-        `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", ordering="${tabOrdering}", invalidateCache=${invalidateCache}`,
+        `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", ordering="${tabOrdering}", filter="${tabFilter}", invalidateCache=${invalidateCache}`,
       );
       return load<unknown>(sessionContext, invalidateCache, tab, setErrorMessage, {
         page,
         search: tabSearch,
         ordering: tabOrdering,
+        filter: tabFilter,
       }).then(({ objects, pagination }) => {
         if (!isActive() || request !== latestRequest.current[tab]) return;
         console.debug(`${loggerPrefix} loadTab() received ${tab} objects:`, objects, pagination);
         setLists((prev) => ({ ...prev, [tab]: { objects, isLoading: false, pagination } }));
-        if (page === 1 && !tabSearch && !tabOrdering) {
+        if (page === 1 && !tabSearch && !tabOrdering && !tabFilter) {
           writeCache(makeCacheKey(sessionContext.ApiUrl, tab), objects);
         }
       });
@@ -225,6 +238,19 @@ export default function TabbedListView<TObject>({
     setLists((prev) => withLoading(prev, tabKeys));
     setPages(tabRecord(tabKeys, () => 1));
     setOrdering(requested);
+  };
+
+  // show every object again: remove the filter, from the list and from the page's url.
+  const clearFilter = () => {
+    console.debug(
+      `${loggerPrefix} clearFilter() removing the "${filter}" filter, reloading the first page of each tab`,
+    );
+    const url = new URL(window.location.href);
+    url.searchParams.delete("filter");
+    window.history.replaceState(window.history.state, "", url);
+    setLists((prev) => withLoading(prev, tabKeys));
+    setPages(tabRecord(tabKeys, () => 1));
+    setFilter("");
   };
 
   // request the search once typing pauses, from the first page of each tab.
@@ -251,7 +277,7 @@ export default function TabbedListView<TObject>({
       return;
     }
     requeryRef.current = now;
-    tabKeys.forEach((tab) => void loadTab(tab, pages[tab], search, ordering, true));
+    tabKeys.forEach((tab) => void loadTab(tab, pages[tab], search, ordering, filter, true));
   };
 
   // whether the component is mounted: the results of a load that finishes after it unmounts are ignored.
@@ -279,12 +305,12 @@ export default function TabbedListView<TObject>({
     }
     tabKeys.forEach((tab) => {
       const page = pages[tab] ?? 1;
-      const params = JSON.stringify([page, search, ordering]);
+      const params = JSON.stringify([page, search, ordering, filter]);
       if (requested.current.params[tab] === params) return;
       requested.current.params[tab] = params;
-      void loadTab(tab, page, search, ordering, false, () => mounted.current);
+      void loadTab(tab, page, search, ordering, filter, false, () => mounted.current);
     });
-  }, [loadTab, tabKeys, pages, search, ordering]);
+  }, [loadTab, tabKeys, pages, search, ordering, filter]);
 
   if (errorMessage) {
     return (
@@ -310,6 +336,9 @@ export default function TabbedListView<TObject>({
   const pagination = list.pagination ?? sameView.map((key) => lists[key].pagination).find(Boolean);
   const sortFields = pagination?.sortFields ?? [];
   const sorting: Sorting = { ordering, sortFields, onSort };
+  // the filter that applies: the api ignores, and reports as "", a filter that it doesn't offer.
+  const appliedFilter = list.pagination ? (list.pagination.filter ?? filter) : filter;
+  const filterLabel = tabbedListViewContext.filters?.[appliedFilter] ?? appliedFilter;
 
   return (
     <div className="pt-5 pb-5 card card-flush h-xl-100">
@@ -318,7 +347,26 @@ export default function TabbedListView<TObject>({
       </div>
       <div className="m-0 p-0 card-body list-view">
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pe-3">
-          <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+          <div className="d-flex flex-wrap align-items-center gap-3">
+            <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+            {appliedFilter && (
+              <span className="badge badge-light-primary fs-7 fw-semibold d-inline-flex align-items-center gap-2 py-2 ps-3 pe-2">
+                {
+                  // Translators: the label of the filter that narrows a list, e.g. "Pending deployment".
+                  interpolate(gettext("Showing: %(filter)s"), { filter: filterLabel })
+                }
+                <button
+                  type="button"
+                  className="btn btn-icon btn-sm h-20px w-20px btn-active-light-primary"
+                  aria-label={gettext("Show all")}
+                  title={gettext("Show all")}
+                  onClick={clearFilter}
+                >
+                  <i className="ki-outline ki-cross fs-6 text-primary"></i>
+                </button>
+              </span>
+            )}
+          </div>
           <SearchBox
             value={searchInput}
             onChange={setSearchInput}

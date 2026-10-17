@@ -88,6 +88,7 @@ from smarter.apps.mcpclient.caching import (
 )
 from smarter.apps.mcpclient.urls import MCPClientReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
+from smarter.apps.prompt.views.listview.api import PENDING_FILTER
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.secret.models import Secret
@@ -474,6 +475,10 @@ class MyResourcesView(SmarterAuthenticatedWebView):
                 "pending_deployments": get_pending_deployments(user_profile=user_profile),
                 "llmclients_qty": get_llmclients(user_profile=user_profile),
                 "llmclients_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                # the LLMClient list, narrowed to those that pending_deployments counts.
+                "pending_deployments_url": (
+                    reverse(PromptReverseNames.namespace, PromptReverseNames.listview) + f"?filter={PENDING_FILTER}"
+                ),
                 "plugins_qty": get_plugins(user_profile=user_profile),
                 "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 "mcpclients_qty": get_mcpclients(user_profile=user_profile),

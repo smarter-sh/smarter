@@ -31,8 +31,8 @@ from django.http import JsonResponse
 from django.http.request import HttpRequest
 
 from smarter.common.conf import smarter_settings
-from smarter.lib import logging
-from smarter.lib.cache import lazy_cache
+from smarter.lib import json, logging
+from smarter.lib.cache import cache_results, lazy_cache
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
 CELERY_PING_TIMEOUT = 0.5  # seconds. the widget loads asynchronously, but should not hang.
+HEALTH_CHECKS_CACHE_TIMEOUT = 60  # seconds. one run of the checks serves every dashboard for a minute.
 
 
 def check_database() -> bool:
@@ -100,6 +101,50 @@ def run_health_checks() -> list[dict[str, object]]:
     return retval
 
 
+@cache_results(timeout=HEALTH_CHECKS_CACHE_TIMEOUT)
+def cached_health_checks() -> list[dict[str, object]]:
+    """The results of :func:`run_health_checks`, cached for :data:`HEALTH_CHECKS_CACHE_TIMEOUT` seconds."""
+    return run_health_checks()
+
+
+def wants_refresh(request: HttpRequest) -> bool:
+    """
+    True if the request asks for the checks to run again now, with ``{"refresh": true}`` as its body.
+
+    The dashboard's refresh button sends it. A missing or malformed body is not a refresh.
+
+    :param request: The incoming HTTP POST request.
+    :type request: django.http.HttpRequest
+    :returns: Whether the body's ``refresh`` is true.
+    :rtype: bool
+    """
+    try:
+        body = json.loads(request.body or b"{}")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return False
+    return isinstance(body, dict) and body.get("refresh") is True
+
+
+def current_health_checks() -> list[dict[str, object]]:
+    """
+    Return the results of the health checks, from the cache when it has them.
+
+    The checks ping the database, the cache and the Celery workers, so every
+    dashboard shares one run of them a minute. If the cache itself is down,
+    reading it raises, and the checks run uncached, so that the Cache check
+    reports the failure instead of the whole widget failing.
+
+    :returns: The name of each check, and whether it passed.
+    :rtype: list[dict[str, object]]
+    """
+    try:
+        return cached_health_checks()
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.warning("%s.current_health_checks() the cache failed, running the checks uncached: %s", logger_prefix, e)
+        return run_health_checks()
+
+
 # pylint: disable=W0613
 class ServiceHealthView(SmarterAuthenticatedWebView):
     """
@@ -109,9 +154,13 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
     restrict access to authenticated users.
 
     On a ``POST`` request the view reads version strings and environment
-    information from :data:`~smarter.common.conf.smarter_settings`, runs the
-    live :data:`HEALTH_CHECKS`, and returns them as a JSON object with an HTTP
-    200 status. ``health_score`` is the percentage of checks that passed.
+    information, and the url of the platform's source code repository, from
+    :data:`~smarter.common.conf.smarter_settings`, runs the
+    live :data:`HEALTH_CHECKS`, at most once a minute (see
+    :func:`current_health_checks`), and returns them as a JSON object with an
+    HTTP 200 status. A body of ``{"refresh": true}``, which the dashboard's
+    refresh button sends, runs the checks again now. ``health_score`` is the
+    percentage of checks that passed.
 
     Response shape:
 
@@ -124,6 +173,7 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
             "python_version": "3.11.0",
             "pydantic_version": "2.0.0",
             "drf_version": "3.14.0",
+            "repository_url": "https://github.com/smarter-sh/smarter",
             "health_checks": [
                 {"name": "Database", "healthy": true},
                 {"name": "Cache", "healthy": true},
@@ -153,7 +203,10 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
         :rtype: django.http.JsonResponse
         """
 
-        health_checks = run_health_checks()
+        if wants_refresh(request):
+            logger.info("%s.post() refreshing the health checks", self.formatted_class_name)
+            cached_health_checks.invalidate()
+        health_checks = current_health_checks()
         healthy = sum(1 for check in health_checks if check["healthy"])
         retval = {
             "smarter_version": smarter_settings.version,
@@ -162,6 +215,7 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
             "python_version": smarter_settings.python_version,
             "pydantic_version": smarter_settings.pydantic_version,
             "drf_version": smarter_settings.drf_version,
+            "repository_url": smarter_settings.repository_url,
             "health_checks": health_checks,
             "health_score": round(healthy / len(health_checks) * 100),
         }

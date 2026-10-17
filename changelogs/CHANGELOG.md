@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.32.2](https://github.com/smarter-sh/smarter/compare/v0.32.1...v0.32.2) (2026-10-17)
+
+### Bug Fixes
+
+* **dashboard:** redesign service health and fix token usage chart ([8214d2c](https://github.com/smarter-sh/smarter/commit/8214d2c15cc83e63c8719a785990723f533af0b7))
+
 ## [0.32.1](https://github.com/smarter-sh/smarter/compare/v0.32.0...v0.32.1) (2026-10-17)
 
 ### Performance

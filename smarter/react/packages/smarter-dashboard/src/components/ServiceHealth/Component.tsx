@@ -2,32 +2,54 @@
  * ServiceHealth dashboard widget.
  *
  * This component fetches backend service metadata from an API endpoint and
- * renders platform health details, the results of the live checks of the
- * backing services, GitHub status, and runtime version information in a
- * dashboard card.
+ * renders it in a compact dashboard card: the platform's version and Linux
+ * distribution in the header, the runtime versions on one line under it, a ring that shows the
+ * share of live checks of the backing services that passed, an overall
+ * status, one tile per check, whose tooltip says what it tests, and the
+ * build, test and deploy badges of the platform's own repository. The ring
+ * and the status are green when every check passes, amber when at least half
+ * do, and red otherwise. A narrow card hides the ring, to give the tiles its
+ * room. While it loads, and if it can't be loaded, the card shows its own ghost:
+ * gray placeholders in the shape of its content, so that the dashboard keeps
+ * its layout. The refresh button stays, to try again.
  *
+ * Health doesn't change from second to second, so a response is kept for five
+ * minutes in localStorage and reused by later page loads, and an open page
+ * asks again every five minutes while it's visible. The ring animates only
+ * when the score changes, from the score it showed last. The refresh button in
+ * the header runs the checks again at once, bypassing the api's cache.
+ *
+ * :param sessionContext: Session context used for authenticated requests.
+ * :type sessionContext: SessionContext
  * :param apiUrl: Endpoint used to request service health and platform version
  *     data.
  * :type apiUrl: str
  *
- * :returns: A JSX element that renders loading, error, or service health
- *     dashboard content.
+ * :returns: A JSX element containing the service health card.
  * :rtype: JSX.Element
  *
  * :example:
  *
- *     <ServiceHealth apiUrl="https://api.smarter.sh/health" />
+ *     <ServiceHealth sessionContext={sessionContext} apiUrl="/dashboard/api/service-health/" />
  */
-import { useEffect, useState } from "react";
-import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";
+import type { SessionContext } from "@smarter/common";
+import { gettext, interpolate, ngettext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
+import useDashboardApi from "@/hooks/useDashboardApi";
 import HealthRing from "@/components/ServiceHealth/HealthRing";
-import GitHubStatus from "@/components/ServiceHealth/GitHubStatus";
+import type { HealthLevel } from "@/components/ServiceHealth/HealthRing";
+import CIStatus from "@/components/ServiceHealth/CIStatus";
+import { GhostBody, GhostHeader } from "@/components/ServiceHealth/Ghost";
 import "@/components/ServiceHealth/styles.css";
 
 interface ServiceHealthProps {
+  sessionContext: SessionContext;
   apiUrl: string;
+}
+
+interface HealthCheck {
+  name: string;
+  healthy: boolean;
 }
 
 interface ServiceHealthData {
@@ -37,186 +59,216 @@ interface ServiceHealthData {
   python_version: string;
   pydantic_version: string;
   drf_version: string;
+  repository_url: string;
   health_checks: HealthCheck[];
   health_score: number;
 }
 
-interface HealthCheck {
-  name: string;
-  healthy: boolean;
+interface CheckInfo {
+  label: string;
+  icon: string;
+  description: string;
 }
 
-function HealthCheckItem({ name, healthy }: HealthCheck) {
+/**
+ * What each check that the backend runs is called, its icon, and what it tests, by the name the
+ * backend gives it. A check that isn't listed shows its own name, FALLBACK_ICON and no description.
+ */
+const CHECKS: Record<string, CheckInfo> = {
+  Database: {
+    label: gettext("Database"),
+    icon: "ki-data",
+    description: gettext("The database answers a query."),
+  },
+  Cache: {
+    label: gettext("Cache"),
+    icon: "ki-disk",
+    description: gettext("A value written to the Redis cache can be read back."),
+  },
+  "Task Broker": {
+    label: gettext("Task Broker"),
+    icon: "ki-route",
+    description: gettext("The Celery task broker, which queues background jobs, accepts a connection."),
+  },
+  Workers: {
+    label: gettext("Workers"),
+    icon: "ki-gear",
+    description: gettext("At least one Celery worker, which runs background jobs, answers a ping."),
+  },
+};
+const FALLBACK_ICON = "ki-abstract-26";
+
+/**
+ * How long a response is reused across page loads, and how often an open page asks again. The checks
+ * don't change from second to second, and the api caches them for a minute.
+ */
+const REFRESH_MS = 5 * 60 * 1000;
+
+/** The Keen color of each health level, for its badge and bullet. */
+const LEVEL_COLORS: Record<HealthLevel, string> = {
+  healthy: "success",
+  degraded: "warning",
+  down: "danger",
+};
+
+/** Green when every check passes, amber when at least half do, red otherwise. */
+function healthLevel(score: number, failing: number): HealthLevel {
+  if (failing === 0) return "healthy";
+  return score >= 50 ? "degraded" : "down";
+}
+
+function StatusBadge({ level, failing, total }: { level: HealthLevel; failing: number; total: number }) {
+  const color = LEVEL_COLORS[level];
   return (
-    <span className="d-flex align-items-center fs-7 fw-bold text-gray-500 mb-2">
-      <i
-        className={`smarter-health-checks ki-outline ${healthy ? "ki-check text-success" : "ki-cross text-danger"} fs-6 me-2`}
-        aria-label={healthy ? "healthy" : "unhealthy"}
-      ></i>
-      {name}
+    <span className={`badge badge-light-${color} fs-9 fw-bold px-2 py-1 text-nowrap`}>
+      <span className={`bullet bullet-dot bg-${color} h-5px w-5px me-1`}></span>
+      {failing === 0
+        ? gettext("All systems operational")
+        : interpolate(
+            ngettext("%(failing)s of %(total)s check failing", "%(failing)s of %(total)s checks failing", total),
+            { failing, total },
+          )}
     </span>
   );
 }
 
-interface CardHeaderProps {
-  smarter_version: string;
-  linux_distribution: string;
-}
-
-function CardHeader({ smarter_version, linux_distribution }: CardHeaderProps) {
+function HealthCheckItem({ name, healthy }: HealthCheck) {
+  const info = CHECKS[name];
+  const label = info?.label ?? name;
+  const state = healthy
+    ? // Translators: the state of a backend service that answers its health check.
+      gettext("Healthy")
+    : // Translators: the state of a backend service that fails its health check, i.e. not running.
+      gettext("Down");
   return (
-    <div className="card-header pt-5">
-      {/* begin::Title */}
-      <div className="row">
-        <div className="col-12 border-bottom border-gray-200 pb-2 mb-2">
-          <h4 className="card-title card-label fw-bold text-gray-800">
-            {interpolateNodes(gettext("Smarter v%(smarter_version)s"), { smarter_version })}
-          </h4>
-        </div>
-        <div className="col-12 fw-bold text-gray-500 fs-6 mt-1">{linux_distribution}</div>
-      </div>
-      {/* end::Title */}
-    </div>
-  );
-}
-
-interface PlatformVersionsProps {
-  python_version: string;
-  django_version: string;
-  pydantic_version: string;
-  drf_version: string;
-}
-
-function PlatformVersions({ python_version, django_version, pydantic_version, drf_version }: PlatformVersionsProps) {
-  return (
-    <div className="row">
-      <span className="col-12 text-gray-500 text-center mt-3 mb-0 pb-0 fs-9">
-        {interpolateNodes(
-          gettext(
-            "Python %(python_version)s / Django %(django_version)s / Pydantic %(pydantic_version)s / DRF %(drf_version)s",
-          ),
-          { python_version, django_version, pydantic_version, drf_version },
-        )}
+    <li
+      aria-label={label}
+      title={info ? `${label}: ${info.description}` : label}
+      className={`service-health-check ${healthy ? "" : "service-health-check-down"}`}
+    >
+      <i className={`ki-outline ${info?.icon ?? FALLBACK_ICON} fs-2 me-3`} data-testid="check-icon"></i>
+      <span className="service-health-check-text">
+        <span className="service-health-check-name">{label}</span>
+        <span className={`service-health-check-state text-${healthy ? "success" : "danger"}`}>
+          <i className={`ki-outline ${healthy ? "ki-check" : "ki-cross"} fs-7 me-1`}></i>
+          {state}
+        </span>
       </span>
-    </div>
+    </li>
   );
 }
 
-interface ServiceHealthChecksProps {
-  healthChecks: HealthCheck[];
-  healthScore: number;
-}
-
-function ServiceHealthChecks({ healthChecks, healthScore }: ServiceHealthChecksProps) {
-  // two columns of checks
-  const half = Math.ceil(healthChecks.length / 2);
-
+function RuntimeVersions({ data }: { data: ServiceHealthData }) {
+  const versions: [string, string][] = [
+    ["Python", data.python_version],
+    ["Django", data.django_version],
+    ["Pydantic", data.pydantic_version],
+    ["DRF", data.drf_version],
+  ];
+  // one line across the card. A card too narrow for it ends it with an ellipsis, and its tooltip has it all.
   return (
-    <div className="d-flex align-items-center mb-5">
-      <div className="row m-0">
-        <div className="col-3 d-flex justify-content-end">
-          <div className="w-80px flex-shrink-0 me-2">
-            <div
-              className="min-h-auto ms-n3 d-none d-md-table-cell"
-              id="kt_slider_widget_smarter_health"
-              style={{ height: "100px" }}
-            >
-              <HealthRing value={healthScore} />
-            </div>
-          </div>
-        </div>
-        <div className="col-9">
-          <h4 className="fw-bold text-gray-800 mb-3">{gettext("Backend Service Health")}</h4>
-          <div className="d-flex d-grid gap-5">
-            <div className="d-flex flex-column flex-shrink-0 me-4">
-              {healthChecks.slice(0, half).map((check) => (
-                <HealthCheckItem key={check.name} {...check} />
-              ))}
-            </div>
-            <div className="d-flex flex-column flex-shrink-0">
-              {healthChecks.slice(half).map((check) => (
-                <HealthCheckItem key={check.name} {...check} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ul
+      className="service-health-versions"
+      aria-label={gettext("Runtime versions")}
+      title={versions.map(([name, version]) => `${name} ${version}`).join(" · ")}
+    >
+      {versions.map(([name, version]) => (
+        <li key={name}>
+          <span className="service-health-version-name">{name}</span>
+          {version}
+        </li>
+      ))}
+    </ul>
   );
 }
 
-function ServiceHealth({ apiUrl }: ServiceHealthProps) {
-  const [data, setData] = useState<ServiceHealthData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const res = await fetch(apiUrl, {
-          method: "POST",
-          credentials: "same-origin",
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-        });
-
-        if (!res.ok) {
-          throw new Error(interpolate(gettext("Request failed: %(status)s"), { status: res.status }));
-        }
-
-        const json = (await res.json()) as ServiceHealthData;
-        console.debug(loggerPrefix, "Service Health data fetched from ", apiUrl, json);
-        setData(json);
-      } catch (err) {
-        console.error(loggerPrefix, "Error loading Service Health:", err);
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        setError(err instanceof Error ? err.message : gettext("Unknown error"));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-    return () => controller.abort();
-  }, [apiUrl]);
-
-  const smarter_version = data?.smarter_version ?? "0.0.0";
-  const django_version = data?.django_version ?? "0.0.0";
-  const python_version = data?.python_version ?? "0.0.0";
-  const pydantic_version = data?.pydantic_version ?? "0.0.0";
-  const drf_version = data?.drf_version ?? "0.0.0";
-  const linux_distribution = data?.linux_distribution ?? gettext("Unknown Linux distribution");
-  const health_checks = data?.health_checks ?? [];
-  const health_score = data?.health_score ?? 0;
-
-  if (loading) return <Loading />;
-  if (error) return <div>{interpolateNodes(gettext("Failed to load service health: %(error)s"), { error })}</div>;
+function ServiceHealth({ sessionContext, apiUrl }: ServiceHealthProps) {
+  const { data, error, refresh, refreshing } = useDashboardApi<ServiceHealthData>(sessionContext, apiUrl, {
+    maxAgeMs: REFRESH_MS,
+    refreshMs: REFRESH_MS,
+  });
+  const checks = data?.health_checks ?? [];
+  const failing = checks.filter((check) => !check.healthy).length;
+  const level = healthLevel(data?.health_score ?? 0, failing);
 
   return (
-    <>
-      {/* begin::Col */}
-      <div id="service-health" aria-label={gettext("Service Health")} className="col-xl-6 mb-xl-10">
-        <div className="card card-flush h-xl-100">
-          <CardHeader smarter_version={smarter_version} linux_distribution={linux_distribution} />
-          <div className="card-body py-6">
-            <ServiceHealthChecks healthChecks={health_checks} healthScore={health_score} />
-            <GitHubStatus />
-            <PlatformVersions
-              python_version={python_version}
-              django_version={django_version}
-              pydantic_version={pydantic_version}
-              drf_version={drf_version}
-            />
+    <section
+      id="service-health"
+      aria-label={gettext("Service Health")}
+      aria-busy={!data && !error}
+      // without data, the card is its own ghost: shimmering while it loads, still if it failed.
+      className={`col-xl-6 mb-xl-10 ${!data && !error ? "service-health-loading" : ""}`}
+    >
+      <div className="card card-flush h-xl-100">
+        <div className="card-header flex-nowrap pt-5">
+          <div className="card-title align-items-start flex-column min-w-0">
+            <h3 className="card-label fw-bold text-gray-800 m-0">{gettext("Service Health")}</h3>
+            {data && (
+              <span className="text-muted mt-1 fw-semibold fs-7">
+                {interpolate(gettext("Smarter v%(smarter_version)s on %(linux_distribution)s"), {
+                  smarter_version: data.smarter_version,
+                  linux_distribution: data.linux_distribution,
+                })}
+              </span>
+            )}
+            {!data && <GhostHeader />}
           </div>
+          {(data || error) && (
+            <div className="card-toolbar align-self-start flex-shrink-0 ms-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-icon btn-light btn-active-light-primary"
+                title={gettext("Run the health checks again now")}
+                aria-label={gettext("Refresh service health")}
+                disabled={refreshing}
+                // the api runs the checks again, rather than answering from its cache.
+                onClick={() => refresh({ refresh: true })}
+              >
+                <i className={`ki-outline ki-arrows-circle fs-3 ${refreshing ? "service-health-refreshing" : ""}`}></i>
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="card-body pt-2 pb-5 service-health-body">
+          {data && <RuntimeVersions data={data} />}
+          {!data && <GhostBody />}
+          {error && (
+            <p className="visually-hidden" role="status">
+              {gettext("Service health couldn't be loaded. It will try again shortly.")}
+            </p>
+          )}
+          {data && (
+            <>
+              <div className="d-flex align-items-center gap-4 mb-4">
+                <HealthRing value={data.health_score} level={level} />
+                <div className="flex-grow-1 min-w-0">
+                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                    <div
+                      className="service-health-label"
+                      title={gettext(
+                        "Live checks of the services that the platform needs, run each time this page loads.",
+                      )}
+                    >
+                      {gettext("Backend services")}
+                      <i className="ki-outline ki-information-5 fs-7 ms-1"></i>
+                    </div>
+                    <StatusBadge level={level} failing={failing} total={checks.length} />
+                  </div>
+                  <ul className="service-health-checks" aria-label={gettext("Backend services")}>
+                    {checks.map((check) => (
+                      <HealthCheckItem key={check.name} {...check} />
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="service-health-footer">
+                <CIStatus repositoryUrl={data.repository_url} />
+              </div>
+            </>
+          )}
         </div>
       </div>
-      {/* end::Col */}
-    </>
+    </section>
   );
 }
 
