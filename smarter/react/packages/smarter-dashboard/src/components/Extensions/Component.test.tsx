@@ -37,7 +37,7 @@ describe("Extensions", () => {
     for (const [name, href] of [
       ["How extensions work", `${DOCS}/smarter-platform/extensions.html`],
       ["Browse the registry", "https://github.com/smarter-sh/extensions-registry"],
-      [/Build one/, `${DOCS}/smarter-framework/smarter-extensions.html`],
+      [/^Build one →$/, `${DOCS}/smarter-framework/smarter-extensions.html`],
     ]) {
       expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
     }

@@ -90,6 +90,7 @@ export const exampleContext: TabbedViewContext<Example> = {
     { key: "owned" as TabKey, label: "Your Examples" },
     { key: "shared" as TabKey, label: "Shared Examples" },
   ],
+  filters: { even: "Even examples" },
   ListView: ExampleListView,
   CardView: ExampleCardView,
 };

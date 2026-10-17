@@ -75,6 +75,19 @@ describe("extractFromSource", () => {
     expect(() => extractFromSource("App.tsx", 'ngettext("one", plural, n);')).toThrow(/argument 2 of ngettext/);
     expect(() => extractFromSource("App.tsx", "gettext();")).toThrow(ExtractionError);
   });
+
+  it("refuses an HTML entity in a React message, but not in static/js", () => {
+    expect(() => extractFromSource("App.tsx", 'gettext("Build one &rarr;");')).toThrow(
+      /must not contain an HTML entity/,
+    );
+    expect(() => extractFromSource("App.tsx", 'gettext("Copyright &#169;");')).toThrow(ExtractionError);
+    expect(() => extractFromSource("App.tsx", 'ngettext("one", "two &middot; three", n);')).toThrow(/argument 2/);
+    expect(extractFromSource("App.tsx", 'gettext("Build one →");')[0].singular).toBe("Build one →");
+    expect(extractFromSource("App.tsx", 'gettext("Salt & pepper; to taste");')[0].singular).toBe(
+      "Salt & pepper; to taste",
+    );
+    expect(extractFromSource("static.js", 'gettext("Build one &rarr;");')[0].singular).toBe("Build one &rarr;");
+  });
 });
 
 describe("formatMessages", () => {

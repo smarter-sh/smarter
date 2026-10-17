@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 20:56+0000\n"
+"POT-Creation-Date: 2026-10-17 12:24+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -424,6 +424,15 @@ msgstr "Carregando…"
 #. Translators: used in react/packages/smarter-common/src/components/Loading/Component.tsx
 msgid "Loading"
 msgstr "Carregando"
+
+#. Translators: the label of the filter that narrows a list, e.g. "Pending deployment".
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+msgid "Showing: %(filter)s"
+msgstr "Mostrando: %(filter)s"
+
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+msgid "Show all"
+msgstr "Mostrar tudo"
 
 #. Translators: objects is the plural of a resource kind's name, e.g. secrets.
 #. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
@@ -1104,8 +1113,8 @@ msgid "How extensions work"
 msgstr "Como as extensões funcionam"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx
-msgid "Build one &rarr;"
-msgstr "Crie uma &rarr;"
+msgid "Build one →"
+msgstr "Crie uma →"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx
 msgid "Official extensions"
@@ -1366,11 +1375,11 @@ msgstr "VectorStores"
 msgid "LLMHosts"
 msgstr "LLMHosts"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx
 msgid "Request failed: %(status)s"
 msgstr "A solicitação falhou: %(status)s"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
 msgid "Unknown error"
 msgstr "Erro desconhecido"
 
@@ -1525,56 +1534,132 @@ msgid "Installation Guide"
 msgstr "Guia de instalação"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/SelfHost/Component.tsx
-msgid "Open source &middot; AGPL-3.0"
-msgstr "Código aberto &middot; AGPL-3.0"
+msgid "Open source · AGPL-3.0"
+msgstr "Código aberto · AGPL-3.0"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+msgid "Build Status"
+msgstr "Status do build"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+msgid "Test Status"
+msgstr "Status dos testes"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+msgid "Release Status"
+msgstr "Status da versão"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+msgid "CI status unknown"
+msgstr "Status de CI desconhecido"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+msgid "Build status"
+msgstr "Status do build"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+msgid "Database"
+msgstr "Banco de dados"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-msgid "Smarter v%(smarter_version)s"
-msgstr "Smarter v%(smarter_version)s"
+msgid "The database answers a query."
+msgstr "O banco de dados responde a uma consulta."
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Cache"
+msgstr "Cache"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "A value written to the Redis cache can be read back."
+msgstr "Um valor gravado no cache do Redis pode ser lido de volta."
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Task Broker"
+msgstr "Broker de tarefas"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
 msgid ""
-"Python %(python_version)s / Django %(django_version)s / Pydantic %"
-"(pydantic_version)s / DRF %(drf_version)s"
+"The Celery task broker, which queues background jobs, accepts a connection."
 msgstr ""
-"Python %(python_version)s / Django %(django_version)s / Pydantic %"
-"(pydantic_version)s / DRF %(drf_version)s"
+"O broker de tarefas do Celery, que enfileira os trabalhos em segundo plano, "
+"aceita uma conexão."
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-msgid "Backend Service Health"
-msgstr "Saúde dos serviços de backend"
+msgid "Workers"
+msgstr "Workers"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-msgid "Unknown Linux distribution"
-msgstr "Distribuição Linux desconhecida"
+msgid "At least one Celery worker, which runs background jobs, answers a ping."
+msgstr ""
+"Pelo menos um worker do Celery, que executa os trabalhos em segundo plano, "
+"responde a um ping."
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-msgid "Failed to load service health: %(error)s"
-msgstr "Falha ao carregar a saúde dos serviços: %(error)s"
+msgid "All systems operational"
+msgstr "Todos os sistemas operacionais"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "%(failing)s of %(total)s check failing"
+msgid_plural "%(failing)s of %(total)s checks failing"
+msgstr[0] "%(failing)s de %(total)s verificação com falha"
+msgstr[1] "%(failing)s de %(total)s verificações com falha"
+
+#. Translators: the state of a backend service that answers its health check.
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Healthy"
+msgstr "Saudável"
+
+#. Translators: the state of a backend service that fails its health check, i.e. not running.
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Down"
+msgstr "Fora do ar"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Runtime versions"
+msgstr "Versões do ambiente de execução"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
 msgid "Service Health"
 msgstr "Saúde dos serviços"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-msgid "Build Status"
-msgstr "Status do build"
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Smarter v%(smarter_version)s on %(linux_distribution)s"
+msgstr "Smarter v%(smarter_version)s em %(linux_distribution)s"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-msgid "Test Status"
-msgstr "Status dos testes"
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Run the health checks again now"
+msgstr "Executar as verificações novamente agora"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-msgid "Release Status"
-msgstr "Status da versão"
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Refresh service health"
+msgstr "Atualizar a saúde dos serviços"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-msgid "Codecov"
-msgstr "Codecov"
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Service health couldn't be loaded. It will try again shortly."
+msgstr ""
+"Não foi possível carregar a saúde dos serviços. Uma nova tentativa será "
+"feita em breve."
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid ""
+"Live checks of the services that the platform needs, run each time this page "
+"loads."
+msgstr ""
+"Verificações ao vivo dos serviços de que a plataforma precisa, executadas "
+"sempre que esta página é carregada."
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+msgid "Backend services"
+msgstr "Serviços de backend"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/HealthRing.tsx
 msgid "Service health %(clampedValue)s percent"
 msgstr "Saúde dos serviços: %(clampedValue)s por cento"
+
+#. Translators: a caption under a percentage, e.g. "75%" over "healthy": the share of health checks that pass.
+#. Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/HealthRing.tsx
+msgid "healthy"
+msgstr "saudável"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 msgid "Request"
@@ -1583,14 +1668,6 @@ msgstr "Solicitação"
 #. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
 msgid "Completion"
 msgstr "Completion"
-
-#. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
-msgid "Limit"
-msgstr "Limite"
-
-#. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
-msgid "Hour"
-msgstr "Hora"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
 msgid "Half Day"
@@ -1613,8 +1690,20 @@ msgid "Year"
 msgstr "Ano"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
-msgid "Failed to fetch tokenUsageData (%(status)s): %(error)s"
-msgstr "Falha ao buscar tokenUsageData (%(status)s): %(error)s"
+msgid "Time period"
+msgstr "Período de tempo"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+msgid "Failed to load token usage (%(status)s): %(error)s"
+msgstr "Falha ao carregar o uso de tokens (%(status)s): %(error)s"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+msgid "the server didn't answer with JSON"
+msgstr "o servidor não respondeu com JSON"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+msgid "No token usage in this period."
+msgstr "Nenhum uso de tokens neste período."
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/UserCharges.tsx
 msgid "User Usage"
@@ -2514,6 +2603,10 @@ msgstr "Seus clientes LLM"
 #. Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
 msgid "Shared LLM Clients"
 msgstr "Clientes LLM compartilhados"
+
+#. Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
+msgid "Pending deployment"
+msgstr "Implantação pendente"
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
 msgid "LLM Clients (aka 'Harnesses')"
@@ -5010,10 +5103,6 @@ msgstr ""
 "e remove documentos, e faz snapshots agendados. Crie um com um manifesto "
 "Vectorstore."
 
-#. Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
-msgid "Database"
-msgstr "Banco de dados"
-
 #. Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Index or Collection"
 msgstr "Índice ou coleção"
@@ -5522,3 +5611,34 @@ msgstr "A confirmação da senha é obrigatória"
 #. Translators: used in smarter/static/js/coming-soon.js
 msgid "Added"
 msgstr "Adicionado"
+
+#~ msgid "Failed to load service health: %(error)s"
+#~ msgstr "Falha ao carregar a saúde dos serviços: %(error)s"
+
+#~ msgid "Limit"
+#~ msgstr "Limite"
+
+#~ msgid "Hour"
+#~ msgstr "Hora"
+
+#~ msgid "Failed to fetch tokenUsageData (%(status)s): %(error)s"
+#~ msgstr "Falha ao buscar tokenUsageData (%(status)s): %(error)s"
+
+#~ msgid "Codecov"
+#~ msgstr "Codecov"
+
+#~ msgid "Runtime"
+#~ msgstr "Ambiente de execução"
+
+#~ msgid "Build"
+#~ msgstr "Build"
+
+#~ msgid ""
+#~ "Python %(python_version)s / Django %(django_version)s / Pydantic %"
+#~ "(pydantic_version)s / DRF %(drf_version)s"
+#~ msgstr ""
+#~ "Python %(python_version)s / Django %(django_version)s / Pydantic %"
+#~ "(pydantic_version)s / DRF %(drf_version)s"
+
+#~ msgid "Unknown Linux distribution"
+#~ msgstr "Distribuição Linux desconhecida"

@@ -3,330 +3,189 @@
 Smarter.apps.dashboard.views.api.charges
 =========================================
 
-This module implements the API logic for aggregated usage charges in the Smarter dashboard application.
+API view for the dashboard's Token Usage chart: the tokens that a user's LLM requests used, over
+a recent window of time, one point per hour, day or month.
 
-Overview
---------
-It provides endpoints and utilities for summarizing per-user or per-resource usage costs, intended for
-display within frontend dashboard components. The module's main responsibilities are:
+Each LLM request creates a :class:`~smarter.apps.account.models.Charge` for each resource that it
+is charged to, the user's :class:`~smarter.apps.account.models.UserProfile` among them. Celery Beat
+rolls charges up into :class:`~smarter.apps.account.models.AggregatedCharges` every hour, and
+deletes them, so each point is summed from both, by
+:func:`~smarter.apps.account.models.get_actuals`, as the budgets are. The charges of the current
+hour are therefore counted before they're aggregated.
 
-- **Aggregated Charges Querying**: Defines functions to efficiently query and aggregate usage charge metrics
-  (e.g., tokens, cost) across various time intervals including hour, day, week, month, and year,
-  supporting dynamic data visualization in dashboard charts.
-- **Periodicity Logic**: Encapsulates business logic to compute time boundaries and grouping fields for different
-  reporting periods, used for accurate and flexible charting.
-- **API Endpoint**: Exposes an authenticated Django view class (`MyResourcesView`) which serves data to frontend
-  React components via a JSON API, supporting POST requests that specify desired aggregation periodicity.
-
-Caching
--------
-Resource-intensive queries (e.g., charge aggregation) leverage a cache layer to minimize repeated expensive
-computations and database load. The `@cache_results` decorator is used, with a default timeout of one hour.
-
-Usage
------
-To expose the API endpoint, wire up `MyResourcesView` in your Django application's URL configuration. The endpoint
-expects POST requests containing a valid periodicity value and returns aggregated charge statistics as JSON.
-Use these endpoints to drive dashboard visualizations of account or organization usage.
-
-Note
-----
-Function signatures and argument details are documented via Sphinx's ``automodule`` directive. For deeper API
-reference, see the generated developer docs or inline function docstrings.
+- :class:`TokenUsageWindow`: the windows that the chart offers, e.g. the last 24 hours, by hour.
+- :func:`token_usage_series`: the points of a window, cached for five minutes.
+- :class:`ChargesView`: the authenticated POST endpoint, ``{"periodicity": "24_hours"}``.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from http import HTTPStatus
-from typing import Any, cast
-from zoneinfo import ZoneInfo
+from typing import Literal, Optional
 
-from django.db.models import Q, Sum
 from django.http import HttpRequest, JsonResponse
-from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
+from django.utils import timezone
+from pydantic import BaseModel, ConfigDict
 
-from smarter.__version__ import __version__
-from smarter.apps.account.models import (
-    AggregatedCharges,
-    UserProfile,
-    get_resolved_user,
-)
-from smarter.apps.account.serializers import ChargeSerializer
-from smarter.lib import logging
+from smarter.apps.account.models import UserProfile, get_actuals, get_resolved_user
+from smarter.apps.account.models.budget import BudgetPeriod, add_periods, period_start
+from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
-from smarter.lib.django.views import (
-    SmarterAuthenticatedWebView,
-)
+from smarter.lib.django.views import SmarterAuthenticatedWebView
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
-server_tz = datetime.now().astimezone().tzinfo
+
+TOKEN_USAGE_CACHE_TIMEOUT = 5 * 60  # seconds. the chart's newest point may be five minutes behind.
+
+TokenUsagePeriod = Literal["hour", "day", "month"]
 
 
-class AggregatedChargesPeriod:
+class TokenUsageWindow:
     """
-    API view to provide aggregated usage charge data for the dashboard’s "Aggregated Charges Chart".
+    The windows of time that the Token Usage chart offers, by their periodicity key.
 
-    React component.
-
-    This view responds to authenticated POST requests, returning per-user usage summaries
-    (e.g., tokens and cost) for a requested aggregation period as part of the dashboard experience.
-
-    Inherits from :class:`SmarterAuthenticatedWebView`, which enforces user authentication.
-
-    Attributes
-    ----------
-    formatted_class_name : str
-        Returns the class name and instance identifier as a formatted string,
-        helpful for logging and debugging.
-
-    Methods
-    -------
-    post(request, periodicity, *args, **kwargs)
-        Handle POST requests and return aggregated charge data as JSON for the
-        specified periodicity.
-
-    Examples
-    --------
-    Usage in Django’s URL configuration::
-
-        from smarter.apps.dashboard.views.api.charges import MyResourcesView
-
-        urlpatterns = [
-            path("api/charges/<str:periodicity>/", MyResourcesView.as_view(), name="api-charges"),
-        ]
+    Each is a number of points of one period, ending with the current one: e.g. ``24_hours`` is
+    the current hour and the 23 before it. Charges are aggregated by the hour, so an hour is the
+    smallest period.
     """
 
-    HOUR = "1_hour"
     HALF_DAY = "12_hours"
     DAY = "24_hours"
     WEEK = "7_days"
     MONTH = "1_month"
     YEAR = "1_year"
 
-    @classmethod
-    def delta(cls, periodicity: str, tz: ZoneInfo | None = None) -> datetime:
-        """
-        Compute the UTC datetime cutoff for the beginning of a given aggregation period.
+    DEFAULT = DAY
 
-        Determines the lower (older) time boundary to use when aggregating charge data, based on
-        a specified periodicity key. The returned datetime represents "now minus the length of
-        the interval," in the given timezone.
-
-        Parameters
-        ----------
-        periodicity : str
-            The aggregation period key. Must be one of:
-            ``"1_hour"``, ``"12_hours"``, ``"24_hours"``, ``"7_days"``, ``"1_month"``, or ``"1_year"``.
-        tz : ZoneInfo or None, optional
-            Timezone to use for the calculation (defaults to the system local time zone if None).
-
-        Returns
-        -------
-        datetime
-            The datetime value representing the start of the aggregation window.
-
-        Raises
-        ------
-        ValueError
-            If an unknown periodicity key is provided.
-
-        Examples
-        --------
-        ::
-
-            # Get start of the last 7 days in UTC
-            from zoneinfo import ZoneInfo
-            cutoff = AggregatedChargesPeriod.delta("7_days", tz=ZoneInfo("UTC"))
-        """
-        now = datetime.now(tz)
-
-        match periodicity:
-            case cls.HOUR:
-                return now - timedelta(hours=1)
-            case cls.HALF_DAY:
-                return now - timedelta(hours=12)
-            case cls.DAY:
-                return now - timedelta(days=1)
-            case cls.WEEK:
-                return now - timedelta(weeks=1)
-            case cls.MONTH:
-                return now - timedelta(days=30)
-            case cls.YEAR:
-                return now - timedelta(days=365)
-            case _:
-                raise ValueError(f"Unknown periodicity: {periodicity}")
+    WINDOWS: dict[str, tuple[TokenUsagePeriod, int]] = {
+        HALF_DAY: ("hour", 12),
+        DAY: ("hour", 24),
+        WEEK: ("day", 7),
+        MONTH: ("day", 30),
+        YEAR: ("month", 12),
+    }
 
     @classmethod
-    def grouping_fields(cls, periodicity: str) -> list[str]:
+    def get(cls, periodicity: str) -> tuple[TokenUsagePeriod, int]:
         """
-        Retrieve the list of model fields used to group charge data for a given periodicity.
+        Return the period of a window's points, and how many there are.
 
-        This method assists in dynamically determining how database records should be grouped
-        for aggregation, based on the reporting interval requested. It enables flexible
-        aggregation (hourly, daily, monthly, etc.) for charge summaries.
-
-        Parameters
-        ----------
-        periodicity : str
-            Aggregation period key. Must be one of the constants defined in
-            :class:`AggregatedChargesPeriod` (e.g., ``"1_hour"``, ``"12_hours"``, ``"24_hours"``, ``"7_days"``, ``"1_month"``, ``"1_year"``).
-
-        Returns
-        -------
-        list of str
-            List of model field names that should be used to group charge records for the
-            requested periodicity.
-
-        Raises
-        ------
-        KeyError
-            If the supplied periodicity value is not recognized.
-
-        Examples
-        --------
-        ::
-
-            fields = AggregatedChargesPeriod.grouping_fields("1_month")
-            # May return: ['year', 'month', 'day']
+        :param periodicity: The window's key, e.g. ``"24_hours"``.
+        :type periodicity: str
+        :returns: The period, ``"hour"``, ``"day"`` or ``"month"``, and the number of points.
+        :rtype: tuple[str, int]
+        :raises ValueError: If the periodicity is not one of the windows.
         """
-        retval = {
-            AggregatedChargesPeriod.HOUR: [
-                "year",
-                "month",
-                "day",
-                "hour",
-            ],
-            AggregatedChargesPeriod.HALF_DAY: [
-                "year",
-                "month",
-                "day",
-                "hour",
-            ],
-            AggregatedChargesPeriod.DAY: [
-                "year",
-                "month",
-                "day",
-                "hour",
-            ],
-            AggregatedChargesPeriod.WEEK: [
-                "year",
-                "month",
-                "day",
-            ],
-            AggregatedChargesPeriod.MONTH: [
-                "year",
-                "month",
-                "day",
-            ],
-            AggregatedChargesPeriod.YEAR: [
-                "year",
-                "month",
-            ],
-        }
-        return retval[periodicity]
+        try:
+            return cls.WINDOWS[periodicity]
+        except KeyError as e:
+            raise ValueError(f"Unknown periodicity: {periodicity}. Use one of {', '.join(cls.WINDOWS)}.") from e
 
 
-@cache_results(timeout=60 * 60)  # one hour
-def get_aggregated_charges(
-    user_profile: UserProfile, periodicity: str = AggregatedChargesPeriod.HOUR, invalidate: bool = False
-) -> ReturnList[ReturnDict[str, Any]]:
+class TokenUsagePoint(BaseModel):
+    """The tokens and cost of one period of the Token Usage chart."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    period_start: datetime
+    records: int
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    total_cost: float
+
+
+class TokenUsageSeries(BaseModel):
+    """The Token Usage chart's points for one window, oldest first."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    periodicity: str
+    period: TokenUsagePeriod
+    points: list[TokenUsagePoint]
+
+
+def build_token_usage_series(
+    resource_locator: str, periodicity: str, now: Optional[datetime] = None
+) -> TokenUsageSeries:
     """
-    Query and aggregate resource usage charges for a user over a specified reporting interval.
+    Return the tokens that a resource used in each period of a window, oldest first.
 
-    This function collects and summarizes charge records (e.g., tokens, cost) associated with
-    a user’s resource locator, grouping by the appropriate fields for the requested
-    periodicity (hourly, daily, weekly, etc.). The result is suitable for data visualization
-    on usage charts. Results are cached to improve performance on repeated requests.
+    A period without charges is a point of zeros, so that the chart's time axis has no gaps.
 
-    Parameters
-    ----------
-    user_profile : UserProfile
-        The user profile whose charges should be aggregated.
-    periodicity : str, optional
-        Key for aggregation period, accepted values are constants defined in
-        :class:`AggregatedChargesPeriod` (default is ``AggregatedChargesPeriod.HOUR``).
-    invalidate : bool, optional
-        If True, bypass and invalidate any cached value before recomputing the result
-        (default is False).
-
-    Returns
-    -------
-    list of dict
-        A list of dictionaries representing aggregated charge data. Each dict contains
-        groupby fields (year, month, day, etc.), `resource_locator`, and aggregated
-        metrics: ``records``, ``prompt_tokens``, ``completion_tokens``,
-        ``total_tokens``, and ``total_cost``.
-
-    Raises
-    ------
-    ValueError
-        If the supplied periodicity value is unrecognized.
-
-    Examples
-    --------
-    ::
-
-        data = get_aggregated_charges(user_profile, periodicity="1_month")
-        for entry in data:
-            print(entry["total_cost"])
+    :param resource_locator: The record locator of the resource whose charges are counted, e.g. a
+        UserProfile's.
+    :type resource_locator: str
+    :param periodicity: The window's key, e.g. ``"24_hours"``. See :class:`TokenUsageWindow`.
+    :type periodicity: str
+    :param now: The end of the window. Defaults to now.
+    :type now: Optional[datetime]
+    :returns: The window's points.
+    :rtype: TokenUsageSeries
+    :raises ValueError: If the periodicity is not one of the windows.
     """
-
-    logger.debug(
-        "%s.get_aggregated_charges() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
-    resource_locator = user_profile.record_locator
-    utc = ZoneInfo("UTC")
-    end_date = datetime.now(utc)
-    start_date = AggregatedChargesPeriod.delta(periodicity=periodicity, tz=utc)
-    group_fields = AggregatedChargesPeriod.grouping_fields(periodicity)
-    start_q = (
-        Q(year__gt=start_date.year)
-        | (Q(year=start_date.year) & Q(month__gt=start_date.month))
-        | (Q(year=start_date.year) & Q(month=start_date.month) & Q(day__gt=start_date.day))
-        | (Q(year=start_date.year) & Q(month=start_date.month) & Q(day=start_date.day) & Q(hour__gte=start_date.hour))
-    )
-
-    end_q = (
-        Q(year__lt=end_date.year)
-        | (Q(year=end_date.year) & Q(month__lt=end_date.month))
-        | (Q(year=end_date.year) & Q(month=end_date.month) & Q(day__lt=end_date.day))
-        | (Q(year=end_date.year) & Q(month=end_date.month) & Q(day=end_date.day) & Q(hour__lte=end_date.hour))
-    )
-
-    retval = (
-        AggregatedCharges.objects.filter(resource_locator=resource_locator)
-        .filter(start_q & end_q)
-        .values(
-            *group_fields,
-            "resource_locator",
+    period, count = TokenUsageWindow.get(periodicity)
+    budget_period = BudgetPeriod(period)
+    now = now or timezone.now()
+    start = add_periods(budget_period, period_start(budget_period, now), 1 - count)
+    points: list[TokenUsagePoint] = []
+    for _ in range(count):
+        end = add_periods(budget_period, start, 1)
+        actuals = get_actuals(resource_locator, start, min(end, now))
+        points.append(
+            TokenUsagePoint(
+                period_start=start,
+                records=actuals.records,
+                prompt_tokens=actuals.prompt_tokens,
+                completion_tokens=actuals.completion_tokens,
+                total_tokens=actuals.total_tokens,
+                total_cost=float(actuals.total_cost),
+            )
         )
-        .annotate(
-            records=Sum("records"),
-            prompt_tokens=Sum("prompt_tokens"),
-            completion_tokens=Sum("completion_tokens"),
-            total_tokens=Sum("total_tokens"),
-            total_cost=Sum("total_cost"),
-        )
-        .order_by(
-            *group_fields,
-            "resource_locator",
-        )
-    )
-    data = cast(ReturnList[ReturnDict[str, Any]], ChargeSerializer(retval, many=True).data)
-    logger.debug(
-        "%s.get_aggregated_charges() retrieved and cached aggregated charges for %s: %s",
-        logger_prefix,
-        user_profile,
-        data,
-    )
-    return data
+        start = end
+    return TokenUsageSeries(periodicity=periodicity, period=period, points=points)
+
+
+@cache_results(timeout=TOKEN_USAGE_CACHE_TIMEOUT)
+def token_usage_series(resource_locator: str, periodicity: str) -> dict:
+    """
+    The JSON of :func:`build_token_usage_series` for a window that ends now, cached for five minutes.
+
+    :param resource_locator: The record locator of the resource whose charges are counted.
+    :type resource_locator: str
+    :param periodicity: The window's key. See :class:`TokenUsageWindow`.
+    :type periodicity: str
+    :returns: The JSON of a :class:`TokenUsageSeries`.
+    :rtype: dict
+    :raises ValueError: If the periodicity is not one of the windows. Errors aren't cached.
+    """
+    return build_token_usage_series(resource_locator, periodicity).model_dump(mode="json")
+
+
+def requested_periodicity(request: HttpRequest) -> str:
+    """
+    The periodicity in the request's JSON body, ``{"periodicity": "24_hours"}``, or the default.
+
+    :param request: The incoming HTTP POST request.
+    :type request: django.http.HttpRequest
+    :returns: The requested periodicity, or :attr:`TokenUsageWindow.DEFAULT` if the body has none.
+    :rtype: str
+    """
+    try:
+        body = json.loads(request.body or b"{}")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return TokenUsageWindow.DEFAULT
+    periodicity = body.get("periodicity") if isinstance(body, dict) else None
+    return periodicity if isinstance(periodicity, str) else TokenUsageWindow.DEFAULT
 
 
 class ChargesView(SmarterAuthenticatedWebView):
-    """API view for the Aggregated Charges Chart React component on the dashboard."""
+    """
+    API view for the dashboard's Token Usage chart: the user's token usage over a window of time.
+
+    A ``POST`` with ``{"periodicity": "<window>"}`` returns a :class:`TokenUsageSeries` of the
+    charges to the user's UserProfile. An unknown periodicity is a 400.
+    """
 
     @property
     def formatted_class_name(self) -> str:
@@ -334,14 +193,21 @@ class ChargesView(SmarterAuthenticatedWebView):
         class_name = f"{__name__}.{ChargesView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
-    def post(self, request: HttpRequest, periodicity: str, *args, **kwargs) -> JsonResponse:
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Handle POST requests to return the user's token usage over a window of time.
 
+        :param request: The incoming HTTP POST request, whose JSON body may name a periodicity.
+        :type request: django.http.HttpRequest
+        :returns: The window's points, or a 400 with the error if the periodicity is unknown.
+        :rtype: django.http.JsonResponse
+        """
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
-        logger.debug("%s.post()", self.formatted_class_name)
-
+        periodicity = requested_periodicity(request)
+        logger.debug("%s.post() periodicity=%s", self.formatted_class_name, periodicity)
         try:
-            retval = get_aggregated_charges(user_profile=user_profile, periodicity=periodicity)
+            TokenUsageWindow.get(periodicity)
         except ValueError as e:
             return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
-        return JsonResponse(retval, status=HTTPStatus.OK, safe=False)
+        return JsonResponse(token_usage_series(user_profile.record_locator, periodicity), status=HTTPStatus.OK)

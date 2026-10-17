@@ -1,17 +1,32 @@
 .service-health-ring {
   position: relative;
-  width: 92px;
-  height: 92px;
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  --service-health-color: var(--bs-success);
+}
+
+.service-health-ring-degraded {
+  --service-health-color: var(--bs-warning);
+}
+
+.service-health-ring-down {
+  --service-health-color: var(--bs-danger);
 }
 
 .service-health-ring__svg {
   overflow: visible;
 }
 
+.service-health-ring__track {
+  stroke: var(--bs-gray-200);
+}
+
 .service-health-ring__progress {
+  stroke: var(--service-health-color);
   transition: stroke-dashoffset 240ms linear;
 }
 
@@ -19,9 +34,223 @@
   position: absolute;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  line-height: 1.1;
+}
+
+.service-health-ring__value {
+  color: var(--bs-gray-900);
+  font-size: 1rem;
   font-weight: 700;
-  color: #1f2937;
+}
+
+.service-health-ring__caption {
+  color: var(--bs-gray-500);
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.service-health-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.service-health-check {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.6rem;
+  background-color: rgba(var(--bs-gray-100-rgb, 245, 248, 250), 0.7);
+  color: var(--bs-gray-600);
+  cursor: help;
+}
+
+.service-health-check-down {
+  background-color: var(--bs-danger-light);
+  color: var(--bs-danger);
+}
+
+.service-health-check-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.service-health-check-name {
+  overflow: hidden;
+  color: var(--bs-gray-800);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-health-check-state {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.service-health-check-state i {
+  color: inherit;
+}
+
+.service-health-label {
+  display: flex;
+  align-items: center;
+  color: var(--bs-gray-500);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.service-health-label[title] {
+  width: fit-content;
+  cursor: help;
+}
+
+.service-health-footer {
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--bs-gray-300);
+}
+
+.service-health-versions {
+  overflow: hidden;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  color: var(--bs-gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+  list-style: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-health-versions li {
+  display: inline;
+}
+
+.service-health-versions li + li::before {
+  margin: 0 0.3rem;
+  content: "·";
+}
+
+.service-health-version-name {
+  margin-right: 0.25rem;
+  color: var(--bs-gray-400);
+}
+
+.service-health-badges {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* the badges keep to one line: in a narrow card they shrink together, in proportion, rather than wrap. */
+.service-health-badges li {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.service-health-badges img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 20px;
+}
+
+.service-health-ci-unknown {
+  display: flex;
+  align-items: center;
+  color: var(--bs-gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.service-health-ci-unknown i {
+  color: inherit;
+}
+
+.service-health-refreshing {
+  animation: service-health-spin 0.8s linear infinite;
+}
+
+@keyframes service-health-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-health-refreshing {
+    animation: none;
+  }
+}
+
+/* the ghost of the card: gray placeholders in the shape of its content. */
+.service-health-ghost {
+  display: block;
+  border-radius: 0.4rem;
+  background-color: var(--bs-gray-200);
+}
+
+.service-health-ghost-ring {
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
+  border: 7px solid var(--bs-gray-200);
+  border-radius: 50%;
+  background: none;
+}
+
+.service-health-ghost-tile {
+  cursor: default;
+}
+
+.service-health-ghost-tile .service-health-ghost {
+  background-color: var(--bs-gray-300);
+}
+
+/* while it loads, the ghost shimmers. A ghost that failed to load is still. */
+.service-health-loading .service-health-ghost {
+  animation: service-health-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes service-health-shimmer {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-health-loading .service-health-ghost {
+    animation: none;
+  }
+}
+
+/* in a narrow card, the status badge and the tiles say what the ring does, and the tiles need its room. */
+.service-health-body {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .service-health-ring,
+  .service-health-ghost-ring {
+    display: none;
+  }
 }
