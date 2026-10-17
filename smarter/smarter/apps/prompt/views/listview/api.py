@@ -46,6 +46,7 @@ Example Endpoints
 from http import HTTPStatus
 
 from django.db import models
+from django.db.models import Q
 from django.http import HttpRequest
 from django.http.response import JsonResponse
 
@@ -74,6 +75,18 @@ SORT_FIELDS = {
     "defaultModel": "default_model",
 }
 """The columns of the LLMClient list that it may be sorted by, and the fields that sort them."""
+
+PENDING_FILTER = "pending"
+"""The name of the filter of the LLMClients that aren't deployed yet."""
+
+FILTERS = {
+    PENDING_FILTER: Q(deployed=False),
+}
+"""The named filters of the LLMClient list.
+
+``?filter=pending`` lists the LLMClients that aren't deployed yet, which the dashboard's pending
+deployments link opens.
+"""
 
 
 def should_log_verbose(level):
@@ -201,7 +214,9 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        llmclients, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
+        llmclients, pagination = paginate_listview(
+            request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS, filters=FILTERS
+        )
 
         smarter_admin = smarter_cached_objects.smarter_admin_user_profile
         retval = {

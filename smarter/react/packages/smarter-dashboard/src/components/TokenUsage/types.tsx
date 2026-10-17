@@ -1,27 +1,23 @@
 import type { SessionContext } from "@smarter/common";
 
-export interface TokenUsageInterface {
-  timestamp: string;
+/** The period of each point: Charges are aggregated by the hour, so an hour is the smallest. */
+export type TokenUsagePeriod = "hour" | "day" | "month";
 
-  requestTokens: number;
-  completionTokens: number;
-  budgetTokens: number;
-
-  totalTokens: number;
-  remainingTokens: number;
-  utilization: number;
+/** The tokens and cost of one period, from smarter.apps.dashboard.views.views.api.charges.TokenUsagePoint. */
+export interface TokenUsagePoint {
+  period_start: string;
+  records: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  total_cost: number;
 }
 
-export interface AreaSeries {
-  key: keyof TokenUsageInterface;
-  label: string;
-  color: string;
-}
-
-export interface LineSeries {
-  key: keyof TokenUsageInterface;
-  label: string;
-  color: string;
+/** The points of one window, oldest first, from smarter.apps.dashboard.views.views.api.charges.TokenUsageSeries. */
+export interface TokenUsageSeries {
+  periodicity: string;
+  period: TokenUsagePeriod;
+  points: TokenUsagePoint[];
 }
 
 export interface TokenUsageChartProps {

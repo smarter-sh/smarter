@@ -71,7 +71,7 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
             <MyResources apiUrl={appContext.myResourcesApiUrl} />
             <div className="col-xl-8 mb-5 mb-xl-10">
               <div className="row g-5 g-xl-10">
-                <ServiceHealth apiUrl={appContext.serviceHealthApiUrl} />
+                <ServiceHealth sessionContext={appContext.sessionContext} apiUrl={appContext.serviceHealthApiUrl} />
                 <QuickActions sessionContext={appContext.sessionContext} apiUrl={appContext.quickActionsApiUrl} />
               </div>
               <Extensions />

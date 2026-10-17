@@ -32,7 +32,6 @@ from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect, render
 
-from smarter.apps.dashboard.views.views.api.charges import AggregatedChargesPeriod
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -87,9 +86,6 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
         @cache_results()
         def _get_context() -> dict[str, dict[str, str]]:
             # pylint: disable=C0415
-            from smarter.apps.dashboard.views.views.api.charges import (
-                AggregatedChargesPeriod,
-            )
             from smarter.apps.dashboard.views.views.api.urls import (
                 DashboardApiReverseNames,
             )
@@ -134,14 +130,9 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                         DashboardApiReverseNames.quick_actions,
                     ),
                     "charges_api_url": reverse(
-                        ":".join(
-                            (
-                                DashboardReverseNames.namespace,
-                                DashboardApiReverseNames.namespace,
-                                DashboardApiReverseNames.token_charges,
-                            )
-                        ),
-                        kwargs={"periodicity": AggregatedChargesPeriod.DAY},
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.token_charges,
                     ),
                     "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                     "smarter_request_id": self.generate_smarter_request_id(),

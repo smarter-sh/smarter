@@ -184,6 +184,11 @@ gettext("Failed to load the budget series (%(status)s).");
 gettext("Loading…");
 // Translators: used in react/packages/smarter-common/src/components/Loading/Component.tsx
 gettext("Loading");
+// Translators: the label of the filter that narrows a list, e.g. "Pending deployment".
+// Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+gettext("Showing: %(filter)s");
+// Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+gettext("Show all");
 // Translators: objects is the plural of a resource kind's name, e.g. secrets.
 // Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
 gettext("Search %(objects)s");
@@ -492,7 +497,7 @@ gettext("Python packages that give your LLMs new tools, installed from the signe
 // Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx
 gettext("How extensions work");
 // Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx
-gettext("Build one &rarr;");
+gettext("Build one →");
 // Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx
 gettext("Official extensions");
 // Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
@@ -619,9 +624,9 @@ gettext("Secrets");
 gettext("VectorStores");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx
 gettext("LLMHosts");
-// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx
 gettext("Request failed: %(status)s");
-// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
 gettext("Unknown error");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx
 gettext("Failed to load resources: %(error)s");
@@ -696,37 +701,68 @@ gettext("The same open source platform, from your laptop to production. No licen
 // Translators: used in react/packages/smarter-dashboard/src/components/SelfHost/Component.tsx
 gettext("Installation Guide");
 // Translators: used in react/packages/smarter-dashboard/src/components/SelfHost/Component.tsx
-gettext("Open source &middot; AGPL-3.0");
+gettext("Open source · AGPL-3.0");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+gettext("Build Status");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+gettext("Test Status");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+gettext("Release Status");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+gettext("CI status unknown");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/CIStatus.tsx
+gettext("Build status");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+gettext("Database");
 // Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-gettext("Smarter v%(smarter_version)s");
+gettext("The database answers a query.");
 // Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-gettext("Python %(python_version)s / Django %(django_version)s / Pydantic %(pydantic_version)s / DRF %(drf_version)s");
+gettext("Cache");
 // Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-gettext("Backend Service Health");
+gettext("A value written to the Redis cache can be read back.");
 // Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-gettext("Unknown Linux distribution");
+gettext("Task Broker");
 // Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
-gettext("Failed to load service health: %(error)s");
+gettext("The Celery task broker, which queues background jobs, accepts a connection.");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Workers");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("At least one Celery worker, which runs background jobs, answers a ping.");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("All systems operational");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+ngettext("%(failing)s of %(total)s check failing", "%(failing)s of %(total)s checks failing", 1);
+// Translators: the state of a backend service that answers its health check.
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Healthy");
+// Translators: the state of a backend service that fails its health check, i.e. not running.
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Down");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Runtime versions");
 // Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
 gettext("Service Health");
-// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-gettext("Build Status");
-// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-gettext("Test Status");
-// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-gettext("Release Status");
-// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/GitHubStatus.tsx
-gettext("Codecov");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Smarter v%(smarter_version)s on %(linux_distribution)s");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Run the health checks again now");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Refresh service health");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Service health couldn't be loaded. It will try again shortly.");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Live checks of the services that the platform needs, run each time this page loads.");
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/Component.tsx
+gettext("Backend services");
 // Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/HealthRing.tsx
 gettext("Service health %(clampedValue)s percent");
+// Translators: a caption under a percentage, e.g. "75%" over "healthy": the share of health checks that pass.
+// Translators: used in react/packages/smarter-dashboard/src/components/ServiceHealth/HealthRing.tsx
+gettext("healthy");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 gettext("Request");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
 gettext("Completion");
-// Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
-gettext("Limit");
-// Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
-gettext("Hour");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
 gettext("Half Day");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
@@ -738,7 +774,13 @@ gettext("Month");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
 gettext("Year");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
-gettext("Failed to fetch tokenUsageData (%(status)s): %(error)s");
+gettext("Time period");
+// Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+gettext("Failed to load token usage (%(status)s): %(error)s");
+// Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+gettext("the server didn't answer with JSON");
+// Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+gettext("No token usage in this period.");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/UserCharges.tsx
 gettext("User Usage");
 // Translators: used in react/packages/smarter-dashboard/src/components/TokenUsage/UserCharges.tsx
@@ -1144,6 +1186,8 @@ gettext("Provider / service");
 gettext("Your LLM Clients");
 // Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
 gettext("Shared LLM Clients");
+// Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
+gettext("Pending deployment");
 // Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
 gettext("LLM Clients (aka 'Harnesses')");
 // Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
@@ -2251,8 +2295,6 @@ gettext("Shared Vectorstores");
 gettext("Vectorstores");
 // Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx
 gettext("A Vectorstore is a vector database for retrieval-augmented generation (RAG): documents, such as PDFs, are split into chunks, embedded, and loaded into it, and searched by meaning. Smarter runs Qdrant on its own Kubernetes cluster, or connects to Pinecone or Qdrant Cloud. It creates and destroys the database, loads and removes documents, and takes scheduled snapshots. Create one with a Vectorstore manifest.");
-// Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
-gettext("Database");
 // Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Index or Collection");
 // Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
