@@ -1,3 +1,8 @@
+.. role:: doc
+.. raw:: html
+
+   <style> .system-message { display: none !important; } </style>
+
 .. Smarter documentation master file, created by
    sphinx-quickstart on 2025-Nov-24.
 
@@ -316,6 +321,7 @@ MCPClient, and four guardrails, and it contains no code.
    :caption: Getting Started
 
    Quick Start Guide <smarter-platform/installation/quick-start>
+   Claude Code Tutorials <smarter-platform/claude-code-tutorials>
 
 .. toctree::
    :maxdepth: 1
