@@ -5513,6 +5513,20 @@
             "title": "Count",
             "type": "integer"
           },
+          "filter": {
+            "default": "",
+            "description": "The named filter that narrows the list, e.g. pending, or an empty string for none.",
+            "title": "Filter",
+            "type": "string"
+          },
+          "filters": {
+            "description": "The named filters that the list offers.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Filters",
+            "type": "array"
+          },
           "numPages": {
             "description": "The number of pages.",
             "minimum": 1,

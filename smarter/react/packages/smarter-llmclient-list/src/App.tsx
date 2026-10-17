@@ -27,6 +27,8 @@ const providerTabbedListViewContext: ProviderTabbedViewContext = {
   objectType: {} as LLMClient,
   objectTypeName: "llmclient",
   tabs: tabs,
+  // the list api's named filters, e.g. ?filter=pending from the dashboard's pending deployments link.
+  filters: { pending: gettext("Pending deployment") },
   ListView: ListView,
   CardView: CardView,
 };

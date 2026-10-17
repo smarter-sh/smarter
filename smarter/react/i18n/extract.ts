@@ -126,6 +126,9 @@ function translatorCommentsOf(source: ts.SourceFile): TranslatorComment[] {
   return comments;
 }
 
+/** An HTML entity, such as `&rarr;`, `&#8594;` or `&#x2192;`. */
+const HTML_ENTITY = /&(?:#\d+|#x[\da-f]+|[a-z][a-z\d]*);/i;
+
 /** Extracts the messages of one file's source text. `file` is the path shown to translators. */
 export function extractFromSource(file: string, sourceText: string): Message[] {
   const kind = file.endsWith(".js") ? ts.ScriptKind.JS : ts.ScriptKind.TSX;
@@ -142,11 +145,17 @@ export function extractFromSource(file: string, sourceText: string): Message[] {
       const argument = (index: number | undefined): string | undefined => {
         if (index === undefined) return undefined;
         const value = node.arguments[index] ? literalValue(node.arguments[index]) : undefined;
+        const { line, character } = source.getLineAndCharacterOfPosition(node.getStart(source));
+        const where = `${file}:${line + 1}:${character + 1}: argument ${index + 1} of ${node.expression.getText(source)}()`;
         if (value === undefined) {
-          const { line, character } = source.getLineAndCharacterOfPosition(node.getStart(source));
           throw new ExtractionError(
-            `${file}:${line + 1}:${character + 1}: argument ${index + 1} of ${node.expression.getText(source)}() ` +
-              "must be a string literal, so that it can be extracted for translation. Use interpolate() for values.",
+            `${where} must be a string literal, so that it can be extracted for translation. Use interpolate() for values.`,
+          );
+        }
+        // React shows a string's entities literally. static/js may insert messages as HTML, where they work.
+        if (kind === ts.ScriptKind.TSX && HTML_ENTITY.test(value)) {
+          throw new ExtractionError(
+            `${where} must not contain an HTML entity, which React shows literally. Write the character itself, e.g. → for &rarr;.`,
           );
         }
         return value;

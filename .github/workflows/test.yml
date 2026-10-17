@@ -403,10 +403,16 @@ jobs:
       # - ghaction-github-runtime exposes the ACTIONS_* runtime variables that
       #   BuildKit needs for the GitHub Actions cache backend. build-push-action
       #   does this implicitly; Compose does not.
-      # - A generated override file adds cache_from/cache_to to the three
+      # - A generated override file adds cache_from/cache_to to the four
       #   services that build the smarter image, and COMPOSE_FILE layers it on
-      #   top of docker-compose.yml so the Makefile runs unchanged. All three
+      #   top of docker-compose.yml so the Makefile runs unchanged. All four
       #   build the identical image, so only smarter-app exports the cache.
+      # - The override also sets PYTHON_BASE_IMAGE to Docker Hub's python
+      #   image. The Dockerfile's default pulls it from the ECR Public Gallery,
+      #   whose anonymous data quota GitHub's shared runner IPs exhaust
+      #   (429 "toomanyrequests: Data limit exceeded"). This workflow has no
+      #   AWS credentials to authenticate that pull, but it is logged in to
+      #   Docker Hub.
       #
       # BuildKit exports the cache during the build itself, so it is saved
       # even if a later step fails.
@@ -440,16 +446,28 @@ jobs:
           services:
             smarter-app:
               build:
+                args:
+                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
                 cache_from:
                   - type=gha,scope=smarter-test
                 cache_to:
                   - type=gha,scope=smarter-test,mode=max
             smarter-worker:
               build:
+                args:
+                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
+                cache_from:
+                  - type=gha,scope=smarter-test
+            smarter-worker-infrastructure:
+              build:
+                args:
+                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
                 cache_from:
                   - type=gha,scope=smarter-test
             smarter-beat:
               build:
+                args:
+                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
                 cache_from:
                   - type=gha,scope=smarter-test
           EOF
