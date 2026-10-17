@@ -136,6 +136,9 @@ inputs:
   smarter-email-admin:
     description: "The admin email to use in the branding info"
     required: false
+  smarter-enable-web-console-terminal:
+    description: "True to enable the web console terminal feature in the Smarter platform"
+    required: true
   smarter-logo:
     description: "The URL to the Smarter logo image"
     required: true
@@ -421,6 +424,7 @@ runs:
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
             "SMARTER_AWS_EKS_CLUSTER_NAME": ${{ inputs.eks-cluster-name && format('"{0}"', inputs.eks-cluster-name) || 'null' }},
             "SMARTER_EMAIL_ADMIN": ${{ inputs.smarter-email-admin && format('"{0}"', inputs.smarter-email-admin) || 'null' }},
+            "SMARTER_ENABLE_WEB_CONSOLE_TERMINAL": ${{ inputs.smarter-enable-web-console-terminal && format('"{0}"', inputs.smarter-enable-web-console-terminal) || 'null' }},
             "SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY": ${{ inputs.extension-registry-public-key && format('"{0}"', inputs.extension-registry-public-key) || 'null' }},
             "SMARTER_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
             "SMARTER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},

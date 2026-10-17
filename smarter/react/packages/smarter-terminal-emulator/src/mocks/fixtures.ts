@@ -1,10 +1,34 @@
-/** Example log lines, as the log stream api sends them. See smarter.apps.dashboard.views.terminal_emulator. */
-export const STREAM_URL = "/dashboard/logs/api/stream/";
+/** Example data for the terminal: its session context, a ticket, and the server's messages. See smarter.apps.dashboard.views.terminal_emulator. */
+import type { SessionContext } from "@smarter/common";
 
-export const bulkLogs = [
-  { message: "[stream] connected", level: "INFO" },
-  { message: "INFO smarter.apps.llmclient: LLMClient example deployed", level: "INFO" },
-  { message: "WARNING smarter.apps.provider: openai rate limited, retrying", level: "WARNING" },
-];
+import type { SessionInfo } from "@/lib/session";
 
-export const liveLog = { message: "INFO smarter.apps.prompt: prompt completed in 1.2s", level: "INFO" };
+export const TICKET_URL = "/dashboard/terminal/api/ticket/";
+export const WEBSOCKET_PATH = "/ws/terminal/";
+
+export const sessionContext: SessionContext = {
+  ApiUrl: TICKET_URL,
+  csrfCookieName: "csrftoken",
+  djangoSessionCookieName: "sessionid",
+  cookieDomain: "localhost",
+  debugMode: false,
+  smarterClient: "@smarter/terminal-emulator",
+  smarterClientVersion: "0.0.0",
+  smarterRequestId: "0123456789abcdef0123456789abcdef",
+  smarterCapabilities: ["terminal"],
+};
+
+export const ticket = { ticket: "a-single-use-ticket", url: WEBSOCKET_PATH };
+
+export const sessionInfo: SessionInfo = {
+  hostname: "smarter-app-7d9f8c6b5-x2kqp",
+  user: "smarter_user",
+  command: "bash --login",
+  pid: 4242,
+  idle_timeout: 30 * 60,
+  max_duration: 8 * 60 * 60,
+};
+
+export const sessionMessage = { type: "session", ...sessionInfo };
+
+export const prompt = "\x1b[32msmarter_user@smarter-app\x1b[0m:\x1b[34m~\x1b[0m$ ";
