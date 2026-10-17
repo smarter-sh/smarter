@@ -189,3 +189,43 @@ Django Admin Console
    <img src="https://cdn.smarter.sh/docs/smarter-framework/smarter-web-dashboard/django-admin-console.png"
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Django Admin Console"/>
+
+Terminal
+~~~~~~~~
+
+The Terminal page, in the Workbench section of the sidebar, opens a bash shell inside the
+platform's own server container, in an xterm.js terminal window, so that an instructor can show
+a class the running platform from the inside: its files, its processes, its environment, and
+commands such as ``python manage.py shell`` and ``curl``. It is a real terminal, on a pseudo
+terminal, so job control, :kbd:`Ctrl+C`, tab completion and full screen programs such as ``vim``,
+``less`` and ``top`` work as they do anywhere else.
+
+The shell runs inside the server process that accepted the connection, which is one of the
+platform's replicas, chosen by the load balancer. Two windows may open on two different pods. The
+terminal says so when it starts, along with the pod's host name, and it warns that the session
+can end suddenly:
+
+- when the server restarts, or is redeployed or scaled down,
+- when the connection drops, or the page is reloaded or closed,
+- after 30 minutes without input, and after 8 hours in any case.
+
+When a session ends, its shell, and everything that it started, is stopped, so the terminal is a
+poor place for long-running processes. Files that it writes are in the container's file system,
+and disappear when the container is replaced. Press :kbd:`Enter` to start a new session.
+
+What the terminal showed is kept, though, in the browser tab: when the page is reloaded, or left
+and opened again in the same tab, it redraws the screen and its scrollback, up to 5,000 lines, says
+that the shell that drew them has ended, and starts a new session below. A full screen program's
+screen, e.g. ``vim``'s, is not kept. The screen is kept in the tab's ``sessionStorage``, which the
+browser clears when the tab is closed, because it can show credentials, e.g. the output of ``env``.
+
+The shell runs as the server's operating system user, with the server's environment, and so with
+every credential that the server has: the database's, the cloud provider's, and the LLM providers'
+api keys. For that reason the Terminal is off unless ``SMARTER_ENABLE_WEB_CONSOLE_TERMINAL`` is
+set to ``true``, and even then only superusers see it, or can open it. The page asks the server
+for a single use ticket, which is valid for a minute, and opens its WebSocket, ``/ws/terminal/``,
+with it, so that another site's page cannot open a terminal with a superuser's session cookie.
+Each session's start and end are logged, with its user, pod and shell, but what is typed is not,
+since it can include passwords. See
+:doc:`../smarter-framework/developer-reference/react-integration/terminal-application` for how it
+is built.

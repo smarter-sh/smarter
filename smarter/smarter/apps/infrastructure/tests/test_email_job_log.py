@@ -173,6 +173,32 @@ class TestEmailJobLogCommand(InfrastructureTestBase):
         self.assertIn("The log could not be read", sent.body)
         self.assertEqual(sent.attachments, [])
 
+    def test_summary(self):
+        """The summary file's text, redacted and escaped, is shown above the note about the log."""
+        self.log.write_text("OK\n", encoding="utf-8")
+        summary = self.log.with_suffix(".summary")
+        self.addCleanup(summary.unlink, missing_ok=True)
+        summary.write_text("Backup file: smarter.tar.gz <12 MiB>\nkey s3cr3t-value\n", encoding="utf-8")
+        with patch.dict(os.environ, {"SMARTER_MYSQL_ROOT_PASSWORD": "s3cr3t-value"}):
+            self.call(job="smarter-mysql-backup", summary=str(summary))
+        body = self.email.outbox[0].body
+        self.assertIn("<pre>Backup file: smarter.tar.gz &lt;12 MiB&gt;\nkey ********</pre>", body)
+        self.assertNotIn("s3cr3t-value", body)
+        self.assertLess(body.index("<pre>"), body.index("is attached as"))
+
+    def test_missing_or_empty_summary(self):
+        """A failed job may write no summary: the email is sent without one."""
+        self.log.write_text("FAILED\n", encoding="utf-8")
+        summary = self.log.with_suffix(".summary")
+        self.addCleanup(summary.unlink, missing_ok=True)
+        self.call(status=1, summary=str(summary))
+        summary.write_text("\n", encoding="utf-8")
+        self.call(status=1, summary=str(summary))
+        self.assertEqual(len(self.email.outbox), 2)
+        for sent in self.email.outbox:
+            self.assertNotIn("<pre>", sent.body)
+            self.assertEqual(len(sent.attachments), 1)
+
     def test_not_sent_does_not_fail(self):
         self.log.write_text("OK\n", encoding="utf-8")
         self.email.fail = "SMTP is down"

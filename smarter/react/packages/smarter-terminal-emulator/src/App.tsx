@@ -1,21 +1,22 @@
 /**
- * LLM API Prompt Passthrough
- * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
- *
+ * Terminal
+ * A bash shell inside the server's container, for superusers, in an xterm.js terminal window.
  */
+import type { SessionContext } from "@smarter/common";
+
 import Hero from "@/components/Hero";
 import TerminalEmulator from "@/components/Terminal";
 
 interface AppProps {
-  apiUrl: string;
+  sessionContext: SessionContext;
 }
 
-function App({ apiUrl }: AppProps) {
+function App({ sessionContext }: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="terminal-emulator">
         <Hero />
-        <TerminalEmulator apiUrl={apiUrl} />
+        <TerminalEmulator sessionContext={sessionContext} />
       </section>
     </>
   );
