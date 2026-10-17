@@ -47,14 +47,26 @@ class TestDashboardReactViews(TestAccountMixin):
         url = reverse(DASHBOARD, DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.terminal_emulator_view)
         self.assert_page(url, "smarter-terminal-emulator-root")
 
-    def test_sidebar_server_logs(self):
-        """Test that the sidebar has a Server Logs item only while server logs are viewable in the browser."""
+    def test_sidebar_has_no_server_logs(self):
+        """Test that the sidebar has no Server Logs item: the server logs are a tab of the Prompt Passthrough."""
         url = reverse(DASHBOARD, DropzoneReverseNames.namespace, DropzoneReverseNames.dropzone)
-        menu_item = b">Server Logs</span>"
-        with patch("smarter.apps.dashboard.context_processors.server_logs_enabled", return_value=False):
-            self.assertNotIn(menu_item, self.client.get(url).content)
-        with patch("smarter.apps.dashboard.context_processors.server_logs_enabled", return_value=True):
-            self.assertIn(menu_item, self.client.get(url).content)
+        with patch("smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled", return_value=True):
+            self.assertNotIn(b">Server Logs</span>", self.client.get(url).content)
+
+    def test_passthrough_log_stream_url(self):
+        """Test that the passthrough page has the log stream's url only while server logs are viewable."""
+        url = reverse(DASHBOARD, PassthroughReverseNames.namespace, PassthroughReverseNames.view)
+        stream = reverse(
+            DASHBOARD,
+            DashboardLogsReverseNames.namespace,
+            DashboardLogsApiReverseNames.namespace,
+            DashboardLogsApiReverseNames.stream,
+        )
+        enabled = "smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled"
+        with patch(enabled, return_value=True):
+            self.assertIn(f'smarter-log-stream-url="{stream}"'.encode(), self.client.get(url).content)
+        with patch(enabled, return_value=False):
+            self.assertIn(b'smarter-log-stream-url=""', self.client.get(url).content)
 
     def test_server_logs_are_not_found_while_disabled(self):
         """Test that the Server Logs page and its log stream are a 404 while server logs are disabled."""

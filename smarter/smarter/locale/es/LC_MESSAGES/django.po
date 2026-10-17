@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 20:52+0000\n"
+"POT-Creation-Date: 2026-10-17 21:56+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -1499,10 +1499,6 @@ msgid "Prompt Passthrough"
 msgstr "Prompt directo"
 
 #: smarter/templates/dashboard/sidebar.html
-msgid "Server Logs"
-msgstr "Registros del servidor"
-
-#: smarter/templates/dashboard/sidebar.html
 msgid "Models"
 msgstr "Modelos"
 
@@ -1903,6 +1899,9 @@ msgstr "Esquemas JSON de SAM"
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr "Acerca del contrato"
+
+#~ msgid "Server Logs"
+#~ msgstr "Registros del servidor"
 
 #~ msgid "Resources"
 #~ msgstr "Recursos"
