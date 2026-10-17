@@ -27,7 +27,14 @@
 # It is commonly used for production deployments where a lightweight Python environment is preferred.
 # This is important because the Smarter container image build exceeds 2.4 GB,
 # even when using the slim image as a base.
-FROM public.ecr.aws/docker/library/python:3.14-slim-trixie AS linux_base
+#
+# PYTHON_BASE_IMAGE lets a build pull the same image from somewhere else.
+# Anonymous ECR Public pulls have a monthly data quota per source IP, which
+# other users of GitHub's shared runner IPs exhaust ("toomanyrequests: Data
+# limit exceeded"). The Test workflow has no AWS credentials to authenticate
+# its pulls, so it sets this to Docker Hub's python image, where it is logged in.
+ARG PYTHON_BASE_IMAGE=public.ecr.aws/docker/library/python:3.14-slim-trixie
+FROM ${PYTHON_BASE_IMAGE} AS linux_base
 
 LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   description="Docker image for the Smarter Api and web console" \

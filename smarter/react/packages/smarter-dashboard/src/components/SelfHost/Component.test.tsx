@@ -19,5 +19,6 @@ describe("SelfHost", () => {
       "href",
       "https://docs.smarter.sh/en/latest/smarter-platform/installation.html",
     );
+    expect(within(selfHost).getByText("Open source · AGPL-3.0")).toBeInTheDocument();
   });
 });

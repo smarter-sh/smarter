@@ -1,9 +1,4 @@
-"""
-Test the dashboard's "My Resources" and "Aggregated Charges" api views,.
-
-:mod:`smarter.apps.dashboard.views.views.api.my_resources` and
-:mod:`smarter.apps.dashboard.views.views.api.charges`.
-"""
+"""Test the dashboard's "My Resources" api view, :mod:`smarter.apps.dashboard.views.views.api.my_resources`."""
 
 from http import HTTPStatus
 
@@ -13,7 +8,6 @@ from django.urls import reverse
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.views.views.api import my_resources
-from smarter.apps.dashboard.views.views.api.charges import AggregatedChargesPeriod
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import Extension
@@ -40,7 +34,7 @@ COUNTERS = (
 
 
 class TestDashboardApiViews(TestAccountMixin):
-    """Test MyResourcesView, its counters, and ChargesView."""
+    """Test MyResourcesView and its counters."""
 
     def setUp(self):
         super().setUp()
@@ -99,6 +93,8 @@ class TestDashboardApiViews(TestAccountMixin):
         for key in ("llmclients_url", "guardrails_url", "secrets_url", "custom_domains_url", "llmhosts_url"):
             with self.subTest(key=key):
                 self.assertTrue(data[key].startswith("/"))
+        # the pending deployments link opens the LLMClient list, narrowed to the LLMClients that it counts.
+        self.assertEqual(data["pending_deployments_url"], data["llmclients_url"] + "?filter=pending")
         self.assertEqual(data["mcpclients_url"], "/mcpclient/")
         self.assertNotIn("connections_qty", data)
 
@@ -148,31 +144,3 @@ class TestDashboardApiViews(TestAccountMixin):
         self.client.force_login(other_user)
         theirs = self.my_resources()
         self.assertNotEqual(mine["llmclients_qty"], theirs["llmclients_qty"])
-
-    def test_charges(self):
-        """Test that the aggregated charges are returned for each periodicity."""
-        periods = (
-            AggregatedChargesPeriod.HOUR,
-            AggregatedChargesPeriod.HALF_DAY,
-            AggregatedChargesPeriod.DAY,
-            AggregatedChargesPeriod.WEEK,
-            AggregatedChargesPeriod.MONTH,
-            AggregatedChargesPeriod.YEAR,
-        )
-        for periodicity in periods:
-            with self.subTest(periodicity=periodicity):
-                response = self.client.post(self.url(DashboardApiReverseNames.token_charges, periodicity=periodicity))
-                self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
-                json.loads(response.content)
-
-    def test_periods(self):
-        with self.assertRaises(ValueError):
-            AggregatedChargesPeriod.delta("2_weeks")
-        for periodicity in (AggregatedChargesPeriod.HOUR, AggregatedChargesPeriod.YEAR):
-            self.assertTrue(AggregatedChargesPeriod.grouping_fields(periodicity))
-
-    def test_charges_unknown_periodicity(self):
-        """Test that an unknown periodicity is a 400."""
-        self.client.raise_request_exception = False
-        response = self.client.post(self.url(DashboardApiReverseNames.token_charges, periodicity="2_weeks"))
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)

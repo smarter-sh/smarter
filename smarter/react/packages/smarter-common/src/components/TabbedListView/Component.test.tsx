@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { server } from "@test/server";
 
@@ -21,6 +21,62 @@ function setup() {
 }
 
 describe("TabbedListView", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("opens narrowed by the named filter of the page's url, and shows all again", async () => {
+    const filters: string[] = [];
+    server.use(
+      http.post(`${API_URL}:tab/`, ({ request }) => {
+        filters.push(new URL(request.url).searchParams.get("filter") ?? "");
+        return HttpResponse.json(examplePage(manyExamples(6), request.url));
+      }),
+    );
+    window.history.replaceState(null, "", "/examples/?filter=even&tab=owned");
+    const user = setup();
+
+    expect(screen.getByText("Showing: Even examples")).toBeInTheDocument();
+    expect(await screen.findByText("example_2")).toBeInTheDocument();
+    const names = () =>
+      rows()
+        .map((row) => row.textContent)
+        .filter((text) => text?.startsWith("example_"));
+    expect(names()).toEqual(["example_2", "example_4", "example_6"]);
+    await vi.waitFor(() => expect(filters).toEqual(["even", "even"]));
+
+    await user.click(screen.getByRole("button", { name: "Show all" }));
+    expect(await screen.findByText("example_1")).toBeInTheDocument();
+    expect(names()).toHaveLength(6);
+    expect(screen.queryByText("Showing: Even examples")).not.toBeInTheDocument();
+    expect(window.location.search).toBe("?tab=owned");
+    await vi.waitFor(() => expect(filters).toEqual(["even", "even", "", ""]));
+  });
+
+  it("neither shows nor writes the unfiltered cache while a filter applies", async () => {
+    server.use(
+      http.post(`${API_URL}:tab/`, ({ request }) => HttpResponse.json(examplePage(manyExamples(4), request.url))),
+    );
+    writeCache(makeCacheKey(API_URL, "owned"), [{ id: 9, name: "cached_example" }]);
+    window.history.replaceState(null, "", "/?filter=even");
+    setup();
+    expect(screen.queryByText("cached_example")).not.toBeInTheDocument();
+    expect(await screen.findByText("example_2")).toBeInTheDocument();
+    const cached = JSON.parse(sessionStorage.getItem(makeCacheKey(API_URL, "owned")) ?? "{}");
+    expect(cached.objects).toEqual([{ id: 9, name: "cached_example" }]);
+  });
+
+  it("drops a filter that the list api doesn't offer", async () => {
+    server.use(
+      http.post(`${API_URL}:tab/`, ({ request }) => HttpResponse.json(examplePage(manyExamples(3), request.url))),
+    );
+    window.history.replaceState(null, "", "/?filter=nonsense");
+    setup();
+    expect(screen.getByText("Showing: nonsense")).toBeInTheDocument();
+    expect(await screen.findByText("example_1")).toBeInTheDocument();
+    expect(screen.queryByText(/^Showing: /)).not.toBeInTheDocument();
+  });
+
   it("loads, and shows, your objects, and those shared with you", async () => {
     server.use(...listHandlers());
     const user = setup();

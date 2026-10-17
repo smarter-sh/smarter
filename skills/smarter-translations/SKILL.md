@@ -36,10 +36,13 @@ The Sphinx docs and the api's responses are not translated. The user-facing expl
   `interpolateNodes(gettext("Delete %(name)s?"), { name: <strong>{x.name}</strong> })`.
 - `smarter/static/js`: the global `gettext()` and `interpolate(fmt, obj, true)`.
 
-## Rules (the extractor enforces the first)
+## Rules (the extractor enforces the first two)
 
 - The message argument must be a **string literal** (or a concatenation of literals).
   `extract.ts` throws on `gettext(variable)` or a template literal with `${}`, with file:line.
+- No HTML entities in a React message: `gettext()` returns a string, and React shows its `&rarr;` literally.
+  Write the character itself (`"Build one →"`). `extract.ts` throws on `&name;`, `&#n;` and `&#xn;` in
+  `.tsx`/`.ts` files; `smarter/static/js` is exempt, since it may insert messages as HTML.
 - Whole sentences, never assembled from pieces (`` `${verb}d` ``, `"Search " + kind + "s"`).
   See `actionMessages()` in every list package's `Toolbar/Component.tsx`.
 - Counts use `ngettext`, never `x === 1 ? "" : "s"`.

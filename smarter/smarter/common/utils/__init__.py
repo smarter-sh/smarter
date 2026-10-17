@@ -23,6 +23,7 @@ from .decorators import camel_case, snake_case
 from .diagnostics import get_diagnostics
 from .dict import dict_is_contained_in, dict_is_subset, recursive_sort_dict
 from .file_handlers import get_readonly_csv_file, get_readonly_yaml_file
+from .repository import get_repository_url
 from .request import is_authenticated_request
 from .request_to_json import RequestData, request_to_json
 from .rfc1034_compliance import rfc1034_compliant_str, rfc1034_compliant_to_snake
@@ -45,6 +46,7 @@ __all__ = [
     "dict_is_contained_in",
     "dict_is_subset",
     "generate_fernet_encryption_key",
+    "get_repository_url",
     "get_semantic_version",
     "hash_factory",
     "is_authenticated_request",

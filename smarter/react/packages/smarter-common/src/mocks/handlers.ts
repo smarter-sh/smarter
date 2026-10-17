@@ -17,7 +17,11 @@ export function examplePage(examples: Example[], requestUrl: string, defaultPage
   const pageSize = Number(params.get("page_size")) || defaultPageSize;
   const requested = params.get("ordering") ?? "";
   const ordering = EXAMPLE_SORT_FIELDS.includes(requested.replace(/^-/, "")) ? requested : "";
-  const matches = examples.filter((example) => example.name.toLowerCase().includes(search));
+  // the list api's one named filter, "even": the examples with an even id. It ignores any other.
+  const filter = params.get("filter") === "even" ? "even" : "";
+  const matches = examples.filter(
+    (example) => example.name.toLowerCase().includes(search) && (!filter || example.id % 2 === 0),
+  );
   if (ordering) {
     const direction = ordering.startsWith("-") ? -1 : 1;
     matches.sort((a, b) => direction * (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
@@ -34,6 +38,8 @@ export function examplePage(examples: Example[], requestUrl: string, defaultPage
       search,
       ordering,
       sortFields: EXAMPLE_SORT_FIELDS,
+      filter,
+      filters: ["even"],
     },
   };
 }
