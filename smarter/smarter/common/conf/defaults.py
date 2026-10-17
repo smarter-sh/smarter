@@ -200,6 +200,7 @@ class SettingsDefaults:
     FERNET_ENCRYPTION_KEY = SecretStr(fernet)
 
     FILE_DROP_ZONE_ENABLED = bool_environment_variable("FILE_DROP_ZONE_ENABLED", True)
+    GITHUB_API_TOKEN: Optional[SecretStr] = optional_secret_env("GITHUB_API_TOKEN")
 
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "prompt_history")

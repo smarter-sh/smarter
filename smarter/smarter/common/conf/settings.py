@@ -2268,6 +2268,48 @@ class Settings(BaseSettings):
 
         return v
 
+    github_api_token: Optional[SecretStr] = Field(
+        settings_defaults.GITHUB_API_TOKEN,
+        description="A GitHub token for the GitHub REST api requests that retrieve remote SkillPlugin skills. Masked by pydantic SecretStr.",
+        examples=["github_pat_xxxxxxxxxxxxxxxxxxxxxxxx"],
+        title="GitHub API Token",
+    )
+    """
+    A GitHub token for the GitHub REST api requests that retrieve remote SkillPlugin skills.
+
+    A SkillPlugin whose skill is in a GitHub repository lists the skill's files with the GitHub
+    git trees api. Without a token those requests are anonymous, and GitHub limits them to 60 per
+    hour per client IP address. Hosts that share an address, such as GitHub Actions runners, reach
+    that limit quickly, and GitHub then responds with HTTP 403. A token raises the limit. It needs
+    no scopes or permissions to read public repositories. In GitHub Actions, the workflow's
+    ``GITHUB_TOKEN`` will do.
+
+    The token is sent only to ``api.github.com``. See
+    :py:func:`smarter.apps.llmtool.plugin.skill_sources.list_github_skill_files`.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``settings_defaults.GITHUB_API_TOKEN``, None if it is not set.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("github_api_token")
+    def validate_github_api_token(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `github_api_token` field.
+
+        Args:
+            v (Optional[SecretStr]): The GitHub token to validate.
+        Returns:
+            Optional[SecretStr]: The validated GitHub token, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.GITHUB_API_TOKEN
+        if is_missing_value(v):
+            return None
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"github_api_token of type {type(v)} is not a SecretStr")
+        return v
+
     internal_ip_prefixes: List[str] = Field(
         settings_defaults.INTERNAL_IP_PREFIXES,
         description="A list of internal IP prefixes used for security and middleware features.",
