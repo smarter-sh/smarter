@@ -10,10 +10,20 @@ import MyResources from "@/components/MyResources/Component";
 const apiUrl = appContext.myResourcesApiUrl;
 
 describe("MyResources", () => {
+  it("links pending deployments to the unfiltered list from an api without a pending link", async () => {
+    const { pending_deployments_url: _, ...older } = myResources;
+    server.use(http.post(apiUrl, () => HttpResponse.json(older)));
+    render(<MyResources apiUrl={apiUrl} />);
+    expect(await screen.findByRole("link", { name: "2 pending" })).toHaveAttribute("href", older.llmclients_url);
+  });
+
   it("counts a single pending deployment", async () => {
     server.use(http.post(apiUrl, () => HttpResponse.json({ ...myResources, pending_deployments: 1 })));
     render(<MyResources apiUrl={apiUrl} />);
-    expect(await screen.findByRole("link", { name: "1 pending" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "1 pending" })).toHaveAttribute(
+      "href",
+      "/workbench/?filter=pending",
+    );
     expect(screen.getByText(/^\s*deployment$/)).toBeInTheDocument();
   });
 

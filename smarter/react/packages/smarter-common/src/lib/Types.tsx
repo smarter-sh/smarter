@@ -37,14 +37,19 @@ export type Pagination = {
   ordering: string;
   /** The columns that the list api can sort by. */
   sortFields: string[];
+  /** The named filter that narrows the objects, e.g. "pending", or empty for none. */
+  filter?: string;
+  /** The named filters that the list api offers. */
+  filters?: string[];
 };
 
-/** The page of a list api's objects to request, the search that they match, and their order. All are optional. */
+/** The page of a list api's objects to request, the search and named filter that they match, and their order. All are optional. */
 export type ListQuery = {
   page?: number;
   pageSize?: number;
   search?: string;
   ordering?: string;
+  filter?: string;
 };
 
 /**
@@ -129,6 +134,11 @@ export type TabbedViewContext<TObject> = {
   objectType: TObject;
   objectTypeName: string;
   tabs: Tabs;
+  /**
+   * The labels of the list api's named filters, by name, e.g. { pending: "Pending deployment" }.
+   * A page opened with ?filter=<name> is narrowed by that filter, and shows its label.
+   */
+  filters?: Record<string, string>;
   ListView: React.ComponentType<ListViewBaseProps<TObject, SessionContext>>;
   CardView: React.ComponentType<CardViewBaseProps<TObject, SessionContext>>;
 };
