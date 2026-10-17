@@ -49,6 +49,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -480,24 +482,32 @@ class SAMMCPClientBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the LLMClients that use this MCPClient.
+    @classmethod
+    def dependents(cls, instance: MCPClient) -> SAMDependents:
+        """Return the LLMClients that use an MCPClient.
 
-        :return: A broker for each LLMClient that lists this MCPClient in its ``spec.mcpClients``.
-        :rtype: List[AbstractBroker]
+        :param instance: The MCPClient.
+        :type instance: MCPClient
+        :return: The LLMClients that list the MCPClient in their ``spec.mcpClients``.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.llmclient.models import LLMClient, LLMClientMCPClients
 
-        mcpclient = self.mcpclient
-        if not mcpclient:
-            return []
         llmclients = LLMClient.objects.filter(
-            id__in=LLMClientMCPClients.objects.filter(mcpclient=mcpclient).values("llmclient_id")
+            id__in=LLMClientMCPClients.objects.filter(mcpclient=instance).values("llmclient_id")
         )
-        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
+        return [(SAMKinds.LLM_CLIENT.value, llmclients)]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the LLMClients that use this MCPClient.
+
+        :return: A broker for each LLMClient that lists this MCPClient in its ``spec.mcpClients``.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.mcpclient)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the MCPClient.

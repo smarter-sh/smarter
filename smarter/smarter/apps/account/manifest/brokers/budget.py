@@ -47,6 +47,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -496,15 +498,29 @@ class SAMBudgetBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @classmethod
+    def dependents(cls, instance: Budget) -> SAMDependents:
+        """Return the resources that depend on a Budget.
+
+        No resource refers to a Budget. A Budget refers to the resources that it constrains, and deleting
+        it detaches it from them.
+
+        :param instance: The Budget.
+        :type instance: Budget
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
+    def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this Budget.
 
         No resource refers to a Budget. A Budget refers to the resources that it constrains, and deleting
         it detaches it from them.
 
         :return: An empty list.
-        :rtype: List[AbstractBroker]
+        :rtype: List[SAMDependency]
         """
         return []
 

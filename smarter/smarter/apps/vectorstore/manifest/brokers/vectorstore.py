@@ -63,6 +63,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -514,23 +516,29 @@ class SAMVectorstoreBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the Vectorsearches that search this Vectorstore.
+    @classmethod
+    def dependents(cls, instance: VectorstoreMeta) -> SAMDependents:
+        """Return the Vectorsearches that search a Vectorstore.
 
-        :return: A broker for each Vectorsearch whose ``spec.vectorstore`` is this Vectorstore.
-        :rtype: List[AbstractBroker]
+        :param instance: The VectorstoreMeta.
+        :type instance: VectorstoreMeta
+        :return: The Vectorsearches whose ``spec.vectorstore`` is the Vectorstore.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.vectorsearch.models import Vectorsearch
 
-        vectorstore = self.vectorstore
-        if not vectorstore:
-            return []
-        return self.dependency_brokers(
-            SAMKinds.VECTORSEARCH.value, Vectorsearch.objects.filter(vectorstore=vectorstore)
-        )
+        return [(SAMKinds.VECTORSEARCH.value, Vectorsearch.objects.filter(vectorstore=instance))]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the Vectorsearches that search this Vectorstore.
+
+        :return: A broker for each Vectorsearch whose ``spec.vectorstore`` is this Vectorstore.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.vectorstore)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Destroy the database and its data, unless deletionProtection is enabled, then delete the Vectorstore."""

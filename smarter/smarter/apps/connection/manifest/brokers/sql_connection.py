@@ -40,6 +40,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -1096,24 +1098,32 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         model = self.manifest.model_dump()
         return self.json_response_ok(command=command, data=model)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the SqlPlugins that use this SqlConnection.
+    @classmethod
+    def dependents(cls, instance: SqlConnection) -> SAMDependents:
+        """Return the SqlPlugins that use a SqlConnection.
 
-        :return: A broker for each SqlPlugin whose ``spec.connection`` is this SqlConnection.
-        :rtype: List[AbstractBroker]
+        :param instance: The SqlConnection.
+        :type instance: SqlConnection
+        :return: The SqlPlugins whose ``spec.connection`` is the SqlConnection.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
 
-        connection = self.connection
-        if not connection:
-            return []
         plugins = PluginMeta.objects.filter(
-            id__in=PluginDataSql.objects.filter(connection=connection).values("plugin_id")
+            id__in=PluginDataSql.objects.filter(connection=instance).values("plugin_id")
         )
-        return self.dependency_brokers(SAMKinds.SQL_PLUGIN.value, plugins)
+        return [(SAMKinds.SQL_PLUGIN.value, plugins)]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the SqlPlugins that use this SqlConnection.
+
+        :return: A broker for each SqlPlugin whose ``spec.connection`` is this SqlConnection.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.connection)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
