@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.0...v0.33.1-alpha.1) (2026-10-17)
+
+### Bug Fixes
+
+* **passthrough:** show each prompt's server logs in a server logs tab ([c46eb29](https://github.com/smarter-sh/smarter/commit/c46eb29b21de1faf2afc4cad5bce949839fd45ed))
+
 ## [0.33.0](https://github.com/smarter-sh/smarter/compare/v0.32.2...v0.33.0) (2026-10-17)
 
 ### Features
