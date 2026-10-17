@@ -13,7 +13,7 @@ function TemplateSelector({ value, onChange }: TemplateSelectorProps) {
   return (
     <select
       aria-label={gettext("Prompt template")}
-      className="form-select form-select-sm ms-auto"
+      className="form-select form-select-sm"
       style={{ width: "220px" }}
       value={selectedValue}
       onChange={(e) => {

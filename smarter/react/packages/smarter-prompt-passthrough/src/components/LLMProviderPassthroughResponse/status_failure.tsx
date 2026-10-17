@@ -6,7 +6,7 @@ export default function FailureEmoji() {
   const [randomEmoji] = useState(() => failureEmojis[Math.floor(Math.random() * failureEmojis.length)]);
 
   return (
-    <span role="img" aria-label="failure">
+    <span role="img" aria-label="failure" className="fs-3">
       {randomEmoji}
     </span>
   );

@@ -4,7 +4,14 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import ExtensionPage from "@/components/ExtensionPage";
-import { API_URL, brokenDetail, detailContext, disabledDetail, makeDetail } from "@/mocks/fixtures";
+import {
+  API_URL,
+  brokenDetail,
+  detailContext,
+  disabledDetail,
+  makeDetail,
+  readOnlyDetailContext,
+} from "@/mocks/fixtures";
 import { detailHandlers, errorHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
@@ -34,6 +41,17 @@ describe("ExtensionPage", () => {
     expect(await screen.findByText("Disabled Weather.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Enable" }));
     expect(await screen.findByText("Enabled Weather.")).toBeInTheDocument();
+  });
+
+  it("is read-only for a user who is not a superuser", async () => {
+    server.use(...detailHandlers());
+    renderPage({ context: readOnlyDetailContext });
+    expect(await screen.findByRole("heading", { level: 1, name: "Weather" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^(Enable|Disable|Update to|Uninstall)/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/is available. You have/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Settings" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Availability" })).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Tools" })).toBeInTheDocument();
   });
 
   it("can't be enabled until its required settings are configured", async () => {

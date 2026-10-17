@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 12:24+0000\n"
+"POT-Creation-Date: 2026-10-17 21:11+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -51,7 +51,7 @@ msgstr "ID"
 msgid "Manifest URL"
 msgstr "URL du manifeste"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Owner"
 msgstr "Propriétaire"
 
@@ -63,7 +63,7 @@ msgstr "E-mail du propriétaire"
 msgid "Account Number"
 msgstr "Numéro de compte"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Created"
 msgstr "Créée"
 
@@ -79,11 +79,11 @@ msgstr "Version"
 msgid "Description"
 msgstr "Description"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Tags"
 msgstr "Étiquettes"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Annotations"
 msgstr "Annotations"
 
@@ -107,7 +107,7 @@ msgstr "Chargement..."
 msgid "Name"
 msgstr "Nom"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Updated"
 msgstr "Mis à jour"
 
@@ -697,7 +697,7 @@ msgstr "Domaine"
 msgid "Verification Status"
 msgstr "État de la vérification"
 
-#. Translators: used in react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+#. Translators: used in react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 msgid "Verified"
 msgstr "Vérifié"
 
@@ -759,7 +759,7 @@ msgid_plural "%(recordCount)s DNS records"
 msgstr[0] "%(recordCount)s enregistrement DNS"
 msgstr[1] "%(recordCount)s enregistrements DNS"
 
-#. Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx
+#. Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
 msgid "Verifying"
 msgstr "Vérification en cours"
 
@@ -988,7 +988,7 @@ msgstr "Des outils puissants pour gérer vos ressources d'IA."
 msgid "Example CLI session"
 msgstr "Exemple de session CLI"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx, react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx, react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 msgid "Download"
 msgstr "Télécharger"
 
@@ -1946,6 +1946,10 @@ msgstr ""
 "Aucune extension installée. Parcourez le registre ou téléversez une archive."
 
 #. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
+msgid "No extensions are installed."
+msgstr "Aucune extension n’est installée."
+
+#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 msgid "Extension"
 msgstr "Extension"
 
@@ -1961,7 +1965,7 @@ msgstr "Source"
 msgid "Enabled"
 msgstr "Activée"
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
+#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 msgid "Error"
 msgstr "Erreur"
 
@@ -2158,7 +2162,7 @@ msgstr "Désinstallation"
 msgid "Uninstall %(displayName)s"
 msgstr "Désinstaller %(displayName)s"
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx
+#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Slug"
 msgstr "Slug"
 
@@ -2819,7 +2823,7 @@ msgstr "URL de base du bac à sable"
 msgid "Hostname"
 msgstr "Nom d'hôte"
 
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx
 msgid "Base URL"
 msgstr "URL de base"
 
@@ -2854,7 +2858,7 @@ msgstr ""
 msgid "URL Chatapp"
 msgstr "URL de l'application de chat"
 
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
+#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 msgid "Model"
 msgstr "Modèle"
 
@@ -3826,7 +3830,7 @@ msgstr "Aucun problème"
 msgid "Line %(line)s"
 msgstr "Ligne %(line)s"
 
-#. Translators: used in react/packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
+#. Translators: used in react/packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 msgid "Copied to clipboard"
 msgstr "Copié dans le presse-papiers"
 
@@ -4216,72 +4220,89 @@ msgid "Delete: Delete this orchestrator resource"
 msgstr "Supprimer : supprimer cette ressource orchestrateur"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
+msgid "Unverified"
+msgstr "Non vérifié"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
+msgid "Verification failed"
+msgstr "Échec de la vérification"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+msgid "Suspended"
+msgstr "Suspendu"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+msgid "Deprecated"
+msgstr "Obsolète"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
 msgid "%(name)s logo"
 msgstr "Logo de %(name)s"
 
+#. Translators: when an email address was verified, e.g. "Verified Oct 15, 2026".
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Slug:"
-msgstr "Slug :"
+msgid "Verified %(date)s"
+msgstr "Vérifié le %(date)s"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Default model:"
-msgstr "Modèle par défaut :"
+msgid "Not verified"
+msgstr "Non vérifié"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "API Key Secret Name:"
-msgstr "Nom du Secret de la clé d'API :"
+msgid "Connection"
+msgstr "Connexion"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Connectivity path:"
-msgstr "Chemin de connectivité :"
+msgid "Default model"
+msgstr "Modèle par défaut"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Account:"
-msgstr "Compte :"
+msgid "Connectivity path"
+msgstr "Chemin de connectivité"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "User:"
-msgstr "Utilisateur :"
+msgid "API key secret"
+msgstr "Secret de la clé d'API"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "TOS accepted:"
-msgstr "CGU acceptées :"
+msgid "Ownership"
+msgstr "Propriété"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "TOS accepted by:"
-msgstr "CGU acceptées par :"
+msgid "Account"
+msgstr "Compte"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "TOS accepted at:"
-msgstr "CGU acceptées le :"
+msgid "Ownership requested"
+msgstr "Propriété demandée"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Ownership requested:"
-msgstr "Propriété demandée :"
+msgid "Terms of service"
+msgstr "Conditions d'utilisation"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Created:"
-msgstr "Créé :"
+msgid "Accepted"
+msgstr "Acceptées"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Updated:"
-msgstr "Mis à jour :"
+msgid "Accepted by"
+msgstr "Acceptées par"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Tags:"
-msgstr "Étiquettes :"
+msgid "Accepted on"
+msgstr "Acceptées le"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Annotations:"
-msgstr "Annotations :"
+msgid "Contact"
+msgstr "Contact"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Contact:"
-msgstr "Contact :"
+msgid "Contact email"
+msgstr "E-mail de contact"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Support:"
-msgstr "Assistance :"
+msgid "Support email"
+msgstr "E-mail d'assistance"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 msgid "Default"
@@ -4292,20 +4313,22 @@ msgid "Featured"
 msgstr "En vedette"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
-msgid "Deprecated"
-msgstr "Obsolète"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 msgid "Flagged"
 msgstr "Signalé"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
-msgid "Suspended"
-msgstr "Suspendu"
+msgid "Flags"
+msgstr "Indicateurs"
 
+#. Translators: a provider flag that is set, e.g. "Featured: yes".
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
-msgid "Flags:"
-msgstr "Indicateurs :"
+msgid "%(flag)s: yes"
+msgstr "%(flag)s : oui"
+
+#. Translators: a provider flag that isn't set, e.g. "Featured: no".
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+msgid "%(flag)s: no"
+msgstr "%(flag)s : non"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx
 msgid "Website"
@@ -4323,6 +4346,22 @@ msgstr "Conditions"
 msgid "Privacy"
 msgstr "Confidentialité"
 
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx
+msgid "Provider links"
+msgstr "Liens du fournisseur"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
+msgid "LLM provider"
+msgstr "Fournisseur de LLM"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/TemplateSelector/Component.tsx
+msgid "Prompt template"
+msgstr "Modèle de prompt"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+msgid "Endpoint"
+msgstr "Point de terminaison"
+
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx
 msgid "SENDING..."
 msgstr "ENVOI..."
@@ -4332,21 +4371,87 @@ msgid "SEND"
 msgstr "ENVOYER"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-msgid "(prompting LLM...)"
-msgstr "(interrogation du LLM...)"
+msgid "Network error"
+msgstr "Erreur réseau"
 
-#. Translators: %(span)s is the request's status, e.g. (prompting LLM...), and an emoji.
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
+msgid "Copy JSON"
+msgstr "Copier le JSON"
+
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-msgid "HTTP Response Body %(span)s"
-msgstr "Corps de la réponse HTTP %(span)s"
+msgid "Waiting for the provider's response…"
+msgstr "En attente de la réponse du fournisseur…"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "No response yet"
+msgstr "Pas encore de réponse"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Send a request, and the provider's response will appear here."
+msgstr "Envoyez une requête, et la réponse du fournisseur apparaîtra ici."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "The response isn't JSON. It's shown below, as it is."
+msgstr ""
+"La réponse n'est pas du JSON. Elle est affichée ci-dessous, telle quelle."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
+msgid "Response"
+msgstr "Réponse"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Time to respond"
+msgstr "Temps de réponse"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Response size"
+msgstr "Taille de la réponse"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Raw response"
+msgstr "Réponse brute"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Raw JSON"
+msgstr "JSON brut"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Response JSON"
+msgstr "JSON de la réponse"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "Reply"
+msgstr "Réponse du modèle"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "Tool calls"
+msgstr "Appels d'outils"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "The reply is empty."
+msgstr "La réponse est vide."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "Finish reason"
+msgstr "Raison de fin"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "Tokens"
+msgstr "Jetons"
+
+#. Translators: token counts of a prompt, e.g. "13 prompt · 7 completion · 20 total".
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "%(prompt)s prompt · %(completion)s completion · %(total)s total"
+msgstr ""
+"%(prompt)s de prompt · %(completion)s de complétion · %(total)s au total"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "Stack trace"
+msgstr "Trace de la pile"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviders.tsx
 msgid "Failed to fetch providers: %(status)s"
 msgstr "Impossible de récupérer les fournisseurs : %(status)s"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
-msgid "LLM provider"
-msgstr "Fournisseur de LLM"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
 msgid "No providers available"
@@ -4355,14 +4460,6 @@ msgstr "Aucun fournisseur disponible"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 msgid "LLM Provider API Passthrough"
 msgstr "Accès direct à l'API du fournisseur de LLM"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
-msgid "Response"
-msgstr "Réponse"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/TemplateSelector/Component.tsx
-msgid "Prompt template"
-msgstr "Modèle de prompt"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 msgid "File New"
@@ -4375,10 +4472,6 @@ msgstr "Enregistrer le fichier"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 msgid "Format JSON"
 msgstr "Formater le JSON"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
-msgid "Copy JSON"
-msgstr "Copier le JSON"
 
 #. Translators: used in react/packages/smarter-provider-list/src/App.tsx
 msgid "Your Providers"
@@ -5193,10 +5286,6 @@ msgid "Index or Collection"
 msgstr "Index ou collection"
 
 #. Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
-msgid "Endpoint"
-msgstr "Point de terminaison"
-
-#. Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "ApiConnection"
 msgstr "ApiConnection"
 
@@ -5705,6 +5794,45 @@ msgstr "La confirmation du mot de passe est obligatoire"
 #. Translators: used in smarter/static/js/coming-soon.js
 msgid "Added"
 msgstr "Ajouté"
+
+#~ msgid "(prompting LLM...)"
+#~ msgstr "(interrogation du LLM...)"
+
+#~ msgid "HTTP Response Body %(span)s"
+#~ msgstr "Corps de la réponse HTTP %(span)s"
+
+#~ msgid "Slug:"
+#~ msgstr "Slug :"
+
+#~ msgid "API Key Secret Name:"
+#~ msgstr "Nom du Secret de la clé d'API :"
+
+#~ msgid "User:"
+#~ msgstr "Utilisateur :"
+
+#~ msgid "TOS accepted:"
+#~ msgstr "CGU acceptées :"
+
+#~ msgid "TOS accepted by:"
+#~ msgstr "CGU acceptées par :"
+
+#~ msgid "TOS accepted at:"
+#~ msgstr "CGU acceptées le :"
+
+#~ msgid "Created:"
+#~ msgstr "Créé :"
+
+#~ msgid "Updated:"
+#~ msgstr "Mis à jour :"
+
+#~ msgid "Tags:"
+#~ msgstr "Étiquettes :"
+
+#~ msgid "Annotations:"
+#~ msgstr "Annotations :"
+
+#~ msgid "Support:"
+#~ msgstr "Assistance :"
 
 #~ msgid "Failed to load service health: %(error)s"
 #~ msgstr "Impossible de charger l'état des services : %(error)s"

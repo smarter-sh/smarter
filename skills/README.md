@@ -42,6 +42,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-course-design`                | You're designing a course for the Free Course Catalog in the docs.                 |
 | `blog.smarter.sh-release-announcement` | You're writing a release announcement post for blog.smarter.sh.                    |
 | `blog.smarter.sh-blog-post`            | You're writing any other article for blog.smarter.sh.                              |
+| `blog.smarter.sh-publish`              | You're publishing, drafting or updating a post on the WordPress blog yourself.     |
 
 ### Layout of a skill
 

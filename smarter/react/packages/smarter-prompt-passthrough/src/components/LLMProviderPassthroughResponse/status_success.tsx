@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import "@/components/LLMProviderPassthroughResponse/styles.css";
 
 const successEmojis = [
   "🎉",
