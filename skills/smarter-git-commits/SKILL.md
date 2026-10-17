@@ -58,13 +58,23 @@ semantic-release (`release.config.js`) to version the release.
 
 - **type:** `feat`, `fix`, `test`, `docs`, `refactor`, `perf`, `style`,
   `build`, `ci`, or `chore`.
-  - `feat` is a user-visible capability, and `fix` is a bug fix. Both trigger a
-    release.
+  - `feat` is reserved for a **truly new feature**: a new Django app, a new
+    React app, a new SAM resource kind, or another major addition to an existing
+    app. `feat` triggers a minor release, so it must be rare. When in doubt, it
+    is `fix`.
+  - `fix` is a bug fix, and that includes UI and UX defects and other
+    shortcomings of something that already exists, even when the fix adds
+    controls, options or keyboard shortcuts. `fix` triggers a patch release.
+  - Refactoring is `refactor`, never `feat`, even when it moves a feature to a
+    new place.
   - Use `chore` for data-only or housekeeping changes, such as example manifests
     or model defaults. Don't use `feat` for them.
-  - Work that the user asked for as a list of bugs is `fix`, even when it adds a
-    small capability along the way. Use `feat` only when the user framed the
-    work as a new feature.
+  - Anti-example: a log viewer tab that lacked a horizontal scroll bar, a wrap
+    toggle and keyboard navigation got all three, plus a filter, copy and full
+    screen. Its commit was written as
+    `feat(chat): add keyboard navigation and a toolbar to the server logs`,
+    and the user corrected it to `fix`: it repaired UI defects in an existing
+    tab, however much code it took.
 - **scope:** the Django app or area that the change centers on, in lower case:
   `llmclient`, `guardrail`, `plugin`, `passthrough`, `react`, `api`, ... You
   can omit it for changes that span the whole repository.

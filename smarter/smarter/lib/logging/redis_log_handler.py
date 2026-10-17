@@ -16,6 +16,7 @@ Main Components
 - ``smarter.lib.logging.redis_log_handler.RedisLogHandler``: A custom logging handler that publishes log records to Redis channels, supporting both job-specific and global log streams.
 - ``smarter.lib.logging.redis_log_handler.job_id_factory``: Utility function to generate unique job IDs for associating logs with specific jobs or tasks.
 - ``smarter.lib.logging.redis_log_handler.user_id_context``: Context variable for tracking the current job ID within the logging context.
+- ``smarter.lib.logging.redis_log_handler.request_id_context``: Context variable for the current request's id, which each published log record carries, so that a log stream can be narrowed to one request.
 - ``smarter.lib.logging.redis_log_handler.GLOBAL_LOG_CHANNEL``: The Redis channel name used for publishing all logs globally.
 
 Features
@@ -79,6 +80,7 @@ Example Usage
 import atexit
 import os
 import queue
+import re
 import threading
 import uuid
 from contextvars import ContextVar
@@ -93,6 +95,14 @@ if TYPE_CHECKING:
     from redis import Redis
 
 CONTEXT_NAME = "user_id"
+REQUEST_ID_CONTEXT_NAME = "request_id"
+REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+"""
+The form of a request id: up to 64 letters, digits, underscores and hyphens.
+
+A request id is sent by the browser, in the ``X-Smarter-RequestId`` header, so it is validated
+before it is attached to log records. See :func:`valid_request_id`.
+"""
 CHANNEL_PREFIX = "logs"
 GLOBAL_LOG_CHANNEL = "global"
 MAX_BATCH = 100
@@ -112,6 +122,7 @@ logger_prefix = logging.formatted_text(__name__)
 
 _redis_cache_holder = {"client": None}
 user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
+request_id_context: ContextVar[str | None] = ContextVar(REQUEST_ID_CONTEXT_NAME, default=None)
 log_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
 
 
@@ -144,6 +155,22 @@ def job_id_factory(prefix: str = "job") -> str:
     :rtype: str
     """
     return f"{prefix}_{str(uuid.uuid4())}"
+
+
+def valid_request_id(request_id: Optional[str]) -> Optional[str]:
+    """
+    Return a request id if it has the form of one, or else None.
+
+    :param request_id: A request id, e.g. the value of a request's ``X-Smarter-RequestId`` header.
+    :type request_id: Optional[str]
+    :return: The request id, stripped, or None if it is missing or does not match
+        :data:`REQUEST_ID_PATTERN`.
+    :rtype: Optional[str]
+    """
+    if not request_id:
+        return None
+    request_id = request_id.strip()
+    return request_id if REQUEST_ID_PATTERN.match(request_id) else None
 
 
 def build_channel(name: str) -> str:
@@ -373,7 +400,8 @@ class RedisLogHandler(logging.Handler):
 
         This method formats the log record and publishes it to the appropriate Redis channels.
         If a job ID is present in the current context, the log record is published to the job-specific
-        channel. All log records are also published to the global log channel.
+        channel. All log records are also published to the global log channel. While a request id is
+        set in :obj:`request_id_context`, the record carries it as ``request_id``.
 
         :param record: The log record to be emitted.
         :type record: logging.LogRecord
@@ -392,6 +420,9 @@ class RedisLogHandler(logging.Handler):
                 "logger": record.name,
                 "pod": os.getenv("HOSTNAME"),
             }
+            request_id = request_id_context.get()
+            if request_id:
+                payload["request_id"] = request_id
 
             data = json.dumps(payload)
 
@@ -430,6 +461,8 @@ __all__ = [
     "get_user_context",
     "GLOBAL_LOG_CHANNEL",
     "user_id_context",
+    "request_id_context",
+    "valid_request_id",
     "RedisLogHandler",
     "job_id_factory",
 ]

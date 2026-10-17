@@ -12,6 +12,7 @@ This module provides Django middleware that injects a per-request logging contex
 - **Async-safe logging context propagation**: Works seamlessly with both synchronous and asynchronous Django views, ensuring context is preserved across async boundaries.
 - **Real-time log filtering**: Supports real-time log filtering in the Smarter Terminal Emulator for improved debugging and monitoring.
 - **User-scoped or anonymous request tracing**: Authenticated users are identified in logs by their model and username; anonymous users receive a UUID-based identifier.
+- **Request-scoped log streams**: the request id that a web console React app sends in the ``X-Smarter-RequestId`` header is attached to every log record of the request, so that the app can stream the server logs of that one request, e.g. the Server Logs tab of the Prompt Passthrough.
 
 Features
 --------
@@ -63,8 +64,12 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .redis_log_handler import (
     get_user_context,
     job_id_factory,
+    request_id_context,
     user_id_context,
+    valid_request_id,
 )
+
+REQUEST_ID_HEADER = "X-Smarter-RequestId"
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -91,6 +96,10 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
     Anonymous users receive:
         UUID-based request identifiers.
+
+    The request's ``X-Smarter-RequestId`` header, when it is a valid request id, is set in
+    :obj:`smarter.lib.logging.redis_log_handler.request_id_context`, so that each log record of
+    the request carries it.
     """
 
     sync_capable = True
@@ -110,11 +119,13 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         context = self.get_sync_context(request)
         logger.debug("%s called. Setting context=%s", self.formatted_class_name, context)
         token = self.set_logging_context(context)
+        request_token = request_id_context.set(self.get_request_id(request))
         # purge_log_context(context)
 
         try:
             return self.get_response(request)
         finally:
+            request_id_context.reset(request_token)
             self.reset_logging_context(token)
             logger.debug("%s reset logging context=%s", self.formatted_class_name, context)
 
@@ -129,10 +140,12 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
         logger.debug("%s setting async logging context=%s", self.formatted_class_name, context)
         token = self.set_logging_context(context)
+        request_token = request_id_context.set(self.get_request_id(request))
 
         try:
             return await async_get_response(request)
         finally:
+            request_id_context.reset(request_token)
             self.reset_logging_context(token)
             logger.debug("%s reset async logging context=%s", self.formatted_class_name, context)
 
@@ -152,6 +165,19 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         """Restore previous logging context."""
 
         user_id_context.reset(token)
+
+    @staticmethod
+    def get_request_id(request: HttpRequest) -> str | None:
+        """
+        Return the request's ``X-Smarter-RequestId`` header, if it is a valid request id.
+
+        :param request: The request.
+        :type request: django.http.HttpRequest
+        :return: The request id, or None.
+        :rtype: str | None
+        """
+        headers = getattr(request, "headers", None)
+        return valid_request_id(headers.get(REQUEST_ID_HEADER) if headers is not None else None)
 
     def get_sync_context(self, request: HttpRequest) -> str:
         """Resolve logging context for sync requests."""

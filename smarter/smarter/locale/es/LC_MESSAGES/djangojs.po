@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 21:11+0000\n"
+"POT-Creation-Date: 2026-10-17 21:57+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -4411,6 +4411,162 @@ msgstr "No hay proveedores disponibles"
 msgid "LLM Provider API Passthrough"
 msgstr "Acceso directo a la API del proveedor de LLM"
 
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx
+msgid "Server Logs"
+msgstr "Registros del servidor"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
+msgid "Send a request to see its server logs here."
+msgstr "Envíe una solicitud para ver aquí sus registros del servidor."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Top"
+msgstr "Inicio"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Bottom, and follow new records"
+msgstr "Final, y seguir los registros nuevos"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Up a line"
+msgstr "Subir una línea"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Down a line"
+msgstr "Bajar una línea"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Up a page"
+msgstr "Subir una página"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Down a page"
+msgstr "Bajar una página"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Scroll left"
+msgstr "Desplazar a la izquierda"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Scroll right"
+msgstr "Desplazar a la derecha"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Start of the lines"
+msgstr "Inicio de las líneas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "End of the longest line"
+msgstr "Final de la línea más larga"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Wrap long lines, or scroll them"
+msgstr "Ajustar las líneas largas, o desplazarlas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Follow new records, or stop"
+msgstr "Seguir los registros nuevos, o dejar de seguirlos"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Filter the lines"
+msgstr "Filtrar las líneas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Copy the lines"
+msgstr "Copiar las líneas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Full screen, or not"
+msgstr "Pantalla completa, o no"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Show these shortcuts, or hide them"
+msgstr "Mostrar estos atajos, u ocultarlos"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Leave full screen, hide the shortcuts, or clear the filter"
+msgstr "Salir de la pantalla completa, ocultar los atajos, o borrar el filtro"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Connecting to the server log stream..."
+msgstr "Conectando al flujo de registros del servidor..."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "%(shown)s of %(total)s lines match."
+msgstr "%(shown)s de %(total)s líneas coinciden."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Streaming server logs..."
+msgstr "Transmitiendo los registros del servidor..."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Streaming server logs... There are none yet."
+msgstr "Transmitiendo los registros del servidor... Todavía no hay ninguno."
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Filter the server logs"
+msgstr "Filtrar los registros del servidor"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Filter (/)"
+msgstr "Filtrar (/)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Wrap lines"
+msgstr "Ajustar líneas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Scroll long lines (w)"
+msgstr "Desplazar las líneas largas (w)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Wrap long lines (w)"
+msgstr "Ajustar las líneas largas (w)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Follow"
+msgstr "Seguir"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Stop following new records (s)"
+msgstr "Dejar de seguir los registros nuevos (s)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Follow new records (s)"
+msgstr "Seguir los registros nuevos (s)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Copied"
+msgstr "Copiado"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Copy the lines (c)"
+msgstr "Copiar las líneas (c)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Full screen"
+msgstr "Pantalla completa"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Leave full screen (F, Esc)"
+msgstr "Salir de la pantalla completa (F, Esc)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Full screen (F)"
+msgstr "Pantalla completa (F)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Keyboard shortcuts"
+msgstr "Atajos de teclado"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Keyboard shortcuts (?)"
+msgstr "Atajos de teclado (?)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Server logs"
+msgstr "Registros del servidor"
+
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 msgid "File New"
 msgstr "Archivo nuevo"
@@ -4422,6 +4578,10 @@ msgstr "Guardar archivo"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 msgid "Format JSON"
 msgstr "Formatear JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/lib/logStream.ts
+msgid "The log stream disconnected. Reconnecting..."
+msgstr "El flujo de registros se desconectó. Reconectando..."
 
 #. Translators: used in react/packages/smarter-provider-list/src/App.tsx
 msgid "Your Providers"
@@ -5012,10 +5172,6 @@ msgstr ""
 #. Translators: used in react/packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 msgid "Delete: Delete this secret resource"
 msgstr "Eliminar: elimina este recurso secreto"
-
-#. Translators: used in react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx
-msgid "Server Logs"
-msgstr "Registros del servidor"
 
 #. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
 msgid "Log terminal"
