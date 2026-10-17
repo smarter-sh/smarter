@@ -100,7 +100,7 @@ function SelfHost() {
             >
               {gettext("Installation Guide")}
             </a>
-            <span className="selfhost-license">{gettext("Open source &middot; AGPL-3.0")}</span>
+            <span className="selfhost-license">{gettext("Open source · AGPL-3.0")}</span>
           </div>
           {/* end::Action */}
         </div>
