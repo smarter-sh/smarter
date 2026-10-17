@@ -8,6 +8,9 @@
  * - Monaco-based JSON editor for composing request payloads
  * - Editor toolbar for common actions
  * - SEND button that POSTs the request and displays the response
+ * - a Server Logs tab, with the server logs of the request that was sent last, while server
+ *   logs are enabled (logStreamUrl). Each request has its own X-Smarter-RequestId, and the tab
+ *   streams the logs that it tagged.
  *
  * CSRF token validation is performed via cookie lookup before each request.
  * The API response is rendered by the Response component below the editor.
@@ -31,6 +34,8 @@ import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
 import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
 import type { PassthroughResponse } from "@/components/LLMProviderPassthroughResponse/summary";
 import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
+import ServerLogs from "@/components/ServerLogs";
+import { logStreamUrlForRequest, newRequestId, useLogStream } from "@/lib/logStream";
 
 import "@/components/Prompt/styles.css";
 
@@ -39,9 +44,19 @@ interface PromptProps {
   defaultLLMProviderId: number;
   defaultTemplateId: number;
   providerApiUrl: string;
+  /** The server log stream's url, or empty while server logs are disabled: then there is no Server Logs tab. */
+  logStreamUrl?: string;
 }
 
-function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, providerApiUrl }: PromptProps) {
+type PromptTab = "request" | "response" | "logs";
+
+function Prompt({
+  sessionContext,
+  defaultLLMProviderId,
+  defaultTemplateId,
+  providerApiUrl,
+  logStreamUrl = "",
+}: PromptProps) {
   // UI state
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -61,7 +76,12 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
 
   // Final request JSON state (function of providersJson, llmProviderId, templateId, defaultModel)
   const [requestJson, setRequestJson] = useState("");
-  const [activeTab, setActiveTab] = useState<"request" | "response">("request");
+  const [activeTab, setActiveTab] = useState<PromptTab>("request");
+
+  // the server logs of the request that was sent last. The stream stays connected while another
+  // tab is selected, so that its logs keep arriving.
+  const [logRequestId, setLogRequestId] = useState<string | null>(null);
+  const logStream = useLogStream(logStreamUrlForRequest(logStreamUrl || null, logRequestId));
 
   // when the providers arrive: select the default one, and generate the initial request JSON
   // from it and the current template. An effect event, so that it reads the current templateId
@@ -123,10 +143,13 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
     // the response tab shows that the request is on its way.
     setActiveTab("response");
     const started = performance.now();
+    // the request's own id, which tags its server logs.
+    const requestId = newRequestId();
+    setLogRequestId(requestId);
     try {
       // ApiUrl is absolute when Django renders the page, and relative in the Vite dev server's index.html.
       const url = new URL(providerSlug + "/", new URL(sessionContext.ApiUrl, window.location.href)).toString();
-      const res = await fetchDjangoUrl(sessionContext, url, requestJson);
+      const res = await fetchDjangoUrl({ ...sessionContext, smarterRequestId: requestId }, url, requestJson);
       const text = await res.text();
       // a body that isn't JSON, such as a proxy's HTML error page, is shown as it is.
       let body: unknown = text;
@@ -186,6 +209,19 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
                 {gettext("Response")}
               </button>
             </li>
+            {logStreamUrl && (
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link ${activeTab === "logs" ? "active" : ""}`}
+                  type="button"
+                  onClick={() => setActiveTab("logs")}
+                  role="tab"
+                  aria-selected={activeTab === "logs"}
+                >
+                  {gettext("Server Logs")}
+                </button>
+              </li>
+            )}
           </ul>
 
           {activeTab === "request" && (
@@ -208,6 +244,15 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
 
           {activeTab === "response" && (
             <LLMProviderPassthroughResponse apiResponse={apiResponse} isProcessing={isSending} />
+          )}
+
+          {activeTab === "logs" && logStreamUrl && (
+            <div className="passthrough-server-logs rounded p-3">
+              <ServerLogs
+                {...logStream}
+                idleText={logRequestId ? null : gettext("Send a request to see its server logs here.")}
+              />
+            </div>
           )}
         </div>
         {activeTab === "request" && <LLMProviderMetaData provider={selectedProviderJson} />}

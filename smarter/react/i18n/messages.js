@@ -1992,12 +1992,92 @@ gettext("Failed to fetch providers: %(status)s");
 gettext("No providers available");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 gettext("LLM Provider API Passthrough");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx
+gettext("Server Logs");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
+gettext("Send a request to see its server logs here.");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Top");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Bottom, and follow new records");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Up a line");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Down a line");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Up a page");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Down a page");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Scroll left");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Scroll right");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Start of the lines");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("End of the longest line");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Wrap long lines, or scroll them");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Follow new records, or stop");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Filter the lines");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Copy the lines");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Full screen, or not");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Show these shortcuts, or hide them");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Leave full screen, hide the shortcuts, or clear the filter");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Connecting to the server log stream...");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("%(shown)s of %(total)s lines match.");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Streaming server logs...");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Streaming server logs... There are none yet.");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Filter the server logs");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Filter (/)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Wrap lines");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Scroll long lines (w)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Wrap long lines (w)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Follow");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Stop following new records (s)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Follow new records (s)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Copied");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Copy the lines (c)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Full screen");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Leave full screen (F, Esc)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Full screen (F)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Keyboard shortcuts");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Keyboard shortcuts (?)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Server logs");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 gettext("File New");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 gettext("File Save");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 gettext("Format JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/lib/logStream.ts
+gettext("The log stream disconnected. Reconnecting...");
 // Translators: used in react/packages/smarter-provider-list/src/App.tsx
 gettext("Your Providers");
 // Translators: used in react/packages/smarter-provider-list/src/App.tsx
@@ -2258,8 +2338,6 @@ gettext("Rename: Rename this secret resource");
 gettext("Delete: You can't delete this secret, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this secret resource");
-// Translators: used in react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx
-gettext("Server Logs");
 // Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
 gettext("Log terminal");
 // Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx

@@ -223,3 +223,39 @@ class TestLogStreams(TestAccountMixin):
         self.assertIn('"message": "debug"', chunks[1])
         self.assertIn('"message": "info"', chunks[1])
         self.assertEqual(chunks[2:], [f"data: {debug.decode()}\n", "\n", f"data: {info.decode()}\n"])
+
+    def test_request_id(self):
+        """Test that the request id is the request_id query parameter, if it is a valid request id."""
+        factory = RequestFactory()
+        self.assertEqual(streams._request_id(factory.get("/", {"request_id": "abc123"})), "abc123")
+        self.assertIsNone(streams._request_id(factory.get("/", {"request_id": "not valid"})))
+        self.assertIsNone(streams._request_id(factory.get("/")))
+
+    def test_is_other_request(self):
+        """Test that, for one request's stream, only that request's records are kept."""
+        other = streams._is_other_request
+        self.assertFalse(other('{"request_id": "abc", "message": "x"}', "abc"))
+        self.assertTrue(other('{"request_id": "xyz", "message": "x"}', "abc"))
+        self.assertTrue(other('{"message": "x"}', "abc"))
+        self.assertTrue(other("plain text", "abc"))
+        self.assertTrue(other("[1, 2]", "abc"))
+        self.assertFalse(other('{"message": "x"}', None))
+        self.assertFalse(other("plain text", None))
+
+    def test_one_requests_records(self):
+        """Test that a stream with a request_id replays, and sends live, only that request's records."""
+        fake_cache = MagicMock()
+        fake_cache.xrevrange.side_effect = [
+            [
+                (b"2-0", {b"data": b'{"message": "other", "request_id": "xyz"}'}),
+                (b"1-0", {b"data": b'{"message": "mine", "request_id": "abc"}'}),
+            ],
+            [],
+        ]
+        fake_cache.pubsub.return_value.get_message.side_effect = [
+            {"type": "message", "data": b'{"message": "live other", "request_id": "xyz"}'},
+            {"type": "message", "data": b'{"message": "live mine", "request_id": "abc"}'},
+        ]
+        _, chunks = self._stream(fake_cache, limit=3, query={"request_id": "abc"})
+        self.assertEqual(chunks[1], 'event: bulk\ndata: [{"message": "mine", "request_id": "abc"}]\n\n')
+        self.assertEqual(chunks[2], 'data: {"message": "live mine", "request_id": "abc"}\n')

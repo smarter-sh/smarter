@@ -13,7 +13,7 @@ def server_logs_enabled() -> bool:
     """
     Whether users can view their server logs in the browser.
 
-    This decides whether the web console's sidebar has a Server Logs item, whether Smarter Chat's
+    This decides whether the Prompt Passthrough page has a Server Logs tab, whether Smarter Chat's
     Console has a Server Logs tab, and whether the Server Logs page and its log stream are found.
     See :func:`require_server_logs`.
 
