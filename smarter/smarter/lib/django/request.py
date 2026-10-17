@@ -15,6 +15,7 @@ known url patterns for Smarter llmclients. key features include:
 import hashlib
 import inspect
 import re
+import sys
 import uuid
 from datetime import datetime
 from functools import cached_property
@@ -169,9 +170,9 @@ class SmarterRequestMixin(AccountMixin):
         self._cache_key: Optional[str] = None
         self._srm_ready: bool = False
 
-        stack = inspect.stack()
-        caller = stack[1]
-        module_name = caller.frame.f_globals["__name__"]
+        # sys._getframe() reads only the caller's frame. inspect.stack() would read the source of
+        # every frame on the stack, which cost each broker several milliseconds.
+        module_name = sys._getframe(1).f_globals.get("__name__")  # pylint: disable=protected-access
         verbose_logger.debug(
             "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
             self.srm_formatted_class_name,

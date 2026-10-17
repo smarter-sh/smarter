@@ -57,6 +57,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -426,14 +428,27 @@ class SAMLLMHostBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @classmethod
+    def dependents(cls, instance: LLMHost) -> SAMDependents:
+        """Return the resources that depend on an LLMHost.
+
+        No other resource refers to an LLMHost.
+
+        :param instance: The LLMHost.
+        :type instance: LLMHost
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
+    def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this LLMHost.
 
         No other resource refers to an LLMHost.
 
         :return: An empty list.
-        :rtype: List[AbstractBroker]
+        :rtype: List[SAMDependency]
         """
         return []
 

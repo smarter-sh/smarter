@@ -39,6 +39,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -178,9 +180,14 @@ class SAMOrchestratorBroker(AbstractBroker):
             return self._orchestrator
 
         try:
-            self._orchestrator = Orchestrator.get_cached_object(
-                invalidate=True, user_profile=self.user_profile, name=self.name
-            )  # type: ignore
+            # read the database, not the cache: a broker writes this orchestrator, so it must be current.
+            # get_cached_object(invalidate=True) was current too, but it also emptied the cache that
+            # every other reader of this orchestrator uses, each time a broker was built.
+            self._orchestrator = (
+                Orchestrator.objects.prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+                .get(user_profile=self.user_profile, name=self.name)
+            )
             logger.debug(
                 "%s.orchestrator() retrieved existing Orchestrator instance %s owned by %s from database.",
                 self.formatted_class_name,
@@ -748,14 +755,27 @@ class SAMOrchestratorBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
+    @classmethod
+    def dependents(cls, instance: Orchestrator) -> SAMDependents:
+        """Return the resources that depend on an Orchestrator.
+
+        No other resource refers to an Orchestrator.
+
+        :param instance: The Orchestrator.
+        :type instance: Orchestrator
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
+    def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this Orchestrator.
 
         No other resource refers to an Orchestrator.
 
         :return: An empty list.
-        :rtype: List[AbstractBroker]
+        :rtype: List[SAMDependency]
         """
         return []
 
