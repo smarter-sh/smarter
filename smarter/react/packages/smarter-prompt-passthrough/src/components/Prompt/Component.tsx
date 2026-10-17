@@ -29,6 +29,7 @@ import getPromptTemplate from "@/components/Prompt/templates";
 import LLMProviderMetaData from "@/components/LLMProviderMetaData";
 import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
 import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
+import type { PassthroughResponse } from "@/components/LLMProviderPassthroughResponse/summary";
 import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
 
 import "@/components/Prompt/styles.css";
@@ -44,10 +45,7 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
   // UI state
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [isSending, setIsSending] = useState(false);
-  const [apiResponse, setApiResponse] = useState<{
-    status: number;
-    body: unknown;
-  } | null>(null);
+  const [apiResponse, setApiResponse] = useState<PassthroughResponse | null>(null);
 
   // LLM provider and template state
   const [providersJson, setProviders] = useState<LLMProvider[]>([]);
@@ -81,7 +79,7 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
     }
     // selecting the default provider also selects its model, base URL, etc.: see the derived values above.
     setLLMProvider(default_provider.id);
-    const templateJson = getPromptTemplate(templateId, default_provider.defaultModel);
+    const templateJson = getPromptTemplate(templateId, default_provider.defaultModel ?? "");
     setRequestJson(templateJson);
   });
 
@@ -105,7 +103,7 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
     setLLMProvider(newId);
     const provider = providersJson.find((p) => p.id === newId);
     if (provider) {
-      const templateJson = getPromptTemplate(templateId, provider.defaultModel);
+      const templateJson = getPromptTemplate(templateId, provider.defaultModel ?? "");
       setRequestJson(templateJson);
     }
   };
@@ -122,15 +120,39 @@ function Prompt({ sessionContext, defaultLLMProviderId, defaultTemplateId, provi
     }
 
     setIsSending(true);
+    // the response tab shows that the request is on its way.
+    setActiveTab("response");
+    const started = performance.now();
     try {
       // ApiUrl is absolute when Django renders the page, and relative in the Vite dev server's index.html.
       const url = new URL(providerSlug + "/", new URL(sessionContext.ApiUrl, window.location.href)).toString();
       const res = await fetchDjangoUrl(sessionContext, url, requestJson);
-      const data = await res.json();
-      console.debug(loggerPrefix, `fetched response from ${url}:`, data);
-
-      setApiResponse({ status: res.status, body: data });
-      setActiveTab("response");
+      const text = await res.text();
+      // a body that isn't JSON, such as a proxy's HTML error page, is shown as it is.
+      let body: unknown = text;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        console.warn(loggerPrefix, `the response from ${url} isn't JSON`);
+      }
+      console.debug(loggerPrefix, `fetched response from ${url}:`, body);
+      setApiResponse({
+        status: res.status,
+        statusText: res.statusText,
+        body,
+        elapsedMs: performance.now() - started,
+        size: new Blob([text]).size,
+      });
+    } catch (err) {
+      console.error(loggerPrefix, "Error sending the request:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      setApiResponse({
+        status: 0,
+        statusText: "",
+        body: { error: { message } },
+        elapsedMs: performance.now() - started,
+        size: 0,
+      });
     } finally {
       setIsSending(false);
     }

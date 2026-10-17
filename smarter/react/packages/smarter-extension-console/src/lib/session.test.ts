@@ -26,6 +26,14 @@ describe("readContext", () => {
     expect(context.slug).toBeUndefined();
     expect(context.session.debugMode).toBe(true);
     expect(context.session.cookieDomain).toBe(window.location.hostname);
+    expect(context.canEdit).toBe(false);
+  });
+
+  it("reads whether the user may manage extensions", () => {
+    expect(readContext(root(LIST_ROOT_ID, { ...ATTRIBUTES, "smarter-extension-can-edit": "true" })).canEdit).toBe(true);
+    expect(readContext(root(LIST_ROOT_ID, { ...ATTRIBUTES, "smarter-extension-can-edit": "false" })).canEdit).toBe(
+      false,
+    );
   });
 
   it("reads an extension page's slug", () => {

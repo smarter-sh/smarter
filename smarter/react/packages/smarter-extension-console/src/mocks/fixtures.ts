@@ -28,8 +28,11 @@ export const session: SessionContext = {
   smarterRequestId: "test-request-id",
 };
 
-export const listContext: ConsoleContext = { session, apiUrl: API_URL, listUrl: LIST_URL };
+export const listContext: ConsoleContext = { session, apiUrl: API_URL, listUrl: LIST_URL, canEdit: true };
 export const detailContext: ConsoleContext = { ...listContext, slug: "weather" };
+/** The pages as a user who is not a superuser sees them: read-only. */
+export const readOnlyListContext: ConsoleContext = { ...listContext, canEdit: false };
+export const readOnlyDetailContext: ConsoleContext = { ...detailContext, canEdit: false };
 
 export function makeSummary(overrides: Partial<ExtensionSummary> = {}): ExtensionSummary {
   return {
