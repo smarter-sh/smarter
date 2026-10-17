@@ -5,6 +5,7 @@ Redis is faked, and the module's log_queue is replaced with a new queue in each
 test, so that the running worker thread and the real Redis are never touched.
 """
 
+import json
 import logging
 import queue
 from unittest.mock import MagicMock, patch
@@ -99,3 +100,25 @@ class TestRedisLogHandler(SmarterTestBase):
         log_handler.emit(record)  # the queue is full after one more payload.
         self.assertEqual(self.queue.qsize(), 3)
         self.assertEqual(handler.RedisLogHandler.dropped_logs, dropped + 1)
+
+    def test_valid_request_id(self):
+        """Test that a request id from the browser is used only if it has the form of one."""
+        self.assertEqual(handler.valid_request_id(" 0123abcdef_-XYZ "), "0123abcdef_-XYZ")
+        self.assertEqual(handler.valid_request_id("a" * 64), "a" * 64)
+        for invalid in (None, "", "a" * 65, "has space", "line\nbreak", "<script>", "a/b"):
+            self.assertIsNone(handler.valid_request_id(invalid), msg=f"request_id={invalid!r}")
+
+    def test_emit_tags_the_record_with_the_request_id(self):
+        """Test that a record carries the request id while one is set, and not otherwise."""
+        self.queue = queue.Queue(maxsize=10)
+        record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
+        log_handler = handler.RedisLogHandler()
+        with patch(f"{MODULE}.log_queue", self.queue):
+            token = handler.request_id_context.set("abc123")
+            try:
+                log_handler.emit(record)
+            finally:
+                handler.request_id_context.reset(token)
+            log_handler.emit(record)
+        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(4)]
+        self.assertEqual([payload.get("request_id") for payload in payloads], ["abc123", "abc123", None, None])

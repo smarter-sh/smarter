@@ -16,6 +16,8 @@ const cookieDomain = rootEl.getAttribute("smarter-cookie-domain") || window.loca
 const llmProviderId = parseInt(rootEl.getAttribute("smarter-llm-provider-id") || "1", 10);
 const templateId = parseInt(rootEl.getAttribute("smarter-template-id") || "1", 10);
 const providerApiUrl = rootEl.getAttribute("smarter-provider-api-url") || "";
+// empty while server logs are disabled: then there is no Server Logs tab.
+const logStreamUrl = rootEl.getAttribute("smarter-log-stream-url") || "";
 const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "true";
 const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
 
@@ -53,6 +55,7 @@ createRoot(rootEl).render(
       defaultLLMProviderId={llmProviderId}
       defaultTemplateId={templateId}
       providerApiUrl={providerApiUrl}
+      logStreamUrl={logStreamUrl}
     />
   </StrictMode>,
 );

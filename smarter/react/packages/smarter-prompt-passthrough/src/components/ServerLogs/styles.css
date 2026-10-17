@@ -1,0 +1,150 @@
+/* The server log viewer, in the palette and font of Smarter Chat's Console. A copy of the server
+   logs rules of smarter-chat's src/components/Console/styles.css: keep the two the same. The
+   lines' height is --console-server-logs-height. */
+.console-server-logs {
+  --console-server-logs-height: 60vh;
+  background-color: #171b20;
+  color: #d9e1ea;
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.console-server-logs-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.console-server-logs-status {
+  color: #7bd88f;
+}
+
+.console-server-logs-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.console-server-logs-filter {
+  width: 12em;
+  padding: 2px 6px;
+  border: 1px solid #323a45;
+  border-radius: 4px;
+  background-color: #22272e;
+  color: #d9e1ea;
+  font: inherit;
+  font-size: 12px;
+}
+
+.console-server-logs-filter:focus {
+  border-color: #78dce8;
+  outline: none;
+}
+
+.console-server-logs-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid #323a45;
+  border-radius: 4px;
+  background-color: #22272e;
+  color: #8b98a7;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.console-server-logs-button:hover,
+.console-server-logs-button:focus-visible {
+  color: #d9e1ea;
+}
+
+.console-server-logs-button[aria-pressed="true"] {
+  border-color: #78dce8;
+  color: #78dce8;
+}
+
+.console-server-logs-help {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(22em, 1fr));
+  gap: 2px 16px;
+  margin: 0 0 6px;
+  padding: 6px 8px;
+  border: 1px solid #323a45;
+  border-radius: 4px;
+  background-color: #1b1f24;
+  font-size: 12px;
+}
+
+.console-server-logs-help-item {
+  display: flex;
+  gap: 8px;
+}
+
+.console-server-logs-help dt {
+  flex: 0 0 13em;
+  font-weight: normal;
+}
+
+.console-server-logs-help dd {
+  margin: 0;
+  color: #8b98a7;
+}
+
+.console-server-logs-help kbd {
+  margin-right: 4px;
+  padding: 0 4px;
+  border: 1px solid #323a45;
+  border-radius: 3px;
+  background-color: #22272e;
+  color: #d9e1ea;
+  font: inherit;
+  font-size: 11px;
+}
+
+/* the lines scroll in both directions, so that the horizontal scroll bar is always in view. Long
+   lines scroll horizontally, unless they wrap. */
+.console-server-logs-lines {
+  height: var(--console-server-logs-height);
+  overflow: auto;
+  white-space: pre;
+  scrollbar-color: #39424d #161a1f;
+}
+
+.console-server-logs-lines:focus-visible {
+  outline: 1px solid #78dce8;
+  outline-offset: 2px;
+}
+
+.console-server-logs-wrap .console-server-logs-lines {
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* each line is as wide as the longest, so that the horizontal scrolling is the same for all. */
+.console-log-line {
+  min-width: max-content;
+}
+
+.console-server-logs-wrap .console-log-line {
+  min-width: 0;
+}
+
+/* full screen: the viewer covers the page, until Esc or F. */
+.console-server-logs.console-server-logs-fullscreen {
+  --console-server-logs-height: calc(100vh - 64px);
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  overflow: auto;
+  padding: 8px 12px;
+}

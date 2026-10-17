@@ -197,6 +197,18 @@ class TestSettingsMethods(SmarterTestBase):
         self.assertEqual(call(Settings.validate_aws_eks_cluster_name, "my-cluster", {}), "my-cluster")
         self.assertIsNone(call(Settings.validate_smtp_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
 
+    def test_github_api_token(self):
+        """Test that the GitHub token is None when missing, or a placeholder, and must be a SecretStr."""
+        module = "smarter.common.conf.settings"
+        for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr(DEFAULT_MISSING_VALUE)):
+            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
+                defaults.GITHUB_API_TOKEN = None
+                self.assertIsNone(call(Settings.validate_github_api_token, value, {}))
+        token = SecretStr("github-token")
+        self.assertIs(call(Settings.validate_github_api_token, token, {}), token)
+        with self.assertRaises(SmarterConfigurationError):
+            call(Settings.validate_github_api_token, "github-token", {})
+
     def test_versions(self):
         for name in ("version", "python_version", "pydantic_version", "drf_version", "linux_distribution"):
             with self.subTest(name=name):

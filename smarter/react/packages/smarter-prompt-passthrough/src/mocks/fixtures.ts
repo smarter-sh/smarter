@@ -167,3 +167,33 @@ export const providerError = {
   api: "smarter.sh/v1",
   metadata: { command: "prompt", thing: "Prompt" },
 };
+
+/** The server log stream. See smarter.apps.dashboard.views.terminal_emulator.api.streams. */
+export const LOG_STREAM_URL = "http://localhost:9357/dashboard/logs/api/stream/";
+
+/** The recent server logs of a prompt, which the log stream sends first, in its "bulk" event. */
+export const bulkLogs = [
+  {
+    message: "2026-01-01 12:00:00,000 INFO \u001b[1;34msmarter.apps.prompt\u001b[0m passthrough request received",
+    level: "INFO",
+    logger: "smarter.apps.prompt",
+    timestamp: 1767268800,
+    request_id: "0123456789abcdef0123456789abcdef",
+  },
+  {
+    message: "2026-01-01 12:00:01,000 DEBUG smarter.apps.prompt sending the request to openai",
+    level: "DEBUG",
+    logger: "smarter.apps.prompt",
+    timestamp: 1767268801,
+    request_id: "0123456789abcdef0123456789abcdef",
+  },
+];
+
+/** A server log of a prompt, which the log stream sends as it is logged. */
+export const liveLog = {
+  message: "2026-01-01 12:00:02,000 ERROR \u001b[31mthe provider responded with HTTP 401\u001b[0m",
+  level: "ERROR",
+  logger: "smarter.apps.prompt",
+  timestamp: 1767268802,
+  request_id: "0123456789abcdef0123456789abcdef",
+};

@@ -82,6 +82,12 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         placeholder segment from the fully-qualified URL so that the React
         component can append any provider name dynamically.
 
+        While users can view their server logs in the browser (see
+        :func:`smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled`),
+        the context includes the url of the log stream, from which the page's
+        Server Logs tab streams the server logs of each prompt that it sends.
+        Otherwise the url is empty, and the page has no Server Logs tab.
+
         :param request: The incoming HTTP GET request from the client.
         :type request: django.http.HttpRequest
         :param args: Additional positional arguments forwarded by the URL dispatcher.
@@ -98,6 +104,15 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         )
         from smarter.apps.dashboard.views.passthrough.urls import (
             PassthroughReverseNames,
+        )
+        from smarter.apps.dashboard.views.terminal_emulator.api.names import (
+            DashboardLogsApiReverseNames,
+        )
+        from smarter.apps.dashboard.views.terminal_emulator.enabled import (
+            server_logs_enabled,
+        )
+        from smarter.apps.dashboard.views.terminal_emulator.names import (
+            DashboardLogsReverseNames,
         )
         from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
@@ -119,6 +134,18 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         # example: https://alpha.ubc.smarter.sh/dashboard/passthrough/api/providers/
         provider_api_url = urljoin(smarter_settings.environment_platform_url, provider_api_path)
 
+        # example: /dashboard/logs/api/stream/. Empty while server logs are disabled.
+        log_stream_url = (
+            reverse(
+                DashboardReverseNames.namespace,
+                DashboardLogsReverseNames.namespace,
+                DashboardLogsApiReverseNames.namespace,
+                DashboardLogsApiReverseNames.stream,
+            )
+            if server_logs_enabled()
+            else ""
+        )
+
         context = {
             "passthrough": {
                 "root_id": "smarter-prompt-passthrough-root",
@@ -129,6 +156,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
                 "llm_provider_id": "1",  # default value for the provider_id. The React component will set the user-selected provider_id here and use it when making requests to the api_url.
                 "template_id": "1",  # default value for the template_id. The React component will set the user-selected template_id here and use it when making requests to the api_url.
                 "provider_api_url": provider_api_url,  # list of providers (openai, googleai, anthropic, etc.) and their details (capabilities, pricing, etc.
+                "log_stream_url": log_stream_url,  # the server log stream, for the Server Logs tab. Empty while server logs are disabled.
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }
