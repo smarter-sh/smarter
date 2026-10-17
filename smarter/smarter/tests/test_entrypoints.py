@@ -12,9 +12,8 @@ import importlib
 import logging
 import os
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
-from asgiref.sync import async_to_sync
 from pydantic import SecretStr
 
 import smarter.settings.base as base_settings
@@ -264,7 +263,7 @@ class TestApplicationEntryPoints(SmarterTestBase):
 
 
 class TestWebSocketConsumers(SmarterTestBase):
-    """Test the WebSocket routing and the terminal emulator log consumer."""
+    """Test the WebSocket routing."""
 
     def test_consumers_urlpatterns(self):
         from smarter import consumers
@@ -272,14 +271,16 @@ class TestWebSocketConsumers(SmarterTestBase):
         self.assertIsInstance(consumers.urlpatterns, list)
         self.assertEqual(consumers.__all__, ["urlpatterns"])
 
-    def test_redis_log_consumer_connect_accepts(self):
-        """The consumer accepts every connection."""
+    def test_the_terminal_is_routed(self):
+        """The terminal's WebSocket is at ws/terminal/.
+
+        Its consumer is tested in the dashboard app.
+        """
+        from smarter import consumers
         from smarter.apps.dashboard.views.terminal_emulator.api.consumers import (
-            RedisLogConsumer,
+            TerminalConsumer,
         )
 
-        consumer = RedisLogConsumer()
-        consumer.accept = AsyncMock()
-        consumer.scope = MagicMock()
-        async_to_sync(consumer.connect)()
-        consumer.accept.assert_awaited_once()
+        routes = {str(pattern.pattern): pattern.callback for pattern in consumers.urlpatterns}
+        self.assertIn("ws/terminal/", routes)
+        self.assertIs(routes["ws/terminal/"].consumer_class, TerminalConsumer)

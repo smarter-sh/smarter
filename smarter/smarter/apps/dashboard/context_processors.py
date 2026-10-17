@@ -85,6 +85,9 @@ from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.dropzone.urls import DropzoneReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
+from smarter.apps.dashboard.views.terminal_emulator.names import (
+    DashboardTerminalReverseNames,
+)
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.guardrail.urls import GuardrailReverseNames
@@ -183,6 +186,13 @@ def sidebar_context() -> SmarterDictType:
             DropzoneReverseNames.namespace,
             DropzoneReverseNames.dropzone,
         )
+    if smarter_settings.enable_web_console_terminal:
+        # the sidebar shows it to superusers only. See templates/dashboard/sidebar.html.
+        context["sidebar"]["terminal"] = reverse(
+            DashboardReverseNames.namespace,
+            DashboardTerminalReverseNames.namespace,
+            DashboardTerminalReverseNames.terminal_emulator_view,
+        )
     return context
 
 
@@ -196,7 +206,8 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     destination:
 
     ``dashboard``, ``workbench``, ``apply_manifest``, ``prompt_passthrough``,
-    ``providers``, ``plugins``, ``connections``, ``secrets``,
+    ``terminal`` (while the web console terminal is enabled), ``providers``, ``plugins``,
+    ``connections``, ``secrets``,
     ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
     ``swagger_docs``, ``redoc``, ``openapi``, ``json_schemas``, ``account``, ``admin``.
 

@@ -6,6 +6,10 @@ admin, or whoever ``--to`` names, learns how each install and upgrade went witho
 ``kubectl logs``. Values of environment variables that look like credentials are redacted from
 the log before it is sent.
 
+``--summary`` names a second, short file, whose text is shown at the top of the email's body, for
+example the name, size and location of the file that a backup Job saved. The Helm chart's scheduled
+database backup Job uses it.
+
 The whole log is attached to the email. A log larger than ``--max-attachment-bytes`` would
 exceed the SMTP server's message size limit, so it is saved instead to the platform's default
 file storage, which is public (an S3 bucket with a ``public-read`` ACL, served by the CDN), under
@@ -18,6 +22,7 @@ also sends the admin a blind copy when someone else is the recipient.
 .. code-block:: console
 
     python manage.py email_job_log --file /tmp/job.log --job smarter-job-init --status 1
+    python manage.py email_job_log --file /tmp/backup.log --summary /tmp/backup-summary.txt --job smarter-mysql-backup
 """
 
 import html
@@ -84,6 +89,26 @@ def redact(text: str) -> str:
     return text
 
 
+def read_summary(filename: str) -> str:
+    """
+    The body's summary of a job: the text of ``--summary``, redacted, as html.
+
+    A summary that is missing or empty, for example because the job failed before it wrote one, is
+    left out, and the email is sent without it.
+
+    :param filename: The summary file, or an empty string for none.
+    :returns: The summary as a ``<pre>`` element, or an empty string.
+    """
+    if not filename:
+        return ""
+    try:
+        summary = redact(Path(filename).read_text(encoding="utf-8", errors="replace")).strip()
+    except OSError as e:
+        logger.warning("%s.read_summary() could not read the summary %s: %s", logger_prefix, filename, e)
+        return ""
+    return f"<pre>{html.escape(summary)}</pre>" if summary else ""
+
+
 def save_public(filename: str, content: bytes) -> str:
     """
     Save a file to the platform's default file storage, and return its public URL.
@@ -120,6 +145,12 @@ class Command(SmarterCommand):
         parser.add_argument("--status", type=int, default=0, help="The job's exit status. 0 is success.")
         parser.add_argument(
             "--to", type=str, default="", help="The recipient. By default, smarter_settings.email_admin."
+        )
+        parser.add_argument(
+            "--summary",
+            type=str,
+            default="",
+            help="A short file whose text is shown at the top of the email, e.g. what a backup saved and where.",
         )
         parser.add_argument(
             "--max-attachment-bytes",
@@ -175,7 +206,7 @@ class Command(SmarterCommand):
                     )
 
         subject = f"[{smarter_settings.environment_platform_domain}] {job} {outcome}"
-        body = f"<p>{html.escape(job)} {html.escape(outcome)}.</p>{note}"
+        body = f"<p>{html.escape(job)} {html.escape(outcome)}.</p>{read_summary(options['summary'])}{note}"
 
         to = options["to"] or str(smarter_settings.email_admin)
         if infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, attachments=attachments):

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 21:57+0000\n"
+"POT-Creation-Date: 2026-10-17 23:17+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -4411,7 +4411,7 @@ msgstr "No hay proveedores disponibles"
 msgid "LLM Provider API Passthrough"
 msgstr "Acceso directo a la API del proveedor de LLM"
 
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 msgid "Server Logs"
 msgstr "Registros del servidor"
 
@@ -5173,25 +5173,122 @@ msgstr ""
 msgid "Delete: Delete this secret resource"
 msgstr "Eliminar: elimina este recurso secreto"
 
-#. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-msgid "Log terminal"
-msgstr "Terminal de registros"
+#. Translators: used in react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
+msgid "Terminal"
+msgstr "Terminal"
 
 #. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-msgid "logs@smarter:~"
-msgstr "logs@smarter:~"
+msgid "connecting"
+msgstr "conectando"
 
 #. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-msgid "Loading logs"
-msgstr "Cargando registros"
+msgid "connected"
+msgstr "conectado"
 
 #. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-msgid "Loading logs…"
-msgstr "Cargando registros…"
+msgid "disconnected"
+msgstr "desconectado"
 
-#. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/logStream.tsx
-msgid "Log stream disconnected. Reconnecting..."
-msgstr "Se desconectó el flujo de registros. Reconectando..."
+#. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
+msgid "terminal"
+msgstr "terminal"
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "%(count)s minute"
+msgid_plural "%(count)s minutes"
+msgstr[0] "%(count)s minuto"
+msgstr[1] "%(count)s minutos"
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "%(count)s hour"
+msgid_plural "%(count)s hours"
+msgstr[0] "%(count)s hora"
+msgstr[1] "%(count)s horas"
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid ""
+"Smarter Terminal: %(command)s on %(hostname)s, as %(user)s, pid %(pid)s."
+msgstr ""
+"Terminal de Smarter: %(command)s en %(hostname)s, como %(user)s, pid %(pid)s."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid ""
+"This shell runs inside the server process that accepted your connection: one "
+"of the platform's replicas, which the load balancer chose. Another window "
+"may open on another replica."
+msgstr ""
+"Este shell se ejecuta dentro del proceso del servidor que aceptó tu "
+"conexión: una de las réplicas de la plataforma, elegida por el balanceador "
+"de carga. Otra ventana puede abrirse en otra réplica."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "This session can end suddenly, without warning:"
+msgstr "Esta sesión puede terminar de repente, sin aviso:"
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "when the server restarts, or is redeployed or scaled down,"
+msgstr "cuando el servidor se reinicia, se vuelve a desplegar o se reduce,"
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "when your connection drops, or you reload or leave this page,"
+msgstr "cuando se cae tu conexión, o recargas o sales de esta página,"
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "after %(idle)s without input, and after %(max)s in any case."
+msgstr "tras %(idle)s sin actividad y, en cualquier caso, tras %(max)s."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid ""
+"When it ends, everything that it started is stopped, so it is a poor place "
+"for long-running processes. Files that it writes may disappear when the "
+"container is replaced."
+msgstr ""
+"Cuando termina, se detiene todo lo que inició, así que no es buen lugar para "
+"procesos de larga duración. Los archivos que escribe pueden desaparecer "
+"cuando se reemplaza el contenedor."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid ""
+"The shell has the server's environment, and every one of its credentials."
+msgstr "El shell tiene el entorno del servidor y todas sus credenciales."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid ""
+"Restored from before this page was left. That shell has ended, and a new one "
+"starts below."
+msgstr "Restaurado de antes de salir de esta página. Ese shell terminó, y uno nuevo empieza abajo."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "The shell exited with status %(code)s."
+msgstr "El shell terminó con el estado %(code)s."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "The session ended after too long without input."
+msgstr "La sesión terminó tras demasiado tiempo sin actividad."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "The session reached its time limit."
+msgstr "La sesión alcanzó su límite de tiempo."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "The server could not start a shell."
+msgstr "El servidor no pudo iniciar un shell."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid ""
+"The server refused the connection. The terminal may be disabled, or your "
+"sign-in may have expired."
+msgstr ""
+"El servidor rechazó la conexión. Es posible que la terminal esté desactivada "
+"o que tu sesión haya caducado."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "The connection to the server closed, and the session ended."
+msgstr "La conexión con el servidor se cerró y la sesión terminó."
+
+#. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
+msgid "Press Enter to start a new session."
+msgstr "Pulsa Intro para iniciar una nueva sesión."
 
 #. Translators: used in react/packages/smarter-vectorsearch-list/src/App.tsx
 msgid "Your Vectorsearch"
@@ -5874,6 +5971,18 @@ msgstr "La confirmación de la contraseña es obligatoria"
 #. Translators: used in smarter/static/js/coming-soon.js
 msgid "Added"
 msgstr "Agregado"
+
+#~ msgid "logs@smarter:~"
+#~ msgstr "logs@smarter:~"
+
+#~ msgid "Loading logs"
+#~ msgstr "Cargando registros"
+
+#~ msgid "Loading logs…"
+#~ msgstr "Cargando registros…"
+
+#~ msgid "Log stream disconnected. Reconnecting..."
+#~ msgstr "Se desconectó el flujo de registros. Reconectando..."
 
 #~ msgid "(prompting LLM...)"
 #~ msgstr "(consultando al LLM...)"

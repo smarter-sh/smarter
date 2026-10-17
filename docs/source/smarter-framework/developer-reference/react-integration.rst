@@ -69,9 +69,10 @@ Django Objects
 ~~~~~~~~~~~~~~~~~
 
 The Terminal Application begins with a standard Django request lifecycle.
-A URL pattern routes incoming requests for the pattern `/dashboard/logs/` to the Django view class
-:class:`TerminalEmulatorLogView`. The view is also responsible for generating
-and providing the API endpoint that the React application will use to retrieve log data.
+A URL pattern routes incoming requests for the pattern `/dashboard/terminal/` to the Django view class
+:class:`~smarter.apps.dashboard.views.terminal_emulator.reactapp.TerminalEmulatorView`. The view is also
+responsible for generating and providing the API endpoint that the React application will use: the ticket
+api, whose single use ticket opens the WebSocket of the terminal's shell.
 Rather than hardcoding endpoint URLs, the view uses Django's :func:`reverse()`
 function and Django URL namespaces to generate the correct endpoint at runtime.
 This ensures that routing remains centralized within Django, that it remains
@@ -106,7 +107,7 @@ passes configuration data into React during application initialization.
 
   <div
     id="smarter-terminal-emulator-root"
-    smarter-api-path="/dashboard/logs/api/stream/"
+    smarter-api-path="/dashboard/terminal/api/ticket/"
     smarter-cookie-domain="alpha.platform.example.com"
     smarter-csrf-cookie-name="csrftoken"
     smarter-django-session-cookie-name="sessionid"
@@ -517,7 +518,7 @@ Application:
 
   <div
     id="smarter-terminal-emulator-root"
-    smarter-api-path="/dashboard/logs/api/stream/"
+    smarter-api-path="/dashboard/terminal/api/ticket/"
     smarter-cookie-domain="alpha.platform.example.com"
     smarter-csrf-cookie-name="csrftoken"
     smarter-django-session-cookie-name="sessionid"

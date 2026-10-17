@@ -2144,6 +2144,44 @@ class Settings(BaseSettings):
 
         raise SmarterConfigurationError(f"could not validate enable_dashboard_server_logs: {v}")
 
+    enable_web_console_terminal: bool = Field(
+        settings_defaults.ENABLE_WEB_CONSOLE_TERMINAL,
+        description=(
+            "True if superusers can open a bash shell inside the server's container from the web console's "
+            "Terminal page. Off by default."
+        ),
+        title="Enable Web Console Terminal",
+    )
+    """Determines whether superusers can open a bash shell inside the server's container from the web console.
+
+    The shell runs as the server's own operating system user, with the server's environment and
+    credentials, inside whichever server process (and so whichever pod or container) accepted the
+    connection. See :mod:`smarter.apps.dashboard.views.terminal_emulator.api.consumers`.
+
+    Set with ``SMARTER_ENABLE_WEB_CONSOLE_TERMINAL``. Defaults to False.
+
+    Returns:
+        bool: True if the web console terminal is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_web_console_terminal")
+    def parse_enable_web_console_terminal(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_web_console_terminal' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the enable_web_console_terminal value to validate
+        Returns:
+            bool: The validated enable_web_console_terminal.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_WEB_CONSOLE_TERMINAL
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_web_console_terminal: {v}")
+
     enable_dashboard_passthrough_prompt: bool = Field(
         settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT,
         description="True if the passthrough prompt feature is enabled based on the current environment.",
