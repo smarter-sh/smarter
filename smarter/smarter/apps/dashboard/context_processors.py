@@ -85,10 +85,6 @@ from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.dropzone.urls import DropzoneReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
-from smarter.apps.dashboard.views.terminal_emulator.enabled import server_logs_enabled
-from smarter.apps.dashboard.views.terminal_emulator.names import (
-    DashboardLogsReverseNames,
-)
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.guardrail.urls import GuardrailReverseNames
@@ -187,12 +183,6 @@ def sidebar_context() -> SmarterDictType:
             DropzoneReverseNames.namespace,
             DropzoneReverseNames.dropzone,
         )
-    if smarter_settings.enable_dashboard_server_logs:
-        context["sidebar"]["server_logs"] = reverse(
-            DashboardReverseNames.namespace,
-            DashboardLogsReverseNames.namespace,
-            DashboardLogsReverseNames.terminal_emulator_view,
-        )
     return context
 
 
@@ -206,7 +196,7 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     destination:
 
     ``dashboard``, ``workbench``, ``apply_manifest``, ``prompt_passthrough``,
-    ``server_logs``, ``providers``, ``plugins``, ``connections``, ``secrets``,
+    ``providers``, ``plugins``, ``connections``, ``secrets``,
     ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
     ``swagger_docs``, ``redoc``, ``openapi``, ``json_schemas``, ``account``, ``admin``.
 
@@ -312,7 +302,6 @@ def base(request: "HttpRequest") -> SmarterDictType:
         return cached_context
 
     context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
-    # not cached, so that the sidebar's Server Logs item follows its waffle switch as soon as it changes.
     # not cached with the rest, so that a newly uploaded profile image shows at once. get_cached_avatar_url() has its own cache.
     profile_image_url = (
         get_cached_avatar_url(user_id=resolved_user.id)  # type: ignore[union-attr]
@@ -323,7 +312,6 @@ def base(request: "HttpRequest") -> SmarterDictType:
         **context,
         "dashboard": {
             **context["dashboard"],
-            "is_enabled_server_logs": server_logs_enabled(),
             "profile_image_url": profile_image_url,
         },
     }

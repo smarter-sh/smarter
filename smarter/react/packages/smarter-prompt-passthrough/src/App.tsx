@@ -12,9 +12,10 @@ interface AppProps {
   defaultLLMProviderId: number;
   defaultTemplateId: number;
   providerApiUrl: string;
+  logStreamUrl?: string;
 }
 
-function App({ sessionContext, defaultLLMProviderId, defaultTemplateId, providerApiUrl }: AppProps) {
+function App({ sessionContext, defaultLLMProviderId, defaultTemplateId, providerApiUrl, logStreamUrl = "" }: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="prompt-passthrough">
@@ -24,6 +25,7 @@ function App({ sessionContext, defaultLLMProviderId, defaultTemplateId, provider
           defaultLLMProviderId={defaultLLMProviderId}
           defaultTemplateId={defaultTemplateId}
           providerApiUrl={providerApiUrl}
+          logStreamUrl={logStreamUrl}
         />
       </section>
     </>
