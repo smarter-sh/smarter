@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.33.2](https://github.com/smarter-sh/smarter/compare/v0.33.1...v0.33.2) (2026-10-17)
+
+### Bug Fixes
+
+* **console:** refactor the server logs window into a bash terminal ([1e17b3b](https://github.com/smarter-sh/smarter/commit/1e17b3b8b25fd6d952bce8bfbefbc8861b8267df))
+
 ## [0.33.1](https://github.com/smarter-sh/smarter/compare/v0.33.0...v0.33.1) (2026-10-17)
 
 ### Bug Fixes
