@@ -50,6 +50,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -454,14 +456,27 @@ class SAMProxyBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @classmethod
+    def dependents(cls, instance: Proxy) -> SAMDependents:
+        """Return the resources that depend on a Proxy.
+
+        No other resource refers to a Proxy.
+
+        :param instance: The Proxy.
+        :type instance: Proxy
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
+    def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this Proxy.
 
         No other resource refers to a Proxy.
 
         :return: An empty list.
-        :rtype: List[AbstractBroker]
+        :rtype: List[SAMDependency]
         """
         return []
 

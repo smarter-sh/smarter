@@ -73,8 +73,8 @@ summary:
 4. **Model and migration**: a `MetaDataWithOwnershipModel` subclass, plus a
    migration (see `smarter-migrations`).
 5. **Serializer**: a `MetaDataWithOwnershipModelSerializer` subclass with
-   `Meta.kind`, which `can_delete` uses to find the broker and check
-   dependencies, and a `manifest_url`.
+   `Meta.kind`, which `can_delete` uses to find the broker class and ask its
+   `has_dependents()`, and a `manifest_url`.
 6. **Views and URLs**: `views/detailview.py`, `views/listview/view.py` and
    `views/listview/api.py`, and `urls.py` with a `<App>ReverseNames` class.
 7. **React list page**: a templatetag, a Django template, a React package, and
@@ -106,9 +106,17 @@ summary:
 - `describe` returns a manifest that round-trips. Its output can be applied
   again.
 - `delete` calls `self.verify_no_dependencies(command)` first, which raises
-  `SAMBrokerErrorDependencies` while other resources depend on the object. The
-  broker's dependency list is a `@memoized_dependencies` method. Call
-  `self.cache_invalidations()` before changing or deleting the object.
+  `SAMBrokerErrorDependencies` while other resources depend on the object.
+  Implement both halves of the dependency list, as `SAMGuardrailBroker` does:
+  the classmethod `dependents(instance)`, which returns `(kind, QuerySet)` pairs
+  of the rows that refer to an ORM instance and builds no brokers, and a
+  `@memoized_dependencies` `dependencies()` that is just
+  `return self.dependency_brokers_for(self.<instance>)`. A list page's
+  `canDelete` calls `has_dependents()` for every row, which runs `EXISTS` on the
+  pairs. Never build a broker per row to answer it: that cost the Guardrail list
+  about 70 ms and 15 queries a row. A kind that nothing refers to returns `[]`
+  from both. Call `self.cache_invalidations()` before changing or deleting the
+  object.
 - Errors are the broker's own `SAM<Kind>BrokerError`, raised `from` the
   original exception, with `thing=self.kind` and `command=command`.
 - Side effects with infrastructure (DNS, certificates, Kubernetes) happen in

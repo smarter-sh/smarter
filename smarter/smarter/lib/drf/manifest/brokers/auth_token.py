@@ -32,6 +32,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -673,24 +675,32 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the LLMClients that use this auth token.
+    @classmethod
+    def dependents(cls, instance: SmarterAuthToken) -> SAMDependents:
+        """Return the LLMClients that use an auth token.
 
-        :return: A broker for each LLMClient that lists this auth token in its ``spec.apiKey``.
-        :rtype: List[AbstractBroker]
+        :param instance: The SmarterAuthToken.
+        :type instance: SmarterAuthToken
+        :return: The LLMClients that list the auth token in their ``spec.apiKey``.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
 
-        smarter_auth_token = self.smarter_auth_token
-        if not smarter_auth_token:
-            return []
         llmclients = LLMClient.objects.filter(
-            id__in=LLMClientAPIKey.objects.filter(api_key=smarter_auth_token).values("llmclient_id")
+            id__in=LLMClientAPIKey.objects.filter(api_key=instance).values("llmclient_id")
         )
-        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
+        return [(SAMKinds.LLM_CLIENT.value, llmclients)]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the LLMClients that use this auth token.
+
+        :return: A broker for each LLMClient that lists this auth token in its ``spec.apiKey``.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.smarter_auth_token)
 
     def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(

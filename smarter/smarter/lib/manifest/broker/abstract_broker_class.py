@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
-from typing import Any, Callable, ClassVar, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, ClassVar, Iterable, List, Optional, Tuple, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
@@ -154,6 +154,31 @@ class SAMDependencyReference:
 
 SAMDependency = Union["AbstractBroker", SAMDependencyReference]
 """A resource that depends on another: its broker, or a reference to it when its broker fails to initialize."""
+
+SAMDependents = List[Tuple[Optional[str], Iterable[models.Model]]]
+"""
+The resources that depend on another, as their Django ORM rows, grouped by SAM kind.
+
+Each pair is a kind, e.g. ``SAMKinds.LLM_CLIENT.value``, and the rows of that kind, usually a
+lazy QuerySet. A kind of None means that each row has its own kind, in its ``kind`` field, as a
+plugin's PluginMeta does. See :meth:`AbstractBroker.dependents`.
+"""
+
+
+def dependents_exist(rows: Iterable[models.Model]) -> bool:
+    """Return True if there is at least one row, reading no more of them than that.
+
+    A QuerySet is asked with one ``EXISTS`` query, and any other iterable is read up to its
+    first item, so a generator that filters rows in Python stops at the first match.
+
+    :param rows: The rows of one kind, from :meth:`AbstractBroker.dependents`.
+    :type rows: Iterable[models.Model]
+    :return: Whether there is at least one row.
+    :rtype: bool
+    """
+    if isinstance(rows, models.QuerySet):
+        return rows.exists()
+    return next(iter(rows), None) is not None
 
 
 class AbstractBroker(ABC, SmarterRequestMixin):
@@ -1540,6 +1565,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         Django ORM, and may belong to other users. :meth:`verify_no_dependencies` uses them to
         refuse to delete a resource that is still in use.
 
+        A broker usually implements it as ``return self.dependency_brokers_for(<its ORM instance>)``,
+        so that it agrees with :meth:`dependents`, which says which resources those are.
+
         Example:
 
         .. code-block:: python
@@ -1555,6 +1583,75 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: List[SAMDependency]
         """
         raise SAMBrokerErrorNotImplemented(message="dependencies() not implemented", thing=self.thing)
+
+    @classmethod
+    def dependents(cls, instance: models.Model) -> SAMDependents:
+        """Return the resources that depend on a resource, as Django ORM rows, without building brokers.
+
+        This is the one place where a broker says which resources refer to its kind of resource.
+        :meth:`dependencies` builds a broker for each of these rows, and :meth:`has_dependents`
+        only asks whether there are any, which is much cheaper: a resource list page asks it for
+        every row that it shows, as that row's ``canDelete``.
+
+        Return lazy QuerySets where possible, so that :meth:`has_dependents` can ask each with
+        one ``EXISTS`` query. Rows that can only be filtered in Python may be a generator.
+
+        Example:
+
+        .. code-block:: python
+
+            @classmethod
+            def dependents(cls, instance: Guardrail) -> SAMDependents:
+                llmclients = LLMClient.objects.filter(
+                    id__in=LLMClientGuardrails.objects.filter(guardrail=instance).values("llmclient_id")
+                )
+                return [(SAMKinds.LLM_CLIENT.value, llmclients)]
+
+        :param instance: The resource's Django ORM instance, e.g. a Guardrail.
+        :type instance: models.Model
+        :return: The kinds and rows of the resources that depend on it, or an empty list.
+        :rtype: SAMDependents
+        :raises SAMBrokerErrorNotImplemented: If the broker does not implement it.
+        """
+        raise SAMBrokerErrorNotImplemented(message=f"{cls.__name__}.dependents() not implemented")
+
+    @classmethod
+    def has_dependents(cls, instance: models.Model) -> bool:
+        """Return True if any resource depends on a resource.
+
+        It asks :meth:`dependents` whether there is at least one row, one kind at a time, and
+        stops at the first. It builds no brokers, so it costs a few ``EXISTS`` queries.
+
+        Example:
+
+        .. code-block:: python
+
+            if SAMGuardrailBroker.has_dependents(guardrail):
+                print("an LLMClient uses this guardrail")
+
+        :param instance: The resource's Django ORM instance, e.g. a Guardrail.
+        :type instance: models.Model
+        :return: Whether any resource depends on it.
+        :rtype: bool
+        :raises SAMBrokerErrorNotImplemented: If the broker does not implement :meth:`dependents`.
+        """
+        return any(dependents_exist(rows) for _, rows in cls.dependents(instance))
+
+    def dependency_brokers_for(self, instance: Optional[models.Model]) -> List[SAMDependency]:
+        """Return a broker for each resource that depends on a resource, as :meth:`dependents` lists them.
+
+        :param instance: The resource's Django ORM instance, or None if it does not exist.
+        :type instance: Optional[models.Model]
+        :return: A broker, or a reference, for each resource that depends on it, or an empty list
+            if it does not exist. See :meth:`dependency_brokers`.
+        :rtype: List[SAMDependency]
+        """
+        if instance is None:
+            return []
+        retval: List[SAMDependency] = []
+        for kind, rows in self.dependents(instance):
+            retval += self.dependency_brokers(kind, rows)
+        return retval
 
     def dependency_broker(
         self,
@@ -1606,18 +1703,22 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
             return SAMDependencyReference(kind=kind, name=name, user_profile=user_profile)
 
-    def dependency_brokers(self, kind: str, instances: Iterable[models.Model]) -> List[SAMDependency]:
+    def dependency_brokers(self, kind: Optional[str], instances: Iterable[models.Model]) -> List[SAMDependency]:
         """Return a broker for each resource that depends on this resource.
 
-        :param kind: The SAM kind of the resources, e.g. ``SAMKinds.LLM_CLIENT.value``.
-        :type kind: str
+        :param kind: The SAM kind of the resources, e.g. ``SAMKinds.LLM_CLIENT.value``, or None if
+            each resource has its own kind in its ``kind`` field, as a plugin's PluginMeta does.
+        :type kind: Optional[str]
         :param instances: The resources' Django ORM instances.
         :type instances: Iterable[models.Model]
         :return: A broker, or a reference, for each resource, without duplicates. See :meth:`dependency_broker`.
         :rtype: List[SAMDependency]
         """
         unique = {instance.pk: instance for instance in instances}
-        return [self.dependency_broker(kind, instance) for instance in unique.values()]
+        return [
+            self.dependency_broker(kind or getattr(instance.kind, "value", instance.kind), instance)  # type: ignore[attr-defined]
+            for instance in unique.values()
+        ]
 
     def verify_no_dependencies(self, command: Optional[SmarterJournalCliCommands] = None) -> None:
         """Raise an error if other resources depend on this resource.
@@ -2338,8 +2439,16 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Log the current state of the AbstractBroker instance for debugging purposes.
 
+        A ready broker's state is logged at INFO, which is usually switched off, so it is built
+        only when it will be logged: it reads the broker's ready state and ORM instance, which
+        would otherwise cost every broker queries that its caller may never need. A broker that
+        is not ready always logs a warning.
+
         :return: None
         """
+        is_ready = self.is_ready_abstract_broker
+        if is_ready and not logger.should_log(logging.INFO):
+            return
         state = {
             "ready": self.ready,
             "name": self._name,
@@ -2353,7 +2462,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             f"{self.abstract_broker_logger_prefix} {self.kind} "
             f"broker is {self.abstract_broker_ready_state}: " + logging.formatted_json(state)
         )
-        if self.is_ready_abstract_broker:
+        if is_ready:
             logger.info(msg)
         else:
             logger.warning(msg)

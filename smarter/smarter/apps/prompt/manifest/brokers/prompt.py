@@ -24,6 +24,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
     SAMBrokerReadOnlyError,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -328,14 +330,27 @@ class SAMPromptBroker(AbstractBroker):
                 raise SAMPromptBrokerError(f"Failed to describe {self.kind}", thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
+    @classmethod
+    def dependents(cls, instance: Prompt) -> SAMDependents:
+        """Return the resources that depend on a Prompt.
+
+        A Prompt is a chat session. Orchestration runs refer to it as history, which is deleted with it.
+
+        :param instance: The Prompt.
+        :type instance: Prompt
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
-    def dependencies(self) -> typing.List[AbstractBroker]:
+    def dependencies(self) -> typing.List[SAMDependency]:
         """Return brokers for the resources that depend on this Prompt.
 
         A Prompt is a chat session. Orchestration runs refer to it as history, which is deleted with it.
 
         :return: An empty list.
-        :rtype: typing.List[AbstractBroker]
+        :rtype: typing.List[SAMDependency]
         """
         return []
 
