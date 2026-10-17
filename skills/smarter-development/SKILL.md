@@ -193,6 +193,7 @@ reference implementations.
 | A course design for the Free Course Catalog (instructors docs)   | `smarter-course-design`                |
 | A release announcement post for blog.smarter.sh                  | `blog.smarter.sh-release-announcement` |
 | Any other article for blog.smarter.sh                            | `blog.smarter.sh-blog-post`            |
+| Publishing or updating a post on blog.smarter.sh (WordPress)     | `blog.smarter.sh-publish`              |
 
 ## Definition of done
 
