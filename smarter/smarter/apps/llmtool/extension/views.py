@@ -2,15 +2,18 @@
 The web console's Extensions pages, and their api.
 
 Superusers manage extensions on two pages, which one React app, ``@smarter/extension-console``,
-renders, depending on the root element that the page's template provides:
+renders, depending on the root element that the page's template provides. Every other user sees
+the same pages read-only: the extensions that their account may use, without their settings, their
+availability or the platform admin's Secrets, and without any action.
 
 - **Extensions** (``/extensions/``): the installed extensions, and the registry's, which can be
   installed, and an archive's upload.
 - **An extension** (``/extensions/<slug>/``): its documentation, tools, settings, availability,
   versions and resources, and every action on it.
 
-The api is a set of POST endpoints, under ``/extensions/react-integration/api/``, for superusers
-only. Each validates its request and builds its response with the models of
+The api is a set of POST endpoints, under ``/extensions/react-integration/api/``. The actions are
+for superusers only; the list, the registry and an extension's detail are read-only for everyone
+else. Each validates its request and builds its response with the models of
 :mod:`~smarter.apps.llmtool.extension.contract`, and carries out its action with the
 :class:`~smarter.apps.llmtool.extension.installer.ExtensionInstaller` or the
 :mod:`~smarter.apps.llmtool.extension.registry` client, as the admin console and the management
@@ -34,10 +37,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmtool.models import Extension, ExtensionVersion
 from smarter.apps.secret.models import Secret
 from smarter.lib import json, logging
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseForbidden,
-    SmarterHttpResponseNotFound,
-)
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
@@ -171,6 +171,25 @@ def extension_detail(extension: Extension) -> ExtensionDetail:
     )
 
 
+def read_only_detail(detail: ExtensionDetail) -> ExtensionDetail:
+    """
+    Return what a user who is not a superuser may see of an extension's detail page.
+
+    Its settings, the accounts that may use it, the platform admin's Secrets and who installed each
+    version are left out.
+
+    :param detail: Everything that the detail page shows a superuser.
+    """
+    return detail.model_copy(
+        update={
+            "settings": [],
+            "accounts": [],
+            "available_secrets": [],
+            "versions": [version.model_copy(update={"installed_by": None}) for version in detail.versions],
+        }
+    )
+
+
 def is_newer(candidate: str, current: Optional[str]) -> bool:
     """Return whether a version is newer than another; an unparsable version is never newer."""
     try:
@@ -235,7 +254,11 @@ def registry_extensions(index: "registry.RegistryIndex") -> list[RegistryExtensi
 # pages
 # ------------------------------------------------------------------------------
 class ExtensionPageView(SmarterAuthenticatedNeverCachedWebView):
-    """The base class of the Extensions pages: superusers only, and the React app's root element's attributes."""
+    """
+    The base class of the Extensions pages, and the React app's root element's attributes.
+
+    A superuser manages extensions on them; every other user sees them read-only.
+    """
 
     template_path: str
     context_key: str
@@ -254,6 +277,7 @@ class ExtensionPageView(SmarterAuthenticatedNeverCachedWebView):
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "extension_api_url": reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.api_root),
                 "extension_list_url": reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
+                "can_edit": "true" if self.request.user.is_superuser else "false",  # type: ignore[union-attr]
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
                 **extra,
@@ -269,8 +293,6 @@ class ExtensionListView(ExtensionPageView):
     root_id = "smarter-extension-list-root"
 
     def get(self, request: ASGIRequest, *args, **kwargs) -> HttpResponse:
-        if not request.user.is_superuser:  # type: ignore[union-attr]
-            return SmarterHttpResponseForbidden(request=request, error_message=FORBIDDEN)
         return render(request, template_name=self.template_path, context=self.page_context())
 
 
@@ -282,9 +304,10 @@ class ExtensionDetailView(ExtensionPageView):
     root_id = "smarter-extension-detail-root"
 
     def get(self, request: ASGIRequest, *args, slug: str = "", **kwargs) -> HttpResponse:
-        if not request.user.is_superuser:  # type: ignore[union-attr]
-            return SmarterHttpResponseForbidden(request=request, error_message=FORBIDDEN)
-        if not Extension.objects.filter(slug=slug).exists():
+        extension = Extension.objects.filter(slug=slug).first()
+        if extension is None or not (
+            request.user.is_superuser or extension.is_available_to(self.account)  # type: ignore[union-attr]
+        ):
             return SmarterHttpResponseNotFound(request=request, error_message=f"No extension {slug} is installed.")
         return render(request, template_name=self.template_path, context=self.page_context(extension_slug=slug))
 
@@ -294,13 +317,20 @@ class ExtensionDetailView(ExtensionPageView):
 # ------------------------------------------------------------------------------
 class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
     """
-    The base class of the Extensions api: POST only, superusers only, JSON in and out.
+    The base class of the Extensions api: POST only, JSON in and out, and superusers only unless.
+
+    :attr:`read_only` is set.
 
     Subclasses implement :meth:`handle`, which returns a contract model, and set
     :attr:`request_model` if the request has a body.
     """
 
     request_model: Optional[type[BaseModel]] = None
+    read_only: bool = False
+    """Whether every user may call it.
+
+    It then shows a user who is not a superuser only what they may see.
+    """
     http_method_names = ["post"]
 
     @property
@@ -336,8 +366,12 @@ class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
             )
             raise ValueError(f"The request is not valid: {problems}") from e
 
+    def visible(self, request: ASGIRequest, extension: Extension) -> bool:
+        """Return whether the requesting user may see an extension: a superuser sees every one."""
+        return request.user.is_superuser or extension.is_available_to(self.account)  # type: ignore[union-attr]
+
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
-        if not request.user.is_superuser:  # type: ignore[union-attr]
+        if not (self.read_only or request.user.is_superuser):  # type: ignore[union-attr]
             return self.error(FORBIDDEN, HTTPStatus.FORBIDDEN)
         try:
             body = self.parse(request)
@@ -361,10 +395,16 @@ class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class ExtensionListApiView(ExtensionApiView):
-    """The installed extensions, and the state of the registry."""
+    """The installed extensions that the requesting user may see, and the state of the registry."""
+
+    read_only = True
 
     def handle(self, request, body, **kwargs) -> ExtensionListResponse:
-        extensions = list(Extension.objects.select_related("installed_version").order_by("display_name"))
+        extensions = [
+            extension
+            for extension in Extension.objects.select_related("installed_version").order_by("display_name")
+            if self.visible(request, extension)
+        ]
         return ExtensionListResponse(
             objects=[ExtensionSummary.from_model(extension, detail_url(extension.slug)) for extension in extensions],
             registry_enabled=registry.is_enabled(),
@@ -373,9 +413,13 @@ class ExtensionListApiView(ExtensionApiView):
 
 
 class ExtensionRegistryApiView(ExtensionApiView):
-    """The registry's extensions, with what each offers on this platform."""
+    """The registry's extensions, with what each offers on this platform.
+
+    Only a superuser may refresh it.
+    """
 
     request_model = RegistryRequest
+    read_only = True
 
     def handle(self, request, body: RegistryRequest, **kwargs) -> RegistryResponse:
         if not registry.is_enabled():
@@ -385,7 +429,8 @@ class ExtensionRegistryApiView(ExtensionApiView):
                 objects=[],
             )
         try:
-            index = registry.refresh_index() if body.refresh else registry.get_index()
+            refresh = body.refresh and request.user.is_superuser
+            index = registry.refresh_index() if refresh else registry.get_index()
         except SmarterExtensionException as e:
             return RegistryResponse(enabled=True, error=e.message, objects=[])
         return RegistryResponse(enabled=True, objects=registry_extensions(index))
@@ -432,10 +477,17 @@ class ExtensionUploadApiView(ExtensionApiView):
 
 
 class ExtensionDetailApiView(ExtensionApiView):
-    """Everything that an extension's detail page shows."""
+    """Everything that an extension's detail page shows, and less to a user who is not a superuser."""
+
+    read_only = True
 
     def handle(self, request, body, slug: str = "", **kwargs) -> ExtensionDetailResponse:
-        return ExtensionDetailResponse(extension=extension_detail(self.extension(slug)))
+        extension = self.extension(slug)
+        if request.user.is_superuser:
+            return ExtensionDetailResponse(extension=extension_detail(extension))
+        if not self.visible(request, extension):
+            raise Extension.DoesNotExist
+        return ExtensionDetailResponse(extension=read_only_detail(extension_detail(extension)))
 
 
 class ExtensionActionApiView(ExtensionApiView):
@@ -578,5 +630,6 @@ __all__ = [
     "ExtensionUpdateApiView",
     "ExtensionUploadApiView",
     "extension_detail",
+    "read_only_detail",
     "registry_extensions",
 ]

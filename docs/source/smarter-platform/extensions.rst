@@ -21,8 +21,12 @@ use the Extensions that are available to their account.
 The Extensions Page
 -------------------
 
-In the web console, click **Extensions** in the sidebar (``/extensions/``). Superusers see it,
-with a count of the Extensions that have an update available. The page has two tabs.
+In the web console, click **Extensions** in the sidebar's **Tools** section (``/extensions/``).
+Every user sees it. A superuser manages Extensions there, and the link shows them a count of the
+Extensions that have an update available. Everyone else sees the page read-only: the Extensions
+that their account may use, and the registry, with no buttons, switches or install actions. An
+Extension's page shows them its overview, tools, versions and resources, but not its settings,
+its availability, or who installed each version. The page has two tabs.
 
 **Installed** lists the installed Extensions:
 

@@ -1,5 +1,5 @@
 """
-URL patterns of the web console's Extensions pages and their api, for superusers only.
+URL patterns of the web console's Extensions pages and their api: superusers manage extensions, others see them read-only.
 
 how we got here:
  - /extensions/

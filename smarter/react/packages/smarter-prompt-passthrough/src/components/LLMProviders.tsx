@@ -7,25 +7,33 @@
  *****************************************************************************/
 import { loggerPrefix } from "@/const";
 import { gettext, interpolate } from "@smarter/common";
+/** A user, as the provider api describes one. */
+export interface LLMProviderUser {
+  username: string;
+  email: string;
+}
+
+/**
+ * An LLM provider, as smarter.apps.provider.serializers.ProviderSerializer returns it, in camelCase.
+ * The fields that the Provider model allows to be empty are nullable here too.
+ */
 export interface LLMProvider {
   id: number;
   tags: string[];
+  /** The provider's page in the web console. */
+  manifestUrl?: string;
   apiKey: {
     id: number;
     name: string;
-  };
+    /** The Secret's page in the web console. */
+    manifestUrl?: string;
+  } | null;
   isOfficialProvider: boolean;
   tosAccepted: boolean;
   rfc1034CompliantName: string;
-  tosAcceptedBy: {
-    username: string;
-    email: string;
-  };
+  tosAcceptedBy: LLMProviderUser | null;
   userProfile: {
-    user: {
-      username: string;
-      email: string;
-    };
+    user: LLMProviderUser;
     account: {
       accountNumber: string;
     };
@@ -35,7 +43,8 @@ export interface LLMProvider {
   name: string;
   description: string;
   version: string;
-  annotations: string[];
+  /** The manifest's annotations: a list of one-key objects, such as { "smarter.sh/purpose": "testing" }. */
+  annotations: Record<string, unknown>[];
   status: string;
   isDefault: boolean;
   isActive: boolean;
@@ -45,19 +54,19 @@ export interface LLMProvider {
   isFlagged: boolean;
   isSuspended: boolean;
   baseUrl: string;
-  defaultModel: string;
-  connectivityTestPath: string;
-  logo: string;
-  websiteUrl: string;
+  defaultModel: string | null;
+  connectivityTestPath: string | null;
+  logo: string | null;
+  websiteUrl: string | null;
   ownershipRequested: string | null;
-  contactEmail: string;
-  contactEmailVerified: string;
-  supportEmail: string;
-  supportEmailVerified: string;
-  docsUrl: string;
-  termsOfServiceUrl: string;
-  privacyPolicyUrl: string;
-  tosAcceptedAt: string;
+  contactEmail: string | null;
+  contactEmailVerified: string | null;
+  supportEmail: string | null;
+  supportEmailVerified: string | null;
+  docsUrl: string | null;
+  termsOfServiceUrl: string | null;
+  privacyPolicyUrl: string | null;
+  tosAcceptedAt: string | null;
 }
 
 interface ProvidersResponse {
