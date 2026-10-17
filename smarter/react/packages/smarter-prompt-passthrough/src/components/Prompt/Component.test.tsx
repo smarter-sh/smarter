@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { API_URL, PROVIDER_API_URL, completion, sessionContext } from "@/mocks/fixtures";
+import { FakeEventSource, installFakes } from "@/mocks/fakes";
+import { API_URL, LOG_STREAM_URL, PROVIDER_API_URL, bulkLogs, completion, sessionContext } from "@/mocks/fixtures";
 import { passthroughErrorHandlers, providerHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
@@ -11,13 +12,14 @@ import Prompt from "@/components/Prompt/Component";
 
 vi.mock("@monaco-editor/react", async () => await import("@/mocks/MonacoEditor"));
 
-function setup() {
+function setup(logStreamUrl = "") {
   render(
     <Prompt
       sessionContext={sessionContext}
       defaultLLMProviderId={1}
       defaultTemplateId={1}
       providerApiUrl={PROVIDER_API_URL}
+      logStreamUrl={logStreamUrl}
     />,
   );
   return userEvent.setup();
@@ -189,5 +191,65 @@ describe("Prompt", () => {
     );
     await screen.findByRole("option", { name: "anthropic" });
     expect(requestJson()).toMatchObject({ model: "gpt-4o-mini" });
+  });
+
+  describe("Server Logs", () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("has no Server Logs tab while server logs are disabled", async () => {
+      server.use(...providerHandlers);
+      setup();
+      await screen.findByRole("option", { name: "anthropic" });
+      expect(screen.queryByRole("tab", { name: "Server Logs" })).not.toBeInTheDocument();
+    });
+
+    it("has a Server Logs tab, on the right, which waits for the first request", async () => {
+      installFakes();
+      server.use(...providerHandlers);
+      const user = setup(LOG_STREAM_URL);
+      await screen.findByRole("option", { name: "anthropic" });
+
+      expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["Request", "Response", "Server Logs"]);
+      await user.click(screen.getByRole("tab", { name: "Server Logs" }));
+      expect(screen.getByRole("tab", { name: "Server Logs", selected: true })).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent("Send a request to see its server logs here.");
+      expect(FakeEventSource.instances).toHaveLength(0);
+    });
+
+    it("streams the server logs of each request that it sends, which its own request id tags", async () => {
+      installFakes();
+      const requestIds: (string | null)[] = [];
+      server.use(
+        ...providerHandlers,
+        http.post(`${API_URL}:provider/`, ({ request }) => {
+          requestIds.push(request.headers.get("X-Smarter-RequestId"));
+          return HttpResponse.json(completion);
+        }),
+      );
+      const user = setup(LOG_STREAM_URL);
+      await screen.findByRole("option", { name: "anthropic" });
+
+      await user.click(screen.getByRole("button", { name: "SEND" }));
+      await screen.findByRole("region", { name: "Reply" });
+      expect(requestIds[0]).toMatch(/^[0-9a-f]{32}$/);
+      expect(requestIds[0]).not.toBe(sessionContext.smarterRequestId);
+      const stream = FakeEventSource.latest();
+      expect(stream.url).toBe(`${LOG_STREAM_URL}?request_id=${requestIds[0]}&level=DEBUG`);
+
+      await user.click(screen.getByRole("tab", { name: "Server Logs" }));
+      act(() => stream.open());
+      act(() => stream.emit(bulkLogs, "bulk"));
+      expect(screen.getByRole("log", { name: "Server logs" })).toHaveTextContent("passthrough request received");
+
+      // the next request has its own id, and its own logs.
+      await user.click(screen.getByRole("tab", { name: "Request" }));
+      await user.click(screen.getByRole("button", { name: "SEND" }));
+      await screen.findByRole("region", { name: "Reply" });
+      expect(requestIds[1]).not.toBe(requestIds[0]);
+      expect(stream.closed).toBe(true);
+      expect(FakeEventSource.latest().url).toContain(`request_id=${requestIds[1]}`);
+      await user.click(screen.getByRole("tab", { name: "Server Logs" }));
+      expect(screen.getByRole("log", { name: "Server logs" })).toBeEmptyDOMElement();
+    });
   });
 });

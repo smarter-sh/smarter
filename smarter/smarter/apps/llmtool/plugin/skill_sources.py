@@ -21,8 +21,11 @@ with the plugin, so that tool calls never depend on the availability of the remo
 
 .. note::
 
-    GitHub api requests are unauthenticated, and so are rate limited to 60 per hour per
-    client IP address. One api request is made per GitHub-sourced skill, per apply.
+    One GitHub api request is made per GitHub-sourced skill, per apply. Without a token,
+    GitHub api requests are anonymous, and so are rate limited to 60 per hour per client IP
+    address, which hosts that share an address, such as GitHub Actions runners, exceed. Set
+    ``smarter_settings.github_api_token`` (``SMARTER_GITHUB_API_TOKEN``) to authenticate them.
+    The token is sent only to ``api.github.com``.
 
 .. note::
 
@@ -33,8 +36,8 @@ with the plugin, so that tool calls never depend on the availability of the remo
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
-from urllib.parse import quote
+from typing import Callable, Optional
+from urllib.parse import quote, urlparse
 
 from smarter.apps.llmtool.const import PluginCacheTtl
 from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
@@ -53,6 +56,7 @@ from smarter.apps.llmtool.manifest.models.skill_plugin.source import (
     SkillSourceLocation,
     parse_source_url,
 )
+from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -110,13 +114,20 @@ def validate_public_https_url(url: str) -> None:
         raise SkillSourceError(f"skill source is not permitted: {e}") from e
 
 
-def fetch(url: str, max_bytes: int = MAX_RESPONSE_BYTES, headers: Optional[dict[str, str]] = None) -> bytes:
+def fetch(
+    url: str,
+    max_bytes: int = MAX_RESPONSE_BYTES,
+    headers: Optional[dict[str, str]] = None,
+    redirect_policy: Optional[Callable[[str], None]] = None,
+) -> bytes:
     """
     Download a remote file, safely.
 
     :param url: The https URL to download.
     :param max_bytes: The maximum size of the response body.
-    :param headers: Additional request headers.
+    :param headers: Additional request headers. They are sent with each redirect too.
+    :param redirect_policy: Called with each redirect URL. It raises
+        :py:class:`~smarter.apps.llmtool.plugin.safe_http.SafeHttpError` to refuse the redirect.
     :return: The response body.
     :raises SkillSourceError: If the URL is not a public https URL, the request fails or
         times out, the response is not 200 OK, or the response is too large.
@@ -130,6 +141,7 @@ def fetch(url: str, max_bytes: int = MAX_RESPONSE_BYTES, headers: Optional[dict[
             timeout=REQUEST_TIMEOUT,
             max_bytes=max_bytes,
             max_redirects=MAX_REDIRECTS,
+            redirect_policy=redirect_policy,
         ).content
     except safe_http.SafeHttpError as e:
         raise SkillSourceError(f"skill source could not be retrieved: {e}") from e
@@ -151,6 +163,30 @@ def fetch_text(url: str, max_bytes: int = MAX_RESPONSE_BYTES) -> Optional[str]:
         return None
 
 
+def github_api_headers() -> dict[str, str]:
+    """
+    The headers of a GitHub api request: its Accept header, and the token, if there is one.
+
+    :return: The headers. With ``smarter_settings.github_api_token``, they include its
+        ``Authorization`` header.
+    """
+    headers = {"Accept": "application/vnd.github+json"}
+    if smarter_settings.github_api_token:
+        headers["Authorization"] = f"Bearer {smarter_settings.github_api_token.get_secret_value()}"
+    return headers
+
+
+def github_api_redirect_policy(url: str) -> None:
+    """
+    Refuse a redirect away from the GitHub api, which would send its token to another host.
+
+    :param url: The redirect URL.
+    :raises safe_http.SafeHttpError: If the URL's host is not the GitHub api's.
+    """
+    if urlparse(url).hostname != urlparse(GITHUB_API_URL).hostname:
+        raise safe_http.SafeHttpError(f"the GitHub api redirected to another host: {urlparse(url).netloc}")
+
+
 def list_github_skill_files(location: SkillSourceLocation) -> list[tuple[str, int]]:
     """
     List the files beneath a skill directory in a GitHub repository.
@@ -162,7 +198,12 @@ def list_github_skill_files(location: SkillSourceLocation) -> list[tuple[str, in
         f"{GITHUB_API_URL}/repos/{quote(str(location.owner))}/{quote(str(location.repo))}"
         f"/git/trees/{quote(str(location.ref))}?recursive=1"
     )
-    content = fetch(tree_url, max_bytes=MAX_GITHUB_TREE_BYTES, headers={"Accept": "application/vnd.github+json"})
+    content = fetch(
+        tree_url,
+        max_bytes=MAX_GITHUB_TREE_BYTES,
+        headers=github_api_headers(),
+        redirect_policy=github_api_redirect_policy,
+    )
     try:
         tree = json.loads(content)
     except ValueError as e:
