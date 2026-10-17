@@ -52,6 +52,21 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def create_resource(cls, name: str) -> LLMClient:
         return LLMClient.objects.create(name=name, user_profile=cls.user_profile)
 
+    def test_list_api_pending_filter(self):
+        """Test that ?filter=pending lists only the LLMClients that aren't deployed, as the dashboard counts them."""
+        deployed = self.throwaway("deployed")
+        pending = self.throwaway("pending")
+        LLMClient.objects.filter(pk=deployed.pk).update(deployed=True)
+        LLMClient.objects.filter(pk=pending.pk).update(deployed=False)
+        names = self.listed("owned", filter="pending", invalidate_cache="true", page_size=100)
+        self.assertIn(pending.name, names)
+        self.assertNotIn(deployed.name, names)
+        self.assertIn(deployed.name, self.listed("owned", invalidate_cache="true", page_size=100))
+
+        url = self.url("listview_api", ownership_filter="owned") + "?filter=pending&invalidate_cache=true"
+        pagination = self.post(url)["pagination"]
+        self.assertEqual((pagination["filter"], pagination["filters"]), ("pending", ["pending"]))
+
     def test_detail(self):
         super().test_detail()
 

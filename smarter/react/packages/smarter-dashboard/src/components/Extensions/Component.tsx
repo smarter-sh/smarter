@@ -104,7 +104,7 @@ function Extensions() {
                   target="_blank"
                   className="align-self-center fw-semibold extensions-link"
                 >
-                  {gettext("Build one &rarr;")}
+                  {gettext("Build one →")}
                 </a>
               </div>
             </div>

@@ -3,7 +3,8 @@ Pagination and search for the list apis of the React list views in the Smarter w
 
 Every resource list, e.g. the Guardrail or Secret list, is a ``TabbedListView`` of
 ``@smarter/common``, which asks its Django list api for one page of the resources at a time,
-optionally narrowed by a search, and sorted by one of its columns. :func:`paginate_listview`
+optionally narrowed by a search and by one of the list's named filters, and sorted by one of its
+columns. :func:`paginate_listview`
 reads those query parameters, filters, sorts and paginates the queryset, and describes the page,
 so that every list api behaves alike.
 
@@ -24,6 +25,7 @@ default order, on the other pages.
     )
 """
 
+from types import MappingProxyType
 from typing import Any, Mapping, Optional, Sequence
 
 from django.core.exceptions import FieldDoesNotExist
@@ -50,17 +52,22 @@ A longer one is truncated.
 DEFAULT_SEARCH_FIELDS = ("name", "description")
 """The fields that a search matches, of the MetaDataModel that every Smarter resource inherits."""
 
-DEFAULT_SORT_FIELDS: Mapping[str, str] = {
-    "name": "name",
-    "description": "description",
-    "createdAt": "created_at",
-    "updatedAt": "updated_at",
-}
+DEFAULT_SORT_FIELDS: Mapping[str, str] = MappingProxyType(
+    {
+        "name": "name",
+        "description": "description",
+        "createdAt": "created_at",
+        "updatedAt": "updated_at",
+    }
+)
 """The columns that a list may be sorted by, of the MetaDataModel that every Smarter resource inherits.
 
 Each key is a column's name in the list api's response, in camelCase, as the ``ordering`` query
 parameter names it. Each value is the field that sorts it, in the queryset's lookup syntax, such as
 ``"api_key__name"`` for a related resource's name.
+
+It is read-only, since it is every list's default: a list adds its own columns to a copy, e.g.
+``{**DEFAULT_SORT_FIELDS, "stage": "stage"}``.
 """
 
 
@@ -88,6 +95,10 @@ class ListViewPagination(BaseModel):
         "", description="The column that sorts the list, e.g. -createdAt, or an empty string for the default order."
     )
     sort_fields: list[str] = Field(default_factory=list, description="The columns that the list may be sorted by.")
+    filter: str = Field(
+        "", description="The named filter that narrows the list, e.g. pending, or an empty string for none."
+    )
+    filters: list[str] = Field(default_factory=list, description="The named filters that the list offers.")
 
 
 def positive_int(value: Any, default: int, maximum: Optional[int] = None) -> int:
@@ -124,6 +135,7 @@ def search_queryset(queryset: QuerySet, search: str, search_fields: Sequence[str
     if not search:
         return queryset
     condition = Q()
+    # pylint: disable=protected-access
     for field in search_fields:
         try:
             queryset.model._meta.get_field(field)
@@ -135,6 +147,27 @@ def search_queryset(queryset: QuerySet, search: str, search_fields: Sequence[str
     return queryset.filter(condition)
 
 
+def filter_queryset(queryset: QuerySet, name: str, filters: Mapping[str, Q]) -> tuple[QuerySet, str]:
+    """
+    The resources of ``queryset`` that match the named filter of ``filters``, e.g. ``"pending"``.
+
+    A list offers its own named filters, so that a link can open it narrowed, e.g. the dashboard's
+    pending deployments link opens the LLMClient list with ``?filter=pending``. An empty or
+    unknown name leaves the queryset unchanged, as an unknown ordering does.
+
+    :param queryset: The resources to filter.
+    :param name: The filter's name, as the ``filter`` query parameter gives it.
+    :param filters: The list's named filters, and the conditions that they apply.
+    :returns: The matching resources, and the name of the filter that applied: ``name``, or an
+        empty string if none did.
+    """
+    name = name.strip()
+    condition = filters.get(name) if name else None
+    if condition is None:
+        return queryset, ""
+    return queryset.filter(condition), name
+
+
 def has_field(model: type[Model], lookup: str) -> bool:
     """
     Whether ``model`` has the field that ``lookup`` names, following relations, e.g. ``"api_key__name"``.
@@ -143,6 +176,7 @@ def has_field(model: type[Model], lookup: str) -> bool:
     :param lookup: A field name, or a path of field names joined by ``__``.
     :returns: True if every field of the path exists.
     """
+    # pylint: disable=protected-access
     for name in lookup.split("__"):
         if model is None:
             return False
@@ -204,6 +238,7 @@ def paginate_listview(
     queryset: QuerySet,
     search_fields: Sequence[str] = DEFAULT_SEARCH_FIELDS,
     sort_fields: Mapping[str, str] = DEFAULT_SORT_FIELDS,
+    filters: Optional[Mapping[str, Q]] = None,
 ) -> tuple[Page, SmarterDictType]:
     """
     One page of a list api's resources, which match its search, and a description of the page.
@@ -216,20 +251,25 @@ def paginate_listview(
     - ``ordering``: the column of ``sort_fields`` to sort by, e.g. ``name``, or ``-name`` to sort
       it in descending order. Without one, the resources keep the queryset's order. See
       :func:`sort_queryset`.
+    - ``filter``: the name of one of ``filters``, e.g. ``pending``. See :func:`filter_queryset`.
 
     :param request: The list api's request.
     :param queryset: The resources that the user may list, in their default order.
     :param search_fields: The names of the fields that a search matches.
     :param sort_fields: The columns that the list may be sorted by, and the fields that sort them.
         See :data:`DEFAULT_SORT_FIELDS`.
+    :param filters: The list's named filters, and the conditions that they apply, e.g.
+        ``{"pending": Q(deployed=False)}``. None offers none.
     :returns: The page, and its description for the list api's response, a dumped :class:`ListViewPagination`:
         ``{"page": 1, "pageSize": 25, "numPages": 3, "count": 61, "search": "", "ordering": "-name",
-        "sortFields": ["createdAt", "description", "name", "updatedAt"]}``. ``ordering`` is empty
+        "sortFields": ["createdAt", "description", "name", "updatedAt"], "filter": "", "filters": []}``. ``ordering`` is empty
         when the default order applies, and ``sortFields`` are the columns that the list may be
         sorted by, so that the list shows only those columns as sortable.
     """
     search = request.GET.get("search", "").strip()[:MAX_SEARCH_LENGTH]
     page_size = positive_int(request.GET.get("page_size"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
+    filters = filters or {}
+    queryset, applied_filter = filter_queryset(queryset, request.GET.get("filter", ""), filters)
     queryset, ordering = sort_queryset(queryset, request.GET.get("ordering", ""), sort_fields)
     paginator = Paginator(search_queryset(queryset, search, search_fields), page_size)
     # get_page() returns the last page for a page past it, and the first for an invalid one.
@@ -242,6 +282,8 @@ def paginate_listview(
         search=search,
         ordering=ordering,
         sort_fields=sorted(sortable_fields(queryset, sort_fields)),
+        filter=applied_filter,
+        filters=sorted(filters),
     )
     return page, pagination.model_dump(mode="json")
 
@@ -253,6 +295,7 @@ __all__ = [
     "ListViewPagination",
     "MAX_PAGE_SIZE",
     "MAX_SEARCH_LENGTH",
+    "filter_queryset",
     "has_field",
     "paginate_listview",
     "positive_int",

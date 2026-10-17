@@ -198,32 +198,6 @@ class AccountMiniSerializer(SmarterCamelCaseSerializer):
         fields = ("account_number",)
 
 
-class ChargeSerializer(SmarterCamelCaseSerializer):
-    """
-    Read-only serializer for the ``Charge`` model.
-
-    This serializer converts :class:`Charge` model instances to and from the
-    JSON representation used by the Smarter API. Field names are automatically
-    converted between Django's ``snake_case`` convention and the API's
-
-    ``camelCase`` convention by the
-
-    :class:`SmarterCamelCaseSerializer` base class.
-
-    This serializer is intended for read operations only. All model fields are
-    exposed, and every field is marked as read-only, preventing creation or
-    modification through this serializer.
-
-    :inherits: SmarterCamelCaseSerializer
-    """
-
-    # pylint: disable=C0115
-    class Meta:
-        model = User
-        fields = ["__all__"]
-        read_only_fields = fields
-
-
 class UserProfileSerializer(SmarterCamelCaseSerializer):
     """
     Serializer for the `UserProfile` model in the Smarter API.

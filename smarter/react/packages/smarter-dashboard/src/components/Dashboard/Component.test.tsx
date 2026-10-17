@@ -12,10 +12,13 @@ describe("Dashboard", () => {
     server.use(...dashboardHandlers);
     render(<Dashboard appContext={appContext} />);
 
-    expect(await screen.findByRole("link", { name: "2 pending" })).toHaveAttribute("href", "/workbench/");
-    expect(await screen.findByText("Backend Service Health")).toBeInTheDocument();
-    const health = screen.getByLabelText("Service Health");
-    expect(within(within(health).getByText("Kubernetes")).getByLabelText("unhealthy")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "2 pending" })).toHaveAttribute(
+      "href",
+      "/workbench/?filter=pending",
+    );
+    const health = screen.getByRole("region", { name: "Service Health" });
+    expect(await within(health).findByText("1 of 4 checks failing")).toBeInTheDocument();
+    expect(within(health).getByRole("listitem", { name: "Workers" })).toHaveTextContent("Down");
 
     const actions = await screen.findByRole("region", { name: "Quick Actions" });
     expect(within(actions).getByRole("link", { name: /Documentation/ })).toHaveAttribute("target", "_blank");
