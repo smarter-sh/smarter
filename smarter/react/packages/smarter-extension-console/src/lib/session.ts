@@ -37,5 +37,6 @@ export function readContext(rootEl: HTMLElement): ConsoleContext {
     smarterRequestId: attribute("smarter-request-id"),
   };
   const slug = rootEl.id === DETAIL_ROOT_ID ? attribute("smarter-extension-slug") : undefined;
-  return { session, apiUrl, listUrl: attribute("smarter-extension-list-url"), slug };
+  const canEdit = attribute("smarter-extension-can-edit", false).toLowerCase() === "true";
+  return { session, apiUrl, listUrl: attribute("smarter-extension-list-url"), slug, canEdit };
 }

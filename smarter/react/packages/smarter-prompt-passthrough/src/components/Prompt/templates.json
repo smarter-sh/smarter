@@ -7,6 +7,14 @@
         {
           "role": "user",
           "content": "Hello world"
+        },
+        {
+          "role": "assistant",
+          "content": "Hello! How can I help?"
+        },
+        {
+          "role": "user",
+          "content": "What's the weather in San Francisco?"
         }
       ]
     }
@@ -64,6 +72,239 @@
               "required": ["location"]
             }
           }
+        }
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "name": "MCP Server",
+    "body": {
+      "max_tokens": 1024,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You answer questions about The Smarter Project. Your tools are the tools of this platform's built-in Smarter Project MCP server, at /api/v1/mcp/smarter-project/, as its tools/list method describes them. Call a tool to find the answer before you reply."
+        },
+        {
+          "role": "user",
+          "content": "How do I verify a custom domain for an LLMClient?"
+        }
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_repository_overview",
+            "description": "Describe a repository of The Smarter Project: what it contains, its GitHub url, its indexed commit, its top-level folders and files, and its README. Use it for questions about a repository as a whole, not to answer a specific question, which the search tools answer directly.",
+            "parameters": {
+              "additionalProperties": false,
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "enum": [
+                    "smarter",
+                    "smarter-cli",
+                    "smarter-python",
+                    "smarter-nodejs",
+                    "smarter-golang",
+                    "smarter-vscode-yaml",
+                    "smarter-infrastructure",
+                    "smarter-chat",
+                    "smarter-deploy"
+                  ],
+                  "description": "The repository. Omit it to use all of the repositories."
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search_documentation",
+            "description": "Search the documentation of The Smarter Project: the Sphinx documentation published at docs.smarter.sh, READMEs, and other reStructuredText and Markdown files. Returns the best passages, with links to the published page and to the source. Use it for concepts, features, configuration, installation and how-to questions.",
+            "parameters": {
+              "additionalProperties": false,
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "enum": [
+                    "smarter",
+                    "smarter-cli",
+                    "smarter-python",
+                    "smarter-nodejs",
+                    "smarter-golang",
+                    "smarter-vscode-yaml",
+                    "smarter-infrastructure",
+                    "smarter-chat",
+                    "smarter-deploy"
+                  ],
+                  "description": "The repository. Omit it to use all of the repositories."
+                },
+                "query": {
+                  "description": "Keywords, identifiers or \"quoted phrases\", e.g. custom domain verification.",
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "limit": {
+                  "default": 8,
+                  "description": "The maximum number of results.",
+                  "maximum": 20,
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": ["query"],
+              "type": "object"
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search_code",
+            "description": "Search the source code and configuration of The Smarter Project: Python, TypeScript, Go, YAML manifests, Helm charts, Terraform and more. Returns the best files, with their matching lines and GitHub links. Use it for how something is implemented, and to find a class, function, setting or manifest field by name.",
+            "parameters": {
+              "additionalProperties": false,
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "enum": [
+                    "smarter",
+                    "smarter-cli",
+                    "smarter-python",
+                    "smarter-nodejs",
+                    "smarter-golang",
+                    "smarter-vscode-yaml",
+                    "smarter-infrastructure",
+                    "smarter-chat",
+                    "smarter-deploy"
+                  ],
+                  "description": "The repository. Omit it to use all of the repositories."
+                },
+                "query": {
+                  "description": "Keywords, identifiers or \"quoted phrases\", e.g. custom domain verification.",
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "limit": {
+                  "default": 8,
+                  "description": "The maximum number of results.",
+                  "maximum": 20,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "path": {
+                  "description": "Only search files under this folder, e.g. smarter/smarter/apps/llmclient.",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": ["query"],
+              "type": "object"
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "description": "Read a file of a repository of The Smarter Project, with line numbers, from the paths that the search tools and list_files return. Long files are read 400 lines at a time: use start_line and end_line to read more.",
+            "parameters": {
+              "additionalProperties": false,
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "enum": [
+                    "smarter",
+                    "smarter-cli",
+                    "smarter-python",
+                    "smarter-nodejs",
+                    "smarter-golang",
+                    "smarter-vscode-yaml",
+                    "smarter-infrastructure",
+                    "smarter-chat",
+                    "smarter-deploy"
+                  ],
+                  "description": "The repository."
+                },
+                "path": {
+                  "description": "The file's path in the repository, e.g. README.md.",
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "start_line": {
+                  "default": 1,
+                  "description": "The first line to read.",
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "end_line": {
+                  "description": "The last line to read. At most 400 lines are read at once.",
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": ["repository", "path"],
+              "type": "object"
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "list_files",
+            "description": "List the folders and indexed files in a folder of a repository of The Smarter Project, with the number of files in each folder. Use it to explore a repository's layout.",
+            "parameters": {
+              "additionalProperties": false,
+              "properties": {
+                "repository": {
+                  "type": "string",
+                  "enum": [
+                    "smarter",
+                    "smarter-cli",
+                    "smarter-python",
+                    "smarter-nodejs",
+                    "smarter-golang",
+                    "smarter-vscode-yaml",
+                    "smarter-infrastructure",
+                    "smarter-chat",
+                    "smarter-deploy"
+                  ],
+                  "description": "The repository."
+                },
+                "path": {
+                  "description": "The folder, e.g. smarter/smarter/apps. Omit it for the repository's top-level folder.",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "type": "object",
+              "required": ["repository"]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "name": "RAG",
+    "body": {
+      "max_tokens": 1024,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an accounts payable analyst. Answer only from the accounts payable vouchers below, which were retrieved for the user's question, and are fictitious example data. Cite each voucher number that you use. If the vouchers don't answer the question, say so.\n\nRetrieved vouchers:\nVoucher AP-2026-0412 | Vendor: Cascade Industrial Supply | Invoice: CIS-88213 | Invoice date: 2026-08-28 | Due: 2026-09-27 | Terms: Net 30 | Amount: USD 14,250.00 | PO: PO-55102 | GL account: 5100 Raw Materials | Status: Approved, unpaid\nVoucher AP-2026-0418 | Vendor: Bluewater Logistics | Invoice: BWL-20931 | Invoice date: 2026-09-02 | Due: 2026-10-02 | Terms: Net 30 | Amount: USD 3,870.45 | PO: PO-55117 | GL account: 5300 Freight In | Status: Approved, unpaid\nVoucher AP-2026-0421 | Vendor: Summit Office Products | Invoice: SOP-7741 | Invoice date: 2026-09-05 | Due: 2026-10-05 | Terms: Net 30 | Amount: USD 612.18 | PO: PO-55120 | GL account: 6100 Office Supplies | Status: Paid 2026-10-01, check 10482\nVoucher AP-2026-0427 | Vendor: Ironwood Machining | Invoice: IWM-3310 | Invoice date: 2026-09-10 | Due: 2026-10-25 | Terms: Net 45 | Amount: USD 28,400.00 | PO: PO-55131 | GL account: 5100 Raw Materials | Status: Approved, unpaid\nVoucher AP-2026-0433 | Vendor: Cascade Industrial Supply | Invoice: CIS-88213 | Invoice date: 2026-08-28 | Due: 2026-09-27 | Terms: Net 30 | Amount: USD 14,250.00 | PO: PO-55102 | GL account: 5100 Raw Materials | Status: Pending approval\nVoucher AP-2026-0436 | Vendor: Brightline Electric | Invoice: BLE-0912 | Invoice date: 2026-09-12 | Due: 2026-09-22 | Terms: Net 10 | Amount: USD 1,945.00 | PO: none | GL account: 6400 Utilities | Status: Approved, unpaid\nVoucher AP-2026-0440 | Vendor: Meridian Software | Invoice: MSW-INV-5521 | Invoice date: 2026-09-15 | Due: 2026-10-15 | Terms: Net 30 | Amount: USD 9,600.00 | PO: PO-55140 | GL account: 6500 Software Subscriptions | Status: Approved, unpaid\nVoucher AP-2026-0444 | Vendor: Bluewater Logistics | Invoice: BWL-21007 | Invoice date: 2026-09-18 | Due: 2026-10-18 | Terms: Net 30 | Amount: USD 2,215.90 | PO: PO-55117 | GL account: 5300 Freight In | Status: Approved, unpaid\nVoucher AP-2026-0449 | Vendor: Harborview Facilities | Invoice: HVF-1187 | Invoice date: 2026-09-20 | Due: 2026-10-20 | Terms: Net 30 | Amount: USD 4,300.00 | PO: PO-55152 | GL account: 6200 Repairs and Maintenance | Status: On hold: quantity received does not match the PO\nVoucher AP-2026-0453 | Vendor: Ironwood Machining | Invoice: IWM-3348 | Invoice date: 2026-09-24 | Due: 2026-11-08 | Terms: Net 45 | Amount: USD 11,725.50 | PO: PO-55131 | GL account: 5100 Raw Materials | Status: Approved, unpaid\nVoucher AP-2026-0458 | Vendor: Pinecrest Consulting | Invoice: PCC-2026-09 | Invoice date: 2026-09-30 | Due: 2026-10-30 | Terms: Net 30 | Amount: USD 7,500.00 | PO: none | GL account: 6700 Professional Fees | Status: Pending approval\nVoucher AP-2026-0461 | Vendor: Summit Office Products | Invoice: SOP-7802 | Invoice date: 2026-10-03 | Due: 2026-11-02 | Terms: Net 30 | Amount: USD 388.74 | PO: PO-55160 | GL account: 6100 Office Supplies | Status: Approved, unpaid"
+        },
+        {
+          "role": "user",
+          "content": "As of October 17, 2026, which unpaid vouchers are past due, how much is past due to each vendor, and are any of the vouchers possible duplicates?"
         }
       ]
     }

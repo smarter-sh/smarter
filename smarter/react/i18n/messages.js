@@ -14,13 +14,13 @@ gettext("Smarter Authtokens are a Django REST Framework API authentication token
 gettext("ID");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Manifest URL");
-// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Owner");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx
 gettext("Owner Email");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Account Number");
-// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Created");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Last Updated");
@@ -28,9 +28,9 @@ gettext("Last Updated");
 gettext("Version");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Description");
-// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Tags");
-// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Annotations");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-connection-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-guardrail-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmclient-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmhost-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmtool-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-provider-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-proxy-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-secret-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/renderDetail.tsx
 gettext("No value");
@@ -42,7 +42,7 @@ gettext("No");
 gettext("Loading...");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 gettext("Name");
-// Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+// Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 gettext("Updated");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 gettext("Status");
@@ -302,7 +302,7 @@ gettext("A Custom Domain serves an LLMClient from your own branded domain name, 
 gettext("Domain");
 // Translators: used in react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx
 gettext("Verification Status");
-// Translators: used in react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+// Translators: used in react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 gettext("Verified");
 // Translators: used in react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx
 gettext("Verification Message");
@@ -332,7 +332,7 @@ gettext("Deployed: the LLMClient is deployed");
 gettext("Not deployed");
 // Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/Component.tsx
 ngettext("%(recordCount)s DNS record", "%(recordCount)s DNS records", 1);
-// Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx
+// Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
 gettext("Verifying");
 // Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx, react/packages/smarter-vectorstore-list/src/lib/format.tsx
 gettext("Failed");
@@ -430,7 +430,7 @@ gettext("CLI%(span)s");
 gettext("Powerful tools for managing your AI resources.");
 // Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx
 gettext("Example CLI session");
-// Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx, react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx, react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 gettext("Download");
 // Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx, react/packages/smarter-dashboard/src/components/McpServer/Component.tsx, react/packages/smarter-dashboard/src/components/Sdk/Component.tsx, react/packages/smarter-dashboard/src/components/VSCodeExtension/Component.tsx
 gettext("Documentation");
@@ -875,6 +875,8 @@ gettext("Check for updates");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 gettext("No extensions are installed. Browse the registry, or upload an archive.");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
+gettext("No extensions are installed.");
+// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 gettext("Extension");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 gettext("Trust");
@@ -882,7 +884,7 @@ gettext("Trust");
 gettext("Source");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx
 gettext("Enabled");
-// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
+// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 gettext("Error");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 gettext("%(latestVersion)s available");
@@ -972,7 +974,7 @@ gettext("Deletes the extension, its settings and versions, and the waffle switch
 gettext("Uninstalling");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
 gettext("Uninstall %(displayName)s");
-// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx
+// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("Slug");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx
 gettext("Unknown");
@@ -1256,7 +1258,7 @@ gettext("Sandbox Host");
 gettext("Base Sandbox URL");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 gettext("Hostname");
-// Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx
+// Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx
 gettext("Base URL");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 gettext("Note that the base URL does not resolve to a working endpoint. Add '/chat' or '/config' to this URL.");
@@ -1270,7 +1272,7 @@ gettext("URL Chat Config");
 gettext("POST only endpoint for llmclient configuration retrieval.");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 gettext("URL Chatapp");
-// Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
+// Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 gettext("Model");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 gettext("Temperature");
@@ -1698,7 +1700,7 @@ gettext("Checking the manifest…");
 gettext("No problems");
 // Translators: used in react/packages/smarter-manifest-editor/src/components/Problems/Component.tsx
 gettext("Line %(line)s");
-// Translators: used in react/packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
+// Translators: used in react/packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 gettext("Copied to clipboard");
 // Translators: used in react/packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
 gettext("Manifest editor");
@@ -1869,51 +1871,62 @@ gettext("Delete: You can't delete this orchestrator, because other resources dep
 // Translators: used in react/packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this orchestrator resource");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
+gettext("Unverified");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
+gettext("Verification failed");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+gettext("Suspended");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+gettext("Deprecated");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
 gettext("%(name)s logo");
+// Translators: when an email address was verified, e.g. "Verified Oct 15, 2026".
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Slug:");
+gettext("Verified %(date)s");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Default model:");
+gettext("Not verified");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("API Key Secret Name:");
+gettext("Connection");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Connectivity path:");
+gettext("Default model");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Account:");
+gettext("Connectivity path");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("User:");
+gettext("API key secret");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("TOS accepted:");
+gettext("Ownership");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("TOS accepted by:");
+gettext("Account");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("TOS accepted at:");
+gettext("Ownership requested");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Ownership requested:");
+gettext("Terms of service");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Created:");
+gettext("Accepted");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Updated:");
+gettext("Accepted by");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Tags:");
+gettext("Accepted on");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Annotations:");
+gettext("Contact");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Contact:");
+gettext("Contact email");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Support:");
+gettext("Support email");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 gettext("Default");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 gettext("Featured");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
-gettext("Deprecated");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 gettext("Flagged");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
-gettext("Suspended");
+gettext("Flags");
+// Translators: a provider flag that is set, e.g. "Featured: yes".
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
-gettext("Flags:");
+gettext("%(flag)s: yes");
+// Translators: a provider flag that isn't set, e.g. "Featured: no".
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
+gettext("%(flag)s: no");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx
 gettext("Website");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx
@@ -1922,35 +1935,69 @@ gettext("Docs");
 gettext("Terms");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx
 gettext("Privacy");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx
+gettext("Provider links");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
+gettext("LLM provider");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/TemplateSelector/Component.tsx
+gettext("Prompt template");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+gettext("Endpoint");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx
 gettext("SENDING...");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx
 gettext("SEND");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-gettext("(prompting LLM...)");
-// Translators: %(span)s is the request's status, e.g. (prompting LLM...), and an emoji.
+gettext("Network error");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
+gettext("Copy JSON");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-gettext("HTTP Response Body %(span)s");
+gettext("Waiting for the provider's response…");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("No response yet");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Send a request, and the provider's response will appear here.");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("The response isn't JSON. It's shown below, as it is.");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
+gettext("Response");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Time to respond");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Response size");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Raw response");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Raw JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Response JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+gettext("Reply");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+gettext("Tool calls");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+gettext("The reply is empty.");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+gettext("Finish reason");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+gettext("Tokens");
+// Translators: token counts of a prompt, e.g. "13 prompt · 7 completion · 20 total".
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+gettext("%(prompt)s prompt · %(completion)s completion · %(total)s total");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+gettext("Stack trace");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviders.tsx
 gettext("Failed to fetch providers: %(status)s");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
-gettext("LLM provider");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
 gettext("No providers available");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 gettext("LLM Provider API Passthrough");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
-gettext("Response");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/TemplateSelector/Component.tsx
-gettext("Prompt template");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 gettext("File New");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 gettext("File Save");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 gettext("Format JSON");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
-gettext("Copy JSON");
 // Translators: used in react/packages/smarter-provider-list/src/App.tsx
 gettext("Your Providers");
 // Translators: used in react/packages/smarter-provider-list/src/App.tsx
@@ -2297,8 +2344,6 @@ gettext("Vectorstores");
 gettext("A Vectorstore is a vector database for retrieval-augmented generation (RAG): documents, such as PDFs, are split into chunks, embedded, and loaded into it, and searched by meaning. Smarter runs Qdrant on its own Kubernetes cluster, or connects to Pinecone or Qdrant Cloud. It creates and destroys the database, loads and removes documents, and takes scheduled snapshots. Create one with a Vectorstore manifest.");
 // Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Index or Collection");
-// Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
-gettext("Endpoint");
 // Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("ApiConnection");
 // Translators: used in react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
