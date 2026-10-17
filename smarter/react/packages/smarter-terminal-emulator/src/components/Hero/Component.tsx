@@ -4,7 +4,7 @@ import { gettext } from "@smarter/common";
 function Hero() {
   return (
     <>
-      <h3>{gettext("Server Logs")}</h3>
+      <h3>{gettext("Terminal")}</h3>
     </>
   );
 }

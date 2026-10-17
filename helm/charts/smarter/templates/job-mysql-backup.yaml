@@ -3,8 +3,18 @@
 #
 # This file defines a Kubernetes CronJob that runs a backup script
 # to back up the MariaDB database. The backup script is stored in a
-# ConfigMap and mounted into the Job. The Job runs on a Debian image,
+# ConfigMap and mounted into the Job. The backup runs on a Debian image,
 # installs necessary tools, and executes the backup script.
+#
+# When the backup completes, the Job emails the result, with the backup's log
+# attached, in the same way that job-init.yaml does: with manage.py email_job_log,
+# to databaseScheduledBackup.notifyEmail, or to smarter_settings.email_admin. A
+# successful backup's email names the backup file, its size and where in S3 it was
+# saved. The Debian image has no Django, so the backup runs as an init container,
+# which writes its log, exit status and summary to a shared volume, and always exits
+# 0, so that the email container runs after a failed backup too. The email
+# container then exits with the backup's status. A failed backup fails the pod, and
+# the Job retries it in a new pod, up to backoffLimit times, each of which emails.
 #
 # Note:
 # The app.kubernetes.io/application-group label is used to identify pods to Calico
@@ -31,12 +41,18 @@ spec:
   jobTemplate:
     spec:
       ttlSecondsAfterFinished: 86400
+      backoffLimit: 2
       template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: "{{ .Values.global.appName }}-mysql-backup"
+            app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
         spec:
           affinity:
             {{- toYaml .Values.global.affinity | nindent 12 }}
           tolerations:
             {{- toYaml .Values.global.tolerations | nindent 12 }}
+          automountServiceAccountToken: true
 
           volumes:
             - name: debian-setup-script
@@ -47,8 +63,10 @@ spec:
               configMap:
                 name: mysql-backup-script
                 defaultMode: 0755
+            - name: job-log
+              emptyDir: {}
 
-          containers:
+          initContainers:
             - name: mysql-backup
               image: debian:bullseye-slim
               workingDir: /home/
@@ -56,22 +74,30 @@ spec:
                 - /bin/bash
                 - -c
                 - |
-                    set -e
+                    # The backup's output is also written to /job/backup.log, which the email
+                    # container sends. The steps run in a subshell (they are piped to tee), so
+                    # their exit status is passed back in a file. This container always exits 0.
+                    {
+                      echo "Waiting for configMap mounts..."
+                      for i in $(seq 1 10); do
+                        if [ -f /home/setup/install.sh ]; then break; fi
+                        echo "Still waiting..."
+                        sleep 1
+                      done
 
-                    echo "Waiting for configMap mounts..."
-                    for i in $(seq 1 10); do
-                      if [ -f /home/setup/install.sh ]; then break; fi
-                      echo "Still waiting..."
-                      sleep 1
-                    done
+                      ls -l /home/setup || true
+                      ls -l /home/backup || true
 
-                    ls -l /home/setup || true
-                    ls -l /home/backup || true
-
-                    /home/setup/install.sh
-                    /home/backup/backup-to-s3.sh
-
-                    echo "Backup completed successfully!"
+                      /home/setup/install.sh && /home/backup/backup-to-s3.sh
+                      status=$?
+                      if [ $status -eq 0 ]; then
+                        echo "Backup completed successfully!"
+                      else
+                        echo "FAILED: the backup exited with status $status"
+                      fi
+                      echo $status > /job/backup.status
+                    } 2>&1 | tee /job/backup.log
+                    exit 0
 
               imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
 
@@ -89,6 +115,8 @@ spec:
                 - name: mysql-backup-script
                   mountPath: /home/backup/backup-to-s3.sh
                   subPath: backup-to-s3.sh
+                - name: job-log
+                  mountPath: /job
 
               env:
                 {{- range $key, $value := .Values.env }}
@@ -99,6 +127,42 @@ spec:
                 - name: {{ $env.name }}
                   value: {{ $env.value | quote }}
                 {{- end }}
+                - name: BACKUP_SUMMARY_FILE
+                  value: /job/backup-summary.txt
 
-          restartPolicy: OnFailure
+          containers:
+            - name: email-backup-log
+              image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
+              imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
+              command:
+                - /bin/sh
+                - -c
+              args:
+                - |
+                  # a backup that never wrote its status, e.g. one killed for running out of memory, failed.
+                  status=$(cat /job/backup.status 2>/dev/null || echo 1)
+                  python manage.py email_job_log --file /job/backup.log --summary /job/backup-summary.txt --job "{{ .Values.global.appName }}-mysql-backup {{ .Chart.Version }}" --status "$status" --to "{{ .Values.databaseScheduledBackup.notifyEmail | default "" }}" || true
+                  exit $status
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 1Gi
+              volumeMounts:
+                - name: job-log
+                  mountPath: /job
+                  readOnly: true
+              env:
+                {{- range $key, $value := .Values.env }}
+                - name: {{ $key }}
+                  value: {{ $value | quote }}
+                {{- end }}
+                {{- range $env := .Values.app.env }}
+                - name: {{ $env.name }}
+                  value: {{ $env.value | quote }}
+                {{- end }}
+
+          restartPolicy: Never
 {{- end }}

@@ -16,15 +16,19 @@ from django.conf import settings
 from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
 from django.core.asgi import get_asgi_application
 
-from smarter import consumers
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
 
+# Django must be set up, with its app registry populated, before anything imports a model, so
+# the WebSocket consumers, whose modules do, are imported after this. See the Channels docs.
 django_asgi_app = get_asgi_application()
 static_asgi_app = ASGIStaticFilesHandler(django_asgi_app)
+
+from smarter import consumers  # noqa: E402  pylint: disable=wrong-import-position
+
 websocket_application = AllowedHostsOriginValidator(AuthMiddlewareStack(URLRouter(consumers.urlpatterns)))
 
 

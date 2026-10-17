@@ -270,6 +270,7 @@ databaseInit:
 databaseScheduledBackup:
   enabled: true
   schedule: "0 2 * * *" # Every day at 2am UTC
+  notifyEmail: ""        # the Job emails the backup's result and log here. Empty: smarter_settings.email_admin
 
 externalDatabase:
   host: ""        # Will use .Values.env.SMARTER_MYSQL_HOST if empty
