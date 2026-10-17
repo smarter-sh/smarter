@@ -185,6 +185,7 @@ class SettingsDefaults:
     ENABLE_VECTORSTORE: bool = bool_environment_variable("ENABLE_VECTORSTORE", True)
     ENABLE_MANIFEST_DROPZONE: bool = bool_environment_variable("ENABLE_MANIFEST_DROPZONE", True)
     ENABLE_DASHBOARD_SERVER_LOGS: bool = bool_environment_variable("ENABLE_DASHBOARD_SERVER_LOGS", True)
+    ENABLE_WEB_CONSOLE_TERMINAL: bool = bool_environment_variable("ENABLE_WEB_CONSOLE_TERMINAL", False)
     ENABLE_DASHBOARD_PASSTHROUGH_PROMPT: bool = bool_environment_variable("ENABLE_DASHBOARD_PASSTHROUGH_PROMPT", True)
     ENABLE_PROXY: bool = bool_environment_variable("ENABLE_PROXY", True)
 

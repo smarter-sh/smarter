@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 21:56+0000\n"
+"POT-Creation-Date: 2026-10-17 23:01+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -1497,6 +1497,10 @@ msgstr "Aplicar manifiesto"
 #: smarter/templates/dashboard/sidebar.html
 msgid "Prompt Passthrough"
 msgstr "Prompt directo"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Terminal"
+msgstr "Terminal"
 
 #: smarter/templates/dashboard/sidebar.html
 msgid "Models"

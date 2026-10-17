@@ -35,20 +35,48 @@ data:
     # backup-to-s3.sh
     #
     # This script performs a backup of the MariaDB database and uploads it to S3.
+    #
+    # When it succeeds, it prints the backup file's name, size and S3 location, and
+    # also writes them to $BACKUP_SUMMARY_FILE, if that is set. The scheduled backup
+    # Job emails that summary, with this script's log attached.
     ################################################################################
     set -e
 
     BACKUP_FILENAME="${SMARTER_MYSQL_DATABASE}-$(date +%Y%m%dT%H%M%S)"
+    BACKUP_FILE="${BACKUP_FILENAME}.tar.gz"
+    BACKUP_URI="s3://ubc.smarter.sh/backups/sql/${BACKUP_FILE}"
 
     echo "Starting MariaDB backup for database: $SMARTER_MYSQL_DATABASE"
     mysqldump -h "$SMARTER_MYSQL_HOST" -u "$SMARTER_MYSQL_ROOT_USERNAME" -p"$SMARTER_MYSQL_ROOT_PASSWORD" --databases  "$SMARTER_MYSQL_DATABASE" --add-drop-database --add-drop-table --routines --events --triggers --single-transaction --quick --lock-tables=false > ${BACKUP_FILENAME}.sql
+    SQL_BYTES=$(stat -c %s "${BACKUP_FILENAME}.sql")
 
     echo "Compressing backup file: ${BACKUP_FILENAME}.sql"
-    tar -czvf ${BACKUP_FILENAME}.tar.gz ${BACKUP_FILENAME}.sql
+    tar -czvf ${BACKUP_FILE} ${BACKUP_FILENAME}.sql
+    BACKUP_BYTES=$(stat -c %s "${BACKUP_FILE}")
 
-    echo "Uploading backup file to S3: ${BACKUP_FILENAME}.tar.gz"
-    aws s3 cp ${BACKUP_FILENAME}.tar.gz s3://ubc.smarter.sh/backups/sql/${BACKUP_FILENAME}.tar.gz
+    echo "Uploading backup file to S3: ${BACKUP_FILE}"
+    aws s3 cp ${BACKUP_FILE} "${BACKUP_URI}"
+
+    # confirm that the upload is in S3, with the same size, before reporting success.
+    echo "Verifying the upload: ${BACKUP_URI}"
+    S3_BYTES=$(aws s3 ls "${BACKUP_URI}" | awk '{print $3}')
+    if [ "${S3_BYTES}" != "${BACKUP_BYTES}" ]; then
+      echo "FAILED: ${BACKUP_URI} is ${S3_BYTES:-missing} bytes in S3, but ${BACKUP_BYTES} bytes were uploaded."
+      exit 1
+    fi
     rm ${BACKUP_FILENAME}.sql
-    rm ${BACKUP_FILENAME}.tar.gz
+    rm ${BACKUP_FILE}
 
-    echo "MariaDB backup completed and uploaded to S3: ${BACKUP_FILENAME}.tar.gz"
+    SUMMARY=$(cat <<SUMMARY
+    Backup file: ${BACKUP_FILE}
+    Size:        $(numfmt --to=iec-i --suffix=B "${BACKUP_BYTES}") (${BACKUP_BYTES} bytes), compressed from $(numfmt --to=iec-i --suffix=B "${SQL_BYTES}") of SQL
+    Saved to:    ${BACKUP_URI}
+    Database:    ${SMARTER_MYSQL_DATABASE} on ${SMARTER_MYSQL_HOST}
+    Finished:    $(date -u +%Y-%m-%dT%H:%M:%SZ)
+    SUMMARY
+    )
+    echo "MariaDB backup completed and uploaded to S3:"
+    echo "${SUMMARY}"
+    if [ -n "${BACKUP_SUMMARY_FILE}" ]; then
+      echo "${SUMMARY}" > "${BACKUP_SUMMARY_FILE}"
+    fi

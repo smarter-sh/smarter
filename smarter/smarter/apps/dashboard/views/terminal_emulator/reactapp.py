@@ -1,27 +1,24 @@
 # pylint: disable=W0613
 """
-Backend for the terminal emulator view in the dashboard logs app.
+The web console's Terminal page: a bash shell inside the server's container, for superusers.
 
-This module provides the Django view that renders a browser-based terminal
-emulation window styled after macOS Terminal.app. The terminal is backed by a
-React component and is used in the web console to give users direct access to
-Linux command-line tools such as ``curl`` without leaving the browser.
-
-The rendered page connects to a WebSocket endpoint that streams log data and
-accepts command input, with authentication enforced via Django's session and
-CSRF mechanisms.
+This module provides the Django view that renders a browser-based terminal window styled after
+macOS Terminal.app. The terminal is the ``@smarter/terminal-emulator`` React app, which draws
+with xterm.js. It POSTs to the ticket api for a single use ticket, then opens the terminal's
+WebSocket with it, which runs a bash shell in the server process that accepts it. See
+:mod:`.api.tickets` and :mod:`.api.consumers`.
 
 Classes:
-    TerminalEmulatorLogView: Authenticated view that renders the React-based
-        terminal emulator page.
+    TerminalEmulatorView: Renders the React-based terminal page.
 
 Example:
     Wire up the view in your URL configuration::
 
-        from smarter.apps.dashboard.views.terminal_emulator.reactapp import TerminalEmulatorLogView
+        from smarter.apps.dashboard.views.terminal_emulator.enabled import require_terminal
+        from smarter.apps.dashboard.views.terminal_emulator.reactapp import TerminalEmulatorView
 
         urlpatterns = [
-            path("terminal/", TerminalEmulatorLogView.as_view(), name="smarter-terminal-emulator"),
+            path("terminal/", require_terminal(TerminalEmulatorView.as_view()), name="terminal_emulator_view"),
         ]
 """
 
@@ -40,21 +37,18 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=C0415
-class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
+class TerminalEmulatorView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Authenticated view that renders the React-based terminal emulator page.
+    Renders the React-based Terminal page.
 
     Extends :class:`~smarter.lib.django.views.SmarterAuthenticatedNeverCachedWebView`
     to ensure that only authenticated users can access the terminal and that
-    responses are never served from cache.
+    responses are never served from cache. The url patterns wrap it in
+    :func:`.enabled.require_terminal`, so that only a superuser can, and only while the terminal
+    is enabled.
 
-    On a ``GET`` request the view builds a context dictionary containing the
-    WebSocket API URL and the relevant cookie/session names required by the
-    React frontend, then renders ``react/terminal-emulator.html``.
-
-    Attributes:
-        template_path (str): Set at request time to
-            ``"react/terminal-emulator.html"``.
+    On a ``GET`` request the view builds a context dictionary containing the ticket api's URL and
+    the cookie names required by the React frontend, then renders ``react/terminal-emulator.html``.
 
     Context keys passed to the template:
 
@@ -62,11 +56,13 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
 
         {
             "terminal": {
-                "root_id": str,                  # DOM element id for the React root
+                "root_id": str,                   # DOM element id for the React root
                 "csrf_cookie_name": str,          # Django CSRF cookie name
                 "django_session_cookie_name": str,# Django session cookie name
                 "cookie_domain": str,             # Session cookie domain
-                "api_url": str,                   # WebSocket endpoint URL
+                "api_url": str,                   # The ticket api's URL
+                "react_debug_mode": bool,
+                "smarter_request_id": str,
             }
         }
     """
@@ -74,17 +70,12 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{TerminalEmulatorLogView.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{TerminalEmulatorView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Render the terminal emulator page for the authenticated user.
-
-        Builds a context dictionary that wires the React frontend to the
-        correct WebSocket API endpoint and supplies the cookie/session names
-        needed for CSRF and session authentication. The context is then passed
-        to ``react/terminal-emulator.html``.
+        Render the Terminal page.
 
         :param request: The incoming HTTP GET request from the client.
         :type request: django.http.HttpRequest
@@ -94,12 +85,9 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
             with the terminal context dictionary.
         :rtype: django.http.HttpResponse
         """
-        from smarter.apps.dashboard.views.terminal_emulator.api.urls import (
-            DashboardLogsApiReverseNames,
-        )
         from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
-        from .names import DashboardLogsReverseNames
+        from .names import DashboardTerminalReverseNames
 
         context = {
             "terminal": {
@@ -110,10 +98,9 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "api_url": reverse(
                     DashboardReverseNames.namespace,
-                    DashboardLogsReverseNames.namespace,
-                    DashboardLogsApiReverseNames.namespace,
-                    DashboardLogsApiReverseNames.stream,
-                ),  # the WebSocket endpoint with the log data stream.
+                    DashboardTerminalReverseNames.namespace,
+                    DashboardTerminalReverseNames.ticket,
+                ),  # the ticket api, whose ticket opens the terminal's WebSocket.
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }
