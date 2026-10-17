@@ -1,8 +1,8 @@
 .. _napl-anthropic-admin-guide:
 
-======================================================================
+================================================================
 Getting Started: Enabling Claude Code on NAPL's Smarter Platform
-======================================================================
+================================================================
 
 .. contents:: Table of Contents
    :local:
@@ -10,117 +10,69 @@ Getting Started: Enabling Claude Code on NAPL's Smarter Platform
 
 .. note::
 
-   This guide is for the **Smarter administrator**, who adds an LLM provider once
-   on the platform. Programmers are not meant to complete these steps and should
-   not be given the Anthropic API key.
+   This guide is for a **Smarter administrator**. Enabling Anthropic and its proxy
+   is done once on the platform by an administrator. Programmers should never hold an
+   Anthropic API key.
 
-   The steps and outputs in this guide were tested on 2026-10-11 and
-   2026-10-12 on a local Docker Compose install of Smarter, built from source
-   (development build).
+   Note that steps and outputs in this guide were tested on a local Docker Compose
+   install of Smarter v0.18.11, built from source, with Smarter CLI v0.4.0. The steps
+   on a production platform have been provided based on Smarter documentation, but
+   have not been tested.
 
 Goal
 ====
 
 We will use Claude Code with Smarter to give every programmer in NAPL's custom
-programming area a Claude-backed coding assistant. The administrator supplies
-one Anthropic API key to the central Smarter platform and enables Smarter's
-built-in ``anthropic`` **Proxy**. Programmers then point Claude Code at that
-proxy using their own personal Smarter API key.
+programming area a coding assistant.
 
-.. list-table:: Who does what
-   :header-rows: 1
-   :widths: 25 75
-
-   * - Role
-     - Responsibility
-   * - Administrator (you)
-     - Add the Anthropic key to the platform, initialize the provider and the
-       proxy, verify. Done once.
-   * - Programmer
-     - Needs a **staff** user account in Smarter. Sets two environment
-       variables and runs ``claude``. No provider setup.
+Prior to Smarter v0.14.17, adding Anthropic meant applying a provider manifest, which is
+what `Adding an LLM Provider
+<https://docs.smarter.sh/smarter-platform/adding-an-llm-provider.html>`__ covers. For
+providers that Smarter does not list, the steps in that guide are still relevant. As of
+Smarter v0.14.17, Anthropic is one of Smarter's built-in providers; therefore,
+using Anthropic means supplying an API key and initializing the built-in provider
+and proxy, which is what the steps below help with.
 
 Prerequisites
 =============
 
-You are assumed to already have:
+You are assumed to have the following:
 
-- A running Smarter platform, v0.16.0 or later (the Proxy feature).
-- A Smarter **account administrator** login.
-- Access to the platform's configuration and the ability to restart it and
-  run management commands in its application container.
-- An Anthropic API account with billing enabled. This is separate from a
-  Claude subscription.
-- Working knowledge of a Linux shell, YAML and environment variables.
+- A running Smarter platform, v0.16.0 or later (includes the Proxy feature).
+- A Smarter administrator-level account that can login to the Smarter
+  web console.
+- The `Smarter CLI <https://docs.smarter.sh/smarter-framework/smarter-cli.html>`__
+  installed and configured with your own Smarter administrator API key.
+- Permission to change the platform's configuration and apply it (redeploy in production;
+  restart on a local Docker install), and the ability to run management commands
+  in the Smarter application container.
+- `Claude Code <https://code.claude.com/docs/en/setup>`__ installed to test
+  the proxy as a programmer would.
+- Python 3 for generating a Fernet encryption key.
+- An Anthropic API account with billing enabled.
+- A bash-compatible terminal (e.g., Linux, macOS, or WSL) and working knowledge
+  of YAML and environment variables. The commands in this guide use bash syntax.
 
 Setup
 =====
 
-These steps prepare the administrator's workstation. Commands were run in a
-WSL Ubuntu terminal.
-
-1. Install the Smarter CLI
---------------------------
-
-Download the Linux binary from the CLI's releases page and put it on your
-``PATH``:
-
-.. code-block:: bash
-
-   curl -L -o smarter https://github.com/smarter-sh/smarter-cli/releases/download/v0.4.0/smarter-ubuntu-latest-0.4.0
-   chmod +x smarter
-   sudo mv smarter /usr/local/bin/smarter
-   smarter version
-
-2. Create a Smarter API key
----------------------------
-
-The CLI authenticates with a Smarter API key. Create one for your admin user.
-Replace the account number with your own:
-
-.. code-block:: bash
-
-   docker exec smarter-app python manage.py create_api_key \
-     --account_number 1234-5678-9012 \
-     --username admin \
-     --description "CLI key for administration"
-
-The 64-character key is printed once. Copy it immediately.
-
-3. Write the CLI configuration file
------------------------------------
-
-Create ``~/.smarter/config.yaml``. Set ``environment`` to the environment you
-are targeting (``local`` for a Docker install on your own machine):
-
-.. code-block:: yaml
-
-   config:
-     account_number: 1234-5678-9012
-     environment: local
-     output_format: yaml
-     root_domain: platform.smarter.sh
-     username: admin
-   local:
-     api_key: <your 64-character Smarter API key>
-
-4. Confirm the CLI can reach the platform
------------------------------------------
+Confirm the Smarter CLI can reach the platform using your Smarter administrator API key:
 
 .. code-block:: bash
 
    smarter whoami
 
-The response should show your account, ``environment: local`` and
-``isStaff: true`` for your user.
+The response should show your account and ``"isStaff": true`` for your user. Staff status
+is required for the administrator to add a provider and issue Smarter API keys to
+programmers.
 
 Concept Overview
 ================
 
 **Provider**
-   Smarter's record of an upstream LLM service. On a fresh install, Smarter
-   already lists eight providers, including ``anthropic``, before any API key
-   has been supplied. A provider cannot be used until its key is supplied.
+   Smarter's record of an upstream LLM service. Since v0.14.17, Smarter
+   lists eight providers, including Anthropic. To use one of these providers,
+   a provider API key must be supplied.
 
 **Secret**
    An encrypted value stored by Smarter. The Anthropic key is stored as a
@@ -128,21 +80,26 @@ Concept Overview
 
 **Proxy**
    A pass-through endpoint for a provider's own API. A caller sends a normal
-   Anthropic API request to Smarter with a **Smarter** API key. Smarter
+   Anthropic API request to Smarter with a Smarter API key. Smarter
    authenticates the caller, substitutes the platform's Anthropic key, forwards
-   the request and records usage. Claude Code connects to this.
+   the request and records usage. Claude Code connects to the proxy.
 
-.. code-block:: text
+.. figure:: _data/napl-claude-code-proxy-flow.svg
+   :alt: Claude Code sends requests to Smarter's Anthropic proxy with the
+         programmer's Smarter key. The proxy checks the key, swaps in the
+         company's Anthropic key, forwards the request to Anthropic, and
+         passes Claude's reply back.
+   :width: 100%
+   :align: center
 
-   Claude Code  --(personal Smarter API key)-->  Smarter "anthropic" Proxy
-                                                 --(platform Anthropic key)-->  Anthropic API
+   One request through Smarter's Anthropic proxy.
 
-Why this design suits NAPL: one Anthropic key is held centrally, each
-programmer has an individually revocable Smarter key, and each key records
+With this pattern, one Anthropic key is held centrally, and each
+programmer has an individually revocable Smarter key. Each key records
 when it was last used.
 
-Data points Smarter needs
--------------------------
+Configuration Data
+==================
 
 .. list-table::
    :header-rows: 1
@@ -170,53 +127,13 @@ Data points Smarter needs
      - ``x-api-key``
      - Smarter (built-in proxy)
 
-For Anthropic, only the two keys have to be supplied. Everything else is
-built in.
-
-.. note::
-
-   Smarter's `Adding an LLM Provider
-   <https://docs.smarter.sh/smarter-platform/adding-an-llm-provider.html>`__
-   page describes writing and applying a ``Provider`` manifest for Anthropic.
-   On the build tested here that was not necessary: ``anthropic`` was already
-   listed, and supplying the key and running the commands in Step 4 was
-   enough. Manifests remain the way to register a provider Smarter does not
-   already list.
-
-The proxy as a manifest
------------------------
-
-Every Smarter resource can be expressed as a YAML manifest. This is the proxy
-Smarter creates, as returned by ``smarter describe proxy anthropic -o yaml``
-(abbreviated):
-
-.. code-block:: yaml
-
-   apiVersion: smarter.sh/v1
-   kind: Proxy
-   metadata:
-     annotations:
-     - smarter.sh/proxy/builtin: "true"
-     description: Passthrough access to Anthropic's Messages API, for Claude.
-     name: anthropic
-     version: 1.0.0
-   spec:
-     allowedPaths:
-     - v1/messages
-     - v1/messages/count_tokens
-     - v1/models
-     - v1/models/*
-     apiKey: anthropic_api_key
-     auth:
-       header: x-api-key
-
-Note that ``apiKey`` holds the **name** of the Secret, never the key itself.
+For Anthropic, the administrator supplies only two values: the Anthropic API
+key (``SMARTER_ANTHROPIC_API_KEY``) and the encryption key Smarter uses to
+store it (``SMARTER_FERNET_ENCRYPTION_KEY``). Smarter provides everything
+else.
 
 Step-by-Step
 ============
-
-The commands below are for a Docker Compose deployment. See
-`On a production platform`_ for how the same steps map to Kubernetes.
 
 Step 1: Obtain an Anthropic API key
 -----------------------------------
@@ -227,15 +144,7 @@ valid key starts with ``sk-ant-api``.
 Step 2: Add two settings to the platform configuration
 ------------------------------------------------------
 
-In the ``.env`` file in the folder Smarter is started from, set both lines.
-Each must have no leading ``#``:
-
-.. code-block:: bash
-
-   SMARTER_ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxx
-   SMARTER_FERNET_ENCRYPTION_KEY=<generated value>
-
-Generate the encryption key with:
+Generate a Fernet encryption key for Smarter to use when storing the Anthropic key:
 
 .. code-block:: bash
 
@@ -245,30 +154,51 @@ Generate the encryption key with:
 
    ``SMARTER_FERNET_ENCRYPTION_KEY`` must be set. The inline documentation
    in ``.env`` notes that if it is unset, a temporary key is generated at
-   runtime. In testing, the proxy then could not decrypt the stored Anthropic
+   runtime. In testing, the proxy was unable to decrypt the stored Anthropic
    key and failed with "its API key Secret anthropic_api_key cannot be read."
 
-.. danger::
+In the ``.env`` file in the folder Smarter is started from, set both lines.
 
-   Never commit ``.env`` to version control.
+.. code-block:: bash
 
-Step 3: Restart Smarter
------------------------
+   SMARTER_ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxx
+   SMARTER_FERNET_ENCRYPTION_KEY=<generated value>
 
-Stop the running platform (``Ctrl+C`` in its terminal), then from the same
-folder:
+**Production:** set the same two values under ``env:`` in the Helm chart's
+``values.yaml``.
+
+Step 3: Apply the configuration
+-------------------------------
+
+For a local install, stop the running platform (``Ctrl+C`` in its terminal).
+Then, from the same folder, run the following:
 
 .. code-block:: bash
 
    make run
 
-Confirm both settings reached the application container. Each command prints a
-count and should print ``1``:
+Confirm both settings reached the application container. Both commands below
+should print ``1``:
 
 .. code-block:: bash
 
    docker exec smarter-app printenv | grep -c "ANTHROPIC_API_KEY"
    docker exec smarter-app printenv | grep -c "FERNET"
+
+**Production:** apply the changed values with ``helm upgrade``, which replaces
+the running application as a rolling update. Coordinate this change with the
+infrastructure team.
+
+Confirm both settings reached the application pod. The Helm chart's
+``values.yaml`` defines both settings with placeholder values, so these
+commands check the values themselves rather than whether the variables exist.
+Use the ``namespace`` and ``global.appName`` values from ``values.yaml``. Both
+commands below should print ``1``:
+
+.. code-block:: bash
+
+   kubectl exec -n <namespace> deploy/<appName> -- printenv SMARTER_ANTHROPIC_API_KEY | grep -c "^sk-ant-api"
+   kubectl exec -n <namespace> deploy/<appName> -- printenv SMARTER_FERNET_ENCRYPTION_KEY | grep -vc "SET-ME"
 
 Step 4: Initialize the provider and the proxy
 ---------------------------------------------
@@ -277,6 +207,9 @@ Step 4: Initialize the provider and the proxy
 
    docker exec smarter-app python manage.py initialize_providers
    docker exec smarter-app python manage.py add_builtin_proxies
+
+**Production:** the Helm chart's post-upgrade job runs platform
+initialization. To run the commands yourself, run them in the application pod.
 
 The second command reports which proxies it created. Only providers with a key
 get one:
@@ -298,30 +231,54 @@ Step 5: Verify the proxy exists
 Before Step 4 this table is empty. Afterwards it contains one row named
 ``anthropic`` with ``isActive`` true.
 
-Step 6: Issue programmers their keys
-------------------------------------
+Like every Smarter resource, the proxy can be expressed as a YAML manifest.
+To see the one Smarter created:
 
-Smarter only issues API keys to **staff** users. A programmer's Smarter
-account must be a staff account, or key creation fails with "API Keys can only
-be created for staff users."
+.. code-block:: bash
 
-Create a key for each programmer, using their Smarter username:
+   smarter describe proxy anthropic -o yaml
+
+**Expected result** (abbreviated):
+
+.. code-block:: yaml
+
+   apiVersion: smarter.sh/v1
+   kind: Proxy
+   metadata:
+     annotations:
+     - smarter.sh/proxy/builtin: "true"
+     description: Passthrough access to Anthropic's Messages API, for Claude.
+     name: anthropic
+     version: 1.0.0
+   spec:
+     allowedPaths:
+     - v1/messages
+     - v1/messages/count_tokens
+     - v1/models
+     - v1/models/*
+     apiKey: anthropic_api_key
+     auth:
+       header: x-api-key
+
+Note that ``apiKey`` holds the name of the Secret, never the key itself.
+
+Step 6: Create a Smarter API key for each programmer
+----------------------------------------------------
+
+Create a key for each programmer, using their Smarter username and your
+account number (``accountNumber`` in the ``smarter whoami`` output):
 
 .. code-block:: bash
 
    docker exec smarter-app python manage.py create_api_key \
-     --account_number 1234-5678-9012 \
+     --account_number <account number> \
      --username <programmer username> \
      --description "Claude Code key for <name>"
 
-The key is printed once, between two lines of asterisks. Send it to the
-programmer securely.
+The key is printed once, between two lines of asterisks. Copy it immediately,
+as it will not be shown again.
 
-.. note::
-
-   In this deployment, the staff flag that allows API keys is also what
-   Smarter checks before accepting Provider manifests. Review what staff
-   users are permitted to change before granting staff accounts widely.
+**Production:** run the same command in the application pod.
 
 Step 7: Hand off to programmers
 -------------------------------
@@ -334,45 +291,48 @@ Give each programmer the proxy address and their key. Their entire setup is:
    export ANTHROPIC_API_KEY="<personal Smarter API key>"
    claude
 
+Without these two variables, Claude Code uses its normal login instead.
+
 On a local install the address is
 ``http://localhost:9357/api/v1/proxy/anthropic``. Do not append ``/v1``.
+Claude Code adds ``/v1/messages`` to the base URL itself, so an extra ``/v1``
+produces ``.../v1/v1/messages``, which the proxy rejects with ``403``.
 
-Claude Code asks once whether to use the key it found. Approve it. Without
-these two variables, Claude Code uses its normal login instead.
+.. important::
 
-No sharing step is needed: a staff user who is not the administrator can use
-the built-in proxy as soon as their key exists.
+   The first time a programmer runs ``claude`` with these variables set,
+   Claude Code asks whether to use the API key it found in the environment.
+   The programmer should approve it. Claude Code remembers the answer, so a
+   programmer who declines by mistake is not asked again and the key is not
+   used.
 
-On a production platform
-------------------------
 
 .. note::
 
-   This section is based on Smarter's Helm chart and production deployment
-   documentation. The steps in the rest of this guide were tested on a local
-   Docker Compose install.
-
-Production Smarter is deployed to Kubernetes with a Helm chart. The same
-settings, ``SMARTER_ANTHROPIC_API_KEY`` and ``SMARTER_FERNET_ENCRYPTION_KEY``,
-are set under ``env:`` in the chart's ``values.yaml`` and applied with
-``helm upgrade``, which replaces the running application as a rolling update.
-The chart's post-upgrade job runs platform initialization. Coordinate this
-change with the infrastructure team.
+   All proxy usage is billed to the platform's Anthropic key. Claude Code
+   chooses its own default model, which may be the most expensive tier, so
+   tell programmers which model to choose with ``/model``, and consider
+   Smarter budgets.
 
 Proof of Concept
 ================
 
-The setup is complete when requests made with a **Smarter** API key, and no
-Anthropic key on the caller's side, return real Claude responses.
+The setup is complete when a programmer's Smarter API key, with no Anthropic
+key on the programmer's side, returns real Claude responses. Run these tests
+as a programmer would: with a key issued in Step 6 to a staff user who is not
+the administrator.
+
+.. code-block:: bash
+
+   export PROGRAMMER_KEY="<Smarter API key issued in Step 6>"
 
 1. List models through the proxy
 --------------------------------
 
 .. code-block:: bash
 
-   export SMARTER_API_KEY="<your Smarter API key>"
-   curl -s http://localhost:9357/api/v1/proxy/anthropic/v1/models \
-     -H "x-api-key: $SMARTER_API_KEY" \
+   curl -s https://localhost:9357/api/v1/proxy/anthropic/v1/models \
+     -H "x-api-key: $PROGRAMMER_KEY" \
      -H "anthropic-version: 2023-06-01"
 
 **Expected result:** JSON listing Anthropic's models, for example
@@ -384,7 +344,7 @@ Anthropic key on the caller's side, return real Claude responses.
 .. code-block:: bash
 
    curl -s http://localhost:9357/api/v1/proxy/anthropic/v1/messages \
-     -H "x-api-key: $SMARTER_API_KEY" \
+     -H "x-api-key: $PROGRAMMER_KEY" \
      -H "anthropic-version: 2023-06-01" \
      -H "content-type: application/json" \
      -d '{"model": "claude-haiku-4-5-20251001", "max_tokens": 50,
@@ -406,8 +366,16 @@ Anthropic key on the caller's side, return real Claude responses.
 3. Run Claude Code through the proxy
 ------------------------------------
 
-With the two variables from Step 7 set, start ``claude`` and type ``/status``.
-It should report:
+Set the two variables from Step 7, using the programmer's key:
+
+.. code-block:: bash
+
+   export ANTHROPIC_BASE_URL="http://localhost:9357/api/v1/proxy/anthropic"
+   export ANTHROPIC_API_KEY="$PROGRAMMER_KEY"
+   claude
+
+Approve the key when Claude Code asks, then type ``/status``. It should
+report:
 
 .. code-block:: text
 
@@ -431,16 +399,13 @@ Send a short prompt, then confirm the requests in Smarter's log:
    "POST /api/v1/proxy/anthropic/v1/messages?beta=true HTTP/1.1" 200
 
 The lines ending ``?beta=true`` with status ``200`` are Claude Code's
-requests succeeding through Smarter.
+requests succeeding through Smarter. The ``HEAD .../api/hello`` line with
+status ``401`` is Claude Code's startup connectivity check, and is harmless.
 
-4. Repeat as a programmer
--------------------------
+4. Confirm the programmer's key made the requests
+-------------------------------------------------
 
-Repeat tests 2 and 3 with a key issued to a staff user who is not the
-administrator. In testing, a key for ``staff_user`` returned Claude's reply to
-the ``curl`` prompt, and Claude Code ran successfully with it.
-
-To confirm which key made the requests, list each key's last use:
+List each key's last use:
 
 .. code-block:: bash
 
@@ -451,54 +416,20 @@ To confirm which key made the requests, list each key's last use:
    "
 
 **Expected result:** the programmer's key shows a last-used time matching the
-Claude Code requests in the log, and the administrator's key does not.
+Claude Code requests in the log, and the administrator's key does not
+(abbreviated):
 
 .. code-block:: text
 
    3141-5926-5359.staff_user | 2026-10-12 19:21:22
    3141-5926-5359.admin      | 2026-10-12 19:11:19
 
-5. Revoke a programmer's key
-----------------------------
-
-Keys are managed in the Django admin, where they can be disabled or deleted.
-Disable the programmer's key (untick **Is active**), then repeat the ``curl``
-prompt with it, printing only the status code:
-
-.. code-block:: bash
-
-   curl -s -o /dev/null -w "HTTP %{http_code}\n" \
-     http://localhost:9357/api/v1/proxy/anthropic/v1/messages \
-     -H "x-api-key: $PROGRAMMER_KEY" \
-     -H "anthropic-version: 2023-06-01" \
-     -H "content-type: application/json" \
-     -d '{"model": "claude-haiku-4-5-20251001", "max_tokens": 50,
-          "messages": [{"role": "user", "content": "Reply with the word ready."}]}'
-
-**Expected result:** ``HTTP 401``. The response has no body, so without the
-status code the command appears to print nothing. The administrator's key and
-every other programmer's key keep working.
-
 Troubleshooting
 ===============
-
-**The CLI's APT install fails with 403 Forbidden**
-   The package repository has no build for newer Ubuntu releases. Remove it
-   with ``sudo add-apt-repository --remove ppa:lpm0073/smarter-cli`` and
-   install the binary as shown in Setup.
-
-**"No api_key found for environment" when running smarter configure**
-   The CLI checks for a saved key before ``configure`` can save one, so
-   first-time setup fails. Write ``~/.smarter/config.yaml`` by hand as shown
-   in Setup.
 
 **"API Keys can only be created for staff users"**
    The user is not a staff user. Programmers need staff accounts to receive
    a Smarter API key.
-
-**create_api_key prints no key**
-   The command failed and its error was hidden. If you filtered the output
-   with ``2>/dev/null``, rerun it with ``2>&1`` to see the error.
 
 **Proxy error: "its API key Secret anthropic_api_key cannot be read"**
    Smarter cannot decrypt the stored key. Set
@@ -514,28 +445,14 @@ Troubleshooting
    The proxy is only created when the Anthropic key is configured. Confirm
    Steps 2 and 3, then rerun Step 4.
 
-**smarter get providers returns HTTP 400 (invalid logo URL)**
-   Seen on a local Docker install: provider logos are stored with a relative
-   path that fails validation, so the provider list and the web console's
-   Providers page fail. The providers still work. Verify with
-   ``smarter get proxies`` and the Proof of Concept instead.
-
 **A provider shows active and verified but does not work**
    On a fresh install, every listed provider already shows as active and
    verified before any key is supplied. Do not use those flags as evidence.
    Use the Proof of Concept.
 
-**HEAD .../api/hello returns 401 in the log**
-   This is Claude Code's startup connectivity check. It is harmless.
-
 **Proxy returns 401 for a real request**
    The caller sent an invalid or disabled Smarter API key, no key at all, or
    an Anthropic key. The proxy only accepts active Smarter API keys.
-
-**Unexpected Anthropic charges**
-   Claude Code chooses its own default model, which may be the most expensive
-   tier. All proxy usage is billed to the platform's Anthropic key. Choose a
-   model with ``/model`` and consider Smarter budgets.
 
 References
 ==========
@@ -558,12 +475,3 @@ Anthropic documentation, for the Claude Code side:
 
 - `Claude Code: Advanced setup <https://code.claude.com/docs/en/setup>`__
 - `Claude Code: LLM gateways <https://code.claude.com/docs/en/llm-gateway>`__
-
-Acknowledgments
-===============
-
-This tutorial was prepared with assistance from Claude, an AI model made by
-Anthropic. Claude helped research the Smarter documentation, diagnose errors
-during testing, and draft the reStructuredText. All steps were run and
-verified by the author on a local Docker installation of Smarter, and the
-outputs shown are from that testing.
