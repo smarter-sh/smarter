@@ -1,15 +1,23 @@
 """Test the Smarter Waffle Switch."""
 
+import time
 from unittest.mock import MagicMock, patch
 
 from django.apps import apps
+from django.db.models.signals import post_delete, post_save
+from django.db.utils import OperationalError
+from waffle import get_waffle_switch_model
 
 from smarter.lib.django.waffle import (
     SmarterWaffleSwitches,
     is_database_ready,
     smarter_waffle_switches,
 )
-from smarter.lib.django.waffle.is_active import switch_is_active
+from smarter.lib.django.waffle.is_active import (
+    SWITCH_CACHE_SECONDS,
+    clear_switch_cache,
+    switch_is_active,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -87,6 +95,11 @@ class TestMissingSwitch(SmarterTestBase):
     database's switches are never changed.
     """
 
+    def setUp(self):
+        super().setUp()
+        # the patched model is read only on a miss of the switches that this process remembers.
+        clear_switch_cache()
+
     def check_missing(self, switch_name: str) -> MagicMock:
         """Check a missing switch, and return the patched Switch model."""
         default = smarter_waffle_switches.switches[switch_name].default
@@ -120,3 +133,69 @@ class TestMissingSwitch(SmarterTestBase):
         with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=model):
             self.assertFalse(switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF))
         model.objects.get_or_create.assert_not_called()
+
+
+class TestSwitchCache(SmarterTestBase):
+    """
+    Each process remembers a switch's state for SWITCH_CACHE_SECONDS, and forgets it when a switch is saved or deleted.
+
+    The Switch model is patched where a switch's state is read, so that the database's switches are never changed.
+    """
+
+    def setUp(self):
+        super().setUp()
+        clear_switch_cache()
+        self.addCleanup(clear_switch_cache)
+
+    def model(self, active: bool) -> MagicMock:
+        """Return a patched Switch model whose switch is ``active``."""
+        switch = MagicMock(pk=1)
+        switch.is_active.return_value = active
+        model = MagicMock()
+        model.get.return_value = switch
+        return model
+
+    def test_remembers_a_switch(self):
+        """Test that a second check is answered from memory, without reading the switch."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        model = self.model(True)
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=model):
+            self.assertTrue(switch_is_active(name))
+            self.assertTrue(switch_is_active(name))
+        model.get.assert_called_once_with(name)
+
+    def test_forgets_a_switch_after_its_time(self):
+        """Test that a switch is read again once SWITCH_CACHE_SECONDS have passed."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
+            self.assertTrue(switch_is_active(name))
+        later = time.monotonic() + SWITCH_CACHE_SECONDS + 1
+        with (
+            patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(False)),
+            patch(f"{IS_ACTIVE}.time.monotonic", return_value=later),
+        ):
+            self.assertFalse(switch_is_active(name))
+
+    def test_forgets_every_switch_when_a_switch_is_saved_or_deleted(self):
+        """Test that saving or deleting a Switch, e.g. with override_switch, clears what this process remembers."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
+            self.assertTrue(switch_is_active(name))
+        for signal in (post_save, post_delete):
+            with self.subTest(signal=signal):
+                signal.send(sender=get_waffle_switch_model(), instance=MagicMock())
+                with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(False)):
+                    self.assertFalse(switch_is_active(name))
+                with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
+                    clear_switch_cache()
+                    self.assertTrue(switch_is_active(name))
+
+    def test_does_not_remember_a_failure(self):
+        """Test that a switch whose state could not be read is read again on the next check."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        failing = MagicMock()
+        failing.get.side_effect = OperationalError("database is gone")
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=failing):
+            self.assertFalse(switch_is_active(name))
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
+            self.assertTrue(switch_is_active(name))

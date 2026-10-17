@@ -28,6 +28,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -839,24 +841,37 @@ class SAMAccountBroker(AbstractBroker):
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the Users that belong to this Account.
+    @classmethod
+    def dependents(cls, instance: Account) -> SAMDependents:
+        """Return the users that belong to an Account, as their UserProfiles.
 
-        :return: A User broker for each of the Account's users.
-        :rtype: List[AbstractBroker]
+        A User has no ``name`` field, so :meth:`dependencies` builds the User brokers itself, from
+        these UserProfiles, with each user's username. Don't pass these rows to
+        :meth:`dependency_brokers`.
+
+        :param instance: The Account.
+        :type instance: Account
+        :return: The UserProfiles of the Account's users.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
 
+        return [(SAMKinds.USER.value, UserProfile.objects.filter(account=instance).select_related("user"))]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the Users that belong to this Account.
+
+        :return: A User broker for each of the Account's users.
+        :rtype: List[SAMDependency]
+        """
         account = self.brokered_account
         if not account:
             return []
-        user_profiles = UserProfile.objects.filter(account=account).select_related("user")
         return [
-            self.dependency_broker(
-                SAMKinds.USER.value, user_profile.user, name=user_profile.user.username, user_profile=user_profile
-            )
+            self.dependency_broker(kind, user_profile.user, name=user_profile.user.username, user_profile=user_profile)  # type: ignore[arg-type]
+            for kind, user_profiles in self.dependents(account)
             for user_profile in user_profiles
         ]
 

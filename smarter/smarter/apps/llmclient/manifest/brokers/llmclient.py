@@ -56,6 +56,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -248,8 +250,13 @@ class SAMLLMClientBroker(AbstractBroker):
             return self._llmclient
 
         try:
-            self._llmclient = LLMClient.get_cached_object(
-                invalidate=True, user_profile=self.user_profile, name=self.name
+            # read the database, not the cache: a broker writes this llmclient, so it must be current.
+            # get_cached_object(invalidate=True) was current too, but it also emptied the cache that
+            # every other reader of this llmclient uses, each time a broker was built.
+            self._llmclient = (
+                LLMClient.objects.prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+                .get(user_profile=self.user_profile, name=self.name)
             )
             logger.debug(
                 "%s.llmclient() retrieved existing LLMClient instance %s owned by %s from database.",
@@ -1240,26 +1247,36 @@ class SAMLLMClientBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the Orchestrators that use this LLMClient.
+    @classmethod
+    def dependents(cls, instance: LLMClient) -> SAMDependents:
+        """Return the Orchestrators that use an LLMClient.
 
         An LLMClient's Prompts are its chat history, not dependencies, so they are deleted with it.
 
-        :return: A broker for each Orchestrator that lists this LLMClient in its ``spec.llmClients``.
-        :rtype: List[AbstractBroker]
+        :param instance: The LLMClient.
+        :type instance: LLMClient
+        :return: The Orchestrators that list the LLMClient in their ``spec.llmClients``.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.orchestrator.models import Orchestrator, OrchestratorHarness
 
-        llmclient = self.llmclient
-        if not llmclient:
-            return []
         orchestrators = Orchestrator.objects.filter(
-            id__in=OrchestratorHarness.objects.filter(llmclient=llmclient).values("orchestrator_id")
+            id__in=OrchestratorHarness.objects.filter(llmclient=instance).values("orchestrator_id")
         )
-        return self.dependency_brokers(SAMKinds.ORCHESTRATOR.value, orchestrators)
+        return [(SAMKinds.ORCHESTRATOR.value, orchestrators)]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the Orchestrators that use this LLMClient.
+
+        An LLMClient's Prompts are its chat history, not dependencies, so they are deleted with it.
+
+        :return: A broker for each Orchestrator that lists this LLMClient in its ``spec.llmClients``.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.llmclient)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__

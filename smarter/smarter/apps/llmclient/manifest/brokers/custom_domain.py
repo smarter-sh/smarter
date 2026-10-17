@@ -9,7 +9,7 @@ with AWS: a Route53 hosted zone, and a TLS certificate, which the
 """
 
 import datetime
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -46,6 +46,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -355,24 +357,35 @@ class SAMCustomDomainBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
+    @classmethod
+    def dependents(cls, instance: LLMClientCustomDomain) -> SAMDependents:
+        """Return the LLMClient that uses a CustomDomain.
+
+        LLMClient.custom_domain cascades deletes, so a CustomDomain cannot be deleted while
+        an LLMClient uses it.
+
+        :param instance: The LLMClientCustomDomain.
+        :type instance: LLMClientCustomDomain
+        :return: The LLMClient whose ``custom_domain`` is the CustomDomain.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient
+
+        return [(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(custom_domain=instance))]
+
     @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
+    def dependencies(self) -> List[SAMDependency]:
         """Return a broker for the LLMClient that uses this CustomDomain.
 
         LLMClient.custom_domain cascades deletes, so a CustomDomain cannot be deleted while
         an LLMClient uses it.
 
         :return: A broker for the LLMClient whose ``custom_domain`` is this CustomDomain.
-        :rtype: List[AbstractBroker]
+        :rtype: List[SAMDependency]
         """
-        # pylint: disable=import-outside-toplevel
-        from smarter.apps.api.v1.manifests.enum import SAMKinds
-        from smarter.apps.llmclient.models import LLMClient
-
-        custom_domain = self.custom_domain
-        if not custom_domain:
-            return []
-        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(custom_domain=custom_domain))
+        return self.dependency_brokers_for(self.custom_domain)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the CustomDomain.

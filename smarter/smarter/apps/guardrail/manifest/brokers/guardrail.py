@@ -56,6 +56,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMDependency,
+    SAMDependents,
     memoized_dependencies,
 )
 from smarter.lib.manifest.enum import (
@@ -404,24 +406,32 @@ class SAMGuardrailBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=data)
 
-    @memoized_dependencies
-    def dependencies(self) -> List[AbstractBroker]:
-        """Return brokers for the LLMClients that use this Guardrail.
+    @classmethod
+    def dependents(cls, instance: Guardrail) -> SAMDependents:
+        """Return the LLMClients that use a Guardrail.
 
-        :return: A broker for each LLMClient that lists this Guardrail in its ``spec.guardrails``.
-        :rtype: List[AbstractBroker]
+        :param instance: The Guardrail.
+        :type instance: Guardrail
+        :return: The LLMClients that list it in their ``spec.guardrails``.
+        :rtype: SAMDependents
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 
-        guardrail = self.guardrail
-        if not guardrail:
-            return []
         llmclients = LLMClient.objects.filter(
-            id__in=LLMClientGuardrails.objects.filter(guardrail=guardrail).values("llmclient_id")
+            id__in=LLMClientGuardrails.objects.filter(guardrail=instance).values("llmclient_id")
         )
-        return self.dependency_brokers(SAMKinds.LLM_CLIENT.value, llmclients)
+        return [(SAMKinds.LLM_CLIENT.value, llmclients)]
+
+    @memoized_dependencies
+    def dependencies(self) -> List[SAMDependency]:
+        """Return brokers for the LLMClients that use this Guardrail.
+
+        :return: A broker for each LLMClient that lists this Guardrail in its ``spec.guardrails``.
+        :rtype: List[SAMDependency]
+        """
+        return self.dependency_brokers_for(self.guardrail)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Delete the Guardrail.
