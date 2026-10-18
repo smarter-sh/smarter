@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.33.5-alpha.1...v0.33.5-alpha.2) (2026-10-18)
+
+### Bug Fixes
+
+* **logging:** keep the config api's chat session key in its request ([6f6636f](https://github.com/smarter-sh/smarter/commit/6f6636fe72bdf33e7eab4f33999287498bca01a1))
+* **prompt:** edit the llmclient manifest in the workbench console ([05f695e](https://github.com/smarter-sh/smarter/commit/05f695e747717b771c483cfb1bc0a432aa7d6f8d))
+* **provider:** name plugins by their own names in tool messages ([e3f8ed1](https://github.com/smarter-sh/smarter/commit/e3f8ed1b9c2ec91f7f8c0c61c6580bdda1dbead8))
+
 ## [0.33.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.4...v0.33.5-alpha.1) (2026-10-18)
 
 ### Bug Fixes
