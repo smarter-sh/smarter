@@ -299,6 +299,11 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
      - ``null``
      - The url of a Smarter server log stream, for the Console's Server Logs tab. Only useful to
        developers who are logged in to the web console on the same domain.
+   * - ``manifestEditorUrl``
+     - ``null``
+     - The url of the web console's editor of the LLMClient's manifest, for the Console's Manifest
+       tab, in an iframe. It must be of the page's own origin, so it is only useful to pages that
+       the web console serves itself, such as the workbench. Any other url is ignored.
 
 
 Recipes
