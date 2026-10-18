@@ -278,6 +278,27 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             DashboardLogsApiReverseNames.stream,
         )
 
+    @property
+    def manifest_editor_url(self) -> str:
+        """
+        The url of the llmclient's manifest editor, which Smarter Chat displays in its Console's "Manifest" tab.
+
+        The url is a path, of the workbench's own origin, which Smarter Chat requires of it.
+
+        :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientManifestEditorView`, or an
+            empty string if there is no llmclient, in which case Smarter Chat has no "Manifest" tab.
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseNames
+
+        if not self.llmclient:
+            return ""
+        return reverse(
+            f"{PromptReverseNames.namespace}:{PromptReverseNames.manifest_editor_by_hashed_id}",
+            kwargs={"hashed_id": self.llmclient.hashed_id},
+        )
+
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch method to handle the request for the main prompt application page.
@@ -419,6 +440,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "react_debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
                 "log_stream_url": self.log_stream_url,
+                "manifest_editor_url": self.manifest_editor_url,
             }
         }
         verbose_logger.debug(
