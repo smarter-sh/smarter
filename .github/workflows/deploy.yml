@@ -19,7 +19,7 @@ env:
   NAMESPACE_BASE: "smarter-ubc"
   PLATFORM_SUBDOMAIN: "ubc"
   ROOT_DOMAIN: "smarter.sh"
-  SMARTER_ENABLE_WEB_CONSOLE_TERMINAL: "false"
+  SMARTER_ENABLE_WEB_CONSOLE_TERMINAL: "true"
   VERSION: "latest"
 
 jobs:
