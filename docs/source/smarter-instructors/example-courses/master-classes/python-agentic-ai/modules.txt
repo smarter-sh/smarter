@@ -1,0 +1,191 @@
+Each module is a 30-minute lecture followed by a lab of about 30 minutes. The lecture reads one
+part of Smarter, a large Django codebase whose output rose more than tenfold once a coding agent
+was set loose on it, and which has, so far, converged. The lab applies the same idea to *the
+student's project*, the large Python codebase that each student brings to the course and works
+on throughout it, with Claude Code as the agent. Most labs end with a Python script, a test or a
+written rule committed to the student's project; together they become the student's
+*convergence kit*. The file references are listed in full under
+`The Modules in the Source Code`_.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 6 47 47
+
+   * - #
+     - Lecture
+     - Lab
+   * - 1
+     - **Eighteen days in October.** Smarter's first three and a half years were the work of one
+       developer: fifteen minor versions, v0.0 to v0.14. Between September 30 and October 17,
+       2026, with Claude Code designing and writing most of the code, it shipped nineteen more,
+       v0.15 to v0.33, plus about fifty patch releases: more feature releases in three weeks
+       than in its whole history before. About 290,000 lines were added in those weeks, some
+       250,000 of them by the agent, while coverage rose to about 97%. Who built what: the
+       *subsystems* that a human designed over years, against the *applications*, the resource
+       families, where the agent wrote most of the code. Why the multiplier is neutral: an agent
+       multiplies whatever it finds.
+     - Install Claude Code against the student's project and against a clone of Smarter. In
+       Smarter, count commits, releases and lines by author and by week with ``git log`` and a
+       short Python script, and reproduce the lecture's figures. Discuss which measure is
+       honest: lines, releases, or features in production.
+   * - 2
+     - **Telescoping and geometric series.** A codebase changed by an agent is a sum of
+       changes, each with an error term. In a *telescoping* series each error is cancelled by
+       what comes after it, tests, linters and review, and the sum stays bounded. In a
+       *geometric* series each error becomes the example for the next, :math:`e_{n+1} = r e_n`,
+       and the sum :math:`e_1 / (1 - r)` is finite only while :math:`r < 1`. The ratio is not
+       chosen when the agent starts: it is set by the foundation, the feedback and the
+       guidance already in the codebase, and by one question, *when the agent goes looking,
+       which way does it find first?*
+     - Pick three recent agent-written or human-written changes in the student's project, and
+       for each, name the example it copied, the feedback that checked it, and an error that
+       nothing would have caught. Estimate the project's ratio, and write down why.
+   * - 3
+     - **Measuring a codebase.** What a clone can tell you, and how to count it reproducibly:
+       commits, lines and releases by author over time; tests and coverage per package; the
+       share of commits with a real body; the number of files that call a low-level primitive
+       directly. Counting at release tags rather than today, so that a trend shows. Round,
+       durable figures, and how to say what a figure does not show.
+     - Write ``convergence.py``, the first tool of the convergence kit: a Python script that
+       uses ``subprocess`` and ``git`` to print a baseline of the student's project as a
+       table, with coverage from ``coverage json``. Commit it with its output as the
+       project's baseline.
+   * - 4
+     - **Subsystems by hand.** The parts of a codebase that every feature inherits, and that a
+       human should design: tenancy and ownership, a single shape for every response,
+       errors, secrets referenced by name, and typed settings. Smarter's
+       ``MetaDataWithOwnershipModel``, its journal, its Secrets and its settings layer, and how
+       little of them the agent changed while writing whole applications on top. "The agent
+       writes the difference. The foundation cancels the rest."
+     - Draw the student's project as subsystems and applications. For each subsystem, name its
+       canonical module and the question it answers (who owns this? what does an error look
+       like?), and mark the ones that are missing, where every feature answers the question
+       for itself.
+   * - 5
+     - **One way to do each thing.** Patterns as templates: the manifest loader and the abstract
+       broker that every Smarter resource kind extends, and why a new kind is mostly the
+       difference from the last one. The pattern-first rule (find two or three implementations,
+       prefer the newest, copy them) and why it works only when the nearest example is also
+       the best one. Python's tools for one way: base classes, mixins, decorators and
+       protocols.
+     - List the student's project's canonical helpers, each beside the low-level primitive it
+       wraps (the HTTP client, ``os.environ``, raw SQL, the cache, ``json.dumps`` in a view).
+       This list is the input to Modules 13 to 15.
+   * - 6
+     - **Types and contracts.** Annotations as a rule rather than a style, typed aliases
+       instead of ``Any``, Pydantic models instead of dictionaries, and a published contract
+       tested from outside the codebase. The bugs that Smarter's Python SDK found by calling
+       the API as a stranger would, from a ``500`` on a list route to an ``apply`` response
+       that leaked a masked API key and the caller's IP address.
+     - Add annotations and a Pydantic model to one subsystem boundary of the student's
+       project, and write one test that calls it from the outside, the way a client would.
+       Ask the agent to change the code behind it, and see whether the contract holds it.
+   * - 7
+     - **Tests define correct.** Tests as the agent's definition of correct and as executable
+       examples; base classes that build fixtures once and clean up after themselves; and the
+       coverage campaign that raised Smarter from about 75% to about 97% and found well over a
+       hundred bugs, from an endpoint that never checked ownership to a middleware that
+       computed a ``403`` and threw it away. Marking a found bug as an expected failure, so
+       that it is recorded before it is fixed. Tests that call real, billable services, and
+       when that is right.
+     - Ask the agent to raise the coverage of one package of the student's project, with
+       instructions to record each bug it finds as an expected failure rather than fixing it.
+       Review what it found, and check each one yourself.
+   * - 8
+     - **Linters cancel mechanically.** A pre-commit configuration as the one lint standard
+       that the agent and the human both run: formatters, flake8, isort, autoflake,
+       pyupgrade, bandit, codespell and commit message rules. Why agents copy what they see
+       and invent what is missing, and how a hook cancels both before they become examples.
+     - Add a pre-commit configuration to the student's project, or tighten the existing one,
+       and run it on the whole tree. Have the agent fix the findings in one package, and
+       review which fixes were mechanical and which changed behavior.
+   * - 9
+     - **A runnable environment.** "An agent that can run your code converges. An agent that
+       can't is guessing." Smarter's ``make init`` and Docker Compose stack, the rule that the
+       agent runs the tests itself, and the traps that had to be written down: a container
+       with no bind mount, a shell that does not split words, a dev server that never returns.
+     - Give the student's project one command that runs its whole test suite from a clean
+       clone, and one that starts it. Hand the agent a failing test with no other help, and
+       time how long it takes to run, read and fix it.
+   * - 10
+     - **What the agent reads.** Claude Code's transcripts are JSON lines on disk, one file per
+       session. Classified by a short script, three weeks of Smarter's sessions show what the
+       agent reads and runs: existing code, tests, pre-commit and the runtime in nearly every
+       session, Skills in four of five, ``git log`` in three of four, and ADRs in one in ten.
+       Guidance sets the direction of a change, and feedback cancels its errors.
+     - Write ``reads.py`` for the convergence kit: a Python script that reads the student's own
+       Claude Code transcripts, classifies each tool call by pattern, and prints each source's
+       reach across sessions. Compare the table with Smarter's, and say what surprised you.
+   * - 11
+     - **CLAUDE.md and Skills.** A short, always-loaded file that holds only what applies to
+       every task and points to everything else; Agent Skills as folders of know-how loaded on
+       demand; and the evidence: one line in ``CLAUDE.md`` took the first skill's load rate from
+       15% to 77% of sessions. Skills written by the agent after the work, with the traps it hit,
+       and rules that carry their reasons, because a rule without reasons gets reasoned
+       around.
+     - Write a ``CLAUDE.md`` of no more than about 150 lines for the student's project, and its
+       first skill, a ``SKILL.md`` that says which narrower skill or document covers each kind
+       of work. Run the same task with and without them, and compare.
+   * - 12
+     - **Docstrings, ADRs and commit bodies.** Docstrings are the contract of the code the
+       agent did not write, and the only guidance that can disagree with the code beside it.
+       ADRs as the project's constitution, read rarely because their rules have moved into
+       skills. Commit bodies that explain what was wrong, what changed and how it was tested,
+       written for the next agent, which runs ``git log`` in most sessions.
+     - Count the share of the student's project's commits with a body of five lines or more
+       over time, and add it to ``convergence.py``. Rewrite the docstrings of one canonical
+       helper so that they state its contract, and write the commit for it.
+   * - 13
+     - **A second way to do things.** The antipattern that starts a geometric series: a second
+       way that lives beside the canonical one, never wrong enough to fail a test. Smarter's
+       ``@cache_results`` decorator, and the hand-rolled ``cache.get()`` and ``cache.set()``
+       calls that grew beside it, release by release, because the agent copies the nearest
+       example, not the best one; what each copy carried, from opaque keys to an API key in
+       the key-building code; and the search that showed the same cat every time.
+     - In a clone of Smarter, count the files that call ``cache.get(`` or ``cache.set(``
+       directly at v0.14, v0.15, v0.19 and today, and read each one that is left. Decide which
+       are legitimate exceptions and which are copies, and say why.
+   * - 14
+     - **Detecting divergence.** The antipattern lives in the comparison between changes, so
+       look across the codebase and across time: count both ways at every release tag, grep
+       for each primitive outside its helper's home, find the helpers that the newest code
+       skips, look for shared fingerprints such as the same key function or constant names,
+       and treat a recurring bug shape as a symptom of a pattern.
+     - Write ``ways.py`` for the convergence kit: for each helper and primitive pair from
+       Module 5, it counts both ways at every tag of the student's project and prints the
+       trend. Find the student's project's worst second way.
+   * - 15
+     - **The four-step fix.** Name the pattern, not the instance; fix every copy in one change,
+       because a leftover copy is the next feature's template; write the rule, its reasons and
+       its exceptions where the agent reads first; and add a mechanical guard that fails on
+       the second way. The commit that did all four in Smarter, the mistake it made on the way
+       (a cache on a generic transport that overrode every caller's settings), and the
+       ``reverse()`` cache that showed one way must also be the right way.
+     - Write the guard for the student's worst second way: a unit test that walks the
+       project's modules with Python's ``ast`` module and fails on any direct use of the
+       primitive outside its allowed modules. Run it, and watch it fail.
+   * - 16
+     - **Irreversible steps.** Guardrails belong in the environment, not in the developer's
+       attention span. The one-line DNS change that ran on every Smarter deployment, filled
+       the host data it lacked with a plausible guess, and took production offline; the fix;
+       and what lasted: a service layer for every cloud call, an in-memory provider for tests,
+       and a skill that hands write commands to the human.
+     - Inventory the student's project's irreversible operations: deployments, migrations,
+       DNS, payments, email, deletes. For each, decide how a test fakes it and how the agent is
+       kept from running it, and add the rule to ``CLAUDE.md``.
+   * - 17
+     - **Prompts, review and honest numbers.** A prompt as a single unit of work with a
+       verifiable done; a definition of done that the agent checks itself against; reviewing
+       an agent's pull request as a colleague's, including tests weakened rather than bugs
+       fixed; and productivity measured honestly, with lines, releases and defects, and with
+       the conditions that made the pace possible.
+     - Write three prompts for real work in the student's project, each with its outcome,
+       evidence and done. Run one, and review the pull request against its definition of done.
+   * - 18
+     - **Keeping the sources convergent.** Sources are terms in the series too: a stale rule
+       is copied with the agent's full confidence. The commit that moved notes from one
+       machine's agent memory into the repository, and the decay modes it exposed. A periodic
+       convergence review: rerun the kit, compare the agent's sources with its code, and keep
+       cancelling.
+     - Run the whole convergence kit on the student's project, compare it with the Module 3
+       baseline, and choose the capstone.

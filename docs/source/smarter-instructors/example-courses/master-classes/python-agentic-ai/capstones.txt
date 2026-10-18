@@ -1,0 +1,123 @@
+Capstone A: A Convergence Campaign in Your Own Project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Learning objective.** Make a large Python codebase converge under an AI coding agent, and show
+with measurements that it did.
+
+Students run a campaign of at least two weeks in the student's project, with Claude Code doing
+most of the work and the student designing, prompting and reviewing it. The campaign starts from
+the Module 3 baseline and must include: one subsystem designed or repaired by hand, with types
+and a contract test from the outside; a test suite and pre-commit hooks that the agent runs alone
+from one command; a ``CLAUDE.md`` and at least three skills, at least one written from a mistake
+the agent made during the campaign; the project's worst second way eliminated in one change,
+with its rule and a mechanical guard; and a real feature or set of fixes delivered on top, so
+that the foundation is tested by work, not only described.
+
+**What students turn in:**
+
+- The pull requests of the campaign, in the student's project or a fork of it, with their
+  commit bodies.
+- The convergence kit (``convergence.py``, ``reads.py``, ``ways.py`` and the guard test),
+  committed and runnable from a clean clone.
+- A convergence report of about four pages: the baseline and final figures, side by side; the
+  ratio before and after, argued from evidence; what the agent read, from the student's own
+  transcripts; every mistake the agent made and where it is now written down; and what is still
+  diverging.
+- A ten-minute presentation.
+
+**How it is graded (100 points):**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 8 35 35
+
+   * - Criterion
+     - Pts
+     - Exemplary
+     - Developing
+   * - Measurement
+     - 25
+     - Baseline and final figures from the kit, reproducible from a clean clone, with what each
+       figure does not show.
+     - Figures from the agent's summary, never recounted.
+   * - Foundation and feedback
+     - 20
+     - A subsystem that the new code inherits, typed and tested from outside; tests and hooks
+       the agent runs alone.
+     - A test command that needs the student's help.
+   * - Second way eliminated
+     - 20
+     - Every copy fixed in one change, the rule written with its reasons and exceptions, and a
+       guard test that fails on a new copy.
+     - Some copies fixed, or a rule with no guard.
+   * - Guidance
+     - 15
+     - A short ``CLAUDE.md``, skills that the transcripts show were loaded, each mistake turned
+       into a rule.
+     - Skills written but never loaded.
+   * - Delivered work
+     - 10
+     - A real feature or fixes, reviewed and merged, on top of the foundation.
+     - Only infrastructure for the agent.
+   * - Report and presentation
+     - 10
+     - Honest about what still diverges; clear and on time.
+     - Claims convergence without evidence.
+
+Capstone B: A Convergence Audit of Smarter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Learning objective.** Audit a large agent-developed Python codebase for divergence, find a
+second way to do something that its maintainers have not found, and propose the fix.
+
+Students audit Smarter, or another large open-source Python project developed with coding agents
+that the instructor approves, with the convergence kit. The audit counts both ways for every
+canonical helper and primitive pair the student can find in ``smarter/smarter/lib/`` and
+``smarter/smarter/common/``, at every minor release tag from v0.14 to today; finds at least one
+second way that is growing, or a helper that the newest code skips; and checks it against the
+rules in ``CLAUDE.md`` and ``skills/``. The student then writes the four-step fix as a plan, and
+implements it in a fork with Claude Code, including the skill change and the guard test. A fix
+that is to be proposed to Smarter is agreed with the maintainers in a GitHub issue first, and
+follows :doc:`/smarter-framework/developer-reference/agentic-development`.
+
+**What students turn in:**
+
+- The audit: a table of every pair counted at every tag, with the script that produced it.
+- The fork's pull request, with the fix, the rule, the guard test and a commit body in
+  Smarter's style, and the tests run in Smarter's containers.
+- A report of about four pages: the method, the findings ranked by growth, the evidence that
+  each one is a copy rather than an exception, and what the fix changes in the series.
+- A ten-minute presentation.
+
+**How it is graded (100 points):**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 8 35 35
+
+   * - Criterion
+     - Pts
+     - Exemplary
+     - Developing
+   * - Method
+     - 20
+     - Every pair counted at every tag by a script anyone can rerun.
+     - Today's counts only.
+   * - Findings
+     - 25
+     - A growing second way, with its fingerprints traced through the history and the commits
+       that copied it.
+     - A one-off use reported as a pattern.
+   * - Verification
+     - 15
+     - Each finding read in the source and checked against the written exceptions.
+     - Took the agent's word for it.
+   * - Fix
+     - 25
+     - Every copy fixed in one change, the rule written with reasons and exceptions, a guard
+       test, Smarter's tests passing.
+     - A fix of one instance.
+   * - Report and presentation
+     - 15
+     - Clear about the evidence and its limits; on time.
+     - Overruns, or overstates the findings.

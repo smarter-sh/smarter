@@ -1,0 +1,206 @@
+Every lecture, lab and assignment in this course rests on the files and commits below. Every
+reference is to the ``main`` branch of a public repository in
+`github.com/smarter-sh <https://github.com/smarter-sh>`__, so that students can open each one
+during class. Python paths in the ``smarter`` repository are under ``smarter/smarter/``. The
+figures quoted in the lectures were counted on ``main`` in October 2026, excluding release
+commits, migrations and generated files; students recount them in the labs.
+
+Converge or Diverge
+~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 1. Eighteen days in October
+     - The release history from v0.14 to v0.33: nineteen minor releases between September 30
+       and October 17, 2026, more than the fifteen in the project's whole history before. The
+       first feature that Claude Code designed and wrote, the manifest-declared Guardrail, and
+       the three-part *Converge or Diverge* series on blog.smarter.sh that measures what
+       happened.
+     - `CHANGELOG.md <https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md>`__,
+       `commit 329527e8e <https://github.com/smarter-sh/smarter/commit/329527e8e607a9adf830b71518e385f812d1b9f7>`__,
+       `Part 1 <https://blog.smarter.sh/2026/10/10/claude-code-large-django-codebase/>`__
+   * - 2. Telescoping and geometric series
+     - The two ways a series of agent changes can add up, and the one question that sets the
+       ratio: when the agent goes looking, which way does it find first?
+     - `Part 2 <https://blog.smarter.sh/2026/10/11/blog-prologue-geometric-series/>`__,
+       `skills/smarter-development/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-development/SKILL.md>`__
+   * - 3. Measuring a codebase
+     - What can be counted from a clone: commits and lines by author, releases, tests, coverage,
+       commit bodies, and the files that use a primitive directly. The project's coverage
+       target and how it is enforced.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__,
+       `.github/workflows/test.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__,
+       `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__
+
+The Foundation
+~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 4. Subsystems by hand
+     - The human-designed subsystems that every application inherits: tenancy and ownership,
+       the response journal, encrypted Secrets referenced by name, and a typed settings layer.
+       "The agent writes the difference. The foundation cancels the rest."
+     - `apps/account/models/metadata_with_ownership.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__,
+       `lib/journal/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/journal>`__,
+       `apps/secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
+       `common/conf/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf>`__
+   * - 5. One way to do each thing
+     - The manifest loader and the abstract broker that every resource kind extends, with
+       ``kubectl``-style verbs, so that a new kind is the difference from the last one.
+       :doc:`ADR 005 </adr/005-manifests>`, :doc:`ADR 024 </adr/024-broker-model>`.
+     - `lib/manifest/loader.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/loader.py>`__,
+       `lib/manifest/broker/abstract_broker_class.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__,
+       `apps/guardrail/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail>`__
+   * - 6. Types and contracts
+     - Type annotations as a rule, typed aliases instead of ``Any``, Pydantic models instead of
+       raw JSON, and an OpenAPI document that tests every route from the outside. The API bugs
+       that the Python SDK found when it called the platform as a stranger would.
+       :doc:`ADR 027 </adr/027-annotations>`, :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+     - `lib/typing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/typing.py>`__,
+       `apps/api/v1/contract/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/api/v1/contract>`__,
+       `commit 04f67ed01 <https://github.com/smarter-sh/smarter/commit/04f67ed0107b117ae8f5aa7e5eb67be4b57e0c46>`__,
+       `smarter-python <https://github.com/smarter-sh/smarter-python>`__
+
+Feedback
+~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 7. Tests define correct
+     - The test base classes, and the coverage campaign of early October 2026 that took the
+       Python suite from about 75% to about 97% coverage and found bugs on the way, each
+       commit's body listing what was wrong: 23 in the framework code, 13 in accounts, 9 in
+       the API and CLI, and 43 that tests had marked as expected failures.
+     - `lib/unittest/base_classes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/base_classes.py>`__,
+       `commit da46f38a9 <https://github.com/smarter-sh/smarter/commit/da46f38a96c62ae7e491e95115ed7a41fc95302f>`__,
+       `commit e92adae59 <https://github.com/smarter-sh/smarter/commit/e92adae594a3942f1e8544c347cf8c284776f8da>`__,
+       `commit d118c6bd6 <https://github.com/smarter-sh/smarter/commit/d118c6bd6f8c3da42a05669a214faadbfc8c3bf7>`__,
+       `commit 9b7f0ea59 <https://github.com/smarter-sh/smarter/commit/9b7f0ea598ba1d5946b9cc6e7b398d3b815a9689>`__
+   * - 8. Linters cancel mechanically
+     - About two dozen pre-commit hooks, from black and flake8 to bandit, codespell and
+       commitlint, as the one lint standard that the agent and the human both run.
+     - `.pre-commit-config.yaml <https://github.com/smarter-sh/smarter/blob/main/.pre-commit-config.yaml>`__,
+       `skills/smarter-code-quality/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-code-quality/SKILL.md>`__
+   * - 9. A runnable environment
+     - One command that starts Django, Celery, MariaDB and Redis; the rules for running tests
+       in the containers; and the traps written down so that an agent never tests old code in
+       a container with no bind mount.
+     - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__,
+       `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__,
+       `skills/smarter-docker-environment/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/SKILL.md>`__
+
+Guidance
+~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 10. What the agent reads
+     - Three weeks of Claude Code transcripts, classified by a short script: what 94
+       code-changing sessions read and ran, ranked by reach, from searching existing code (99%)
+       to architecture decision records (10%) and the project's own MCP server (none).
+     - `Part 3 <https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__,
+       `skills/README.md <https://github.com/smarter-sh/smarter/blob/main/skills/README.md>`__
+   * - 11. CLAUDE.md and Skills
+     - The always-loaded file, its hard rules and its pointer to the first skill, which raised
+       that skill's load rate from 15% to 77% of code-changing sessions; the day the
+       accumulated notes became one ``skills/`` folder; and the skills written from mistakes.
+     - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__,
+       `commit 6a6a8774d <https://github.com/smarter-sh/smarter/commit/6a6a8774d4aa94e07ad6fade7568b5c299018d17>`__,
+       `commit 1c59d0a86 <https://github.com/smarter-sh/smarter/commit/1c59d0a86da38f4ba22a8496c1adcac7a3c9cdf9>`__,
+       `skills/ <https://github.com/smarter-sh/smarter/tree/main/skills>`__
+   * - 12. Docstrings, ADRs and commit bodies
+     - Docstrings as the contract of code the agent did not write; ADRs as the constitution
+       that the skills now carry; and commit bodies, which went from 4% to 44% of commits with
+       five lines or more once the agent wrote them for the next agent.
+       :doc:`ADR 029 </adr/029-docstrings>`.
+     - `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__,
+       `skills/smarter-docstrings/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docstrings/SKILL.md>`__,
+       `skills/smarter-git-commits/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-git-commits/SKILL.md>`__,
+       :doc:`/adr`
+
+The Antipattern
+~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 13. A second way to do things
+     - The canonical cache decorator, and the hand-rolled ``cache.get()`` and ``cache.set()``
+       calls that grew beside it from four files at v0.14 to nine at v0.19, with the same opaque
+       keys in each copy, and the image search that showed the same cat every time.
+     - `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__,
+       `lib/cache/lazy_cache.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/lazy_cache.py>`__,
+       `apps/llmtool/plugin/image_search.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/image_search.py>`__,
+       `apps/mcpclient/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient>`__
+   * - 14. Detecting divergence
+     - Counting both ways at every release tag, grepping for a primitive outside its helper's
+       home, and finding the helpers that the newest code skips.
+     - The release tags (``git tag``), `apps/llmtool/plugin/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/plugin>`__,
+       `apps/guardrail/services/strategies/semantic_strategy.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/semantic_strategy.py>`__
+   * - 15. The four-step fix
+     - One commit that moved every copy onto the decorator in 59 files and wrote the rule, with
+       its reasons and exceptions, into the first skill; the generic-transport cache that the
+       fix itself got wrong; and the year-long ``reverse()`` cache that showed the canonical
+       helper used where it did not belong.
+     - `commit eeb7a7a19 <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__,
+       `commit 5be6cf37c <https://github.com/smarter-sh/smarter/commit/5be6cf37c942f70e9d49504cec0dbeb5234576e3>`__,
+       `lib/django/shortcuts.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/shortcuts.py>`__,
+       `lib/django/tests/test_views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/tests/test_views.py>`__
+
+The Human in the Loop
+~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 43 35
+
+   * - Module
+     - What to read
+     - Where to look
+   * - 16. Irreversible steps
+     - The DNS change that ran on every deployment, invented the host data it lacked, and took
+       production offline for about 20 minutes; the fix; and the service layer, in-memory
+       provider and safety skill that now keep every cloud call out of the tests.
+     - `commit eb6995baf <https://github.com/smarter-sh/smarter/commit/eb6995baff0d9e91800edf831d93e8338dbc44e7>`__,
+       `apps/api/management/commands/verify_dns_configuration.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/management/commands/verify_dns_configuration.py>`__,
+       `apps/infrastructure/providers/memory.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/infrastructure/providers/memory.py>`__,
+       `skills/smarter-infrastructure-safety/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-infrastructure-safety/SKILL.md>`__
+   * - 17. Prompts, review and honest numbers
+     - Prompts as single units of work with a verifiable done; the definition of done the agent
+       checks itself against; a test-coverage commit to review as a colleague would; and why a
+       25-times multiplier is neutral.
+     - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__,
+       `commit c97f2a475 <https://github.com/smarter-sh/smarter/commit/c97f2a475017fde4d289c856b3ed6576b1d67428>`__,
+       `skills/smarter-python-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-python-testing/SKILL.md>`__
+   * - 18. Keeping the sources convergent
+     - The commit that moved notes from one machine's agent memory into the repository, and the
+       decay it exposed: facts that lived on one machine, rules whose reasons had expired, and
+       instructions the agent kept breaking.
+     - `commit 577454464 <https://github.com/smarter-sh/smarter/commit/57745446469df4c31aed98b47e82ffadef48a8ac>`__,
+       `skills/smarter-git-commits/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-git-commits/SKILL.md>`__,
+       `skills/smarter-development/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-development/SKILL.md>`__
