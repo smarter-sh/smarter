@@ -1,44 +1,26 @@
-"""Apply the built-in LLMHostCompute manifests: the kinds of node, and node group, that LLMHosts run on."""
+"""Apply the example LLMHostCompute manifests: the kinds of node, and node group, that LLMHosts run on."""
+
+from typing import Optional
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import (
-    get_cached_user_for_username,
-    smarter_cached_objects,
-)
 from smarter.apps.llmhost.services.compute import add_example_computes
-from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.management.examples import SmarterExamplesCommand
 
 
-class Command(SmarterCommand):
+class Command(SmarterExamplesCommand):
     """Django manage.py add_example_llmhost_compute command."""
 
     help = (
-        "Apply the built-in LLMHostCompute manifests, in smarter/apps/llmhost/data/compute. "
+        "Apply the example LLMHostCompute manifests, in smarter/apps/llmhost/data/compute. "
         "No node group is created: an LLMHost's launch does."
     )
+    family = "LLMHostCompute"
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            "--username",
-            type=str,
-            help="The user that will own the LLMHostComputes. Every account may use the Smarter admin's.",
-            default=smarter_cached_objects.smarter_admin.username,
-        )
+    def add_examples(self, user_profile: Optional[UserProfile]) -> list[str]:
+        """Apply the example LLMHostComputes.
 
-    def handle(self, *args, **options):
-        self.handle_begin()
-        username = options["username"]
-        user = get_cached_user_for_username(username=username)
-        if user is None:
-            self.handle_completed_failure(ValueError(username), f"User {username} does not exist.")
-            raise ValueError(f"User {username} does not exist.")
-        try:
-            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
-            success = add_example_computes(user_profile=user_profile)
-        # pylint: disable=broad-except
-        except Exception as exc:
-            self.handle_completed_failure(exc, f"Failed to apply the built-in LLMHostCompute manifests: {exc}")
-            raise
-        if not success:
-            self.stdout.write(self.style.WARNING("One or more built-in LLMHostCompute manifests failed to apply."))
-        self.handle_completed_success()
+        Every account may use the Smarter admin's.
+        """
+        if not add_example_computes(user_profile=user_profile):
+            return ["One or more example LLMHostCompute manifests failed to apply. See the log."]
+        return []

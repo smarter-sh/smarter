@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 from django.core.management import call_command
 
-from smarter.apps.llmclient.management.commands.deploy_example_llmclients import (
-    Command as DeployBuiltinLLMClients,
+from smarter.apps.llmclient.management.commands.add_example_llmclients import (
+    Command as AddExampleLLMClients,
 )
 from smarter.apps.llmtool.const import OFFICIAL_EXTENSIONS
 from smarter.apps.llmtool.models import Extension, ExtensionSetting
@@ -93,9 +93,9 @@ class TestExtensionCommands(ExtensionTestMixin):
         ):
             self.assertIn("registry is disabled", run("add_example_extensions"))
 
-    def test_deploy_example_llmclients_skips_missing_extensions(self):
-        """A built-in LLMClient whose extensions are not installed is skipped, not failed."""
-        command = DeployBuiltinLLMClients()
+    def test_add_example_llmclients_finds_missing_extensions(self):
+        """The extensions of an example LLMClient that are not installed, for which it is skipped, not failed."""
+        command = AddExampleLLMClients()
         self.assertEqual(command.missing_extensions(["echo"]), ["echo"])
         self.install_echo()
         self.assertEqual(command.missing_extensions(["echo", "no-such-extension"]), ["no-such-extension"])

@@ -2,7 +2,7 @@
 Test the add_example_llmhost and add_example_llmhost_compute management commands.
 
 Applying an LLMHost manifest does not launch it, but these tests still mock
-apply_manifest and add_example_computes: the commands' own logic is what is
+apply_manifest, in SmarterExamplesCommand's module, and add_example_computes: the commands' own logic is what is
 under test, and the manifests are tested by the llmhost manifest tests.
 """
 
@@ -13,7 +13,6 @@ from unittest.mock import patch
 
 from django.core.management import call_command
 
-from smarter.apps.account.models import User
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmhost.const import BUILTIN_MANIFESTS_PATH
 
@@ -35,7 +34,7 @@ class TestAddBuiltinLLMHost(BuiltinCommandTestBase):
     def setUp(self):
         super().setUp()
         self.manifests = sorted(glob.glob(os.path.join(BUILTIN_MANIFESTS_PATH, "*.yaml")))
-        patcher = patch(f"{COMMANDS}.add_example_llmhost.call_command")
+        patcher = patch("smarter.lib.django.management.examples.call_command")
         self.apply_manifest = patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -55,13 +54,13 @@ class TestAddBuiltinLLMHost(BuiltinCommandTestBase):
         output = self.run_command("add_example_llmhost", username=self.admin_user.username)
         self.assertEqual(self.apply_manifest.call_count, len(self.manifests))
         self.assertIn("failed to apply", output)
-        self.assertIn(f"{os.path.basename(self.manifests[0])}: invalid manifest", output)
+        self.assertIn(f"{os.path.basename(self.manifests[0])}: RuntimeError: invalid manifest", output)
 
     def test_unknown_user(self):
-        """Get_cached_user_for_username() raises for an unknown user; the command also guards against None."""
-        with self.assertRaises(User.DoesNotExist):
+        """Test that an unknown user, whether get_cached_user_for_username() raises or returns None, fails the command."""
+        with self.assertRaises(SystemExit):
             self.run_command("add_example_llmhost", username=f"not_a_user_{self.hash_suffix}")
-        with patch(f"{COMMANDS}.add_example_llmhost.get_cached_user_for_username", return_value=None):
+        with patch("smarter.lib.django.management.examples.get_cached_user_for_username", return_value=None):
             with self.assertRaises(SystemExit):
                 self.run_command("add_example_llmhost", username=self.admin_user.username)
         self.apply_manifest.assert_not_called()
@@ -93,10 +92,10 @@ class TestAddBuiltinLLMHostCompute(BuiltinCommandTestBase):
             self.run_command("add_example_llmhost_compute", username=self.admin_user.username)
 
     def test_unknown_user(self):
-        """Get_cached_user_for_username() raises for an unknown user; the command also guards against None."""
-        with self.assertRaises(User.DoesNotExist):
+        """Test that an unknown user, whether get_cached_user_for_username() raises or returns None, fails the command."""
+        with self.assertRaises(SystemExit):
             self.run_command("add_example_llmhost_compute", username=f"not_a_user_{self.hash_suffix}")
-        with patch(f"{COMMANDS}.add_example_llmhost_compute.get_cached_user_for_username", return_value=None):
+        with patch("smarter.lib.django.management.examples.get_cached_user_for_username", return_value=None):
             with self.assertRaises(SystemExit):
                 self.run_command("add_example_llmhost_compute", username=self.admin_user.username)
         self.add_example_computes.assert_not_called()
