@@ -127,6 +127,49 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(response.context["smarter_chat"]["log_stream_url"], "")
         self.assertIn('smarter-log-stream-url=""', response.content.decode())
 
+    def test_workbench_manifest_editor_url(self):
+        """Test that the workbench passes the LLMClient's manifest editor, of its own origin, to Smarter Chat."""
+        response = self.client.get(
+            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
+        )
+        manifest_editor_url = response.context["smarter_chat"]["manifest_editor_url"]
+        self.assertEqual(
+            manifest_editor_url, self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id)
+        )
+        # a path, of the workbench's own origin, as Smarter Chat requires.
+        self.assertTrue(manifest_editor_url.startswith("/"), manifest_editor_url)
+        self.assertTrue(manifest_editor_url.endswith("/manifest/editor/"), manifest_editor_url)
+        self.assertIn(f'smarter-manifest-editor-url="{manifest_editor_url}"', response.content.decode())
+
+    def test_manifest_editor(self):
+        """Test that the manifest editor page renders the editor alone, and may be framed by the console only."""
+        response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        templates = [template.name for template in response.templates]
+        self.assertIn("common/manifest_editor_frame.html", templates)
+        self.assertIn("common/manifest_editor.html", templates)
+        # without the web console's header and sidebar.
+        self.assertNotIn("dashboard/base.html", templates)
+        self.assertNotIn("dashboard/sidebar.html", templates)
+        content = response.content.decode()
+        self.assertIn('id="smarter-manifest-editor-root"', content)
+        self.assertIn(self.resource.name, content)
+        # Django denies every other page to frames.
+        self.assertEqual(response["X-Frame-Options"], "SAMEORIGIN")
+
+    def test_manifest_editor_not_found(self):
+        """Test that the manifest editor page is a 404 for an unknown LLMClient."""
+        unknown = LLMClient(id=999999999)
+        response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_detail_page_may_not_be_framed(self):
+        """Test that the manifest detail page, unlike the manifest editor page, may not be framed."""
+        response = self.client.get(self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertEqual(response["X-Frame-Options"], "DENY")
+        self.assertIn("dashboard/base.html", [template.name for template in response.templates])
+
     def test_workbench_and_config_not_found(self):
         """Test that the workbench page and config api are a 404 for an unknown LLMClient."""
         unknown = LLMClient(id=999999999)

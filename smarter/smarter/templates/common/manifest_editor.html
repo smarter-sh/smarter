@@ -1,0 +1,24 @@
+{% load react_manifest_editor %}
+{% comment %}
+The manifest editor's root element, and the manifest, as YAML, for the @smarter/manifest-editor React app.
+It expects a "manifest" context variable. The page includes the app's assets, from
+manifest_editor_react_assets. See manifest_detail.html and manifest_editor_frame.html.
+{% endcomment %}
+{% manifest_editor_context as manifest_editor %}
+<!--begin:: Manifest editor-->
+{{ manifest|json_script:manifest_editor.data_id }}
+<div
+  id="{{ manifest_editor.root_id }}"
+  smarter-manifest-data-id="{{ manifest_editor.data_id }}"
+  smarter-apply-api-url="{{ manifest_editor.apply_api_url }}"
+  smarter-validate-api-url="{{ manifest_editor.validate_api_url }}"
+  smarter-delete-api-url="{{ manifest_editor.delete_api_url }}"
+  smarter-kind-placeholder="{{ manifest_editor.kind_placeholder }}"
+  django-csrf-cookie-name="{{ manifest_editor.csrf_cookie_name }}"
+  django-session-cookie-name="{{ manifest_editor.django_session_cookie_name }}"
+  django-cookie-domain="{{ manifest_editor.cookie_domain }}"
+  react-debug-mode="{{ manifest_editor.react_debug_mode }}"
+  smarter-request-id="{{ manifest_editor.smarter_request_id }}"
+  >
+</div>
+<!--end:: Manifest editor-->
