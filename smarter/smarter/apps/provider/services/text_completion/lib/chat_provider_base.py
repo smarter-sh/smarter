@@ -640,17 +640,24 @@ class SmarterChatProviderBase(ChatDbMixin):
         content = f"Smarter selected this plugin: {plugin}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
-    def append_message_tool_called(self, tool_call: ChatCompletionMessageToolCallUnion) -> None:
+    def append_message_tool_called(
+        self, tool_call: ChatCompletionMessageToolCallUnion, tool_name: Optional[str] = None
+    ) -> None:
         """
         Append a message indicating that a tool was called.
 
         :param tool_call: The tool call object containing function name and arguments.
         :type tool_call: ChatCompletionMessageToolCallUnion
+        :param tool_name: The tool's name as users know it, e.g. a plugin's name rather than its symbolic
+            function name, ``smarter_plugin_0000000016``. Defaults to the function name. The tool call's
+            json, below the message, keeps the function name that the LLM called.
+        :type tool_name: Optional[str]
         :returns: None
         :rtype: None
         """
         tool_call_to_json = tool_call.model_dump()
-        content = f"{self.provider_name} called this tool: {tool_call.function.name}({tool_call.function.arguments})"  # type: ignore
+        name = tool_name or tool_call.function.name  # type: ignore
+        content = f"{self.provider_name} called this tool: {name}({tool_call.function.arguments})"  # type: ignore
         content = content + f"\n\nTool call:\n--------------------\n{json.dumps(tool_call_to_json, indent=4)}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 

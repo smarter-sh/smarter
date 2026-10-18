@@ -316,6 +316,43 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         self.assertEqual(len(presented), 3)
         self.assertIn("location: A city., unit: Celsius, Fahrenheit", presented[0])
 
+    def test_a_plugin_is_presented_by_its_name(self):
+        """A plugin's tool is presented by its PluginMeta's name, and its definition keeps its function name."""
+        function_name = f"{PLUGIN_PREFIX}_0000000022"
+        plugin_meta = MagicMock()
+        plugin_meta.name = "stackademy_api"
+        tools = [{"type": "function", "function": {"name": function_name, "description": "Stackademy's api."}}]
+        with patch.object(module.PluginMeta, "get_cached_object", return_value=plugin_meta):
+            self.prep_first_request(tools)
+        presented = [content for content in self.appended() if content.startswith("Tool presented")]
+        self.assertEqual(len(presented), 1)
+        self.assertTrue(presented[0].startswith("Tool presented: stackademy_api() - Stackademy's api."), presented[0])
+        self.assertIn(f'"name": "{function_name}"', presented[0])
+
+    def test_a_called_plugin_is_named_by_its_name(self):
+        """The tool call's message names a plugin by its PluginMeta's name, and its json keeps its function name."""
+        function_name = f"{PLUGIN_PREFIX}_0000000022"
+        tool_call = self.tool_call(function_name, '{"course": "CS210"}')
+        with patch.object(OpenAISmarterClient, "provider_name", new_callable=PropertyMock, return_value="openai"):
+            self.client.append_message_tool_called(tool_call, tool_name="stackademy_api")
+            self.client.append_message_tool_called(tool_call)
+        named, unnamed = self.appended()
+        self.assertTrue(named.startswith('openai called this tool: stackademy_api({"course": "CS210"})'), named)
+        self.assertIn(f'"name": "{function_name}"', named)
+        self.assertTrue(unnamed.startswith(f"openai called this tool: {function_name}("), unnamed)
+
+    def test_process_tool_call_names_a_plugin_by_its_name(self):
+        """Process_tool_call() passes the plugin's name, not its function name, to the tool call's message."""
+        plugin_meta = MagicMock()
+        plugin_meta.name = "stackademy_api"
+        with patch.object(module.PluginMeta, "get_cached_object", return_value=plugin_meta):
+            # refused by a budget, so that the plugin isn't called.
+            self.process(f"{PLUGIN_PREFIX}_0000000022", refusal="over budget")
+        # process() replaced append_message_tool_called with a mock.
+        OpenAISmarterClient.append_message_tool_called.assert_called_once()  # type: ignore[attr-defined]
+        kwargs = OpenAISmarterClient.append_message_tool_called.call_args.kwargs  # type: ignore[attr-defined]
+        self.assertEqual(kwargs["tool_name"], "stackademy_api")
+
     def test_tool_definition_must_be_a_dict(self):
         with self.assertRaises(SmarterValueError):
             self.prep_first_request([{"type": "function", "function": "not a dict"}])
