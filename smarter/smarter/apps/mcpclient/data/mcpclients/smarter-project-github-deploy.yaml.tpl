@@ -5,7 +5,7 @@
 # Documentation: https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html
 #
 # The MCP server serves one endpoint per repository, so this client reads only smarter-sh/smarter-deploy.
-# The smarter LLMClient uses one such client for each of The Smarter Project's repositories:
+# The smarter_sdk_guide LLMClient uses several such clients, one per repository:
 # see the other smarter-project-github*.yaml.tpl manifests, and smarter-project.yaml.tpl, which
 # reads all of them.
 #

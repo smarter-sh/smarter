@@ -80,7 +80,7 @@ from .base_classes import (
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "data", "sample-plugins"))
-# the built-in WebsearchPlugin of the smarter LLMClient, which deploy_example_llmclients applies.
+# the sample WebsearchPlugin smarter_project_websearch, which add_example_tools applies.
 SMARTER_PROJECT_WEBSEARCH_PATH = os.path.abspath(
     os.path.join(HERE, "..", "..", "data", "sample-plugins", "websearch-smarter-project.yaml")
 )
@@ -730,7 +730,7 @@ class TestWebsearchPlugin(PluginTestBase):
             self.assertNotIn("error", retval, path)
 
     def test_smarter_project_websearch(self):
-        """Test that the smarter LLMClient's built-in WebsearchPlugin searches for The Smarter Project, with Tavily."""
+        """Test that the sample WebsearchPlugin smarter_project_websearch searches for The Smarter Project, with Tavily."""
         self.new_secret("tavily_api_key")
         manifest = copy.deepcopy(get_readonly_yaml_file(SMARTER_PROJECT_WEBSEARCH_PATH))
         name = "websearch_smarter_project"

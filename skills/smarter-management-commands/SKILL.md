@@ -51,7 +51,7 @@ manifests**, not Python fixtures. Every command that creates them is named
 `add_example_tools` (all the plugin kinds), `add_example_llmclients`,
 `add_example_custom_domains`, `add_example_guardrails`, `add_example_budgets`, ... Each
 belongs to the app that implements the kind. A command that creates nothing is named for
-what it does: `deploy_example_llmclients` only deploys the LLMClients that
+what it does: `deploy_example_llmclients` only deploys the example and Stackademy LLMClients that
 `add_example_llmclients` applied, and `verify_stackademy` only prompts them.
 
 1. Put the manifests in `smarter/smarter/apps/<app>/data/<kinds>/*.yaml`, with

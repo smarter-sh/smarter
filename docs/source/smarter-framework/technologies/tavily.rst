@@ -62,24 +62,15 @@ expires.
 The implementation is
 :py:class:`smarter.apps.llmtool.plugin.websearch_providers.TavilySearchProvider`.
 
-**The smarter LLMClient.** The platform's built-in ``smarter`` LLMClient, the Smarter sales
-agent, uses the built-in WebsearchPlugin ``smarter_project_websearch`` to find current
-information about The Smarter Project on the web, from reputable sources. It complements the
-documentation and source code that its ``smarter_project_github`` MCPClients read. Its manifests are in
-the source tree:
+**The sample WebsearchPlugin.** ``smarter_project_websearch`` uses Tavily to find current
+information about The Smarter Project on the web, from reputable sources. It is an example to
+copy, and no example LLMClient uses it. Its manifest is in the source tree:
+``smarter/smarter/apps/llmtool/data/sample-plugins/websearch-smarter-project.yaml``.
 
-- ``smarter/smarter/apps/llmtool/data/sample-plugins/websearch-smarter-project.yaml``
-- ``smarter/smarter/apps/llmclient/data/llm-clients/llmclient-smarter.yaml``
-
-``manage.py add_example_tools`` applies the sample plugins, ``manage.py add_example_llmclients``
-then applies the example LLMClients, and ``manage.py deploy_example_llmclients`` deploys them.
-Applying an LLMClient fails if any plugin that it names does not exist, and applying
-``smarter_project_websearch`` fails if its Secret ``tavily_api_key`` does not exist. **An
-installation without a Tavily API key therefore cannot deploy the smarter LLMClient.** The other
-plugins and LLMClients are not affected: each manifest is applied in its own transaction, so a
-manifest that fails is rolled back entirely, and is reported, and the command goes on to the next
-one. An existing smarter LLMClient keeps its previous version.
-
+``manage.py add_example_tools`` applies the sample plugins. Applying ``smarter_project_websearch``
+fails if its Secret ``tavily_api_key`` does not exist. The other plugins are not affected: each
+manifest is applied in its own transaction, so a manifest that fails is rolled back entirely, and
+is reported, and the command goes on to the next one.
 
 Setup
 -----
@@ -109,13 +100,11 @@ Setup
    the Secret, and lists the key in the ``[API KEYS NOT SET]`` console error that it logs at the
    end, with the other missing API keys. It never stores a placeholder as the key.
 
-4. **Apply the example plugins and LLMClients, and deploy the LLMClients.**
+4. **Apply the sample plugins.**
 
    .. code-block:: bash
 
        python manage.py add_example_tools
-       python manage.py add_example_llmclients
-       python manage.py deploy_example_llmclients --account_number 3141-5926-5359
 
 Other WebsearchPlugins can use the same Secret, by setting ``apiKey: tavily_api_key``, or a
 Secret of their own: ``apiKey`` is the name of any Secret that the plugin's owner can read. See
@@ -140,17 +129,15 @@ secret.
 ``tavily-api-key`` input of ``.github/actions/deploy``, which sets the Helm value
 ``env.SMARTER_TAVILY_API_KEY``. The chart's init Job, ``templates/job-init.yaml``, is a Helm
 ``post-install`` and ``post-upgrade`` hook, so every deployment runs ``initialize_platform``,
-which creates or updates the Secret, and applies the example plugins and LLMClients, and then
-``deploy_example_llmclients``. Consequently:
+which creates or updates the Secret, and applies the sample plugins. Consequently:
 
 - **Adding the key** to an existing installation takes effect on the next deployment.
 - **Rotating the key**: update the GitHub secret, and deploy. The Secret is updated in place.
 - **A deployment without the key** completes, but the init Job logs that the ``tavily_api_key``
-  Secret was not created, and that ``smarter_project_websearch``, and therefore the ``smarter``
-  LLMClient, could not be applied. The other example LLMClients are applied as usual. When the
+  Secret was not created, and that ``smarter_project_websearch`` could not be applied. When the
   GitHub secret is not set, the deploy action passes no value, and Helm falls back to the
   ``values.yaml`` placeholder, which the init command recognizes and ignores.
-- **Every environment** that deploys the example LLMClients needs the key: local, alpha, beta
+- **Every environment** that uses a Tavily WebsearchPlugin needs the key: local, alpha, beta
   and production. Each may use its own Tavily key, for separate usage and billing.
 
 
@@ -178,9 +165,9 @@ Troubleshooting
     ``TAVILY_API_KEY``, run ``manage.py initialize_providers``, and apply the plugin again.
 
 ``Plugin smarter_project_websearch not found for account ...``
-    The smarter LLMClient was applied, but its WebsearchPlugin was not, almost always because of
-    the missing Secret above. Fix the Secret, and run ``manage.py add_example_tools`` and
-    ``manage.py add_example_llmclients``, which report each manifest that fails to apply.
+    An LLMClient that names the plugin was applied, but the plugin was not, almost always because
+    of the missing Secret above. Fix the Secret, run ``manage.py add_example_tools``, and apply
+    the LLMClient again.
 
 ``TAVILY_API_KEY is not set``, and ``SMARTER_TAVILY_API_KEY`` in the ``[API KEYS NOT SET]`` console error
     The init command found no key, or only a placeholder. Set the environment variable, or, in a

@@ -502,8 +502,8 @@ class Command(SmarterCommand):
         """
         Initialize the Tavily web search api key Secret.
 
-        The built-in WebsearchPlugin smarter_project_websearch, which the smarter LLMClient uses,
-        reads its api key from this Secret. Unlike the provider api keys, a missing key is not
+        WebsearchPlugins whose search provider is Tavily, such as the sample smarter_project_websearch,
+        read their api key from this Secret. Unlike the provider api keys, a missing key is not
         stored: the Secret is skipped, so that applying the plugin reports the missing Secret.
         """
         NAME = "tavily"

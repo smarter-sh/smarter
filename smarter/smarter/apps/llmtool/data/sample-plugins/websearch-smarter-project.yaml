@@ -1,6 +1,6 @@
 ---
 # A WebsearchPlugin that searches the web for information about The Smarter Project,
-# from reputable sources, for the smarter LLMClient (llm-clients/llmclient-smarter.yaml).
+# from reputable sources.
 #
 # Prerequisite: a Smarter Secret named tavily_api_key, containing a Tavily API key from
 # https://tavily.com. manage.py initialize_providers creates it from the environment
