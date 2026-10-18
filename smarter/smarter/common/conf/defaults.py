@@ -122,6 +122,7 @@ class SettingsDefaults:
     BRANDING_CURRENCY: str = get_env("BRANDING_CURRENCY", "USD")
     BRANDING_TIMEZONE: str = get_env("BRANDING_TIMEZONE", "America/Denver")
     BRANDING_CONTACT_URL: HttpUrl = HttpUrl(get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/"))
+    BRANDING_PRIMARY_CONTACT: str = get_env("BRANDING_PRIMARY_CONTACT", "Lawrence McDaniel")
     BRANDING_SUPPORT_HOURS: str = get_env("BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)")
     BRANDING_URL_FACEBOOK: HttpUrl = HttpUrl(get_env("BRANDING_URL_FACEBOOK", "https://facebook.com"))
     BRANDING_URL_TWITTER: HttpUrl = HttpUrl(get_env("BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry"))

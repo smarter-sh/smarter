@@ -122,3 +122,58 @@ class TestRedisLogHandler(SmarterTestBase):
             log_handler.emit(record)
         payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(4)]
         self.assertEqual([payload.get("request_id") for payload in payloads], ["abc123", "abc123", None, None])
+
+    def test_bind_log_context(self):
+        """Test that a bound function runs in the log context of its binding, and restores the caller's."""
+        user_token = handler.user_id_context.set("User.a")
+        request_token = handler.request_id_context.set("abc123")
+        try:
+            bound = handler.bind_log_context(
+                lambda value: (handler.user_id_context.get(), handler.request_id_context.get(), value)
+            )
+        finally:
+            handler.request_id_context.reset(request_token)
+            handler.user_id_context.reset(user_token)
+
+        # e.g. a streaming response's generator, after the middleware reset the request's log context.
+        self.assertEqual(bound("x"), ("User.a", "abc123", "x"))
+        self.assertIsNone(handler.user_id_context.get())
+        self.assertIsNone(handler.request_id_context.get())
+
+        failing = handler.bind_log_context(lambda: 1 / 0)
+        with self.assertRaises(ZeroDivisionError):
+            failing()
+        self.assertIsNone(handler.request_id_context.get())
+
+    def test_valid_session_key(self):
+        """Test that a chat session key is used only if it has the form of one."""
+        session_key = "0123456789abcdef" * 4
+        self.assertEqual(handler.valid_session_key(f" {session_key} "), session_key)
+        for invalid in (None, "", "a" * 63, "a" * 65, "g" * 64, "abc123"):
+            self.assertIsNone(handler.valid_session_key(invalid), msg=f"session_key={invalid!r}")
+
+    def test_emit_tags_the_record_with_the_session_key(self):
+        """Test that a record carries the chat session key while one is set, and not otherwise."""
+        self.queue = queue.Queue(maxsize=10)
+        record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
+        log_handler = handler.RedisLogHandler()
+        session_key = "a" * 64
+        with patch(f"{MODULE}.log_queue", self.queue):
+            token = handler.session_key_context.set(session_key)
+            try:
+                log_handler.emit(record)
+            finally:
+                handler.session_key_context.reset(token)
+            log_handler.emit(record)
+        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(4)]
+        self.assertEqual([payload.get("session_key") for payload in payloads], [session_key, session_key, None, None])
+
+    def test_bind_log_context_with_a_session_key(self):
+        """Test that a bound function runs with the chat session key of its binding."""
+        token = handler.session_key_context.set("a" * 64)
+        try:
+            bound = handler.bind_log_context(handler.session_key_context.get)
+        finally:
+            handler.session_key_context.reset(token)
+        self.assertEqual(bound(), "a" * 64)
+        self.assertIsNone(handler.session_key_context.get())

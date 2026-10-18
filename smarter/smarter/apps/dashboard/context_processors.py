@@ -382,6 +382,7 @@ def branding(request: "HttpRequest") -> SmarterDictType:
                 "corporate_timezone": smarter_settings.branding_timezone,
                 "support_email": smarter_settings.branding_support_email,
                 "contact_url": smarter_settings.branding_contact_url,
+                "primary_contact": smarter_settings.branding_primary_contact,
                 "support_hours": smarter_settings.branding_support_hours,
                 "support_phone_number": smarter_settings.branding_support_phone_number,
                 "copyright": f"© 2023-{current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",

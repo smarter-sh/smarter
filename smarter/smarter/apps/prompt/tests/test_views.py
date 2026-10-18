@@ -162,6 +162,27 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertNotIn('"chatbot', content)
         self.assertNotIn("url_chatbot", content)
 
+    def test_config_tags_its_logs_with_the_session_key(self):
+        """Test that the config api tags the rest of its request's logs with the chat's session key, e.g. a new one."""
+        module = "smarter.apps.prompt.views.detailviews.prompt_config_view"
+        url = self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id)
+        with (
+            patch(f"{module}.waffle.switch_is_active", return_value=True),
+            patch(f"{module}.session_key_context") as session_key_context,
+        ):
+            response = self.client.post(url, HTTP_X_SMARTER_CAPABILITIES=CHAT_CONTRACT_V2_CAPABILITY)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        session_key = PromptChatApiConfigResponse.model_validate(response.json()).data.session_key
+        session_key_context.set.assert_called_once_with(session_key)
+
+        # while server logs are off, nothing resets the log context, so it isn't set.
+        with (
+            patch(f"{module}.waffle.switch_is_active", return_value=False),
+            patch(f"{module}.session_key_context") as session_key_context,
+        ):
+            self.client.post(url)
+        session_key_context.set.assert_not_called()
+
     def test_config_v2_is_the_default(self):
         """Test that a client that asks for no version of the contract receives version 2."""
         response = self.client.post(self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id))

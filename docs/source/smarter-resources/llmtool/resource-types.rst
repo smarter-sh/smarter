@@ -11,6 +11,7 @@ LLMTool Plugin Reference
    plugin/sql
    plugin/api
    plugin/utils
+   plugin/request
    plugin/skill
    plugin/websearch
    plugin/image-search

@@ -41,6 +41,7 @@ from smarter.apps.mcpclient.signals import (
     mcpclient_tool_responded,
 )
 from smarter.lib import logging
+from smarter.lib.logging.redis_log_handler import bind_log_context
 from smarter.lib.typing import SmarterDictType
 
 from .signals import (
@@ -336,7 +337,9 @@ def prompt_event_stream_response(
     """
     The prompt api's response as Server-Sent Events.
 
-    See :func:`prompt_event_stream`.
+    See :func:`prompt_event_stream`. ``complete`` and ``on_error`` run in the request's log
+    context, so that the prompt's log records reach the user's server log stream, tagged with the
+    request's id. See :func:`smarter.lib.logging.redis_log_handler.bind_log_context`.
 
     :param complete: Runs the prompt synchronously, and returns the prompt api's JSON response.
     :type complete: Callable[[], django.http.HttpResponse]
@@ -347,8 +350,9 @@ def prompt_event_stream_response(
         prompt's own status is in its ``result`` event.
     :rtype: django.http.StreamingHttpResponse
     """
+    # the prompt runs while the response streams, after the request's log context is reset.
     response = StreamingHttpResponse(
-        prompt_event_stream(complete, on_error),
+        prompt_event_stream(bind_log_context(complete), bind_log_context(on_error)),
         content_type=EVENT_STREAM_CONTENT_TYPE,
         status=HTTPStatus.OK.value,
     )
