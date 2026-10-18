@@ -30,7 +30,7 @@ spec:
           YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.
       defaultTemperature: 1.0
       defaultMaxTokens: 1024
-      appName: Stackademy
+      appName: Stackademy SQL
       appAssistant: Stanley
       appWelcomeMessage: Welcome to Stackademy! How can I help you today?
       appExamplePrompts:
