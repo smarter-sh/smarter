@@ -71,7 +71,7 @@ class TestAddBuiltinCustomDomains(TestAccountMixin):
         self.verify_custom_domain.delay.assert_not_called()
 
     def test_failed_manifests_are_reported(self):
-        with patch(f"{MODULE}.call_command", side_effect=RuntimeError("invalid manifest")):
+        with patch("smarter.lib.django.management.examples.call_command", side_effect=RuntimeError("invalid manifest")):
             output = self.run_command(username=self.admin_user.username)
         self.assertIn("failed to apply", output)
         self.assertIn("invalid manifest", output)

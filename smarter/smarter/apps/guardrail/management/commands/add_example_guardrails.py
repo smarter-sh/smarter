@@ -1,62 +1,20 @@
-# pylint: disable=W0613
-"""Add builtin Guardrails to an account."""
+"""Apply the example Guardrail manifests, which every account may use."""
 
 from typing import Optional
 
-from smarter.apps.account.models import User, UserProfile
-from smarter.apps.account.utils import (
-    get_cached_user_for_username,
-    smarter_cached_objects,
-)
+from smarter.apps.account.models import UserProfile
 from smarter.apps.guardrail.utils import add_example_guardrails
-from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.management.examples import SmarterExamplesCommand
 
 
-# pylint: disable=E1101
-class Command(SmarterCommand):
+class Command(SmarterExamplesCommand):
     """Django manage.py add_example_guardrails command."""
 
-    def add_arguments(self, parser):
-        """Add arguments to the command."""
-        parser.add_argument(
-            "--username",
-            type=str,
-            help="The user that will own the new plugin.",
-            default=smarter_cached_objects.smarter_admin.username,
-        )
-        parser.add_argument("--verbose", action="store_true", help="Enable verbose output.")
+    help = "Apply the example Guardrail manifests, in smarter/apps/guardrail/data/guardrails."
+    family = "Guardrail"
 
-    def handle(self, *args, **options):
-        """Create the plugin."""
-        self.handle_begin()
-
-        user_profile: Optional[UserProfile] = None
-        username = options["username"]
-        verbose = options["verbose"]
-
-        try:
-            user: Optional[User] = get_cached_user_for_username(username=username)
-            if user is None:
-                raise User.DoesNotExist(f"User with username {username} does not exist.")
-        except User.DoesNotExist as e:
-            self.handle_completed_failure(e, f"User {username} does not exist.")
-            raise ValueError(f"User {username} does not exist.") from e
-
-        try:
-            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
-        except UserProfile.DoesNotExist as e:
-            self.handle_completed_failure(e, f"UserProfile for {user} does not exist.")
-            raise ValueError(f"UserProfile for {user} does not exist.") from e
-
-        try:
-            add_example_guardrails(user_profile=user_profile, verbose=verbose)
-        # pylint: disable=broad-except
-        except Exception as exc:
-            # pylint: disable=import-outside-toplevel
-            import traceback
-
-            tb = traceback.format_exc()
-            self.handle_completed_failure(exc, f"Stack trace:\n{tb}")
-            raise
-
-        self.handle_completed_success()
+    def add_examples(self, user_profile: Optional[UserProfile]) -> list[str]:
+        """Apply the example Guardrails."""
+        if not add_example_guardrails(user_profile=user_profile, verbose=self.verbose):
+            return ["One or more example Guardrail manifests failed to apply. See the log."]
+        return []

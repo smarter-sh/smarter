@@ -64,6 +64,7 @@ class SmarterExamplesCommand(SmarterCommand):
         self.handle_begin()
         self.verbose = bool(options.get("verbose"))
         user_profile: Optional[UserProfile] = None
+        owner = "no owner"
         if self.requires_owner:
             username = options.get("username") or smarter_cached_objects.smarter_admin.username
             try:
@@ -74,6 +75,13 @@ class SmarterExamplesCommand(SmarterCommand):
                 self.handle_completed_failure(ValueError(username), f"User {username} does not exist.")
                 raise ValueError(f"User {username} does not exist.")
             user_profile = UserProfile.get_cached_object(user=user)  # type: ignore[arg-type]
+            owner = f"owned by {username}"
+        self.stdout.write(
+            self.style.NOTICE(
+                f"{SmarterExamplesCommand.__module__}.{SmarterExamplesCommand.__name__}: adding the example "
+                f"{self.family}s of {self.__module__}, {owner}."
+            )
+        )
         try:
             failed = self.add_examples(user_profile=user_profile)
         # pylint: disable=broad-except
@@ -84,6 +92,12 @@ class SmarterExamplesCommand(SmarterCommand):
             self.stdout.write(
                 self.style.WARNING(f"Example {self.family} manifests that failed to apply:\n" + "\n".join(failed))
             )
+        self.stdout.write(
+            self.style.NOTICE(
+                f"{SmarterExamplesCommand.__name__}: added the example {self.family}s of {self.__module__}, "
+                f"{len(failed)} failed."
+            )
+        )
         self.handle_completed_success()
 
     def add_examples(self, user_profile: Optional[UserProfile]) -> list[str]:

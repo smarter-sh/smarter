@@ -57,6 +57,13 @@ class TestSmarterExamplesCommand(TestAccountMixin):
             self.assertEqual(call.args, ("apply_manifest",))
             self.assertEqual(call.kwargs["username"], self.admin_user.username)
         self.assertIn("Applied a.yaml", output)
+        # the base class says that it is doing the work, for which command, and for whom.
+        self.assertIn(
+            f"smarter.lib.django.management.examples.SmarterExamplesCommand: adding the example Widgets of {__name__}, "
+            f"owned by {self.admin_user.username}.",
+            output,
+        )
+        self.assertIn(f"SmarterExamplesCommand: added the example Widgets of {__name__}, 0 failed.", output)
 
     def test_defaults_to_the_smarter_admin(self):
         with patch(f"{MODULE}.call_command") as call_command:

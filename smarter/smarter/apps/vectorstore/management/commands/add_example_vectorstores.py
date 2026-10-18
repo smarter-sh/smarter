@@ -1,15 +1,13 @@
-"""Apply the built-in Vectorstore manifests: example vector databases, which every account may use."""
+"""Apply the example Vectorstore manifests: example vector databases, which every account may use."""
+
+from typing import Optional
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import (
-    get_cached_user_for_username,
-    smarter_cached_objects,
-)
 from smarter.apps.vectorstore.builtins import add_example_vectorstores
-from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.management.examples import SmarterExamplesCommand
 
 
-class Command(SmarterCommand):
+class Command(SmarterExamplesCommand):
     """
     Django manage.py add_example_vectorstores command.
 
@@ -20,36 +18,19 @@ class Command(SmarterCommand):
     """
 
     help = (
-        "Apply the built-in Vectorstore manifests, in smarter/apps/vectorstore/data/vectorstores. They are not "
+        "Apply the example Vectorstore manifests, in smarter/apps/vectorstore/data/vectorstores. They are not "
         "deployed. Those whose Provider or ApiConnection does not exist are skipped."
     )
+    family = "Vectorstore"
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            "--username",
-            type=str,
-            help="The user that will own the Vectorstores. Every account may use the Smarter admin's.",
-            default=smarter_cached_objects.smarter_admin.username,
-        )
+    def add_examples(self, user_profile: Optional[UserProfile]) -> list[str]:
+        """Apply the example Vectorstores.
 
-    def handle(self, *args, **options):
-        self.handle_begin()
-        username = options["username"]
-        user = get_cached_user_for_username(username=username)
-        if user is None:
-            self.handle_completed_failure(ValueError(username), f"User {username} does not exist.")
-            raise ValueError(f"User {username} does not exist.")
-        try:
-            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
-            result = add_example_vectorstores(user_profile=user_profile)
-        # pylint: disable=broad-except
-        except Exception as exc:
-            self.handle_completed_failure(exc, f"Failed to apply the built-in Vectorstore manifests: {exc}")
-            raise
+        Every account may use the Smarter admin's.
+        """
+        result = add_example_vectorstores(user_profile=user_profile)
         for name in result.applied:
             self.stdout.write(self.style.SUCCESS(f"Applied Vectorstore {name}. It is not deployed."))
         for name, reason in result.skipped.items():
             self.stdout.write(self.style.WARNING(f"Skipped Vectorstore {name}: {reason}."))
-        for name in result.failed:
-            self.stdout.write(self.style.ERROR(f"Failed to apply Vectorstore {name}. See the log."))
-        self.handle_completed_success()
+        return [f"{name}: see the log." for name in result.failed]

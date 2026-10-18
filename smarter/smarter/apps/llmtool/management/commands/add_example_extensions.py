@@ -1,5 +1,8 @@
 """Install the official Smarter Extensions from the registry."""
 
+from typing import Optional
+
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmtool.const import OFFICIAL_EXTENSIONS
 from smarter.apps.llmtool.extension import registry
@@ -8,10 +11,10 @@ from smarter.apps.llmtool.extension.installer import ExtensionInstaller
 from smarter.apps.llmtool.extension.manifest import ExtensionSettingType
 from smarter.apps.llmtool.models import Extension
 from smarter.apps.secret.models import Secret
-from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.management.examples import SmarterExamplesCommand
 
 
-class Command(SmarterCommand):
+class Command(SmarterExamplesCommand):
     """Django manage.py add_example_extensions command."""
 
     help = (
@@ -19,6 +22,8 @@ class Command(SmarterCommand):
         "settings can be configured. Does nothing while the registry is disabled. Exits with code 1 if an official "
         "extension could not be installed and enabled, e.g. because it is not compatible with this platform."
     )
+    family = "extension"
+    requires_owner = False
 
     def configure(self, installer: ExtensionInstaller, extension: Extension) -> None:
         """
@@ -37,12 +42,17 @@ class Command(SmarterCommand):
         if values:
             installer.configure(extension, values)
 
-    def handle(self, *args, **options):
-        self.handle_begin()
+    def add_examples(self, user_profile: Optional[UserProfile]) -> list[str]:
+        """
+        Install, or update, and enable each official extension, as the Smarter admin.
+
+        :raises SmarterExtensionInstallError: If any official extension was not installed and enabled,
+            after every one was attempted: the example LLMClients that use a missing official extension
+            are skipped, so a deployment without one is broken, and the init job must fail.
+        """
         if not registry.is_enabled():
             self.stdout.write(self.style.WARNING("The extension registry is disabled: no extensions were installed."))
-            self.handle_completed_success()
-            return
+            return []
         installer = ExtensionInstaller(user=smarter_cached_objects.smarter_admin)
         failed = []
         for slug in OFFICIAL_EXTENSIONS:
@@ -60,10 +70,7 @@ class Command(SmarterCommand):
             except Exception as e:
                 failed.append(f"{slug}: {e}")
         if failed:
-            # the built-in LLMClients that use a missing official extension are skipped, so a deployment
-            # without one is broken: report every failure, then exit 1 so that the init job fails.
             message = "Official extensions that were not installed and enabled:\n" + "\n".join(failed)
             self.stdout.write(self.style.ERROR(message))
-            self.handle_completed_failure(err=SmarterExtensionInstallError(message))
-            return
-        self.handle_completed_success()
+            raise SmarterExtensionInstallError(message)
+        return []
