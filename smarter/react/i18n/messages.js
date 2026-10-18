@@ -2039,6 +2039,12 @@ gettext("Streaming server logs...");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 gettext("Streaming server logs... There are none yet.");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Collapse the JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Expand the JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+ngettext("(%(count)s line)", "(%(count)s lines)", 1);
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 gettext("Filter the server logs");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 gettext("Filter (/)");
@@ -2048,6 +2054,12 @@ gettext("Wrap lines");
 gettext("Scroll long lines (w)");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 gettext("Wrap long lines (w)");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Expand JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Collapse all the JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+gettext("Expand all the JSON");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 gettext("Follow");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
