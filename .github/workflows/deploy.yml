@@ -101,6 +101,7 @@ jobs:
           smarter-branding-contact-url: ${{ secrets.SMARTER_BRANDING_CONTACT_URL }}
           smarter-branding-corporate-name: ${{ secrets.SMARTER_BRANDING_CORPORATE_NAME }}
           smarter-branding-support-email: ${{ secrets.SMARTER_BRANDING_SUPPORT_EMAIL }}
+          smarter-branding-primary-contact: ${{ secrets.SMARTER_BRANDING_PRIMARY_CONTACT }}
           smarter-branding-support-hours: ${{ secrets.SMARTER_BRANDING_SUPPORT_HOURS }}
           smarter-branding-support-phone-number: ${{ secrets.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER }}
           smarter-email-admin: ${{ secrets.SMARTER_EMAIL_ADMIN }}
