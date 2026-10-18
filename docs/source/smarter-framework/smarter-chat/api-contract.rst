@@ -121,6 +121,11 @@ Overview
                                             ◀───  Server-Sent Events: a "bulk" history, then
                                                   one event per log record
 
+  once the Console's Manifest tab is opened, in an iframe:
+    GET <manifestEditorUrl>                 ───▶  LLMClientManifestEditorView
+                                            ◀───  the manifest editor, which saves with the cli
+                                                  api, then posts "smarter:manifest-saved"
+
 The configuration tells the chat where to send prompts, so ``apiUrl`` is the only url a page has to
 know.
 
@@ -157,6 +162,10 @@ Endpoints
    * - Server logs
      - The ``smarter-log-stream-url`` that the workbench passes, or the ``logStreamUrl`` prop
      - ``smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs``
+   * - Manifest editor
+     - The ``smarter-manifest-editor-url`` that the workbench passes, or the ``manifestEditorUrl``
+       prop: ``/workbench/llm-clients/<hashed_id>/manifest/editor/``, of the page's own origin
+     - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`
 
 A page that embeds the chat therefore calls one host only: its LLMClient's.
 
