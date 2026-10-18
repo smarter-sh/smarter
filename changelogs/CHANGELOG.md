@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.33.3-alpha.1...v0.33.3-alpha.2) (2026-10-18)
+
+### Bug Fixes
+
+* **llmclient:** deploy Stackademy LLMClients, drop the smarter example ([c6fda20](https://github.com/smarter-sh/smarter/commit/c6fda209f1a12322a87a154f98f4d68333c47523))
+
 ## [0.33.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.2...v0.33.3-alpha.1) (2026-10-18)
 
 ### Bug Fixes
