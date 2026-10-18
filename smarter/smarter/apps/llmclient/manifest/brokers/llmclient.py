@@ -508,7 +508,8 @@ class SAMLLMClientBroker(AbstractBroker):
             for link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient).select_related("guardrail")
         ]
 
-        api_key = self.llmclient_api_key.api_key if self.llmclient_api_key else None
+        # spec.apiKey is the SmarterAuthToken's name, which is what apply() looks it up by.
+        api_key = self.llmclient_api_key.api_key.name if self.llmclient_api_key else None
 
         meta = SAMLLMClientMetadata(
             name=self.llmclient.name,
