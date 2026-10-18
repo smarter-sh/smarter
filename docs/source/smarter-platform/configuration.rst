@@ -121,7 +121,7 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
    * - GOOGLE_MAPS_API_KEY
      - API key for Google Maps integrations (for getweather() LLM tool)
    * - TAVILY_API_KEY
-     - API key for Tavily web search, stored as the Secret tavily_api_key, which the built-in smarter_project_websearch plugin of the smarter LLMClient uses. See :doc:`Tavily <../smarter-framework/technologies/tavily>`
+     - API key for Tavily web search, stored as the Secret tavily_api_key, which WebsearchPlugins such as the sample smarter_project_websearch use. See :doc:`Tavily <../smarter-framework/technologies/tavily>`
    * - BRAVE_SEARCH_API_KEY
      - API key for the Brave Search API, stored as the Secret brave_search_api_key, which ImageSearchPlugins and the Brave WebsearchPlugin samples use. See :doc:`ImageSearchPlugin <../smarter-resources/llmtool/plugin/image-search>`
    * - GOOGLE_SERVICE_ACCOUNT_B64

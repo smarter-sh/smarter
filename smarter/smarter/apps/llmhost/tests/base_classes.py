@@ -35,7 +35,7 @@ from smarter.apps.llmhost.services.cluster import (
 )
 from smarter.apps.llmhost.services.compute import (
     ComputeProvisioner,
-    add_builtin_computes,
+    add_example_computes,
     builtin_computes,
     resolve_compute,
 )
@@ -145,7 +145,7 @@ def builtin_compute_models() -> list[LLMHostCompute]:
 def ensure_builtin_computes() -> None:
     """Apply the built-in LLMHostCompute manifests, owned by the Smarter admin, if they do not exist."""
     if not builtin_computes().exists():
-        add_builtin_computes()
+        add_example_computes()
 
 
 class LLMHostTestBase(TestAccountMixin):

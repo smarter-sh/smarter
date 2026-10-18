@@ -1,11 +1,13 @@
 Budget Example Manifests
 ==================================
 
-These examples are in ``smarter/apps/account/data/example-manifests/budgets/``. Apply one with
+These examples are in ``smarter/apps/account/data/example-manifests/budgets/``, except for the
+Stackademy project budget, which is with the other Stackademy manifests of the account app, in
+``smarter/apps/account/data/stackademy/``. Apply one with
 ``smarter apply -f <file>``. Only superusers may apply a Budget.
 
 ``manage.py initialize_platform`` creates a built-in budget from each of them, with
-``manage.py add_builtin_budgets``. Built-in budgets are created detached: their ``spec.resources``
+``manage.py add_example_budgets``. Built-in budgets are created detached: their ``spec.resources``
 is ignored, so they enforce nothing until a superuser attaches them. A budget that already
 exists is left as it is.
 
@@ -40,7 +42,7 @@ Organizational monthly cost constraint
 Project budget
 --------------
 
-.. literalinclude:: ../../../../../../smarter/smarter/apps/account/data/example-manifests/budgets/project.yaml
+.. literalinclude:: ../../../../../../smarter/smarter/apps/account/data/stackademy/stackademy-project.yaml
    :language: yaml
    :linenos:
 

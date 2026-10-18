@@ -35,7 +35,8 @@ Applications to Take Apart
    * - Stackademy
      - A fictional university's course catalog, served two ways: by a SQL Plugin over a database,
        and by an API Plugin over a REST API, each with its own LLMClient.
-     - `llmtool/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/stackademy>`__
+     - `llmtool/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/stackademy>`__,
+       `llmclient/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/stackademy>`__
 
 Knowledge and Data
 ~~~~~~~~~~~~~~~~~~
@@ -71,7 +72,7 @@ Knowledge and Data
      - A Connection names the database or API, and its password is the name of a Secret, so
        neither the model nor the plugin's author ever sees it.
        :doc:`/smarter-resources/smarter-connection`.
-     - `connection/data/sample-connections/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/connection/data/sample-connections>`__
+     - `connection/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/connection/data/stackademy>`__
 
 Action and Orchestration
 ~~~~~~~~~~~~~~~~~~~~~~~~

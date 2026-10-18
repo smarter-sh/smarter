@@ -1,5 +1,5 @@
 """
-Test :mod:`smarter.apps.guardrail.utils` and the add_builtin_guardrails management command.
+Test :mod:`smarter.apps.guardrail.utils` and the add_example_guardrails management command.
 
 .. note::
 
@@ -12,7 +12,7 @@ from unittest import mock
 
 from django.core.management import call_command
 
-from smarter.apps.guardrail.utils import GuardrailExamples, add_builtin_guardrails
+from smarter.apps.guardrail.utils import GuardrailExamples, add_example_guardrails
 from smarter.common.exceptions import SmarterValueError
 
 from .base_classes import GuardrailTestBase
@@ -37,18 +37,18 @@ class TestGuardrailUtils(GuardrailTestBase):
         example = examples.guardrails[0]
         self.assertEqual(repr(example), f"<GuardrailExample filename={example.filename} name={example.name}>")
 
-    def test_add_builtin_guardrails(self):
-        """Test that add_builtin_guardrails applies every built-in manifest for the user."""
+    def test_add_example_guardrails(self):
+        """Test that add_example_guardrails applies every built-in manifest for the user."""
         with mock.patch("smarter.apps.guardrail.utils.call_command") as command:
-            self.assertTrue(add_builtin_guardrails(user_profile=self.user_profile))
+            self.assertTrue(add_example_guardrails(user_profile=self.user_profile))
         self.assertEqual(command.call_count, 18)
         for call in command.call_args_list:
             self.assertEqual(call.args[0], "apply_manifest")
             self.assertEqual(call.kwargs["username"], self.admin_user.username)
 
-    def test_add_builtin_guardrails_applies(self):
+    def test_add_example_guardrails_applies(self):
         """Test that the built-in guardrails really apply, for a test user."""
-        call_command("add_builtin_guardrails", username=self.admin_user.username)
+        call_command("add_example_guardrails", username=self.admin_user.username)
         from smarter.apps.guardrail.models import (
             Guardrail,  # pylint: disable=import-outside-toplevel
         )
@@ -56,6 +56,6 @@ class TestGuardrailUtils(GuardrailTestBase):
         self.assertEqual(Guardrail.objects.filter(user_profile=self.user_profile).count(), 18)
 
     def test_requires_user_profile(self):
-        """Test that add_builtin_guardrails requires a UserProfile."""
+        """Test that add_example_guardrails requires a UserProfile."""
         with self.assertRaises(SmarterValueError):
-            add_builtin_guardrails(user_profile=None)
+            add_example_guardrails(user_profile=None)
