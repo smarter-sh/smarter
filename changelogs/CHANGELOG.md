@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.6](https://github.com/smarter-sh/smarter/compare/v0.33.5...v0.33.6) (2026-10-18)
+
+### Bug Fixes
+
+* **llmclient:** describe the api key by name, not by token object ([1d4792a](https://github.com/smarter-sh/smarter/commit/1d4792a917eb307d6ffe5f2d2c1bedbd806f89a3))
+
 ## [0.33.5](https://github.com/smarter-sh/smarter/compare/v0.33.4...v0.33.5) (2026-10-18)
 
 ### Bug Fixes
