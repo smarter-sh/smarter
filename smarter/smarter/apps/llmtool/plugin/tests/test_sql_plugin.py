@@ -19,6 +19,7 @@ from smarter.apps.llmtool.manifest.models.sql_plugin.const import (
 )
 from smarter.apps.llmtool.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
+from smarter.apps.llmtool.plugin.request import SQL_PLUGIN_REQUEST_SIGNALS
 from smarter.apps.llmtool.plugin.sql import (
     MAX_SQL_QUERY_LENGTH,
     SmarterSqlPluginError,
@@ -34,6 +35,8 @@ from .base_classes import (
     SQL_PLUGIN_NAME,
     SQL_QUERY,
     PluginTestBase,
+    capture_request_signals,
+    roles,
 )
 
 
@@ -531,3 +534,82 @@ class TestSqlPlugin(PluginTestBase):
         with mock.patch.object(SqlConnection, "execute_query", return_value=42):
             with self.assertRaises(SmarterSqlPluginError):
                 self.load_sql_plugin().tool_call_fetch_plugin_response({"username": "admin"})
+
+    # =========================================================================
+    # SqlPlugin: request lifecycle signals
+    # =========================================================================
+    def test_sql_lifecycle_live_query(self):
+        """Test the signals of a real query: started, authenticated, responded, completed."""
+        plugin = self.load_sql_plugin()
+        with capture_request_signals(SQL_PLUGIN_REQUEST_SIGNALS) as received:
+            retval = plugin.tool_call_fetch_plugin_response({"username": "admin", "unit": "Celsius"})
+        self.assertEqual(roles(received), ["started", "authenticated", "responded", "completed"])
+        started, authenticated, responded, completed = (kwargs for _, kwargs in received)
+        self.assertIs(started["plugin"], plugin)
+        self.assertEqual(started["function_args"], {"username": "admin", "unit": "Celsius"})
+        self.assertEqual(authenticated["connection"], SQL_CONNECTION_NAME)
+        self.assertEqual(responded["response"], retval)
+        self.assertFalse(responded["cached"])
+        self.assertIn("'admin'", responded["sql"])
+        self.assertTrue(completed["success"])
+
+    def test_sql_lifecycle_cached(self):
+        """Test that a cached result is responded as cached, without authenticating."""
+        with mock.patch.object(SqlConnection, "execute_query", return_value='[{"a": 1}]'):
+            self.load_sql_plugin().tool_call_fetch_plugin_response({"username": "admin"})
+            with capture_request_signals(SQL_PLUGIN_REQUEST_SIGNALS) as received:
+                self.load_sql_plugin().tool_call_fetch_plugin_response({"username": "admin"})
+        self.assertEqual(roles(received), ["started", "responded", "completed"])
+        self.assertTrue(received[1][1]["cached"])
+
+    def test_sql_lifecycle_empty_result(self):
+        """Test that a query without rows responds with an empty string, and succeeds."""
+        with mock.patch.object(SqlConnection, "execute_query", return_value=""):
+            with capture_request_signals(SQL_PLUGIN_REQUEST_SIGNALS) as received:
+                self.load_sql_plugin().tool_call_fetch_plugin_response({"username": "admin"})
+        self.assertEqual(roles(received), ["started", "responded", "completed"])
+        self.assertEqual(received[1][1]["response"], "")
+        self.assertTrue(received[2][1]["success"])
+
+    def test_sql_lifecycle_authentication_failed(self):
+        """Test that a connection that cannot connect sends authentication_failed, failed and completed."""
+
+        # pylint: disable=unused-argument
+        def execute_query(connection, sql, limit):
+            connection.connected = False
+            return False
+
+        with mock.patch.object(SqlConnection, "execute_query", autospec=True, side_effect=execute_query):
+            with capture_request_signals(SQL_PLUGIN_REQUEST_SIGNALS) as received:
+                retval = self.load_sql_plugin().tool_call_fetch_plugin_response({"username": "admin"})
+        self.assertEqual(retval, "")
+        self.assertEqual(roles(received), ["started", "authentication_failed", "failed", "completed"])
+        self.assertEqual(received[1][1]["connection"], SQL_CONNECTION_NAME)
+        self.assertIn("SQL query failed", received[2][1]["error"])
+        self.assertFalse(received[3][1]["success"])
+
+    def test_sql_lifecycle_invalid_query(self):
+        """Test that a query rejected by the database authenticates, and then fails."""
+        plugin = self.new_sql_plugin("sql_lifecycle_invalid", sql_query="SELEKT {username} AS username;")
+        with capture_request_signals(SQL_PLUGIN_REQUEST_SIGNALS) as received:
+            plugin.tool_call_fetch_plugin_response({"username": "admin"})
+        self.assertEqual(roles(received), ["started", "authenticated", "failed", "completed"])
+
+    def test_sql_lifecycle_exception(self):
+        """Test that a tool call that raises sends failed and completed."""
+        with mock.patch.object(SqlConnection, "execute_query", return_value=42):
+            with capture_request_signals(SQL_PLUGIN_REQUEST_SIGNALS) as received:
+                with self.assertRaises(SmarterSqlPluginError):
+                    self.load_sql_plugin().tool_call_fetch_plugin_response({"username": "admin"})
+        self.assertEqual(roles(received), ["started", "failed", "completed"])
+        self.assertIn("unexpected type", received[1][1]["error"])
+
+    def test_sql_connection_connected(self):
+        """Test that SqlConnection.execute_query() records whether it connected."""
+        connection = SqlConnection.objects.get(pk=self.sql_connection.pk)
+        self.assertIsNone(connection.connected)
+        self.assertTrue(connection.execute_query("SELECT 1 AS one;"))
+        self.assertTrue(connection.connected)
+        with mock.patch.object(SqlConnection, "get_connection", return_value=None):
+            self.assertFalse(connection.execute_query("SELECT 1 AS one;"))
+        self.assertFalse(connection.connected)

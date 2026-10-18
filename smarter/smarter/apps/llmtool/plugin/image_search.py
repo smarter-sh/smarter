@@ -47,6 +47,7 @@ import secrets
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import unquote, urlparse
 
@@ -104,6 +105,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
+from .request import IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS, PluginRequest
 from .safe_http import SafeHttpError, fetch
 from .websearch_providers import SearchProvider
 
@@ -119,6 +121,8 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 MAX_VALIDATION_WORKERS = 10
 MAX_RESPONSE_BYTES = 5_000_000
+BRAVE_PROVIDER = "brave"
+"""The image search API, as the image search request lifecycle signals name it."""
 BRAVE_MAX_COUNT = 200
 """The most images that one Brave Image Search API request returns."""
 BRAVE_MIN_COUNT = 50
@@ -623,7 +627,9 @@ class ImageSearchPlugin(PluginBase):
             )
         return value
 
-    def brave_images(self, search_params: SmarterDictType) -> list[ImageResult]:
+    def brave_images(
+        self, search_params: SmarterDictType, plugin_request: Optional[PluginRequest] = None
+    ) -> list[ImageResult]:
         """
         Search the Brave Image Search API.
 
@@ -642,6 +648,8 @@ class ImageSearchPlugin(PluginBase):
         are never part of the key. Failed requests are never cached.
 
         :param search_params: The query parameters, from :py:meth:`PluginDataImageSearch.search_params`.
+        :param plugin_request: The tool call's request lifecycle signals, if any. Its
+            authentication and failure signals are sent from here, and its ``cached`` is set.
         :return: The images found, or an empty list if the api key is missing, or the search fails.
         """
         plugin_data: PluginDataImageSearch = self.plugin_data  # type: ignore[assignment]
@@ -650,6 +658,9 @@ class ImageSearchPlugin(PluginBase):
         if operators:
             params["q"] = f"{params['q']} {operators}"
         params["count"] = min(BRAVE_MAX_COUNT, max(BRAVE_MIN_COUNT, params["count"] * OVERFETCH_FACTOR))
+
+        # whether the images came from the Brave Image Search API, rather than from the cache.
+        executed: list[bool] = []
 
         @cache_results(timeout=plugin_data.cache_ttl)
         def get_brave_images(
@@ -660,9 +671,13 @@ class ImageSearchPlugin(PluginBase):
             safesearch: Optional[str] = None,
             spellcheck: Optional[str] = None,
         ) -> list[ImageResult]:
+            executed.append(True)
             api_key = self.api_key()
             if not api_key:
-                raise SmarterImageSearchRequestError(f"{self.name} has no Brave Search API key.")
+                error = f"{self.name} has no Brave Search API key."
+                if plugin_request:
+                    plugin_request.authentication_failed(provider=BRAVE_PROVIDER, error=error)
+                raise SmarterImageSearchRequestError(error)
             query_params = {
                 "q": q,
                 "count": count,
@@ -686,7 +701,13 @@ class ImageSearchPlugin(PluginBase):
                     self.name,
                     describe_brave_error(e),
                 )
+                if plugin_request and e.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+                    plugin_request.authentication_failed(provider=BRAVE_PROVIDER, error=describe_brave_error(e))
+                elif plugin_request and e.status_code is not None:
+                    plugin_request.authenticated(provider=BRAVE_PROVIDER)
                 raise SmarterImageSearchRequestError(describe_brave_error(e)) from e
+            if plugin_request:
+                plugin_request.authenticated(provider=BRAVE_PROVIDER)
             try:
                 return parse_brave_images(json.loads(response.content))
             except (ValueError, UnicodeDecodeError) as e:
@@ -698,9 +719,14 @@ class ImageSearchPlugin(PluginBase):
                 raise SmarterImageSearchRequestError("the Brave Search API returned an invalid response.") from e
 
         try:
-            return get_brave_images(**params)
-        except SmarterImageSearchRequestError:
+            retval = get_brave_images(**params)
+        except SmarterImageSearchRequestError as e:
+            if plugin_request:
+                plugin_request.failed(error=str(e))
             return []
+        if plugin_request:
+            plugin_request.cached = not executed
+        return retval
 
     def filtered_images(self, images: list[ImageResult]) -> list[ImageResult]:
         """
@@ -779,7 +805,13 @@ class ImageSearchPlugin(PluginBase):
                     return retval
         return retval
 
-    def search(self, query: str, count: Any = None, llm_params: Optional[SmarterDictType] = None) -> list[str]:
+    def search(
+        self,
+        query: str,
+        count: Any = None,
+        llm_params: Optional[SmarterDictType] = None,
+        plugin_request: Optional[PluginRequest] = None,
+    ) -> list[str]:
         """
         Search for images.
 
@@ -789,6 +821,7 @@ class ImageSearchPlugin(PluginBase):
         :param llm_params: The other search parameters that the LLM set, which are used only
             if the plugin's ``llmSearchParams`` is true. See
             :py:meth:`PluginDataImageSearch.search_params`.
+        :param plugin_request: The tool call's request lifecycle signals, if any. See :py:meth:`brave_images`.
         :return: The https urls of a random selection of the images found, in random order. Empty
             if none were found, the api key is missing, or the search failed.
         """
@@ -797,7 +830,7 @@ class ImageSearchPlugin(PluginBase):
         if isinstance(count, bool) or not isinstance(count, int):
             count = None
         search_params = plugin_data.search_params(query=query, count=count, llm_params=llm_params)
-        images = shuffled(self.filtered_images(self.brave_images(search_params)))
+        images = shuffled(self.filtered_images(self.brave_images(search_params, plugin_request=plugin_request)))
         return self.validated_urls(images, search_params["count"])
 
     def tool_call_fetch_plugin_response(
@@ -823,31 +856,43 @@ class ImageSearchPlugin(PluginBase):
         :return: A list of https image urls. Empty if the arguments are invalid, no images were
             found, the api key is missing, or the search failed.
         :raises SmarterImageSearchPluginError: If the plugin is not ready, or has no data.
+
+        Sends the ImageSearchPlugin request lifecycle signals, from
+        ``image_search_plugin_request_started`` to ``image_search_plugin_request_completed``. See
+        :py:mod:`smarter.apps.llmtool.plugin.request`.
         """
-        if not self.ready:
-            raise SmarterImageSearchPluginError(f"Plugin {self.name} is not in a ready state.")
-        if not self.plugin_data:
-            raise SmarterImageSearchPluginError(f"Plugin {self.name} is not ready. Plugin data is not available.")
+        with PluginRequest(
+            IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS, sender=self.__class__, plugin=self, function_args=function_args
+        ) as plugin_request:
+            if not self.ready:
+                raise SmarterImageSearchPluginError(f"Plugin {self.name} is not in a ready state.")
+            if not self.plugin_data:
+                raise SmarterImageSearchPluginError(f"Plugin {self.name} is not ready. Plugin data is not available.")
 
-        if isinstance(function_args, str):
-            try:
-                function_args = json.loads(function_args) if function_args.strip() else {}
-            except json.JSONDecodeError:
+            if isinstance(function_args, str):
+                try:
+                    function_args = json.loads(function_args) if function_args.strip() else {}
+                except json.JSONDecodeError:
+                    function_args = {}
+            if not isinstance(function_args, dict):
                 function_args = {}
-        if not isinstance(function_args, dict):
-            function_args = {}
-        query = function_args.get("query")
-        if not isinstance(query, str) or not query.strip():
-            logger.warning("%s.tool_call_fetch_plugin_response() query is missing.", self.formatted_class_name)
-            return []
+            query = function_args.get("query")
+            if not isinstance(query, str) or not query.strip():
+                logger.warning("%s.tool_call_fetch_plugin_response() query is missing.", self.formatted_class_name)
+                plugin_request.failed(error="the query is missing.")
+                return []
 
-        plugin_called.send(sender=self.tool_call_fetch_plugin_response, plugin=self, inquiry_type="search")
-        llm_params = {key: function_args.get(key) for key in LLM_SEARCH_PARAMS if key in function_args}
-        retval = self.search(query, count=function_args.get("count"), llm_params=llm_params)
-        plugin_responded.send(
-            sender=self.tool_call_fetch_plugin_response, plugin=self, inquiry_type="search", response=retval
-        )
-        return retval
+            plugin_called.send(sender=self.tool_call_fetch_plugin_response, plugin=self, inquiry_type="search")
+            llm_params = {key: function_args.get(key) for key in LLM_SEARCH_PARAMS if key in function_args}
+            retval = self.search(
+                query, count=function_args.get("count"), llm_params=llm_params, plugin_request=plugin_request
+            )
+            plugin_responded.send(
+                sender=self.tool_call_fetch_plugin_response, plugin=self, inquiry_type="search", response=retval
+            )
+            if not plugin_request.has_failed:
+                plugin_request.responded(response=retval, cached=plugin_request.cached, query=query)
+            return retval
 
     def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """

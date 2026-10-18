@@ -31,6 +31,7 @@ A Plugin that uses a remote REST API server to retrieve its return data.
 
 import re
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import quote
 
@@ -82,6 +83,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
+from .request import API_PLUGIN_REQUEST_SIGNALS, PluginRequest
 
 
 # pylint: disable=W0613
@@ -775,144 +777,172 @@ class ApiPlugin(PluginBase):
         :param function_args: Arguments for the function call, as a dict, list, or JSON string.
         :return: The JSON response of the API request as a dict or list, or an empty string if the request failed or returned no results.
         :raises SmarterApiPluginError: If plugin data or API connection is invalid, arguments are malformed, or a required endpoint placeholder is missing.
+
+        Sends the ApiPlugin request lifecycle signals, from ``api_plugin_request_started`` to
+        ``api_plugin_request_completed``. See :py:mod:`smarter.apps.llmtool.plugin.request`.
         """
-        logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
+        with PluginRequest(
+            API_PLUGIN_REQUEST_SIGNALS, sender=self.__class__, plugin=self, function_args=function_args
+        ) as plugin_request:
+            logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
 
-        if not self.plugin_data:
-            raise SmarterApiPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
-            )
-        api_connection = self.plugin_data.connection
-        if not isinstance(api_connection, ApiConnection):
-            raise SmarterApiPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data ApiConnection is not a valid ApiConnection instance."
-            )
-
-        function_args = function_args or []
-        if isinstance(function_args, str):
-            try:
-                function_args = json.loads(function_args)
-            except json.JSONDecodeError as e:
+            if not self.plugin_data:
                 raise SmarterApiPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args is not a valid JSON string. Error: {e}"
-                ) from e
-        if isinstance(function_args, dict):
-            function_args = [function_args]
-
-        if not isinstance(function_args, list):
-            raise SmarterApiPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a dict or a JSON string."
-            )
-
-        # combine the list of dictionaries into a single dictionary, omitting
-        # optional parameters for which the LLM did not provide a value.
-        params: SmarterDictType = {}
-        for d in function_args:
-            if not isinstance(d, dict):
-                raise SmarterApiPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
                 )
-            params.update(d)
-        params = {key: value for key, value in params.items() if value is not None}
+            api_connection = self.plugin_data.connection
+            if not isinstance(api_connection, ApiConnection):
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data ApiConnection is not a valid ApiConnection instance."
+                )
 
-        endpoint = self.plugin_data.endpoint
-        if not isinstance(endpoint, str):
-            raise SmarterApiPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} endpoint must be a string."
+            function_args = function_args or []
+            if isinstance(function_args, str):
+                try:
+                    function_args = json.loads(function_args)
+                except json.JSONDecodeError as e:
+                    raise SmarterApiPluginError(
+                        f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args is not a valid JSON string. Error: {e}"
+                    ) from e
+            if isinstance(function_args, dict):
+                function_args = [function_args]
+
+            if not isinstance(function_args, list):
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a dict or a JSON string."
+                )
+
+            # combine the list of dictionaries into a single dictionary, omitting
+            # optional parameters for which the LLM did not provide a value.
+            params: SmarterDictType = {}
+            for d in function_args:
+                if not isinstance(d, dict):
+                    raise SmarterApiPluginError(
+                        f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+                    )
+                params.update(d)
+            params = {key: value for key, value in params.items() if value is not None}
+
+            endpoint = self.plugin_data.endpoint
+            if not isinstance(endpoint, str):
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} endpoint must be a string."
+                )
+
+            # interpolate path placeholders, e.g. /v1/weather/{location}/
+            path_params: set[str] = set()
+
+            def repl(match):
+                key = match.group(1)
+                if key not in params:
+                    raise SmarterApiPluginError(
+                        f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} missing a value for endpoint placeholder '{key}'."
+                    )
+                path_params.add(key)
+                return quote(str(params[key]), safe="")
+
+            endpoint = re.sub(r"\{(\w+)\}", repl, endpoint)
+            params = {key: value for key, value in params.items() if key not in path_params}
+
+            method = (self.plugin_data.method or SmarterHttpMethods.GET).upper()
+            headers = {str(header["name"]): str(header["value"]) for header in self.plugin_data.headers or []}
+            url_params = {str(url_param["key"]): url_param["value"] for url_param in self.plugin_data.url_params or []}
+            body = self.plugin_data.body
+
+            if method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH) and isinstance(
+                body, (dict, type(None))
+            ):
+                body = {**(body or {}), **params}
+            else:
+                url_params.update(params)
+
+            limit = (
+                self.plugin_data.limit
+                if self.plugin_data.limit and self.plugin_data.limit < MAX_API_RESULTS
+                else MAX_API_RESULTS
             )
 
-        # interpolate path placeholders, e.g. /v1/weather/{location}/
-        path_params: set[str] = set()
-
-        def repl(match):
-            key = match.group(1)
-            if key not in params:
-                raise SmarterApiPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} missing a value for endpoint placeholder '{key}'."
-                )
-            path_params.add(key)
-            return quote(str(params[key]), safe="")
-
-        endpoint = re.sub(r"\{(\w+)\}", repl, endpoint)
-        params = {key: value for key, value in params.items() if key not in path_params}
-
-        method = (self.plugin_data.method or SmarterHttpMethods.GET).upper()
-        headers = {str(header["name"]): str(header["value"]) for header in self.plugin_data.headers or []}
-        url_params = {str(url_param["key"]): url_param["value"] for url_param in self.plugin_data.url_params or []}
-        body = self.plugin_data.body
-
-        if method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH) and isinstance(
-            body, (dict, type(None))
-        ):
-            body = {**(body or {}), **params}
-        else:
-            url_params.update(params)
-
-        limit = (
-            self.plugin_data.limit
-            if self.plugin_data.limit and self.plugin_data.limit < MAX_API_RESULTS
-            else MAX_API_RESULTS
-        )
-
-        logger.debug(
-            "%s.tool_call_fetch_plugin_response() sending remote API request: %s %s params=%s",
-            self.formatted_class_name,
-            method,
-            endpoint,
-            url_params,
-        )
-
-        def execute_request() -> Union[SmarterDictType, list[Any]]:
-            retval = api_connection.execute_query(
-                endpoint=endpoint,
-                params=url_params,
-                limit=limit,
-                method=method,
-                headers=headers,
-                body=body,
-            )
-            if not isinstance(retval, (dict, list)):
-                # raise rather than return so that failed requests are never cached.
-                raise SmarterApiPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} API request failed: {method} {endpoint}"
-                )
-            return retval
-
-        @cache_results(timeout=PluginCacheTtl.API)
-        def get_cached_api_response(
-            connection_id: int, method: str, endpoint: str, request: str
-        ) -> Union[SmarterDictType, list[Any]]:
-            retval = execute_request()
             logger.debug(
-                "%s.tool_call_fetch_plugin_response() fetched and cached API response for request: %s %s",
+                "%s.tool_call_fetch_plugin_response() sending remote API request: %s %s params=%s",
                 self.formatted_class_name,
                 method,
                 endpoint,
+                url_params,
             )
-            return retval
 
-        try:
-            if method == SmarterHttpMethods.GET:
-                # the cache key must include everything that can alter the response.
-                request = json.dumps({"params": url_params, "headers": headers, "limit": limit}, sort_keys=True)
-                retval = get_cached_api_response(api_connection.pk, method, endpoint, request)
-            else:
+            # whether the response came from the remote API, rather than from the cache.
+            executed: list[bool] = []
+
+            def execute_request() -> Union[SmarterDictType, list[Any]]:
+                executed.append(True)
+                api_connection.last_status_code = None
+                retval = api_connection.execute_query(
+                    endpoint=endpoint,
+                    params=url_params,
+                    limit=limit,
+                    method=method,
+                    headers=headers,
+                    body=body,
+                )
+                status_code = api_connection.last_status_code
+                if status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+                    plugin_request.authentication_failed(
+                        connection=api_connection.name,
+                        auth_method=api_connection.auth_method,
+                        status_code=status_code,
+                        error=f"HTTP {status_code}",
+                    )
+                elif status_code is not None:
+                    plugin_request.authenticated(
+                        connection=api_connection.name,
+                        auth_method=api_connection.auth_method,
+                        status_code=status_code,
+                    )
+                if not isinstance(retval, (dict, list)):
+                    # raise rather than return so that failed requests are never cached.
+                    raise SmarterApiPluginError(
+                        f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} API request failed: {method} {endpoint}"
+                    )
+                return retval
+
+            @cache_results(timeout=PluginCacheTtl.API)
+            def get_cached_api_response(
+                connection_id: int, method: str, endpoint: str, request: str
+            ) -> Union[SmarterDictType, list[Any]]:
                 retval = execute_request()
-        except SmarterApiPluginError as e:
-            logger.warning("%s. Returning empty string.", e)
-            return ""
+                logger.debug(
+                    "%s.tool_call_fetch_plugin_response() fetched and cached API response for request: %s %s",
+                    self.formatted_class_name,
+                    method,
+                    endpoint,
+                )
+                return retval
 
-        if not retval:
-            logger.warning(
-                "%s.tool_call_fetch_plugin_response() API request returned no results. Returning empty string.",
-                self.formatted_class_name,
-            )
-            return ""
-        if not isinstance(retval, (str, list, dict)):
-            raise SmarterApiPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} API request returned an unexpected type: {type(retval)}. Expected str, list, or dict."
-            )
-        return retval
+            try:
+                if method == SmarterHttpMethods.GET:
+                    # the cache key must include everything that can alter the response.
+                    request = json.dumps({"params": url_params, "headers": headers, "limit": limit}, sort_keys=True)
+                    retval = get_cached_api_response(api_connection.pk, method, endpoint, request)
+                else:
+                    retval = execute_request()
+            except SmarterApiPluginError as e:
+                logger.warning("%s. Returning empty string.", e)
+                plugin_request.failed(error=str(e))
+                return ""
+
+            if not retval:
+                logger.warning(
+                    "%s.tool_call_fetch_plugin_response() API request returned no results. Returning empty string.",
+                    self.formatted_class_name,
+                )
+                plugin_request.responded(response="", cached=not executed, method=method, endpoint=endpoint)
+                return ""
+            if not isinstance(retval, (str, list, dict)):
+                raise SmarterApiPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} API request returned an unexpected type: {type(retval)}. Expected str, list, or dict."
+                )
+            plugin_request.responded(response=retval, cached=not executed, method=method, endpoint=endpoint)
+            return retval
 
     def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
