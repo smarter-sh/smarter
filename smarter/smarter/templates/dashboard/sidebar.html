@@ -103,27 +103,6 @@
             </div>
             <!--end:Menu item-->
 
-            <!--begin:Menu item Apply -->
-            <div class="menu-item">
-              <!--begin:Menu link-->
-              <a
-                class="menu-link"
-                href="{{ sidebar.manifest_drop_zone }}"
-                target="_self"
-              >
-                <span class="menu-icon">
-                  <i class="ki-duotone ki-gear fs-2">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                    <span class="path3"></span>
-                  </i>
-                </span>
-                <span class="menu-title">{% translate "Apply Manifest" %}</span>
-              </a>
-              <!--end:Menu link-->
-            </div>
-            <!--end:Menu item Apply -->
-
             <!--begin:Menu item Prompt Passthrough -->
             <div class="menu-item">
               <!--begin:Menu link-->
@@ -144,6 +123,27 @@
               <!--end:Menu link-->
             </div>
             <!--end:Menu item Prompt Passthrough -->
+
+            <!--begin:Menu item Apply -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.manifest_drop_zone }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-gear fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">{% translate "Apply Manifest" %}</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Apply -->
 
             <!--begin:Menu item Terminal -->
             {% if sidebar.terminal and user.is_superuser %}
