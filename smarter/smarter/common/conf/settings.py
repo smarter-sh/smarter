@@ -1143,6 +1143,40 @@ class Settings(BaseSettings):
             return settings_defaults.BRANDING_CONTACT_URL
         return v
 
+    branding_primary_contact: str = Field(
+        settings_defaults.BRANDING_PRIMARY_CONTACT,
+        description="The name of the person who is the technical point of contact for this platform.",
+        examples=["Lawrence McDaniel"],
+        title="Branding Primary Contact",
+    )
+    """
+    The name of the person who is the technical point of contact for this platform.
+
+    This setting names the person who hosts the platform and answers its users' questions.
+    The welcome email is written from this person, and signed with this name.
+    :type: str
+    :default: Value from ``settings_defaults.BRANDING_PRIMARY_CONTACT``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_primary_contact")
+    def validate_branding_primary_contact(cls, v: Optional[str]) -> str:
+        """Validates the `branding_primary_contact` field.
+
+        Args:
+            v (Optional[str]): The branding primary contact value to validate.
+
+        Returns:
+            str: The validated branding primary contact.
+        """
+        if v in THE_EMPTY_SET:
+            return settings_defaults.BRANDING_PRIMARY_CONTACT
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_primary_contact of type {type(v)} is not a str.")
+
+        return v
+
     branding_support_hours: str = Field(
         settings_defaults.BRANDING_SUPPORT_HOURS,
         description="The support hours used for branding purposes throughout the platform.",

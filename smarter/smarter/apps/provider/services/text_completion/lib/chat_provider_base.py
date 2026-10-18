@@ -549,9 +549,10 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: The initialized message thread.
         :rtype: List[Dict[str, str]]
         """
+        # default_system_role_enhanced already starts with the date/time string.
         default_system_role = get_date_time_string()
-        if self.prompt and self.prompt.llmclient and self.prompt.llmclient.default_system_role_enhanced:
-            default_system_role += self.prompt.llmclient.default_system_role_enhanced
+        if self.prompt and self.prompt.llmclient and self.prompt.llmclient.default_system_role:
+            default_system_role = self.prompt.llmclient.default_system_role_enhanced
         request_body = get_request_body(data=data)
         client_message_thread, _ = parse_request(request_body)
         if not isinstance(client_message_thread, list):

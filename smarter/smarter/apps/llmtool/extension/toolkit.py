@@ -18,6 +18,7 @@ extension does not fail the prompt.
 import hashlib
 import re
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ from smarter.lib.typing import SmarterDictType
 
 from ..signals import (
     extension_tool_called,
+    extension_tool_completed,
     extension_tool_failed,
     extension_tool_responded,
 )
@@ -51,6 +53,13 @@ MAX_FUNCTION_NAME_LENGTH = 64
 """The maximum length of an OpenAI function name."""
 FUNCTION_NAME_PREFIX = "ext_"
 JSON_VALUE = TypeAdapter(JsonValue)
+
+
+class ExtensionToolCallError(Exception):
+    """A tool call failed.
+
+    :meth:`ExtensionToolkit.call` returns its message to the LLM.
+    """
 
 
 @dataclass(frozen=True)
@@ -179,6 +188,9 @@ class ExtensionToolkit:
         Errors, including invalid arguments, an exception and a timeout, are returned as
         ``{"error": "..."}``, so that the LLM can recover.
 
+        Sends ``extension_tool_called``, then ``extension_tool_responded`` or
+        ``extension_tool_failed``, and always ``extension_tool_completed`` last.
+
         :param function_name: The function name that the LLM called.
         :param arguments: The function's arguments, as a dict or a JSON string.
         :returns: The tool's result.
@@ -186,12 +198,40 @@ class ExtensionToolkit:
         function = self.functions.get(function_name)
         if function is None:
             return {"error": f"{function_name} is not an extension tool."}
+        start_time = time.monotonic()
+        success = False
+        try:
+            result = self.run(function, arguments)
+            success = True
+            return result
+        except ExtensionToolCallError as e:
+            return self.failed(function, str(e))
+        finally:
+            extension_tool_completed.send(
+                sender=self.__class__,
+                slug=function.extension.slug,
+                version=function.loaded.version,
+                tool_name=function.tool.name,
+                success=success,
+                duration=time.monotonic() - start_time,
+            )
+
+    def run(self, function: ExtensionFunction, arguments: Union[SmarterDictType, str, None]) -> JsonValue:
+        """
+        Run one of this toolkit's tools, for :meth:`call`.
+
+        :param function: The function that the LLM called.
+        :param arguments: The function's arguments, as a dict or a JSON string.
+        :returns: The tool's result.
+        :raises ExtensionToolCallError: If the arguments are invalid, or the tool fails, times out,
+            or returns a result that is not JSON.
+        """
         slug, version, tool_name = function.extension.slug, function.loaded.version, function.tool.name
         if isinstance(arguments, str):
             try:
                 arguments = json.loads(arguments) if arguments.strip() else {}
             except json.JSONDecodeError as e:
-                return self.failed(function, f"The arguments are not valid JSON: {e}")
+                raise ExtensionToolCallError(f"The arguments are not valid JSON: {e}") from e
         arguments = arguments if isinstance(arguments, dict) else {}
         extension_tool_called.send(
             sender=self.__class__, slug=slug, version=version, tool_name=tool_name, arguments=arguments
@@ -202,7 +242,7 @@ class ExtensionToolkit:
             problems = "; ".join(
                 f"{'.'.join(str(part) for part in error['loc']) or 'arguments'}: {error['msg']}" for error in e.errors()
             )
-            return self.failed(function, f"Invalid arguments: {problems}")
+            raise ExtensionToolCallError(f"Invalid arguments: {problems}") from e
         context = ExtensionContext(
             slug=slug,
             version=version,
@@ -213,7 +253,7 @@ class ExtensionToolkit:
         )
         timeout = function.loaded.manifest.smarter.timeout
 
-        def run() -> JsonValue:
+        def run_tool() -> JsonValue:
             try:
                 return function.tool().call(validated, context)
             finally:
@@ -221,24 +261,24 @@ class ExtensionToolkit:
                 connections.close_all()
 
         executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"extension-{slug}")
-        future = executor.submit(run)
+        future = executor.submit(run_tool)
         try:
             result = future.result(timeout=timeout)
         except FutureTimeoutError:
-            return self.failed(function, f"The tool did not finish within {timeout} seconds.")
+            raise ExtensionToolCallError(f"The tool did not finish within {timeout} seconds.") from None
         except ExtensionToolError as e:
-            return self.failed(function, str(e))
+            raise ExtensionToolCallError(str(e)) from e
         # a tool is the extension's code, which can fail in any way at all.
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.exception("%s.call() %s %s %s raised: %s", self.formatted_class_name, slug, version, tool_name, e)
-            return self.failed(function, f"The tool failed: {type(e).__name__}: {e}")
+            logger.exception("%s.run() %s %s %s raised: %s", self.formatted_class_name, slug, version, tool_name, e)
+            raise ExtensionToolCallError(f"The tool failed: {type(e).__name__}: {e}") from e
         finally:
             executor.shutdown(wait=False)
         try:
             result = JSON_VALUE.validate_python(result)
         except ValidationError as e:
-            return self.failed(function, f"The tool returned a result that is not JSON: {e.errors()[0]['msg']}")
+            raise ExtensionToolCallError(f"The tool returned a result that is not JSON: {e.errors()[0]['msg']}") from e
         characters = len(json.dumps(result))
         extension_tool_responded.send(
             sender=self.__class__, slug=slug, version=version, tool_name=tool_name, characters=characters
@@ -265,4 +305,4 @@ class ExtensionToolkit:
         return {"error": error}
 
 
-__all__ = ["ExtensionFunction", "ExtensionToolkit"]
+__all__ = ["ExtensionFunction", "ExtensionToolCallError", "ExtensionToolkit"]

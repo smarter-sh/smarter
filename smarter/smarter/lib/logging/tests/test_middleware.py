@@ -12,6 +12,7 @@ from smarter.lib.logging.middleware import SmarterRequestLogContextMiddleware
 from smarter.lib.logging.redis_log_handler import (
     get_user_context,
     request_id_context,
+    session_key_context,
     user_id_context,
 )
 
@@ -125,3 +126,37 @@ class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
 
     def test_get_request_id_without_headers(self):
         self.assertIsNone(SmarterRequestLogContextMiddleware.get_request_id(object()))  # type: ignore[arg-type]
+
+    def test_session_key(self):
+        """Test that the request's session_key query parameter tags its logs while the view runs, if it is valid."""
+        seen = []
+
+        def get_response(request):
+            seen.append(session_key_context.get())
+            return HttpResponse("ok")
+
+        session_key = "a" * 64
+        middleware = SmarterRequestLogContextMiddleware(get_response)
+        middleware(self.request(path=f"/api/v1/llm-clients/1/prompt/?session_key={session_key}", user=self.admin_user))
+        middleware(self.request(path="/api/v1/llm-clients/1/prompt/?session_key=not-a-key", user=self.admin_user))
+        middleware(self.request(user=self.admin_user))
+        self.assertEqual(seen, [session_key, None, None])
+        self.assertIsNone(session_key_context.get())
+
+    def test_async_session_key(self):
+        """Test that an async request's session_key query parameter tags its logs while the view runs."""
+        seen = []
+
+        async def get_response(request):
+            seen.append(session_key_context.get())
+            return HttpResponse("async ok")
+
+        session_key = "b" * 64
+        middleware = SmarterRequestLogContextMiddleware(get_response)
+        with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
+            asyncio.run(middleware(self.request(path=f"/?session_key={session_key}")))
+        self.assertEqual(seen, [session_key])
+        self.assertIsNone(session_key_context.get())
+
+    def test_get_session_key_without_a_query(self):
+        self.assertIsNone(SmarterRequestLogContextMiddleware.get_session_key(object()))  # type: ignore[arg-type]

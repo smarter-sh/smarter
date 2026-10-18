@@ -602,7 +602,12 @@ The Console's Server Logs tab opens an ``EventSource`` to ``logStreamUrl``, with
 - each later, unnamed event is one record, as JSON, with ``message`` (the formatted line, including
   its ANSI colors), ``level``, ``logger`` and ``timestamp``,
 - the ``level`` query parameter sets the minimum level; without it, the stream sends the records at
-  ``smarter_settings.log_level`` and above. In sandbox mode the chat adds ``level=DEBUG``.
+  ``smarter_settings.log_level`` and above. In sandbox mode the chat adds ``level=DEBUG``,
+- the ``session_key`` query parameter narrows the stream to the records of one chat session. The
+  platform tags each record of a request to an LLMClient's api with the request's ``session_key``,
+  including the records of a prompt that streams its progress, and the config api tags its
+  records with the session key that it creates for a new chat. The chat adds its own session key,
+  and opens a new stream for each new chat.
 
 This stream is not part of the versioned contract: only the web console's own pages use it.
 

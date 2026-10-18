@@ -65,6 +65,7 @@ env:
   SMARTER_BRANDING_CONTACT_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRANDING_CORPORATE_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRANDING_SUPPORT_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_BRANDING_PRIMARY_CONTACT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRANDING_SUPPORT_HOURS: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRANDING_SUPPORT_PHONE_NUMBER: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_BRAVE_SEARCH_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"

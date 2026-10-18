@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.4](https://github.com/smarter-sh/smarter/compare/v0.33.3...v0.33.4) (2026-10-18)
+
+### Bug Fixes
+
+* **llmtool:** add plugin request lifecycle signals, split signals pkg ([e2acf01](https://github.com/smarter-sh/smarter/commit/e2acf01748001c23d4caa69606764a9a946fd490))
+* **logging:** stream each chat's own server logs, by session key ([a4f8af1](https://github.com/smarter-sh/smarter/commit/a4f8af1642018a4b9685d4d539da7ef59423c076))
+
+## [0.33.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.33.4-alpha.1...v0.33.4-alpha.2) (2026-10-18)
+
+### Bug Fixes
+
+* **logging:** stream each chat's own server logs, by session key ([a4f8af1](https://github.com/smarter-sh/smarter/commit/a4f8af1642018a4b9685d4d539da7ef59423c076))
+
+## [0.33.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.3...v0.33.4-alpha.1) (2026-10-18)
+
+### Bug Fixes
+
+* **llmtool:** add plugin request lifecycle signals, split signals pkg ([e2acf01](https://github.com/smarter-sh/smarter/commit/e2acf01748001c23d4caa69606764a9a946fd490))
+
 ## [0.33.3](https://github.com/smarter-sh/smarter/compare/v0.33.2...v0.33.3) (2026-10-18)
 
 ### Bug Fixes

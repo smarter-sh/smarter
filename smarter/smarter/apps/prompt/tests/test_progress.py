@@ -30,6 +30,7 @@ from smarter.apps.prompt.signals import (
     llm_tool_requested,
     llm_tool_responded,
 )
+from smarter.lib.logging.redis_log_handler import request_id_context, user_id_context
 from smarter.lib.typing import SmarterDictType
 
 TOOL_CALL = {"id": "call_1", "type": "function", "function": {"name": "get_current_weather", "arguments": '{"a": 1}'}}
@@ -264,3 +265,26 @@ class TestPromptEventStream(TestCase):
         self.assertEqual(
             collect(response.streaming_content)[-1], 'event: result\ndata: {"status": 200, "response": {}}\n\n'
         )
+
+    def test_the_prompt_runs_in_the_request_log_context(self):
+        """The prompt runs after the middleware resets the request's log context, but logs in it."""
+        contexts = []
+
+        def complete():
+            contexts.append((user_id_context.get(), request_id_context.get()))
+            raise RuntimeError("the LLM is down")
+
+        def on_error(e: Exception) -> HttpResponse:
+            contexts.append((user_id_context.get(), request_id_context.get()))
+            return self.on_error(e)
+
+        user_token = user_id_context.set("User.a")
+        request_token = request_id_context.set("abc123")
+        try:
+            response = prompt_event_stream_response(complete, on_error)
+        finally:
+            request_id_context.reset(request_token)
+            user_id_context.reset(user_token)
+        with patch.object(progress, "logger"):
+            collect(response.streaming_content)
+        self.assertEqual(contexts, [("User.a", "abc123"), ("User.a", "abc123")])
