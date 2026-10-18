@@ -1,0 +1,29 @@
+- **Official documentation:** the `Claude Code documentation <https://code.claude.com/docs>`__,
+  on ``CLAUDE.md``, skills, hooks, subagents and settings; the open `Agent Skills
+  <https://agentskills.io/>`__ format; and the Python documentation of the `ast
+  <https://docs.python.org/3/library/ast.html>`__ module, which the course's guard tests use.
+- **Tools:** `pre-commit <https://pre-commit.com/>`__, `coverage.py
+  <https://coverage.readthedocs.io/>`__, and `import-linter
+  <https://github.com/seddonym/import-linter>`__, which turns rules about which module may import
+  which into a check that fails, a ready-made mechanical guard for a second way.
+- **Research:** Meir M. Lehman's *Programs, Life Cycles, and Laws of Software Evolution*
+  (Proceedings of the IEEE, 1980), whose laws of increasing complexity are the course's
+  divergence, decades before coding agents; and METR's *Measuring the Impact of Early-2025 AI on
+  Experienced Open-Source Developer Productivity* (2025), a randomized trial to read beside
+  Smarter's figures when discussing how to measure productivity honestly.
+- **Essays:** Anthropic's `Building effective agents
+  <https://www.anthropic.com/engineering/building-effective-agents>`__, and the articles on
+  generative AI in software delivery on `martinfowler.com <https://martinfowler.com/>`__.
+- **YouTube:** Andrej Karpathy's talk *Software Is Changing (Again)* (Y Combinator AI Startup
+  School, 2025), and the talks on coding agents in large codebases on the `AI Engineer
+  <https://www.youtube.com/@aiDotEngineer>`__ channel.
+- **Podcasts:** `Latent Space <https://www.latent.space/podcast>`__, on AI engineering, and `Talk
+  Python To Me <https://talkpython.fm/>`__, for the Python side.
+- **Writing:** Simon Willison's `weblog <https://simonwillison.net/>`__, which documents his own
+  use of coding agents in detail.
+- **Smarter:** the *Converge or Diverge* series on `blog.smarter.sh <https://blog.smarter.sh/>`__,
+  which this course is built on: `Part 1: Maintaining Long-Term Code Quality With Agentic AI
+  <https://blog.smarter.sh/2026/10/10/claude-code-large-django-codebase/>`__, `Part 2: The
+  Antipattern That Makes a Codebase Diverge
+  <https://blog.smarter.sh/2026/10/11/blog-prologue-geometric-series/>`__ and `Part 3: What
+  Claude Code Actually Reads <https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__.
