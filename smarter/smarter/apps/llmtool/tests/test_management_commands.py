@@ -2,9 +2,8 @@
 """
 Test the plugin app's manage.py commands.
 
-- :mod:`smarter.apps.llmtool.management.commands.add_plugin_examples`
+- :mod:`smarter.apps.llmtool.management.commands.add_example_tools`
 - :mod:`smarter.apps.llmtool.management.commands.create_plugin`
-- :mod:`smarter.apps.llmtool.management.commands.create_stackademy`
 - :mod:`smarter.apps.llmtool.management.commands.delete_plugin`
 - :mod:`smarter.apps.llmtool.management.commands.get_plugins`
 - :mod:`smarter.apps.llmtool.management.commands.retrieve_plugin`
@@ -15,18 +14,16 @@ is given an exception, so a command's failures are asserted as ``SystemExit``.
 """
 
 import io
+import os
 from contextlib import redirect_stdout
 from unittest import mock
 
-import yaml
 from django.core.management import call_command
 
-from smarter.apps.llmtool.management.commands import create_stackademy
 from smarter.apps.llmtool.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.static import StaticPlugin
 from smarter.lib import logging
-from smarter.lib.manifest.template import manifest_template_values
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase, get_data_path
 
@@ -263,74 +260,43 @@ class TestPluginManagementCommands(PluginAppTestBase):
             self.call("get_plugins", account_number=UNKNOWN_ACCOUNT_NUMBER, username=self.username)
 
     # -------------------------------------------------------------------------
-    # add_plugin_examples
+    # add_example_tools
     # -------------------------------------------------------------------------
-    def test_add_plugin_examples(self):
-        """Test that add_plugin_examples adds the examples to the user's profile."""
-        with mock.patch(f"{COMMANDS_MODULE}.add_plugin_examples.add_example_plugins") as add_example_plugins:
-            self.call("add_plugin_examples", username=self.username, verbose=True)
+    def test_add_example_tools(self):
+        """Test that add_example_tools creates the sample plugins, and applies the Stackademy plugins."""
+        with (
+            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins") as add_example_plugins,
+            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.Command.apply_all", return_value=[]) as apply_all,
+        ):
+            self.call("add_example_tools", username=self.username, verbose=True)
         add_example_plugins.assert_called_once()
         self.assertEqual(add_example_plugins.call_args.kwargs["user_profile"], self.user_profile)
         self.assertTrue(add_example_plugins.call_args.kwargs["verbose"])
-
-    def test_add_plugin_examples_failure(self):
-        """Test that add_plugin_examples fails when the examples cannot be added."""
-        with mock.patch(f"{COMMANDS_MODULE}.add_plugin_examples.add_example_plugins", side_effect=ValueError("boom")):
-            with self.assertRaises(SystemExit):
-                self.call("add_plugin_examples", username=self.username)
-
-    def test_add_plugin_examples_unknown_user(self):
-        """Test that add_plugin_examples fails for a user that does not exist."""
-        with mock.patch(f"{COMMANDS_MODULE}.add_plugin_examples.add_example_plugins") as add_example_plugins:
-            with self.assertRaises(SystemExit):
-                self.call("add_plugin_examples", username=UNKNOWN_USERNAME)
-        add_example_plugins.assert_not_called()
-
-    # -------------------------------------------------------------------------
-    # create_stackademy
-    # -------------------------------------------------------------------------
-    def test_create_stackademy(self):
-        """Test that create_stackademy applies the Sql and Api manifests as the account's admin."""
-        with mock.patch(f"{COMMANDS_MODULE}.create_stackademy.apply_manifest_v2") as apply_manifest_v2:
-            self.call("create_stackademy", account_number=self.account_number)
-        self.assertEqual(apply_manifest_v2.call_count, 8)
-        filespecs = [call.kwargs["filespec"] for call in apply_manifest_v2.call_args_list]
-        self.assertIn("smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml", filespecs)
-        self.assertIn("smarter/apps/llmtool/data/stackademy/stackademy-plugin-api.yaml", filespecs)
-        for call in apply_manifest_v2.call_args_list:
-            self.assertEqual(call.kwargs["username"], self.username)
-        # the ApiConnection points to this platform, rather than to the local development server.
-        connection = next(
-            call.kwargs["manifest"]
-            for call in apply_manifest_v2.call_args_list
-            if call.kwargs["filespec"] == create_stackademy.API_CONNECTION_FILE_PATH
-        )
-        values = manifest_template_values()
+        filespecs, user_profile = apply_all.call_args.args
+        self.assertEqual(user_profile, self.user_profile)
         self.assertEqual(
-            yaml.safe_load(connection)["spec"]["connection"]["baseUrl"],
-            f"{values['environment_platform_scheme']}://{values['environment_platform_domain']}/api/v1/tests",
+            sorted(os.path.basename(f) for f in filespecs), ["stackademy-plugin-api.yaml", "stackademy-plugin-sql.yaml"]
         )
 
-    def test_create_stackademy_fails_when_a_manifest_is_not_applied(self):
-        """Test that create_stackademy fails, rather than carrying on, when apply_manifest_v2 returns False."""
-        with mock.patch(
-            f"{COMMANDS_MODULE}.create_stackademy.apply_manifest_v2", return_value=False
-        ) as apply_manifest_v2:
-            with self.assertRaises(SystemExit):
-                self.call("create_stackademy", account_number=self.account_number)
-        apply_manifest_v2.assert_called_once()
+    def test_add_example_tools_reports_failures(self):
+        """Test that add_example_tools reports, but doesn't fail on, the examples that fail."""
+        with (
+            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins", return_value=False),
+            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.Command.apply_all", return_value=["a.yaml: boom"]),
+        ):
+            output = self.call("add_example_tools", username=self.username)
+        self.assertIn("sample-plugins", output)
+        self.assertIn("a.yaml: boom", output)
 
-    def test_create_stackademy_unknown_account(self):
-        """Test that create_stackademy does nothing for an account that does not exist."""
-        with mock.patch(f"{COMMANDS_MODULE}.create_stackademy.apply_manifest_v2") as apply_manifest_v2:
-            self.call("create_stackademy", account_number=UNKNOWN_ACCOUNT_NUMBER)
-        apply_manifest_v2.assert_not_called()
-
-    def test_create_stackademy_failure(self):
-        """Test that create_stackademy fails when a manifest cannot be applied."""
-        with mock.patch(
-            f"{COMMANDS_MODULE}.create_stackademy.apply_manifest_v2", side_effect=ValueError("boom")
-        ) as apply_manifest_v2:
+    def test_add_example_tools_failure(self):
+        """Test that add_example_tools fails when the examples cannot be added."""
+        with mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins", side_effect=ValueError("boom")):
             with self.assertRaises(SystemExit):
-                self.call("create_stackademy", account_number=self.account_number)
-        apply_manifest_v2.assert_called_once()
+                self.call("add_example_tools", username=self.username)
+
+    def test_add_example_tools_unknown_user(self):
+        """Test that add_example_tools fails for a user that does not exist."""
+        with mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins") as add_example_plugins:
+            with self.assertRaises(SystemExit):
+                self.call("add_example_tools", username=UNKNOWN_USERNAME)
+        add_example_plugins.assert_not_called()

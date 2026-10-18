@@ -414,7 +414,7 @@ engineer changes one line and applies the manifest again.
 The complete manifest is one of Smarter's built-in examples. In it, Stackademy's images are on Smarter's
 own CDN, rather than Stackademy's:
 
-.. literalinclude:: ../../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-sql.yaml
+.. literalinclude:: ../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
    :language: yaml
    :caption: stackademy-llmclient-sql.yaml
 
@@ -432,7 +432,7 @@ They're in the Smarter repository, under
 - ``llmclient-math.yaml``: a chalkboard, with a handwriting font and a wooden frame.
 - ``llmclient-weather.yaml``: a sunny sky, with round, puffy bubbles.
 - ``llmclient-research-analyst.yaml``: a library's reading room, in a serif font.
-- ``llmclient-smarter.yaml``: Smarter's own orange and gold.
+- ``llmclient-smarter-developer.yaml``: Smarter's own orange, on GitHub's grays.
 
 
 Troubleshooting

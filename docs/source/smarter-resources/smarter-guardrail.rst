@@ -183,7 +183,7 @@ Built-in Guardrails
 -------------------
 
 Smarter installs the following Guardrails, owned by the Smarter admin user, and shared with every
-account. Install them with ``python manage.py add_builtin_guardrails``.
+account. Install them with ``python manage.py add_example_guardrails``.
 
 .. list-table::
    :header-rows: 1

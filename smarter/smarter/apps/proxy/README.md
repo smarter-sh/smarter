@@ -44,7 +44,7 @@ Key features:
 - `api/v1/`: the passthrough endpoint, `/api/v1/proxy/<name>/<path>`
 - `views/`, `urls.py`: the web console's list and manifest pages, at `/proxy/`
 - `builtins.py`, `data/proxy/`: the built-in Proxy manifests, which
-  `manage.py add_builtin_proxies` applies
+  `manage.py add_example_proxies` applies
 
 See the documentation: `docs/source/smarter-resources/smarter-proxy.rst`.
 

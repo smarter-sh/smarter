@@ -40,7 +40,16 @@ class TestInitializeAccount(CommandTestBase):
         self.assertTrue(user.is_superuser)
         self.assertEqual(self.names()[0], "create_account")
         self.assertIn("load_from_github", self.names())
-        self.assertIn("create_stackademy", self.names())
+        # the account's own examples, in the order of their dependencies, and then their deployment.
+        examples = [
+            "add_example_secrets",
+            "add_example_connections",
+            "add_example_tools",
+            "add_example_llmclients",
+            "deploy_example_llmclients",
+        ]
+        self.assertEqual([name for name in self.names() if name in examples], examples)
+        self.assertNotIn("verify_stackademy", self.names())
 
     def test_new_user(self):
         self.run_command("initialize_account", **self.options(username=self.unique("newuser"), email="bad email"))

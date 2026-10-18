@@ -14,7 +14,7 @@ and removes as LLMHosts are launched and destroyed. An LLMHost names its compute
 `spec.compute`, and its `spec.resources` must fit that node.
 
 `manage.py initialize_platform` applies both, for the Smarter admin, so that every account may use
-them: `add_builtin_llmhost_compute`, then `add_builtin_llmhost`.
+them: `add_example_llmhost_compute`, then `add_example_llmhost`.
 
 Apply one with the Smarter CLI, then launch it:
 
@@ -39,5 +39,3 @@ A node group's IAM role and subnets are `SMARTER_LLMHOST_NODE_ROLE_ARN` and
 model volume is an EBS volume in one availability zone, so one subnet per node group keeps an
 LLMHost's node in the same zone as its retained volume. GPU nodes need the NVIDIA device plugin,
 which advertises their GPUs to Kubernetes.
-
-You'll find these in /home/smarter_user/data/manifests/ inside the Docker container.

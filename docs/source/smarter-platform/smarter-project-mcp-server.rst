@@ -137,7 +137,7 @@ The Built-in MCPClients
 -----------------------
 
 The ``smarter_project`` and ``smarter_project_github*`` MCPClients that ``manage.py
-add_builtin_mcpclients`` applies read the MCP server of the platform that applies them. Their
+add_example_mcpclients`` applies read the MCP server of the platform that applies them. Their
 manifests, in ``smarter/apps/mcpclient/data/mcpclients``, are templates, ``*.yaml.tpl``, whose
 ``endpointUrl`` is filled in when they are applied:
 
