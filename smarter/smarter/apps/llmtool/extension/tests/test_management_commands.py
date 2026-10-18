@@ -1,4 +1,4 @@
-"""Tests of the extension management commands: validate, package, install, uninstall and add_builtin_extensions."""
+"""Tests of the extension management commands: validate, package, install, uninstall and add_example_extensions."""
 
 import io
 import tempfile
@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from django.core.management import call_command
 
-from smarter.apps.llmclient.management.commands.deploy_builtin_llmclients import (
+from smarter.apps.llmclient.management.commands.deploy_example_llmclients import (
     Command as DeployBuiltinLLMClients,
 )
 from smarter.apps.llmtool.const import OFFICIAL_EXTENSIONS
@@ -86,14 +86,14 @@ class TestExtensionCommands(ExtensionTestMixin):
             with self.assertRaises(SystemExit):
                 run("test_extension", directory)
 
-    def test_add_builtin_extensions_without_registry(self):
+    def test_add_example_extensions_without_registry(self):
         """Without a registry, nothing is installed."""
         with patch(
-            "smarter.apps.llmtool.management.commands.add_builtin_extensions.registry.is_enabled", return_value=False
+            "smarter.apps.llmtool.management.commands.add_example_extensions.registry.is_enabled", return_value=False
         ):
-            self.assertIn("registry is disabled", run("add_builtin_extensions"))
+            self.assertIn("registry is disabled", run("add_example_extensions"))
 
-    def test_deploy_builtin_llmclients_skips_missing_extensions(self):
+    def test_deploy_example_llmclients_skips_missing_extensions(self):
         """A built-in LLMClient whose extensions are not installed is skipped, not failed."""
         command = DeployBuiltinLLMClients()
         self.assertEqual(command.missing_extensions(["echo"]), ["echo"])
@@ -104,11 +104,11 @@ class TestExtensionCommands(ExtensionTestMixin):
 class TestAddBuiltinExtensions(RegistryTestMixin):
     """Test installing the official extensions from a registry."""
 
-    def test_add_builtin_extensions(self):
+    def test_add_example_extensions(self):
         """Official extensions are installed and configured from the platform's Secrets."""
         secret = self.secret("api_key")
-        with patch("smarter.apps.llmtool.management.commands.add_builtin_extensions.OFFICIAL_EXTENSIONS", ("echo",)):
-            output = run("add_builtin_extensions")
+        with patch("smarter.apps.llmtool.management.commands.add_example_extensions.OFFICIAL_EXTENSIONS", ("echo",)):
+            output = run("add_example_extensions")
         extension = Extension.objects.get(slug="echo")
         self.assertTrue(extension.enabled)
         self.assertEqual(ExtensionSetting.objects.get(extension=extension, name="api_key").secret, secret)
@@ -120,10 +120,10 @@ class TestAddBuiltinExtensions(RegistryTestMixin):
         self.secret("api_key")  # echo's required setting, without which it cannot be enabled
         output = io.StringIO()
         with patch(
-            "smarter.apps.llmtool.management.commands.add_builtin_extensions.OFFICIAL_EXTENSIONS", ("nope", "echo")
+            "smarter.apps.llmtool.management.commands.add_example_extensions.OFFICIAL_EXTENSIONS", ("nope", "echo")
         ):
             with self.assertRaises(SystemExit) as raised:
-                call_command("add_builtin_extensions", stdout=output, stderr=io.StringIO())
+                call_command("add_example_extensions", stdout=output, stderr=io.StringIO())
         self.assertEqual(raised.exception.code, 1)
         self.assertTrue(Extension.objects.get(slug="echo").enabled)
         self.assertIn("Installed and enabled echo 1.1.0", output.getvalue())
@@ -132,5 +132,5 @@ class TestAddBuiltinExtensions(RegistryTestMixin):
     def test_skips_uploads(self):
         """An official slug that was installed from an upload is left alone."""
         self.install_echo()
-        with patch("smarter.apps.llmtool.management.commands.add_builtin_extensions.OFFICIAL_EXTENSIONS", ("echo",)):
-            self.assertIn("Skipped echo", run("add_builtin_extensions"))
+        with patch("smarter.apps.llmtool.management.commands.add_example_extensions.OFFICIAL_EXTENSIONS", ("echo",)):
+            self.assertIn("Skipped echo", run("add_example_extensions"))

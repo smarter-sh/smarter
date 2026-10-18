@@ -16,6 +16,6 @@ to validate, deploy, and manage those resources. Inspired by this success, the a
 the Smarter API Manifest (SAM) specification to bring similar benefits to the AI development space.
 
 
-.. literalinclude:: ../../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-sql.yaml
+.. literalinclude:: ../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest

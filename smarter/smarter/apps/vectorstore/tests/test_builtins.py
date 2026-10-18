@@ -3,7 +3,7 @@
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.vectorstore.builtins import (
-    add_builtin_vectorstores,
+    add_example_vectorstores,
     builtin_manifest_files,
 )
 from smarter.apps.vectorstore.manifest.models.vectorstore.model import SAMVectorstore
@@ -41,7 +41,7 @@ class TestBuiltinVectorstores(VectorstoreTestBase):
             with open(os.path.join(path, os.path.basename(filename)), "w", encoding="utf-8") as f:
                 yaml.safe_dump(manifest, f)
 
-    def test_add_builtin_vectorstores(self):
+    def test_add_example_vectorstores(self):
         """Test that the manifests are applied, not deployed, and those without their ApiConnection are skipped."""
         # pylint: disable=import-outside-toplevel
         import tempfile
@@ -57,7 +57,7 @@ class TestBuiltinVectorstores(VectorstoreTestBase):
         self.addCleanup(ApiConnection.objects.filter(name="pinecone", user_profile=self.user_profile).delete)
         with tempfile.TemporaryDirectory() as path:
             self.write_manifests(path)
-            result = add_builtin_vectorstores(user_profile=self.user_profile, path=path)
+            result = add_example_vectorstores(user_profile=self.user_profile, path=path)
         self.assertTrue(result.success, result.failed)
         self.assertEqual(len(result.applied), 3)
         self.assertEqual(list(result.skipped), [f"example_support_articles_{self.hash_suffix}"])

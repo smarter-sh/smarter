@@ -140,24 +140,33 @@ class Command(SmarterCommand):
             repo_version=2,
         )
 
-        # 4. Add builtin plugin examples and deploy llmclients.
+        # 4. Add the account's own copies of the example resources, in the order of their dependencies:
+        # Secrets, Connections, tools (plugins), then LLMClients. The platform-wide examples, e.g. the
+        # Guardrails and Proxies, belong to the Smarter admin, and every account may use them. The
+        # Stackademy LLMClients are verified by initialize_platform, rather than with billable prompts
+        # each time that an account is created.
 
-        call_command("add_plugin_examples", username=username)
+        for command in (
+            "add_example_secrets",
+            "add_example_connections",
+            "add_example_tools",
+            "add_example_llmclients",
+        ):
+            call_command(command, username=username)
+
+        # 5. Deploy the account's example LLMClients.
+
         try:
-            call_command("deploy_builtin_llmclients", account_number=account_number)
+            call_command("deploy_example_llmclients", account_number=account_number)
         except CommandError as e:
-            # one built-in manifest that fails, e.g. for a Secret that this platform has not set,
+            # one example LLMClient that fails, e.g. for a Secret that this platform has not set,
             # must not prevent the rest of the account's initialization.
             logger.error(
-                "%s.initialize_account() deploy_builtin_llmclients failed for account %s: %s",
+                "%s.initialize_account() deploy_example_llmclients failed for account %s: %s",
                 logger_prefix,
                 account_number,
                 e,
             )
-
-        # 5. Setup Stackademy AI resources, used for training and testing.
-
-        call_command("create_stackademy", account_number=account_number)
 
         logger.info("Account %s initialized successfully.", account_number)
         return True

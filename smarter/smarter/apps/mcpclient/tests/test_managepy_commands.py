@@ -1,4 +1,4 @@
-"""Tests for manage.py add_builtin_mcpclients."""
+"""Tests for manage.py add_example_mcpclients."""
 
 import io
 from unittest import mock
@@ -8,7 +8,7 @@ from django.core.management import call_command
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.connection.tests.factories import secret_factory
 from smarter.apps.mcpclient.models import MCPClient
-from smarter.apps.mcpclient.utils import MCPClientExamples, add_builtin_mcpclients
+from smarter.apps.mcpclient.utils import MCPClientExamples, add_example_mcpclients
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
@@ -20,7 +20,7 @@ REFRESH_PATCH = "smarter.apps.mcpclient.receivers.refresh_mcpclient"
 
 class ManageCommandAddBuiltinMCPClientsTestCase(TestAccountMixin):
     """
-    Tests for manage.py add_builtin_mcpclients, and the add_builtin_mcpclients() util.
+    Tests for manage.py add_example_mcpclients, and the add_example_mcpclients() util.
 
     The MCPClients are applied for the test account's admin user. Saving an MCPClient
     queues a catalog refresh, which would contact the real MCP server, so the refresh
@@ -65,8 +65,8 @@ class ManageCommandAddBuiltinMCPClientsTestCase(TestAccountMixin):
             if example.name and (not example.credentials or self.secret_is_visible(example.credentials))
         }
 
-    def add_builtin_mcpclients(self, *args):
-        call_command("add_builtin_mcpclients", "--username", self.admin_user.username, *args, stdout=io.StringIO())
+    def add_example_mcpclients(self, *args):
+        call_command("add_example_mcpclients", "--username", self.admin_user.username, *args, stdout=io.StringIO())
 
     def test_examples(self):
         """Every built-in manifest loads, and has a name."""
@@ -90,9 +90,9 @@ class ManageCommandAddBuiltinMCPClientsTestCase(TestAccountMixin):
         self.assertIsNone(by_name["deepwiki"].credentials)
         self.assertEqual(by_name["github"].credentials, "github_personal_access_token")
 
-    def test_add_builtin_mcpclients(self):
+    def test_add_example_mcpclients(self):
         """The MCPClients without credentials are applied, and the others are skipped."""
-        self.add_builtin_mcpclients()
+        self.add_example_mcpclients()
 
         names = self.mcpclient_names()
         self.assertEqual(names, self.expected_names())
@@ -101,39 +101,39 @@ class ManageCommandAddBuiltinMCPClientsTestCase(TestAccountMixin):
                 self.assertIn(example.name, names)
         self.assertTrue(self.mock_refresh.delay.called)
 
-    def test_add_builtin_mcpclients_verbose(self):
+    def test_add_example_mcpclients_verbose(self):
         """--verbose applies the same MCPClients."""
-        self.add_builtin_mcpclients("--verbose")
+        self.add_example_mcpclients("--verbose")
         self.assertEqual(self.mcpclient_names(), self.expected_names())
 
-    def test_add_builtin_mcpclients_is_idempotent(self):
+    def test_add_example_mcpclients_is_idempotent(self):
         """Running the command again updates the MCPClients, and does not duplicate them."""
-        self.add_builtin_mcpclients()
+        self.add_example_mcpclients()
         count = MCPClient.objects.filter(user_profile=self.user_profile).count()
 
-        self.add_builtin_mcpclients()
+        self.add_example_mcpclients()
         self.assertEqual(MCPClient.objects.filter(user_profile=self.user_profile).count(), count)
         self.assertEqual(self.mcpclient_names(), self.expected_names())
 
-    def test_add_builtin_mcpclients_after_secret_is_created(self):
+    def test_add_example_mcpclients_after_secret_is_created(self):
         """A skipped MCPClient is applied once its Secret exists."""
         secret = secret_factory(
             user_profile=self.user_profile, name="github_personal_access_token", value="test-github-token"
         )
         self.addCleanup(secret.delete)
 
-        self.add_builtin_mcpclients()
+        self.add_example_mcpclients()
 
         github = MCPClient.objects.get(user_profile=self.user_profile, name="github")
         self.assertEqual(github.credentials, secret)
 
-    def test_add_builtin_mcpclients_unknown_user(self):
+    def test_add_example_mcpclients_unknown_user(self):
         """An unknown username fails the command."""
         with self.assertRaises(SystemExit):
-            call_command("add_builtin_mcpclients", "--username", "no_such_user_for_this_test", stdout=io.StringIO())
+            call_command("add_example_mcpclients", "--username", "no_such_user_for_this_test", stdout=io.StringIO())
         self.assertEqual(self.mcpclient_names(), set())
 
-    def test_add_builtin_mcpclients_util_requires_user_profile(self):
+    def test_add_example_mcpclients_util_requires_user_profile(self):
         """Add_builtin_mcpclients() requires a UserProfile."""
         with self.assertRaises(SmarterValueError):
-            add_builtin_mcpclients(user_profile=None)
+            add_example_mcpclients(user_profile=None)

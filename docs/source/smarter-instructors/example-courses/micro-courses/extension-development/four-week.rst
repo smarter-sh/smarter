@@ -125,7 +125,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 7
      - **Settings and secrets.** Typed settings and ``SecretStr`` in ``settings.py``, secrets
-       stored as Smarter Secrets, and the naming convention that lets ``add_builtin_extensions``
+       stored as Smarter Secrets, and the naming convention that lets ``add_example_extensions``
        configure them.
    * - 3
      - Lecture 8

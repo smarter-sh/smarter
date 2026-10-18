@@ -414,7 +414,7 @@ engineer changes one line and applies the manifest again.
 The complete manifest is one of Smarter's built-in examples. In it, Stackademy's images are on Smarter's
 own CDN, rather than Stackademy's:
 
-.. literalinclude:: ../../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-sql.yaml
+.. literalinclude:: ../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
    :language: yaml
    :caption: stackademy-llmclient-sql.yaml
 

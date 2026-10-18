@@ -69,8 +69,8 @@ unless they start with `docs/`.
 | Step           | File                                                                                                    |
 | -------------- | ------------------------------------------------------------------------------------------------------- |
 | Manifest       | `apps/llmclient/data/custom-domains/example-com.yaml`                                                   |
-| Loader command | `apps/llmclient/management/commands/add_builtin_custom_domains.py`                                      |
-| Platform setup | `apps/account/management/commands/initialize_platform.py`: `call_command("add_builtin_custom_domains")` |
+| Loader command | `apps/llmclient/management/commands/add_example_custom_domains.py`                                      |
+| Platform setup | `apps/account/management/commands/initialize_platform.py`: `call_command("add_example_custom_domains")` |
 
 ## 8. Sphinx
 
@@ -86,5 +86,5 @@ unless they start with `docs/`.
 | Broker            | `apps/llmclient/manifest/brokers/tests/test_custom_domain_broker.py` plus `data/custom_domain.yaml` |
 | Views             | `apps/llmclient/tests/test_custom_domain_views.py`                                                  |
 | Verification task | `apps/llmclient/tests/test_verify_custom_domain.py`                                                 |
-| Built-in loader   | `apps/llmclient/tests/test_add_builtin_custom_domains.py`                                           |
+| Built-in loader   | `apps/llmclient/tests/test_add_example_custom_domains.py`                                           |
 | React             | `smarter/react/packages/smarter-custom-domain-list/src/**/*.test.tsx` and stories                   |

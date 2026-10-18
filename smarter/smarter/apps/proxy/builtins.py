@@ -3,7 +3,7 @@ The built-in Proxies: one for each of the built-in LLM Providers that has an API
 
 ``manage.py initialize_providers`` creates the built-in Providers, e.g. openai and anthropic,
 and their API key Secrets, from environment variables, e.g. ``OPENAI_API_KEY``.
-``manage.py add_builtin_proxies``, which ``manage.py initialize_platform`` calls after it,
+``manage.py add_example_proxies``, which ``manage.py initialize_platform`` calls after it,
 applies a Proxy manifest for each of them, from ``smarter/apps/proxy/data/proxy``. The Smarter admin
 owns them, so every account may use them.
 
@@ -34,7 +34,7 @@ logger_prefix = logging.formatted_text(__name__)
 
 @dataclass
 class BuiltinProxiesResult:
-    """The outcome of :func:`add_builtin_proxies`: the names of the Proxies, by outcome."""
+    """The outcome of :func:`add_example_proxies`: the names of the Proxies, by outcome."""
 
     applied: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
@@ -65,7 +65,7 @@ def missing_dependency(loader: SAMLoader, user_profile: UserProfile) -> Optional
     return None
 
 
-def add_builtin_proxies(
+def add_example_proxies(
     user_profile: Optional[UserProfile] = None, path: str = BUILTIN_PROXY_PATH
 ) -> BuiltinProxiesResult:
     """
@@ -113,4 +113,4 @@ def builtin_proxies():
     return Proxy.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile)
 
 
-__all__ = ["BuiltinProxiesResult", "add_builtin_proxies", "builtin_manifest_files", "builtin_proxies"]
+__all__ = ["BuiltinProxiesResult", "add_example_proxies", "builtin_manifest_files", "builtin_proxies"]
