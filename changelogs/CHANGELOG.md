@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.4...v0.33.5-alpha.1) (2026-10-18)
+
+### Bug Fixes
+
+* **passthrough:** keep the server logs' scroll bars visible ([70f4cd7](https://github.com/smarter-sh/smarter/commit/70f4cd7cdeb9e987bc99315e8c4eed5a0d62fce9)), closes [#161a1](https://github.com/smarter-sh/smarter/issues/161a1) [#39424](https://github.com/smarter-sh/smarter/issues/39424) [#4a5663](https://github.com/smarter-sh/smarter/issues/4a5663)
+
 ## [0.33.4](https://github.com/smarter-sh/smarter/compare/v0.33.3...v0.33.4) (2026-10-18)
 
 ### Bug Fixes
