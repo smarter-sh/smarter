@@ -3,7 +3,9 @@
  *
  * The records are displayed as Smarter Chat's Console displays them: their text, with its ANSI
  * colors, in the Console's palette and font. Their text already has their time and level. Long
- * lines scroll horizontally, unless the user wraps them.
+ * lines scroll horizontally, unless the user wraps them. Blocks of pretty-printed JSON, which can
+ * be hundreds of lines long, are collapsed, each with a toggle, and the toolbar expands or collapses
+ * them all. See src/lib/logJson.ts.
  *
  * The viewer has the keyboard shortcuts of src/lib/logViewerKeys.ts while it has the focus: w wraps,
  * s follows the newest record, / filters, Ctrl+Up and Ctrl+Down move to the top and the bottom, and
@@ -12,11 +14,12 @@
  * Adapted from smarter-chat's src/components/Console/ServerLogs.tsx, which is published separately,
  * as @smarter.sh/ui-chat. The two look and behave the same: keep them so.
  */
-import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import { gettext, interpolate } from "@smarter/common";
+import { gettext, interpolate, ngettext } from "@smarter/common";
 
-import { ansiCss, parseAnsi, stripAnsi } from "@/lib/ansi";
+import { ansiCss, parseAnsi, stripAnsi, type AnsiSegment } from "@/lib/ansi";
+import { hasJsonBlock, logNodes, type LogNode } from "@/lib/logJson";
 import type { LogEvent } from "@/lib/logStream";
 import { LOG_VIEWER_SHORTCUTS, logViewerAction, type LogViewerAction } from "@/lib/logViewerKeys";
 import { useLogWrap } from "@/lib/logWrap";
@@ -89,14 +92,71 @@ function status(props: ServerLogsProps, shown: number, total: number, filter: st
   return total > 0 ? gettext("Streaming server logs...") : gettext("Streaming server logs... There are none yet.");
 }
 
-function LogLine({ message }: { message: string }) {
+function Segments({ segments }: { segments: AnsiSegment[] }) {
+  return segments.map((segment, index) => (
+    <span key={index} style={ansiCss(segment.style)}>
+      {segment.text}
+    </span>
+  ));
+}
+
+function JsonBlock({ node, expandAll }: { node: Extract<LogNode, { kind: "block" }>; expandAll: boolean }) {
+  const [expanded, setExpanded] = useState(expandAll);
+  const closing = node.close
+    .map((segment) => segment.text)
+    .join("")
+    .trim();
+  return (
+    <>
+      <Segments segments={node.open} />
+      <button
+        type="button"
+        className="console-log-json-toggle"
+        aria-expanded={expanded}
+        aria-label={expanded ? gettext("Collapse the JSON") : gettext("Expand the JSON")}
+        title={expanded ? gettext("Collapse the JSON") : gettext("Expand the JSON")}
+        onClick={() => setExpanded((previous) => !previous)}
+      >
+        {expanded ? "\u2212" : "+"}
+      </button>
+      {expanded ? (
+        <>
+          {"\n"}
+          <LogNodes nodes={node.children} expandAll={expandAll} />
+          {"\n"}
+          <Segments segments={node.close} />
+        </>
+      ) : (
+        <span className="console-log-json-summary">
+          {" \u2026 "}
+          {closing}{" "}
+          <span className="console-log-json-count">
+            {interpolate(ngettext("(%(count)s line)", "(%(count)s lines)", node.lines), { count: node.lines })}
+          </span>
+        </span>
+      )}
+    </>
+  );
+}
+
+function LogNodes({ nodes, expandAll }: { nodes: LogNode[]; expandAll: boolean }) {
+  return nodes.map((node, index) => (
+    <Fragment key={index}>
+      {index > 0 && "\n"}
+      {node.kind === "line" ? <Segments segments={node.segments} /> : <JsonBlock node={node} expandAll={expandAll} />}
+    </Fragment>
+  ));
+}
+
+function LogLine({ message, expandAll }: { message: string; expandAll: boolean }) {
+  const nodes = useMemo(() => logNodes(message), [message]);
   return (
     <div className="console-log-line">
-      {parseAnsi(message).map((segment, index) => (
-        <span key={index} style={ansiCss(segment.style)}>
-          {segment.text}
-        </span>
-      ))}
+      {hasJsonBlock(nodes) ? (
+        <LogNodes nodes={nodes} expandAll={expandAll} />
+      ) : (
+        <Segments segments={parseAnsi(message)} />
+      )}
     </div>
   );
 }
@@ -135,6 +195,9 @@ function ServerLogs(props: ServerLogsProps) {
   const [help, setHelp] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // the blocks of JSON are collapsed, until the user expands them, one by one, or all of them.
+  const [expandAll, setExpandAll] = useState(false);
+  const [expandGeneration, setExpandGeneration] = useState(0);
   const linesRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLInputElement | null>(null);
 
@@ -171,6 +234,12 @@ function ServerLogs(props: ServerLogsProps) {
       .catch(() => {
         // e.g. the page isn't allowed to write to the clipboard. The lines can still be selected.
       });
+  };
+
+  const toggleExpandAll = () => {
+    setExpandAll((previous) => !previous);
+    // each block starts again from the new state, whichever way the user toggled it.
+    setExpandGeneration((generation) => generation + 1);
   };
 
   const escape = () => {
@@ -290,6 +359,15 @@ function ServerLogs(props: ServerLogsProps) {
             <path d="M1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5Zm0 4a.5.5 0 0 1 .5-.5h11a2.5 2.5 0 0 1 0 5H9.707l.647.646a.5.5 0 0 1-.708.708l-1.5-1.5a.5.5 0 0 1 0-.708l1.5-1.5a.5.5 0 1 1 .708.708L9.707 11H12.5a1.5 1.5 0 0 0 0-3h-11a.5.5 0 0 1-.5-.5Zm0 4a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5Z" />
           </ToolbarButton>
           <ToolbarButton
+            label={gettext("Expand JSON")}
+            title={expandAll ? gettext("Collapse all the JSON") : gettext("Expand all the JSON")}
+            pressed={expandAll}
+            onClick={toggleExpandAll}
+            showLabel
+          >
+            <path d="M3.5 2a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5H5a.5.5 0 0 0 0-1H4V3h1a.5.5 0 0 0 0-1H3.5Zm9 0H11a.5.5 0 0 0 0 1h1v10h-1a.5.5 0 0 0 0 1h1.5a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5ZM6 8a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm3 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z" />
+          </ToolbarButton>
+          <ToolbarButton
             label={gettext("Follow")}
             title={follow ? gettext("Stop following new records (s)") : gettext("Follow new records (s)")}
             pressed={follow}
@@ -349,7 +427,7 @@ function ServerLogs(props: ServerLogsProps) {
         onScroll={onScroll}
       >
         {shownMessages.map((message, index) => (
-          <LogLine key={index} message={message} />
+          <LogLine key={`${expandGeneration}-${index}`} message={message} expandAll={expandAll} />
         ))}
       </div>
       {/* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}

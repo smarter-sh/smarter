@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 23:17+0000\n"
+"POT-Creation-Date: 2026-10-18 19:14+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -4493,6 +4493,20 @@ msgid "Streaming server logs... There are none yet."
 msgstr "Transmitindo os logs do servidor... Ainda não há nenhum."
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Collapse the JSON"
+msgstr "Recolher o JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Expand the JSON"
+msgstr "Expandir o JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "(%(count)s line)"
+msgid_plural "(%(count)s lines)"
+msgstr[0] "(%(count)s linha)"
+msgstr[1] "(%(count)s linhas)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 msgid "Filter the server logs"
 msgstr "Filtrar os logs do servidor"
 
@@ -4511,6 +4525,18 @@ msgstr "Rolar as linhas longas (w)"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 msgid "Wrap long lines (w)"
 msgstr "Quebrar as linhas longas (w)"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Expand JSON"
+msgstr "Expandir JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Collapse all the JSON"
+msgstr "Recolher todo o JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
+msgid "Expand all the JSON"
+msgstr "Expandir todo o JSON"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
 msgid "Follow"
@@ -5243,7 +5269,9 @@ msgstr "O shell tem o ambiente do servidor, e todas as suas credenciais."
 msgid ""
 "Restored from before this page was left. That shell has ended, and a new one "
 "starts below."
-msgstr "Restaurado de antes de você sair desta página. Aquele shell terminou, e um novo começa abaixo."
+msgstr ""
+"Restaurado de antes de você sair desta página. Aquele shell terminou, e um "
+"novo começa abaixo."
 
 #. Translators: used in react/packages/smarter-terminal-emulator/src/lib/banner.ts
 msgid "The shell exited with status %(code)s."

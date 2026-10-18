@@ -133,7 +133,8 @@ class ChatDbMixin(AccountMixin):
                 self.prompt.session_key if self.prompt else "None",
             )
         else:
-            logger.warning("%s.__init__() initialized but not ready.", self.formatted_class_name)
+            # normal: a provider is created before its prompt, which it is given per request.
+            logger.debug("%s.__init__() initialized without a prompt, so not ready yet.", self.formatted_class_name)
 
     @property
     def ready(self) -> bool:
