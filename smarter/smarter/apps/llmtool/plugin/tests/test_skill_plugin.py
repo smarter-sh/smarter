@@ -29,13 +29,20 @@ from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
 )
 from smarter.apps.llmtool.manifest.models.skill_plugin.model import SAMSkillPlugin
 from smarter.apps.llmtool.models import PLUGIN_DATA_MAP, PluginDataSkill, PluginMeta
+from smarter.apps.llmtool.plugin.request import SKILL_PLUGIN_REQUEST_SIGNALS
 from smarter.apps.llmtool.plugin.skill import (
     SkillPlugin,
     SmarterSkillPluginError,
 )
 from smarter.apps.llmtool.plugin.skill_sources import retrieve_skill
 from smarter.apps.llmtool.serializers import PluginSkillSerializer
-from smarter.apps.llmtool.signals import plugin_called, plugin_responded
+from smarter.apps.llmtool.signals import (
+    plugin_called,
+    plugin_responded,
+    skill_plugin_retrieval_failed,
+    skill_plugin_retrieval_started,
+    skill_plugin_retrieved,
+)
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
@@ -49,8 +56,10 @@ from .base_classes import (
     SKILL_SOURCES_REQUESTS_PATCH,
     FakeSkillHost,
     PluginTestBase,
+    capture_request_signals,
     capture_signal,
     mock_skill_host,
+    roles,
 )
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -697,3 +706,62 @@ class TestSkillPlugin(PluginTestBase):
             self.assertIn("instructions", plugin.tool_call_fetch_plugin_response({}), path)
             for resource in plugin.plugin_data.resource_paths:  # type: ignore[union-attr]
                 plugin.tool_call_fetch_plugin_response({"resource": resource})
+
+    # =========================================================================
+    # request lifecycle signals
+    # =========================================================================
+    def test_lifecycle(self):
+        """Test the signals of a tool call: started, responded, completed.
+
+        A SkillPlugin has no credentials.
+        """
+        with capture_request_signals(SKILL_PLUGIN_REQUEST_SIGNALS) as received:
+            retval = self.ask({"resource": "references/forms.md"})
+        self.assertEqual(roles(received), ["started", "responded", "completed"])
+        started, responded, completed = (kwargs for _, kwargs in received)
+        self.assertEqual(started["function_args"], {"resource": "references/forms.md"})
+        self.assertEqual(responded["response"], retval)
+        self.assertEqual(responded["resource"], "references/forms.md")
+        self.assertFalse(responded["cached"])
+        self.assertTrue(completed["success"])
+
+    def test_lifecycle_failure(self):
+        """Test that a failed tool call sends failed and completed, and raises."""
+        with capture_request_signals(SKILL_PLUGIN_REQUEST_SIGNALS) as received:
+            with self.assertRaises(SmarterSkillPluginError):
+                self.ask({"resource": "missing.md"})
+        self.assertEqual(roles(received), ["started", "failed", "completed"])
+        self.assertIn("missing.md", received[1][1]["error"])
+        self.assertFalse(received[2][1]["success"])
+
+    def test_retrieval_signals(self):
+        """Test that retrieving a remote skill sends retrieval_started, and then retrieved."""
+        name = "skill_retrieval_signals"
+        retrieve_skill.invalidate(SKILL_REMOTE_URL)  # type: ignore[attr-defined]
+        with (
+            capture_signal(skill_plugin_retrieval_started) as started,
+            capture_signal(skill_plugin_retrieved) as retrieved,
+            capture_signal(skill_plugin_retrieval_failed) as failed,
+        ):
+            self.new_skill_plugin(name, remote=True)
+        self.assertEqual(len(started), 1)
+        self.assertEqual(started[0]["url"], SKILL_REMOTE_URL)
+        self.assertEqual(len(retrieved), 1)
+        self.assertEqual(retrieved[0]["skill_name"], "test-skill")
+        self.assertEqual(retrieved[0]["resource_count"], len(REMOTE_RESOURCES))
+        self.assertGreaterEqual(retrieved[0]["duration"], 0.0)
+        self.assertEqual(failed, [])
+
+    def test_retrieval_failed_signal(self):
+        """Test that a remote skill that cannot be retrieved sends retrieval_failed."""
+        name = "skill_retrieval_failed_signal"
+        self.addCleanup(self.delete_plugin_by_name, name)
+        host = FakeSkillHost()
+        host.remove(SKILL_REMOTE_RAW_URL + "SKILL.md")
+        with capture_signal(skill_plugin_retrieval_failed) as failed, capture_signal(skill_plugin_retrieved) as ok:
+            with self.assertRaises(SmarterSkillPluginError):
+                self.new_skill_plugin(name, host=host, remote=True)
+        self.assertEqual(len(failed), 1)
+        self.assertEqual(failed[0]["url"], SKILL_REMOTE_URL)
+        self.assertTrue(failed[0]["error"])
+        self.assertEqual(ok, [])

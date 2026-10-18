@@ -67,6 +67,7 @@ from smarter.apps.llmtool.plugin.image_search import (
     parse_brave_images,
     shuffled,
 )
+from smarter.apps.llmtool.plugin.request import IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS
 from smarter.apps.llmtool.plugin.safe_http import SafeHttpError
 from smarter.apps.llmtool.serializers import PluginImageSearchSerializer
 from smarter.common.exceptions import SmarterValueError
@@ -76,7 +77,14 @@ from smarter.lib.cache import lazy_cache
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.typing import SmarterDictType
 
-from .base_classes import FakeWebHost, PluginTestBase, get_test_data, mock_web_host
+from .base_classes import (
+    FakeWebHost,
+    PluginTestBase,
+    capture_request_signals,
+    get_test_data,
+    mock_web_host,
+    roles,
+)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "data", "sample-plugins"))
@@ -737,3 +745,72 @@ class TestImageSearchPlugin(PluginTestBase):
         function = plugin.custom_tool["function"]  # type: ignore[index]
         self.assertNotEqual(function["name"], "image_search")
         self.assertTrue(function["description"].startswith(WEATHER_IMAGE_SEARCH_DESCRIPTION))
+
+    # =========================================================================
+    # request lifecycle signals
+    # =========================================================================
+    def test_lifecycle(self):
+        """Test the signals of a search: started, authenticated, responded, completed."""
+        plugin = self.load()
+        with capture_request_signals(IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS) as received:
+            urls, _ = self.call({"query": "kittens"}, plugin=plugin)
+        self.assertEqual(roles(received), ["started", "authenticated", "responded", "completed"])
+        started, authenticated, responded, completed = (kwargs for _, kwargs in received)
+        self.assertIs(started["plugin"], plugin)
+        self.assertEqual(started["function_args"], {"query": "kittens"})
+        self.assertEqual(authenticated["provider"], "brave")
+        self.assertEqual(responded["response"], urls)
+        self.assertEqual(responded["query"], "kittens")
+        self.assertFalse(responded["cached"])
+        self.assertTrue(completed["success"])
+
+    def test_lifecycle_cached(self):
+        """Test that cached search results are responded as cached, without authenticating."""
+        self.call({"query": "kittens"})
+        with capture_request_signals(IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS) as received:
+            self.call({"query": "kittens"})
+        self.assertEqual(roles(received), ["started", "responded", "completed"])
+        self.assertTrue(received[1][1]["cached"])
+
+    def test_lifecycle_rejected_api_key(self):
+        """Test that HTTP 401 sends authentication_failed, failed and completed, without the api key."""
+        with self.assertLogs(LOGGER, level="WARNING"):
+            with capture_request_signals(IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS) as received:
+                self.call({"query": "kittens"}, host=web([], status_code=401))
+        self.assertEqual(roles(received), ["started", "authentication_failed", "failed", "completed"])
+        self.assertIn("rejected the api key", received[1][1]["error"])
+        self.assertNotIn(API_KEY, json.dumps([str(kwargs) for _, kwargs in received]))
+        self.assertFalse(received[3][1]["success"])
+
+    def test_lifecycle_missing_api_key(self):
+        """Test that a missing api key sends authentication_failed, without a request."""
+        plugin = self.new_plugin("test_image_search_lifecycle_no_api_key", apiKey="no_such_secret")
+        with self.assertLogs(LOGGER, level="WARNING"):
+            with capture_request_signals(IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS) as received:
+                self.call({"query": "kittens"}, plugin=plugin)
+        self.assertEqual(roles(received), ["started", "authentication_failed", "failed", "completed"])
+        self.assertIn("no Brave Search API key", received[1][1]["error"])
+
+    def test_lifecycle_other_brave_error(self):
+        """Test that another Brave error authenticates, and then fails."""
+        with self.assertLogs(LOGGER, level="WARNING"):
+            with capture_request_signals(IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS) as received:
+                self.call({"query": "kittens"}, host=web([], status_code=429))
+        self.assertEqual(roles(received), ["started", "authenticated", "failed", "completed"])
+        self.assertIn("rate limit", received[2][1]["error"])
+
+    def test_lifecycle_missing_query(self):
+        """Test that a tool call without a query fails, without authenticating."""
+        with capture_request_signals(IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS) as received:
+            self.call({"count": 2})
+        self.assertEqual(roles(received), ["started", "failed", "completed"])
+        self.assertEqual(received[1][1]["error"], "the query is missing.")
+
+    def test_lifecycle_not_ready(self):
+        """Test that a plugin that is not ready raises, after sending failed and completed."""
+        plugin = self.load()
+        with mock.patch.object(ImageSearchPlugin, "ready", new_callable=mock.PropertyMock, return_value=False):
+            with capture_request_signals(IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS) as received:
+                with self.assertRaises(SmarterImageSearchPluginError):
+                    plugin.tool_call_fetch_plugin_response({"query": "kittens"})
+        self.assertEqual(roles(received), ["started", "failed", "completed"])

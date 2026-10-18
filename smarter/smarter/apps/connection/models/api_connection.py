@@ -72,6 +72,13 @@ class ApiConnection(ConnectionBase):
 
     objects: MetaDataWithOwnershipModelManager["ApiConnection"] = MetaDataWithOwnershipModelManager()
 
+    last_status_code: Optional[int] = None
+    """
+    The HTTP status code of the most recent :meth:`execute_query` response, or ``None`` if no.
+
+    request was sent, or the server could not be reached.
+    """
+
     AUTH_METHOD_CHOICES = [
         ("none", "None"),
         ("basic", "Basic Auth"),
@@ -206,6 +213,8 @@ class ApiConnection(ConnectionBase):
         and sends an HTTP request to the API with the provided parameters, headers and body.
         Authentication headers derived from this connection's ``auth_method`` and ``api_key``
         take precedence over any caller-supplied ``Authorization`` header.
+        Sets :attr:`last_status_code`, so that a caller can tell a rejected credential
+        (HTTP 401 or 403) from any other failure.
 
         :param endpoint: The API endpoint to query.
         :param params: A dictionary of URL query string parameters to include in the API request.
@@ -230,10 +239,12 @@ class ApiConnection(ConnectionBase):
             request_kwargs["json"] = body
 
         response = None
+        self.last_status_code = None
         try:
             api_connection_attempted.send(sender=self.__class__, connection=self)
             api_connection_query_attempted.send(sender=self.__class__, connection=self)
             response = requests.request(method, url, **request_kwargs)
+            self.last_status_code = response.status_code
             response.raise_for_status()
             if response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]:
                 api_connection_success.send(sender=self.__class__, connection=self)

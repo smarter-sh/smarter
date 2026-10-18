@@ -44,7 +44,13 @@ var KTSigninGeneral = (function () {
         },
       },
       plugins: {
-        trigger: new FormValidation.plugins.Trigger(),
+        // Validate the email when the user leaves the field, not on every
+        // keystroke: a partially typed address is never valid.
+        trigger: new FormValidation.plugins.Trigger({
+          event: {
+            email: "blur change",
+          },
+        }),
         bootstrap: new FormValidation.plugins.Bootstrap5({
           rowSelector: ".fv-row",
           eleInvalidClass: "", // comment to enable invalid state icons

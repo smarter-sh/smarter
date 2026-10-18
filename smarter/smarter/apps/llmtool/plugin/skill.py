@@ -51,6 +51,7 @@ A Plugin that provides an Agent Skill to the LLM, per the SKILL.md standard.
     be documented.
 """
 
+import time
 from datetime import datetime
 from typing import Any, Optional, Type, Union
 
@@ -83,7 +84,13 @@ from smarter.apps.llmtool.manifest.models.skill_plugin.spec import (
 )
 from smarter.apps.llmtool.models import PluginDataSkill
 from smarter.apps.llmtool.serializers import PluginSkillSerializer
-from smarter.apps.llmtool.signals import plugin_called, plugin_responded
+from smarter.apps.llmtool.signals import (
+    plugin_called,
+    plugin_responded,
+    skill_plugin_retrieval_failed,
+    skill_plugin_retrieval_started,
+    skill_plugin_retrieved,
+)
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
 from smarter.common.exceptions import SmarterValueError
@@ -95,6 +102,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
+from .request import SKILL_PLUGIN_REQUEST_SIGNALS, PluginRequest
 from .skill_sources import RetrievedSkill, retrieve_skill
 
 
@@ -311,18 +319,38 @@ class SkillPlugin(PluginBase):
         :return: The retrieved skill, or ``None`` if the manifest does not refer to a remote skill.
         :rtype: Optional[RetrievedSkill]
         :raises SmarterSkillPluginError: If the skill cannot be retrieved, or is invalid.
+
+        Sends ``skill_plugin_retrieval_started``, and then ``skill_plugin_retrieved`` or
+        ``skill_plugin_retrieval_failed``.
         """
         if self._retrieved_skill:
             return self._retrieved_skill
         source = self._manifest.spec.skillData.source if self._manifest else None
         if not source:
             return None
+        start_time = time.monotonic()
+        skill_plugin_retrieval_started.send(sender=self.__class__, plugin=self, url=source.url)
         try:
             self._retrieved_skill = retrieve_skill(source.url)
         except (SkillSourceError, SkillDocumentError) as e:
+            skill_plugin_retrieval_failed.send(
+                sender=self.__class__,
+                plugin=self,
+                url=source.url,
+                error=str(e),
+                duration=time.monotonic() - start_time,
+            )
             raise SmarterSkillPluginError(
                 f"{self.formatted_class_name} {self._manifest.metadata.name} could not retrieve the skill at {source.url}: {e}"  # type: ignore[union-attr]
             ) from e
+        skill_plugin_retrieved.send(
+            sender=self.__class__,
+            plugin=self,
+            url=source.url,
+            skill_name=self._retrieved_skill.document.name,
+            resource_count=len(self._retrieved_skill.resources),
+            duration=time.monotonic() - start_time,
+        )
         return self._retrieved_skill
 
     @property
@@ -519,51 +547,58 @@ class SkillPlugin(PluginBase):
         :rtype: dict
         :raises SmarterSkillPluginError: If the arguments are malformed, the plugin is not ready or
             lacks data, or the requested resource does not exist.
+
+        Sends the SkillPlugin request lifecycle signals, from ``skill_plugin_request_started`` to
+        ``skill_plugin_request_completed``. See :py:mod:`smarter.apps.llmtool.plugin.request`.
         """
-        if isinstance(function_args, str):
-            try:
-                function_args = json.loads(function_args) if function_args.strip() else {}
-            except json.JSONDecodeError as e:
+        with PluginRequest(
+            SKILL_PLUGIN_REQUEST_SIGNALS, sender=self.__class__, plugin=self, function_args=function_args
+        ) as plugin_request:
+            if isinstance(function_args, str):
+                try:
+                    function_args = json.loads(function_args) if function_args.strip() else {}
+                except json.JSONDecodeError as e:
+                    raise SmarterSkillPluginError(
+                        f"Plugin {self.name} function_args is not a valid JSON string: {e}.",
+                    ) from e
+            function_args = function_args or {}
+            if not isinstance(function_args, dict):
                 raise SmarterSkillPluginError(
-                    f"Plugin {self.name} function_args is not a valid JSON string: {e}.",
-                ) from e
-        function_args = function_args or {}
-        if not isinstance(function_args, dict):
-            raise SmarterSkillPluginError(
-                f"Plugin {self.name} function_args must be a dict or a JSON string, got {type(function_args)}.",
-            )
-        resource = function_args.get(RESOURCE_PARAMETER)
-        if resource is not None and not isinstance(resource, str):
-            raise SmarterSkillPluginError(
-                f"Plugin {self.name} invalid {RESOURCE_PARAMETER}. Expected a string, got {type(resource)}.",
-            )
+                    f"Plugin {self.name} function_args must be a dict or a JSON string, got {type(function_args)}.",
+                )
+            resource = function_args.get(RESOURCE_PARAMETER)
+            if resource is not None and not isinstance(resource, str):
+                raise SmarterSkillPluginError(
+                    f"Plugin {self.name} invalid {RESOURCE_PARAMETER}. Expected a string, got {type(resource)}.",
+                )
 
-        if not self.ready:
-            raise SmarterSkillPluginError(
-                f"Plugin {self.name} is not in a ready state.",
-            )
-        if not self.plugin_data:
-            raise SmarterSkillPluginError(
-                f"Plugin {self.name} is not ready. Plugin data is not available.",
-            )
+            if not self.ready:
+                raise SmarterSkillPluginError(
+                    f"Plugin {self.name} is not in a ready state.",
+                )
+            if not self.plugin_data:
+                raise SmarterSkillPluginError(
+                    f"Plugin {self.name} is not ready. Plugin data is not available.",
+                )
 
-        plugin_called.send(
-            sender=self.tool_call_fetch_plugin_response,
-            plugin=self,
-            inquiry_type=resource,
-        )
-        try:
-            retval = self.plugin_data.sanitized_return_data({RESOURCE_PARAMETER: resource} if resource else None)
-        except SmarterValueError as e:
-            raise SmarterSkillPluginError(f"Plugin {self.name}: {e}") from e
+            plugin_called.send(
+                sender=self.tool_call_fetch_plugin_response,
+                plugin=self,
+                inquiry_type=resource,
+            )
+            try:
+                retval = self.plugin_data.sanitized_return_data({RESOURCE_PARAMETER: resource} if resource else None)
+            except SmarterValueError as e:
+                raise SmarterSkillPluginError(f"Plugin {self.name}: {e}") from e
 
-        plugin_responded.send(
-            sender=self.tool_call_fetch_plugin_response,
-            plugin=self,
-            inquiry_type=resource,
-            response=retval,
-        )
-        return retval
+            plugin_request.responded(response=retval, resource=resource)
+            plugin_responded.send(
+                sender=self.tool_call_fetch_plugin_response,
+                plugin=self,
+                inquiry_type=resource,
+                response=retval,
+            )
+            return retval
 
     def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """

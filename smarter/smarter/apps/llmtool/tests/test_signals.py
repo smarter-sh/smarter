@@ -33,8 +33,42 @@ SIGNAL_NAMES = (
     "websearch_searched",
     "websearch_fetched",
     "websearch_failed",
+    "sql_plugin_request_started",
+    "sql_plugin_authenticated",
+    "sql_plugin_authentication_failed",
+    "sql_plugin_responded",
+    "sql_plugin_failed",
+    "sql_plugin_request_completed",
+    "api_plugin_request_started",
+    "api_plugin_authenticated",
+    "api_plugin_authentication_failed",
+    "api_plugin_responded",
+    "api_plugin_failed",
+    "api_plugin_request_completed",
+    "image_search_plugin_request_started",
+    "image_search_plugin_authenticated",
+    "image_search_plugin_authentication_failed",
+    "image_search_plugin_responded",
+    "image_search_plugin_failed",
+    "image_search_plugin_request_completed",
+    "skill_plugin_request_started",
+    "skill_plugin_responded",
+    "skill_plugin_failed",
+    "skill_plugin_request_completed",
+    "skill_plugin_retrieval_started",
+    "skill_plugin_retrieved",
+    "skill_plugin_retrieval_failed",
+    "extension_installed",
+    "extension_upgraded",
+    "extension_uninstalled",
+    "extension_enabled",
+    "extension_disabled",
+    "extension_tool_called",
+    "extension_tool_responded",
+    "extension_tool_failed",
+    "extension_tool_completed",
 )
-TASK_PATCH = "smarter.apps.llmtool.receivers.create_plugin_selector_history"
+TASK_PATCH = "smarter.apps.llmtool.receivers.plugin.create_plugin_selector_history"
 
 
 class TestPluginSignals(PluginAppTestBase):
@@ -46,6 +80,25 @@ class TestPluginSignals(PluginAppTestBase):
             signal = getattr(signals, name)
             self.assertIsInstance(signal, Signal, name)
             self.assertTrue(signal.has_listeners(), name)
+
+    def test_package_exports_every_signal(self):
+        """Test that the signals package re-exports every signal of its modules, and nothing else."""
+        modules = (
+            signals.api,
+            signals.extension,
+            signals.image_search,
+            signals.plugin,
+            signals.skill,
+            signals.sql,
+            signals.websearch,
+        )
+        defined = {
+            name: value for module in modules for name, value in vars(module).items() if isinstance(value, Signal)
+        }
+        self.assertEqual(sorted(defined), sorted(signals.__all__))
+        self.assertEqual(sorted(defined), sorted(SIGNAL_NAMES))
+        for name, value in defined.items():
+            self.assertIs(getattr(signals, name), value, name)
 
     def test_plugin_created(self):
         """Test that creating a plugin sends plugin_created."""

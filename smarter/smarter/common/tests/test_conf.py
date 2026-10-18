@@ -114,6 +114,9 @@ class TestSettings(SmarterTestBase):
     def test_branding_contact_url(self):
         self.assertIsNotNone(smarter_settings.branding_contact_url)
 
+    def test_branding_primary_contact(self):
+        self.assertIsNotNone(smarter_settings.branding_primary_contact)
+
     def test_branding_support_hours(self):
         self.assertIsNotNone(smarter_settings.branding_support_hours)
 

@@ -84,7 +84,7 @@ import re
 import threading
 import uuid
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, ParamSpec, TypeVar
 
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
@@ -97,6 +97,8 @@ if TYPE_CHECKING:
 CONTEXT_NAME = "user_id"
 REQUEST_ID_CONTEXT_NAME = "request_id"
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+SESSION_KEY_CONTEXT_NAME = "session_key"
+SESSION_KEY_PATTERN = re.compile(r"^[a-fA-F0-9]{64}$")
 """
 The form of a request id: up to 64 letters, digits, underscores and hyphens.
 
@@ -123,6 +125,7 @@ logger_prefix = logging.formatted_text(__name__)
 _redis_cache_holder = {"client": None}
 user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
 request_id_context: ContextVar[str | None] = ContextVar(REQUEST_ID_CONTEXT_NAME, default=None)
+session_key_context: ContextVar[str | None] = ContextVar(SESSION_KEY_CONTEXT_NAME, default=None)
 log_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
 
 
@@ -173,6 +176,23 @@ def valid_request_id(request_id: Optional[str]) -> Optional[str]:
     return request_id if REQUEST_ID_PATTERN.match(request_id) else None
 
 
+def valid_session_key(session_key: Optional[str]) -> Optional[str]:
+    """
+    Return a chat session key if it has the form of one, or else None.
+
+    :param session_key: A chat session key, e.g. the ``session_key`` query parameter of a
+        request to an LLMClient's api.
+    :type session_key: Optional[str]
+    :return: The session key, stripped, or None if it is missing or does not match
+        :data:`SESSION_KEY_PATTERN`.
+    :rtype: Optional[str]
+    """
+    if not session_key:
+        return None
+    session_key = session_key.strip()
+    return session_key if SESSION_KEY_PATTERN.match(session_key) else None
+
+
 def build_channel(name: str) -> str:
     """Build a normalized Redis pubsub channel name."""
     return f"{CHANNEL_PREFIX}:{name}"
@@ -217,6 +237,45 @@ def get_user_context(user: Any) -> str:
     else:
         username = str(user)
     return f"{user.__class__.__name__}.{username}"
+
+
+_P = ParamSpec("_P")
+_T = TypeVar("_T")
+
+
+def bind_log_context(func: Callable[_P, _T]) -> Callable[_P, _T]:
+    """
+    Return a function that calls ``func`` in the current log context.
+
+    The log context is the user channel in :obj:`user_id_context`, the request id in
+    :obj:`request_id_context` and the chat session key in :obj:`session_key_context`, which
+    :class:`smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware` sets for the
+    duration of a request. Work that runs after the middleware returns, e.g. a streaming
+    response's generator, runs without them, so its log records reach neither the user's log
+    stream nor the request's. Bind such work while the request is being handled.
+
+    :param func: The function to call in the current log context.
+    :type func: Callable[_P, _T]
+    :returns: A function that sets the log context, calls ``func`` and restores the log context
+        that it found.
+    :rtype: Callable[_P, _T]
+    """
+    user_id = user_id_context.get()
+    request_id = request_id_context.get()
+    session_key = session_key_context.get()
+
+    def bound(*args: _P.args, **kwargs: _P.kwargs) -> _T:
+        user_token = user_id_context.set(user_id)
+        request_token = request_id_context.set(request_id)
+        session_token = session_key_context.set(session_key)
+        try:
+            return func(*args, **kwargs)
+        finally:
+            session_key_context.reset(session_token)
+            request_id_context.reset(request_token)
+            user_id_context.reset(user_token)
+
+    return bound
 
 
 def get_redis_cache() -> Optional["Redis"]:
@@ -401,7 +460,8 @@ class RedisLogHandler(logging.Handler):
         This method formats the log record and publishes it to the appropriate Redis channels.
         If a job ID is present in the current context, the log record is published to the job-specific
         channel. All log records are also published to the global log channel. While a request id is
-        set in :obj:`request_id_context`, the record carries it as ``request_id``.
+        set in :obj:`request_id_context`, the record carries it as ``request_id``, and while a chat
+        session key is set in :obj:`session_key_context`, as ``session_key``.
 
         :param record: The log record to be emitted.
         :type record: logging.LogRecord
@@ -423,6 +483,9 @@ class RedisLogHandler(logging.Handler):
             request_id = request_id_context.get()
             if request_id:
                 payload["request_id"] = request_id
+            session_key = session_key_context.get()
+            if session_key:
+                payload["session_key"] = session_key
 
             data = json.dumps(payload)
 
@@ -458,11 +521,14 @@ class RedisLogHandler(logging.Handler):
 
 
 __all__ = [
+    "bind_log_context",
     "get_user_context",
     "GLOBAL_LOG_CHANNEL",
     "user_id_context",
     "request_id_context",
+    "session_key_context",
     "valid_request_id",
+    "valid_session_key",
     "RedisLogHandler",
     "job_id_factory",
 ]
