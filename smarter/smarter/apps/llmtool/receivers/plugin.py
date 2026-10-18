@@ -173,11 +173,16 @@ def handle_search_term_matched(sender, prompt: str, search_term: str, method: st
 
 @receiver(broker_ready, dispatch_uid="broker_ready")
 def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
-    """Handle broker ready signal."""
+    """
+    Log that a broker is ready.
 
+    Brokers of every kind send this signal, so the message names the broker's own class, e.g.
+    ``smarter.apps.guardrail.manifest.brokers.guardrail.SAMGuardrailBroker.broker_ready()``,
+    rather than this module.
+    """
     logger.info(
         "%s %s %s for %s is ready.",
-        formatted_text(f"{prefix}broker_ready()"),
+        formatted_text(f"{sender.__module__}.{sender.__name__}.broker_ready()"),
         broker.kind,
         str(broker),
         broker.name,
