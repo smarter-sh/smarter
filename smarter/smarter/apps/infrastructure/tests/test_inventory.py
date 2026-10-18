@@ -293,8 +293,16 @@ class TestSyncInventoryCommand(InventoryTestBase):
     def test_command(self):
         stdout = StringIO()
         call_command("sync_infrastructure_inventory", stdout=stdout)
-        self.assertIn("kubernetes.node: 1 found, 1 created, 0 destroyed", stdout.getvalue())
+        self.assertIn("kubernetes.node: 1 found, 1 newly recorded, 0 no longer found", stdout.getvalue())
         self.assertIn("node-1", self.active(KubernetesResourceTypes.NODE))
+
+    def test_command_names_the_namespace(self):
+        """Namespaced resource types say whose namespace was counted, cluster-wide types don't."""
+        stdout = StringIO()
+        call_command("sync_infrastructure_inventory", stdout=stdout)
+        lines = {line.split(":")[0]: line for line in stdout.getvalue().splitlines() if ":" in line}
+        self.assertIn(f"in namespace {smarter_settings.environment_namespace}", lines["kubernetes.ingress"])
+        self.assertNotIn("in namespace", lines["kubernetes.node"])
 
     def test_nothing_listed(self):
         stdout = StringIO()
