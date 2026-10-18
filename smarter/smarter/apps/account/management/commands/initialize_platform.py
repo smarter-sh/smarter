@@ -105,94 +105,116 @@ class Command(SmarterCommand):
 
         try:
             call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize Waffle switches: %s", e)
 
         try:
-            call_command("add_builtin_guardrails")
-        except Exception as e:
+            call_command("add_example_guardrails")
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize Guardrails: %s", e)
 
         try:
             # applied, not deployed: an example CustomDomain, whose verification fails.
-            call_command("add_builtin_custom_domains")
-        except Exception as e:
+            call_command("add_example_custom_domains")
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize CustomDomains: %s", e)
 
         try:
-            call_command("add_builtin_budgets")  # Detached budgets, which superusers can attach to resources
-        except Exception as e:
+            call_command("add_example_budgets")  # Detached budgets, which superusers can attach to resources
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize Budgets: %s", e)
 
         try:
-            call_command("add_builtin_mcpclients")
-        except Exception as e:
+            call_command("add_example_mcpclients")
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize MCPClients: %s", e)
 
         try:
             # queued for the Celery worker, which downloads the repositories from GitHub: the
             # built-in smarter_project_* MCPClients read them through the platform's MCP server.
             call_command("index_smarter_project", queue=True)
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             logger.error("Failed to queue the indexing of The Smarter Project's repositories: %s", e)
 
         try:
-            call_command("add_builtin_llmhost_compute")
-        except Exception as e:
+            call_command("add_example_llmhost_compute")
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize LLMHostCompute: %s", e)
 
         try:
             # after LLMHostCompute: each built-in LLMHost's spec.compute must exist.
-            call_command("add_builtin_llmhost")
-        except Exception as e:
+            call_command("add_example_llmhost")
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize LLMHosts: %s", e)
 
         try:
             call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize providers: %s", e)
 
         try:
             # after initialize_providers, whose Secrets, e.g. google_maps_api_key, configure the extensions.
-            # Before deploy_builtin_llmclients, whose built-in LLMClients list the official extensions.
-            call_command("add_builtin_extensions")
+            # Before add_example_llmclients, whose example LLMClients list the official extensions.
+            call_command("add_example_extensions")
         except (Exception, SystemExit) as e:
-            # fatal: the built-in LLMClients that use a missing official extension are not deployed.
+            # fatal: the example LLMClients that use a missing official extension are skipped.
             logger.error("Failed to install the official extensions: %s", e)
-            fatal.append("add_builtin_extensions")
+            fatal.append("add_example_extensions")
 
         try:
             # after initialize_providers: each built-in Proxy's Provider and API key Secret must exist.
-            call_command("add_builtin_proxies")
-        except Exception as e:
+            call_command("add_example_proxies")
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize Proxies: %s", e)
 
         try:
             call_command("initialize_vectorstore_providers")  # Initialize builtin vectorstore providers: pinecone
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             logger.error("Failed to initialize vectorstore providers: %s", e)
 
         try:
-            call_command("add_builtin_vectorstores")  # Applied, not deployed: example vector databases
-        except Exception as e:
-            logger.error("Failed to apply the built-in vectorstores: %s", e)
+            call_command("add_example_vectorstores")  # Applied, not deployed: example vector databases
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to apply the example vectorstores: %s", e)
+
+        # The examples of the Stackademy fictional university, which belong to several apps, depend on
+        # each other in this order: Secrets, Connections, tools (plugins), LLMClients.
+        try:
+            call_command("add_example_secrets", username=username)
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to apply the example Secrets: %s", e)
 
         try:
-            call_command("add_plugin_examples", username=username)
-        except Exception as e:
-            logger.error("Failed to add plugin examples: %s", e)
+            # after add_example_secrets: the Stackademy Connections name its Secrets.
+            call_command("add_example_connections", username=username)
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to apply the example Connections: %s", e)
 
         try:
-            # after initialize_providers: the Stackademy LLMClients use a built-in Provider.
-            call_command("create_stackademy", account_number=SMARTER_ACCOUNT_NUMBER)
-        except Exception as e:
-            logger.error("Failed to create the Stackademy resources: %s", e)
+            # after add_example_connections: the Stackademy plugins name its Connections.
+            call_command("add_example_tools", username=username)
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to apply the example tools: %s", e)
+
+        try:
+            # last of the examples: the example LLMClients use the Providers, the official extensions,
+            # the MCPClients, the tools and the Guardrails. Applied, not deployed: deploy_example_llmclients
+            # deploys them.
+            call_command("add_example_llmclients", username=username)
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to apply the example LLMClients: %s", e)
+
+        try:
+            # after add_example_llmclients. It prompts the Stackademy LLMClients, and exits when they don't work.
+            call_command("verify_stackademy", account_number=SMARTER_ACCOUNT_NUMBER)
+        except (Exception, SystemExit) as e:
+            logger.error("The Stackademy LLMClients don't work: %s", e)
 
         try:
             call_command(
                 "verify_dns_configuration"
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             logger.error("Failed to verify DNS configuration: %s", e)
 
         try:

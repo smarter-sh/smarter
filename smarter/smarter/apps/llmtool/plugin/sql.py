@@ -12,11 +12,11 @@ A PLugin that uses a remote SQL database server to retrieve its return data.
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/secret/data/stackademy/secret-smarter-test-db.yaml
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-db.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/stackademy/smarter-test-db.yaml
     :language: yaml
     :caption: 2.) Example Smarter SQL Connection Manifest
 
@@ -24,7 +24,7 @@ A PLugin that uses a remote SQL database server to retrieve its return data.
     :language: yaml
     :caption: 3.) Example Stackademy SQL Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-sql.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
     :language: yaml
     :caption: 4.) Example Stackademy LLMClient Manifest
 """

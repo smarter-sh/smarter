@@ -127,7 +127,7 @@ A ``secret`` setting's value is a Smarter Secret, encrypted at rest. It reaches 
 :class:`pydantic.SecretStr`. A setting that has neither a value nor a default is ``None``.
 
 By convention, name a secret setting after the platform Secret that it would naturally use, such
-as ``google_maps_api_key``: ``manage.py add_builtin_extensions`` configures an official
+as ``google_maps_api_key``: ``manage.py add_example_extensions`` configures an official
 Extension's unset secret settings from the platform administrator's Secrets of the same names.
 
 The Archive

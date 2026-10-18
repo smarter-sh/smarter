@@ -12,11 +12,11 @@ A Plugin that uses a remote REST API server to retrieve its return data.
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/secret/data/stackademy/secret-smarter-test-api.yaml
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-api.yaml.tpl
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/stackademy/smarter-test-api.yaml.tpl
     :language: yaml
     :caption: 2.) Example Smarter API Connection Manifest
 
@@ -24,7 +24,7 @@ A Plugin that uses a remote REST API server to retrieve its return data.
     :language: yaml
     :caption: 3.) Example Stackademy API Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-api.yaml
     :language: yaml
     :caption: 4.) Example Stackademy LLMClient Manifest
 """
@@ -202,7 +202,7 @@ class ApiPlugin(PluginBase):
             >>> plugin = ApiPlugin()
             >>> manifest = plugin.manifest
             >>> print(manifest.spec.apiData.endpoint)
-            /stackademy/course-catalogue/
+            /api/v1/demos/stackademy/course-catalogue/
         """
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
@@ -241,7 +241,7 @@ class ApiPlugin(PluginBase):
             >>> plugin = ApiPlugin()
             >>> data = plugin.plugin_data
             >>> print(data.endpoint)
-            /stackademy/course-catalogue/
+            /api/v1/demos/stackademy/course-catalogue/
         """
         if self._plugin_data:
             return self._plugin_data
@@ -332,7 +332,7 @@ class ApiPlugin(PluginBase):
             >>> plugin = ApiPlugin()
             >>> serializer = plugin.plugin_data_serializer
             >>> print(serializer.data)
-            {'endpoint': '/stackademy/course-catalogue/', 'method': 'GET', ...}
+            {'endpoint': '/api/v1/demos/stackademy/course-catalogue/', 'method': 'GET', ...}
         """
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginApiSerializer(self.plugin_data)
@@ -770,7 +770,7 @@ class ApiPlugin(PluginBase):
 
         .. code-block:: text
 
-            GET {base_url}/stackademy/course-catalogue/?max_cost=500.00&description=Python
+            GET {base_url}/api/v1/demos/stackademy/course-catalogue/?max_cost=500.00&description=Python
 
         :param function_args: Arguments for the function call, as a dict, list, or JSON string.
         :return: The JSON response of the API request as a dict or list, or an empty string if the request failed or returned no results.
@@ -945,7 +945,7 @@ class ApiPlugin(PluginBase):
             >>> plugin = ApiPlugin()
             >>> manifest_json = plugin.to_json()
             >>> print(manifest_json["spec"]["apiData"]["endpoint"])
-            /stackademy/course-catalogue/
+            /api/v1/demos/stackademy/course-catalogue/
         """
         if self.ready:
             if version == "v1":

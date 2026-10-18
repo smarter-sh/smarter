@@ -9,6 +9,7 @@ delegates route handling to app-specific URL modules.
 - ``accounts/``: User account management endpoints.
 - ``llmclients/``: LLMClient CRUD and related operations.
 - ``cli/``: Brokered services for CLI workflows.
+- ``demos/``: Fictional data for the platform's example resources, e.g. the Stackademy course catalogue.
 - ``mcp/``: The Smarter Project MCP server, which reads the project's documentation and code.
 - ``journal/``: Smarter Journal entries (superusers only).
 - ``connections/``: External connection integration endpoints.
@@ -33,6 +34,7 @@ from django.urls import include, path
 from smarter.apps.account.api.v1 import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.api.v1.cli import urls as cli_urls
+from smarter.apps.api.v1.demos import urls as demos_urls
 from smarter.apps.api.v1.tests import urls as tests_urls
 from smarter.apps.connection.api.v1 import urls as connection_urls
 from smarter.apps.connection.const import namespace as connnection_namespace
@@ -69,6 +71,7 @@ from smarter.lib.journal.const import namespace as journal_namespace
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
+from .demos.const import namespace as demos_namespace
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +90,7 @@ urlpatterns = [
     path("mcpclients/", include(mcpclient_urls, namespace=mcpclient_namespace)),
     path("mcp/", include(mcpserver_urls, namespace=mcpserver_namespace)),
     path("cli/", include(cli_urls, namespace=cli_namespace)),
+    path("demos/", include(demos_urls, namespace=demos_namespace)),
     path("connections/", include(connection_urls, namespace=connnection_namespace)),
     path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("journal/", include(journal_urls, namespace=journal_namespace)),

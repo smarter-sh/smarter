@@ -1,7 +1,7 @@
 """
 The built-in Vectorstores: example vector databases, which every account may use.
 
-``manage.py add_builtin_vectorstores``, which ``manage.py initialize_platform`` calls, applies the
+``manage.py add_example_vectorstores``, which ``manage.py initialize_platform`` calls, applies the
 Vectorstore manifests in ``smarter/apps/vectorstore/data/vectorstores`` for the Smarter admin. They
 are applied, but not deployed, so that no database is created, nor paid for, until someone
 deploys one. A manifest is skipped if its embeddings Provider, or its ApiConnection, does not
@@ -31,7 +31,7 @@ logger_prefix = logging.formatted_text(__name__)
 
 @dataclass
 class BuiltinVectorstoresResult:
-    """The outcome of :func:`add_builtin_vectorstores`: the names of the Vectorstores, by outcome."""
+    """The outcome of :func:`add_example_vectorstores`: the names of the Vectorstores, by outcome."""
 
     applied: list[str] = field(default_factory=list)
     skipped: dict[str, str] = field(default_factory=dict)
@@ -62,7 +62,7 @@ def missing_dependency(loader: SAMLoader, user_profile: UserProfile) -> Optional
     return None
 
 
-def add_builtin_vectorstores(
+def add_example_vectorstores(
     user_profile: Optional[UserProfile] = None, path: str = BUILTIN_VECTORSTORE_PATH
 ) -> BuiltinVectorstoresResult:
     """
@@ -114,7 +114,7 @@ def builtin_vectorstores():
 
 __all__ = [
     "BuiltinVectorstoresResult",
-    "add_builtin_vectorstores",
+    "add_example_vectorstores",
     "builtin_manifest_files",
     "builtin_vectorstores",
 ]

@@ -47,7 +47,7 @@ data:
     BACKUP_URI="s3://ubc.smarter.sh/backups/sql/${BACKUP_FILE}"
 
     echo "Starting MariaDB backup for database: $SMARTER_MYSQL_DATABASE"
-    mysqldump -h "$SMARTER_MYSQL_HOST" -u "$SMARTER_MYSQL_ROOT_USERNAME" -p"$SMARTER_MYSQL_ROOT_PASSWORD" --databases  "$SMARTER_MYSQL_DATABASE" --add-drop-database --add-drop-table --routines --events --triggers --single-transaction --quick --lock-tables=false > ${BACKUP_FILENAME}.sql
+    mariadb-dump -h "$SMARTER_MYSQL_HOST" -u "$SMARTER_MYSQL_ROOT_USERNAME" -p"$SMARTER_MYSQL_ROOT_PASSWORD" --databases  "$SMARTER_MYSQL_DATABASE" --add-drop-database --add-drop-table --routines --events --triggers --single-transaction --quick --lock-tables=false > ${BACKUP_FILENAME}.sql
     SQL_BYTES=$(stat -c %s "${BACKUP_FILENAME}.sql")
 
     echo "Compressing backup file: ${BACKUP_FILENAME}.sql"
