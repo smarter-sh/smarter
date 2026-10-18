@@ -317,7 +317,7 @@ To apply them again, e.g. after adding an API key:
 .. code-block:: console
 
    python manage.py initialize_providers
-   python manage.py add_builtin_proxies
+   python manage.py add_example_proxies
 
 .. list-table::
    :header-rows: 1

@@ -138,7 +138,7 @@ Writing an Extension
    * - Management commands
      - ``validate_extension`` prints each tool's definition exactly as the LLM will see it;
        ``package_extension``, ``test_extension``, ``install_extension``,
-       ``uninstall_extension`` and ``add_builtin_extensions`` cover the rest of a developer's
+       ``uninstall_extension`` and ``add_example_extensions`` cover the rest of a developer's
        loop.
      - `management/commands/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/management/commands>`__
 

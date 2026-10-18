@@ -181,7 +181,7 @@ class GuardrailExamples:
 
 
 # pylint: disable=W0613,C0415
-def add_builtin_guardrails(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
+def add_example_guardrails(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
     """
     Apply the built-in Guardrail manifests, in ``data/guardrails``, for a user.
 
