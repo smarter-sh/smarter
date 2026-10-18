@@ -178,3 +178,32 @@
   overflow: auto;
   padding: 8px 12px;
 }
+
+/* a block of JSON's toggle, and the summary of a collapsed block. */
+.console-log-json-toggle {
+  display: inline-block;
+  min-width: 1.4em;
+  margin: 0 0.4em;
+  padding: 0 0.3em;
+  border: 1px solid #39424d;
+  border-radius: 3px;
+  background: #161a1f;
+  color: #78dce8;
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.console-log-json-toggle:hover,
+.console-log-json-toggle:focus-visible {
+  border-color: #78dce8;
+  outline: none;
+}
+
+.console-log-json-summary {
+  color: #9ba3ad;
+}
+
+.console-log-json-count {
+  font-style: italic;
+}

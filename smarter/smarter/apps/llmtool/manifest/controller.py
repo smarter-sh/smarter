@@ -198,11 +198,11 @@ class PluginController(AbstractController):
                     f"Manifest kind {manifest['kind']} should be one of: {VALID_MANIFEST_KINDS}."
                 )
             SAMPluginCls = self.sam_map.get(manifest["kind"])
-            logger.warning(
-                "%s received %s manifest as dict, converting to %s. This may be deprecated in the future.",
+            logger.debug(
+                "%s received %s manifest as dict, converting to %s.",
                 self.formatted_class_name,
                 manifest["kind"],
-                type(SAMPluginCls).__name__,
+                SAMPluginCls.__name__,  # type: ignore[union-attr]
             )
             manifest = SAMPluginCls(**manifest)  # type: ignore[call-arg]
 

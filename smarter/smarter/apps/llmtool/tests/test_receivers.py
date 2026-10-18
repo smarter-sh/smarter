@@ -152,6 +152,8 @@ class TestPluginReceivers(PluginAppTestBase):
         broker.name = "a_broker"
         broker_ready.send(sender=self.__class__, broker=broker)
         self.assertIn("a_broker", self.logged())
+        # the message names the sender, whatever its kind, not the llmtool receivers module.
+        self.assertIn(f"{self.__class__.__name__}.broker_ready()", self.logged())
 
     # -------------------------------------------------------------------------
     # plugin_selected

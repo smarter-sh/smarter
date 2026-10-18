@@ -42,6 +42,41 @@ describe("ServerLogs", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Streaming server logs...");
   });
 
+  it("collapses blocks of JSON, and expands them one by one, or all of them", async () => {
+    const message = 'chat_response request: {\n  "model": "gpt",\n  "messages": [\n    "hi"\n  ]\n}\ndone';
+    const user = setup({ logs: [{ message }, { message: "a plain line" }] });
+    // collapsed: the block's first line, a summary, and the lines after it.
+    expect(lines()).toHaveTextContent("chat_response request: {+ … } (4 lines) done");
+    expect(lines()).not.toHaveTextContent('"model"');
+    expect(lines()).toHaveTextContent("a plain line");
+
+    await user.click(screen.getByRole("button", { name: "Expand the JSON" }));
+    expect(lines()).toHaveTextContent('"model": "gpt"');
+    // a nested block is collapsed too.
+    expect(lines()).toHaveTextContent('"messages": [+ … ] (1 line)');
+    await user.click(screen.getByRole("button", { name: "Collapse the JSON" }));
+    expect(lines()).not.toHaveTextContent('"model"');
+
+    const expandAll = screen.getByRole("button", { name: "Expand JSON" });
+    await user.click(expandAll);
+    expect(expandAll).toHaveAttribute("aria-pressed", "true");
+    expect(lines()).toHaveTextContent('"hi"');
+    expect(screen.queryByRole("button", { name: "Expand the JSON" })).not.toBeInTheDocument();
+    await user.click(expandAll);
+    expect(lines()).not.toHaveTextContent('"model"');
+  });
+
+  it("copies a collapsed block of JSON in full", async () => {
+    const message = 'request: {\n  "model": "gpt"\n}';
+    // after userEvent.setup(), which installs its own clipboard.
+    setup({ logs: [{ message }] });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    fireEvent.click(screen.getByRole("button", { name: "Copy the lines" }));
+    expect(writeText).toHaveBeenCalledWith(message);
+    expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
+  });
+
   it("hides the stream's own status messages", () => {
     setup({ logs: [{ message: "Waiting for log stream..." }, { message: "[stream] connected " }] });
     expect(lines().children).toHaveLength(0);
