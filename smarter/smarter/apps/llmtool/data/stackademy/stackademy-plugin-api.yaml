@@ -29,7 +29,7 @@ spec:
       name: test2
       required: false
       type: string
-    endpoint: /stackademy/course-catalogue/
+    endpoint: /api/v1/demos/stackademy/course-catalogue/
     method: GET
     headers:
     - name: X-Debug-Request
@@ -43,24 +43,30 @@ spec:
     - name: X-Request-ID
       value: 12345
     limit: 10
+    # like the SqlPlugin's: without defaults, which the LLM would send as filters, and with
+    # an enum of the keywords that the course descriptions contain.
     parameters:
-    - default: 500.00
-      description: A ceiling on the maximum cost of the course.
+    - description: the maximum cost that a student is willing to pay for a course.
       enum: null
       name: max_cost
       required: false
-      type: string
-    - default: Python
-      description: A keyword to search for in the course description.
-      enum: null
+      type: number
+    - description: areas of specialization for courses in the catalogue.
+      enum:
+      - AI
+      - mobile
+      - web
+      - database
+      - network
+      - neural networks
       name: description
       required: false
       type: string
     testValues:
-    - name: max_cost
-      value: 500.00
     - name: description
-      value: Python
+      value: AI
+    - name: max_cost
+      value: 1000
     urlParams: null
   connection: smarter_test_api
   prompt:

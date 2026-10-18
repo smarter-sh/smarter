@@ -46,4 +46,4 @@ Technical Reference
    account/models/budget
    account/sam/brokers/budget
    account/sam/models/budget
-   account/commands/add_builtin_budgets
+   account/commands/add_example_budgets

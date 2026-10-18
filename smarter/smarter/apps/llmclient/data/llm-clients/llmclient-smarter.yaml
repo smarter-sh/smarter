@@ -92,7 +92,7 @@ spec:
       typingIndicator:
         color: '#f15a29'
   plugins:
-    # requires the tavily_api_key Secret. See plugins/plugin-smarter-websearch.yaml.
+    # requires the tavily_api_key Secret. See smarter/apps/llmtool/data/sample-plugins/websearch-smarter-project.yaml.
     - smarter_project_websearch
   # the documentation and code of The Smarter Project's repositories, one MCPClient per repository,
   # through the platform's own Smarter Project MCP server. They require no Secret.

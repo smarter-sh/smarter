@@ -80,9 +80,9 @@ from .base_classes import (
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "data", "sample-plugins"))
-# the built-in WebsearchPlugin of the smarter LLMClient, which deploy_builtin_llmclients applies.
+# the built-in WebsearchPlugin of the smarter LLMClient, which deploy_example_llmclients applies.
 SMARTER_PROJECT_WEBSEARCH_PATH = os.path.abspath(
-    os.path.join(HERE, "..", "..", "..", "llmclient", "data", "plugins", "plugin-smarter-websearch.yaml")
+    os.path.join(HERE, "..", "..", "data", "sample-plugins", "websearch-smarter-project.yaml")
 )
 BRAVE_URL = BraveSearchProvider.url
 TAVILY_URL = TavilySearchProvider.url

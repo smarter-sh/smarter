@@ -16,7 +16,7 @@ addressable through one declarative interface. Because SAM files are versioned, 
 like any other infrastructure-as-code, and because they're plain, human-readable YAML, they can be
 understood and applied by non-developers using the web console.
 
-.. literalinclude:: ../../smarter/smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml
+.. literalinclude:: ../../smarter/smarter/apps/secret/data/stackademy/secret-smarter-test-db.yaml
   :language: yaml
   :caption: Example Manifest
 

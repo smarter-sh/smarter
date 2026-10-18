@@ -5,7 +5,7 @@ An SQL Connection represents a connection to a remote SQL database from the Smar
 It encapsulates the necessary configuration and credentials (``Smarter Secret``)
 required to interact with the SQL Database,
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-db.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/stackademy/smarter-test-db.yaml
    :language: yaml
    :caption: Example SQL Connection Manifest
 

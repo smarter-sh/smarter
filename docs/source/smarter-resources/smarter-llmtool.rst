@@ -99,7 +99,7 @@ Usage
 Example Manifest
 -----------------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
     :language: yaml
     :caption: Example SQL Plugin Manifest
 

@@ -11,7 +11,7 @@ about GPU instance types.
 - :func:`cost_per_hour` is one replica's share of its node's price.
 - :class:`ComputeProvisioner` reconciles a compute's node group with its LLMHosts: it creates the
   node group, adds nodes when LLMHosts need them, and removes empty nodes that they no longer do.
-- :func:`add_builtin_computes` applies the built-in LLMHostCompute manifests, in ``data/compute``.
+- :func:`add_example_computes` applies the built-in LLMHostCompute manifests, in ``data/compute``.
 
 A node group has as many nodes as its LLMHosts' pods need, which is usually one per pod: an
 LLMHost runs on a node of its own unless its compute's node has room for several of its pods.
@@ -431,7 +431,7 @@ class ComputeProvisioner:
         self.nodegroups.delete(compute)
 
 
-def add_builtin_computes(user_profile: Optional[UserProfile] = None, path: str = BUILTIN_COMPUTE_PATH) -> bool:
+def add_example_computes(user_profile: Optional[UserProfile] = None, path: str = BUILTIN_COMPUTE_PATH) -> bool:
     """
     Apply the built-in LLMHostCompute manifests, in ``data/compute``, for a user.
 
@@ -468,7 +468,7 @@ def add_builtin_computes(user_profile: Optional[UserProfile] = None, path: str =
 __all__ = [
     "ComputeProvisioner",
     "ComputeState",
-    "add_builtin_computes",
+    "add_example_computes",
     "PodRequests",
     "choose_compute",
     "cost_per_hour",

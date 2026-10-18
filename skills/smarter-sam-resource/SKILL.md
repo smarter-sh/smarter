@@ -82,7 +82,7 @@ summary:
 8. **Docs app**: a JSON schema view and an example manifest view in
    `smarter/smarter/apps/docs/views/`, routed in `smarter/smarter/apps/docs/urls.py`.
 9. **Built-in data** (if any): YAML manifests in `<app>/data/<kinds>/`, an
-   `add_builtin_<kinds>` command, and a step in `initialize_platform`. See
+   `add_example_<kinds>` command, and a step in `initialize_platform`. See
    `smarter-management-commands`.
 10. **Dashboard counts** (if the dashboard shows them):
     `smarter/smarter/apps/dashboard/views/views/api/my_resources.py`.

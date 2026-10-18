@@ -107,7 +107,7 @@ every setting, with a crash course in colors, sizes, fonts and images, and a cas
 Example Manifest
 ----------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-llmclient-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 

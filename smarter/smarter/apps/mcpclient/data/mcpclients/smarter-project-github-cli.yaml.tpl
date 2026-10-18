@@ -9,7 +9,7 @@
 # see the other smarter-project-github*.yaml.tpl manifests, and smarter-project.yaml.tpl, which
 # reads all of them.
 #
-# This file is a string.Template: add_builtin_mcpclients fills in the scheme and domain of the
+# This file is a string.Template: add_example_mcpclients fills in the scheme and domain of the
 # platform that applies it, from smarter_settings.environment_url and
 # smarter_settings.environment_platform_domain, e.g. https://alpha.platform.example.com, or
 # http://localhost:9357 in local development, so that this MCPClient reads the MCP server of

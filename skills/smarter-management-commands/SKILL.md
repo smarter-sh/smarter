@@ -1,6 +1,6 @@
 ---
 name: smarter-management-commands
-description: Use when writing or changing a Smarter manage.py command, adding built-in data (example manifests that ship with the platform), or wiring a step into initialize_platform. Covers SmarterCommand, the add_builtin_<kinds> pattern of applying YAML manifests from an app's data folder, failure handling and exit codes, and how to test commands.
+description: Use when writing or changing a Smarter manage.py command, adding example data (manifests that ship with the platform), or wiring a step into initialize_platform. Covers SmarterCommand, the add_example_<kinds> pattern of applying YAML manifests from an app's data folder, failure handling and exit codes, and how to test commands.
 ---
 
 # Smarter Management Commands
@@ -15,7 +15,7 @@ from smarter.lib.django.management.base import SmarterCommand
 
 
 class Command(SmarterCommand):
-    """Django manage.py add_builtin_widgets command."""
+    """Django manage.py add_example_widgets command."""
 
     help = "Apply the built-in Widget manifests, in smarter/apps/widget/data/widgets."
 
@@ -43,27 +43,36 @@ class Command(SmarterCommand):
   `update_secret`) live in the secret app. Check
   `python manage.py help` before you pick a name.
 
-## Built-in data: `add_builtin_<kinds>`
+## Example data: `add_example_<kinds>`
 
-Resources that ship with the platform (built-in Guardrails, the example
-CustomDomain, Budgets, MCPClients, Proxies, VectorStores, LLMHosts) are **YAML
-manifests**, not Python fixtures:
+Resources that ship with the platform are **example resources**, declared as **YAML
+manifests**, not Python fixtures. Every command that creates them is named
+`add_example_<kinds>`, never `builtin`: `add_example_secrets`, `add_example_connections`,
+`add_example_tools` (all the plugin kinds), `add_example_llmclients`,
+`add_example_custom_domains`, `add_example_guardrails`, `add_example_budgets`, ... Each
+belongs to the app that implements the kind. A command that creates nothing is named for
+what it does: `deploy_example_llmclients` only deploys the LLMClients that
+`add_example_llmclients` applied, and `verify_stackademy` only prompts them.
 
 1. Put the manifests in `smarter/smarter/apps/<app>/data/<kinds>/*.yaml`, with
-   the path in the app's `const.py` (for example `CUSTOM_DOMAINS_PATH`).
-2. `add_builtin_<kinds>` applies each file with
-   `call_command("apply_manifest", filespec=..., username=...)`, owned by the
-   Smarter admin by default (`smarter_cached_objects.smarter_admin`). That goes
-   through the real broker, so built-in data is created exactly as a user's
-   would be.
+   the path in the app's `const.py` (for example `CUSTOM_DOMAINS_PATH`). The
+   Stackademy fictional university's manifests are in each app's
+   `data/stackademy/` (Secrets in secret, Connections in connection, plugins in
+   llmtool, LLMClients in llmclient, the Budget in account).
+2. Subclass `SmarterExamplesCommand` (`smarter/smarter/lib/django/management/examples.py`),
+   set `family`, and implement `add_examples(user_profile)` with `apply_all(filespecs,
+user_profile)`. It resolves `--username` (default: the Smarter admin), applies
+   each file in a transaction with `apply_manifest`, through the real broker, fills
+   in `*.yaml.tpl` templates, and returns the failures. Reference:
+   `smarter/smarter/apps/connection/management/commands/add_example_connections.py`.
 3. One bad file doesn't stop the rest. Collect the failures, report them as a
    warning at the end, and keep going.
 4. If the kind has an asynchronous lifecycle (verification, deployment), the
    command sets the starting status and queues the task, as
-   `add_builtin_custom_domains` does with `verify_custom_domain.delay(...)`.
+   `add_example_custom_domains` does with `verify_custom_domain.delay(...)`. Never
+   undeploy by applying: `add_example_llmclients` keeps an existing LLMClient's
+   `deployed`.
 5. It must be idempotent. Running it twice is safe, because `apply` updates.
-
-Reference: `smarter/smarter/apps/llmclient/management/commands/add_builtin_custom_domains.py`.
 
 ## initialize_platform
 
@@ -75,10 +84,14 @@ component doesn't stop the others:
 ```python
 try:
     # applied, not deployed: an example CustomDomain, whose verification fails.
-    call_command("add_builtin_custom_domains")
-except Exception as e:
+    call_command("add_example_custom_domains")
+except (Exception, SystemExit) as e:
     logger.error("Failed to initialize CustomDomains: %s", e)
 ```
+
+Catch `SystemExit` too: `handle_completed_failure(err)` exits. `initialize_account` runs
+the examples that each account gets its own copy of (secrets, connections, tools,
+LLMClients) for the account's admin, then `deploy_example_llmclients`.
 
 Place it after the things it depends on. For example, providers come before the
 resources that use them. Comment anything surprising, such as example data that
@@ -87,7 +100,7 @@ is expected to fail verification locally.
 ## Running
 
 ```console
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py add_builtin_custom_domains"
+docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py add_example_custom_domains"
 ```
 
 Built-in commands for infrastructure kinds queue Celery tasks that the
@@ -105,4 +118,4 @@ command queues in the command's module. Assert:
 - that failures are reported but don't stop it, and
 - that a fatal failure raises `SystemExit`.
 
-Reference: `smarter/smarter/apps/llmclient/tests/test_add_builtin_custom_domains.py`.
+Reference: `smarter/smarter/apps/llmclient/tests/test_add_example_custom_domains.py`.
