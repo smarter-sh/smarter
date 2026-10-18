@@ -16,6 +16,7 @@ from smarter.common.utils import to_snake_case
 from .const import namespace
 from .views.detailviews import (
     LLMClientDetailView,
+    LLMClientManifestEditorView,
     PromptConfigView,
     PromptSandboxView,
     PromptWorkbenchView,
@@ -68,6 +69,7 @@ class PromptReverseNames:
     namespace = namespace
 
     manifest_by_hashed_id = to_snake_case(LLMClientDetailView.__name__)
+    manifest_editor_by_hashed_id = to_snake_case(LLMClientManifestEditorView.__name__)
     chat_by_hashed_id = to_snake_case(PromptWorkbenchView.__name__)
     config_by_hashed_id = to_snake_case(PromptConfigView.__name__)
     sandbox_by_hashed_id = to_snake_case(PromptSandboxView.__name__)
@@ -108,6 +110,11 @@ urlpatterns = [
         "llm-clients/<str:hashed_id>/manifest/",
         LLMClientDetailView.as_view(),
         name=PromptReverseNames.manifest_by_hashed_id,
+    ),
+    path(
+        "llm-clients/<str:hashed_id>/manifest/editor/",
+        LLMClientManifestEditorView.as_view(),
+        name=PromptReverseNames.manifest_editor_by_hashed_id,
     ),
     path(
         "llm-clients/<str:hashed_id>/prompt/",

@@ -159,7 +159,8 @@ The Console
 *Turned on in the workbench; on by default in the npm package too (the* ``showConsole`` *prop),
 which suits only wide pages.*
 
-The Console is a simulated terminal beside the chat. Its tabs display, as JSON:
+The Console is a simulated terminal beside the chat. Its tabs display the LLMClient's manifest, the
+chat session's server logs and, as JSON, its history and configuration:
 
 .. list-table::
    :header-rows: 1
@@ -167,6 +168,14 @@ The Console is a simulated terminal beside the chat. Its tabs display, as JSON:
 
    * - Tab
      - Contents
+   * - Manifest
+     - The LLMClient's YAML manifest, in the web console's manifest editor, which validates it as you
+       type, and saves, clones and deletes the LLMClient with your own permissions. When you save,
+       the chat reloads the LLMClient's configuration, so that the next prompt uses your changes, and
+       the chat session carries on. The tab is the far left one, and the editor loads when you first
+       open it, then keeps your unsaved changes while you look at the other tabs. Present only when
+       the page passes the editor's url (``manifestEditorUrl``), as the workbench does: the editor is
+       a page of the web console, so it must be of the page's own origin.
    * - Server Logs
      - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.
        Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Blocks of
@@ -174,7 +183,7 @@ The Console is a simulated terminal beside the chat. Its tabs display, as JSON:
        line and their length: each block's **+** button expands it, and **Expand JSON** expands or
        collapses all of them. Copying the lines copies the JSON in full. Present only
        when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
-       then selected first. A new chat clears it.
+       then selected when the Console opens. A new chat clears it.
    * - Api Calls
      - The chat session's requests to the LLM provider.
    * - Tool Calls
