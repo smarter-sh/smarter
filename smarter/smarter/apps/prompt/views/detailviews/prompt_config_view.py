@@ -75,6 +75,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.logging.redis_log_handler import session_key_context, valid_session_key
 from smarter.lib.typing import SmarterDictType
 
 MAX_RETURNED_PLUGINS = 10
@@ -573,6 +574,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             # before the session, which requires an LLMClient.
             return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         self.session = SmarterPromptSession(request, session_key=self.session_key, llmclient=self.llmclient)
+        # a new chat's session key is created here, so the request's later log records carry it,
+        # for Smarter Chat's Console. SmarterRequestLogContextMiddleware, which runs while this switch
+        # is active, restores the log context after the request.
+        if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
+            session_key_context.set(valid_session_key(self.session.session_key))
 
         # "is not None", not truthiness: LLMClientHelper is a SmarterRequestMixin, whose __bool__ is its
         # readiness, so a helper that isn't ready would skip this check.
