@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.3...v0.33.4-alpha.1) (2026-10-18)
+
+### Bug Fixes
+
+* **llmtool:** add plugin request lifecycle signals, split signals pkg ([e2acf01](https://github.com/smarter-sh/smarter/commit/e2acf01748001c23d4caa69606764a9a946fd490))
+
 ## [0.33.3](https://github.com/smarter-sh/smarter/compare/v0.33.2...v0.33.3) (2026-10-18)
 
 ### Bug Fixes
