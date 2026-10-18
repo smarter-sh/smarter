@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.2...v0.33.3-alpha.1) (2026-10-18)
+
+### Bug Fixes
+
+* **llmclient:** repair stackademy_api, make example data per app ([50c4ec8](https://github.com/smarter-sh/smarter/commit/50c4ec8fc1136fbec60ed072ef007fe191357aae))
+
+### Refactoring
+
+* **management:** base all add_example commands on one class ([a289f22](https://github.com/smarter-sh/smarter/commit/a289f22d870d973812e0378b48e5afdbf386a638))
+
 ## [0.33.2](https://github.com/smarter-sh/smarter/compare/v0.33.1...v0.33.2) (2026-10-17)
 
 ### Bug Fixes
