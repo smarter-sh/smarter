@@ -7,7 +7,7 @@ See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 import json
 import secrets
 from http import HTTPStatus
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 from urllib.parse import urlparse
 
 from django.contrib.auth.models import AnonymousUser
@@ -33,6 +33,7 @@ from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterPromptSession,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib.logging.redis_log_handler import session_key_context
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 PLATFORM_HOST = urlparse(smarter_settings.environment_platform_url).netloc
@@ -126,6 +127,49 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(response.context["smarter_chat"]["log_stream_url"], "")
         self.assertIn('smarter-log-stream-url=""', response.content.decode())
 
+    def test_workbench_manifest_editor_url(self):
+        """Test that the workbench passes the LLMClient's manifest editor, of its own origin, to Smarter Chat."""
+        response = self.client.get(
+            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
+        )
+        manifest_editor_url = response.context["smarter_chat"]["manifest_editor_url"]
+        self.assertEqual(
+            manifest_editor_url, self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id)
+        )
+        # a path, of the workbench's own origin, as Smarter Chat requires.
+        self.assertTrue(manifest_editor_url.startswith("/"), manifest_editor_url)
+        self.assertTrue(manifest_editor_url.endswith("/manifest/editor/"), manifest_editor_url)
+        self.assertIn(f'smarter-manifest-editor-url="{manifest_editor_url}"', response.content.decode())
+
+    def test_manifest_editor(self):
+        """Test that the manifest editor page renders the editor alone, and may be framed by the console only."""
+        response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        templates = [template.name for template in response.templates]
+        self.assertIn("common/manifest_editor_frame.html", templates)
+        self.assertIn("common/manifest_editor.html", templates)
+        # without the web console's header and sidebar.
+        self.assertNotIn("dashboard/base.html", templates)
+        self.assertNotIn("dashboard/sidebar.html", templates)
+        content = response.content.decode()
+        self.assertIn('id="smarter-manifest-editor-root"', content)
+        self.assertIn(self.resource.name, content)
+        # Django denies every other page to frames.
+        self.assertEqual(response["X-Frame-Options"], "SAMEORIGIN")
+
+    def test_manifest_editor_not_found(self):
+        """Test that the manifest editor page is a 404 for an unknown LLMClient."""
+        unknown = LLMClient(id=999999999)
+        response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_detail_page_may_not_be_framed(self):
+        """Test that the manifest detail page, unlike the manifest editor page, may not be framed."""
+        response = self.client.get(self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertEqual(response["X-Frame-Options"], "DENY")
+        self.assertIn("dashboard/base.html", [template.name for template in response.templates])
+
     def test_workbench_and_config_not_found(self):
         """Test that the workbench page and config api are a 404 for an unknown LLMClient."""
         unknown = LLMClient(id=999999999)
@@ -173,15 +217,29 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
             response = self.client.post(url, HTTP_X_SMARTER_CAPABILITIES=CHAT_CONTRACT_V2_CAPABILITY)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         session_key = PromptChatApiConfigResponse.model_validate(response.json()).data.session_key
-        session_key_context.set.assert_called_once_with(session_key)
+        # dispatch() scopes the context to the request, then the session key is set in it.
+        scope = call(session_key_context.get.return_value)
+        self.assertEqual(session_key_context.set.call_args_list, [scope, call(session_key)])
+        session_key_context.reset.assert_called_once_with(session_key_context.set.return_value)
 
-        # while server logs are off, nothing resets the log context, so it isn't set.
+        # while server logs are off, the session key isn't set.
         with (
             patch(f"{module}.waffle.switch_is_active", return_value=False),
             patch(f"{module}.session_key_context") as session_key_context,
         ):
             self.client.post(url)
-        session_key_context.set.assert_not_called()
+        self.assertEqual(session_key_context.set.call_args_list, [call(session_key_context.get.return_value)])
+
+    def test_config_restores_the_log_context(self):
+        """Test that the config api's session key doesn't outlive its request, even without the log context middleware."""
+        module = "smarter.apps.prompt.views.detailviews.prompt_config_view"
+        request = RequestFactory().post(self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id))
+        request.user = self.admin_user
+        self.assertIsNone(session_key_context.get())
+        with patch(f"{module}.waffle.switch_is_active", return_value=True):
+            response = PromptConfigView.as_view()(request, hashed_id=self.resource.hashed_id)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertIsNone(session_key_context.get())
 
     def test_config_v2_is_the_default(self):
         """Test that a client that asks for no version of the contract receives version 2."""

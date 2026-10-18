@@ -116,7 +116,37 @@
   height: var(--console-server-logs-height);
   overflow: auto;
   white-space: pre;
-  scrollbar-color: #39424d #161a1f;
+}
+
+/*
+ * scroll bars that are always visible, as the Terminal's are. macOS hides overlay scroll bars until
+ * the user scrolls, which hid the horizontal one of long lines. Chrome and Safari draw classic,
+ * visible scroll bars once ::-webkit-scrollbar is styled, but only without scrollbar-color, which
+ * Chrome 121 and later prefer. So scrollbar-color is only for the browsers without it, e.g. Firefox.
+ */
+.console-server-logs-lines::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.console-server-logs-lines::-webkit-scrollbar-track,
+.console-server-logs-lines::-webkit-scrollbar-corner {
+  background: #161a1f;
+}
+
+.console-server-logs-lines::-webkit-scrollbar-thumb {
+  background: #39424d;
+  border-radius: 999px;
+}
+
+.console-server-logs-lines::-webkit-scrollbar-thumb:hover {
+  background: #4a5663;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .console-server-logs-lines {
+    scrollbar-color: #39424d #161a1f;
+  }
 }
 
 .console-server-logs-lines:focus-visible {

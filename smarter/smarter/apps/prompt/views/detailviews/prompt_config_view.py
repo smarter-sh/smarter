@@ -503,6 +503,23 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         LLMClientConfigSerializer : Serializer for the llmclient's data.
         LLMClientHelper : Helper for llmclient-related operations.
         """
+        # the chat session key that the request sets, for its log records, is the request's only. The
+        # log context middleware restores it too, but this view also runs without it, e.g. in tests.
+        scope = session_key_context.set(session_key_context.get())
+        try:
+            return self.dispatch_config(request, *args, **kwargs)
+        finally:
+            session_key_context.reset(scope)
+
+    def dispatch_config(
+        self, request: HttpRequest, *args, **kwargs
+    ) -> Union[JsonResponse, HttpResponse, SmarterJournaledJsonErrorResponse]:
+        """
+        Handle the request, for :meth:`dispatch`, which scopes the chat session key of its log records to it.
+
+        :param request: The incoming HTTP request.
+        :returns: The configuration, or an error response.
+        """
         self.thing = SmarterJournalThings(SmarterJournalThings.PROMPT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT_CONFIG)
         self.contract = requested_contract(request)
@@ -575,8 +592,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         self.session = SmarterPromptSession(request, session_key=self.session_key, llmclient=self.llmclient)
         # a new chat's session key is created here, so the request's later log records carry it,
-        # for Smarter Chat's Console. SmarterRequestLogContextMiddleware, which runs while this switch
-        # is active, restores the log context after the request.
+        # for Smarter Chat's Console. dispatch() restores the log context after the request.
         if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
             session_key_context.set(valid_session_key(self.session.session_key))
 
