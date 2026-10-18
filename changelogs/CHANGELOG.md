@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.6...v0.33.7-alpha.1) (2026-10-18)
+
+### Bug Fixes
+
+* **dashboard:** put prompt passthrough second in the sidebar ([b491a8a](https://github.com/smarter-sh/smarter/commit/b491a8ac5187fcf20d03ad2f9d7883427d1c329d))
+* **logging:** quiet init job log noise and clarify inventory counts ([6903994](https://github.com/smarter-sh/smarter/commit/6903994613bb4e3fb08e6e1fbf0fa7226c147085))
+* **passthrough:** collapse blocks of json in the server logs tab ([a4c73d0](https://github.com/smarter-sh/smarter/commit/a4c73d07abc8d8cd7db5cd873e69a24bc6e39c4f))
+
 ## [0.33.6](https://github.com/smarter-sh/smarter/compare/v0.33.5...v0.33.6) (2026-10-18)
 
 ### Bug Fixes
