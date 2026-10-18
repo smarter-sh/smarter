@@ -261,6 +261,45 @@ describe("App, when things go wrong", () => {
     }
   });
 
+  it("tells the page that frames it when it saves, and sends that page away when it deletes", async () => {
+    const parent = {
+      document: { referrer: "http://localhost:9357/workbench/" },
+      location: {
+        href: "http://localhost:9357/workbench/llm-clients/x/prompt/",
+        pathname: "/workbench/llm-clients/x/prompt/",
+        assign: vi.fn(),
+      },
+      postMessage: vi.fn(),
+    };
+    server.use(
+      http.post(APPLY_API_URL, () => HttpResponse.json({ message: "Secret example_secret applied" })),
+      ...cliHandlers,
+    );
+    const user = userEvent.setup();
+    render(<App {...appProps} />);
+    vi.stubGlobal("parent", parent);
+    try {
+      edit(appProps.initialManifest.replace("An example secret.", "An edited secret."));
+      await screen.findByText("No problems", {}, VALIDATION);
+      await user.click(screen.getByRole("button", { name: "Save: Apply your changes to this manifest" }));
+      const saved = await screen.findByRole("dialog", { name: "Saved" });
+      expect(parent.postMessage).toHaveBeenCalledWith(
+        { type: "smarter:manifest-saved", kind: "Secret", name: "example_secret" },
+        window.location.origin,
+      );
+      await user.click(within(saved).getAllByRole("button")[0]);
+
+      await user.click(screen.getByRole("button", { name: "Delete: Delete this Secret" }));
+      await user.click(screen.getByRole("button", { name: "OK" }));
+      const deleted = await screen.findByRole("dialog", { name: "Deleted" });
+      await user.click(within(deleted).getAllByRole("button")[0]);
+      expect(parent.location.assign).toHaveBeenCalledWith("http://localhost:9357/workbench/");
+      expect(parent.postMessage).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("can't clone or delete a manifest that it can't parse", () => {
     server.use(...cliHandlers);
     render(<App {...appProps} initialManifest={"kind: [unclosed"} />);

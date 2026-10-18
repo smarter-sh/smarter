@@ -80,6 +80,15 @@ is missing, so the page fails loudly rather than rendering a broken chat.
      - ``logStreamUrl``
      - The url of the user's server log stream, or empty when log viewing in the browser is disabled
        (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), in which case the Console has no Server Logs tab.
+   * - ``smarter-manifest-editor-url``
+     - ``manifestEditorUrl``
+     - The path of the LLMClient's manifest editor,
+       :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`,
+       for the Console's Manifest tab. The page is the manifest editor of the LLMClient's detail page,
+       without the console's header and sidebar, and it is the only console page that the console's
+       own pages may frame (``X-Frame-Options: SAMEORIGIN``). When the editor saves, it posts a
+       ``smarter:manifest-saved`` message to the workbench, which the chat accepts only from that
+       frame, and then reloads the LLMClient's configuration.
 
 Boolean attributes are compared case-insensitively with ``"true"``, so Django's ``True`` works.
 

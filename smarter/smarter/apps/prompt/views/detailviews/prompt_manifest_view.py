@@ -1,11 +1,17 @@
 # pylint: disable=W0613,C0302
-"""LLMClientDetailView is a Django class-based view that renders a detail view of a SAM manifest for an llmclient."""
+"""
+LLMClientDetailView is a Django class-based view that renders a detail view of a SAM manifest for an llmclient.
+
+LLMClientManifestEditorView renders the same manifest editor alone, for Smarter Chat's Console to frame.
+"""
 
 from typing import Optional
 
 import yaml
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
@@ -217,3 +223,31 @@ class LLMClientDetailView(DocsBaseView):
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response
+
+
+@method_decorator(xframe_options_sameorigin, name="dispatch")
+class LLMClientManifestEditorView(LLMClientDetailView):
+    """
+    Renders an llmclient's manifest editor alone, without the web console's header and sidebar.
+
+    Smarter Chat, the React app of :class:`PromptWorkbenchView`, displays this page in an iframe, in its
+    Console's "Manifest" tab. The page is the manifest editor of :class:`LLMClientDetailView`, the
+    ``@smarter/manifest-editor`` React app, which saves the manifest with the cli api, as the signed-in
+    user, and then posts a ``smarter:manifest-saved`` message to the workbench, which reloads the
+    llmclient's configuration.
+
+    Django's ``XFrameOptionsMiddleware`` denies every page to frames. This one may be framed by the web
+    console's own pages, of the same origin, only.
+
+    **Example usage**::
+
+        GET /workbench/llm-clients/<str:hashed_id>/manifest/editor/
+    """
+
+    template_path = "common/manifest_editor_frame.html"
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{LLMClientManifestEditorView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
