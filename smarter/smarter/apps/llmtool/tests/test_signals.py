@@ -29,6 +29,7 @@ SIGNAL_NAMES = (
     "plugin_responded",
     "plugin_ready",
     "plugin_selected",
+    "search_term_matched",
     "broker_ready",
     "websearch_searched",
     "websearch_fetched",

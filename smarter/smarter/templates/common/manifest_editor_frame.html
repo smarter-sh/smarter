@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static react_manifest_editor %}
+{% comment %}
+The manifest editor alone, without the web console's header and sidebar, for a frame of the web console's
+own pages: Smarter Chat's Console, in the LLMClient prompt workbench, displays it in its "Manifest" tab.
+See smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView.
+{% endcomment %}
+
+{% block head_extra %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'common-styles.css' %}?v={{ STATIC_VERSION }}">
+  <style>
+    /* the frame is the page: no background, margins or scrolling of its own. */
+    body.app-default {
+      background: transparent;
+    }
+    .smarter-manifest-editor-frame {
+      padding: 0;
+    }
+  </style>
+
+  <!--
+  Vite assets for the manifest editor
+  see: smarter.apps.dashboard.templatetags.react_manifest_editor.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% manifest_editor_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/manifest-editor/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block root %}
+<section class="smarter-manifest-editor-frame" aria-label="{{ page_title }}">
+  {% include 'common/manifest_editor.html' %}
+</section>
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the manifest editor
+  see: smarter.apps.dashboard.templatetags.react_manifest_editor.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% manifest_editor_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/manifest-editor/' %}{{ js_file }}"></script>
+  {% endfor %}
+{% endblock %}

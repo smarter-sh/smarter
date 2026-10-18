@@ -18,6 +18,7 @@ import ManifestEditor from "@/components/ManifestEditor";
 import Problems from "@/components/Problems";
 import Toolbar from "@/components/Toolbar";
 import { callCli, type CliResult } from "@/lib/api";
+import { framingWindow, notifySaved } from "@/lib/frame";
 import { cloneManifest, manifestDependencies, manifestToApply, parseManifest, type Manifest } from "@/lib/manifest";
 import { samErrors, syntaxErrors, type ManifestError } from "@/lib/validation";
 
@@ -48,13 +49,17 @@ function tryParse(yaml: string): Manifest | null {
   }
 }
 
-/** Leave the page after its resource is deleted: back to where the user came from, or the dashboard. */
+/**
+ * Leave the page after its resource is deleted: back to where the user came from, or the dashboard. In a
+ * frame, e.g. the prompt workbench's, the page that frames the editor leaves, since its resource is gone too.
+ */
 function leavePage() {
-  const referrer = document.referrer ? new URL(document.referrer) : null;
-  if (referrer && referrer.origin === window.location.origin && referrer.pathname !== window.location.pathname) {
-    window.location.assign(referrer.href);
+  const page = framingWindow() ?? window;
+  const referrer = page.document.referrer ? new URL(page.document.referrer) : null;
+  if (referrer && referrer.origin === window.location.origin && referrer.pathname !== page.location.pathname) {
+    page.location.assign(referrer.href);
   } else {
-    window.location.assign("/dashboard/");
+    page.location.assign("/dashboard/");
   }
 }
 
@@ -193,7 +198,10 @@ function App({
         interpolate(gettext("%(kind)s %(name)s saved"), { kind: manifest.kind, name: manifest.metadata.name }),
       ),
     );
-    if (result.ok) setSavedYaml(yaml);
+    if (result.ok) {
+      setSavedYaml(yaml);
+      notifySaved(manifest);
+    }
     showResult(result.ok ? gettext("Saved") : gettext("Save Failed"), result);
   };
 

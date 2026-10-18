@@ -26,8 +26,15 @@ the cli, e.g. a delete is refused while other resources depend on the resource.
 
 - `smarter.apps.dashboard.templatetags.react_manifest_editor` provides the app's assets, from its
   Vite `manifest.json`, and the root element's settings: the cli api urls and the cookie names.
-- `templates/common/manifest_detail.html` renders the root element, and the manifest, as YAML,
-  with Django's `json_script` filter.
+- `templates/common/manifest_editor.html` renders the root element, and the manifest, as YAML,
+  with Django's `json_script` filter. Every manifest detail page includes it, from
+  `templates/common/manifest_detail.html`.
+- `templates/common/manifest_editor_frame.html` renders the editor alone, for a frame:
+  `smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`, which Smarter
+  Chat's Console displays in its Manifest tab, in the LLMClient prompt workbench. In a frame of the
+  console's own origin, the editor posts a `smarter:manifest-saved` message, with the manifest's `kind`
+  and `name`, to the framing page when it saves, and sends the framing page away when it deletes the
+  resource (`src/lib/frame.tsx`).
 
 ## Development
 
