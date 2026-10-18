@@ -1,15 +1,16 @@
 # pylint: disable=wrong-import-position
 """
-Test :mod:`smarter.apps.llmtool.receivers`.
+Test :mod:`smarter.apps.llmtool.receivers`, the package and each of its modules.
 
 Most receivers only log. Their logger is replaced with a mock, so that these
 tests can verify what each receiver logs regardless of the waffle switches
 that enable receiver logging.
 """
 
+from types import SimpleNamespace
 from unittest import mock
 
-from smarter.apps.llmtool import receivers
+from smarter.apps.llmtool import receivers, signals
 from smarter.apps.llmtool.models import PluginMeta, PluginSelectorHistory
 from smarter.apps.llmtool.signals import (
     broker_ready,
@@ -26,13 +27,23 @@ from smarter.apps.llmtool.signals import (
     websearch_fetched,
     websearch_searched,
 )
-from smarter.lib import logging
+from smarter.lib import json, logging
 
 from .base_classes import PluginAppTestBase, get_test_data
 
 logger = logging.getLogger(__name__)
 
-TASK_PATCH = "smarter.apps.llmtool.receivers.create_plugin_selector_history"
+TASK_PATCH = "smarter.apps.llmtool.receivers.plugin.create_plugin_selector_history"
+RECEIVER_MODULES = (
+    receivers.api,
+    receivers.extension,
+    receivers.image_search,
+    receivers.models,
+    receivers.plugin,
+    receivers.skill,
+    receivers.sql,
+    receivers.websearch,
+)
 
 
 # pylint: disable=too-many-public-methods
@@ -46,9 +57,12 @@ class TestPluginReceivers(PluginAppTestBase):
 
     def setUp(self):
         super().setUp()
-        patcher = mock.patch.object(receivers, "logger")
-        self.logger = patcher.start()
-        self.addCleanup(patcher.stop)
+        # every receivers module has its own logger. They share one mock.
+        self.logger = mock.MagicMock()
+        for module in RECEIVER_MODULES:
+            patcher = mock.patch.object(module, "logger", self.logger)
+            patcher.start()
+            self.addCleanup(patcher.stop)
         self.messages: list[str] = []
         # messages are formatted when they are logged, while the models they
         # describe still exist.
@@ -279,3 +293,87 @@ class TestPluginReceivers(PluginAppTestBase):
         self.assertIn("PluginSelectorHistory() created", self.logged())
         history.delete()
         self.assertIn("PluginSelectorHistory().pre_delete()", self.logged())
+
+    # -------------------------------------------------------------------------
+    # request lifecycle signals
+    # -------------------------------------------------------------------------
+    def test_request_lifecycle(self):
+        """Test that each request lifecycle receiver logs its signal, and logs failures as warnings."""
+        plugin = self.static_plugin
+        for family in ("sql", "api", "image_search", "skill"):
+            cases = {
+                "request_started": {"function_args": {"q": "gobstoppers"}},
+                "responded": {"response": [{"name": "Willy"}], "cached": True, "sql": "SELECT 1;", "query": "q"},
+                "failed": {"error": "it broke"},
+                "request_completed": {"success": False, "duration": 0.25},
+            }
+            if family != "skill":
+                cases["authenticated"] = {"connection": "db", "auth_method": "token", "status_code": 200}
+                cases["authentication_failed"] = {"error": "HTTP 401", "status_code": 401, "provider": "brave"}
+            for event, kwargs in cases.items():
+                name = f"{family}_plugin_{event}"
+                with self.subTest(signal=name):
+                    self.messages.clear()
+                    self.logger.reset_mock()
+                    getattr(signals, name).send(sender=self.__class__, plugin=plugin, **kwargs)
+                    self.assertIn(name, self.logged())
+                    self.assertIn(plugin.name, self.logged())
+                    if event in ("failed", "authentication_failed"):
+                        self.logger.warning.assert_called_once()
+                        self.assertIn(kwargs["error"], self.logged())
+                    else:
+                        self.logger.info.assert_called_once()
+        self.messages.clear()
+        signals.api_plugin_responded.send(sender=self.__class__, plugin=plugin, response="abc", cached=False)
+        self.assertIn("characters: 3", self.logged())
+        signals.sql_plugin_request_completed.send(sender=self.__class__, plugin=plugin, success=True, duration=1.5)
+        self.assertIn("duration: 1.500s", self.logged())
+
+    def test_response_characters(self):
+        """Test the length of a response, as the responded receivers log it."""
+        self.assertEqual(receivers.response_characters(None), 0)
+        self.assertEqual(receivers.response_characters("abcd"), 4)
+        self.assertEqual(receivers.response_characters([1, 2]), len(json.dumps([1, 2])))
+
+    def test_skill_retrieval(self):
+        """Test the SkillPlugin retrieval receivers."""
+        url = "https://github.com/anthropics/skills/tree/main/skills/pdf"
+        signals.skill_plugin_retrieval_started.send(sender=self.__class__, plugin=self.static_plugin, url=url)
+        signals.skill_plugin_retrieved.send(
+            sender=self.__class__, plugin=self.static_plugin, url=url, skill_name="pdf", resource_count=4, duration=1.0
+        )
+        self.assertIn("skill_name: pdf resource_count: 4", self.logged())
+        signals.skill_plugin_retrieval_failed.send(
+            sender=self.__class__, plugin=self.static_plugin, url=url, error="SKILL.md was not found", duration=0.1
+        )
+        self.logger.warning.assert_called_once()
+        self.assertIn("SKILL.md was not found", self.logged())
+
+    # -------------------------------------------------------------------------
+    # extension signals
+    # -------------------------------------------------------------------------
+    def test_extensions(self):
+        """Test the extension receivers."""
+        extension = SimpleNamespace(slug="weather")
+        version = SimpleNamespace(version="1.1.0")
+        tool = {"slug": "weather", "version": "1.1.0", "tool_name": "get_weather"}
+        signals.extension_installed.send(sender=self.__class__, extension=extension, version=version)
+        self.assertIn("extension_installed", self.logged())
+        signals.extension_upgraded.send(
+            sender=self.__class__, extension=extension, version=version, previous_version="1.0.0"
+        )
+        self.assertIn("previous_version: 1.0.0", self.logged())
+        signals.extension_enabled.send(sender=self.__class__, extension=extension)
+        signals.extension_uninstalled.send(sender=self.__class__, slug="weather")
+        signals.extension_tool_called.send(sender=self.__class__, arguments={"city": "Paris"}, **tool)
+        self.assertIn("Paris", self.logged())
+        signals.extension_tool_responded.send(sender=self.__class__, characters=1024, **tool)
+        self.assertIn("characters: 1024", self.logged())
+        signals.extension_tool_completed.send(sender=self.__class__, success=True, duration=0.5, **tool)
+        self.assertIn("success: True duration: 0.500s", self.logged())
+        self.logger.warning.assert_not_called()
+        signals.extension_disabled.send(sender=self.__class__, extension=extension, reason="disabled by admin")
+        signals.extension_tool_failed.send(sender=self.__class__, error="timed out", **tool)
+        self.assertEqual(self.logger.warning.call_count, 2)
+        self.assertIn("disabled by admin", self.logged())
+        self.assertIn("timed out", self.logged())

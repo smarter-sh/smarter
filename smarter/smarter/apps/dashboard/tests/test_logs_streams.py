@@ -259,3 +259,42 @@ class TestLogStreams(TestAccountMixin):
         _, chunks = self._stream(fake_cache, limit=3, query={"request_id": "abc"})
         self.assertEqual(chunks[1], 'event: bulk\ndata: [{"message": "mine", "request_id": "abc"}]\n\n')
         self.assertEqual(chunks[2], 'data: {"message": "live mine", "request_id": "abc"}\n')
+
+    def test_session_key(self):
+        """Test that the session key is the session_key query parameter, if it is a valid chat session key."""
+        factory = RequestFactory()
+        session_key = "a" * 64
+        self.assertEqual(streams._session_key(factory.get("/", {"session_key": session_key})), session_key)
+        self.assertIsNone(streams._session_key(factory.get("/", {"session_key": "abc123"})))
+        self.assertIsNone(streams._session_key(factory.get("/")))
+
+    def test_is_other_session(self):
+        """Test that, for one chat's stream, only that chat's records are kept."""
+        other = streams._is_other_session
+        self.assertFalse(other('{"session_key": "abc", "message": "x"}', "abc"))
+        self.assertTrue(other('{"session_key": "xyz", "message": "x"}', "abc"))
+        self.assertTrue(other('{"message": "x"}', "abc"))
+        self.assertTrue(other("plain text", "abc"))
+        self.assertTrue(other("[1, 2]", "abc"))
+        self.assertFalse(other('{"message": "x"}', None))
+        self.assertFalse(other("plain text", None))
+
+    def test_one_chats_records(self):
+        """Test that a stream with a session_key replays, and sends live, only that chat's records."""
+        mine = "a" * 64
+        other = "b" * 64
+        fake_cache = MagicMock()
+        fake_cache.xrevrange.side_effect = [
+            [
+                (b"2-0", {b"data": f'{{"message": "other", "session_key": "{other}"}}'.encode()}),
+                (b"1-0", {b"data": f'{{"message": "mine", "session_key": "{mine}"}}'.encode()}),
+            ],
+            [],
+        ]
+        fake_cache.pubsub.return_value.get_message.side_effect = [
+            {"type": "message", "data": f'{{"message": "live other", "session_key": "{other}"}}'.encode()},
+            {"type": "message", "data": f'{{"message": "live mine", "session_key": "{mine}"}}'.encode()},
+        ]
+        _, chunks = self._stream(fake_cache, limit=3, query={"session_key": mine})
+        self.assertEqual(chunks[1], f'event: bulk\ndata: [{{"message": "mine", "session_key": "{mine}"}}]\n\n')
+        self.assertEqual(chunks[2], f'data: {{"message": "live mine", "session_key": "{mine}"}}\n')

@@ -9,6 +9,7 @@ from smarter.apps.llmtool.extension.exceptions import SmarterExtensionLoadError
 from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
 from smarter.apps.llmtool.signals import (
     extension_tool_called,
+    extension_tool_completed,
     extension_tool_failed,
     extension_tool_responded,
 )
@@ -86,6 +87,54 @@ class TestExtensionToolkit(ExtensionTestMixin):
         finally:
             extension_tool_failed.disconnect(dispatch_uid="tf")
         self.assertEqual(len(failures), 7)
+
+    def test_completed_is_sent_last(self):
+        """Every call to an extension tool ends with extension_tool_completed, which says whether it succeeded."""
+        received = []
+        for signal in (
+            extension_tool_called,
+            extension_tool_responded,
+            extension_tool_failed,
+            extension_tool_completed,
+        ):
+            signal.connect(
+                lambda signal, **kwargs: received.append((signal, kwargs)), weak=False, dispatch_uid=f"c{id(signal)}"
+            )
+        try:
+            self.toolkit.call("ext_echo_echo", {"text": "world"})
+            succeeded = list(received)
+            received.clear()
+            self.toolkit.call("ext_echo_fail", None)
+            failed = list(received)
+            received.clear()
+            self.toolkit.call("ext_echo_echo", "{not json")
+            invalid = list(received)
+            received.clear()
+            self.toolkit.call("nope", None)
+        finally:
+            for signal in (
+                extension_tool_called,
+                extension_tool_responded,
+                extension_tool_failed,
+                extension_tool_completed,
+            ):
+                signal.disconnect(dispatch_uid=f"c{id(signal)}")
+        self.assertEqual(
+            [signal for signal, _ in succeeded],
+            [extension_tool_called, extension_tool_responded, extension_tool_completed],
+        )
+        completed = succeeded[-1][1]
+        self.assertEqual((completed["slug"], completed["tool_name"]), ("echo", "echo"))
+        self.assertTrue(completed["success"])
+        self.assertGreaterEqual(completed["duration"], 0.0)
+        self.assertEqual(
+            [signal for signal, _ in failed], [extension_tool_called, extension_tool_failed, extension_tool_completed]
+        )
+        self.assertFalse(failed[-1][1]["success"])
+        self.assertEqual([signal for signal, _ in invalid], [extension_tool_failed, extension_tool_completed])
+        self.assertFalse(invalid[-1][1]["success"])
+        # a function that is not one of the toolkit's tools has no extension to report.
+        self.assertEqual(received, [])
 
     def test_skipped_extensions(self):
         """Disabled, unavailable and broken extensions are skipped and reported."""

@@ -66,6 +66,7 @@ from smarter.apps.llmtool.manifest.models.websearch_plugin.model import (
 )
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.api import ApiPlugin
+from smarter.apps.llmtool.plugin.request import PluginRequestSignals
 from smarter.apps.llmtool.plugin.skill import SkillPlugin
 from smarter.apps.llmtool.plugin.skill_sources import retrieve_skill
 from smarter.apps.llmtool.plugin.sql import SqlPlugin
@@ -157,6 +158,37 @@ def capture_signal(signal):
         yield received
     finally:
         signal.disconnect(handler)
+
+
+@contextmanager
+def capture_request_signals(signals: PluginRequestSignals):
+    """
+    Collect every request lifecycle signal of a plugin family, in the order sent.
+
+    Each item is the signal's role in :class:`PluginRequestSignals`, e.g. ``started``, and its kwargs.
+    """
+    received: list[tuple[str, SmarterDictType]] = []
+    handlers = {}
+    for role in ("started", "authenticated", "authentication_failed", "responded", "failed", "completed"):
+        signal = getattr(signals, role)
+        if signal is None:
+            continue
+
+        def handler(sender, role=role, **kwargs):
+            received.append((role, {"sender": sender, **kwargs}))
+
+        signal.connect(handler, weak=False)
+        handlers[signal] = handler
+    try:
+        yield received
+    finally:
+        for signal, handler in handlers.items():
+            signal.disconnect(handler)
+
+
+def roles(received: list[tuple[str, SmarterDictType]]) -> list[str]:
+    """Return the roles of the signals that capture_request_signals() collected."""
+    return [role for role, _ in received]
 
 
 def mock_response(json_data: Any = None, status_code: int = 200) -> mock.MagicMock:
