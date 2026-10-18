@@ -16,7 +16,7 @@ from smarter.apps.llmclient.manifest.models.llmclient.spec import (
     SAMLLMClientSpec,
     SAMLLMClientSpecConfig,
 )
-from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
@@ -401,6 +401,14 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
             {"backgroundColor": "tomato", "color": "#fff", "borderColor": None, "linkColor": None},
         )
         self.assertNotIn("appLogoUrl", manifest["spec"]["config"]["prompt"])
+
+    def test_describe_round_trips_the_api_key_name(self):
+        """Test that describe returns the name of the LLMClient's API key, which apply looks it up by."""
+        self.broker.apply(self.request, **self.kwargs)
+        llmclient_api_key = LLMClientAPIKey.objects.create(llmclient=self.broker.llmclient, api_key=self.token_record)
+        self.addCleanup(llmclient_api_key.delete)
+        manifest = json.loads(self.broker.describe(self.request, **self.kwargs).content)["data"]
+        self.assertEqual(manifest["spec"]["apiKey"], self.token_record.name)
 
     def test_describe(self):
         """

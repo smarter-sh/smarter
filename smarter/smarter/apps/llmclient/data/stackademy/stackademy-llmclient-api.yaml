@@ -25,7 +25,7 @@ spec:
         provide the best possible responses to the user.
       defaultTemperature: 1.0
       defaultMaxTokens: 512
-      appName: Stackademy
+      appName: Stackademy API
       appAssistant: Stanley
       appWelcomeMessage: Welcome to Stackademy! How can I help you today?
       appExamplePrompts:
