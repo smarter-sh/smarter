@@ -45,7 +45,7 @@ as out-of-band infrastructure setup.
 Example Manifest
 -----------------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-db.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/connection/data/stackademy/smarter-test-db.yaml
     :language: yaml
     :caption: Example SQL Database Connection Manifest
 
@@ -57,6 +57,7 @@ Technical Reference
 
    connection/api
    connection/const
+   connection/management
    connection/manifest
    connection/models
    connection/receivers

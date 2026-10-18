@@ -219,9 +219,9 @@ Each action is also a management command, for scripts and automation:
     python manage.py install_extension --registry weather          # install or update from the registry
     python manage.py install_extension weather-1.0.0.zip --enable  # install an archive, and enable it
     python manage.py uninstall_extension weather
-    python manage.py add_builtin_extensions                        # install the official Extensions
+    python manage.py add_example_extensions                        # install the official Extensions
 
-``manage.py initialize_platform`` runs ``add_builtin_extensions``, which installs the official
+``manage.py initialize_platform`` runs ``add_example_extensions``, which installs the official
 Extensions, *calculator*, *date-calculator* and *weather*, from the registry, configures their
 secret settings from the platform's Secrets of the same names, for example the weather
 Extension's ``google_maps_api_key``, and enables them. While the registry is disabled, it installs

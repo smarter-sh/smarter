@@ -676,14 +676,29 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
 
 
 BUILTIN_BUDGETS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "example-manifests", "budgets")
-"""The Budget example manifests that :func:`add_builtin_budgets` creates."""
+"""The Budget example manifests that :func:`add_example_budgets` creates."""
+
+STACKADEMY_BUDGETS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "stackademy")
+"""The Stackademy Budget manifests, which :func:`add_example_budgets` also creates."""
 
 BUILTIN_BUDGET_ANNOTATION = "smarter.sh/budget/builtin"
 
 
-def add_builtin_budgets(verbose: bool = False) -> list[Budget]:
+def example_budget_filespecs() -> list[str]:
     """
-    Create a Budget for each Budget example manifest, in ``data/example-manifests/budgets/``.
+    Return the built-in Budget manifests: the examples, then Stackademy's.
+
+    :returns: The manifests' paths, in ``data/example-manifests/budgets/`` and ``data/stackademy/``.
+    :rtype: list[str]
+    """
+    return sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml"))) + sorted(
+        glob.glob(os.path.join(STACKADEMY_BUDGETS_PATH, "*.yaml"))
+    )
+
+
+def add_example_budgets(verbose: bool = False) -> list[Budget]:
+    """
+    Create a Budget for each built-in Budget manifest, from :func:`example_budget_filespecs`.
 
     ``manage.py initialize_platform`` calls it, so that the platform starts with a catalogue of
     budgets that superusers can attach to resources.
@@ -703,12 +718,12 @@ def add_builtin_budgets(verbose: bool = False) -> list[Budget]:
     from smarter.common.utils import get_readonly_yaml_file
 
     retval = []
-    for filespec in sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml"))):
+    for filespec in example_budget_filespecs():
         manifest = SAMBudget(**get_readonly_yaml_file(filespec))
         name = manifest.metadata.name
         if Budget.objects.filter(name=name).exists():
             if verbose:
-                logger.info("%s.add_builtin_budgets() Budget %s already exists. Skipped.", HERE, name)
+                logger.info("%s.add_example_budgets() Budget %s already exists. Skipped.", HERE, name)
             continue
         config = manifest.spec.config
         fields = {orm_field: getattr(config, manifest_field) for manifest_field, orm_field in CONFIG_FIELDS.items()}
@@ -724,12 +739,13 @@ def add_builtin_budgets(verbose: bool = False) -> list[Budget]:
         budget.tags.set(manifest.metadata.tags or [])
         retval.append(budget)
         if verbose:
-            logger.info("%s.add_builtin_budgets() Created Budget %s from %s.", HERE, name, os.path.basename(filespec))
+            logger.info("%s.add_example_budgets() Created Budget %s from %s.", HERE, name, os.path.basename(filespec))
     return retval
 
 
 __all__ = [
-    "add_builtin_budgets",
+    "add_example_budgets",
+    "example_budget_filespecs",
     "get_cached_default_account",
     "get_cached_account_for_user",
     "get_cached_user_for_user_id",

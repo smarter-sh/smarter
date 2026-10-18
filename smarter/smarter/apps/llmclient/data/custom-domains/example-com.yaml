@@ -1,6 +1,6 @@
 ---
 # A built-in example CustomDomain, owned by the Smarter admin, and installed by
-# python manage.py add_builtin_custom_domains, which initialize_platform runs.
+# python manage.py add_example_custom_domains, which initialize_platform runs.
 #
 # Smarter does not control example.com, so its verification fails: it has no
 # AWS Route53 hosted zone until it is deployed, and its NS records could never

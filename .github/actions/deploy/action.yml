@@ -168,7 +168,7 @@ inputs:
     description: "The LinkedIn OAuth2 secret"
     required: true
   tavily-api-key:
-    description: "The Tavily web search API key, which the built-in smarter LLMClient's websearch plugin uses"
+    description: "The Tavily web search API key, which WebsearchPlugins such as smarter_project_websearch use"
     required: false
   togetherai-api-key:
     description: "The TogetherAI API key"

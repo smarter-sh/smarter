@@ -190,7 +190,7 @@ class MCPClientExamples:
         return self._mcpclient_examples
 
 
-def add_builtin_mcpclients(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
+def add_example_mcpclients(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
     """
     Apply the built-in MCPClient manifests and manifest templates, in ``data/mcpclients``, for a user.
 
@@ -229,14 +229,14 @@ def add_builtin_mcpclients(user_profile: Optional[UserProfile], verbose: bool = 
     .. code-block:: python
 
         from smarter.apps.account.models import UserProfile
-        from smarter.apps.mcpclient.utils import add_builtin_mcpclients
+        from smarter.apps.mcpclient.utils import add_example_mcpclients
 
         user_profile = UserProfile.objects.get(user__username="newuser")
-        success = add_builtin_mcpclients(user_profile)
+        success = add_example_mcpclients(user_profile)
         if success:
             print("Built-in MCPClients created successfully.")
     """
-    logger_prefix = formatted_text(f"{__name__}.add_builtin_mcpclients()")
+    logger_prefix = formatted_text(f"{__name__}.add_example_mcpclients()")
     logger.debug("%s Adding built-in MCPClients for user profile: %s", logger_prefix, user_profile)
 
     mcpclient_examples = MCPClientExamples()
