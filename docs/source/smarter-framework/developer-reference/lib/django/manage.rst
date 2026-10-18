@@ -27,3 +27,20 @@ Example
     :undoc-members:
     :show-inheritance:
     :exclude-members: __init__
+
+Example resources
+-----------------
+
+Each Django app that implements SAM resources has an ``add_example_<kinds>`` command that creates
+the example resources of its kinds, from the manifests in its ``data/`` folder, for example
+``add_example_secrets``, ``add_example_connections``, ``add_example_tools`` and
+``add_example_llmclients``. ``manage.py initialize_platform`` runs them in the order of their
+dependencies. SmarterExamplesCommand is the base class of the newest of them: it resolves the
+owner, ``--username``, applies each manifest in a transaction, fills in manifest templates, and
+reports the manifests that failed without stopping the others.
+
+.. autoclass:: smarter.lib.django.management.examples.SmarterExamplesCommand
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: __init__

@@ -25,7 +25,7 @@ with an output guardrail; `twenty-five ready-made MCP clients
 for services such as GitHub, Notion, Linear and Stripe; twenty `sample plugins
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__;
 and `Stackademy
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/stackademy>`__, a
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/stackademy>`__, a
 fictional university whose course catalog is served both from a database and from a REST API.
 
 Smarter also makes the design decisions behind safe AI applications visible, where students can

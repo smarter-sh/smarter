@@ -18,4 +18,4 @@ manage.py Commands
    commands/reset_cache
    commands/send_welcome_email
 
-See also :doc:`commands/add_builtin_budgets`.
+See also :doc:`commands/add_example_budgets`.

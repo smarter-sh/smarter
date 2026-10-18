@@ -9,7 +9,7 @@
 # Its tools take a repository argument, and the search tools search every repository when it is
 # omitted. To read one repository only, use one of the smarter-project-github*.yaml.tpl manifests.
 #
-# This file is a string.Template: add_builtin_mcpclients fills in the scheme and domain of the
+# This file is a string.Template: add_example_mcpclients fills in the scheme and domain of the
 # platform that applies it, from smarter_settings.environment_url and
 # smarter_settings.environment_platform_domain, e.g. https://alpha.platform.example.com, or
 # http://localhost:9357 in local development, so that this MCPClient reads the MCP server of

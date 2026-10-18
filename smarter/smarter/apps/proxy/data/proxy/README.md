@@ -1,6 +1,6 @@
 # Built-in Proxies
 
-Proxy manifests that `manage.py add_builtin_proxies` applies for the Smarter
+Proxy manifests that `manage.py add_example_proxies` applies for the Smarter
 admin, so that every account may use them. `manage.py initialize_platform`
 calls it after `manage.py initialize_providers`, which creates the built-in
 Providers and their API key Secrets, e.g. `openai` and `openai_api_key` from

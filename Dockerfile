@@ -225,8 +225,9 @@ FROM venv AS application
 # git, and is copied into the image with the rest of ./smarter.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/llmclient/data/ ./data/manifests/
 RUN mkdir -p /home/smarter_user/smarter/staticfiles
+# the output folder of manage.py generate_example_manifests. The built-in manifests are read from
+# the apps' data/ folders, in ./smarter, so they are not copied here.
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 
 # Compile the web console's translations, smarter/locale/<language>/LC_MESSAGES/*.po, to the

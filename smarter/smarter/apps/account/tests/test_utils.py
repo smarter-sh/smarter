@@ -274,14 +274,14 @@ class TestAccountUtilsBranches(TestAccountMixin):
             with self.assertRaises(SmarterConfigurationError):
                 utils.get_cached_account_for_user(invalidate=True, user=user)
 
-    def test_add_builtin_budgets_skips_or_creates(self):
+    def test_add_example_budgets_skips_or_creates(self):
         """Existing built-in budgets are skipped, and missing ones are created."""
         existing = patch.object(utils.Budget.objects, "filter")
         with existing as budget_filter:
             budget_filter.return_value.exists.return_value = True
-            self.assertEqual(utils.add_builtin_budgets(verbose=True), [])
+            self.assertEqual(utils.add_example_budgets(verbose=True), [])
         with existing as budget_filter, patch.object(utils.Budget.objects, "create") as create:
             budget_filter.return_value.exists.return_value = False
-            created = utils.add_builtin_budgets(verbose=True)
+            created = utils.add_example_budgets(verbose=True)
         self.assertEqual(len(created), create.call_count)
         self.assertGreater(len(created), 0)

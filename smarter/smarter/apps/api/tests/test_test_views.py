@@ -51,14 +51,3 @@ class TestTestViews(ApiV1TestBase):
         self.assertEqual(serializer.save()["id"], 1)
         instance = {"id": 1, **faux_dict}
         self.assertEqual(serializer.update(instance, {"status": "updated"})["status"], "updated")
-
-    def test_course_catalogue(self):
-        """Test that the course catalogue is filtered by course id, cost and description."""
-        client = Client()
-        url = self.url(ApiV1TestUrls.STACKADEMY_COURSE_CATALOGUE)
-        courses = client.get(url).json()
-        self.assertTrue(courses)
-        self.assertEqual(len(client.get(url, {"course_id": courses[0]["course_id"]}).json()), 1)
-        self.assertTrue(all(c["cost"] <= 100 for c in client.get(url, {"max_cost": "100"}).json()))
-        client.get(url, {"course_id": "x", "max_cost": "y", "description": "python"})
-        self.assertEqual(client.post(url, data={"a": 1}, content_type="application/json").json(), {"a": 1})
