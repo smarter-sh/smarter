@@ -24,6 +24,10 @@ Behavior
     :class:`smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware`.
     The Prompt Passthrough's Server Logs tab streams the logs of each prompt
     that it sends this way.
+- Streams only the records of one chat, when the ``session_key`` query
+    parameter is set: the records of the requests to an LLMClient's api with
+    that chat session key. Smarter Chat's Console streams the logs of its chat
+    this way.
 - Emits a retry hint and keepalive comments to keep long-lived connections
     healthy through intermediate proxies.
 - Closes the Redis Pub/Sub connection when the stream terminates.
@@ -60,6 +64,7 @@ from smarter.lib.logging.redis_log_handler import (
     job_id_factory,
     stream_key,
     valid_request_id,
+    valid_session_key,
 )
 
 if TYPE_CHECKING:
@@ -230,11 +235,48 @@ def _is_other_request(payload_text: str, request_id: Optional[str]) -> bool:
     return not isinstance(payload_json, dict) or payload_json.get("request_id") != request_id
 
 
-def _should_skip(payload_text: str, min_level: int, request_id: Optional[str]) -> bool:
+def _session_key(request: HttpRequest) -> Optional[str]:
+    """
+    Return the chat session key whose records a stream sends, or None for every record.
+
+    :param request: The stream's request. Its ``session_key`` query parameter is the session key.
+    :type request: django.http.HttpRequest
+    :return: The session key, or None when the parameter is missing or is not a valid session key.
+    :rtype: Optional[str]
+    """
+    return valid_session_key(request.GET.get("session_key"))
+
+
+def _is_other_session(payload_text: str, session_key: Optional[str]) -> bool:
+    """
+    Return True when a stream sends only one chat's records, and a payload is not one of them.
+
+    Payloads that aren't JSON log records carry no session key, so they are not the chat's.
+
+    :param payload_text: The log record, as JSON, or as plain text.
+    :type payload_text: str
+    :param session_key: The chat session key whose records are streamed, or None for every record.
+    :type session_key: Optional[str]
+    :return: True if the record should not be streamed.
+    :rtype: bool
+    """
+    if not session_key:
+        return False
+    try:
+        payload_json = json.loads(payload_text)
+    except (ValueError, TypeError):
+        return True
+    return not isinstance(payload_json, dict) or payload_json.get("session_key") != session_key
+
+
+def _should_skip(
+    payload_text: str, min_level: int, request_id: Optional[str], session_key: Optional[str] = None
+) -> bool:
     """
     Return True when a stream does not send a payload.
 
-    See :func:`_should_skip_stream_internal_log`, :func:`_is_below_level` and :func:`_is_other_request`.
+    See :func:`_should_skip_stream_internal_log`, :func:`_is_below_level`, :func:`_is_other_request`
+    and :func:`_is_other_session`.
 
     :param payload_text: The log record, as JSON, or as plain text.
     :type payload_text: str
@@ -242,6 +284,8 @@ def _should_skip(payload_text: str, min_level: int, request_id: Optional[str]) -
     :type min_level: int
     :param request_id: The request id whose records are streamed, or None for every record.
     :type request_id: Optional[str]
+    :param session_key: The chat session key whose records are streamed, or None for every record.
+    :type session_key: Optional[str]
     :return: True if the record should not be streamed.
     :rtype: bool
     """
@@ -249,11 +293,16 @@ def _should_skip(payload_text: str, min_level: int, request_id: Optional[str]) -
         _should_skip_stream_internal_log(payload_text)
         or _is_below_level(payload_text, min_level)
         or _is_other_request(payload_text, request_id)
+        or _is_other_session(payload_text, session_key)
     )
 
 
 async def _replay_stream_history(
-    redis_cache: "Redis", channel: str, min_level: int = logging.NOTSET, request_id: Optional[str] = None
+    redis_cache: "Redis",
+    channel: str,
+    min_level: int = logging.NOTSET,
+    request_id: Optional[str] = None,
+    session_key: Optional[str] = None,
 ) -> AsyncIterator[str]:
     """
     Replay persisted Redis stream entries as SSE frames before live Pub/Sub.
@@ -280,6 +329,10 @@ async def _replay_stream_history(
         The request id whose records are replayed, or None for every record.
         See :func:`_is_other_request`.
     :type request_id: Optional[str]
+    :param session_key:
+        The chat session key whose records are replayed, or None for every
+        record. See :func:`_is_other_session`.
+    :type session_key: Optional[str]
     :yields:
         Individual SSE frame fragments for each persisted log payload. Each
         payload is emitted as one or more ``data:`` lines followed by a blank
@@ -324,7 +377,7 @@ async def _replay_stream_history(
             fields = payload or {}
             raw = fields.get("data", fields.get(b"data", ""))
             decoded = _decode_redis_payload(raw)
-            if _should_skip(decoded, min_level, request_id):
+            if _should_skip(decoded, min_level, request_id, session_key):
                 # Advance the cursor past this entry even though we're dropping it,
                 # so the next batch starts from the correct position.
                 upper_bound = f"({_decode_redis_payload(entry_id)}"
@@ -359,7 +412,8 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     ``smarter_settings.log_level``. See :func:`_min_log_level`.
 
     With the ``request_id`` query parameter, only the records of that request are
-    streamed. See :func:`_request_id`.
+    streamed. See :func:`_request_id`. With the ``session_key`` query parameter,
+    only the records of that chat are streamed. See :func:`_session_key`.
 
     :param request: Incoming HTTP request. The view requires authentication
         via :func:`django.contrib.auth.decorators.login_required`.
@@ -392,12 +446,14 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     logger_prefix = logging.formatted_text(f"{__name__}.stream_user_logs()")
     min_level = _min_log_level(request)
     request_id = _request_id(request)
+    session_key = _session_key(request)
     logger.info(
-        "%s called for user_context='%s' min_level=%s request_id=%s",
+        "%s called for user_context='%s' min_level=%s request_id=%s session_key=%s",
         logger_prefix,
         user_context,
         logging.getLevelName(min_level),
         request_id,
+        session_key,
     )
 
     if not smarter_settings.enable_dashboard_server_logs:
@@ -445,7 +501,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
             yield "retry: 3000\n\n"
 
             try:
-                async for event in _replay_stream_history(redis_cache, channel, min_level, request_id):
+                async for event in _replay_stream_history(redis_cache, channel, min_level, request_id, session_key):
                     yield event
             except RedisError:
                 logger.exception("%s Failed to replay Redis stream history for log streaming.", logger_prefix)
@@ -460,7 +516,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
                 if message and message.get("type") == "message":
                     raw = message.get("data", "")
                     decoded = _decode_redis_payload(raw)
-                    if _should_skip(decoded, min_level, request_id):
+                    if _should_skip(decoded, min_level, request_id, session_key):
                         continue
                     for frame in _iter_sse_data_frames(decoded):
                         yield frame

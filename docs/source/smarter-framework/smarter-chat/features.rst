@@ -74,7 +74,10 @@ and the tokens it charged, and the prompt's progress. In production mode, the th
 conversation as the LLMClient's users see it, and the Console and the button that shows and hides
 it are hidden too. Switching back to sandbox mode restores the Console as you left it.
 
-The Console's Server Logs tab follows the mode: in sandbox mode it streams every log record, DEBUG
+The Console's Server Logs tab shows the server logs of its own chat session: the records of the
+requests that carry the chat's session key, so that other chats, and other work on your account,
+stay out of it. A new chat has a new session key, and its Server Logs tab starts empty. The tab
+follows the mode: in sandbox mode it streams every log record of the chat, DEBUG
 included, and in production mode only the records at the platform's log level
 (``smarter_settings.log_level``) and above. Switching modes reconnects the stream, which replays
 the recent history at the new level.
@@ -165,8 +168,11 @@ The Console is a simulated terminal beside the chat. Its tabs display, as JSON:
    * - Tab
      - Contents
    * - Server Logs
-     - Your server logs, as they stream in, in the colors and font of the web console's log viewer.
-       Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Present only
+     - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.
+       Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Blocks of
+       pretty-printed JSON, such as a prompt's request and response, are collapsed to their first
+       line and their length: each block's **+** button expands it, and **Expand JSON** expands or
+       collapses all of them. Copying the lines copies the JSON in full. Present only
        when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
        then selected first. A new chat clears it.
    * - Api Calls

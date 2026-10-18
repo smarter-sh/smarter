@@ -27,6 +27,7 @@ from smarter.apps.llmtool.plugin.api import (
     ApiPlugin,
     SmarterApiPluginError,
 )
+from smarter.apps.llmtool.plugin.request import API_PLUGIN_REQUEST_SIGNALS
 from smarter.apps.llmtool.serializers import PluginApiSerializer
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
@@ -38,8 +39,10 @@ from .base_classes import (
     API_REQUEST_PATCH,
     LIVE_API_PROBE_URL,
     PluginTestBase,
+    capture_request_signals,
     live_api_is_available,
     mock_response,
+    roles,
 )
 
 LIVE_API_AVAILABLE = live_api_is_available()
@@ -684,3 +687,84 @@ class TestApiPlugin(PluginTestBase):
         with mock.patch(API_REQUEST_PATCH, return_value=mock_response([1])) as request:
             self.fresh_api_connection().execute_query("api/v1/x/")
         self.assertEqual(request.call_args.args[1], "http://localhost:9357/api/v1/x/")
+
+    # =========================================================================
+    # ApiPlugin: request lifecycle signals
+    # =========================================================================
+    def test_api_lifecycle(self):
+        """Test the signals of a request: started, authenticated, responded, completed."""
+        plugin = self.load_api_plugin()
+        with capture_request_signals(API_PLUGIN_REQUEST_SIGNALS) as received:
+            retval, _ = self.api_call(plugin, {"kind": "list"})
+        self.assertEqual(roles(received), ["started", "authenticated", "responded", "completed"])
+        started, authenticated, responded, completed = (kwargs for _, kwargs in received)
+        self.assertIs(started["plugin"], plugin)
+        self.assertEqual(started["function_args"], {"kind": "list"})
+        self.assertEqual(authenticated["connection"], API_CONNECTION_NAME)
+        self.assertEqual(authenticated["status_code"], 200)
+        self.assertEqual(authenticated["auth_method"], plugin.plugin_data.connection.auth_method)  # type: ignore[union-attr]
+        self.assertEqual(responded["response"], retval)
+        self.assertFalse(responded["cached"])
+        self.assertEqual(responded["method"], "GET")
+        self.assertTrue(completed["success"])
+
+    def test_api_lifecycle_cached(self):
+        """Test that a cached response is responded as cached, without authenticating."""
+        with mock.patch(API_REQUEST_PATCH, return_value=mock_response([{"id": 1}])):
+            self.load_api_plugin().tool_call_fetch_plugin_response({"kind": "list"})
+            with capture_request_signals(API_PLUGIN_REQUEST_SIGNALS) as received:
+                self.load_api_plugin().tool_call_fetch_plugin_response({"kind": "list"})
+        self.assertEqual(roles(received), ["started", "responded", "completed"])
+        self.assertTrue(received[1][1]["cached"])
+
+    def test_api_lifecycle_authentication_failed(self):
+        """Test that HTTP 401 and 403 send authentication_failed, failed and completed."""
+        for status_code in (401, 403):
+            cache.clear()
+            with capture_request_signals(API_PLUGIN_REQUEST_SIGNALS) as received:
+                retval, _ = self.api_call(self.load_api_plugin(), {"kind": "list"}, status_code=status_code)
+            self.assertEqual(retval, "")
+            self.assertEqual(roles(received), ["started", "authentication_failed", "failed", "completed"], status_code)
+            self.assertEqual(received[1][1]["status_code"], status_code)
+            self.assertEqual(received[1][1]["error"], f"HTTP {status_code}")
+            self.assertFalse(received[3][1]["success"])
+
+    def test_api_lifecycle_http_error(self):
+        """Test that another HTTP error authenticates, and then fails."""
+        with capture_request_signals(API_PLUGIN_REQUEST_SIGNALS) as received:
+            self.api_call(self.load_api_plugin(), {"kind": "list"}, status_code=500)
+        self.assertEqual(roles(received), ["started", "authenticated", "failed", "completed"])
+        self.assertEqual(received[1][1]["status_code"], 500)
+
+    def test_api_lifecycle_connection_error(self):
+        """Test that a server that cannot be reached neither authenticates, nor fails to authenticate."""
+        with mock.patch(API_REQUEST_PATCH, side_effect=requests.exceptions.ConnectionError("boom")):
+            with capture_request_signals(API_PLUGIN_REQUEST_SIGNALS) as received:
+                self.load_api_plugin().tool_call_fetch_plugin_response({"kind": "list"})
+        self.assertEqual(roles(received), ["started", "failed", "completed"])
+
+    def test_api_lifecycle_empty_response(self):
+        """Test that an empty response is responded as an empty string, and succeeds."""
+        with capture_request_signals(API_PLUGIN_REQUEST_SIGNALS) as received:
+            self.api_call(self.load_api_plugin(), {"kind": "list"}, json_data=[])
+        self.assertEqual(roles(received), ["started", "authenticated", "responded", "completed"])
+        self.assertEqual(received[2][1]["response"], "")
+        self.assertTrue(received[3][1]["success"])
+
+    def test_api_lifecycle_invalid_arguments(self):
+        """Test that invalid arguments raise, after sending failed and completed."""
+        with capture_request_signals(API_PLUGIN_REQUEST_SIGNALS) as received:
+            with self.assertRaises(SmarterApiPluginError):
+                self.load_api_plugin().tool_call_fetch_plugin_response("{not json")
+        self.assertEqual(roles(received), ["started", "failed", "completed"])
+
+    def test_api_connection_last_status_code(self):
+        """Test that ApiConnection.execute_query() records the response's status code."""
+        connection = self.fresh_api_connection()
+        self.assertIsNone(connection.last_status_code)
+        with mock.patch(API_REQUEST_PATCH, return_value=mock_response(None, 401)):
+            connection.execute_query("/x/")
+        self.assertEqual(connection.last_status_code, 401)
+        with mock.patch(API_REQUEST_PATCH, side_effect=requests.exceptions.Timeout("boom")):
+            connection.execute_query("/x/")
+        self.assertIsNone(connection.last_status_code)
