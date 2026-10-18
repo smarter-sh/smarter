@@ -432,7 +432,7 @@ They're in the Smarter repository, under
 - ``llmclient-math.yaml``: a chalkboard, with a handwriting font and a wooden frame.
 - ``llmclient-weather.yaml``: a sunny sky, with round, puffy bubbles.
 - ``llmclient-research-analyst.yaml``: a library's reading room, in a serif font.
-- ``llmclient-smarter.yaml``: Smarter's own orange and gold.
+- ``llmclient-smarter-developer.yaml``: Smarter's own orange, on GitHub's grays.
 
 
 Troubleshooting

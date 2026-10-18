@@ -1,4 +1,4 @@
-"""Deploy the example LLMClients of an account, which ``manage.py add_example_llmclients`` applies."""
+"""Deploy the example and Stackademy LLMClients of an account, which ``manage.py add_example_llmclients`` applies."""
 
 import glob
 import os
@@ -11,7 +11,7 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     smarter_cached_objects,
 )
-from smarter.apps.llmclient.const import EXAMPLE_LLMCLIENTS_PATH
+from smarter.apps.llmclient.const import EXAMPLE_LLMCLIENTS_PATH, STACKADEMY_PATH
 from smarter.apps.llmclient.management.commands.add_example_llmclients import (
     Command as AddExampleLLMClientsCommand,
 )
@@ -27,8 +27,9 @@ class Command(SmarterCommand):
     """
     Deploy the example LLMClients of a Smarter account.
 
-    The example LLMClients are those in smarter/apps/llmclient/data/llm-clients, which
-    ``manage.py add_example_llmclients`` applies for the account's admin. This command creates
+    The example LLMClients are those in smarter/apps/llmclient/data/llm-clients and
+    smarter/apps/llmclient/data/stackademy, which ``manage.py add_example_llmclients`` applies for
+    the account's admin. This command creates
     nothing: it deploys each of them that is not deployed yet, as a Celery task, which creates its
     DNS record. The deployed LLMClients are accessible at URLs of the form
     ``[llmclient-name].[account-number].api.example.com/llm-client/``.
@@ -44,7 +45,8 @@ class Command(SmarterCommand):
     """
 
     help = (
-        "Deploy the example LLMClients of an account, in smarter/apps/llmclient/data/llm-clients. "
+        "Deploy the example LLMClients of an account, in smarter/apps/llmclient/data/llm-clients and "
+        "smarter/apps/llmclient/data/stackademy. "
         "Run add_example_llmclients first: this command creates nothing."
     )
 
@@ -126,11 +128,12 @@ class Command(SmarterCommand):
         self.user_profile = UserProfile.get_cached_object(user=admin, account=account)  # type: ignore[arg-type]
         self.stdout.write(self.style.NOTICE(f"Deploying the example LLMClients of account {account_number}."))
 
-        failed = [
-            os.path.basename(filespec)
-            for filespec in sorted(glob.glob(os.path.join(EXAMPLE_LLMCLIENTS_PATH, "*.yaml")))
-            if not self.deploy_llmclient(filespec)
+        filespecs = [
+            filespec
+            for path in (EXAMPLE_LLMCLIENTS_PATH, STACKADEMY_PATH)
+            for filespec in sorted(glob.glob(os.path.join(path, "*.yaml")))
         ]
+        failed = [os.path.basename(filespec) for filespec in filespecs if not self.deploy_llmclient(filespec)]
         if failed:
             msg = f"{len(failed)} example LLMClients failed to deploy: {', '.join(failed)}"
             self.handle_completed_failure(msg=msg)
