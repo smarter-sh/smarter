@@ -109,5 +109,5 @@
 
 
 {% block javascript_extra %}
-  <script src="{% static 'js/account/authentication/sign-in.js' %}"></script>
+  <script src="{% static 'js/account/authentication/sign-in.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}

@@ -13,6 +13,7 @@ This module provides Django middleware that injects a per-request logging contex
 - **Real-time log filtering**: Supports real-time log filtering in the Smarter Terminal Emulator for improved debugging and monitoring.
 - **User-scoped or anonymous request tracing**: Authenticated users are identified in logs by their model and username; anonymous users receive a UUID-based identifier.
 - **Request-scoped log streams**: the request id that a web console React app sends in the ``X-Smarter-RequestId`` header is attached to every log record of the request, so that the app can stream the server logs of that one request, e.g. the Server Logs tab of the Prompt Passthrough.
+- **Chat-scoped log streams**: the chat session key of a request to an LLMClient's api, its ``session_key`` query parameter, is attached to every log record of the request, so that Smarter Chat's Console can stream the server logs of that one chat.
 
 Features
 --------
@@ -65,8 +66,10 @@ from .redis_log_handler import (
     get_user_context,
     job_id_factory,
     request_id_context,
+    session_key_context,
     user_id_context,
     valid_request_id,
+    valid_session_key,
 )
 
 REQUEST_ID_HEADER = "X-Smarter-RequestId"
@@ -99,7 +102,9 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
     The request's ``X-Smarter-RequestId`` header, when it is a valid request id, is set in
     :obj:`smarter.lib.logging.redis_log_handler.request_id_context`, so that each log record of
-    the request carries it.
+    the request carries it. Likewise, the request's ``session_key`` query parameter, when it is a
+    valid chat session key, is set in
+    :obj:`smarter.lib.logging.redis_log_handler.session_key_context`.
     """
 
     sync_capable = True
@@ -120,11 +125,13 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         logger.debug("%s called. Setting context=%s", self.formatted_class_name, context)
         token = self.set_logging_context(context)
         request_token = request_id_context.set(self.get_request_id(request))
+        session_token = session_key_context.set(self.get_session_key(request))
         # purge_log_context(context)
 
         try:
             return self.get_response(request)
         finally:
+            session_key_context.reset(session_token)
             request_id_context.reset(request_token)
             self.reset_logging_context(token)
             logger.debug("%s reset logging context=%s", self.formatted_class_name, context)
@@ -141,10 +148,12 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         logger.debug("%s setting async logging context=%s", self.formatted_class_name, context)
         token = self.set_logging_context(context)
         request_token = request_id_context.set(self.get_request_id(request))
+        session_token = session_key_context.set(self.get_session_key(request))
 
         try:
             return await async_get_response(request)
         finally:
+            session_key_context.reset(session_token)
             request_id_context.reset(request_token)
             self.reset_logging_context(token)
             logger.debug("%s reset async logging context=%s", self.formatted_class_name, context)
@@ -178,6 +187,21 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         """
         headers = getattr(request, "headers", None)
         return valid_request_id(headers.get(REQUEST_ID_HEADER) if headers is not None else None)
+
+    @staticmethod
+    def get_session_key(request: HttpRequest) -> str | None:
+        """
+        Return the request's ``session_key`` query parameter, if it is a valid chat session key.
+
+        Smarter Chat sends its chat session key with each request to an LLMClient's api.
+
+        :param request: The request.
+        :type request: django.http.HttpRequest
+        :return: The chat session key, or None.
+        :rtype: str | None
+        """
+        query = getattr(request, "GET", None)
+        return valid_session_key(query.get("session_key") if query is not None else None)
 
     def get_sync_context(self, request: HttpRequest) -> str:
         """Resolve logging context for sync requests."""

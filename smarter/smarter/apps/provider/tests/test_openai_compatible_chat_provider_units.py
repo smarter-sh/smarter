@@ -539,3 +539,20 @@ class TestChatProviderBaseUnits(SmarterTestBase):
             ):
                 with self.assertRaises(SmarterValueError):
                     self.client.get_input_text_prompt({"input_text": "x"})
+
+    def test_get_message_thread_adds_the_date_time_once(self):
+        """A message thread without a system prompt gets the LLMClient's system role, with one date/time line."""
+        llmclient = MagicMock(default_system_role="You are a test.")
+        llmclient.default_system_role_enhanced = f"{base_module.get_date_time_string()}You are a test."
+        for prompt, expected in (
+            (MagicMock(llmclient=llmclient), "You are a test."),
+            (MagicMock(llmclient=None), ""),
+        ):
+            with self.subTest(expected=expected):
+                patch.stopall()
+                self.patch_properties(prompt=prompt)
+                messages = self.client.get_message_thread({"messages": [{"role": "user", "content": "hi"}]})
+                system_role = messages[0]["content"]
+                self.assertEqual(messages[0]["role"], "system")
+                self.assertEqual(system_role.count("The current date/time is"), 1)
+                self.assertTrue(system_role.endswith(expected))

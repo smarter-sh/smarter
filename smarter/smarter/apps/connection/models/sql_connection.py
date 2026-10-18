@@ -86,6 +86,13 @@ class SqlConnection(ConnectionBase):
 
     _connection: Optional[BaseDatabaseWrapper] = None
 
+    connected: Optional[bool] = None
+    """
+    Whether the most recent :meth:`execute_query` established a database connection, which.
+
+    includes authenticating to the database. ``None`` until a query is executed.
+    """
+
     def __enter__(self) -> "SqlConnection":
         """
         Use the SQL connection as a context manager, which closes its database.
@@ -681,6 +688,9 @@ class SqlConnection(ConnectionBase):
         """
         Execute a SQL query and return the results as a JSON string.
 
+        Sets :attr:`connected`, so that a caller can tell a failed connection, such as rejected
+        credentials, from a failed query.
+
         :param sql: The SQL query to execute.
         :param limit: Optional limit on the number of rows to return.
         :return: JSON string of query results if successful, otherwise False.
@@ -707,7 +717,8 @@ class SqlConnection(ConnectionBase):
             # Convert to JSON string (optional)
             return json.dumps(result)
 
-        if not isinstance(self.connection, BaseDatabaseWrapper):
+        self.connected = isinstance(self.connection, BaseDatabaseWrapper)
+        if not self.connected:
             return False
         query_connection = self.connection
         sql_connection_query_attempted.send(sender=self.__class__, connection=self, sql=sql, limit=limit)

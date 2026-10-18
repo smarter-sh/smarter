@@ -76,6 +76,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
+from .request import SQL_PLUGIN_REQUEST_SIGNALS, PluginRequest
 
 
 # pylint: disable=W0613
@@ -725,152 +726,172 @@ class SqlPlugin(PluginBase):
         :param function_args: Arguments for the function call, as a dict, list, or JSON string.
         :return: The result of the SQL query as a string, or an empty string if no results.
         :raises SmarterSqlPluginError: If plugin data or SQL connection is invalid, or arguments are malformed.
+
+        Sends the SqlPlugin request lifecycle signals, from ``sql_plugin_request_started`` to
+        ``sql_plugin_request_completed``. See :py:mod:`smarter.apps.llmtool.plugin.request`.
         """
-        logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
+        with PluginRequest(
+            SQL_PLUGIN_REQUEST_SIGNALS, sender=self.__class__, plugin=self, function_args=function_args
+        ) as plugin_request:
+            logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
 
-        def sql_value(val, backslash_escapes: bool):
-            if val is None:
-                return "NULL"
-            if isinstance(val, bool):
-                return "TRUE" if val else "FALSE"
-            if isinstance(val, (int, float)):
-                return str(val)
-            # everything else is quoted as a string literal. json encode lists and dicts
-            # rather than interpolating their raw python repr into the query.
-            if not isinstance(val, str):
-                val = json.dumps(val)
-            if backslash_escapes:
-                # MySQL and MariaDB treat backslash as an escape character inside string
-                # literals, which would otherwise allow a value to escape its closing quote.
-                val = val.replace("\\", "\\\\")
-            # Escape single quotes for SQL
-            return "'" + val.replace("'", "''") + "'"
+            def sql_value(val, backslash_escapes: bool):
+                if val is None:
+                    return "NULL"
+                if isinstance(val, bool):
+                    return "TRUE" if val else "FALSE"
+                if isinstance(val, (int, float)):
+                    return str(val)
+                # everything else is quoted as a string literal. json encode lists and dicts
+                # rather than interpolating their raw python repr into the query.
+                if not isinstance(val, str):
+                    val = json.dumps(val)
+                if backslash_escapes:
+                    # MySQL and MariaDB treat backslash as an escape character inside string
+                    # literals, which would otherwise allow a value to escape its closing quote.
+                    val = val.replace("\\", "\\\\")
+                # Escape single quotes for SQL
+                return "'" + val.replace("'", "''") + "'"
 
-        def interpolate(sql, params, backslash_escapes: bool):
-            def repl(match):
-                key = match.group(1)
-                return sql_value(params.get(key), backslash_escapes)
+            def interpolate(sql, params, backslash_escapes: bool):
+                def repl(match):
+                    key = match.group(1)
+                    return sql_value(params.get(key), backslash_escapes)
 
-            return re.sub(r"\{(\w+)\}", repl, sql)
+                return re.sub(r"\{(\w+)\}", repl, sql)
 
-        if not self.plugin_data:
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
-            )
-        sql_connection = self.plugin_data.connection
-        if not isinstance(sql_connection, SqlConnection):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data SqlConnection is not a valid SqlConnection instance."
-            )
-
-        function_args = function_args or []
-        if isinstance(function_args, str):
-            try:
-                function_args = json.loads(function_args)
-            except json.JSONDecodeError as e:
+            if not self.plugin_data:
                 raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args is not a valid JSON string. Error: {e}"
-                ) from e
-        if isinstance(function_args, dict):
-            function_args = [function_args]
-
-        if not isinstance(function_args, list):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a dict or a JSON string."
-            )
-
-        # combine the list of dictionaries into a single dictionary
-        params = {}
-        for d in function_args:
-            if not isinstance(d, dict):
-                raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
                 )
-            params.update(d)
-
-        # example sql query:
-        # SELECT c.course_code, c.course_name, c.description, prerequisite.course_code AS prerequisite_course_code
-        # FROM courses c
-        #      LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
-        # WHERE ((description LIKE '%' || {description}) OR ({description} IS NULL))
-        #   AND (c.cost <= {max_cost} OR {max_cost} IS NULL)
-        # ORDER BY c.prerequisite_id;
-        sql = self.plugin_data.sql_query
-        if not isinstance(sql, str):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} sql_query must be a string."
-            )
-
-        # function_args example: [{"description":"AI"}]
-        # iterate the list and replace the placeholders in the SQL query
-        # for arg in function_args:
-        #     if not isinstance(arg, dict):
-        #         raise SmarterSqlPluginError(
-        #             f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
-        #         )
-        #     for key, value in arg.items():
-        #         if not isinstance(key, str):
-        #             raise SmarterSqlPluginError(
-        #                 f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args keys must be strings."
-        #             )
-        #         sql = sql.replace(f"{{{key}}}", str(value))
-
-        # normalize the query template *before* interpolating the arguments, so that
-        # the normalization cannot alter the arguments, nor their escaping.
-        sql = sql.strip()
-        sql = sql.replace("\n", " ")
-        sql = re.sub(r"\\.", "", sql)
-        sql = interpolate(sql, params, backslash_escapes="mysql" in str(sql_connection.db_engine).lower())
-        if not sql.endswith(";"):
-            sql += ";"
-
-        logger.debug(
-            "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
-        )
-
-        limit = (
-            self.plugin_data.limit
-            if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
-            else MAX_SQL_QUERY_LENGTH
-        )
-
-        # the cache key must include everything that can alter the result,
-        # including the connection, since identical sql can run against different databases.
-        @cache_results(timeout=PluginCacheTtl.SQL)
-        def get_cached_query_result(connection_id: int, sql: str, limit: int) -> Union[str, bool]:
-            retval = sql_connection.execute_query(sql=sql, limit=limit)
-            if retval is False:
-                # execute_query() returns False when the query fails. raise rather than
-                # return so that failed queries are never cached. any other unexpected
-                # type is returned, and rejected below, so that it isn't mistaken for a
-                # failed query.
+            sql_connection = self.plugin_data.connection
+            if not isinstance(sql_connection, SqlConnection):
                 raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query failed: {sql}"
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data SqlConnection is not a valid SqlConnection instance."
                 )
+
+            function_args = function_args or []
+            if isinstance(function_args, str):
+                try:
+                    function_args = json.loads(function_args)
+                except json.JSONDecodeError as e:
+                    raise SmarterSqlPluginError(
+                        f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args is not a valid JSON string. Error: {e}"
+                    ) from e
+            if isinstance(function_args, dict):
+                function_args = [function_args]
+
+            if not isinstance(function_args, list):
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a dict or a JSON string."
+                )
+
+            # combine the list of dictionaries into a single dictionary
+            params = {}
+            for d in function_args:
+                if not isinstance(d, dict):
+                    raise SmarterSqlPluginError(
+                        f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+                    )
+                params.update(d)
+
+            # example sql query:
+            # SELECT c.course_code, c.course_name, c.description, prerequisite.course_code AS prerequisite_course_code
+            # FROM courses c
+            #      LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
+            # WHERE ((description LIKE '%' || {description}) OR ({description} IS NULL))
+            #   AND (c.cost <= {max_cost} OR {max_cost} IS NULL)
+            # ORDER BY c.prerequisite_id;
+            sql = self.plugin_data.sql_query
+            if not isinstance(sql, str):
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} sql_query must be a string."
+                )
+
+            # function_args example: [{"description":"AI"}]
+            # iterate the list and replace the placeholders in the SQL query
+            # for arg in function_args:
+            #     if not isinstance(arg, dict):
+            #         raise SmarterSqlPluginError(
+            #             f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+            #         )
+            #     for key, value in arg.items():
+            #         if not isinstance(key, str):
+            #             raise SmarterSqlPluginError(
+            #                 f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args keys must be strings."
+            #             )
+            #         sql = sql.replace(f"{{{key}}}", str(value))
+
+            # normalize the query template *before* interpolating the arguments, so that
+            # the normalization cannot alter the arguments, nor their escaping.
+            sql = sql.strip()
+            sql = sql.replace("\n", " ")
+            sql = re.sub(r"\\.", "", sql)
+            sql = interpolate(sql, params, backslash_escapes="mysql" in str(sql_connection.db_engine).lower())
+            if not sql.endswith(";"):
+                sql += ";"
+
             logger.debug(
-                "%s.tool_call_fetch_plugin_response() fetched and cached SQL query result for query: %s",
-                self.formatted_class_name,
-                sql,
+                "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
             )
+
+            limit = (
+                self.plugin_data.limit
+                if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
+                else MAX_SQL_QUERY_LENGTH
+            )
+
+            # the cache key must include everything that can alter the result,
+            # including the connection, since identical sql can run against different databases.
+            # whether the result came from the database, rather than from the cache.
+            executed: list[bool] = []
+
+            @cache_results(timeout=PluginCacheTtl.SQL)
+            def get_cached_query_result(connection_id: int, sql: str, limit: int) -> Union[str, bool]:
+                executed.append(True)
+                sql_connection.connected = None
+                retval = sql_connection.execute_query(sql=sql, limit=limit)
+                if sql_connection.connected is True:
+                    plugin_request.authenticated(connection=sql_connection.name)
+                elif sql_connection.connected is False:
+                    plugin_request.authentication_failed(
+                        connection=sql_connection.name, error="could not connect to the database"
+                    )
+                if retval is False:
+                    # execute_query() returns False when the query fails. raise rather than
+                    # return so that failed queries are never cached. any other unexpected
+                    # type is returned, and rejected below, so that it isn't mistaken for a
+                    # failed query.
+                    raise SmarterSqlPluginError(
+                        f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query failed: {sql}"
+                    )
+                logger.debug(
+                    "%s.tool_call_fetch_plugin_response() fetched and cached SQL query result for query: %s",
+                    self.formatted_class_name,
+                    sql,
+                )
+                return retval
+
+            try:
+                retval = get_cached_query_result(sql_connection.pk, sql, limit)
+            except SmarterSqlPluginError as e:
+                logger.warning("%s. Returning empty string.", e)
+                plugin_request.failed(error=str(e))
+                return ""
+
+            if not retval:
+                logger.warning(
+                    "%s.tool_call_fetch_plugin_response() SQL query returned no results. Returning empty string.",
+                    self.formatted_class_name,
+                )
+                plugin_request.responded(response="", cached=not executed, sql=sql)
+                return ""
+            if not isinstance(retval, (str, list, dict)):
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query returned an unexpected type: {type(retval)}. Expected str, list, or dict."
+                )
+            plugin_request.responded(response=retval, cached=not executed, sql=sql)
             return retval
-
-        try:
-            retval = get_cached_query_result(sql_connection.pk, sql, limit)
-        except SmarterSqlPluginError as e:
-            logger.warning("%s. Returning empty string.", e)
-            return ""
-
-        if not retval:
-            logger.warning(
-                "%s.tool_call_fetch_plugin_response() SQL query returned no results. Returning empty string.",
-                self.formatted_class_name,
-            )
-            return ""
-        if not isinstance(retval, (str, list, dict)):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query returned an unexpected type: {type(retval)}. Expected str, list, or dict."
-            )
-        return retval
 
     def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
         """
