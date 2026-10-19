@@ -1,4 +1,4 @@
-"""Django context processors for account/base.html"""
+"""Django context processors for account/base.html."""
 
 from django.conf import settings
 
@@ -13,7 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 def base(request):
-    """Base context processor for templates that inherit from account/base.html"""
+    """
+    Base context processor for templates that inherit from account/base.html.
+
+    Its urls are web console urls, so they are reversed against ``settings.ROOT_URLCONF``, not the urlconf
+    that django-hosts activated for the request. A deployed LLMClient's host, whose pages are rendered with
+    this processor too, is served by :mod:`smarter.urls.llmclients`, which has none of the console's names.
+    """
     account_context = {
         "account": {
             "registration_url": "/register/",
@@ -25,7 +31,9 @@ def base(request):
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "forgot_password_url": reverse(AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST),
+            "forgot_password_url": reverse(
+                AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST, urlconf=settings.ROOT_URLCONF
+            ),
         }
     }
     if is_authenticated_request(request):
