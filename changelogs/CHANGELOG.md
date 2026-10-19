@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.34.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.2...v0.34.0-alpha.3) (2026-10-19)
+
+### Features
+
+* **prompt:** add the workbench Architecture tab, an LLMClient's tree ([188f0c5](https://github.com/smarter-sh/smarter/commit/188f0c552957d78d8f620bd8db2a2338c7b02a1f))
+
+### Bug Fixes
+
+* **manifest:** add icons, owners and manifest urls to dependency trees ([223d13b](https://github.com/smarter-sh/smarter/commit/223d13be794ca63ae1f14538e3d7d0fd21309751))
+
 ## [0.34.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.1...v0.34.0-alpha.2) (2026-10-19)
 
 ### Features
