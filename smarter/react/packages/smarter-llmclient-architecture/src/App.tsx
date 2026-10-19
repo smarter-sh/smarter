@@ -1,26 +1,29 @@
 /**
  * An LLMClient's architecture: an introduction to SAM resources and their manifests, then the tree of the
- * resources that the LLMClient is built from, as cards that open each resource's manifest in a new tab. The
- * Prompt Engineer's Workbench renders it in its Console's "Architecture" tab.
+ * resources that the LLMClient is built from, as cards that open each resource's manifest in a new tab, then the
+ * next steps for an LLMClient that has no Guardrail, no tools or no styles. The Prompt Engineer's Workbench renders
+ * it in its Console's "Architecture" tab.
  */
 import { useState } from "react";
 import { gettext, interpolate, ngettext } from "@smarter/common";
 
+import GettingStarted from "./components/GettingStarted";
 import Introduction from "./components/Introduction";
 import ResourceTree from "./components/ResourceTree";
 import { DOCS_URLS } from "./lib/const";
 import { branchIds, countResources, depth, type NodeId } from "./lib/tree";
-import type { SAMDependencyTreeNode } from "./lib/types";
+import type { LLMClientArchitecture } from "./lib/types";
 import "./styles.css";
 
 export interface ArchitectureProps {
-  /** The LLMClient's tree, from its architecture view. */
-  tree: SAMDependencyTreeNode;
+  /** The LLMClient's architecture, from its architecture view: its tree, whether it is styled, and links. */
+  architecture: LLMClientArchitecture;
   /** Fetches the tree again, e.g. after a manifest was changed in another tab. Without it, there is no Reload button. */
   onReload?: () => void;
 }
 
-export default function App({ tree, onReload }: ArchitectureProps) {
+export default function App({ architecture, onReload }: ArchitectureProps) {
+  const { tree, styled, links } = architecture;
   const [collapsed, setCollapsed] = useState<ReadonlySet<NodeId>>(() => new Set());
   const branches = branchIds(tree);
   const resources = countResources(tree);
@@ -87,6 +90,7 @@ export default function App({ tree, onReload }: ArchitectureProps) {
           </a>
         </p>
       </section>
+      <GettingStarted tree={tree} styled={styled} links={links} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { stackademyTree } from "@smarter/llmclient-architecture/mocks";
+import { stackademyArchitecture } from "@smarter/llmclient-architecture/mocks";
 import { workbenchPage } from "@smarter/llmclient-deployment/mocks";
 
 import { ApiError, fetchArchitecture, fetchDeploymentPage, fetchManifest } from "@/lib/api";
@@ -20,7 +20,7 @@ describe("the workbench's own requests", () => {
     );
     expect(await fetchManifest(MANIFEST_URL)).toBe(MANIFEST_YAML);
     expect(credentials).toBe("same-origin");
-    expect(await fetchArchitecture(ARCHITECTURE_URL)).toEqual(stackademyTree);
+    expect(await fetchArchitecture(ARCHITECTURE_URL)).toEqual(stackademyArchitecture);
     expect(await fetchDeploymentPage(DEPLOYMENT_URL)).toEqual(workbenchPage);
   });
 

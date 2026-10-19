@@ -27,10 +27,13 @@ class TestLLMClientArchitectureContract(SmarterTestBase):
         self.assertEqual(contract_schema_json(), SCHEMA_PATH.read_text(encoding="utf-8"))
 
     def test_every_field_is_required(self):
-        """A node always has every field, so that the TypeScript types have no optional ones."""
-        node = contract_schema()["$defs"]["SAMDependencyTreeNode"]
-        self.assertEqual(set(node["required"]), set(node["properties"]))
-        self.assertIn("owner", node["properties"])
+        """Every model always has every field, so that the TypeScript types have no optional ones."""
+        definitions = contract_schema()["$defs"]
+        for name in ("LLMClientArchitecture", "LLMClientArchitectureLinks", "SAMDependencyTreeNode"):
+            with self.subTest(name=name):
+                self.assertEqual(set(definitions[name]["required"]), set(definitions[name]["properties"]))
+        self.assertIn("owner", definitions["SAMDependencyTreeNode"]["properties"])
+        self.assertIn("mcpClientsUrl", definitions["LLMClientArchitectureLinks"]["properties"])
 
     def test_export_command(self):
         """The export command writes the schema."""

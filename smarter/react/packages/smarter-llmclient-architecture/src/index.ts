@@ -7,4 +7,4 @@
  */
 export { default as LLMClientArchitecture } from "./App";
 export type { ArchitectureProps } from "./App";
-export type { SAMDependencyTreeNode } from "./lib/types";
+export type { LLMClientArchitecture as LLMClientArchitectureData, SAMDependencyTreeNode } from "./lib/types";

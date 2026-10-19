@@ -1,9 +1,9 @@
 /**
- * Example trees for the stories and tests, as LLMClientArchitectureView returns them: see
+ * Example architectures for the stories and tests, as LLMClientArchitectureView returns them: see
  * smarter.apps.prompt.views.detailviews.prompt_architecture_view. src/contract.test.ts checks that each matches
  * the backend's contract. The workbench's tests and stories use them too, as @smarter/llmclient-architecture/mocks.
  */
-import type { SAMDependencyTreeNode } from "../lib/types";
+import type { LLMClientArchitecture, LLMClientArchitectureLinks, SAMDependencyTreeNode } from "../lib/types";
 
 const OWNER = "Ada Lovelace (ada)";
 
@@ -90,3 +90,24 @@ export const lockedTree: SAMDependencyTreeNode = {
     },
   ],
 };
+
+/** The web console's list pages, as the backend reverses them. */
+export const consoleLinks: LLMClientArchitectureLinks = {
+  guardrailsUrl: "/guardrail/",
+  pluginsUrl: "/llm-tools/",
+  extensionsUrl: "/extensions/",
+  mcpClientsUrl: "/mcpclient/",
+};
+
+/** stackademy_sql, styled: it has everything, so the tab suggests nothing. */
+export const stackademyArchitecture: LLMClientArchitecture = {
+  tree: stackademyTree,
+  styled: true,
+  links: consoleLinks,
+};
+
+/** hello_world, which uses nothing, and isn't styled: the tab suggests a Guardrail, tools and styles. */
+export const leafArchitecture: LLMClientArchitecture = { tree: leafTree, styled: false, links: consoleLinks };
+
+/** An LLMClient with another account's Guardrail, unstyled: the tab suggests tools and styles. */
+export const lockedArchitecture: LLMClientArchitecture = { tree: lockedTree, styled: false, links: consoleLinks };

@@ -278,3 +278,118 @@ a.architecture-card-name:focus {
     transform: none;
   }
 }
+
+/* the next steps, beneath the tree: a section for each thing that the LLMClient is missing */
+.architecture-getting-started {
+  padding: 2.5rem 2rem;
+  border-top: 1px solid var(--bs-gray-200);
+}
+.architecture-getting-started .architecture-kicker {
+  color: var(--bs-primary);
+}
+@media (max-width: 575.98px) {
+  .architecture-getting-started {
+    padding: 1.5rem 1rem;
+  }
+}
+.architecture-suggestion {
+  border: 1px solid var(--bs-gray-200);
+  border-radius: 0.85rem;
+  background-color: var(--bs-gray-100);
+}
+.architecture-suggestion-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background-color: var(--bs-primary-light);
+}
+.architecture-suggestion-icon i {
+  color: var(--bs-primary);
+}
+.architecture-tool {
+  border: 1px solid var(--bs-gray-300);
+  border-radius: 0.75rem;
+  background-color: var(--bs-body-bg);
+}
+.architecture-steps {
+  padding-left: 1.25rem;
+}
+.architecture-steps li + li {
+  margin-top: 0.5rem;
+}
+.architecture-inline-code {
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+/* a manifest excerpt: dark in both modes, like the deployment page's terminals */
+.architecture-snippet {
+  overflow: hidden;
+  border-radius: 0.65rem;
+  background-color: #2b2b2b;
+  box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.12);
+}
+.architecture-snippet-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  background-color: #232323;
+  color: #9a9a9a;
+  font-size: 0.8rem;
+}
+.architecture-snippet-title {
+  flex: 1;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.architecture-snippet-copy {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid #4a4a4a;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: #c8c8c8;
+  font-size: 0.8rem;
+}
+.architecture-snippet-copy i {
+  color: inherit;
+}
+.architecture-snippet-copy:hover,
+.architecture-snippet-copy:focus-visible {
+  border-color: var(--architecture-accent);
+  color: #ffffff;
+}
+.architecture-snippet-code {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  background: transparent;
+  color: #d4d4d4;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  text-align: left;
+  white-space: pre;
+}
+/* Keen styles every <code>: not inside an excerpt. */
+.architecture-snippet-code code {
+  padding: 0;
+  background: none !important;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  box-shadow: none;
+}
+.architecture-snippet-context {
+  color: #6a6a6a;
+}
+.architecture-snippet-added {
+  color: #9cdcfe;
+}

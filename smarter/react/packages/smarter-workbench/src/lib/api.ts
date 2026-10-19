@@ -5,7 +5,7 @@
  * prompt_architecture_view.LLMClientArchitectureView and prompt_deployment_view.LLMClientDeploymentView.
  */
 import { gettext, interpolate } from "@smarter/common";
-import type { SAMDependencyTreeNode } from "@smarter/llmclient-architecture";
+import type { LLMClientArchitectureData } from "@smarter/llmclient-architecture";
 import type { LLMClientDeploymentPage } from "@smarter/llmclient-deployment";
 
 /** A failed request: its message, for the person who opened the tab. */
@@ -40,8 +40,8 @@ export async function fetchManifest(url: string): Promise<string> {
   return manifest;
 }
 
-/** The LLMClient's architecture: the tree of the SAM resources that it is built from. */
-export const fetchArchitecture = (url: string) => getJson<SAMDependencyTreeNode>(url);
+/** The LLMClient's architecture: the tree of the SAM resources that it is built from, and its next steps' data. */
+export const fetchArchitecture = (url: string) => getJson<LLMClientArchitectureData>(url);
 
 /** The LLMClient's deployment page, as the workbench shows it: with its owner and api keys. */
 export const fetchDeploymentPage = (url: string) => getJson<LLMClientDeploymentPage>(url);

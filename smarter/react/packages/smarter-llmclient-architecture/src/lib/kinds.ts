@@ -19,7 +19,8 @@ export interface KindInfo {
 }
 
 const RESOURCES = `${DOCS}/smarter-resources`;
-const PLUGIN_KINDS = [
+/** The kinds of plugin, which share a presentation. */
+export const PLUGIN_KINDS = [
   "Plugin",
   "StaticPlugin",
   "ApiPlugin",
