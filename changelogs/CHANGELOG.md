@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.34.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.1...v0.34.0-alpha.2) (2026-10-19)
+
+### Features
+
+* **prompt:** add the smarter-workbench app, hosting smarter-chat ([bcff773](https://github.com/smarter-sh/smarter/commit/bcff773514c891e891f512a9019a9c7a34d86475))
+
 ## [0.34.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.14...v0.34.0-alpha.1) (2026-10-19)
 
 ### Features
