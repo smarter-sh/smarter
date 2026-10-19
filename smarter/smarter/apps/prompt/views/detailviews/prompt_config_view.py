@@ -193,7 +193,8 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
 
     @property
     def llmclient_helper(self) -> Optional[LLMClientHelper]:
-        if self._llmclient_helper:
+        # "is not None", not truthiness, here and below: see the comment in dispatch_config().
+        if self._llmclient_helper is not None:
             return self._llmclient_helper
         if self.llmclient:
             # throw everything but the kitchen sink at the LLMClientHelper
@@ -215,7 +216,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
                 user=self.user,
                 user_profile=self.user_profile,
             )
-        if self._llmclient_helper:
+        if self._llmclient_helper is not None:
             logger.debug(
                 "%s.llmclient_helper property - instantiated LLMClientHelper with llmclient=%s, name=%s",
                 self.formatted_class_name,
@@ -375,14 +376,14 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         chat_helper = self.session.chat_helper
         session_key = self.session.session_key
         history = PromptChatApiHistory(
-            chat_history=(chat_helper.prompt_history if chat_helper else None) or [],
+            chat_history=(chat_helper.prompt_history if chat_helper is not None else None) or [],
             prompt_tool_call_history=[
                 PromptChatApiPromptToolCall.from_model(row)
-                for row in (chat_helper.prompt_tool_call if chat_helper else [])
+                for row in (chat_helper.prompt_tool_call if chat_helper is not None else [])
             ],
             prompt_plugin_usage_history=[
                 PromptChatApiPromptPluginUsage.from_model(row)
-                for row in (chat_helper.prompt_plugin_usage if chat_helper else [])
+                for row in (chat_helper.prompt_plugin_usage if chat_helper is not None else [])
             ],
             plugin_selector_history=[
                 PromptChatApiPluginSelection.from_model(row)
