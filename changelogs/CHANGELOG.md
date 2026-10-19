@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.8...v0.33.9-alpha.1) (2026-10-19)
+
+### Bug Fixes
+
+* **llmclient:** resolve a deployed llmclient by its full host label ([ec5b4d1](https://github.com/smarter-sh/smarter/commit/ec5b4d1b6d0977646e6d7f28fe0785f42aa43316))
+
 ## [0.33.8](https://github.com/smarter-sh/smarter/compare/v0.33.7...v0.33.8) (2026-10-19)
 
 ### Bug Fixes
