@@ -1,6 +1,9 @@
 """Test the LLMClient model's billing, domain, mode and readiness properties, and its clone()."""
 
+import warnings
 from unittest.mock import MagicMock, patch
+
+from django.urls import get_urlconf, set_urlconf
 
 from smarter.apps.account.tests.factories import (
     factory_account_teardown,
@@ -56,6 +59,28 @@ class TestLLMClientModel(TestAccountMixin):
             self.assertFalse(llmclient.ready)
             llmclient.deployed = True
             self.assertTrue(llmclient.ready)
+
+    def test_urls_on_a_deployed_llmclient_host(self):
+        """The console urls build while a deployed LLMClient's urlconf is active, e.g. for its endpoints page."""
+        expected = self.console_urls()
+        previous = get_urlconf()
+        self.addCleanup(set_urlconf, previous)
+        set_urlconf("smarter.urls.llmclients")
+
+        self.assertEqual(self.console_urls(), expected)
+        self.assertIn(self.llmclient.hashed_id, expected[0])
+
+    def console_urls(self) -> list[str]:
+        """The LLMClient's urls that are reversed from the console urlconf."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            return [
+                self.llmclient.sandbox_url,
+                self.llmclient.manifest_url,
+                self.llmclient.url_llmclient,
+                self.llmclient.url_chat_config,
+                self.llmclient.url_chatapp,
+            ]
 
 
 class TestLLMClientClone(MCPClientTestBase, GuardrailTestBase):
