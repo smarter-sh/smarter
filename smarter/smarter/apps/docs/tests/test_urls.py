@@ -21,6 +21,7 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..const import namespace
+from ..urls import DocsReverseNames
 from ..utils import json_schema_name, manifest_name
 
 logger = getLogger(__name__)
@@ -72,42 +73,42 @@ class TestDocsUrls(SmarterTestBase):
     # -----------------------------------------------------------------------
     def test_url_developer_readme(self) -> None:
         """Test url for developer readme."""
-        url = reverse(f"{namespace}:developer-readme")
+        url = reverse(namespace, DocsReverseNames.developer_readme)
         self.process_url(url)
 
     def test_url_developer_changelog(self) -> None:
         """Test url for developer changelog."""
-        url = reverse(f"{namespace}:developer-changelog")
+        url = reverse(namespace, DocsReverseNames.developer_changelog)
         self.process_url(url)
 
     def test_url_developer_code_of_conduct(self) -> None:
         """Test url for developer code of conduct."""
-        url = reverse(f"{namespace}:developer-code-of-conduct")
+        url = reverse(namespace, DocsReverseNames.developer_code_of_conduct)
         self.process_url(url)
 
     def test_url_developer_makefile(self) -> None:
         """Test url for developer makefile."""
-        url = reverse(f"{namespace}:developer-makefile")
+        url = reverse(namespace, DocsReverseNames.developer_makefile)
         self.process_url(url)
 
     def test_url_developer_extension_protocol(self) -> None:
         """Test url for the developer extension protocol."""
-        url = reverse(f"{namespace}:developer-extension-protocol")
+        url = reverse(namespace, DocsReverseNames.developer_extension_protocol)
         self.process_url(url)
 
     def test_url_developer_requirements(self) -> None:
         """Test url for developer requirements."""
-        url = reverse(f"{namespace}:developer-requirements")
+        url = reverse(namespace, DocsReverseNames.developer_requirements)
         self.process_url(url)
 
     def test_url_developer_dockerfile(self) -> None:
         """Test url for developer dockerfile."""
-        url = reverse(f"{namespace}:developer-dockerfile")
+        url = reverse(namespace, DocsReverseNames.developer_dockerfile)
         self.process_url(url)
 
     def test_url_developer_docker_compose(self) -> None:
         """Test url for developer docker compose."""
-        url = reverse(f"{namespace}:developer-docker-compose")
+        url = reverse(namespace, DocsReverseNames.developer_docker_compose)
         self.process_url(url)
 
     # -----------------------------------------------------------------------
