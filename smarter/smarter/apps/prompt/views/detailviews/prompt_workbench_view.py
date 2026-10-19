@@ -301,6 +301,25 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         )
 
     @property
+    def architecture_url(self) -> str:
+        """
+        The url of the llmclient's architecture, as JSON, which the workbench's Console draws in its "Architecture" tab.
+
+        :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientArchitectureView`, or an
+            empty string if there is no llmclient, in which case the Console has no "Architecture" tab.
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseNames
+
+        if not self.llmclient:
+            return ""
+        return reverse(
+            f"{PromptReverseNames.namespace}:{PromptReverseNames.architecture_by_hashed_id}",
+            kwargs={"hashed_id": self.llmclient.hashed_id},
+        )
+
+    @property
     def deployment_url(self) -> str:
         """The url of the llmclient's deployment page's data, which the workbench's Console displays in its.
 
@@ -471,6 +490,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "smarter_request_id": self.generate_smarter_request_id(),
                 "log_stream_url": self.log_stream_url,
                 "manifest_url": self.manifest_url,
+                "architecture_url": self.architecture_url,
                 "deployment_url": self.deployment_url,
                 "llmclient_list_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "apply_api_url": manifest_editor["apply_api_url"],

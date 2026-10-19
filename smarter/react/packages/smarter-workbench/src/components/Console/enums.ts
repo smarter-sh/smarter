@@ -1,9 +1,10 @@
 /**
- * The Console's menu items: the manifest, the deployment, the configuration, the chat session's
- * tool calls, and the server logs.
+ * The Console's menu items: the manifest, the architecture, the deployment, the configuration, the chat
+ * session's tool calls, and the server logs.
  */
 export const MenuItems = {
   MANIFEST: "manifest",
+  ARCHITECTURE: "architecture",
   DEPLOYMENT: "deployment",
   CHAT_CONFIG: "chat_config",
   CHAT_TOOL_CALL_HISTORY: "chat_tool_call_history",

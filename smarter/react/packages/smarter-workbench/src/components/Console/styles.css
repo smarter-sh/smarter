@@ -267,6 +267,7 @@ div.app-container {
 /* the manifest editor, and the LLMClient's deployment page, as tall as the Console's output. Each scrolls on its
    own, and its text is aligned as on its own page, rather than centered, as the terminal's is. */
 .console-manifest-editor,
+.console-architecture-page,
 .console-deployment-page {
   display: block;
   width: 100%;
@@ -278,6 +279,7 @@ div.app-container {
 /* .console-output is a flex box, which would otherwise override the hidden attribute. */
 .console-output[hidden],
 .console-manifest[hidden],
+.console-architecture[hidden],
 .console-deployment[hidden] {
   display: none;
 }

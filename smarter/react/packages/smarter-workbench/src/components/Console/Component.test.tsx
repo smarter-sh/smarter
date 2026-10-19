@@ -102,12 +102,13 @@ describe("Console", () => {
     vi.unstubAllGlobals();
   });
 
-  it("lists the manifest first, then the server logs, which it selects, and the deployment last", () => {
+  it("lists the manifest and the architecture first, then the server logs, which it selects, and the deployment last", () => {
     installFakes();
     render(<Console workbench={workbench} config={config} />);
     const tabs = within(screen.getByRole("navigation", { name: "Console" })).getAllByRole("button");
     expect(tabs.map((button) => button.textContent)).toEqual([
       "Manifest",
+      "Architecture",
       "Server Logs",
       "Tool Calls",
       "Config",
@@ -155,6 +156,26 @@ describe("Console", () => {
     await user.click(screen.getByRole("button", { name: "Manifest" }));
     await user.click(await screen.findByRole("button", { name: "Save" }));
     expect(onManifestSaved).toHaveBeenCalledOnce();
+  });
+
+  it("loads the architecture when its tab is selected, and keeps it while another tab is", async () => {
+    server.use(...tabHandlers);
+    const user = userEvent.setup();
+    render(<Console workbench={{ ...plainWorkbench, architectureUrl: workbench.architectureUrl }} config={config} />);
+    expect(screen.queryByRole("heading", { name: "How this LLMClient is built" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Architecture" }));
+    const heading = await screen.findByRole("heading", { name: "How this LLMClient is built" });
+    expect(screen.getByRole("article", { name: "LLMClient stackademy_sql" })).toBeInTheDocument();
+    expect(screen.queryByRole("log", { name: "Console output" })).not.toBeInTheDocument();
+    // a resource that the user collapsed stays collapsed.
+    await user.click(screen.getByRole("button", { name: "Hide what stackademy_sql uses" }));
+
+    await user.click(screen.getByRole("button", { name: "Config" }));
+    expect(heading).not.toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Architecture" }));
+    expect(screen.getByRole("heading", { name: "How this LLMClient is built" })).toBe(heading);
+    expect(screen.getByRole("button", { name: "Show what stackademy_sql uses" })).toBeInTheDocument();
   });
 
   it("loads the deployment page when its tab is selected, and keeps it while another tab is", async () => {

@@ -50,6 +50,7 @@ export function readConfig(rootEl: HTMLElement): WorkbenchConfig {
     smarterRequestId,
     logStreamUrl: attribute("smarter-log-stream-url", false) || null,
     manifestUrl: attribute("smarter-manifest-url", false) || null,
+    architectureUrl: attribute("smarter-architecture-url", false) || null,
     deploymentUrl: attribute("smarter-deployment-url", false) || null,
     llmclientListUrl: attribute("smarter-llmclient-list-url"),
     applyApiUrl,

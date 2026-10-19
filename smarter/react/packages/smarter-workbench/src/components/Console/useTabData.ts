@@ -1,4 +1,4 @@
-/** The data of a Console tab that it fetches when it is first opened: the manifest, or the deployment page. */
+/** The data of a Console tab that it fetches when it is first opened: the manifest, the architecture, or the deployment page. */
 import { useEffect, useState } from "react";
 
 export type TabData<T> = { data: T | null; error: string | null };

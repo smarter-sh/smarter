@@ -64,7 +64,15 @@ To continue a chat, send the ``session_key`` that ``/config/`` returned, e.g.
 ``{"session_key": "<SESSION-KEY>", "messages": [...]}``, and the chat's earlier messages. An LLMClient
 with api keys requires one in every request: add ``-H "Authorization: Token <YOUR-API-KEY>"``.
 
-The workbench's Console has a Deployment tab, between Manifest and Server Logs, for what comes after
+An LLMClient is built from other SAM resources, each declared in its own manifest: the Provider whose
+models it prompts, the plugins and MCPClients that give it tools, its Guardrails, its Custom Domain and
+its api key, and beneath them what those use in turn, such as Connections and Secrets. The workbench's
+Console draws this tree in its Architecture tab, right of Manifest, as a card for each resource, with its
+kind, its name and its owner. Clicking a card opens that resource's manifest page, where its manifest can
+be edited, in a new tab. The tree is the LLMClient broker's ``dependency_tree()``: see
+:doc:`Record Locators and Dependency Trees <../smarter-framework/smarter-manifests/record-locators>`.
+
+The workbench's Console has a Deployment tab, its far right one, for what comes after
 deploying: the LLMClient's status and url, where to go from here, with the integrations that put its
 chat on a web site (:doc:`WordPress <../smarter-framework/smarter-wordpress>`,
 :doc:`Drupal <../smarter-framework/smarter-drupal>`, :doc:`Shopify <../smarter-framework/smarter-shopify>`,

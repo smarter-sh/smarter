@@ -20,6 +20,8 @@ export interface WorkbenchConfig {
   logStreamUrl: string | null;
   /** The LLMClient's manifest, as JSON. Without it, the Console has no Manifest tab. */
   manifestUrl: string | null;
+  /** The LLMClient's architecture, the tree of the SAM resources that it is built from. Without it, the Console has no Architecture tab. */
+  architectureUrl: string | null;
   /** The LLMClient's deployment page's data. Without it, the Console has no Deployment tab. */
   deploymentUrl: string | null;
   /** The LLM Clients list, where the workbench goes after its LLMClient is deleted. */

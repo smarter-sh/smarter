@@ -1,12 +1,13 @@
 /**
  * The Console: a simulated terminal beside the chat, which displays the LLMClient's configuration and the chat
  * session's tool calls, as JSON, and, when the page passes their urls, the chat session's server logs, as they
- * stream in, the LLMClient's manifest, in the manifest editor, and its deployment page.
+ * stream in, the LLMClient's manifest, in the manifest editor, its architecture, and its deployment page.
  */
 import { useEffect, useRef, useState } from "react";
 import ReactJsonView from "@microlink/react-json-view";
 import { gettext } from "@smarter/common";
 
+import ArchitectureTab from "@/components/Console/ArchitectureTab";
 import { consoleData, type ConsoleConfig } from "@/components/Console/data";
 import DeploymentTab from "@/components/Console/DeploymentTab";
 import { initialMenuItem, MenuItems, type MenuItem } from "@/components/Console/enums";
@@ -46,14 +47,22 @@ interface Tab {
 
 /**
  * The Console's tabs, from left to right, translated, in the order of a prompt engineer's work: the manifest,
- * which each change starts with, the server logs and the tool calls, which tell what a prompt did, the
- * configuration, for reference, and the deployment, for when the work is done. Each of the manifest, the server
- * logs and the deployment is there only when the page passes its url. The server logs, when they are there, are
- * selected when the Console opens: see initialMenuItem().
+ * which each change starts with, and the architecture, the tree of resources that the manifest builds on, the
+ * server logs and the tool calls, which tell what a prompt did, the configuration, for reference, and the
+ * deployment, for when the work is done. Each of the manifest, the architecture, the server logs and the
+ * deployment is there only when the page passes its url. The server logs, when they are there, are selected when
+ * the Console opens: see initialMenuItem().
  */
-function tabs(withServerLogs: boolean, withManifest: boolean, withDeployment: boolean): Tab[] {
+function tabs(
+  withServerLogs: boolean,
+  withManifest: boolean,
+  withArchitecture: boolean,
+  withDeployment: boolean,
+): Tab[] {
   // Translators: the tab of the Console that edits the LLMClient's YAML manifest.
   const manifest: Tab = { id: MenuItems.MANIFEST, label: gettext("Manifest"), empty: "" };
+  // Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
+  const architecture: Tab = { id: MenuItems.ARCHITECTURE, label: gettext("Architecture"), empty: "" };
   // Translators: the tab of the Console about the LLMClient's deployment: its url, and how to use it.
   const deployment: Tab = { id: MenuItems.DEPLOYMENT, label: gettext("Deployment"), empty: "" };
   const serverLogs: Tab = { id: MenuItems.SERVER_LOGS, label: gettext("Server Logs"), empty: "" };
@@ -72,6 +81,7 @@ function tabs(withServerLogs: boolean, withManifest: boolean, withDeployment: bo
   ];
   return [
     ...(withManifest ? [manifest] : []),
+    ...(withArchitecture ? [architecture] : []),
     ...(withServerLogs ? [serverLogs] : []),
     ...menu,
     ...(withDeployment ? [deployment] : []),
@@ -85,7 +95,7 @@ function toolCallName(item: object): string {
 }
 
 function Console({ workbench, config, logLevel = null, resetKey, onManifestSaved, onSelect }: ConsoleProps) {
-  const { logStreamUrl, manifestUrl, deploymentUrl } = workbench;
+  const { logStreamUrl, manifestUrl, architectureUrl, deploymentUrl } = workbench;
   // the server logs, when there are any, are first, and selected. Their stream stays connected,
   // so that the logs keep arriving while another tab is selected.
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem>(() => initialMenuItem(logStreamUrl));
@@ -104,13 +114,15 @@ function Console({ workbench, config, logLevel = null, resetKey, onManifestSaved
     previousResetKey.current = resetKey;
     clearLogs();
   }, [resetKey, clearLogs]);
-  // the manifest editor and the deployment page load when their tab is first selected, and then stay,
-  // hidden while another tab is selected, so that the editor keeps its unsaved changes, and the page its
-  // scroll position.
+  // the manifest editor, the architecture and the deployment page load when their tab is first selected, and
+  // then stay, hidden while another tab is selected, so that the editor keeps its unsaved changes, and the
+  // others their scroll position, and which resources are collapsed.
   const [editorOpened, setEditorOpened] = useState(false);
+  const [architectureOpened, setArchitectureOpened] = useState(false);
   const [deploymentOpened, setDeploymentOpened] = useState(false);
-  const menu = tabs(!!logStreamUrl, !!manifestUrl, !!deploymentUrl);
+  const menu = tabs(!!logStreamUrl, !!manifestUrl, !!architectureUrl, !!deploymentUrl);
   const showEditor = selectedMenuItem === MenuItems.MANIFEST && !!manifestUrl;
+  const showArchitecture = selectedMenuItem === MenuItems.ARCHITECTURE && !!architectureUrl;
   const showDeployment = selectedMenuItem === MenuItems.DEPLOYMENT && !!deploymentUrl;
   const showLogs = selectedMenuItem === MenuItems.SERVER_LOGS && !!logStreamUrl;
   const emptyText = menu.find(({ id }) => id === selectedMenuItem)?.empty ?? "";
@@ -152,6 +164,7 @@ function Console({ workbench, config, logLevel = null, resetKey, onManifestSaved
                         onClick={() => {
                           setSelectedMenuItem(id);
                           if (id === MenuItems.MANIFEST) setEditorOpened(true);
+                          if (id === MenuItems.ARCHITECTURE) setArchitectureOpened(true);
                           if (id === MenuItems.DEPLOYMENT) setDeploymentOpened(true);
                         }}
                       >
@@ -166,6 +179,11 @@ function Console({ workbench, config, logLevel = null, resetKey, onManifestSaved
                   <ManifestTab workbench={workbench} onSaved={onManifestSaved} />
                 </div>
               )}
+              {architectureUrl && architectureOpened && (
+                <div className="console-architecture" hidden={!showArchitecture}>
+                  <ArchitectureTab workbench={workbench} />
+                </div>
+              )}
               {deploymentUrl && deploymentOpened && (
                 <div className="console-deployment" hidden={!showDeployment}>
                   <DeploymentTab workbench={workbench} />
@@ -175,7 +193,7 @@ function Console({ workbench, config, logLevel = null, resetKey, onManifestSaved
                 className={`console-output rounded ${showLogs ? "console-output-logs" : ""}`}
                 role="log"
                 aria-label={gettext("Console output")}
-                hidden={showEditor || showDeployment}
+                hidden={showEditor || showArchitecture || showDeployment}
               >
                 <div className="console-output-content">
                   {/* a terminal's own messages, which are in English. */}

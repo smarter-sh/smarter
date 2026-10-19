@@ -1,11 +1,13 @@
 /**
- * MSW request handlers for the workbench: the chat's config and prompt apis, and the Console's Manifest and
- * Deployment tabs' data. See storybook/preview.ts and test/server.ts in the workspace.
+ * MSW request handlers for the workbench: the chat's config and prompt apis, and the Console's Manifest,
+ * Architecture and Deployment tabs' data. See storybook/preview.ts and test/server.ts in the workspace.
  */
 import { http, HttpResponse } from "msw";
+import { stackademyTree } from "@smarter/llmclient-architecture/mocks";
 import { workbenchPage } from "@smarter/llmclient-deployment/mocks";
 
 import {
+  ARCHITECTURE_URL,
   CONFIG_URL,
   DEPLOYMENT_URL,
   LOG_STREAM_URL,
@@ -38,15 +40,19 @@ export const chatHandlers = [
   }),
 ];
 
-/** The Manifest and Deployment tabs' data. */
+/** The Manifest, Architecture and Deployment tabs' data. */
 export const tabHandlers = [
   http.get(MANIFEST_URL, () => HttpResponse.json({ manifest: MANIFEST_YAML })),
+  http.get(ARCHITECTURE_URL, () => HttpResponse.json(stackademyTree)),
   http.get(DEPLOYMENT_URL, () => HttpResponse.json(workbenchPage)),
 ];
 
-/** The Manifest and Deployment tabs' data fail to load. */
+/** The Manifest, Architecture and Deployment tabs' data fail to load. */
 export const tabErrorHandlers = [
   http.get(MANIFEST_URL, () => new HttpResponse(null, { status: 500, statusText: "Internal Server Error" })),
+  http.get(ARCHITECTURE_URL, () =>
+    HttpResponse.json({ error: "LLMClient not found." }, { status: 404, statusText: "Not Found" }),
+  ),
   http.get(DEPLOYMENT_URL, () =>
     HttpResponse.json({ error: "LLMClient not found.", code: "not_found" }, { status: 404, statusText: "Not Found" }),
   ),

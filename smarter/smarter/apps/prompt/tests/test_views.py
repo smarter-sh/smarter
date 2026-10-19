@@ -17,10 +17,16 @@ from django.test import RequestFactory, override_settings
 
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.llmclient.caching import (
     invalidate_all_cached_llmclients_for_user_profile,
 )
-from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey, LLMClientHelper
+from smarter.apps.llmclient.models import (
+    LLMClient,
+    LLMClientAPIKey,
+    LLMClientGuardrails,
+    LLMClientHelper,
+)
 from smarter.apps.llmclient.views.deployment_contract import (
     ApiKeyActionResponse,
     CreateApiKeyRequest,
@@ -51,6 +57,7 @@ from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
 from smarter.common.conf import smarter_settings
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.logging.redis_log_handler import session_key_context
+from smarter.lib.manifest.models import SAMDependencyTreeNode
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 PLATFORM_HOST = urlparse(smarter_settings.environment_platform_url).netloc
@@ -176,6 +183,68 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         """Test that the manifest editor's data is a 404 for an unknown LLMClient."""
         unknown = LLMClient(id=999999999)
         response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_workbench_architecture_url(self):
+        """Test that the workbench passes the url of the LLMClient's architecture, for its Architecture tab."""
+        response = self.client.get(
+            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
+        )
+        architecture_url = response.context["workbench"]["architecture_url"]
+        self.assertEqual(architecture_url, self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(architecture_url, f"/workbench/llm-clients/{self.resource.hashed_id}/architecture/")
+        self.assertIn(f'smarter-architecture-url="{architecture_url}"', response.content.decode())
+
+    def test_architecture(self):
+        """Test that the architecture is the LLMClient's tree, as JSON: each resource with its owner and manifest page."""
+        guardrail = Guardrail.objects.create(
+            user_profile=self.user_profile,
+            name=f"{self.resource.name}_guardrail",
+            description="test",
+            version="1.0.0",
+            stage="both",
+            category="pii",
+        )
+        self.addCleanup(Guardrail.objects.filter(pk=guardrail.pk).delete)
+        LLMClientGuardrails.objects.create(llmclient=self.resource, guardrail=guardrail)
+        self.addCleanup(LLMClientGuardrails.objects.filter(llmclient=self.resource).delete)
+
+        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn("no-cache", response["Cache-Control"])
+        tree = SAMDependencyTreeNode.model_validate(response.json())
+        self.assertEqual((tree.kind, tree.name), ("LLMClient", self.resource.name))
+        self.assertEqual(tree.recordLocator, self.resource.record_locator)
+        self.assertEqual(tree.url, self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertIn(self.admin_user.username, tree.owner)
+
+        guardrails = [child for child in tree.children if child.kind == "Guardrail"]
+        self.assertEqual([child.name for child in guardrails], [guardrail.name])
+        self.assertIn(self.admin_user.username, guardrails[0].owner)
+        self.assertTrue(guardrails[0].url.startswith("/guardrail/"), guardrails[0].url)
+
+    def test_architecture_is_get_only(self):
+        """Test that the architecture refuses a POST."""
+        response = self.client.post(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_architecture_not_found(self):
+        """Test that the architecture is a 404 for an unknown LLMClient, and for another account's."""
+        unknown = LLMClient(id=999999999)
+        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=unknown.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(response.json(), {"error": "LLMClient not found."})
+
+        other_admin_user, other_account, other_user_profile = admin_user_factory()
+        # cleanups run last first: the user profile, then the user, then the account.
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_admin_user.delete)
+        self.addCleanup(other_user_profile.delete)
+        other_admin_user.is_superuser = False
+        other_admin_user.save()
+        self.client.force_login(other_admin_user)
+        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_workbench_deployment_url(self):

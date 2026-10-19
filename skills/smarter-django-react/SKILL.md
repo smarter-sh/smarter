@@ -109,13 +109,15 @@ for the files to read.
 ## One package that imports another
 
 A console app can render another package's component. For example, the Prompt Engineer's Workbench
-(`smarter-workbench`) renders the manifest editor and the LLMClient deployment page in its Console's
-tabs, and imports Smarter Chat. The workspace's shared configuration maps `@/` to the _importing_
+(`smarter-workbench`) renders the manifest editor, the LLMClient architecture and the LLMClient deployment
+page in its Console's tabs, and imports Smarter Chat. A package that exists only to be imported, such as
+`smarter-llmclient-architecture`, has no `build` script: `npm run dev` renders its fixtures, and the importing
+package's build bundles it. The workspace's shared configuration maps `@/` to the _importing_
 package's `src/`, so a package whose source another package imports follows these rules:
 
 - **Its source uses relative imports**, not `@/`, as `@smarter/common`'s does. Its tests, stories and
-  mocks may keep `@/`, because they run only in their own package. `smarter-manifest-editor` and
-  `smarter-llmclient-deployment` do this.
+  mocks may keep `@/`, because they run only in their own package. `smarter-manifest-editor`,
+  `smarter-llmclient-architecture` and `smarter-llmclient-deployment` do this.
 - **Its `package.json` exports its source**: `"main"` and `"exports": {".": "./src/index.ts"}`.
   `src/index.ts` exports the component and its props type. Fixtures that other packages' tests
   use are exported as a subpath, e.g. `"./mocks"` in `smarter-llmclient-deployment`.
