@@ -72,10 +72,11 @@ from smarter.urls import api as smarter_api_urls
 from smarter.urls import console as smarter_console_urls
 from smarter.urls import llmclients as smarter_llmclients_urls
 
-API_DOMAIN = re.escape(f"{smarter_settings.api_subdomain}.{smarter_settings.root_domain}")
-"""The api domain, e.g. api.example.com, as a regular expression.
+API_DOMAIN = re.escape(smarter_settings.root_api_domain)
+"""The root api domain, e.g. api.platform.example.com, as a regular expression.
 
-Deployed LLMClients are its subdomains.
+Deployed LLMClients are its subdomains, e.g. stackademy-sql.3141-5926-5359.api.platform.example.com,
+the same domain that :attr:`LLMClient.default_host` is built from. It includes the platform subdomain.
 """
 
 host_patterns = patterns(
