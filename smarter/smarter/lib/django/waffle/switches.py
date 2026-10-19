@@ -173,6 +173,9 @@ class SmarterWaffleSwitches:
     ENABLE_SMARTER_PAGE_CACHING = "enable_smarter_page_caching"
     """Enables the Smarter user-based page caching decorator for user-facing pages to improve performance."""
 
+    ENABLE_LLMCLIENT_ENDPOINTS_PAGE = "enable_llmclient_endpoints_page"
+    """Enables the page that a browser receives from a GET of a deployed LLMClient's endpoints."""
+
     ENABLE_FORMATTED_LOGGING = "enable_formatted_logging"
     """Enables formatted logging with ANSI color codes for enhanced readability in logs."""
 
@@ -397,6 +400,14 @@ class SmarterWaffleSwitches:
         ENABLE_REACTAPP_DEBUG_MODE: SmarterWaffleSwitch(
             name=ENABLE_REACTAPP_DEBUG_MODE,
             comment="Enables React app debug mode within the Smarter React Prompt component.",
+            default=False,
+        ),
+        ENABLE_LLMCLIENT_ENDPOINTS_PAGE: SmarterWaffleSwitch(
+            name=ENABLE_LLMCLIENT_ENDPOINTS_PAGE,
+            comment=(
+                "Enables the page that a browser receives from a GET of a deployed LLMClient's endpoints: its "
+                "curl commands, its manifest and The Smarter Project. Inactive, a GET is the api's, a 405."
+            ),
             default=False,
         ),
         ENABLE_PLUGIN_FUZZY_MATCHING: SmarterWaffleSwitch(
