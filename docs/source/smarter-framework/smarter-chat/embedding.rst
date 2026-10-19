@@ -214,7 +214,6 @@ Quick Start
       <SmarterChat
         apiUrl="https://stackademy.3141-5926-5359.api.example.com/"
         apiKey={import.meta.env.VITE_SMARTER_API_KEY}
-        showConsole={false}
       />
     </div>,
   );
@@ -223,8 +222,11 @@ That's all. On its first render, the component fetches the LLMClient's configura
 welcome message and example prompts, and is ready to chat. The chat fills the height of its parent
 element, so give the parent a height.
 
-``showConsole={false}`` hides the developer Console, which is on by default and suits only wide
-pages, such as an internal tool. See :doc:`Features <features>`.
+The developer tools, the Console and its toggle button, the Sandbox mode / Production mode button and
+the Docs button, are the Smarter web console's workbench's only. The npm package and the embed script
+never display them, whatever their props: they ignore ``showConsole``, ``toggleMetadata``,
+``logStreamUrl``, ``manifestEditorUrl`` and ``deploymentUrl``, and the chat is always in production
+mode, the conversation as the LLMClient's users see it. See :doc:`Features <features>`.
 
 
 Props
@@ -246,14 +248,6 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
      - ``null``
      - A Smarter api key, sent as ``Authorization: Token <apiKey>``, for LLMClients that require
        authentication.
-   * - ``showConsole``
-     - ``true``
-     - Show the developer Console beside the chat.
-   * - ``toggleMetadata``
-     - ``false``
-     - Show the Sandbox mode / Production mode button, which shows and hides the backend's own
-       messages, and start in sandbox mode. Sandbox mode also shows the Docs button. Without it, the chat is in production mode: the thread
-       is the conversation, without the system prompt, tool results or Smarter's notes.
    * - ``streamProgress``
      - ``true``
      - Display a running prompt's progress, streamed as Server-Sent Events. A platform that doesn't
@@ -295,20 +289,6 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
      - ``""``
      - An id of the page request, sent as the ``X-Smarter-RequestId`` header, which appears in
        Smarter's logs, for tracing.
-   * - ``logStreamUrl``
-     - ``null``
-     - The url of a Smarter server log stream, for the Console's Server Logs tab. Only useful to
-       developers who are logged in to the web console on the same domain.
-   * - ``manifestEditorUrl``
-     - ``null``
-     - The url of the web console's editor of the LLMClient's manifest, for the Console's Manifest
-       tab, in an iframe. It must be of the page's own origin, so it is only useful to pages that
-       the web console serves itself, such as the workbench. Any other url is ignored.
-   * - ``deploymentUrl``
-     - ``null``
-     - The url of the web console's page about the LLMClient's deployment, for the Console's
-       Deployment tab, in an iframe. Like ``manifestEditorUrl``, it must be of the page's own origin,
-       and any other url is ignored.
 
 
 Recipes
@@ -331,7 +311,7 @@ A floating chat widget
         </button>
         {open && (
           <div style={{ position: "fixed", right: 24, bottom: 80, width: 400, height: 600, zIndex: 1000 }}>
-            <SmarterChat apiUrl="https://support.3141-5926-5359.api.example.com/" apiKey={apiKey} showConsole={false} />
+            <SmarterChat apiUrl="https://support.3141-5926-5359.api.example.com/" apiKey={apiKey} />
           </div>
         )}
       </>
@@ -362,8 +342,7 @@ client only:
         <SmarterChat
           apiUrl={process.env.NEXT_PUBLIC_SMARTER_LLMCLIENT_URL!}
           apiKey={process.env.NEXT_PUBLIC_SMARTER_API_KEY}
-          showConsole={false}
-        />
+          />
       </div>
     );
   }
@@ -377,18 +356,8 @@ cookies:
 
 .. code-block:: tsx
 
-  <SmarterChat apiUrl={salesUrl} apiKey={apiKey} sessionCookieName="sales_session_key" showConsole={false} />
-  <SmarterChat apiUrl={supportUrl} apiKey={apiKey} sessionCookieName="support_session_key" showConsole={false} />
-
-A sandbox for your own team
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An internal tool can show everything the workbench shows:
-
-.. code-block:: tsx
-
-  <SmarterChat apiUrl={apiUrl} apiKey={apiKey} toggleMetadata showConsole />
-
+  <SmarterChat apiUrl={salesUrl} apiKey={apiKey} sessionCookieName="sales_session_key" />
+  <SmarterChat apiUrl={supportUrl} apiKey={apiKey} sessionCookieName="support_session_key" />
 
 Styling
 -------

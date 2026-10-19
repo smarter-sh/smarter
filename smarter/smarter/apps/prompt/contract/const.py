@@ -88,6 +88,20 @@ Smarter Chat call. Workbench and platform api urls, and the cli, receive every f
 PUBLIC_META_DATA_FIELDS = ("ready", "is_valid", "is_deployed", "is_custom_domain", "is_authentication_required")
 """The ``meta_data`` fields of the public configuration."""
 
+VERBOSE_PARAMETER = "verbose"
+"""
+The configuration api's query parameter that asks for its diagnostic parts: ``?verbose=true``.
+
+Without it, the configuration has what a chat needs: the LLMClient, its state, the session's
+messages, and the counts of its plugins and extensions. With it, a client that may read the
+LLMClient also receives the session's tool calls, the complete ``meta_data``, and the lists of
+plugins and extensions, which Smarter Chat's Console displays. A deployed LLMClient's own host
+ignores it.
+"""
+
+VERBOSE_VALUES = ("true", "1", "yes")
+"""The values of :data:`VERBOSE_PARAMETER` that ask for the diagnostic parts, in lower case."""
+
 DIAGNOSTIC_COMPLETION_TOP_KEYS = ("metadata",)
 """
 The keys of a completion that are returned only to the ``smarter`` cli: ``metadata`` describes the.

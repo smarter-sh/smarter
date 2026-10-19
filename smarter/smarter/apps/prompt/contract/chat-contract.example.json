@@ -261,6 +261,8 @@
         "version": "version"
       },
       "meta_data": {
+        "is_authentication_required": false,
+        "is_custom_domain": false,
         "is_deployed": false,
         "is_valid": false,
         "ready": false
@@ -536,6 +538,8 @@
         ]
       },
       "meta_data": {
+        "is_authentication_required": false,
+        "is_custom_domain": false,
         "is_deployed": false,
         "is_valid": false,
         "ready": false
