@@ -34,7 +34,12 @@ from smarter.apps.prompt.contract.builders import (
     chat_error_response,
     requested_contract,
 )
-from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V1, CHAT_CONTRACT_V2
+from smarter.apps.prompt.contract.const import (
+    CHAT_CONTRACT_V1,
+    CHAT_CONTRACT_V2,
+    VERBOSE_PARAMETER,
+    VERBOSE_VALUES,
+)
 from smarter.apps.prompt.contract.models import (
     PromptChatApiConfig,
     PromptChatApiExtensionList,
@@ -140,9 +145,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             - `sandbox_mode`: Boolean indicating if the llmclient is running in sandbox mode.
             - `debug_mode`: Boolean indicating if debug mode is enabled.
             - `llmclient`: Serialized llmclient configuration.
-            - `history`: Prompt and plugin selector history for the session.
-            - `meta_data`: Additional metadata for the llmclient.
-            - `plugins`: Plugin metadata and a limited list of plugins.
+            - `history`: The session's messages, and, with ``?verbose=true``, its tool calls.
+            - `meta_data`: The llmclient's state, and, with ``?verbose=true``, the complete LLMClientHelper.
+            - `plugins` and `extensions`: Their counts, and, with ``?verbose=true``, a limited list of each.
+
+        See :attr:`verbose`.
 
     **Security:**
         - The view is protected and requires the user to be authenticated, unless the llmclient is configured to allow unauthenticated access.
@@ -177,6 +184,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
     """
     resolved_by_id: bool = False
     """True if the LLMClient was found by its id or hashed id, which also checks that the user may read it."""
+    verbose_requested: bool = False
+    """True if the request's query string has ``?verbose=true``.
+
+    See :attr:`verbose`.
+    """
     llmclient_name: Optional[str] = None
     _llmclient_helper: Optional[LLMClientHelper] = None
     _llmclient: Optional[LLMClient] = None
@@ -267,6 +279,23 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         """
         return self.resolved_by_id or self.include_diagnostics
 
+    @property
+    def verbose(self) -> bool:
+        """
+        Whether the configuration includes its diagnostic parts, which Smarter Chat's Console displays.
+
+        They are the session's tool calls, the complete ``meta_data`` (``LLMClientHelper.to_json()``),
+        and the lists of the LLMClient's plugins and extensions. They cost database queries and
+        serialization, and the tool calls grow with the session, so a client asks for them with
+        ``?verbose=true`` (:data:`~smarter.apps.prompt.contract.const.VERBOSE_PARAMETER`) only when it
+        displays them. Only a client that receives the complete configuration (:attr:`full_config`)
+        may ask for them, and the cli always receives them.
+
+        :returns: True for the diagnostic parts.
+        :rtype: bool
+        """
+        return self.include_diagnostics or (self.resolved_by_id and self.verbose_requested)
+
     def prompt_url(self, url_llmclient: Optional[str]) -> Optional[str]:
         """
         The url of the LLMClient's prompt api, on the host that served the configuration.
@@ -316,14 +345,14 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
 
         **Performance:**
           Since this endpoint is called on every browser load and refresh, the logic is optimized to minimize
-          database queries and serialization overhead. Only a limited number of plugins (see
-          ``MAX_RETURNED_PLUGINS``) are returned to keep payloads small and response times fast.
+          database queries and serialization overhead. The diagnostic parts, which Smarter Chat's Console
+          displays, are built only for a client that asks for them (see :attr:`verbose`), and only a limited
+          number of plugins (see ``MAX_RETURNED_PLUGINS``) are returned.
 
         :returns: The configuration, or None if the session or the LLMClient helper is not set. Its fields:
             ``session_key``, ``sandbox_mode``, ``debug_mode``, ``llmclient`` (serialized by
             ``LLMClientConfigSerializer``, with ``url_llmclient`` from :meth:`prompt_url`), ``history``
-            (the session's messages in ``chat_history``, and its diagnostic histories), ``meta_data``
-            (``LLMClientHelper.to_json()``), ``plugins`` and ``extensions``.
+            (:meth:`chat_history`), ``meta_data`` (:meth:`meta_data`), ``plugins`` and ``extensions``.
         :rtype: Optional[PromptChatApiConfig]
         :raises pydantic.ValidationError: If the data breaks the contract.
 
@@ -353,15 +382,16 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             else None
         )
 
-        # plugins context. the main thing we need here is to constrain the number of plugins
-        # returned to some reasonable number, since we'll probaably have cases where
-        # the llmclient has a lot of plugins (hundreds, thousands...).
+        # the plugins and extensions are counted. Their lists, which are constrained to a reasonable
+        # number, since an llmclient may have hundreds of plugins, are diagnostic. See verbose.
         llmclient_plugins_count = LLMClientPlugin.objects.filter(llmclient=self.llmclient).count()
         llmclient_plugins = (
             LLMClientPlugin.objects.filter(llmclient=self.llmclient)
             .select_related("plugin_meta")
             .prefetch_related("plugin_meta__tags")
             .order_by("-pk")[:MAX_RETURNED_PLUGINS]
+            if self.verbose
+            else []
         )
 
         llmclient_extensions_count = LLMClientExtensions.objects.filter(llmclient=self.llmclient).count()
@@ -370,29 +400,8 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             .select_related("extension", "extension__installed_version")
             .defer("extension__installed_version__archive")
             .order_by("extension__slug")[:MAX_RETURNED_PLUGINS]
-        )
-
-        # the session's history, from its rows. The messages are "prompt_history" in PromptHelper.
-        chat_helper = self.session.chat_helper
-        session_key = self.session.session_key
-        history = PromptChatApiHistory(
-            chat_history=(chat_helper.prompt_history if chat_helper is not None else None) or [],
-            prompt_tool_call_history=[
-                PromptChatApiPromptToolCall.from_model(row)
-                for row in (chat_helper.prompt_tool_call if chat_helper is not None else [])
-            ],
-            prompt_plugin_usage_history=[
-                PromptChatApiPromptPluginUsage.from_model(row)
-                for row in (chat_helper.prompt_plugin_usage if chat_helper is not None else [])
-            ],
-            plugin_selector_history=[
-                PromptChatApiPluginSelection.from_model(row)
-                for row in PluginSelectorHistory.objects.filter(session_key=session_key).order_by("-id")
-            ],
-            llmclient_request_history=[
-                PromptChatApiLLMClientRequest.from_model(row)
-                for row in LLMClientRequests.objects.filter(session_key=session_key).order_by("-id")
-            ],
+            if self.verbose
+            else []
         )
 
         llmclient = self.to_snake_case(llmclient_serializer.data) if llmclient_serializer else {}
@@ -404,8 +413,8 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             sandbox_mode=self.llmclient_helper.is_llmclient_sandbox_url,
             debug_mode=waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
             llmclient=PromptChatApiLLMClient(**llmclient),
-            history=history,
-            meta_data=PromptChatApiMetaData(**self.to_snake_case(self.llmclient_helper.to_json())),
+            history=self.chat_history(),
+            meta_data=self.meta_data(),
             plugins=PromptChatApiPluginList(
                 meta_data=PromptChatApiListMetaData(
                     total_plugins=llmclient_plugins_count, plugins_returned=len(llmclient_plugins)
@@ -418,6 +427,71 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
                 ),
                 extensions=[PromptChatApiLLMClientExtension.from_model(link) for link in llmclient_extensions],
             ),
+        )
+
+    def chat_history(self) -> PromptChatApiHistory:
+        """
+        The chat session's history, from its rows.
+
+        - ``chat_history``, the session's messages, which restore the chat thread, always.
+        - ``prompt_tool_call_history``, the session's tool calls, if :attr:`verbose`.
+        - ``prompt_plugin_usage_history``, ``plugin_selector_history`` and ``llmclient_request_history``
+          for the cli only (:attr:`include_diagnostics`). Smarter Chat doesn't display them, and the
+          requests, each of which holds the whole thread, grow with the square of the session's length.
+
+        :returns: The history, empty without a session.
+        :rtype: PromptChatApiHistory
+        """
+        if self.session is None:
+            return PromptChatApiHistory()
+        # the messages are "prompt_history" in PromptHelper.
+        chat_helper = self.session.chat_helper
+        session_key = self.session.session_key
+        history = PromptChatApiHistory(
+            chat_history=(chat_helper.prompt_history if chat_helper is not None else None) or [],  # type: ignore[arg-type]
+        )
+        if self.verbose:
+            history.prompt_tool_call_history = [
+                PromptChatApiPromptToolCall.from_model(row)
+                for row in (chat_helper.prompt_tool_call if chat_helper is not None else [])
+            ]
+        if self.include_diagnostics:
+            history.prompt_plugin_usage_history = [
+                PromptChatApiPromptPluginUsage.from_model(row)
+                for row in (chat_helper.prompt_plugin_usage if chat_helper is not None else [])
+            ]
+            history.plugin_selector_history = [
+                PromptChatApiPluginSelection.from_model(row)
+                for row in PluginSelectorHistory.objects.filter(session_key=session_key).order_by("-id")
+            ]
+            history.llmclient_request_history = [
+                PromptChatApiLLMClientRequest.from_model(row)
+                for row in LLMClientRequests.objects.filter(session_key=session_key).order_by("-id")
+            ]
+        return history
+
+    def meta_data(self) -> PromptChatApiMetaData:
+        """
+        The LLMClient's state.
+
+        It is the complete ``LLMClientHelper.to_json()`` if :attr:`verbose`, and otherwise only the
+        fields of :data:`~smarter.apps.prompt.contract.const.PUBLIC_META_DATA_FIELDS` that the helper
+        has, which are what Smarter Chat reads. ``to_json()`` serializes the LLMClient a second time,
+        with its tools, and the request.
+
+        :returns: The meta data, empty without an LLMClient helper.
+        :rtype: PromptChatApiMetaData
+        """
+        helper = self.llmclient_helper
+        if helper is None:
+            return PromptChatApiMetaData()
+        if self.verbose:
+            return PromptChatApiMetaData(**self.to_snake_case(helper.to_json()))
+        return PromptChatApiMetaData(
+            ready=helper.ready,
+            is_deployed=helper.is_deployed,
+            is_custom_domain=helper.is_custom_domain,
+            is_authentication_required=helper.is_authentication_required,
         )
 
     def config(self) -> SmarterDictType:
@@ -525,6 +599,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT_CONFIG)
         self.contract = requested_contract(request)
         self.resolved_by_id = False
+        self.verbose_requested = str(request.GET.get(VERBOSE_PARAMETER, "")).strip().lower() in VERBOSE_VALUES
         hashed_id = kwargs.pop("hashed_id", None)
         if hashed_id:
             llmclient_id = LLMClient.id_from_hashed_id(hashed_id)
