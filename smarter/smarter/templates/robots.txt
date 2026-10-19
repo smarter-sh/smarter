@@ -3,4 +3,4 @@ Disallow: /admin/
 Disallow: /login/
 Disallow: /dashboard/
 Allow: /
-Sitemap: /sitemap.xml
+Sitemap: {{ sitemap_url }}

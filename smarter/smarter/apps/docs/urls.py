@@ -4,6 +4,7 @@ from django.shortcuts import redirect
 from django.urls import path, re_path
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .openapi import schema_view
@@ -86,6 +87,14 @@ class DocsReverseNames:
     openapi = "openapi"
     openapi_json = "openapi-json"
     json_schemas = "json_schemas"
+    developer_readme = to_snake_case(DeveloperDocsReadme.__name__)
+    developer_changelog = to_snake_case(DeveloperDocsChangelog.__name__)
+    developer_code_of_conduct = to_snake_case(DeveloperDocsCodeOfConduct.__name__)
+    developer_makefile = to_snake_case(DeveloperDocsMakefileView.__name__)
+    developer_extension_protocol = to_snake_case(DeveloperDocsExtensionProtocolView.__name__)
+    developer_requirements = to_snake_case(DeveloperDocsRequirementsView.__name__)
+    developer_dockerfile = to_snake_case(DeveloperDocsDockerfileView.__name__)
+    developer_docker_compose = to_snake_case(DeveloperDocsDockerComposeView.__name__)
 
 
 app_name = namespace
@@ -94,18 +103,28 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/docs/ in the Dockeer container
     # -------------------------------------------------------------------------
-    path("developer/README.md/", DeveloperDocsReadme.as_view(), name="developer-readme"),
-    path("developer/CHANGELOG.md/", DeveloperDocsChangelog.as_view(), name="developer-changelog"),
-    path("developer/CODE_OF_CONDUCT.md/", DeveloperDocsCodeOfConduct.as_view(), name="developer-code-of-conduct"),
-    path("developer/makefile/", DeveloperDocsMakefileView.as_view(), name="developer-makefile"),
+    path("developer/README.md/", DeveloperDocsReadme.as_view(), name=DocsReverseNames.developer_readme),
+    path("developer/CHANGELOG.md/", DeveloperDocsChangelog.as_view(), name=DocsReverseNames.developer_changelog),
+    path(
+        "developer/CODE_OF_CONDUCT.md/",
+        DeveloperDocsCodeOfConduct.as_view(),
+        name=DocsReverseNames.developer_code_of_conduct,
+    ),
+    path("developer/makefile/", DeveloperDocsMakefileView.as_view(), name=DocsReverseNames.developer_makefile),
     path(
         "developer/extension-protocol/",
         DeveloperDocsExtensionProtocolView.as_view(),
-        name="developer-extension-protocol",
+        name=DocsReverseNames.developer_extension_protocol,
     ),
-    path("developer/requirements/", DeveloperDocsRequirementsView.as_view(), name="developer-requirements"),
-    path("developer/dockerfile/", DeveloperDocsDockerfileView.as_view(), name="developer-dockerfile"),
-    path("developer/docker-compose/", DeveloperDocsDockerComposeView.as_view(), name="developer-docker-compose"),
+    path(
+        "developer/requirements/", DeveloperDocsRequirementsView.as_view(), name=DocsReverseNames.developer_requirements
+    ),
+    path("developer/dockerfile/", DeveloperDocsDockerfileView.as_view(), name=DocsReverseNames.developer_dockerfile),
+    path(
+        "developer/docker-compose/",
+        DeveloperDocsDockerComposeView.as_view(),
+        name=DocsReverseNames.developer_docker_compose,
+    ),
     # -------------------------------------------------------------------------
     # Documentation generators
     # -------------------------------------------------------------------------
