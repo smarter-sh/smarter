@@ -11,4 +11,4 @@ The Smarter Framework supports multiple hosts using the `django-hosts <https://d
 .. literalinclude:: ../../../../../../smarter/smarter/hosts.py
    :language: python
    :linenos:
-   :lines: 66-
+   :start-at: import re
