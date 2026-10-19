@@ -880,6 +880,17 @@ class SAMSecretBroker(AbstractBroker):
             (SAMKinds.VECTORSEARCH.value, Vectorsearch.objects.filter(auth_secret=instance)),
         ]
 
+    @classmethod
+    def references(cls, instance: Secret) -> SAMDependents:
+        """Return the resources that a Secret uses: none.
+
+        :param instance: The Secret.
+        :type instance: Secret
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that use this Secret.

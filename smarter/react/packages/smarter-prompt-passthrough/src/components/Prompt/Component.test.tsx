@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { FakeEventSource, installFakes } from "@/mocks/fakes";
+import { FakeEventSource, installFakes } from "@smarter/serverlogs/fakes";
 import { API_URL, LOG_STREAM_URL, PROVIDER_API_URL, bulkLogs, completion, sessionContext } from "@/mocks/fixtures";
 import { passthroughErrorHandlers, providerHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";

@@ -6,6 +6,10 @@
  *
  * As the user edits it, it checks the manifest's YAML syntax, and then validates it against its
  * SAM model with the cli api's validate command, and marks the errors in the editor.
+ *
+ * The web console's Prompt Engineer's Workbench (@smarter/workbench) renders it too, in its Console's
+ * Manifest tab, for the LLMClient's manifest: it reloads the chat's configuration when the editor
+ * saves (onSaved), and leaves for the LLM Clients list when it deletes the LLMClient (onDeleted).
  */
 import { useEffect, useMemo, useState } from "react";
 import { load } from "js-yaml";
@@ -14,13 +18,12 @@ import type * as monaco from "monaco-editor";
 import { gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import ManifestEditor from "@/components/ManifestEditor";
-import Problems from "@/components/Problems";
-import Toolbar from "@/components/Toolbar";
-import { callCli, type CliResult } from "@/lib/api";
-import { framingWindow, notifySaved } from "@/lib/frame";
-import { cloneManifest, manifestDependencies, manifestToApply, parseManifest, type Manifest } from "@/lib/manifest";
-import { samErrors, syntaxErrors, type ManifestError } from "@/lib/validation";
+import ManifestEditor from "./components/ManifestEditor";
+import Problems from "./components/Problems";
+import Toolbar from "./components/Toolbar";
+import { callCli, type CliResult } from "./lib/api";
+import { cloneManifest, manifestDependencies, manifestToApply, parseManifest, type Manifest } from "./lib/manifest";
+import { samErrors, syntaxErrors, type ManifestError } from "./lib/validation";
 
 // how long the user pauses typing before the manifest is validated.
 const VALIDATE_DELAY_MS = 600;
@@ -32,6 +35,10 @@ export interface AppProps {
   validateApiUrl: string;
   deleteApiUrl: string;
   kindPlaceholder: string;
+  /** Called with the manifest's kind and name after it is saved. */
+  onSaved?: (saved: { kind: string; name: string }) => void;
+  /** Called after the resource is deleted, in place of leaving the page for the one that the user came from. */
+  onDeleted?: () => void;
 }
 
 type ModalState =
@@ -49,17 +56,13 @@ function tryParse(yaml: string): Manifest | null {
   }
 }
 
-/**
- * Leave the page after its resource is deleted: back to where the user came from, or the dashboard. In a
- * frame, e.g. the prompt workbench's, the page that frames the editor leaves, since its resource is gone too.
- */
+/** Leave the page after its resource is deleted: back to where the user came from, or the dashboard. */
 function leavePage() {
-  const page = framingWindow() ?? window;
-  const referrer = page.document.referrer ? new URL(page.document.referrer) : null;
-  if (referrer && referrer.origin === window.location.origin && referrer.pathname !== page.location.pathname) {
-    page.location.assign(referrer.href);
+  const referrer = document.referrer ? new URL(document.referrer) : null;
+  if (referrer && referrer.origin === window.location.origin && referrer.pathname !== window.location.pathname) {
+    window.location.assign(referrer.href);
   } else {
-    page.location.assign("/dashboard/");
+    window.location.assign("/dashboard/");
   }
 }
 
@@ -109,6 +112,8 @@ function App({
   validateApiUrl,
   deleteApiUrl,
   kindPlaceholder,
+  onSaved,
+  onDeleted = leavePage,
 }: AppProps) {
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [savedYaml, setSavedYaml] = useState(initialManifest);
@@ -200,7 +205,7 @@ function App({
     );
     if (result.ok) {
       setSavedYaml(yaml);
-      notifySaved(manifest);
+      onSaved?.({ kind: manifest.kind, name: manifest.metadata.name });
     }
     showResult(result.ok ? gettext("Saved") : gettext("Save Failed"), result);
   };
@@ -231,7 +236,7 @@ function App({
     const result = await run(() =>
       callCli(sessionContext, url, {}, interpolate(gettext("%(kind)s %(name)s deleted"), { kind, name })),
     );
-    showResult(result.ok ? gettext("Deleted") : gettext("Delete Failed"), result, result.ok ? leavePage : undefined);
+    showResult(result.ok ? gettext("Deleted") : gettext("Delete Failed"), result, result.ok ? onDeleted : undefined);
   };
 
   const closeResult = () => {

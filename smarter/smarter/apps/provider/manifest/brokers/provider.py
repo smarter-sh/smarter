@@ -5,8 +5,10 @@ import datetime
 from typing import List, Optional, Type
 from urllib.parse import urljoin
 
+from django.db.models import QuerySet
 from django.http import HttpRequest
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.apps.provider.manifest.enum import SAMProviderSpecKeys
 from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
@@ -768,6 +770,43 @@ class SAMProviderBroker(AbstractBroker):
             (SAMKinds.GUARDRAIL.value, guardrails),
         ]
         return retval
+
+    @classmethod
+    def references(cls, instance: Provider) -> SAMDependents:
+        """Return the resources that a Provider uses: the Secret of its api key.
+
+        :param instance: The Provider.
+        :type instance: Provider
+        :return: Its Secret.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.secret.models import Secret
+
+        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_id))]  # type: ignore[attr-defined]
+
+    @classmethod
+    def providers_named(cls, name: Optional[str], user_profile: Optional[UserProfile]) -> QuerySet:
+        """Return the Provider that a resource uses by name, as the one row of a QuerySet.
+
+        An LLMClient, a plugin and a Guardrail name their Provider, rather than referring to one row.
+        The name is resolved as a prompt resolves it: the active Provider of that name, ignoring case,
+        that the resource's owner may read. An LLMClient without one uses the default Provider.
+
+        :param name: The Provider's name, or None for the default Provider.
+        :type name: Optional[str]
+        :param user_profile: The owner of the resource that names it.
+        :type user_profile: Optional[UserProfile]
+        :return: The Provider, or no rows if there is none.
+        :rtype: QuerySet
+        """
+        providers = Provider.objects.filter(is_active=True)
+        providers = providers.filter(name__iexact=name) if name else providers.filter(is_default=True)
+        if user_profile is not None:
+            providers = providers.with_read_permission_for(user_profile.user)  # type: ignore[attr-defined]
+        provider = providers.order_by("pk").first()
+        return Provider.objects.filter(pk=provider.pk) if provider else Provider.objects.none()
 
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:

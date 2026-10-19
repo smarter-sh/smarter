@@ -106,6 +106,30 @@ Copy the closest existing list package, then rename it everywhere.
 See [references/canonical-django-react-reference.md](references/canonical-django-react-reference.md)
 for the files to read.
 
+## One package that imports another
+
+A console app can render another package's component. For example, the Prompt Engineer's Workbench
+(`smarter-workbench`) renders the manifest editor, the LLMClient architecture and the LLMClient deployment
+page in its Console's tabs, and imports Smarter Chat. The workbench and the Prompt Passthrough both render the
+server log viewer, `smarter-serverlogs`, in their Server Logs tabs: one package, rather than a copy in each. A package that exists only to be imported, such as
+`smarter-llmclient-architecture`, has no `build` script: `npm run dev` renders its fixtures, and the importing
+package's build bundles it. The workspace's shared configuration maps `@/` to the _importing_
+package's `src/`, so a package whose source another package imports follows these rules:
+
+- **Its source uses relative imports**, not `@/`, as `@smarter/common`'s does. Its tests, stories and
+  mocks may keep `@/`, because they run only in their own package. `smarter-manifest-editor`,
+  `smarter-llmclient-architecture`, `smarter-llmclient-deployment` and `smarter-serverlogs` do this.
+- **Its `package.json` exports its source**: `"main"` and `"exports": {".": "./src/index.ts"}`.
+  `src/index.ts` exports the component and its props type. Fixtures that other packages' tests
+  use are exported as a subpath, e.g. `"./mocks"` in `smarter-llmclient-deployment`.
+- **A component that was a page takes callbacks** in place of whatever it did to its page or a
+  framing page, e.g. the manifest editor's `onSaved` and `onDeleted`.
+- **Smarter Chat is the exception.** It is its own repository, with `@/` imports, so the workbench
+  imports its built library (`packages/smarter-chat/dist/`), as npm users do. `npm run build:deps`
+  builds it and `@smarter/common`; `make react-test`, `make react-lint` and CI run it first.
+
+Don't frame a console page in an iframe to reuse it: export its component instead.
+
 ## A blank page with no console errors
 
 The page renders an empty root element, and the browser console shows nothing:

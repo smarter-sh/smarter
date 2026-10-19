@@ -441,6 +441,25 @@ class SAMLLMHostBroker(AbstractBroker):
         """
         return []
 
+    @classmethod
+    def references(cls, instance: LLMHost) -> SAMDependents:
+        """Return the resources that an LLMHost uses: its LLMHostCompute, and the Secret of its api key.
+
+        :param instance: The LLMHost.
+        :type instance: LLMHost
+        :return: Its LLMHostCompute and Secret.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmhost.models import LLMHostCompute
+        from smarter.apps.secret.models import Secret
+
+        return [
+            (SAMKinds.LLM_HOST_COMPUTE.value, LLMHostCompute.objects.filter(pk=instance.compute_id)),  # type: ignore[attr-defined]
+            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_secret_id)),  # type: ignore[attr-defined]
+        ]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this LLMHost.

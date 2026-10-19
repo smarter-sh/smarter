@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LLMClient deployment</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body class="app-default">
+    <!--
+    only used for development via 'npm run dev', with the public page of src/mocks/fixtures.ts. In
+    production, this file is rendered by Django, as the page at a deployed LLMClient's url.
+
+    See:
+    - smarter.apps.llmclient.views.endpoints.LLMClientEndpointsView
+    - smarter.apps.llmclient.templatetags.react_llmclient_deployment.llmclient_deployment_react_assets
+    - templates/llmclient/endpoints.html
+    -->
+    <script id="smarter-llmclient-deployment-data" type="application/json">
+      {
+        "mode": "public",
+        "llmclient": {
+          "name": "stackademy",
+          "appName": "Stackademy Support Bot",
+          "examplePrompts": ["What courses are there?", "Is your program free?"],
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "version": "1.0.0",
+          "url": "https://stackademy.3141-5926-5359.api.example.com",
+          "workbenchUrl": "/workbench/llm-clients/rMTAwMDAzOQx/prompt/"
+        },
+        "deployed": true,
+        "authenticated": false,
+        "manifestYaml": "apiVersion: smarter.sh/v1\nkind: LLMClient\nmetadata:\n  name: stackademy\n  description: Answers questions about \u003ccourses>.\nspec:\n  config:\n    prompt:\n      defaultSystemRole: |\n        You are a helpful assistant.\n\n        Answer in \u003cb>one\u003c/b> sentence.\n      deployed: true\n      appExamplePrompts:\n        - What courses are there?\n      defaultMaxTokens: 2048\nstatus:\n  accountNumber: 3141-5926-5359",
+        "snippets": {
+          "deployCommand": "smarter deploy llmclient stackademy",
+          "deployCommands": "smarter apply -f stackademy.yaml\nsmarter deploy llmclient stackademy",
+          "configCommand": "curl -X POST https://stackademy.3141-5926-5359.api.example.com/config/ \\\n  -H \"Content-Type: application/json\"",
+          "promptCommand": "curl -X POST https://stackademy.3141-5926-5359.api.example.com/prompt/ \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"messages\":[{\"role\":\"user\",\"content\":\"What courses are there?\"}]}'",
+          "exampleResponse": "{\n  \"api\": \"smarter.sh/v1\",\n  \"data\": {\n    \"status\": 200\n  }\n}",
+          "allowedOriginsYaml": "spec:\n  config:\n    prompt:\n      allowedOrigins:\n        - https://www.example.com",
+          "apiKeyYaml": "spec:\n  apiKey: \u003cAPI-KEY-NAME>",
+          "drupalInstallCommands": "composer require smarter-sh/smarter-drupal\ndrush pm:install smarter_chat",
+          "npmInstallCommand": "npm install @smarter.sh/ui-chat",
+          "embedHtml": "\u003cscript src=\"https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js\"\n  data-chatbot=\"https://stackademy.3141-5926-5359.api.example.com/\" async>\u003c/script>",
+          "embedHtmlWithApiKey": "\u003cscript src=\"https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js\"\n  data-chatbot=\"https://stackademy.3141-5926-5359.api.example.com/\"\n  data-api-key=\"\u003cYOUR-API-KEY>\" async>\u003c/script>",
+          "reactSnippet": "import { SmarterChat } from \"@smarter.sh/ui-chat\";",
+          "reactSnippetWithApiKey": "import { SmarterChat } from \"@smarter.sh/ui-chat\";\n// apiKey={import.meta.env.VITE_SMARTER_API_KEY}",
+          "createApiKeyCommand": "python manage.py create_api_key \\\n  --account_number 3141-5926-5359",
+          "switchCommand": "python manage.py waffle_switch enable_llmclient_endpoints_page off"
+        },
+        "links": {
+          "apiKeysUrl": "https://platform.example.com/api-keys/",
+          "marketingSiteUrl": "https://smarter.sh",
+          "docsUrl": "https://docs.smarter.sh",
+          "logoUrl": "https://cdn.example.com/images/logo/smarter-crop.png",
+          "productName": "The Smarter Project",
+          "productDescription": "An open source, no-code AI authoring platform designed for instructional use."
+        },
+        "ownership": null,
+        "apiKeys": null
+      }
+    </script>
+    <div
+      id="smarter-llmclient-deployment-root"
+      class="d-flex flex-column w-100"
+      smarter-deployment-data-id="smarter-llmclient-deployment-data"
+    ></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+  <script src="/assets/plugins/global/plugins.bundle.js"></script>
+  <script src="/assets/js/scripts.bundle.js"></script>
+</html>

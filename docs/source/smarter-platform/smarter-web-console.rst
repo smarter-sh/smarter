@@ -107,7 +107,7 @@ Authors have direct visibility into the live Linux application server logs of ea
 filtering, to quickly identify relevant log entries. The Passthrough Tool's **Server Logs** tab, to
 the right of its Request and Response tabs, streams the logs of the request that it sent last, and
 only that request's logs: each request has its own id, in its ``X-Smarter-RequestId`` header, and
-the platform tags every log record of the request with it. Smarter Chat's Console has a Server Logs
+the platform tags every log record of the request with it. The workbench's Console has a Server Logs
 tab too, with the user's logs of the chat. This feature is invaluable for debugging complex
 multi-pass prompts, monitoring real-time system behavior, and gaining insights into platform
 performance.

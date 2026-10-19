@@ -375,6 +375,17 @@ class SAMCustomDomainBroker(AbstractBroker):
 
         return [(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(custom_domain=instance))]
 
+    @classmethod
+    def references(cls, instance: LLMClientCustomDomain) -> SAMDependents:
+        """Return the resources that a Custom Domain uses: none.
+
+        :param instance: The Custom Domain.
+        :type instance: LLMClientCustomDomain
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return a broker for the LLMClient that uses this CustomDomain.

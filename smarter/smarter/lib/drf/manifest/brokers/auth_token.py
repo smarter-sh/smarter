@@ -693,6 +693,17 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         )
         return [(SAMKinds.LLM_CLIENT.value, llmclients)]
 
+    @classmethod
+    def references(cls, instance: SmarterAuthToken) -> SAMDependents:
+        """Return the resources that an api key uses: none.
+
+        :param instance: The api key.
+        :type instance: SmarterAuthToken
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the LLMClients that use this auth token.

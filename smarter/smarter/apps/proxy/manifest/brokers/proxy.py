@@ -469,6 +469,25 @@ class SAMProxyBroker(AbstractBroker):
         """
         return []
 
+    @classmethod
+    def references(cls, instance: Proxy) -> SAMDependents:
+        """Return the resources that a Proxy uses: its Provider, and the Secret of its api key.
+
+        :param instance: The Proxy.
+        :type instance: Proxy
+        :return: Its Provider and Secret.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.provider.models import Provider
+        from smarter.apps.secret.models import Secret
+
+        return [
+            (SAMKinds.PROVIDER.value, Provider.objects.filter(pk=instance.provider_id)),  # type: ignore[attr-defined]
+            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_secret_id)),  # type: ignore[attr-defined]
+        ]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this Proxy.
