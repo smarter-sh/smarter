@@ -159,8 +159,9 @@ The Console
 *Only in the workbench. The npm package and the embed script never display it, nor its toggle
 button.*
 
-The Console is a simulated terminal beside the chat. Its tabs display the LLMClient's manifest, its
-deployment, the chat session's server logs and, as JSON, its history and configuration:
+The Console is a simulated terminal beside the chat. Its tabs display the chat session's server logs,
+the LLMClient's manifest, the session's history and configuration, as JSON, and the LLMClient's
+deployment:
 
 .. list-table::
    :header-rows: 1
@@ -168,37 +169,37 @@ deployment, the chat session's server logs and, as JSON, its history and configu
 
    * - Tab
      - Contents
-   * - Manifest
-     - The LLMClient's YAML manifest, in the web console's manifest editor, which validates it as you
-       type, and saves, clones and deletes the LLMClient with your own permissions. When you save,
-       the chat reloads the LLMClient's configuration, so that the next prompt uses your changes, and
-       the chat session carries on. The tab is the far left one, and the editor loads when you first
-       open it, then keeps your unsaved changes while you look at the other tabs. Present only when
-       the page passes the editor's url (``manifestEditorUrl``), as the workbench does: the editor is
-       a page of the web console, so it must be of the page's own origin.
-   * - Deployment
-     - What the prompt engineer needs once the LLMClient is deployed: its status and url, the ways
-       to put its chat on a web site (WordPress, Drupal, Shopify, React from npm, and any html page),
-       how to secure its url with an api key, how the url works, with curl commands and an example
-       response, and its manifest. Its api key section lists the account's api keys, creates one,
-       showing its secret once, and attaches it to the LLMClient or detaches it. An LLMClient that
-       isn't deployed gets the url that it will have, and the command that deploys it. The page loads
-       when you first open the tab. Present only when the page passes its url (``deploymentUrl``), as
-       the workbench does, whatever the ``enable_llmclient_endpoints_page`` waffle switch.
    * - Server Logs
      - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.
        Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Blocks of
        pretty-printed JSON, such as a prompt's request and response, are collapsed to their first
        line and their length: each block's **+** button expands it, and **Expand JSON** expands or
-       collapses all of them. Copying the lines copies the JSON in full. Present only
+       collapses all of them. Copying the lines copies the JSON in full. The tab is the far left one. Present only
        when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
        then selected when the Console opens. A new chat clears it.
+   * - Manifest
+     - The LLMClient's YAML manifest, in the web console's manifest editor, which validates it as you
+       type, and saves, clones and deletes the LLMClient with your own permissions. When you save,
+       the chat reloads the LLMClient's configuration, so that the next prompt uses your changes, and
+       the chat session carries on. The editor loads when you first
+       open it, then keeps your unsaved changes while you look at the other tabs. Present only when
+       the page passes the editor's url (``manifestEditorUrl``), as the workbench does: the editor is
+       a page of the web console, so it must be of the page's own origin.
    * - Tool Calls
      - The chat session's tool calls, each collapsed to its function's name: click one to see its
        request and response.
    * - Config
      - The LLMClient's complete configuration, as the config api returns it with ``?verbose=true``,
        collapsed to its top-level keys.
+   * - Deployment
+     - What the prompt engineer needs once the LLMClient is deployed: its status and url, the ways
+       to put its chat on a web site (WordPress, Drupal, Shopify, React from npm, and any html page),
+       how to secure its url with an api key, how the url works, with curl commands and an example
+       response, and its manifest. Its api key section lists the account's api keys, creates one,
+       showing its secret once, and attaches it to the LLMClient or detaches it. An LLMClient that
+       isn't deployed gets the url that it will have, and the command that deploys it. The tab is the far right one, and the
+       page loads when you first open it. Present only when the page passes its url (``deploymentUrl``), as
+       the workbench does, whatever the ``enable_llmclient_endpoints_page`` waffle switch.
 
 The Tool Calls and Config tabs display the configuration's diagnostic parts, which are costly for
 the platform to build, and grow with the chat session. The chat fetches them only while one of these
