@@ -611,7 +611,8 @@ class PromptChatApiHistoryBase(BaseModel):
 class PromptChatApiHistory(PromptChatApiHistoryBase):
     """The chat session's history, in version 2.
 
-    Only ``chat_history`` is public.
+    Only ``chat_history`` is public. ``prompt_tool_call_history`` is in the complete configuration with
+    ``?verbose=true``, and the other histories are returned only to the cli.
     """
 
     llmclient_request_history: Optional[list[PromptChatApiLLMClientRequest]] = None
@@ -625,11 +626,19 @@ class PromptChatApiHistoryV1(PromptChatApiHistoryBase):
 
 
 class PromptChatApiMetaData(PromptChatApiModel):
-    """The LLMClient's state."""
+    """
+    The LLMClient's state.
+
+    The complete configuration, with ``?verbose=true``, adds the rest of ``LLMClientHelper.to_json()``.
+    """
 
     ready: Optional[bool] = None
     is_valid: Optional[bool] = None
     is_deployed: Optional[bool] = None
+    is_custom_domain: Optional[bool] = Field(None, description="True if the request's host is a custom domain.")
+    is_authentication_required: Optional[bool] = Field(
+        None, description="True if the LLMClient requires a Smarter api key, or a logged-in user."
+    )
 
 
 class PromptChatApiListMetaData(PromptChatApiModel):
@@ -644,7 +653,7 @@ class PromptChatApiListMetaData(PromptChatApiModel):
 class PromptChatApiPluginList(PromptChatApiModel):
     """The LLMClient's plugins.
 
-    The list itself is returned only in the complete configuration.
+    The list itself is returned only in the complete configuration, with ``?verbose=true``.
     """
 
     meta_data: PromptChatApiListMetaData
@@ -654,7 +663,7 @@ class PromptChatApiPluginList(PromptChatApiModel):
 class PromptChatApiExtensionList(PromptChatApiModel):
     """The LLMClient's extensions.
 
-    The list itself is returned only in the complete configuration.
+    The list itself is returned only in the complete configuration, with ``?verbose=true``.
     """
 
     meta_data: PromptChatApiListMetaData
