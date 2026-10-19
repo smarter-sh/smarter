@@ -1,5 +1,5 @@
 """
-smarter.lib.logging.filters
+Smarter.lib.logging.filters
 ============================
 
 Logging filters for the Smarter application.
@@ -14,6 +14,9 @@ Classes
 HealthCheckFilter
     A logging filter that excludes log records related to health check URLs. It can be used in Django or
     standard Python logging configurations to automatically filter out health check requests from logs.
+AsyncioShieldedCancelFilter
+    A logging filter that excludes asyncio's ``CancelledError exception in shielded future`` error,
+    which a client that disconnects in the middle of a request causes under uvicorn.
 
 Examples
 --------
@@ -155,3 +158,75 @@ class HealthCheckFilter(logging.Filter, SmarterHelperMixin):
             return True
 
         return path not in self.health_check_urls
+
+
+class AsyncioShieldedCancelFilter(logging.Filter):
+    """
+    Logging filter to suppress asyncio's ``CancelledError exception in shielded future`` error.
+
+    Smarter runs under uvicorn (ASGI), and most of its middleware is synchronous, so asgiref runs
+    each request's synchronous code in a worker thread, inside :func:`asyncio.shield`. When a client
+    disconnects before the response is sent, Django's ASGI handler cancels the request's task.
+    The shielded work in the thread then ends with :class:`asyncio.CancelledError`, and asyncio's
+    default exception handler logs it at ERROR level with a long traceback through the whole
+    middleware chain, for example::
+
+        CancelledError exception in shielded future
+        future: <Future finished exception=CancelledError()>
+
+    Nothing failed: nobody is waiting for the response anymore. This filter drops that record,
+    and only that record, from the ``asyncio`` logger. Every other asyncio error is still emitted.
+
+    Examples
+    --------
+    To use this filter in a Django logging configuration::
+
+        LOGGING = {
+            ...
+            'filters': {
+                'asyncio_shielded_cancel': {
+                    '()': 'smarter.lib.logging.filters.AsyncioShieldedCancelFilter',
+                },
+            },
+            'loggers': {
+                'asyncio': {
+                    'filters': ['asyncio_shielded_cancel'],
+                },
+            },
+            ...
+        }
+    """
+
+    message_prefix = "CancelledError exception in shielded future"
+    """The beginning of the message that asyncio logs, see :func:`asyncio.shield`."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """
+        Determine whether a log record should be emitted.
+
+        Parameters
+        ----------
+        record : logging.LogRecord
+            The log record to be filtered.
+
+        Returns
+        -------
+        bool
+            False if the record is asyncio's shielded-future ``CancelledError`` and should be suppressed;
+            True otherwise (the log record will be emitted).
+
+        Examples
+        --------
+        >>> f = AsyncioShieldedCancelFilter()
+        >>> f.filter(logging.makeLogRecord({"name": "asyncio", "msg": "CancelledError exception in shielded future"}))
+        False
+        >>> f.filter(logging.makeLogRecord({"name": "asyncio", "msg": "Task exception was never retrieved"}))
+        True
+        """
+        if record.name != "asyncio":
+            return True
+        try:
+            message = record.getMessage()
+        except (TypeError, ValueError):
+            return True
+        return not message.startswith(self.message_prefix)
