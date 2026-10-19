@@ -154,7 +154,7 @@ deploys it.
           <h3 class="fw-bold text-gray-900 mb-3">WordPress</h3>
           <p class="text-gray-600 fs-6 mb-5">{% translate "A plugin: a chat launcher on every page, a Smarter Chat block, and a [smarter_chat] shortcode." %}</p>
           <ol class="text-gray-700 fs-6 ps-5 mb-6 flex-grow-1">
-            <li class="mb-2">{% translate "Download smarter-chat-<version>.zip from the plugin's latest release, and upload it in Plugins, Add New, Upload Plugin." %}</li>
+            <li class="mb-2">{% filter force_escape %}{% translate "Download smarter-chat-<version>.zip from the plugin's latest release, and upload it in Plugins, Add New, Upload Plugin." %}{% endfilter %}</li>
             <li>{% translate "In Settings, Smarter Chat, enter this LLMClient's url." %}</li>
           </ol>
           <div class="d-flex flex-wrap gap-2">
@@ -219,7 +219,7 @@ deploys it.
         <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8 d-flex flex-column">
           <span class="smarter-integration-icon smarter-integration-html mb-6" aria-hidden="true"><i class="fa-brands fa-html5 fs-2x"></i></span>
           <h3 class="fw-bold text-gray-900 mb-3">{% translate "Any web page, in html" %}</h3>
-          <p class="text-gray-600 fs-6 mb-5">{% translate "One script tag, with no build: for a static site, a server-rendered page, Squarespace, Wix or Webflow. Paste it before </body>, and a chat button appears in a corner of the page." %}</p>
+          <p class="text-gray-600 fs-6 mb-5">{% filter force_escape %}{% translate "One script tag, with no build: for a static site, a server-rendered page, Squarespace, Wix or Webflow. Paste it before </body>, and a chat button appears in a corner of the page." %}{% endfilter %}</p>
           <div class="mb-5">
             {% include 'llmclient/terminal.html' with title="index.html" code_id="smarter-embed-html" code=embed_html %}
           </div>
@@ -344,7 +344,7 @@ deploys it.
       <h2 class="fs-2hx fw-bolder text-gray-900 mb-4">{% translate "How this url works" %}</h2>
       <p class="fs-5 text-gray-600 mw-750px mx-auto">
         {% translate "Smarter Chat sends this url two kinds of requests, and so can your own code. Both are POST requests, with JSON in and JSON out. Copy a command into a terminal to try it." %}
-        {% if authenticated %}{% translate "This LLMClient requires a Smarter api key: replace <YOUR-API-KEY> with yours." %}{% endif %}
+        {% if authenticated %}{% filter force_escape %}{% translate "This LLMClient requires a Smarter api key: replace <YOUR-API-KEY> with yours." %}{% endfilter %}{% endif %}
       </p>
     </div>
     <div class="row g-8 mb-12">

@@ -220,18 +220,21 @@ class PromptChatApiMessage(PromptChatApiModel):
 
     role: str = Field(..., description="system, assistant, user, tool, smarter or smarter_error.")
     content: Optional[Union[str, list[PromptChatApiContentPart]]] = Field(
-        None, description="The message's text, or its parts. Null for an assistant message that only calls tools."
+        default=None,
+        description="The message's text, or its parts. Null for an assistant message that only calls tools.",
     )
-    tool_calls: Optional[list[PromptChatApiToolCall]] = Field(None, description="An assistant message's tool calls.")
-    tool_call_id: Optional[str] = Field(None, description="The tool call that a tool message answers.")
-    name: Optional[str] = Field(None, description="The name of a tool message's function.")
+    tool_calls: Optional[list[PromptChatApiToolCall]] = Field(
+        default=None, description="An assistant message's tool calls."
+    )
+    tool_call_id: Optional[str] = Field(default=None, description="The tool call that a tool message answers.")
+    name: Optional[str] = Field(default=None, description="The name of a tool message's function.")
 
 
 class PromptChatApiJournalMetadata(PromptChatApiModel):
     """The journal's record of a request, which every journaled response carries."""
 
-    command: Optional[str] = Field(None, description="The journal's command, e.g. prompt.")
-    thing: Optional[str] = Field(None, description="The journal's thing, e.g. LLMClient.")
+    command: Optional[str] = Field(default=None, description="The journal's command, e.g. prompt.")
+    thing: Optional[str] = Field(default=None, description="The journal's thing, e.g. LLMClient.")
 
 
 class PromptChatApiErrorBody(PromptChatApiModel):
@@ -317,7 +320,7 @@ class PromptChatApiLLMClientBase(PromptChatApiModel):
     deployed: Optional[bool] = None
     provider: Optional[str] = None
     default_model: Optional[str] = None
-    default_system_role: Optional[str] = Field(None, description="The system prompt of a new chat session.")
+    default_system_role: Optional[str] = Field(default=None, description="The system prompt of a new chat session.")
     app_name: Optional[str] = None
     app_assistant: Optional[str] = None
     app_welcome_message: Optional[str] = None
@@ -326,10 +329,10 @@ class PromptChatApiLLMClientBase(PromptChatApiModel):
     app_info_url: Optional[str] = None
     app_file_attachment: Optional[bool] = None
     total_tools: Optional[int] = Field(
-        None, description="The number of the LLMClient's extensions, plugins and MCPClients."
+        default=None, description="The number of the LLMClient's extensions, plugins and MCPClients."
     )
     styles: Optional[PromptChatApiStyles] = Field(
-        None, description="The look of the chat: the manifest's spec.config.styles, with snake_case keys."
+        default=None, description="The look of the chat: the manifest's spec.config.styles, with snake_case keys."
     )
 
 
@@ -357,8 +360,8 @@ class PromptChatApiOrmModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: int = Field(..., description="The row's primary key.")
-    created_at: Optional[datetime] = Field(None, description="TimestampedModel.created_at.")
-    updated_at: Optional[datetime] = Field(None, description="TimestampedModel.updated_at.")
+    created_at: Optional[datetime] = Field(default=None, description="TimestampedModel.created_at.")
+    updated_at: Optional[datetime] = Field(default=None, description="TimestampedModel.updated_at.")
 
 
 class PromptChatApiPluginMeta(PromptChatApiOrmModel):
@@ -369,11 +372,11 @@ class PromptChatApiPluginMeta(PromptChatApiOrmModel):
     """
 
     name: str = Field(..., max_length=255, description="MetaDataModel.name, in snake_case.")
-    description: Optional[str] = Field(None, description="MetaDataModel.description.")
-    version: Optional[str] = Field(None, max_length=255, description="MetaDataModel.version, e.g. 1.0.0.")
+    description: Optional[str] = Field(default=None, description="MetaDataModel.description.")
+    version: Optional[str] = Field(default=None, max_length=255, description="MetaDataModel.version, e.g. 1.0.0.")
     tags: list[str] = Field(default_factory=list, description="MetaDataModel.tags, by name.")
     annotations: Optional[Union[list[dict[str, PromptChatApiJson]], dict[str, PromptChatApiJson]]] = Field(
-        None, description="MetaDataModel.annotations: a list of key-value pairs, or, in legacy rows, an object."
+        default=None, description="MetaDataModel.annotations: a list of key-value pairs, or, in legacy rows, an object."
     )
     plugin_class: PromptChatApiPluginClass = Field(..., description="PluginMeta.plugin_class.")
 
@@ -431,7 +434,7 @@ class PromptChatApiLLMClientExtension(PromptChatApiOrmModel):
     llmclient: int = Field(..., description="LLMClientExtensions.llmclient: the LLMClient's id.")
     extension: int = Field(..., description="LLMClientExtensions.extension: the Extension's id.")
     name: str = Field(..., description="The Extension's slug, e.g. weather.")
-    version: Optional[str] = Field(None, description="The Extension's installed version, e.g. 1.0.0.")
+    version: Optional[str] = Field(default=None, description="The Extension's installed version, e.g. 1.0.0.")
     enabled: bool = Field(..., description="Whether the Extension is enabled, so that its tools are offered.")
 
     @classmethod
@@ -468,9 +471,9 @@ class PromptChatApiLLMClientRequest(PromptChatApiOrmModel):
     """A request to the LLMClient's prompt api: a :class:`smarter.apps.llmclient.models.LLMClientRequests`."""
 
     llmclient: int = Field(..., description="LLMClientRequests.llmclient: the LLMClient's id.")
-    request: Optional[PromptChatApiPromptRequest] = Field(None, description="LLMClientRequests.request.")
-    session_key: Optional[str] = Field(None, description="LLMClientRequests.session_key.")
-    is_aggregation: Optional[bool] = Field(None, description="LLMClientRequests.is_aggregation.")
+    request: Optional[PromptChatApiPromptRequest] = Field(default=None, description="LLMClientRequests.request.")
+    session_key: Optional[str] = Field(default=None, description="LLMClientRequests.session_key.")
+    is_aggregation: Optional[bool] = Field(default=None, description="LLMClientRequests.is_aggregation.")
 
     @classmethod
     def from_model(cls, row: "LLMClientRequests") -> "PromptChatApiLLMClientRequest":
@@ -507,11 +510,13 @@ class PromptChatApiPromptToolCall(PromptChatApiOrmModel):
     """A tool call of the chat session: a :class:`smarter.apps.prompt.models.PromptToolCall`."""
 
     prompt: int = Field(..., description="PromptToolCall.prompt: the chat session's id.")
-    plugin: Optional[int] = Field(None, description="PromptToolCall.plugin: the PluginMeta's id, for a plugin.")
-    function_name: Optional[str] = Field(None, max_length=255, description="PromptToolCall.function_name.")
-    function_args: Optional[str] = Field(None, max_length=255, description="PromptToolCall.function_args.")
-    request: Optional[PromptChatApiJson] = Field(None, description="PromptToolCall.request: the tool's input.")
-    response: Optional[PromptChatApiJson] = Field(None, description="PromptToolCall.response: the tool's result.")
+    plugin: Optional[int] = Field(default=None, description="PromptToolCall.plugin: the PluginMeta's id, for a plugin.")
+    function_name: Optional[str] = Field(default=None, max_length=255, description="PromptToolCall.function_name.")
+    function_args: Optional[str] = Field(default=None, max_length=255, description="PromptToolCall.function_args.")
+    request: Optional[PromptChatApiJson] = Field(default=None, description="PromptToolCall.request: the tool's input.")
+    response: Optional[PromptChatApiJson] = Field(
+        default=None, description="PromptToolCall.response: the tool's result."
+    )
 
     @classmethod
     def from_model(cls, row: "PromptToolCall") -> "PromptChatApiPromptToolCall":
@@ -541,7 +546,7 @@ class PromptChatApiPromptPluginUsage(PromptChatApiOrmModel):
 
     prompt: int = Field(..., description="PromptPluginUsage.prompt: the chat session's id.")
     plugin: int = Field(..., description="PromptPluginUsage.plugin: the PluginMeta's id.")
-    input_text: Optional[str] = Field(None, description="PromptPluginUsage.input_text.")
+    input_text: Optional[str] = Field(default=None, description="PromptPluginUsage.input_text.")
 
     @classmethod
     def from_model(cls, row: "PromptPluginUsage") -> "PromptChatApiPromptPluginUsage":
@@ -567,9 +572,9 @@ class PromptChatApiPluginSelection(PromptChatApiOrmModel):
     """A plugin selector's activation: a :class:`smarter.apps.llmtool.models.PluginSelectorHistory`."""
 
     plugin_selector: int = Field(..., description="PluginSelectorHistory.plugin_selector: the PluginSelector's id.")
-    search_term: Optional[str] = Field(None, max_length=255, description="PluginSelectorHistory.search_term.")
-    messages: Optional[list[PromptChatApiMessage]] = Field(None, description="PluginSelectorHistory.messages.")
-    session_key: Optional[str] = Field(None, max_length=255, description="PluginSelectorHistory.session_key.")
+    search_term: Optional[str] = Field(default=None, max_length=255, description="PluginSelectorHistory.search_term.")
+    messages: Optional[list[PromptChatApiMessage]] = Field(default=None, description="PluginSelectorHistory.messages.")
+    session_key: Optional[str] = Field(default=None, max_length=255, description="PluginSelectorHistory.session_key.")
 
     @classmethod
     def from_model(cls, row: "PluginSelectorHistory") -> "PromptChatApiPluginSelection":
@@ -635,9 +640,9 @@ class PromptChatApiMetaData(PromptChatApiModel):
     ready: Optional[bool] = None
     is_valid: Optional[bool] = None
     is_deployed: Optional[bool] = None
-    is_custom_domain: Optional[bool] = Field(None, description="True if the request's host is a custom domain.")
+    is_custom_domain: Optional[bool] = Field(default=None, description="True if the request's host is a custom domain.")
     is_authentication_required: Optional[bool] = Field(
-        None, description="True if the LLMClient requires a Smarter api key, or a logged-in user."
+        default=None, description="True if the LLMClient requires a Smarter api key, or a logged-in user."
     )
 
 
@@ -791,7 +796,7 @@ class PromptChatApiConfigV1(PromptChatApiConfigBase):
 class PromptChatApiConfigRequest(PromptChatApiModel):
     """The configuration api's request body."""
 
-    session_key: Optional[str] = Field(None, description="The chat session's key, or empty for a new session.")
+    session_key: Optional[str] = Field(default=None, description="The chat session's key, or empty for a new session.")
 
 
 class PromptChatApiConfigResponse(PromptChatApiEnvelope):
@@ -816,7 +821,7 @@ class PromptChatApiChoice(PromptChatApiModel):
     """A choice of a chat completion."""
 
     index: int = 0
-    finish_reason: Optional[str] = Field(None, description="e.g. stop, length or tool_calls.")
+    finish_reason: Optional[str] = Field(default=None, description="e.g. stop, length or tool_calls.")
     message: Optional[PromptChatApiMessage] = None
 
 
@@ -868,7 +873,7 @@ class PromptChatApiPromptResult(PromptChatApiModel):
         default_factory=list, description="The messages that the prompt added to the chat thread, in order."
     )
     completion: Optional[PromptChatApiCompletion] = Field(
-        None,
+        default=None,
         description="The LLM's chat completion, in the format of the OpenAI api: its choices and usage.",
     )
     plugins: list[str] = Field(default_factory=list, description="The plugins that Smarter selected.")
