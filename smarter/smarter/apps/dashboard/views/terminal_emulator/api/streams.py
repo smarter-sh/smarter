@@ -26,7 +26,7 @@ Behavior
     that it sends this way.
 - Streams only the records of one chat, when the ``session_key`` query
     parameter is set: the records of the requests to an LLMClient's api with
-    that chat session key. Smarter Chat's Console streams the logs of its chat
+    that chat session key. The workbench's Console streams the logs of its chat
     this way.
 - Emits a retry hint and keepalive comments to keep long-lived connections
     healthy through intermediate proxies.

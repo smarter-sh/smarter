@@ -80,20 +80,5 @@ spec:
       should be answered with "I am sorry, but I can only provide information about the courses offered by Stackademy University."
     temperature: 1.0
   selector:
-    directive: search_terms
-    searchTerms:
-    - Stackademy
-    - course
-    - courses
-    - class
-    - classes
-    - catalogue
-    - catalog
-    - curriculum
-    - degree
-    - program
-    - study
-    - tuition
-    - cost
-    - budget
-    - prerequisite
+    directive: always
+    searchTerms: null

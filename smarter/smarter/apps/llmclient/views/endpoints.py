@@ -9,9 +9,11 @@ information in it, and how to build one. The page is served only while the
 ``enable_llmclient_endpoints_page`` waffle switch is active.
 
 The Prompt Engineer's Workbench shows the same content, whatever the switch, in the "Deployment" tab of
-Smarter Chat's Console: see
+its Console: see
 :class:`smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView`. Both
-build it with :func:`deployment_context`.
+render the ``@smarter/llmclient-deployment`` React package's page, this one as its app, the workbench
+as its component, and both build its data with :func:`deployment_page`, whose contract is
+:mod:`smarter.apps.llmclient.views.deployment_contract`.
 
 .. seealso::
 
@@ -19,7 +21,6 @@ build it with :func:`deployment_context`.
     - :mod:`smarter.urls.console`, which serves LLMClients on their custom domains
 """
 
-import re
 from functools import wraps
 from typing import Callable, Optional
 from urllib.parse import urljoin
@@ -29,19 +30,29 @@ from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.http.response import HttpResponseBase
 from django.shortcuts import render
-from django.utils.html import escape
-from django.utils.safestring import SafeString, mark_safe
 
 from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
 from smarter.apps.llmclient.manifest.models.llmclient.model import SAMLLMClient
 from smarter.apps.llmclient.models import LLMClient, get_cached_llmclient_by_request
+from smarter.apps.llmclient.templatetags.react_llmclient_deployment import (
+    DEPLOYMENT_DATA_ID,
+    DEPLOYMENT_ROOT_ID,
+)
+from smarter.apps.llmclient.views.deployment_contract import (
+    DeploymentLinks,
+    DeploymentLLMClient,
+    DeploymentSnippets,
+    LLMClientDeploymentPage,
+)
 from smarter.apps.prompt.contract.models import (
+    PromptChatApiConfigRequest,
     PromptChatApiMessage,
     PromptChatApiPromptRequest,
     PromptChatApiPromptResponse,
     PromptChatApiPromptResult,
 )
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -49,13 +60,15 @@ from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterWebHtmlView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 logger_prefix = logging.formatted_text(__name__)
 
 EXAMPLE_PROMPT = "hello world"
 """The prompt that the page's example ``/prompt/`` command sends, for an LLMClient without example prompts."""
+
+SESSION_KEY_PLACEHOLDER = "<SESSION-KEY>"
+"""The placeholder of a chat session's key in the page's commands, which the config api's response replaces."""
 
 EXAMPLE_RESPONSE_CONTENT = (
     "## The LLM's answer\n\nIn **Markdown**: headings, lists, `code`, tables and [links](https://smarter.sh)."
@@ -84,6 +97,12 @@ API_KEY_YAML = """spec:
   apiKey: <API-KEY-NAME>"""
 """The part of an LLMClient's manifest that attaches an api key to it, by the key's name."""
 
+SWITCH_COMMAND = "python manage.py waffle_switch enable_llmclient_endpoints_page off"
+"""The command that turns off the page at deployed LLMClients' urls, which the page shows administrators."""
+
+LOGO_PATH = "images/logo/smarter-crop.png"
+"""The Smarter Project's logo, on its cdn."""
+
 BROWSER_METHODS = ("GET", "HEAD")
 """The methods that :func:`browser_friendly` sends to :class:`LLMClientEndpointsView`."""
 
@@ -96,15 +115,6 @@ The fields that :func:`manifest_yaml` leaves out of the page's manifest: the per
 
 MANIFEST_CACHE_TIMEOUT = 600
 """How long, in seconds, :func:`cached_manifest_yaml` keeps a manifest."""
-
-YAML_KEY_LINE = re.compile(r"^(?P<indent>\s*)(?P<dash>- )?(?P<key>[A-Za-z_][\w-]*)(?P<colon>:)(?P<value>.*)$")
-"""A YAML line that starts a mapping key, optionally as a list item: ``  - key: value``."""
-
-YAML_LIST_LINE = re.compile(r"^(?P<indent>\s*)(?P<dash>- )(?P<value>.*)$")
-"""A YAML line that is a list item's scalar: ``  - value``."""
-
-YAML_LITERAL_VALUES = ("true", "false", "null", "~")
-"""The YAML scalars that :func:`highlight_yaml` colors as literals."""
 
 
 def example_prompt(llmclient: LLMClient) -> str:
@@ -276,59 +286,6 @@ def cached_manifest_yaml(llmclient_id: int, updated_at: str) -> str:
     return manifest_yaml(llmclient_manifest(LLMClient.objects.get(pk=llmclient_id)))
 
 
-def _yaml_value(value: str) -> str:
-    """The HTML of a YAML scalar, with a class for its kind."""
-    stripped = value.strip()
-    if not stripped:
-        return escape(value)
-    if stripped in YAML_LITERAL_VALUES or re.fullmatch(r"-?\d+(\.\d+)?", stripped):
-        css_class = "yaml-literal"
-    elif stripped.startswith(("|", ">")):
-        css_class = "yaml-block"
-    else:
-        css_class = "yaml-string"
-    return f'{escape(value[: len(value) - len(value.lstrip())])}<span class="{css_class}">{escape(stripped)}</span>'
-
-
-def highlight_yaml(text: str) -> SafeString:
-    """
-    YAML, as HTML whose spans color its keys, strings, literals and literal blocks.
-
-    Every part of the text is escaped. The spans' classes are ``yaml-key``, ``yaml-string``,
-    ``yaml-literal``, ``yaml-block`` and ``yaml-punctuation``, which the page styles.
-
-    :param text: The YAML.
-    :type text: str
-    :returns: The HTML, for a ``<pre>``.
-    :rtype: django.utils.safestring.SafeString
-    """
-    lines: list[str] = []
-    block_indent: Optional[int] = None
-    for line in text.splitlines():
-        indent = len(line) - len(line.lstrip())
-        if block_indent is not None and (not line.strip() or indent > block_indent):
-            lines.append(f'<span class="yaml-string">{escape(line)}</span>')
-            continue
-        block_indent = None
-        key_line = YAML_KEY_LINE.match(line)
-        list_line = YAML_LIST_LINE.match(line)
-        if key_line:
-            dash = '<span class="yaml-punctuation">- </span>' if key_line["dash"] else ""
-            lines.append(
-                f'{key_line["indent"]}{dash}<span class="yaml-key">{escape(key_line["key"])}</span>'
-                f'<span class="yaml-punctuation">:</span>{_yaml_value(key_line["value"])}'
-            )
-            if key_line["value"].strip().startswith(("|", ">")):
-                block_indent = indent + (2 if key_line["dash"] else 0)
-        elif list_line:
-            lines.append(
-                f'{list_line["indent"]}<span class="yaml-punctuation">- </span>{_yaml_value(list_line["value"])}'
-            )
-        else:
-            lines.append(escape(line))
-    return mark_safe("\n".join(lines))  # nosec B308 B703: every part of every line is escaped.
-
-
 def create_api_key_command(account_number: str, llmclient_name: str) -> str:
     """
     The command that a platform administrator runs to create an api key, which prints its secret once.
@@ -365,18 +322,19 @@ def api_keys_url() -> str:
     return urljoin(smarter_settings.environment_url, path)
 
 
-def deployment_context(llmclient: LLMClient) -> SmarterDictType:
+def deployment_page(llmclient: LLMClient) -> LLMClientDeploymentPage:
     """
-    The context of ``llmclient/deployment.html``: the LLMClient, its url, and the snippets that call it.
+    The data of the LLMClient's deployment page: the LLMClient, its url, and the snippets that call it.
 
     An LLMClient that isn't deployed has the url that it will have once it is, and ``deployed`` is false.
-    The page's own template adds ``standalone``: true for the page at the LLMClient's url, false for
-    the workbench's "Deployment" tab.
+    The page is the workbench's, without its owner or api keys, which
+    :class:`~smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView` adds.
+    The page at the LLMClient's url is its :meth:`~LLMClientDeploymentPage.public` copy.
 
     :param llmclient: The LLMClient.
     :type llmclient: smarter.apps.llmclient.models.LLMClient
-    :returns: The context.
-    :rtype: SmarterDictType
+    :returns: The page.
+    :rtype: smarter.apps.llmclient.views.deployment_contract.LLMClientDeploymentPage
     """
     deployed = bool(llmclient.deployed)
     base_url = (llmclient.url if deployed else llmclient.custom_url or llmclient.default_url).rstrip("/")
@@ -387,50 +345,75 @@ def deployment_context(llmclient: LLMClient) -> SmarterDictType:
         manifest = cached_manifest_yaml(llmclient.pk, llmclient.updated_at.isoformat())
     # the page, without the manifest, rather than an error. pylint: disable=W0718
     except Exception as e:
-        logger.warning("%s.deployment_context() could not build the manifest of %s: %s", logger_prefix, llmclient, e)
-    return {
-        "llmclient": {
-            "name": llmclient.name,
-            "app_name": llmclient.app_name or llmclient.name,
-            "description": llmclient.description,
-            "example_prompts": llmclient.app_example_prompts or [],
-            "provider": llmclient.provider,
-            "model": llmclient.default_model,
-            "version": llmclient.version,
-            "url": base_url,
-            "is_custom_domain": bool(llmclient.custom_host),
-            "workbench_url": llmclient.workbench_url,
-        },
-        "deployed": deployed,
-        "authenticated": authenticated,
-        "config_command": curl_command(f"{base_url}/config/", authenticated=authenticated),
-        "prompt_command": curl_command(
-            f"{base_url}/prompt/",
-            body=prompt.model_dump_json(exclude_none=True),
-            authenticated=authenticated,
+        logger.warning("%s.deployment_page() could not build the manifest of %s: %s", logger_prefix, llmclient, e)
+    return LLMClientDeploymentPage(
+        mode="workbench",
+        llmclient=DeploymentLLMClient(
+            name=llmclient.name,
+            app_name=llmclient.app_name or llmclient.name,
+            example_prompts=[prompt for prompt in llmclient.app_example_prompts or [] if isinstance(prompt, str)],
+            provider=llmclient.provider or None,
+            model=llmclient.default_model or None,
+            version=llmclient.version or None,
+            url=base_url,
+            workbench_url=llmclient.workbench_url,
         ),
-        "example_response": example_response(),
-        "allowed_origins_yaml": ALLOWED_ORIGINS_YAML,
-        "drupal_install_commands": DRUPAL_INSTALL_COMMANDS,
-        "npm_install_command": NPM_INSTALL_COMMAND,
-        "embed_html": embed_html(base_url, authenticated=authenticated),
-        "react_snippet": react_snippet(base_url, authenticated=authenticated),
-        "create_api_key_command": create_api_key_command(llmclient.user_profile.account.account_number, llmclient.name),
-        "api_key_yaml": API_KEY_YAML,
-        "api_keys_url": api_keys_url(),
-        "embed_html_with_api_key": embed_html(base_url, authenticated=True),
-        "react_snippet_with_api_key": react_snippet(base_url, authenticated=True),
-        "manifest_html": highlight_yaml(manifest) if manifest else None,
-        "deploy_command": f"smarter deploy llmclient {llmclient.name}",
-        "deploy_commands": f"smarter apply -f {llmclient.name}.yaml\nsmarter deploy llmclient {llmclient.name}",
-    }
+        deployed=deployed,
+        authenticated=authenticated,
+        manifest_yaml=manifest,
+        snippets=DeploymentSnippets(
+            deploy_command=f"smarter deploy llmclient {llmclient.name}",
+            deploy_commands=f"smarter apply -f {llmclient.name}.yaml\nsmarter deploy llmclient {llmclient.name}",
+            config_command=curl_command(f"{base_url}/config/", authenticated=authenticated),
+            prompt_command=curl_command(
+                f"{base_url}/prompt/",
+                body=prompt.model_dump_json(exclude_none=True),
+                authenticated=authenticated,
+            ),
+            session_config_command=curl_command(
+                f"{base_url}/config/",
+                body=PromptChatApiConfigRequest(session_key=SESSION_KEY_PLACEHOLDER).model_dump_json(),
+                authenticated=authenticated,
+            ),
+            session_prompt_command=curl_command(
+                f"{base_url}/prompt/",
+                body=prompt.model_copy(update={"session_key": SESSION_KEY_PLACEHOLDER}).model_dump_json(
+                    exclude_none=True
+                ),
+                authenticated=authenticated,
+            ),
+            example_response=example_response(),
+            allowed_origins_yaml=ALLOWED_ORIGINS_YAML,
+            api_key_yaml=API_KEY_YAML,
+            drupal_install_commands=DRUPAL_INSTALL_COMMANDS,
+            npm_install_command=NPM_INSTALL_COMMAND,
+            embed_html=embed_html(base_url, authenticated=authenticated),
+            embed_html_with_api_key=embed_html(base_url, authenticated=True),
+            react_snippet=react_snippet(base_url, authenticated=authenticated),
+            react_snippet_with_api_key=react_snippet(base_url, authenticated=True),
+            create_api_key_command=create_api_key_command(
+                llmclient.user_profile.account.account_number, llmclient.name
+            ),
+            switch_command=SWITCH_COMMAND,
+        ),
+        links=DeploymentLinks(
+            api_keys_url=api_keys_url(),
+            marketing_site_url=str(smarter_settings.marketing_site_url),
+            docs_url=str(smarter_settings.smarter_project_docs_url),
+            logo_url=urljoin(str(smarter_settings.smarter_project_cdn_url), LOGO_PATH),
+            product_name=SMARTER_PRODUCT_NAME,
+            product_description=SMARTER_PRODUCT_DESCRIPTION,
+        ),
+    )
 
 
 class LLMClientEndpointsView(SmarterWebHtmlView):
     """
     A deployed LLMClient's endpoints, for a browser, and The Smarter Project, which built it.
 
-    A host that serves no deployed LLMClient is a 404, as it is for the endpoints themselves.
+    The page is the ``@smarter/llmclient-deployment`` React app, in its public mode, whose data,
+    :func:`deployment_page`'s public copy, is in the page, in a ``json_script``. It names no owner, and has
+    no api keys. A host that serves no deployed LLMClient is a 404, as it is for the endpoints themselves.
     """
 
     template_path = "llmclient/endpoints.html"
@@ -457,11 +440,14 @@ class LLMClientEndpointsView(SmarterWebHtmlView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found.")
 
-        context = deployment_context(llmclient)
-        context["standalone"] = True
+        page = deployment_page(llmclient).public()
         logger.debug("%s.get() endpoints page for %s", self.formatted_class_name, llmclient)
-        # rendered as is, not minified: the minifier drops whitespace-only text, which is the indentation
-        # between the highlighted spans of the manifest's YAML.
+        context = {
+            "deployment": page.to_json(),
+            "deployment_root_id": DEPLOYMENT_ROOT_ID,
+            "deployment_data_id": DEPLOYMENT_DATA_ID,
+            "react_debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+        }
         return render(request=request, template_name=self.template_path, context=context)
 
 

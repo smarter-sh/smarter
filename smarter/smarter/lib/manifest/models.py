@@ -392,6 +392,102 @@ class SAMDependency(SmarterBasePydanticModel):
     )
 
 
+class SAMDependencyTreeNode(SmarterBasePydanticModel):
+    """
+    A resource in a dependency tree: the resource, and, recursively, every resource that it uses.
+
+    It is the opposite direction of :class:`SAMDependency`, which lists the resources that depend
+    on a resource. An LLMClient's tree has its Provider, its plugins, their Connections, and those
+    Connections' Secrets. See :meth:`smarter.lib.manifest.broker.AbstractBroker.dependency_tree`.
+
+    A resource that the user may not read keeps its kind and record locator, so that the tree still
+    shows that something is there, but not its name, owner or url, or what it uses in turn.
+
+    Example:
+
+    .. code-block:: json
+
+        {
+          "kind": "LLMClient",
+          "icon": "artificial-intelligence",
+          "name": "stackademy_sql",
+          "owner": "Ada Lovelace (ada)",
+          "recordLocator": "llmclient-rMTAwMDAxMwx",
+          "url": "/workbench/llm-clients/rMTAwMDAxMwx/manifest/",
+          "readable": true,
+          "children": [
+            {
+              "kind": "SqlPlugin",
+              "icon": "file-sheet",
+              "name": "stackademy_sql",
+              "owner": "Ada Lovelace (ada)",
+              "recordLocator": "pluginmeta-rMTEx",
+              "url": "/llm-tools/plugins/rMTEx/",
+              "readable": true,
+              "children": []
+            }
+          ]
+        }
+    """
+
+    # a node always has every field, so its JSON Schema, from which the workbench's Architecture tab
+    # generates its TypeScript types, marks the fields that have defaults as required too.
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
+    kind: str = Field(
+        ...,
+        description="kind[String]: The SAM kind of the resource, e.g. LLMClient. Read only.",
+    )
+
+    icon: str = Field(
+        ...,
+        description=(
+            "icon[String]: The kind's icon in the web console, a Keen Icons name without its ki- prefix, e.g. "
+            "lock-2 for a Secret. See SAMKinds.icon(). Read only."
+        ),
+    )
+
+    name: Optional[str] = Field(
+        default=None,
+        description="name[String]: The name of the resource. None if the user may not read it. Read only.",
+    )
+
+    owner: Optional[str] = Field(
+        default=None,
+        description=(
+            "owner[String]: Who owns the resource: its owner's full name and username, e.g. Ada Lovelace (ada), "
+            "or an Extension's publisher. None if the user may not read it, or if it has no owner. Read only."
+        ),
+    )
+
+    recordLocator: Optional[str] = Field(
+        default=None,
+        description=(
+            "recordLocator[String]: The resource's record locator, e.g. llmclient-rMTAwMDAxMwx, from which its "
+            "web console url is derived. None for a resource that has none, e.g. a User. Read only."
+        ),
+    )
+
+    url: Optional[str] = Field(
+        default=None,
+        description=(
+            "url[String]: The path of the resource's manifest page in the web console, where its manifest can be "
+            "edited, derived from its record locator. None if it has no page, or if the user may not read it. "
+            "Read only."
+        ),
+    )
+
+    readable: bool = Field(
+        default=True,
+        description="readable[Boolean]: Whether the user may read the resource. Read only.",
+    )
+
+    children: List["SAMDependencyTreeNode"] = Field(
+        default_factory=list,
+        description="children[List]: The resources that this resource uses, each with its own tree. Read only.",
+    )
+
+
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class.
 

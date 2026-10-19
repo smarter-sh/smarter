@@ -29,12 +29,11 @@ the cli, e.g. a delete is refused while other resources depend on the resource.
 - `templates/common/manifest_editor.html` renders the root element, and the manifest, as YAML,
   with Django's `json_script` filter. Every manifest detail page includes it, from
   `templates/common/manifest_detail.html`.
-- `templates/common/manifest_editor_frame.html` renders the editor alone, for a frame:
-  `smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`, which Smarter
-  Chat's Console displays in its Manifest tab, in the LLMClient prompt workbench. In a frame of the
-  console's own origin, the editor posts a `smarter:manifest-saved` message, with the manifest's `kind`
-  and `name`, to the framing page when it saves, and sends the framing page away when it deletes the
-  resource (`src/lib/frame.tsx`).
+- `src/index.ts` exports the editor as a component, `ManifestEditor`, for the web console's other
+  apps. The Prompt Engineer's Workbench (`@smarter/workbench`) renders it in its Console's Manifest
+  tab, for the LLMClient's manifest: `onSaved` reloads the chat's configuration, and `onDeleted`
+  leaves for the LLM Clients list. The package's source uses relative imports, so that another
+  package's build can import it, as `@smarter/common`'s does.
 
 ## Development
 

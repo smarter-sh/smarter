@@ -44,6 +44,8 @@ Current app packages include:
 - `smarter-custom-domain-list`
 - `smarter-dashboard`
 - `smarter-guardrail-list`
+- `smarter-llmclient-architecture`
+- `smarter-llmclient-deployment`
 - `smarter-llmclient-list`
 - `smarter-llmhost-compute-list`
 - `smarter-llmhost-list`
@@ -59,6 +61,7 @@ Current app packages include:
 - `smarter-terminal-emulator`
 - `smarter-vectorsearch-list`
 - `smarter-vectorstore-list`
+- `smarter-workbench`
 
 ## Workspace Build Orchestration
 

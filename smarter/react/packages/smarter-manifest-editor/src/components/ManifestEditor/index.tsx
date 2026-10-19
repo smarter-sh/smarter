@@ -1,3 +1,3 @@
-import ManifestEditor from "@/components/ManifestEditor/Component";
+import ManifestEditor from "./Component";
 
 export default ManifestEditor;

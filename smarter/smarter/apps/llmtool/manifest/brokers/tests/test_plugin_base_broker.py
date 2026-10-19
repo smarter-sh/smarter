@@ -305,3 +305,16 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
         ):
             with self.assertRaises(SAMPluginBrokerError):
                 SAMPluginBaseBroker.get(broker, self.request)
+
+    def test_dependency_tree(self):
+        """Test that a plugin's tree is rooted at its PluginMeta, which the LLMClients that use it refer to."""
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        plugin_meta = self.broker.plugin_meta
+        self.assertEqual(self.broker.dependency_tree_instance, plugin_meta)
+        tree = self.broker.dependency_tree()
+        self.assertEqual((tree.kind, tree.name), (self.broker.kind, plugin_meta.name))
+        self.assertEqual(tree.recordLocator, plugin_meta.record_locator)
+        self.assertEqual(tree.url, plugin_meta.manifest_url)
+        # spec.prompt.provider is openai: the tree has it if this platform has an active openai Provider.
+        self.assertTrue(all(child.kind == "Provider" for child in tree.children))

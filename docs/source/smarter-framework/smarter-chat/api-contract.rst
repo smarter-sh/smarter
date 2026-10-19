@@ -105,7 +105,7 @@ Overview
 
   Browser (Smarter Chat)                         Smarter
 
-  on load, on "new chat", and after every prompt:
+  on load, on "new chat", and, with verbose, after every prompt:
     POST <apiUrl>config/?session_key=<key>  ───▶  PromptConfigView
                                             ◀───  the LLMClient's configuration, the session's
                                                   key, and the session's history
@@ -116,20 +116,26 @@ Overview
                                             ◀───  the new messages, as JSON, or as Server-Sent
                                                   Events: progress events, then the result
 
+  Browser (the web console's workbench, beside the chat)
+
   while the Console's Server Logs tab exists:
     GET <logStreamUrl>[?level=DEBUG]        ───▶  stream_user_logs
                                             ◀───  Server-Sent Events: a "bulk" history, then
                                                   one event per log record
 
-  once the Console's Manifest tab is opened, in an iframe:
-    GET <manifestEditorUrl>                 ───▶  LLMClientManifestEditorView
-                                            ◀───  the manifest editor, which saves with the cli
-                                                  api, then posts "smarter:manifest-saved"
+  once the Console's Manifest tab is opened:
+    GET <manifestUrl>                       ───▶  LLMClientManifestEditorView
+                                            ◀───  the manifest, as JSON, which the editor saves
+                                                  with the cli api
 
-  once the Console's Deployment tab is opened, in an iframe:
+  once the Console's Architecture tab is opened, and on Reload:
+    GET <architectureUrl>                   ───▶  LLMClientArchitectureView
+                                            ◀───  the tree of the LLMClient's SAM resources, as JSON
+
+  once the Console's Deployment tab is opened:
     GET <deploymentUrl>                     ───▶  LLMClientDeploymentView
-                                            ◀───  the LLMClient's deployment, whose api key
-                                                  forms post back to the same url
+                                            ◀───  the deployment page's data, as JSON, whose api
+                                                  key actions POST to their own urls
 
 The configuration tells the chat where to send prompts, so ``apiUrl`` is the only url a page has to
 know.
@@ -164,13 +170,21 @@ Endpoints
        else ``https://<platform>/api/v1/llm-clients/<hashed_id>/prompt/`` (``LLMClient.url_llmclient``)
      - :py:class:`~smarter.apps.llmclient.api.v1.views.default.DefaultLLMClientApiView`, a
        :py:class:`~smarter.apps.llmclient.api.v1.views.base.LLMClientApiBaseViewSet`
-   * - Server logs
-     - The ``smarter-log-stream-url`` that the workbench passes, or the ``logStreamUrl`` prop
+   * - Server logs, workbench only
+     - The ``smarter-log-stream-url`` that Django passes the workbench
      - ``smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs``
-   * - Manifest editor
-     - The ``smarter-manifest-editor-url`` that the workbench passes, or the ``manifestEditorUrl``
-       prop: ``/workbench/llm-clients/<hashed_id>/manifest/editor/``, of the page's own origin
+   * - Manifest, workbench only
+     - The ``smarter-manifest-url`` that Django passes the workbench:
+       ``/workbench/llm-clients/<hashed_id>/manifest/editor/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`
+   * - Architecture, workbench only
+     - The ``smarter-architecture-url`` that Django passes the workbench:
+       ``/workbench/llm-clients/<hashed_id>/architecture/``
+     - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView`
+   * - Deployment page, workbench only
+     - The ``smarter-deployment-url`` that Django passes the workbench:
+       ``/workbench/llm-clients/<hashed_id>/deployment/``
+     - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView`
 
 A page that embeds the chat therefore calls one host only: its LLMClient's.
 
@@ -404,8 +418,9 @@ The fields that Smarter Chat reads are the declared fields of
 :class:`~smarter.apps.prompt.contract.models.PromptChatApiLLMClient`,
 :class:`~smarter.apps.prompt.contract.models.PromptChatApiHistory` and
 :class:`~smarter.apps.prompt.contract.models.PromptChatApiMetaData`. ``llmclient.url_llmclient`` and
-``session_key`` are required. Everything else is displayed, as is, in the Console's Config tab,
-which fetches the configuration with ``?verbose=true``.
+``session_key`` are required. Everything else is passed, as is, to ``onConfig``, and the workbench
+displays it in its Console's Config tab, for which the chat fetches the configuration with
+``?verbose=true``.
 
 .. note::
 
@@ -620,18 +635,19 @@ page, becomes "Unexpected response from the Smarter api
 The Server Log Stream
 ---------------------
 
-The Console's Server Logs tab opens an ``EventSource`` to ``logStreamUrl``, with credentials:
+The workbench Console's Server Logs tab opens an ``EventSource`` to its log stream url, with
+credentials:
 
 - the first event is named ``bulk``, and its data is a JSON array of the recent log records,
 - each later, unnamed event is one record, as JSON, with ``message`` (the formatted line, including
   its ANSI colors), ``level``, ``logger`` and ``timestamp``,
 - the ``level`` query parameter sets the minimum level; without it, the stream sends the records at
-  ``smarter_settings.log_level`` and above. In sandbox mode the chat adds ``level=DEBUG``,
+  ``smarter_settings.log_level`` and above. In sandbox mode the Console adds ``level=DEBUG``,
 - the ``session_key`` query parameter narrows the stream to the records of one chat session. The
   platform tags each record of a request to an LLMClient's api with the request's ``session_key``,
   including the records of a prompt that streams its progress, and the config api tags its
-  records with the session key that it creates for a new chat. The chat adds its own session key,
-  and opens a new stream for each new chat.
+  records with the session key that it creates for a new chat. The Console adds the chat's session
+  key, and opens a new stream for each new chat.
 
 This stream is not part of the versioned contract: only the web console's own pages use it.
 

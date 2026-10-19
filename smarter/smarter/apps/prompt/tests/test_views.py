@@ -5,20 +5,34 @@ See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
 import json
+import re
 import secrets
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, call, patch
 from urllib.parse import urlparse
 
+import yaml
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.guardrail.models import Guardrail
+from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llmclient.caching import (
     invalidate_all_cached_llmclients_for_user_profile,
 )
-from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey, LLMClientHelper
+from smarter.apps.llmclient.models import (
+    LLMClient,
+    LLMClientAPIKey,
+    LLMClientGuardrails,
+    LLMClientHelper,
+)
+from smarter.apps.llmclient.views.deployment_contract import (
+    ApiKeyActionResponse,
+    CreateApiKeyRequest,
+    LLMClientDeploymentPage,
+)
 from smarter.apps.prompt.contract.const import (
     CHAT_CONTRACT_V2_CAPABILITY,
     PUBLIC_META_DATA_FIELDS,
@@ -31,17 +45,28 @@ from smarter.apps.prompt.contract.models import (
 )
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.urls import PromptReverseNames
+from smarter.apps.prompt.views.detailviews.architecture_contract import (
+    LLMClientArchitecture,
+)
 from smarter.apps.prompt.views.detailviews.prompt_config_view import PromptConfigView
+from smarter.apps.prompt.views.detailviews.prompt_deployment_view import (
+    OWNERSHIP_DOCS_URL,
+    DeploymentApiError,
+    LLMClientDeploymentApiKeyCreateView,
+)
 from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterChatappViewError,
     SmarterPromptSession,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.logging.redis_log_handler import session_key_context
+from smarter.lib.manifest.models import SAMDependencyTreeNode
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 PLATFORM_HOST = urlparse(smarter_settings.environment_platform_url).netloc
+DEPLOYMENT_VIEW_MODULE = "smarter.apps.prompt.views.detailviews.prompt_deployment_view"
 
 
 class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
@@ -99,116 +124,213 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(self.client.get(url).status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_workbench(self):
-        """Test that the prompt workbench page renders Smarter Chat's root element, configured for the LLMClient."""
+        """Test that the prompt workbench page renders the workbench's root element, configured for the LLMClient."""
         response = self.client.get(
             self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
         )
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertIn("react/smarter-chat.html", [template.name for template in response.templates])
-        smarter_chat = response.context["smarter_chat"]
-        self.assertEqual(smarter_chat["root_id"], "smarter-chat-root")
-        self.assertEqual(smarter_chat["llmclient_api_url"], self.resource.sandbox_url)
+        self.assertIn("react/workbench.html", [template.name for template in response.templates])
+        workbench = response.context["workbench"]
+        self.assertEqual(workbench["root_id"], "smarter-workbench-root")
+        self.assertEqual(workbench["llmclient_api_url"], self.resource.sandbox_url)
         content = response.content.decode()
-        self.assertIn('id="smarter-chat-root"', content)
+        self.assertIn('id="smarter-workbench-root"', content)
         self.assertIn(f'smarter-llmclient-api-url="{self.resource.sandbox_url}"', content)
-        self.assertIn(f'smarter-request-id="{smarter_chat["smarter_request_id"]}"', content)
+        self.assertIn(f'smarter-request-id="{workbench["smarter_request_id"]}"', content)
+        # the Manifest tab's editor saves, validates and deletes the manifest with the cli api.
+        self.assertIn('smarter-apply-api-url="/api/v1/cli/apply/"', content)
+        self.assertIn('smarter-validate-api-url="/api/v1/cli/validate/"', content)
+        self.assertIn('smarter-delete-api-url="/api/v1/cli/delete/__kind__/"', content)
+        self.assertIn('smarter-kind-placeholder="__kind__"', content)
+        self.assertIn(f'smarter-llmclient-list-url="{self.url("listview")}"', content)
         # the app is built into Django's static files, not loaded from a CDN.
         self.assertNotIn("app-loader.js", content)
 
     def test_workbench_log_stream_url(self):
-        """Test that the workbench passes the user's server log stream to Smarter Chat, when it is enabled."""
+        """Test that the workbench passes the user's server log stream to its Console, when it is enabled."""
         url = self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id)
         enabled = "smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled"
 
         with patch(enabled, return_value=True):
             response = self.client.get(url, HTTP_HOST=PLATFORM_HOST)
-        log_stream_url = response.context["smarter_chat"]["log_stream_url"]
+        log_stream_url = response.context["workbench"]["log_stream_url"]
         self.assertTrue(log_stream_url.endswith("/logs/api/stream/"), log_stream_url)
         self.assertIn(f'smarter-log-stream-url="{log_stream_url}"', response.content.decode())
 
-        # without a log stream, Smarter Chat has no "Server Logs" tab.
+        # without a log stream, the Console has no "Server Logs" tab.
         with patch(enabled, return_value=False):
             response = self.client.get(url, HTTP_HOST=PLATFORM_HOST)
-        self.assertEqual(response.context["smarter_chat"]["log_stream_url"], "")
+        self.assertEqual(response.context["workbench"]["log_stream_url"], "")
         self.assertIn('smarter-log-stream-url=""', response.content.decode())
 
-    def test_workbench_manifest_editor_url(self):
-        """Test that the workbench passes the LLMClient's manifest editor, of its own origin, to Smarter Chat."""
+    def test_workbench_manifest_url(self):
+        """Test that the workbench passes the url of the LLMClient's manifest, for its Console's Manifest tab."""
         response = self.client.get(
             self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
         )
-        manifest_editor_url = response.context["smarter_chat"]["manifest_editor_url"]
-        self.assertEqual(
-            manifest_editor_url, self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id)
-        )
-        # a path, of the workbench's own origin, as Smarter Chat requires.
-        self.assertTrue(manifest_editor_url.startswith("/"), manifest_editor_url)
-        self.assertTrue(manifest_editor_url.endswith("/manifest/editor/"), manifest_editor_url)
-        self.assertIn(f'smarter-manifest-editor-url="{manifest_editor_url}"', response.content.decode())
+        manifest_url = response.context["workbench"]["manifest_url"]
+        self.assertEqual(manifest_url, self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertTrue(manifest_url.endswith("/manifest/editor/"), manifest_url)
+        self.assertIn(f'smarter-manifest-url="{manifest_url}"', response.content.decode())
 
     def test_manifest_editor(self):
-        """Test that the manifest editor page renders the editor alone, and may be framed by the console only."""
+        """Test that the manifest editor's data is the LLMClient's manifest, as JSON."""
         response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        templates = [template.name for template in response.templates]
-        self.assertIn("common/manifest_editor_frame.html", templates)
-        self.assertIn("common/manifest_editor.html", templates)
-        # without the web console's header and sidebar.
-        self.assertNotIn("dashboard/base.html", templates)
-        self.assertNotIn("dashboard/sidebar.html", templates)
-        content = response.content.decode()
-        self.assertIn('id="smarter-manifest-editor-root"', content)
-        self.assertIn(self.resource.name, content)
-        # Django denies every other page to frames.
-        self.assertEqual(response["X-Frame-Options"], "SAMEORIGIN")
+        self.assertEqual(response["Content-Type"], "application/json")
+        manifest = yaml.safe_load(response.json()["manifest"])
+        self.assertEqual(manifest["kind"], "LLMClient")
+        self.assertEqual(manifest["metadata"]["name"], self.resource.name)
+        # an ordinary page of the console, which no frame may display.
+        self.assertEqual(response["X-Frame-Options"], "DENY")
 
     def test_manifest_editor_not_found(self):
-        """Test that the manifest editor page is a 404 for an unknown LLMClient."""
+        """Test that the manifest editor's data is a 404 for an unknown LLMClient."""
         unknown = LLMClient(id=999999999)
         response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_workbench_deployment_url(self):
-        """Test that the workbench passes the LLMClient's deployment page, of its own origin, to Smarter Chat."""
+    def test_workbench_architecture_url(self):
+        """Test that the workbench passes the url of the LLMClient's architecture, for its Architecture tab."""
         response = self.client.get(
             self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
         )
-        deployment_url = response.context["smarter_chat"]["deployment_url"]
+        architecture_url = response.context["workbench"]["architecture_url"]
+        self.assertEqual(architecture_url, self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(architecture_url, f"/workbench/llm-clients/{self.resource.hashed_id}/architecture/")
+        self.assertIn(f'smarter-architecture-url="{architecture_url}"', response.content.decode())
+
+    def test_architecture(self):
+        """Test that the architecture is the LLMClient's tree, as JSON: each resource with its owner and manifest page."""
+        guardrail = Guardrail.objects.create(
+            user_profile=self.user_profile,
+            name=f"{self.resource.name}_guardrail",
+            description="test",
+            version="1.0.0",
+            stage="both",
+            category="pii",
+        )
+        self.addCleanup(Guardrail.objects.filter(pk=guardrail.pk).delete)
+        LLMClientGuardrails.objects.create(llmclient=self.resource, guardrail=guardrail)
+        self.addCleanup(LLMClientGuardrails.objects.filter(llmclient=self.resource).delete)
+
+        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn("no-cache", response["Cache-Control"])
+        architecture = LLMClientArchitecture.model_validate(response.json())
+        tree = architecture.tree
+        self.assertIsInstance(tree, SAMDependencyTreeNode)
+        self.assertEqual((tree.kind, tree.name), ("LLMClient", self.resource.name))
+        self.assertEqual(tree.recordLocator, self.resource.record_locator)
+        self.assertEqual(tree.url, self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertIn(self.admin_user.username, tree.owner)
+
+        guardrails = [child for child in tree.children if child.kind == "Guardrail"]
+        self.assertEqual([child.name for child in guardrails], [guardrail.name])
+        self.assertIn(self.admin_user.username, guardrails[0].owner)
+        self.assertTrue(guardrails[0].url.startswith("/guardrail/"), guardrails[0].url)
+
+        links = response.json()["links"]
+        self.assertEqual(set(links), {"guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl"})
+        self.assertEqual(
+            links["guardrailsUrl"], reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview)
+        )
+        self.assertTrue(all(url.startswith("/") for url in links.values()), links)
+
+    def test_architecture_styled(self):
+        """Test that the architecture says whether the LLMClient's manifest styles its chat."""
+        original = LLMClient.objects.get(pk=self.resource.pk).styles
+        self.addCleanup(LLMClient.objects.filter(pk=self.resource.pk).update, styles=original)
+        url = self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id)
+
+        LLMClient.objects.filter(pk=self.resource.pk).update(styles={})
+        self.assertFalse(self.client.get(url).json()["styled"])
+        LLMClient.objects.filter(pk=self.resource.pk).update(styles={"googleFont": "Inter"})
+        self.assertTrue(self.client.get(url).json()["styled"])
+
+    def test_architecture_is_get_only(self):
+        """Test that the architecture refuses a POST."""
+        response = self.client.post(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_architecture_not_found(self):
+        """Test that the architecture is a 404 for an unknown LLMClient, and for another account's."""
+        unknown = LLMClient(id=999999999)
+        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=unknown.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(response.json(), {"error": "LLMClient not found."})
+
+        other_admin_user, other_account, other_user_profile = admin_user_factory()
+        # cleanups run last first: the user profile, then the user, then the account.
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_admin_user.delete)
+        self.addCleanup(other_user_profile.delete)
+        other_admin_user.is_superuser = False
+        other_admin_user.save()
+        self.client.force_login(other_admin_user)
+        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_workbench_deployment_url(self):
+        """Test that the workbench passes the url of the LLMClient's deployment page, for its Deployment tab."""
+        response = self.client.get(
+            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
+        )
+        deployment_url = response.context["workbench"]["deployment_url"]
         self.assertEqual(deployment_url, self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(deployment_url, f"/workbench/llm-clients/{self.resource.hashed_id}/deployment/")
         self.assertIn(f'smarter-deployment-url="{deployment_url}"', response.content.decode())
 
+    def get_deployment(self):
+        """GET the deployment page's data, validated by its contract."""
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        data = response.json()
+        LLMClientDeploymentPage.model_validate(data)
+        return data
+
     def test_deployment(self):
-        """Test that the deployment page renders alone, whatever the endpoints page's switch, and may be framed."""
+        """Test that the deployment page's data is JSON, in its workbench mode, whatever the endpoints page's switch."""
         LLMClient.objects.filter(pk=self.resource.pk).update(deployed=True)
         self.addCleanup(LLMClient.objects.filter(pk=self.resource.pk).update, deployed=False)
         with patch("smarter.apps.llmclient.views.endpoints.waffle.switch_is_active", return_value=False):
             response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        templates = [template.name for template in response.templates]
-        self.assertIn("llmclient/deployment_frame.html", templates)
-        self.assertIn("llmclient/deployment.html", templates)
-        self.assertNotIn("dashboard/base.html", templates)
-        self.assertFalse(response.context["standalone"])
-        self.assertTrue(response.context["deployed"])
-        content = response.content.decode()
-        self.assertIn("Where to go from here?", content)
-        self.assertIn(self.resource.default_url.rstrip("/"), content)
-        # the tab is in the workbench: no way back to it, and none of the endpoints page's own sections.
-        self.assertNotIn("Back to the workbench", content)
-        self.assertNotIn("waffle_switch enable_llmclient_endpoints_page off", content)
-        self.assertIn("enable_llmclient_endpoints_page", content)
-        self.assertEqual(response["X-Frame-Options"], "SAMEORIGIN")
+        self.assertEqual(response["Content-Type"], "application/json")
+        page = response.json()
+        LLMClientDeploymentPage.model_validate(page)
+        self.assertEqual(page["mode"], "workbench")
+        self.assertTrue(page["deployed"])
+        self.assertEqual(page["llmclient"]["url"], self.resource.default_url.rstrip("/"))
         self.assertIn("no-cache", response["Cache-Control"])
+
+    def test_deployment_is_get_only(self):
+        """Test that the deployment page refuses a POST: its api key actions have their own urls."""
+        response = self.client.post(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_deployment_shows_the_owner_to_the_owner(self):
+        """Test that the deployment page shows the LLMClient's owner, to a user who may change it."""
+        ownership = self.get_deployment()["ownership"]
+        self.assertTrue(ownership["canEdit"])
+        self.assertIn(self.admin_user.username, ownership["owner"])
+
+    def test_deployment_explains_cloning_to_a_user_who_is_not_the_owner(self):
+        """Test that the deployment page tells a user who may not change the LLMClient where to clone it."""
+        self.client.force_login(self.non_admin_user)
+        ownership = self.get_deployment()["ownership"]
+        self.assertFalse(ownership["canEdit"])
+        self.assertIn(self.admin_user.username, ownership["owner"])
+        self.assertEqual(ownership["llmclientListUrl"], self.url("listview"))
+        self.assertEqual(ownership["ownershipDocsUrl"], OWNERSHIP_DOCS_URL)
 
     def test_deployment_of_an_llmclient_that_is_not_deployed(self):
         """Test that the deployment page tells how to deploy an LLMClient that isn't deployed."""
         LLMClient.objects.filter(pk=self.resource.pk).update(deployed=False)
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        content = response.content.decode()
-        self.assertIn("Not deployed yet", content)
-        self.assertIn(f"smarter deploy llmclient {self.resource.name}", content)
+        page = self.get_deployment()
+        self.assertFalse(page["deployed"])
+        self.assertEqual(page["snippets"]["deployCommand"], f"smarter deploy llmclient {self.resource.name}")
 
     def test_deployment_not_found(self):
         """Test that the deployment page is a 404 for an unknown LLMClient, and for another account's."""
@@ -224,10 +346,15 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.client.force_login(other_admin_user)
         response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        response = self.api_key_action("detach")
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(response.json()["code"], "not_found")
 
-    def deployment_post(self, **data):
-        """POST the deployment page's api key form."""
-        return self.client.post(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id), data)
+    def api_key_action(self, action: str, body=None, hashed_id: str = ""):
+        """POST one of the deployment page's api key actions: create, attach or detach."""
+        name = f"deployment_api_key_{action}_by_hashed_id"
+        url = self.url(name, hashed_id=hashed_id or self.resource.hashed_id)
+        return self.client.post(url, data=json.dumps(body or {}), content_type="application/json")
 
     def api_key(self, name: str) -> SmarterAuthToken:
         """An api key of the admin user, deleted after the test."""
@@ -240,78 +367,110 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def detach_api_keys(self):
         self.addCleanup(LLMClientAPIKey.detach, self.resource)
 
+    def test_deployment_api_key_urls(self):
+        """Test that the page's api key section names its actions' urls, beside the page's own."""
+        api_keys = self.get_deployment()["apiKeys"]
+        base = f"/workbench/llm-clients/{self.resource.hashed_id}/deployment/api-keys/"
+        self.assertEqual(
+            (api_keys["createUrl"], api_keys["attachUrl"], api_keys["detachUrl"]),
+            (f"{base}create/", f"{base}attach/", f"{base}detach/"),
+        )
+
     def test_deployment_lists_attaches_and_detaches_api_keys(self):
         """Test that the deployment page lists the account's api keys, attaches one in place of another, and detaches it."""
         self.detach_api_keys()
         first, second = self.api_key("first"), self.api_key("second")
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
-        content = response.content.decode()
-        self.assertIn(first.name, content)
-        self.assertIn(second.name, content)
-        self.assertIn("No api key is attached: the url is public.", content)
-        self.assertIn("csrfmiddlewaretoken", content)
+        api_keys = self.get_deployment()["apiKeys"]
+        names = [api_key["name"] for api_key in api_keys["apiKeys"]]
+        self.assertIn(first.name, names)
+        self.assertIn(second.name, names)
+        self.assertIsNone(api_keys["attached"])
+        self.assertTrue(api_keys["canManage"])
+        self.assertTrue(api_keys["canCreate"])
 
-        response = self.deployment_post(action="attach", key_id=str(first.key_id))
+        response = self.api_key_action("attach", {"keyId": str(first.key_id)})
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertIn(f"{first.name} is attached", response.content.decode())
+        data = ApiKeyActionResponse.model_validate(response.json())
+        self.assertIsNone(data.new_api_key)
+        self.assertEqual(data.page.api_keys.attached.name, first.name)
+        self.assertTrue(data.page.authenticated)
+        self.assertIn("Authorization: Token <YOUR-API-KEY>", data.page.snippets.prompt_command)
         self.assertTrue(LLMClient.objects.get(pk=self.resource.pk).is_authentication_required)
-        self.assertEqual(response.context["attached_api_key"]["name"], first.name)
-        self.assertTrue(response.context["authenticated"])
 
         # one api key: attaching another detaches the first.
-        self.deployment_post(action="attach", key_id=str(second.key_id))
+        self.api_key_action("attach", {"keyId": str(second.key_id)})
         self.assertEqual(
             list(LLMClientAPIKey.objects.filter(llmclient=self.resource).values_list("api_key", flat=True)),
             [second.pk],
         )
 
-        response = self.deployment_post(action="detach")
+        response = self.api_key_action("detach")
         self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsNone(response.json()["page"]["apiKeys"]["attached"])
         self.assertFalse(LLMClientAPIKey.objects.filter(llmclient=self.resource).exists())
         self.assertFalse(LLMClient.objects.get(pk=self.resource.pk).is_authentication_required)
 
     def test_deployment_creates_an_api_key(self):
-        """Test that the deployment page creates an api key, shows its secret once, and attaches it."""
+        """Test that the deployment page creates an api key, returns its secret once, and attaches it."""
         self.detach_api_keys()
         name = f"test_deployment_{secrets.token_hex(4)}"
         self.addCleanup(SmarterAuthToken.objects.filter(name=name).delete)
-        response = self.deployment_post(action="create", name=name, description="the chat", attach="1")
+        response = self.api_key_action("create", {"name": name, "description": "the chat", "attach": True})
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         api_key = SmarterAuthToken.objects.get(name=name, user=self.admin_user)
         self.assertEqual(api_key.description, "the chat")
-        secret = response.context["new_api_key"]["secret"]
-        self.assertIn(secret, response.content.decode())
+        data = ApiKeyActionResponse.model_validate(response.json())
+        self.assertEqual(data.new_api_key.name, name)
+        secret = data.new_api_key.secret
+        self.assertEqual(data.page.api_keys.attached.name, name)
         self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.resource, api_key=api_key).exists())
         # the secret is the key: it authenticates.
         self.assertTrue(secret.startswith(api_key.token_key))
-        # shown once: not on the next page.
+        self.assertIn("no-cache", response["Cache-Control"])
+        # shown once: not on the page.
         response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertNotIn(secret, response.content.decode())
 
         # a second key of the same name is refused, and so is an invalid name.
-        self.assertEqual(self.deployment_post(action="create", name=name).status_code, HTTPStatus.BAD_REQUEST)
-        self.assertEqual(self.deployment_post(action="create", name="").status_code, HTTPStatus.BAD_REQUEST)
+        response = self.api_key_action("create", {"name": name})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.json()["code"], "duplicate_name")
+        response = self.api_key_action("create", {"name": " "})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.json()["code"], "invalid_name")
 
     def test_deployment_creates_an_api_key_without_attaching_it(self):
         """Test that the deployment page creates an api key without attaching it, when asked to."""
         self.detach_api_keys()
         name = f"test_deployment_{secrets.token_hex(4)}"
         self.addCleanup(SmarterAuthToken.objects.filter(name=name).delete)
-        response = self.deployment_post(action="create", name=name)
+        response = self.api_key_action("create", {"name": name})
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertIsNone(response.json()["page"]["apiKeys"]["attached"])
         self.assertFalse(LLMClientAPIKey.objects.filter(llmclient=self.resource).exists())
 
     def test_deployment_api_key_errors(self):
-        """Test that the deployment page refuses an unknown action and an unknown api key."""
-        self.assertEqual(self.deployment_post(action="nope").status_code, HTTPStatus.BAD_REQUEST)
-        self.assertEqual(self.deployment_post(action="attach").status_code, HTTPStatus.BAD_REQUEST)
-        response = self.deployment_post(action="attach", key_id="00000000-0000-0000-0000-000000000000")
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        unknown = LLMClient(id=999999999)
+        """Test that the api key actions refuse an invalid request, and an unknown api key."""
+        for body in ({}, {"keyId": "not-a-uuid"}):
+            with self.subTest(body=body):
+                response = self.api_key_action("attach", body)
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertEqual(response.json()["code"], "invalid_request")
         response = self.client.post(
-            self.url("deployment_by_hashed_id", hashed_id=unknown.hashed_id), {"action": "detach"}
+            self.url("deployment_api_key_create_by_hashed_id", hashed_id=self.resource.hashed_id),
+            data="not json",
+            content_type="application/json",
         )
+        self.assertEqual(response.json()["code"], "invalid_request")
+        response = self.api_key_action("attach", {"keyId": "00000000-0000-0000-0000-000000000000"})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.json()["code"], "api_key_not_found")
+        response = self.api_key_action("detach", hashed_id=LLMClient(id=999999999).hashed_id)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        response = self.client.get(
+            self.url("deployment_api_key_detach_by_hashed_id", hashed_id=self.resource.hashed_id)
+        )
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_deployment_api_keys_of_a_user_who_is_not_an_admin(self):
         """Test that a user who isn't an account admin sees the LLMClient's api key, but can't change it or create one."""
@@ -319,21 +478,38 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         api_key = self.api_key("admins")
         LLMClientAPIKey.attach(self.resource, api_key)
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertFalse(response.context["can_manage_api_keys"])
-        self.assertFalse(response.context["can_create_api_keys"])
-        content = response.content.decode()
-        self.assertIn("Only an account admin can create api keys.", content)
-        self.assertNotIn('value="detach"', content)
+        page = self.get_deployment()
+        self.assertTrue(page["authenticated"])
+        self.assertFalse(page["apiKeys"]["canManage"])
+        self.assertFalse(page["apiKeys"]["canCreate"])
 
-        self.assertEqual(self.deployment_post(action="detach").status_code, HTTPStatus.FORBIDDEN)
-        self.assertEqual(self.deployment_post(action="create", name="not_allowed").status_code, HTTPStatus.FORBIDDEN)
+        for action, body, code in (
+            ("detach", {}, "not_owner"),
+            ("attach", {"keyId": str(api_key.key_id)}, "not_owner"),
+            ("create", {"name": "not_allowed"}, "not_admin"),
+        ):
+            with self.subTest(action=action):
+                response = self.api_key_action(action, body)
+                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertEqual(response.json()["code"], code)
         self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.resource, api_key=api_key).exists())
         self.assertFalse(SmarterAuthToken.objects.filter(name="not_allowed").exists())
 
+    def test_deployment_api_key_of_another_account(self):
+        """Test that a staff user without a profile in the LLMClient's account can't create its api keys."""
+        request = RequestFactory().post("/")
+        request.user = MagicMock(is_staff=True)
+        with patch(f"{DEPLOYMENT_VIEW_MODULE}.UserProfile.objects.filter") as user_profiles:
+            user_profiles.return_value.first.return_value = None
+            with self.assertRaises(DeploymentApiError) as raised:
+                LLMClientDeploymentApiKeyCreateView().handle(
+                    request, self.resource, CreateApiKeyRequest(name="elsewhere")
+                )
+        self.assertEqual(raised.exception.code, "not_account_admin")
+        self.assertEqual(raised.exception.status, HTTPStatus.FORBIDDEN)
+
     def test_detail_page_may_not_be_framed(self):
-        """Test that the manifest detail page, unlike the manifest editor page, may not be framed."""
+        """Test that the manifest detail page may not be framed."""
         response = self.client.get(self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertEqual(response["X-Frame-Options"], "DENY")
