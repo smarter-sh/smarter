@@ -9,7 +9,7 @@ import { DOCS_URLS } from "../lib/const";
 
 function DocsLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="fw-semibold">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="fw-semibold text-warning">
       {children}
       <i className="ki-outline ki-arrow-up-right fs-8 ms-1" aria-hidden="true" />
     </a>
@@ -26,14 +26,14 @@ interface ConceptProps {
 function Concept({ icon, title, children, links }: ConceptProps) {
   return (
     <section className="architecture-concept col-12 col-xl-4">
-      <div className="d-flex flex-column h-100 p-5 rounded border border-dashed border-gray-300 bg-body">
+      <div className="architecture-concept-card d-flex flex-column h-100 p-6">
         <div className="d-flex align-items-center mb-3">
           <span className="architecture-concept-icon me-3" aria-hidden="true">
             <i className={`ki-outline ki-${icon} fs-2`} />
           </span>
-          <h3 className="fs-6 fw-bold text-gray-900 mb-0">{title}</h3>
+          <h3 className="fs-6 fw-bold text-white mb-0">{title}</h3>
         </div>
-        <p className="fs-7 text-gray-700 mb-3 flex-grow-1">{children}</p>
+        <p className="architecture-hero-lead fs-7 mb-4 flex-grow-1">{children}</p>
         <div className="d-flex flex-wrap gap-4 fs-7">{links}</div>
       </div>
     </section>
@@ -42,9 +42,10 @@ function Concept({ icon, title, children, links }: ConceptProps) {
 
 export default function Introduction() {
   return (
-    <header className="architecture-introduction mb-8">
-      <h2 className="fs-3 fw-bold text-gray-900 mb-2">{gettext("How this LLMClient is built")}</h2>
-      <p className="fs-6 text-gray-600 mb-6">
+    <header className="architecture-introduction architecture-hero">
+      <div className="architecture-kicker fw-bold fs-7 mb-3">{gettext("Architecture")}</div>
+      <h2 className="fs-2hx fw-bolder text-white mb-3">{gettext("How this LLMClient is built")}</h2>
+      <p className="architecture-hero-lead fs-5 mw-750px mb-8">
         {gettext(
           "An LLMClient is a sophisticated solution, built artisanally from a hierarchical tree of SAM resources. This is its tree: each card is a resource that it uses, directly or through another resource.",
         )}
