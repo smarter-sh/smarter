@@ -1,6 +1,7 @@
 """Test :mod:`smarter.apps.llmclient.views.endpoints`, the page that a browser sees at a deployed LLMClient's endpoints."""
 
 import json
+import re
 import shlex
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -16,21 +17,34 @@ from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmclient.manifest.models.llmclient.model import SAMLLMClient
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.views.endpoints import (
+    EMBED_SCRIPT_URL,
     EXAMPLE_PROMPT,
+    EXAMPLE_RESPONSE_CONTENT,
+    api_keys_url,
     browser_friendly,
     cached_manifest_yaml,
+    create_api_key_command,
     curl_command,
+    deployment_context,
+    embed_html,
+    example_prompt,
+    example_response,
     highlight_yaml,
     llmclient_manifest,
     manifest_yaml,
+    react_snippet,
 )
-from smarter.apps.prompt.contract.models import PromptChatApiPromptRequest
+from smarter.apps.prompt.contract.models import (
+    PromptChatApiPromptRequest,
+    PromptChatApiPromptResponse,
+)
 
 MODULE = "smarter.apps.llmclient.views.endpoints"
 SWITCH = f"{MODULE}.waffle.switch_is_active"
 LLMCLIENTS_URLCONF = "smarter.urls.llmclients"
 CONSOLE_URLCONF = "smarter.urls.console"
 SYSTEM_ROLE = "You are a helpful assistant.\nAnswer in <b>one</b> sentence."
+FIRST_EXAMPLE_PROMPT = "What courses are there?"
 
 
 class TestLLMClientEndpointsView(TestAccountMixin):
@@ -75,11 +89,26 @@ class TestLLMClientEndpointsView(TestAccountMixin):
                 self.assertTrue(response["Content-Type"].startswith("text/html"))
                 html = response.content.decode()
                 self.assertIn(self.llmclient.name, html)
-                self.assertIn("production api", html)
+                self.assertRegex(html, r"<h1[^>]*>\s*<i[^>]*></i>Deployed\s*</h1>")
+                self.assertIn("Where to go from here?", html)
+                self.assertIn(f'href="{self.llmclient.workbench_url}"', html)
+                self.assertIn("Back to the workbench", html)
                 self.assertIn(f"{base_url}/config/", html)
                 self.assertIn(f"{base_url}/prompt/", html)
-                self.assertIn(EXAMPLE_PROMPT, html)
-                self.assertIn("What courses are there?", html)
+                # the /prompt/ command sends the LLMClient's first example prompt.
+                self.assertIn(f"&quot;content&quot;:&quot;{FIRST_EXAMPLE_PROMPT}&quot;", html)
+                self.assertNotIn(EXAMPLE_PROMPT, html)
+                self.assertIn("Markdown", html)
+                for integration in ("WordPress", "Drupal", "Shopify", "@smarter.sh/ui-chat", EMBED_SCRIPT_URL):
+                    self.assertIn(integration, html)
+                self.assertIn(f"data-chatbot=&quot;{base_url}/&quot;", html)
+                self.assertIn("allowedOrigins", html)
+                # how to secure the url: create an api key, attach it, give it to Smarter Chat.
+                self.assertIn("Need to secure this url?", html)
+                self.assertIn(f"--account_number {self.account.account_number}", html)
+                self.assertIn("apiKey: &lt;API-KEY-NAME&gt;", html)
+                self.assertIn(f'href="{api_keys_url()}"', html)
+                self.assertIn("data-api-key=&quot;&lt;YOUR-API-KEY&gt;&quot;", html)
                 self.assertIn("https://github.com/smarter-sh", html)
                 self.assertIn("smarter-crop.png", html)
                 self.assertIn("waffle_switch enable_llmclient_endpoints_page off", html)
@@ -87,7 +116,8 @@ class TestLLMClientEndpointsView(TestAccountMixin):
                 self.assertIn("js/llmclient/endpoints.js", html)
                 self.assertIn('data-clipboard-target="#smarter-prompt-command"', html)
                 self.assertIn('data-smarter-copied-label="Copied"', html)
-                self.assertNotIn("YOUR-API-KEY", html)
+                # a public LLMClient's commands send no api key.
+                self.assertNotIn("Authorization", re.search(r'id="smarter-prompt-command">(.*?)</code>', html, re.S)[1])
                 # escaped, in the description and in the manifest's system role.
                 self.assertIn("&lt;courses&gt;", html)
                 self.assertIn("&lt;b&gt;one&lt;/b&gt;", html)
@@ -115,6 +145,9 @@ class TestLLMClientEndpointsView(TestAccountMixin):
         html = response.content.decode()
         self.assertIn("Authorization: Token &lt;YOUR-API-KEY&gt;", html)
         self.assertIn("Api key required", html)
+        self.assertIn("data-api-key=&quot;&lt;YOUR-API-KEY&gt;&quot;", html)
+        self.assertIn("apiKey={import.meta.env.VITE_SMARTER_API_KEY}", html)
+        self.assertIn("already requires an api key", html)
 
     def test_a_host_without_an_llmclient(self):
         for urlconf in (LLMCLIENTS_URLCONF, CONSOLE_URLCONF):
@@ -141,8 +174,8 @@ class TestLLMClientEndpointsView(TestAccountMixin):
             response = self.get("/", self.llmclient)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         html = response.content.decode()
-        self.assertNotIn("smarter-manifest", html)
-        self.assertIn(EXAMPLE_PROMPT, html)
+        self.assertNotIn('id="smarter-manifest"', html)
+        self.assertIn(FIRST_EXAMPLE_PROMPT, html)
 
     def test_post_goes_to_the_api_view(self):
         api_view = MagicMock(return_value=HttpResponse("api"))
@@ -211,6 +244,29 @@ class TestLLMClientEndpointsView(TestAccountMixin):
         self.assertIn("defaultSystemRole: |", text)
         self.assertIn("\n        Answer in <b>one</b> sentence.", text)
 
+    def test_the_deployment_context_of_an_llmclient_that_is_not_deployed(self):
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=False)
+        self.llmclient.refresh_from_db()
+        context = deployment_context(self.llmclient)
+        self.assertFalse(context["deployed"])
+        # the url that it will have once it is deployed, not its sandbox url.
+        self.assertEqual(context["llmclient"]["url"], self.llmclient.default_url.rstrip("/"))
+        self.assertNotIn("/workbench/", context["llmclient"]["url"])
+        self.assertEqual(context["deploy_command"], f"smarter deploy llmclient {self.llmclient.name}")
+        self.assertEqual(context["llmclient"]["workbench_url"], self.llmclient.workbench_url)
+        self.assertTrue(
+            self.llmclient.workbench_url.endswith(f"/workbench/llm-clients/{self.llmclient.hashed_id}/prompt/")
+        )
+
+    def test_example_prompt(self):
+        self.assertEqual(example_prompt(self.llmclient), FIRST_EXAMPLE_PROMPT)
+        for prompts in (None, [], ["", "  "]):
+            with self.subTest(prompts=prompts):
+                self.llmclient.app_example_prompts = prompts
+                self.assertEqual(example_prompt(self.llmclient), EXAMPLE_PROMPT)
+        self.llmclient.app_example_prompts = ["  ", " What's new? "]
+        self.assertEqual(example_prompt(self.llmclient), "What's new?")
+
 
 class TestHighlightYaml(TestAccountMixin):
     """Test the YAML highlighter of the page's manifest."""
@@ -265,3 +321,50 @@ class TestCurlCommand(TestAccountMixin):
         sent = json.loads(args[args.index("-d") + 1])
         self.assertEqual(sent, {"messages": [{"role": "user", "content": EXAMPLE_PROMPT}]})
         PromptChatApiPromptRequest.model_validate(sent)
+
+    def test_a_body_with_a_single_quote(self):
+        body = PromptChatApiPromptRequest.model_validate(
+            {"messages": [{"role": "user", "content": "What's new?"}]}
+        ).model_dump_json(exclude_none=True)
+        args = shlex.split(curl_command("https://example.com/prompt/", body=body).replace("\\\n", ""))
+        sent = json.loads(args[args.index("-d") + 1])
+        self.assertEqual(sent["messages"][0]["content"], "What's new?")
+
+
+class TestSnippets(TestAccountMixin):
+    """Test the example response, and the snippets that put the LLMClient's chat on a web page."""
+
+    def test_example_response_matches_the_contract(self):
+        data = json.loads(example_response())
+        response = PromptChatApiPromptResponse.model_validate(data)
+        self.assertEqual(response.data.status, 200)
+        self.assertEqual(response.data.messages[0].role, "assistant")
+        self.assertEqual(response.data.messages[0].content, EXAMPLE_RESPONSE_CONTENT)
+        self.assertEqual(set(data["data"]), {"status", "messages"})
+
+    def test_embed_html(self):
+        html = embed_html("https://example.com")
+        self.assertIn(f'<script src="{EMBED_SCRIPT_URL}"', html)
+        self.assertIn('data-chatbot="https://example.com/"', html)
+        self.assertTrue(html.endswith(" async></script>"))
+        self.assertNotIn("data-api-key", html)
+        self.assertIn('data-api-key="<YOUR-API-KEY>"', embed_html("https://example.com", authenticated=True))
+
+    def test_react_snippet(self):
+        snippet = react_snippet("https://example.com")
+        self.assertIn('import { SmarterChat } from "@smarter.sh/ui-chat";', snippet)
+        self.assertIn('apiUrl="https://example.com/"', snippet)
+        self.assertNotIn("apiKey", snippet)
+        self.assertIn("apiKey={import.meta.env.VITE_SMARTER_API_KEY}", react_snippet("https://example.com", True))
+
+    def test_create_api_key_command(self):
+        command = create_api_key_command("3141-5926-5359", "stackademy")
+        args = shlex.split(command.replace("\\\n", ""))
+        self.assertEqual(args[:3], ["python", "manage.py", "create_api_key"])
+        self.assertEqual(args[args.index("--account_number") + 1], "3141-5926-5359")
+        self.assertEqual(args[args.index("--description") + 1], "stackademy in production")
+
+    def test_api_keys_url(self):
+        url = api_keys_url()
+        self.assertTrue(url.startswith("http"), url)
+        self.assertTrue(url.endswith("/authtoken/"), url)

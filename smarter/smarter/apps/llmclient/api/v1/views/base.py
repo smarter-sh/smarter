@@ -163,23 +163,27 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         return self._llmclient_id
 
     @property
-    def chat_helper(self) -> PromptHelper:
+    def chat_helper(self) -> Optional[PromptHelper]:
         """
         Returns the PromptHelper instance.
 
         Lazily initializes the PromptHelper if it hasn't been created yet.
 
+        The helpers are tested with ``is not None``, never by truthiness: PromptHelper and
+        LLMClientHelper are SmarterRequestMixins, whose ``__bool__`` is their readiness, and a
+        helper for an anonymous request on a deployed LLMClient's host is never ready.
+
         :return: The PromptHelper instance.
-        :rtype: PromptHelper
+        :rtype: Optional[PromptHelper]
         """
-        if self._chat_helper:
+        if self._chat_helper is not None:
             return self._chat_helper
 
         if self.session_key or self.llmclient:
             self._chat_helper = PromptHelper(
                 request=self.smarter_request, session_key=self.session_key, llmclient=self.llmclient
             )
-            if self._chat_helper:
+            if self._chat_helper is not None:
                 self.helper_logger(
                     f"{self.formatted_class_name} initialized with prompt: {self.chat_helper.prompt}, llmclient: {self.llmclient}"
                 )
@@ -200,7 +204,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         :return: The LLMClientHelper instance.
         :rtype: Optional[LLMClientHelper]
         """
-        if self._llmclient_helper:
+        if self._llmclient_helper is not None:
             return self._llmclient_helper
         # ensure that we have some combination of properties that can identify an llmclient
         if not (self.url or self.llmclient_id or (self.user_profile and self.name)):
@@ -232,7 +236,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
                 self._llmclient_id,
                 self._url,
             )
-        if self._llmclient_helper:
+        if self._llmclient_helper is not None:
             logger.debug(
                 "%s: %s LLMClientHelper reinitializing user_profile: %s",
                 self.formatted_class_name,
@@ -262,7 +266,8 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         """
         if self._name:
             return self._name
-        self._name = self._llmclient_helper.name if self._llmclient_helper else None
+        self._name = self._llmclient_helper.name if self._llmclient_helper is not None else None
+        return self._name
 
     @property
     def llmclient(self):
@@ -272,7 +277,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         :return: The LLMClient instance.
         :rtype: Optional[LLMClient]
         """
-        return self.llmclient_helper.llmclient if self.llmclient_helper else None
+        return self.llmclient_helper.llmclient if self.llmclient_helper is not None else None
 
     @property
     def formatted_class_name(self) -> str:
@@ -466,7 +471,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         logger.debug("%s.dispatch() - body=%s", self.formatted_class_name, self.data)
         logger.debug("%s.dispatch() - headers=%s", self.formatted_class_name, request.META)
 
-        if not self.llmclient_helper:
+        if self.llmclient_helper is None:
             raise SmarterLLMClientException(
                 f"LLMClientHelper not found. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             )
@@ -497,7 +502,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
                 logger.debug("%s.dispatch(): session_key=%s", self.formatted_class_name, self.session_key)
                 logger.debug("%s.dispatch(): chat_helper=%s", self.formatted_class_name, self.chat_helper)
 
-        if self.llmclient_helper.is_llmclient and self.chat_helper:
+        if self.llmclient_helper.is_llmclient and self.chat_helper is not None:
             llmclient_called.send(
                 sender=self.__class__,
                 llmclient=self.llmclient,
@@ -614,7 +619,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         logger.debug(
             "%s.post() - prompt: %s",
             self.formatted_class_name,
-            self.chat_helper.prompt.user_profile if self.chat_helper and self.chat_helper.prompt else None,
+            self.chat_helper.prompt.user_profile if self.chat_helper is not None and self.chat_helper.prompt else None,
         )
         logger.debug("%s.post() - llmclient: %s", self.formatted_class_name, self.llmclient)
         logger.debug("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
@@ -631,7 +636,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         handler: SmarterChatHarnessProtocol = smarter_compatible_client.get_smarter_harness(
             request=request, provider_name=self.llmclient.provider
         )
-        if not self.chat_helper:
+        if self.chat_helper is None:
             logger.error(
                 "%s.post() PromptHelper not found. name=%s, llmclient_id=%s, session_key=%s",
                 self.formatted_class_name,

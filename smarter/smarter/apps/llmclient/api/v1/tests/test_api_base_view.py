@@ -10,17 +10,21 @@ from contextlib import ExitStack
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from django.contrib.auth.models import AnonymousUser
 from django.http import StreamingHttpResponse
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.api.v1.views.base import LLMClientApiBaseViewSet
+from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.prompt.contract.models import (
     PromptChatApiErrorResponse,
     PromptChatApiPromptResponse,
 )
+from smarter.apps.prompt.models import Prompt
+from smarter.common.conf import smarter_settings
 from smarter.lib.typing import SmarterDictType
 
 MODULE = "smarter.apps.llmclient.api.v1.views.base"
@@ -159,6 +163,37 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
             with self.assertRaises(LLMClient.DoesNotExist):
                 _ = view.llmclient_helper
 
+    @staticmethod
+    def falsy(**attributes) -> MagicMock:
+        """A helper that exists but isn't ready, as for an anonymous request: its __bool__ is its readiness."""
+        helper = MagicMock(**attributes)
+        helper.__bool__.return_value = False
+        return helper
+
+    def test_helpers_that_are_not_ready_are_still_used(self):
+        """Test that the helpers are tested with "is not None", not by truthiness."""
+        llmclient = MagicMock()
+        view = LLMClientApiBaseViewSet()
+        helper = self.falsy(llmclient=llmclient)
+        helper.name = "falsy"
+        view._llmclient_helper = helper
+        self.assertIs(view.llmclient_helper, helper)
+        self.assertIs(view.llmclient, llmclient)
+        self.assertEqual(view.name, "falsy")
+
+        chat_helper = self.falsy()
+        view._chat_helper = chat_helper
+        self.assertIs(view.chat_helper, chat_helper)
+
+    def test_post_with_a_chat_helper_that_is_not_ready(self):
+        handler = MagicMock(return_value=self.lambda_response(self.COMPLETION))
+        request = RequestFactory().post("/api/v1/llm-clients/1/prompt/")
+        request.user = self.admin_user
+        with patch(HARNESS) as harness:
+            harness.get_smarter_harness.return_value = handler
+            response = self.view(**self.post_properties(chat_helper=self.falsy())).post(request)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+
     def test_is_web_platform(self):
         request = MagicMock()
         request.get_host.return_value = "not-the-platform.example.com"
@@ -234,3 +269,60 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         error = PromptChatApiErrorResponse.model_validate(json.loads(response.content)).error
         self.assertEqual(error.errorClass, "PromptChatApiErrorNotFound")
         self.assertNotIn("stacktrace", json.loads(response.content)["error"])
+
+
+class TestLLMClientApiForDeployedHosts(TestAccountMixin):
+    """Test the prompt api as a deployed LLMClient's own host serves it, to anonymous clients and api keys."""
+
+    def setUp(self):
+        super().setUp()
+        self.llmclient = LLMClient.objects.create(
+            name=f"test_deployed_prompt_{self.hash_suffix}", user_profile=self.user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
+        self.addCleanup(Prompt.objects.filter(llmclient=self.llmclient).delete)
+        # update(), rather than save(), whose signals would deploy it.
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=True)
+        self.llmclient.refresh_from_db()
+        # the default host's first label is the rfc1034 name, which LLMClientHelper resolves on its own.
+        self.host = (
+            f"{self.llmclient.rfc1034_compliant_name}.{self.account.account_number}."
+            f"{smarter_settings.environment_api_domain}"
+        )
+
+    def post(self, user=None):
+        """POST a prompt to the LLMClient's host, anonymously by default."""
+        request = RequestFactory().post(
+            "/prompt/",
+            data=json.dumps({"messages": [{"role": "user", "content": "hello"}]}),
+            content_type="application/json",
+            HTTP_HOST=self.host,
+        )
+        request.user = user or AnonymousUser()
+        handler = MagicMock(
+            return_value=TestLLMClientApiBaseViewSet.lambda_response(TestLLMClientApiBaseViewSet.COMPLETION)
+        )
+        with override_settings(ALLOWED_HOSTS=["*"]), patch(HARNESS) as harness:
+            harness.get_smarter_harness.return_value = handler
+            response = DefaultLLMClientApiView.as_view()(request)
+        return response, handler
+
+    def test_anonymous_prompt(self):
+        """Test that an anonymous client may prompt a deployed LLMClient without api keys, as its owner."""
+        response, handler = self.post()
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        payload = PromptChatApiPromptResponse.model_validate(json.loads(response.content))
+        self.assertEqual(payload.data.messages[0].content, "hi")
+        handler.assert_called_once()
+        self.assertEqual(handler.call_args.args[0], self.user_profile)
+
+    def test_authenticated_prompt(self):
+        response, handler = self.post(user=self.admin_user)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        handler.assert_called_once()
+
+    def test_anonymous_prompt_of_an_undeployed_llmclient_is_not_found(self):
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=False)
+        response, handler = self.post()
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:500])
+        handler.assert_not_called()
