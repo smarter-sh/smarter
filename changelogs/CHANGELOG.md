@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.34.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.14...v0.34.0-alpha.1) (2026-10-19)
+
+### Features
+
+* **manifest:** add a dependency tree of record locators to brokers ([b0aa0b3](https://github.com/smarter-sh/smarter/commit/b0aa0b314af736a5d79d91944b170542ae10ab84))
+
+### Bug Fixes
+
+* **prompt:** show the owner and a clone guide in the Deployment tab ([ef302d7](https://github.com/smarter-sh/smarter/commit/ef302d7de63814baa5c755842d48bca924cd9b98))
+
 ## [0.33.14](https://github.com/smarter-sh/smarter/compare/v0.33.13...v0.33.14) (2026-10-19)
 
 ### Bug Fixes
