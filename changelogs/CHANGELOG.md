@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.34.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.3...v0.34.0-alpha.4) (2026-10-19)
+
+### Bug Fixes
+
+* **react:** style the architecture tab like the deployment page ([b3b7205](https://github.com/smarter-sh/smarter/commit/b3b720595964024e2b944304d1a46c80b3d087e1)), closes [#ff8c00](https://github.com/smarter-sh/smarter/issues/ff8c00)
+
+### Refactoring
+
+* **react:** move the server log viewer into @smarter/serverlogs ([1ad050b](https://github.com/smarter-sh/smarter/commit/1ad050b1b1a07afb38089013b39bd0b230d4d835))
+
 ## [0.34.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.2...v0.34.0-alpha.3) (2026-10-19)
 
 ### Features
