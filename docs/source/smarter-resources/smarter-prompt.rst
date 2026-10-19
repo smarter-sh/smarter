@@ -36,14 +36,16 @@ Usage
 
 .. code-block:: bash
 
-  # Smarter Prompt Engineer Workbench
-  curl -X POST http://localhost:9357/api/v1/llm-clients/9/chat/?session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7
+  # Deployed Smarter LLMClient
+  curl -X POST https://stackademy-sql.3141-5926-5359.api.example.com/prompt/ \
+    -H "Content-Type: application/json" \
+    -d '{"messages": [{"role": "user", "content": "hello world"}]}'
 
-  # Deployed Smarter LLMClient - Alpha
-  curl -X GET https://stackademy.3141-5926-5359.alpha.api.example.com/chat/?session_key=<SESSION-KEY>
-
-  # Deployed Smarter LLMClient - Production
-  curl -X GET https://stackademy.3141-5926-5359.api.example.com/chat/?session_key=<SESSION-KEY>
+  # Smarter platform api, by the LLMClient's id
+  curl -X POST http://localhost:9357/api/v1/llm-clients/9/prompt/ \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Token <YOUR-API-KEY>" \
+    -d '{"session_key": "<SESSION-KEY>", "messages": [{"role": "user", "content": "hello world"}]}'
 
 .. seealso::
 
