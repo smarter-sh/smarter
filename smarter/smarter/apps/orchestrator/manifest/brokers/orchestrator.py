@@ -768,6 +768,20 @@ class SAMOrchestratorBroker(AbstractBroker):
         """
         return []
 
+    @classmethod
+    def references(cls, instance: Orchestrator) -> SAMDependents:
+        """Return the resources that an Orchestrator uses: the LLMClients of its harnesses.
+
+        :param instance: The Orchestrator.
+        :type instance: Orchestrator
+        :return: Its LLMClients.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+
+        return [(SAMKinds.LLM_CLIENT.value, instance.llmclients.all())]  # type: ignore[attr-defined]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this Orchestrator.

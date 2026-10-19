@@ -2,16 +2,14 @@
 """
 LLMClientDetailView is a Django class-based view that renders a detail view of a SAM manifest for an llmclient.
 
-LLMClientManifestEditorView renders the same manifest editor alone, for Smarter Chat's Console to frame.
+LLMClientManifestEditorView returns the same manifest, as JSON, for the Prompt Engineer's Workbench's Manifest tab.
 """
 
 from typing import Optional
 
 import yaml
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
-from django.utils.decorators import method_decorator
-from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
@@ -205,10 +203,23 @@ class LLMClientDetailView(DocsBaseView):
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error converting manifest to YAML")
 
+        return self.manifest_response(request, yaml_response)
+
+    def manifest_response(self, request: HttpRequest, manifest: str) -> HttpResponse:
+        """
+        The response, with the llmclient's manifest: its detail page.
+
+        :param request: The request.
+        :type request: django.http.HttpRequest
+        :param manifest: The manifest, as YAML.
+        :type manifest: str
+        :returns: The page.
+        :rtype: django.http.HttpResponse
+        """
         context = {
-            "manifest": yaml_response,
-            "page_title": self.llmclient.name,
-            "owner": self.llmclient.user_profile,
+            "manifest": manifest,
+            "page_title": self.llmclient.name,  # type: ignore[union-attr]
+            "owner": self.llmclient.user_profile,  # type: ignore[union-attr]
         }
         try:
             response = render(request, self.template_path, context=context)  # type: ignore
@@ -225,29 +236,37 @@ class LLMClientDetailView(DocsBaseView):
         return response
 
 
-@method_decorator(xframe_options_sameorigin, name="dispatch")
 class LLMClientManifestEditorView(LLMClientDetailView):
     """
-    Renders an llmclient's manifest editor alone, without the web console's header and sidebar.
+    Returns an llmclient's manifest, as JSON, for the manifest editor of the Prompt Engineer's Workbench.
 
-    Smarter Chat, the React app of :class:`PromptWorkbenchView`, displays this page in an iframe, in its
-    Console's "Manifest" tab. The page is the manifest editor of :class:`LLMClientDetailView`, the
-    ``@smarter/manifest-editor`` React app, which saves the manifest with the cli api, as the signed-in
-    user, and then posts a ``smarter:manifest-saved`` message to the workbench, which reloads the
+    The workbench, the ``@smarter/workbench`` React app of :class:`PromptWorkbenchView`, renders the
+    ``@smarter/manifest-editor`` component in its Console's "Manifest" tab, and fetches the manifest from
+    this view when the tab is first opened. The manifest is the one of :class:`LLMClientDetailView`. The
+    editor saves it with the cli api, as the signed-in user, and the workbench then reloads the
     llmclient's configuration.
-
-    Django's ``XFrameOptionsMiddleware`` denies every page to frames. This one may be framed by the web
-    console's own pages, of the same origin, only.
 
     **Example usage**::
 
         GET /workbench/llm-clients/<str:hashed_id>/manifest/editor/
+        {"manifest": "apiVersion: smarter.sh/v1\nkind: LLMClient\n..."}
     """
-
-    template_path = "common/manifest_editor_frame.html"
 
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
         class_name = f"{__name__}.{LLMClientManifestEditorView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
+
+    def manifest_response(self, request: HttpRequest, manifest: str) -> HttpResponse:
+        """
+        The response, with the llmclient's manifest: ``{"manifest": "<yaml>"}``.
+
+        :param request: The request.
+        :type request: django.http.HttpRequest
+        :param manifest: The manifest, as YAML.
+        :type manifest: str
+        :returns: The JSON response.
+        :rtype: django.http.JsonResponse
+        """
+        return JsonResponse({"manifest": manifest})

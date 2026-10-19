@@ -500,6 +500,21 @@ class SAMMCPClientBroker(AbstractBroker):
         )
         return [(SAMKinds.LLM_CLIENT.value, llmclients)]
 
+    @classmethod
+    def references(cls, instance: MCPClient) -> SAMDependents:
+        """Return the resources that an MCPClient uses: the Secret of its credentials.
+
+        :param instance: The MCPClient.
+        :type instance: MCPClient
+        :return: Its Secret.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.secret.models import Secret
+
+        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.credentials_id))]  # type: ignore[attr-defined]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the LLMClients that use this MCPClient.

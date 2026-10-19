@@ -282,7 +282,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
     @property
     def verbose(self) -> bool:
         """
-        Whether the configuration includes its diagnostic parts, which Smarter Chat's Console displays.
+        Whether the configuration includes its diagnostic parts, which the workbench's Console displays.
 
         They are the session's tool calls, the complete ``meta_data`` (``LLMClientHelper.to_json()``),
         and the lists of the LLMClient's plugins and extensions. They cost database queries and
@@ -345,7 +345,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
 
         **Performance:**
           Since this endpoint is called on every browser load and refresh, the logic is optimized to minimize
-          database queries and serialization overhead. The diagnostic parts, which Smarter Chat's Console
+          database queries and serialization overhead. The diagnostic parts, which the workbench's Console
           displays, are built only for a client that asks for them (see :attr:`verbose`), and only a limited
           number of plugins (see ``MAX_RETURNED_PLUGINS``) are returned.
 
@@ -668,7 +668,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         self.session = SmarterPromptSession(request, session_key=self.session_key, llmclient=self.llmclient)
         # a new chat's session key is created here, so the request's later log records carry it,
-        # for Smarter Chat's Console. dispatch() restores the log context after the request.
+        # for the workbench's Console. dispatch() restores the log context after the request.
         if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
             session_key_context.set(valid_session_key(self.session.session_key))
 

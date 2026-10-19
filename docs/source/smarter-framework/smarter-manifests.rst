@@ -43,6 +43,10 @@ The basic structure of a Smarter API Manifest (SAM) YAML document includes the f
   ``pluginClass``. See `Metadata`_ below.
 - **spec**: Defines the desired state and configuration of the resource. The spec section varies considerably by resource kind.
 - **status**: (Optional) Provides information about the current state of the resource. This section is read-only and managed by the system.
+  Its ``recordLocator``, e.g. ``llmclient-rMTAwMDAxMwx``, identifies the resource's row, and leads to its page in
+  the web console. A broker's ``dependency_tree()`` lists, recursively and by record locator, every resource
+  that a resource uses: an LLMClient's Provider, its plugins, their Connections, and those Connections'
+  Secrets. See :doc:`smarter-manifests/record-locators`.
 
 .. code-block:: yaml
 
@@ -261,5 +265,6 @@ The modules and classes below establish the foundation of Smarter's SAM data mod
    smarter-manifests/manifest-templates
    smarter-manifests/controller
    smarter-manifests/broker-model
+   smarter-manifests/record-locators
    smarter-manifests/error-handling
    smarter-manifests/validation-strategy

@@ -859,6 +859,17 @@ class SAMAccountBroker(AbstractBroker):
 
         return [(SAMKinds.USER.value, UserProfile.objects.filter(account=instance).select_related("user"))]
 
+    @classmethod
+    def references(cls, instance: Account) -> SAMDependents:
+        """Return the resources that an Account uses: none.
+
+        :param instance: The Account.
+        :type instance: Account
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the Users that belong to this Account.

@@ -12,11 +12,11 @@ import { useEffect, useState } from "react";
 import Editor, { type BeforeMount, type Monaco, type OnMount } from "@monaco-editor/react";
 import type * as monaco from "monaco-editor";
 
-import { useCopy } from "@/lib/useCopy";
-import { useLockedFields } from "@/lib/useLockedFields";
-import type { ManifestError } from "@/lib/validation";
+import { useCopy } from "../../lib/useCopy";
+import { useLockedFields } from "../../lib/useLockedFields";
+import type { ManifestError } from "../../lib/validation";
 
-import "@/components/ManifestEditor/styles.css";
+import "./styles.css";
 import { gettext } from "@smarter/common";
 
 const THEME = "smarter-manifest";

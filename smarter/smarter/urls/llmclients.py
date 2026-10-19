@@ -15,6 +15,8 @@ Endpoints
      - Named llmclient configuration view
    * - /prompt/
      - Default llmclient API view
+   * - /jsi18n/
+     - The message catalog of the page that a browser sees at the endpoints, in the browser's language
 
 The api views answer POST. While the ``enable_llmclient_endpoints_page`` waffle switch is active, a GET
 or HEAD of any of them, e.g. from a browser, receives a page with the curl commands that call them.
@@ -28,6 +30,7 @@ or HEAD of any of them, e.g. from a browser, receives a page with the curl comma
 
 # from django.contrib import admin
 from django.urls import path
+from django.views.i18n import JavaScriptCatalog
 
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.views.endpoints import browser_friendly
@@ -43,6 +46,8 @@ urlpatterns = [
     path("", config_view, name="console_home"),
     path("config/", config_view, name="llmclient_named_config"),
     path("prompt/", browser_friendly(DefaultLLMClientApiView.as_view()), name="llmclient_named_chat"),
+    # the endpoints page is a React app, whose text is in the djangojs catalog. See smarter.urls.console.
+    path("jsi18n/", JavaScriptCatalog.as_view(domain="djangojs"), name="javascript-catalog"),
 ]
 
 __all__ = ["urlpatterns"]
