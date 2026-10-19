@@ -7,10 +7,12 @@ The Prompt Engineer's Workbench of the Smarter web console, at
   ([smarter-sh/smarter-chat](https://github.com/smarter-sh/smarter-chat), which `make react-install` clones into
   `packages/smarter-chat`). The workbench imports its built library, `dist/`, as any React application does, and
   follows it with its `verbose`, `reloadKey`, `headerActions`, `onConfig`, `onNewChat` and `onModeChange` props.
-- **The Console** has five tabs, in the order of a prompt engineer's work: Manifest (the `@smarter/manifest-editor`
-  component), Server Logs (the chat session's server logs, as they stream in, selected when the Console opens),
-  Tool Calls and Config (the chat's configuration, as JSON), and Deployment (the `@smarter/llmclient-deployment`
-  component). The Manifest and Deployment tabs fetch their data when they are first opened.
+- **The Console** has six tabs, in the order of a prompt engineer's work: Manifest (the `@smarter/manifest-editor`
+  component), Architecture (the `@smarter/llmclient-architecture` component: the tree of the SAM resources that the
+  LLMClient is built from), Server Logs (the chat session's server logs, as they stream in, selected when the
+  Console opens), Tool Calls and Config (the chat's configuration, as JSON), and Deployment (the
+  `@smarter/llmclient-deployment` component). The Manifest, Architecture and Deployment tabs fetch their data when
+  they are first opened.
 - **The layout**: the separator resizes the chat and the Console, the Console button in the chat's header hides
   the Console, and, in sandbox mode, the Docs button opens a dialog of links to the technical references. The
   browser remembers the layout.
@@ -21,7 +23,8 @@ The Prompt Engineer's Workbench of the Smarter web console, at
   `templates/react/workbench.html`, whose root element's attributes are the workbench's configuration
   (`src/lib/session.ts`).
 - `smarter.apps.prompt.templatetags.react_workbench` provides the app's assets, from its Vite `manifest.json`.
-- `LLMClientManifestEditorView` and `LLMClientDeploymentView` return the Manifest and Deployment tabs' data, as JSON.
+- `LLMClientManifestEditorView`, `LLMClientArchitectureView` and `LLMClientDeploymentView` return the Manifest,
+  Architecture and Deployment tabs' data, as JSON.
 
 ## Development
 

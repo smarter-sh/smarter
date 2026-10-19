@@ -1,14 +1,15 @@
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
+import { stackademyTree } from "@smarter/llmclient-architecture/mocks";
 import { workbenchPage } from "@smarter/llmclient-deployment/mocks";
 
-import { ApiError, fetchDeploymentPage, fetchManifest } from "@/lib/api";
-import { DEPLOYMENT_URL, MANIFEST_URL, MANIFEST_YAML } from "@/mocks/fixtures";
+import { ApiError, fetchArchitecture, fetchDeploymentPage, fetchManifest } from "@/lib/api";
+import { ARCHITECTURE_URL, DEPLOYMENT_URL, MANIFEST_URL, MANIFEST_YAML } from "@/mocks/fixtures";
 import { tabHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
 describe("the workbench's own requests", () => {
-  it("fetch the manifest, and the deployment page, with the user's session", async () => {
+  it("fetch the manifest, the architecture, and the deployment page, with the user's session", async () => {
     let credentials: RequestCredentials | null = null;
     server.use(
       http.get(MANIFEST_URL, ({ request }) => {
@@ -19,6 +20,7 @@ describe("the workbench's own requests", () => {
     );
     expect(await fetchManifest(MANIFEST_URL)).toBe(MANIFEST_YAML);
     expect(credentials).toBe("same-origin");
+    expect(await fetchArchitecture(ARCHITECTURE_URL)).toEqual(stackademyTree);
     expect(await fetchDeploymentPage(DEPLOYMENT_URL)).toEqual(workbenchPage);
   });
 

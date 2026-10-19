@@ -1,5 +1,6 @@
 """Views for the prompt app."""
 
+from .prompt_architecture_view import LLMClientArchitectureView
 from .prompt_config_view import PromptConfigView
 from .prompt_deployment_view import (
     LLMClientDeploymentApiKeyAttachView,
@@ -14,6 +15,7 @@ from .prompt_workbench_view import PromptWorkbenchView, SmarterPromptSession
 __all__ = [
     "PromptConfigView",
     "PromptWorkbenchView",
+    "LLMClientArchitectureView",
     "LLMClientDetailView",
     "LLMClientDeploymentApiKeyAttachView",
     "LLMClientDeploymentApiKeyCreateView",

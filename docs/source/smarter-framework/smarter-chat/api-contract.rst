@@ -128,6 +128,10 @@ Overview
                                             ◀───  the manifest, as JSON, which the editor saves
                                                   with the cli api
 
+  once the Console's Architecture tab is opened, and on Reload:
+    GET <architectureUrl>                   ───▶  LLMClientArchitectureView
+                                            ◀───  the tree of the LLMClient's SAM resources, as JSON
+
   once the Console's Deployment tab is opened:
     GET <deploymentUrl>                     ───▶  LLMClientDeploymentView
                                             ◀───  the deployment page's data, as JSON, whose api
@@ -173,6 +177,10 @@ Endpoints
      - The ``smarter-manifest-url`` that Django passes the workbench:
        ``/workbench/llm-clients/<hashed_id>/manifest/editor/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`
+   * - Architecture, workbench only
+     - The ``smarter-architecture-url`` that Django passes the workbench:
+       ``/workbench/llm-clients/<hashed_id>/architecture/``
+     - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView`
    * - Deployment page, workbench only
      - The ``smarter-deployment-url`` that Django passes the workbench:
        ``/workbench/llm-clients/<hashed_id>/deployment/``

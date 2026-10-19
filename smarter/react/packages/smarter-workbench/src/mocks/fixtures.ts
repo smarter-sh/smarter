@@ -1,8 +1,8 @@
 /**
  * Example data for the workbench's stories and tests: its configuration, the LLMClient's chat configuration, as the
  * config api returns it (a trimmed copy of a real response, for the stackademy_sql LLMClient, as Smarter Chat's own
- * fixtures have it), the user's server logs, and the LLMClient's manifest. The deployment page is
- * @smarter/llmclient-deployment's own fixture.
+ * fixtures have it), the user's server logs, and the LLMClient's manifest. The architecture and the deployment page
+ * are @smarter/llmclient-architecture's and @smarter/llmclient-deployment's own fixtures.
  */
 import { normalizeConfig, type ChatConfig, type Contract } from "@smarter.sh/ui-chat";
 import type { SessionContext } from "@smarter/common";
@@ -15,6 +15,7 @@ export const CONFIG_URL = `${API_URL}config/`;
 export const PROMPT_URL = `http://localhost:9357/api/v1/llm-clients/${HASHED_ID}/prompt/`;
 export const LOG_STREAM_URL = "http://localhost:9357/dashboard/logs/api/stream/";
 export const MANIFEST_URL = `/workbench/llm-clients/${HASHED_ID}/manifest/editor/`;
+export const ARCHITECTURE_URL = `/workbench/llm-clients/${HASHED_ID}/architecture/`;
 export const DEPLOYMENT_URL = `/workbench/llm-clients/${HASHED_ID}/deployment/`;
 export const LLMCLIENT_LIST_URL = "/workbench/";
 export const SESSION_KEY = "e019a5c1cb2c1cb87992d2d03bccaf44c9d98406b46de5516a4fa03650038ac8";
@@ -42,6 +43,7 @@ export const workbench: WorkbenchConfig = {
   smarterRequestId: "test-request-id",
   logStreamUrl: LOG_STREAM_URL,
   manifestUrl: MANIFEST_URL,
+  architectureUrl: ARCHITECTURE_URL,
   deploymentUrl: DEPLOYMENT_URL,
   llmclientListUrl: LLMCLIENT_LIST_URL,
   applyApiUrl: "/api/v1/cli/apply/",
@@ -51,11 +53,12 @@ export const workbench: WorkbenchConfig = {
   session,
 };
 
-/** The workbench's configuration without the optional tabs: no server logs, manifest or deployment. */
+/** The workbench's configuration without the optional tabs: no server logs, manifest, architecture or deployment. */
 export const plainWorkbench: WorkbenchConfig = {
   ...workbench,
   logStreamUrl: null,
   manifestUrl: null,
+  architectureUrl: null,
   deploymentUrl: null,
 };
 

@@ -18,6 +18,7 @@
     "@microlink/react-json-view": "^1.31.40",
     "@smarter.sh/ui-chat": "*",
     "@smarter/common": "^0.2.0",
+    "@smarter/llmclient-architecture": "^0.1.0",
     "@smarter/llmclient-deployment": "^0.1.0",
     "@smarter/manifest-editor": "^0.1.0",
     "katex": "^0.18.7",

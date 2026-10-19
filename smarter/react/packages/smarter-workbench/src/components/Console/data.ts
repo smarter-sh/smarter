@@ -18,7 +18,7 @@ export function consoleData(config: ConsoleConfig, item: MenuItem): object[] | n
     case MenuItems.CHAT_CONFIG:
       return [config];
     default:
-      // streamed (ServerLogs), or another component (ManifestTab, DeploymentTab).
+      // streamed (ServerLogs), or another component (ManifestTab, ArchitectureTab, DeploymentTab).
       return [];
   }
 }

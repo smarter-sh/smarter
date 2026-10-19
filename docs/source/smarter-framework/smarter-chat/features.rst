@@ -178,12 +178,22 @@ deployment:
        open it, then keeps your unsaved changes while you look at the other tabs. If you delete the
        LLMClient, the workbench, whose LLMClient is gone, takes you to the LLM Clients list. The tab is
        the far left one, where each change to the LLMClient starts.
+   * - Architecture
+     - How the LLMClient is built: the tree of the SAM resources that it uses, such as its Provider, its
+       plugins, MCPClients and Guardrails, and beneath them, what those use in turn, such as Connections
+       and Secrets. Each resource is a card with its kind's icon, its name and its owner, and clicking it
+       opens the resource's manifest page, where its manifest can be edited, in a new tab. A short
+       introduction explains SAM resources and their manifests, and each kind links to its page in this
+       documentation. Each resource that uses others can be collapsed, **Collapse all** and **Expand all**
+       do it for every one, and **Reload** fetches the tree again, after a manifest was changed in
+       another tab. A resource that you may not read, such as another account's, is a locked card with
+       only its kind and record locator. The tab is right of Manifest, and loads when you first open it.
    * - Server Logs
      - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.
        Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Blocks of
        pretty-printed JSON, such as a prompt's request and response, are collapsed to their first
        line and their length: each block's **+** button expands it, and **Expand JSON** expands or
-       collapses all of them. Copying the lines copies the JSON in full. The tab is right of Manifest. Present only
+       collapses all of them. Copying the lines copies the JSON in full. The tab is right of Architecture. Present only
        when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
        then selected when the Console opens. A new chat clears it.
    * - Tool Calls

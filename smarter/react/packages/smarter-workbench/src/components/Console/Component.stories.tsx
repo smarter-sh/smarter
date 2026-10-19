@@ -28,7 +28,7 @@ export const Empty: Story = {
 };
 
 /**
- * With the Manifest and Deployment tabs, which fetch their data when they are first opened. Storybook has no log
+ * With the Manifest, Architecture and Deployment tabs, which fetch their data when they are first opened. Storybook has no log
  * stream, so the Server Logs tab, which is first, keeps connecting.
  */
 export const WithEveryTab: Story = {

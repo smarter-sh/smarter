@@ -75,6 +75,13 @@ than rendering a broken workbench.
        :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`,
        which the Console's Manifest tab fetches when it is first opened, and edits with the
        ``@smarter/manifest-editor`` component, the editor of every manifest detail page.
+   * - ``smarter-architecture-url``
+     - The path of the LLMClient's architecture, as JSON,
+       :py:class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView`,
+       which the Console's Architecture tab fetches when it is first opened, and draws with the
+       ``@smarter/llmclient-architecture`` component: the tree of the SAM resources that the LLMClient is
+       built from, as cards that open each resource's manifest page. Its data is
+       :py:mod:`~smarter.apps.prompt.views.detailviews.architecture_contract`.
    * - ``smarter-deployment-url``
      - The path of the LLMClient's deployment page's data,
        :py:class:`~smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView`,
@@ -124,8 +131,8 @@ The workbench page and its requests are authenticated by the web console's Djang
 chat's requests are sent with ``credentials: "include"``, so the browser adds the session cookie, and
 the chat adds the ``X-CSRFToken`` header from the CSRF cookie. Its ``apiUrl`` is on the platform's
 own domain, so the configuration request is same-origin. The prompt request, to the LLMClient's
-``url_llmclient``, is also on the platform domain, under ``/api/v1/``. The Console's Manifest and
-Deployment tabs fetch their data from the platform's own domain, with the same session.
+``url_llmclient``, is also on the platform domain, under ``/api/v1/``. The Console's Manifest,
+Architecture and Deployment tabs fetch their data from the platform's own domain, with the same session.
 
 A workbench url is a sandbox url: the LLMClient requires an authenticated user there whether it is
 deployed or not, and the configuration's ``sandbox_mode`` is ``true``.

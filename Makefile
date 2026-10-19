@@ -28,7 +28,7 @@ SMARTER_CHAT_BRANCH ?= main
 SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
 
 
-.PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
@@ -443,6 +443,16 @@ llmclient-deployment-contract:
 	cp smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmclient-deployment/contract/llmclient-deployment.schema.json
 	cd smarter/react/packages/smarter-llmclient-deployment && npm run contract:types
 
+# Regenerate the contract of the workbench's Architecture tab, an LLMClient's tree of SAM resources, from its
+# Pydantic models, in the smarter-app container, copy it into @smarter/llmclient-architecture, and regenerate
+# that package's TypeScript types.
+LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA := smarter/apps/prompt/views/detailviews/llmclient-architecture.schema.json
+llmclient-architecture-contract:
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_architecture_schema"
+	docker cp smarter-app:/home/smarter_user/smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA)
+	cp smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmclient-architecture/contract/llmclient-architecture.schema.json
+	cd smarter/react/packages/smarter-llmclient-architecture && npm run contract:types
+
 # Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-app
 # container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the
 # smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
@@ -537,6 +547,7 @@ help:
 	@echo 'api-contract           - Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document'
 	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
 	@echo 'i18n-messages          - Regenerate and compile the web console translations (.po), optionally LANGUAGE=<code>'
+	@echo 'llmclient-architecture-contract - Regenerate the workbench Architecture tab contract schema, and its React types'
 	@echo 'llmtool-list-contract  - Regenerate the LLMTool list Extensions tab contract schema, and its React types'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'

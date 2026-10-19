@@ -20,6 +20,7 @@ const ATTRIBUTES = {
   "smarter-request-id": "abc",
   "smarter-log-stream-url": "",
   "smarter-manifest-url": "/workbench/llm-clients/rMTAwMDAwMQx/manifest/editor/",
+  "smarter-architecture-url": "/workbench/llm-clients/rMTAwMDAwMQx/architecture/",
   "smarter-deployment-url": "/workbench/llm-clients/rMTAwMDAwMQx/deployment/",
   "smarter-llmclient-list-url": "/workbench/",
   "smarter-apply-api-url": "/api/v1/cli/apply/",
@@ -36,6 +37,7 @@ describe("readConfig", () => {
     // an empty url is no tab.
     expect(config.logStreamUrl).toBeNull();
     expect(config.manifestUrl).toBe("/workbench/llm-clients/rMTAwMDAwMQx/manifest/editor/");
+    expect(config.architectureUrl).toBe("/workbench/llm-clients/rMTAwMDAwMQx/architecture/");
     expect(config.cookieDomain).toBe(window.location.hostname);
     expect(config.session).toMatchObject({
       csrfCookieName: "csrftoken",
