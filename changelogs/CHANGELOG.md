@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.34.1](https://github.com/smarter-sh/smarter/compare/v0.34.0...v0.34.1) (2026-10-19)
+
+### Bug Fixes
+
+* **prompt:** translate the next steps panel, fix flaky Copied tests ([deaf398](https://github.com/smarter-sh/smarter/commit/deaf398bc9a3583db14af519040876a3eebd714e))
+
 ## [0.34.0](https://github.com/smarter-sh/smarter/compare/v0.33.14...v0.34.0) (2026-10-19)
 
 ### Features
