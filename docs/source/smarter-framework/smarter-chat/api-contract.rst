@@ -390,12 +390,22 @@ A plugin's class and a function's name are the ORM's choices, and a test fails i
 Messages (:class:`~smarter.apps.prompt.contract.models.PromptChatApiMessage`) declare their content
 parts (text, image, audio, file and refusal, by ``type``) and their tool calls.
 
+The configuration's diagnostic parts are returned only when the client asks for them with
+``?verbose=true`` (:data:`~smarter.apps.prompt.contract.const.VERBOSE_PARAMETER`): the session's tool
+calls (``history.prompt_tool_call_history``), the complete ``meta_data``, and the
+``plugins.plugins`` and ``extensions.extensions`` lists. Without it, a workbench or platform api url
+returns the complete LLMClient, its state, the session's messages, and the counts of its plugins and
+extensions. A deployed LLMClient's own host ignores the parameter. The cli always receives every
+part, and it is the only client that receives ``history.prompt_plugin_usage_history``,
+``history.plugin_selector_history`` and ``history.llmclient_request_history``.
+
 The fields that Smarter Chat reads are the declared fields of
 :class:`~smarter.apps.prompt.contract.models.PromptChatApiConfig`,
 :class:`~smarter.apps.prompt.contract.models.PromptChatApiLLMClient`,
 :class:`~smarter.apps.prompt.contract.models.PromptChatApiHistory` and
 :class:`~smarter.apps.prompt.contract.models.PromptChatApiMetaData`. ``llmclient.url_llmclient`` and
-``session_key`` are required. Everything else is displayed, as is, in the Console's Config tab.
+``session_key`` are required. Everything else is displayed, as is, in the Console's Config tab,
+which fetches the configuration with ``?verbose=true``.
 
 .. note::
 
