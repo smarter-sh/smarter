@@ -6,7 +6,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-API_DOMAIN = f"{smarter_settings.api_subdomain}.{smarter_settings.root_domain}"
+API_DOMAIN = smarter_settings.root_api_domain
 
 
 def matching_host(hostname: str):
@@ -47,6 +47,8 @@ class TestHostPatterns(SmarterTestBase):
             f"stackademy.3141-5926.{API_DOMAIN}",
             f"stackademy.3141-5926-5359.{API_DOMAIN.replace('.', 'x', 1)}",
             f"stackademy.3141-5926-5359.example.com",
+            # the api domain without the platform subdomain.
+            f"stackademy.3141-5926-5359.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
         ):
             with self.subTest(hostname=hostname):
                 pattern = matching_host(hostname)

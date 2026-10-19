@@ -114,9 +114,9 @@ class TestLLMClientHelperNamedUrl(TestAccountMixin):
         )
         self.addCleanup(LLMClient.objects.filter(pk=self.user_llmclient.pk).delete)
 
-    def helper(self, label: str) -> LLMClientHelper:
+    def helper(self, label: str, path: str = "/") -> LLMClientHelper:
         host = f"{label}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
-        request = RequestFactory().get("/", HTTP_HOST=host)
+        request = RequestFactory().get(path, HTTP_HOST=host)
         request.user = AnonymousUser()
         return LLMClientHelper(request)
 
@@ -137,3 +137,18 @@ class TestLLMClientHelperNamedUrl(TestAccountMixin):
         self.assertIsNone(helper.llmclient)
         self.assertIsNone(helper.llmclient_id)
         self.assertIsNone(helper.llmclient_from_host_label())
+
+    def test_the_config_and_prompt_paths(self):
+        """A deployed host's /config/ and /prompt/ resolve its LLMClient, with or without a trailing slash."""
+        for path in ("/config/", "/config", "/prompt/", "/prompt"):
+            with self.subTest(path=path):
+                helper = self.helper(self.admin_llmclient.rfc1034_compliant_name, path=path)
+                self.assertEqual(helper.llmclient, self.admin_llmclient)
+
+    def test_other_paths_are_not_named_urls(self):
+        """Paths that a deployed host doesn't serve, e.g. the console's /dashboard/, resolve nothing."""
+        for path in ("/dashboard/", "/jsi18n/", "/config/extra/"):
+            with self.subTest(path=path):
+                helper = self.helper(self.admin_llmclient.rfc1034_compliant_name, path=path)
+                self.assertFalse(helper.is_llmclient_named_url)
+                self.assertIsNone(helper.llmclient)

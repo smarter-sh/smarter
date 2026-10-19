@@ -64,6 +64,13 @@ netloc_pattern_named_url = re.compile(
 )
 
 
+NAMED_URL_PATHS = ("", "/config", "/prompt")
+"""The paths, without a trailing slash, that a deployed LLMClient's own host serves.
+
+See ``smarter.urls.llmclients``.
+"""
+
+
 # pylint: disable=W0613
 def should_log_verbose(level):
     """Check if logging should be done based on the waffle switch."""
@@ -1718,6 +1725,7 @@ class SmarterRequestMixin(AccountMixin):
             - https://example-username.3141-5926-5359.api.example.com/
             - http://example-username.3141-5926-5359.api.localhost:9357/
             - http://example-username.3141-5926-5359.api.localhost:9357/config/
+            - http://example-username.3141-5926-5359.api.localhost:9357/prompt/
 
         Returns:
             bool: True if the URL matches the named llmclient pattern, otherwise False.
@@ -1752,8 +1760,8 @@ class SmarterRequestMixin(AccountMixin):
                 self.account = Account.get_cached_object(account_number=account_number)
             return True
 
-        # Accept root path or root with trailing slash
-        if isinstance(self.parsed_url, ParseResult) and self.parsed_url.path not in ("", "/"):
+        # Accept the paths that a deployed LLMClient's own host serves, with or without a trailing slash.
+        if isinstance(self.parsed_url, ParseResult) and self.parsed_url.path.rstrip("/") not in NAMED_URL_PATHS:
             verbose_logger.debug(
                 "%s.is_llmclient_named_url() - url %s path is not root or trailing slash: %s",
                 self.srm_formatted_class_name,
