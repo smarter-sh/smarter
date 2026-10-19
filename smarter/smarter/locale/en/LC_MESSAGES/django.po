@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 10:56+0000\n"
+"POT-Creation-Date: 2026-10-19 13:28+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -1897,6 +1897,7 @@ msgid "Name"
 msgstr ""
 
 #: smarter/templates/llmclient/api_keys.html
+#: smarter/templates/llmclient/deployment.html
 msgid "Owner"
 msgstr ""
 
@@ -2093,6 +2094,80 @@ msgid ""
 "Put %(app_name)s in front of people. Smarter Chat works on any web site, and "
 "these integrations are ready to use: pick the one that matches yours. Each "
 "of them needs only this LLMClient's url."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid "This LLMClient isn't yours"
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"<strong>%(name)s</strong> belongs to <strong>%(owner)s</strong>, who shares "
+"it with you. You can chat with it, read its manifest and use everything on "
+"this page that only reads it, but only its owner, or an admin of its "
+"account, can change it, deploy it or attach an api key to it. That leaves "
+"you two choices."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid "1. Leave it as it is"
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Use it as an example. Chat with it, read its manifest, and borrow whatever "
+"you like for LLMClients of your own. Nothing that you do here changes it."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid "2. Clone it, and work on your copy"
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"A clone is a new LLMClient, owned by you, that starts as an exact copy of "
+"this one: the same instructions, LLM provider and model, and the same "
+"plugins, MCP clients and guardrails, except any that you aren't allowed to "
+"use. It has its own name, and its own url. From then on the two are "
+"independent: your changes to the copy never touch the original, and later "
+"changes to the original never reach your copy."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"Open the <a href=\"%(url)s\" target=\"_top\" class=\"fw-semibold\">LLM "
+"Clients</a> list, and its <strong>Shared LLM Clients</strong> tab."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"Find <strong>%(name)s</strong>, and click its <strong>Clone</strong> button, "
+"the green icon of two pages."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Type a name for your copy, and click <strong>OK</strong>. Smarter writes the "
+"name in snake case: <em>My Advisor</em> becomes <code>my_advisor</code>."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Your copy appears in the <strong>Your LLM Clients</strong> tab, under its "
+"new name, and the original stays in <strong>Shared LLM Clients</strong>, "
+"unchanged. Open your copy in the workbench, and from there edit its "
+"manifest, deploy it, and put it on your site, as this page describes."
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid "How ownership of Smarter resources works"
+msgstr ""
+
+#: smarter/templates/llmclient/deployment.html
+msgid "who owns a resource, who can read it, and who can change it."
 msgstr ""
 
 #: smarter/templates/llmclient/deployment.html

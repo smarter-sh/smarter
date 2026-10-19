@@ -8,7 +8,8 @@ Included by llmclient/endpoints.html, the page at the deployed LLMClient's url, 
 and by llmclient/deployment_frame.html, the "Deployment" tab of the workbench's Console, where it is
 false. The context is smarter.apps.llmclient.views.endpoints.deployment_context(). An LLMClient that
 isn't deployed, which only the workbench shows, has the url that it will have, and the command that
-deploys it.
+deploys it. Only the workbench shows the LLMClient's owner and, to a user who may not change it, how
+to clone it: see LLMClientDeploymentView.ownership_context().
 {% endcomment %}
 {% translate "Copied" as copied_label %}
 
@@ -88,6 +89,9 @@ deploys it.
             <table class="table table-borderless align-middle mb-0">
               <tbody class="fs-6">
                 <tr><td class="text-gray-500 ps-0">{% translate "Name" %}</td><td class="text-white fw-semibold text-end pe-0">{{ llmclient.name }}</td></tr>
+                {% if owner %}
+                <tr><td class="text-gray-500 ps-0">{% translate "Owner" %}</td><td class="text-white fw-semibold text-end pe-0">{{ owner }}</td></tr>
+                {% endif %}
                 <tr><td class="text-gray-500 ps-0">{% translate "Status" %}</td><td class="text-white fw-semibold text-end pe-0">{% if deployed %}{% translate "Deployed" %}{% else %}{% translate "Not deployed" %}{% endif %}</td></tr>
                 {% if llmclient.provider %}
                 <tr><td class="text-gray-500 ps-0">{% translate "LLM provider" %}</td><td class="text-white fw-semibold text-end pe-0">{{ llmclient.provider }}</td></tr>
@@ -132,6 +136,61 @@ deploys it.
         {% endblocktranslate %}
       </p>
     </div>
+
+    {% if not standalone and not can_edit_llmclient %}
+    <div id="not-yours" class="notice bg-light-warning rounded border-warning border border-dashed p-6 mb-10">
+      <h3 class="text-gray-900 fw-bold mb-3"><i class="ki-outline ki-information fs-2 text-warning me-2"></i>{% translate "This LLMClient isn't yours" %}</h3>
+      <p class="fs-6 text-gray-700 mb-4">
+        {% blocktranslate with name=llmclient.name owner=owner trimmed %}
+        <strong>{{ name }}</strong> belongs to <strong>{{ owner }}</strong>, who shares it with you. You can chat with it, read its manifest and use everything on this page that only reads it, but only its owner, or an admin of its account, can change it, deploy it or attach an api key to it. That leaves you two choices.
+        {% endblocktranslate %}
+      </p>
+      <div class="row g-6 mb-4">
+        <div class="col-lg-5">
+          <h4 class="text-gray-900 fw-bold fs-5 mb-2">{% translate "1. Leave it as it is" %}</h4>
+          <p class="fs-6 text-gray-700 mb-0">
+            {% blocktranslate trimmed %}
+            Use it as an example. Chat with it, read its manifest, and borrow whatever you like for LLMClients of your own. Nothing that you do here changes it.
+            {% endblocktranslate %}
+          </p>
+        </div>
+        <div class="col-lg-7">
+          <h4 class="text-gray-900 fw-bold fs-5 mb-2">{% translate "2. Clone it, and work on your copy" %}</h4>
+          <p class="fs-6 text-gray-700 mb-3">
+            {% blocktranslate trimmed %}
+            A clone is a new LLMClient, owned by you, that starts as an exact copy of this one: the same instructions, LLM provider and model, and the same plugins, MCP clients and guardrails, except any that you aren't allowed to use. It has its own name, and its own url. From then on the two are independent: your changes to the copy never touch the original, and later changes to the original never reach your copy.
+            {% endblocktranslate %}
+          </p>
+          <ol class="fs-6 text-gray-700 ps-5 mb-0">
+            <li class="mb-1">
+              {% blocktranslate with url=llmclient_list_url trimmed %}
+              Open the <a href="{{ url }}" target="_top" class="fw-semibold">LLM Clients</a> list, and its <strong>Shared LLM Clients</strong> tab.
+              {% endblocktranslate %}
+            </li>
+            <li class="mb-1">
+              {% blocktranslate with name=llmclient.name trimmed %}
+              Find <strong>{{ name }}</strong>, and click its <strong>Clone</strong> button, the green icon of two pages.
+              {% endblocktranslate %}
+            </li>
+            <li class="mb-1">
+              {% blocktranslate trimmed %}
+              Type a name for your copy, and click <strong>OK</strong>. Smarter writes the name in snake case: <em>My Advisor</em> becomes <code>my_advisor</code>.
+              {% endblocktranslate %}
+            </li>
+            <li>
+              {% blocktranslate trimmed %}
+              Your copy appears in the <strong>Your LLM Clients</strong> tab, under its new name, and the original stays in <strong>Shared LLM Clients</strong>, unchanged. Open your copy in the workbench, and from there edit its manifest, deploy it, and put it on your site, as this page describes.
+              {% endblocktranslate %}
+            </li>
+          </ol>
+        </div>
+      </div>
+      <p class="fs-7 text-gray-600 mb-0">
+        <a href="{{ ownership_docs_url }}" target="_blank" rel="noopener" class="fw-semibold">{% translate "How ownership of Smarter resources works" %}</a>:
+        {% translate "who owns a resource, who can read it, and who can change it." %}
+      </p>
+    </div>
+    {% endif %}
 
     <div class="notice d-flex flex-column flex-lg-row bg-light-primary rounded border-primary border border-dashed p-6 mb-10 gap-6">
       <div class="flex-grow-1 min-w-0">

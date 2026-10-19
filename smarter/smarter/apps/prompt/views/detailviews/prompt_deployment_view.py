@@ -22,6 +22,7 @@ from smarter.apps.llmclient.views.endpoints import deployment_context
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -41,6 +42,9 @@ ACTION_DETACH = "detach"
 
 NOTICE_SUCCESS = "success"
 NOTICE_DANGER = "danger"
+
+OWNERSHIP_DOCS_URL = "https://docs.smarter.sh/en/latest/smarter-resources/account/models/metadata_with_ownership.html"
+"""The docs page that explains who owns a Smarter resource, and who may read and change it."""
 
 
 @method_decorator(xframe_options_sameorigin, name="dispatch")
@@ -167,6 +171,36 @@ class LLMClientDeploymentView(SmarterAuthenticatedNeverCachedWebView):
             "can_create_api_keys": can_create,
         }
 
+    def ownership_context(self, llmclient: LLMClient, can_manage: bool) -> SmarterDictType:
+        """
+        The context of the page's ownership: who owns the llmclient, and where a user can clone it.
+
+        A user who may not change the llmclient gets a guide to cloning it, with the url of the LLM
+        Clients list.
+
+        The owner is in the workbench's tab only, never on the page at the deployed llmclient's url, which
+        anyone can open.
+
+        :param llmclient: The llmclient.
+        :type llmclient: LLMClient
+        :param can_manage: Whether the user has ownership permission for the llmclient: its owner, an
+            admin of its account, or a superuser.
+        :type can_manage: bool
+        :returns: The context.
+        :rtype: SmarterDictType
+        """
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseNames
+
+        owner = llmclient.user_profile.user
+        full_name = owner.get_full_name()
+        return {
+            "owner": f"{full_name} ({owner.username})" if full_name else owner.username,
+            "can_edit_llmclient": can_manage,
+            "llmclient_list_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+            "ownership_docs_url": OWNERSHIP_DOCS_URL,
+        }
+
     def render_page(
         self,
         request: HttpRequest,
@@ -191,11 +225,13 @@ class LLMClientDeploymentView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The page.
         :rtype: django.http.HttpResponse
         """
+        can_manage = self.can_manage(request, llmclient)
         context = deployment_context(llmclient)
         context["standalone"] = False
+        context.update(self.ownership_context(llmclient, can_manage=can_manage))
         context.update(
             self.api_keys_context(
-                request, llmclient, can_manage=self.can_manage(request, llmclient), can_create=request.user.is_staff  # type: ignore[union-attr]
+                request, llmclient, can_manage=can_manage, can_create=request.user.is_staff  # type: ignore[union-attr]
             )
         )
         context["api_key_notice"] = notice

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 10:56+0000\n"
+"POT-Creation-Date: 2026-10-19 13:30+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -2049,6 +2049,7 @@ msgid "Name"
 msgstr "Nombre"
 
 #: smarter/templates/llmclient/api_keys.html
+#: smarter/templates/llmclient/deployment.html
 msgid "Owner"
 msgstr "Propietario"
 
@@ -2272,6 +2273,108 @@ msgstr ""
 "Pon %(app_name)s frente a la gente. Smarter Chat funciona en cualquier sitio "
 "web, y estas integraciones están listas para usar: elige la que corresponda "
 "a tu sitio. Cada una solo necesita la url de este LLMClient."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "This LLMClient isn't yours"
+msgstr "Este LLMClient no es tuyo"
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"<strong>%(name)s</strong> belongs to <strong>%(owner)s</strong>, who shares "
+"it with you. You can chat with it, read its manifest and use everything on "
+"this page that only reads it, but only its owner, or an admin of its "
+"account, can change it, deploy it or attach an api key to it. That leaves "
+"you two choices."
+msgstr ""
+"<strong>%(name)s</strong> pertenece a <strong>%(owner)s</strong>, que lo "
+"comparte contigo. Puedes chatear con él, leer su manifiesto y usar todo lo de"
+" esta página que solo lo lee, pero solo su propietario, o un administrador de"
+" su cuenta, puede cambiarlo, desplegarlo o asociarle una clave de api. Eso te"
+" deja dos opciones."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "1. Leave it as it is"
+msgstr "1. Déjalo como está"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Use it as an example. Chat with it, read its manifest, and borrow whatever "
+"you like for LLMClients of your own. Nothing that you do here changes it."
+msgstr ""
+"Úsalo como ejemplo. Chatea con él, lee su manifiesto y toma lo que quieras "
+"para tus propios LLMClients. Nada de lo que hagas aquí lo cambia."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "2. Clone it, and work on your copy"
+msgstr "2. Clónalo y trabaja en tu copia"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"A clone is a new LLMClient, owned by you, that starts as an exact copy of "
+"this one: the same instructions, LLM provider and model, and the same "
+"plugins, MCP clients and guardrails, except any that you aren't allowed to "
+"use. It has its own name, and its own url. From then on the two are "
+"independent: your changes to the copy never touch the original, and later "
+"changes to the original never reach your copy."
+msgstr ""
+"Un clon es un LLMClient nuevo, de tu propiedad, que empieza como una copia "
+"exacta de este: las mismas instrucciones, el mismo proveedor y modelo de LLM,"
+" y los mismos plugins, clientes MCP y guardrails, salvo los que no tengas "
+"permiso para usar. Tiene su propio nombre y su propia url. A partir de ahí "
+"los dos son independientes: tus cambios en la copia nunca tocan el original, "
+"y los cambios posteriores del original nunca llegan a tu copia."
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"Open the <a href=\"%(url)s\" target=\"_top\" class=\"fw-semibold\">LLM "
+"Clients</a> list, and its <strong>Shared LLM Clients</strong> tab."
+msgstr ""
+"Abre la lista de <a href=\"%(url)s\" target=\"_top\" class=\"fw-"
+"semibold\">Clientes LLM</a> y su pestaña <strong>Clientes LLM "
+"compartidos</strong>."
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"Find <strong>%(name)s</strong>, and click its <strong>Clone</strong> button, "
+"the green icon of two pages."
+msgstr ""
+"Busca <strong>%(name)s</strong> y haz clic en su botón "
+"<strong>Clonar</strong>, el icono verde de dos páginas."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Type a name for your copy, and click <strong>OK</strong>. Smarter writes the "
+"name in snake case: <em>My Advisor</em> becomes <code>my_advisor</code>."
+msgstr ""
+"Escribe un nombre para tu copia y haz clic en <strong>Aceptar</strong>. "
+"Smarter escribe el nombre en snake case: <em>My Advisor</em> se convierte en "
+"<code>my_advisor</code>."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Your copy appears in the <strong>Your LLM Clients</strong> tab, under its "
+"new name, and the original stays in <strong>Shared LLM Clients</strong>, "
+"unchanged. Open your copy in the workbench, and from there edit its "
+"manifest, deploy it, and put it on your site, as this page describes."
+msgstr ""
+"Tu copia aparece en la pestaña <strong>Tus clientes LLM</strong>, con su "
+"nuevo nombre, y el original se queda en <strong>Clientes LLM "
+"compartidos</strong>, sin cambios. Abre tu copia en el workbench y, desde "
+"allí, edita su manifiesto, despliégala y ponla en tu sitio, como describe "
+"esta página."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "How ownership of Smarter resources works"
+msgstr "Cómo funciona la propiedad de los recursos de Smarter"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "who owns a resource, who can read it, and who can change it."
+msgstr ""
+"quién es el propietario de un recurso, quién puede leerlo y quién puede "
+"cambiarlo."
 
 #: smarter/templates/llmclient/deployment.html
 msgid "First, allow your site's origin"
