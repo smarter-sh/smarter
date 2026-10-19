@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.34.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.4...v0.34.0-alpha.5) (2026-10-19)
+
+### Bug Fixes
+
+* **prompt:** add next steps to the workbench Architecture tab ([753c6b3](https://github.com/smarter-sh/smarter/commit/753c6b376b74a4b810ba29c5a131937035deba4e))
+
 ## [0.34.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.3...v0.34.0-alpha.4) (2026-10-19)
 
 ### Bug Fixes
