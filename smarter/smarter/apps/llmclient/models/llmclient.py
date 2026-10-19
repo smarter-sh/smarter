@@ -5,6 +5,7 @@ from functools import cached_property
 from typing import Optional
 from urllib.parse import urljoin, urlparse
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -518,7 +519,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.sandbox_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.sandbox_by_hashed_id}", kwargs={"hashed_id": self.hashed_id}, urlconf=settings.ROOT_URLCONF)  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -536,7 +537,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.manifest_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.manifest_by_hashed_id}", kwargs={"hashed_id": self.hashed_id}, urlconf=settings.ROOT_URLCONF)  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -588,6 +589,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         path = reverse(
             f"{LLMClientApiV1ReverseViews.namespace}:{LLMClientApiV1ReverseViews.default_llmclient_api_view_by_hashed_id}",
             kwargs={"hashed_id": self.hashed_id},
+            urlconf=settings.ROOT_URLCONF,
         )
 
         url = urljoin(smarter_settings.environment_url, path)
@@ -617,6 +619,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         path = reverse(
             f"{LLMClientApiV1ReverseViews.namespace}:{LLMClientApiV1ReverseViews.chat_config_view_by_hashed_id}",
             kwargs={"hashed_id": self.hashed_id},
+            urlconf=settings.ROOT_URLCONF,
         )
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
@@ -640,7 +643,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id}, urlconf=settings.ROOT_URLCONF)  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url

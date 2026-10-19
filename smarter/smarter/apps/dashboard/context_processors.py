@@ -71,6 +71,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urljoin
 
+from django.conf import settings
 from django.templatetags.static import static
 
 from smarter.__version__ import __version__
@@ -139,56 +140,74 @@ def static_version(request):
     }
 
 
+def console_reverse(*args: str) -> str:
+    """
+    Reverse a web console url name against ``settings.ROOT_URLCONF``.
+
+    The sidebar is rendered by templates on every host, including a deployed LLMClient's host, which
+    django-hosts serves with :mod:`smarter.urls.llmclients`. That urlconf has none of the console's
+    names, so reversing against the active urlconf raises ``NoReverseMatch`` there.
+
+    :param args: The namespaces and the view name, as for :func:`smarter.lib.django.shortcuts.reverse`.
+    :type args: str
+    :returns: The url path of the console view.
+    :rtype: str
+    """
+    return reverse(*args, urlconf=settings.ROOT_URLCONF)
+
+
 @cache_results()
 def sidebar_context() -> SmarterDictType:
     context = {
         "sidebar": {
-            "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
-            "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-            "prompt_passthrough": reverse(
+            "dashboard": console_reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
+            "workbench": console_reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+            "prompt_passthrough": console_reverse(
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
             ),
-            "llmhost": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
-            "llmhostcompute": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview),
-            "mcpclients": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
-            "orchestrators": reverse(OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
-            "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
-            "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
-            "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
-            "guardrails": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
-            "budgets": reverse(BudgetReverseNames.namespace, BudgetReverseNames.listview),
-            "infrastructure_resources": reverse(
+            "llmhost": console_reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
+            "llmhostcompute": console_reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview),
+            "mcpclients": console_reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
+            "orchestrators": console_reverse(OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
+            "providers": console_reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+            "plugins": console_reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+            "connections": console_reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+            "guardrails": console_reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
+            "budgets": console_reverse(BudgetReverseNames.namespace, BudgetReverseNames.listview),
+            "infrastructure_resources": console_reverse(
                 InfrastructureReverseNames.namespace, InfrastructureReverseNames.listview
             ),
-            "extensions": reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
-            "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
-            "vectorsearches": reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
-            "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
-            "custom_domains": reverse(LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview),
-            "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
-            "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
-            "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
-            "openapi": reverse(DocsReverseNames.namespace, DocsReverseNames.openapi),
-            "json_schemas": reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
+            "extensions": console_reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
+            "secrets": console_reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
+            "vectorsearches": console_reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
+            "api_keys": console_reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
+            "custom_domains": console_reverse(
+                LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview
+            ),
+            "example_manifests": console_reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
+            "swagger_docs": console_reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
+            "redoc": console_reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
+            "openapi": console_reverse(DocsReverseNames.namespace, DocsReverseNames.openapi),
+            "json_schemas": console_reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
             "account": "/dashboard/account/dashboard/overview/",  # FIX ME
             "admin": "/admin/",  # FIX ME
         }
     }
     if smarter_settings.enable_proxy:
-        context["sidebar"]["proxies"] = reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview)
+        context["sidebar"]["proxies"] = console_reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview)
     if smarter_settings.enable_vectorstore:
-        context["sidebar"]["vectorstores"] = reverse(
+        context["sidebar"]["vectorstores"] = console_reverse(
             VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview
         )
     if smarter_settings.enable_dropzone_manifest_apply:
-        context["sidebar"]["manifest_drop_zone"] = reverse(
+        context["sidebar"]["manifest_drop_zone"] = console_reverse(
             DashboardReverseNames.namespace,
             DropzoneReverseNames.namespace,
             DropzoneReverseNames.dropzone,
         )
     if smarter_settings.enable_web_console_terminal:
         # the sidebar shows it to superusers only. See templates/dashboard/sidebar.html.
-        context["sidebar"]["terminal"] = reverse(
+        context["sidebar"]["terminal"] = console_reverse(
             DashboardReverseNames.namespace,
             DashboardTerminalReverseNames.namespace,
             DashboardTerminalReverseNames.terminal_emulator_view,
