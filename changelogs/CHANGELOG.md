@@ -4,247 +4,63 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.34.0](https://github.com/smarter-sh/smarter/compare/v0.33.14...v0.34.0) (2026-10-19)
 
 ### Features
 
-* **manifest:** add a dependency tree of record locators to brokers ([b0aa0b3](https://github.com/smarter-sh/smarter/commit/b0aa0b314af736a5d79d91944b170542ae10ab84))
-* **prompt:** add the smarter-workbench app, hosting smarter-chat ([bcff773](https://github.com/smarter-sh/smarter/commit/bcff773514c891e891f512a9019a9c7a34d86475))
-* **prompt:** add the workbench Architecture tab, an LLMClient's tree ([188f0c5](https://github.com/smarter-sh/smarter/commit/188f0c552957d78d8f620bd8db2a2338c7b02a1f))
+- **manifest:** add a dependency tree of record locators to brokers ([b0aa0b3](https://github.com/smarter-sh/smarter/commit/b0aa0b314af736a5d79d91944b170542ae10ab84))
+- **prompt:** add the smarter-workbench app, hosting smarter-chat ([bcff773](https://github.com/smarter-sh/smarter/commit/bcff773514c891e891f512a9019a9c7a34d86475))
+- **prompt:** add the workbench Architecture tab, an LLMClient's tree ([188f0c5](https://github.com/smarter-sh/smarter/commit/188f0c552957d78d8f620bd8db2a2338c7b02a1f))
 
 ### Bug Fixes
 
-* **manifest:** add icons, owners and manifest urls to dependency trees ([223d13b](https://github.com/smarter-sh/smarter/commit/223d13be794ca63ae1f14538e3d7d0fd21309751))
-* **prompt:** add next steps to the workbench Architecture tab ([753c6b3](https://github.com/smarter-sh/smarter/commit/753c6b376b74a4b810ba29c5a131937035deba4e))
-* **prompt:** show the owner and a clone guide in the Deployment tab ([ef302d7](https://github.com/smarter-sh/smarter/commit/ef302d7de63814baa5c755842d48bca924cd9b98))
-* **react:** style the architecture tab like the deployment page ([b3b7205](https://github.com/smarter-sh/smarter/commit/b3b720595964024e2b944304d1a46c80b3d087e1)), closes [#ff8c00](https://github.com/smarter-sh/smarter/issues/ff8c00)
+- **manifest:** add icons, owners and manifest urls to dependency trees ([223d13b](https://github.com/smarter-sh/smarter/commit/223d13be794ca63ae1f14538e3d7d0fd21309751))
+- **prompt:** add next steps to the workbench Architecture tab ([753c6b3](https://github.com/smarter-sh/smarter/commit/753c6b376b74a4b810ba29c5a131937035deba4e))
+- **prompt:** show the owner and a clone guide in the Deployment tab ([ef302d7](https://github.com/smarter-sh/smarter/commit/ef302d7de63814baa5c755842d48bca924cd9b98))
+- **react:** style the architecture tab like the deployment page ([b3b7205](https://github.com/smarter-sh/smarter/commit/b3b720595964024e2b944304d1a46c80b3d087e1)), closes [#ff8c00](https://github.com/smarter-sh/smarter/issues/ff8c00)
 
 ### Refactoring
 
-* **react:** move the server log viewer into @smarter/serverlogs ([1ad050b](https://github.com/smarter-sh/smarter/commit/1ad050b1b1a07afb38089013b39bd0b230d4d835))
+- **react:** move the server log viewer into @smarter/serverlogs ([1ad050b](https://github.com/smarter-sh/smarter/commit/1ad050b1b1a07afb38089013b39bd0b230d4d835))
 
 ## [0.34.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.4...v0.34.0-alpha.5) (2026-10-19)
 
 ### Bug Fixes
 
-* **prompt:** add next steps to the workbench Architecture tab ([753c6b3](https://github.com/smarter-sh/smarter/commit/753c6b376b74a4b810ba29c5a131937035deba4e))
+- **prompt:** add next steps to the workbench Architecture tab ([753c6b3](https://github.com/smarter-sh/smarter/commit/753c6b376b74a4b810ba29c5a131937035deba4e))
 
 ## [0.34.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.3...v0.34.0-alpha.4) (2026-10-19)
 
 ### Bug Fixes
 
-* **react:** style the architecture tab like the deployment page ([b3b7205](https://github.com/smarter-sh/smarter/commit/b3b720595964024e2b944304d1a46c80b3d087e1)), closes [#ff8c00](https://github.com/smarter-sh/smarter/issues/ff8c00)
+- **react:** style the architecture tab like the deployment page ([b3b7205](https://github.com/smarter-sh/smarter/commit/b3b720595964024e2b944304d1a46c80b3d087e1)), closes [#ff8c00](https://github.com/smarter-sh/smarter/issues/ff8c00)
 
 ### Refactoring
 
-* **react:** move the server log viewer into @smarter/serverlogs ([1ad050b](https://github.com/smarter-sh/smarter/commit/1ad050b1b1a07afb38089013b39bd0b230d4d835))
+- **react:** move the server log viewer into @smarter/serverlogs ([1ad050b](https://github.com/smarter-sh/smarter/commit/1ad050b1b1a07afb38089013b39bd0b230d4d835))
 
 ## [0.34.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.2...v0.34.0-alpha.3) (2026-10-19)
 
 ### Features
 
-* **prompt:** add the workbench Architecture tab, an LLMClient's tree ([188f0c5](https://github.com/smarter-sh/smarter/commit/188f0c552957d78d8f620bd8db2a2338c7b02a1f))
+- **prompt:** add the workbench Architecture tab, an LLMClient's tree ([188f0c5](https://github.com/smarter-sh/smarter/commit/188f0c552957d78d8f620bd8db2a2338c7b02a1f))
 
 ### Bug Fixes
 
-* **manifest:** add icons, owners and manifest urls to dependency trees ([223d13b](https://github.com/smarter-sh/smarter/commit/223d13be794ca63ae1f14538e3d7d0fd21309751))
+- **manifest:** add icons, owners and manifest urls to dependency trees ([223d13b](https://github.com/smarter-sh/smarter/commit/223d13be794ca63ae1f14538e3d7d0fd21309751))
 
 ## [0.34.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.34.0-alpha.1...v0.34.0-alpha.2) (2026-10-19)
 
 ### Features
 
-* **prompt:** add the smarter-workbench app, hosting smarter-chat ([bcff773](https://github.com/smarter-sh/smarter/commit/bcff773514c891e891f512a9019a9c7a34d86475))
+- **prompt:** add the smarter-workbench app, hosting smarter-chat ([bcff773](https://github.com/smarter-sh/smarter/commit/bcff773514c891e891f512a9019a9c7a34d86475))
 
 ## [0.34.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.14...v0.34.0-alpha.1) (2026-10-19)
 
 ### Features
 
-* **manifest:** add a dependency tree of record locators to brokers ([b0aa0b3](https://github.com/smarter-sh/smarter/commit/b0aa0b314af736a5d79d91944b170542ae10ab84))
+- **manifest:** add a dependency tree of record locators to brokers ([b0aa0b3](https://github.com/smarter-sh/smarter/commit/b0aa0b314af736a5d79d91944b170542ae10ab84))
 
 ### Bug Fixes
 
-* **prompt:** show the owner and a clone guide in the Deployment tab ([ef302d7](https://github.com/smarter-sh/smarter/commit/ef302d7de63814baa5c755842d48bca924cd9b98))
-
-## [0.33.14](https://github.com/smarter-sh/smarter/compare/v0.33.13...v0.33.14) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** escape literal tags in the deployment page's messages ([b55dcdb](https://github.com/smarter-sh/smarter/commit/b55dcdb920ed84d03cd528b05a631d62e509badc))
-
-### Refactoring
-
-* **prompt:** pass Field defaults by keyword in the chat contract ([9c8ff42](https://github.com/smarter-sh/smarter/commit/9c8ff428d200cc392ca33252b2929c44167c9a0b))
-
-## [0.33.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.13...v0.33.14-alpha.1) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** escape literal tags in the deployment page's messages ([b55dcdb](https://github.com/smarter-sh/smarter/commit/b55dcdb920ed84d03cd528b05a631d62e509badc))
-
-### Refactoring
-
-* **prompt:** pass Field defaults by keyword in the chat contract ([9c8ff42](https://github.com/smarter-sh/smarter/commit/9c8ff428d200cc392ca33252b2929c44167c9a0b))
-
-## [0.33.13](https://github.com/smarter-sh/smarter/compare/v0.33.12...v0.33.13) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** show brand icons on the deployment page's cards ([3b39623](https://github.com/smarter-sh/smarter/commit/3b39623edf77d78b6f1f114067501e7b988d7165))
-* **provider:** read a prompt's provider as the llmclient's owner ([66c02cb](https://github.com/smarter-sh/smarter/commit/66c02cb913756211f5b149a08916f4e15902734f))
-
-### Performance
-
-* **prompt:** build the config api's diagnostic parts only on request ([901f579](https://github.com/smarter-sh/smarter/commit/901f5790a227453007303bbed2e5672fedbbdaea))
-
-## [0.33.13-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.12...v0.33.13-alpha.1) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** show brand icons on the deployment page's cards ([3b39623](https://github.com/smarter-sh/smarter/commit/3b39623edf77d78b6f1f114067501e7b988d7165))
-* **provider:** read a prompt's provider as the llmclient's owner ([66c02cb](https://github.com/smarter-sh/smarter/commit/66c02cb913756211f5b149a08916f4e15902734f))
-
-### Performance
-
-* **prompt:** build the config api's diagnostic parts only on request ([901f579](https://github.com/smarter-sh/smarter/commit/901f5790a227453007303bbed2e5672fedbbdaea))
-
-## [0.33.12](https://github.com/smarter-sh/smarter/compare/v0.33.11...v0.33.12) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** guide first deployments in a workbench Deployment tab ([e36c81c](https://github.com/smarter-sh/smarter/commit/e36c81cbd61f0efe00433bd928f45fb714b423fb))
-* **llmclient:** let anonymous clients prompt a deployed llmclient ([dd6f9c8](https://github.com/smarter-sh/smarter/commit/dd6f9c8c03ae18afda50ec058cc086101a8f765f))
-
-## [0.33.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.11...v0.33.12-alpha.1) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** let anonymous clients prompt a deployed llmclient ([dd6f9c8](https://github.com/smarter-sh/smarter/commit/dd6f9c8c03ae18afda50ec058cc086101a8f765f))
-
-## [0.33.11](https://github.com/smarter-sh/smarter/compare/v0.33.10...v0.33.11) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** reverse console urls on deployed llmclient hosts ([3b1abc5](https://github.com/smarter-sh/smarter/commit/3b1abc53b85798e08eb0efbb073b86160191ae72))
-
-## [0.33.10](https://github.com/smarter-sh/smarter/compare/v0.33.9...v0.33.10) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** route deployed llmclient hosts on the root api domain ([9024245](https://github.com/smarter-sh/smarter/commit/90242452434ad61ae48fb622c1245cd35dde2e7f))
-
-## [0.33.9](https://github.com/smarter-sh/smarter/compare/v0.33.8...v0.33.9) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** resolve a deployed llmclient by its full host label ([ec5b4d1](https://github.com/smarter-sh/smarter/commit/ec5b4d1b6d0977646e6d7f28fe0785f42aa43316))
-
-## [0.33.8](https://github.com/smarter-sh/smarter/compare/v0.33.7...v0.33.8) (2026-10-19)
-
-### Bug Fixes
-
-* **llmclient:** serve a page to browsers at a deployed llmclient's api ([b6a85f0](https://github.com/smarter-sh/smarter/commit/b6a85f08e57371cca0b08c360ac0fa1d674bf8d1))
-
-## [0.33.7](https://github.com/smarter-sh/smarter/compare/v0.33.6...v0.33.7) (2026-10-18)
-
-### Bug Fixes
-
-* **dashboard:** put prompt passthrough second in the sidebar ([b491a8a](https://github.com/smarter-sh/smarter/commit/b491a8ac5187fcf20d03ad2f9d7883427d1c329d))
-* **logging:** quiet init job log noise and clarify inventory counts ([6903994](https://github.com/smarter-sh/smarter/commit/6903994613bb4e3fb08e6e1fbf0fa7226c147085))
-* **passthrough:** collapse blocks of json in the server logs tab ([a4c73d0](https://github.com/smarter-sh/smarter/commit/a4c73d07abc8d8cd7db5cd873e69a24bc6e39c4f))
-
-## [0.33.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.6...v0.33.7-alpha.1) (2026-10-18)
-
-### Bug Fixes
-
-* **dashboard:** put prompt passthrough second in the sidebar ([b491a8a](https://github.com/smarter-sh/smarter/commit/b491a8ac5187fcf20d03ad2f9d7883427d1c329d))
-* **logging:** quiet init job log noise and clarify inventory counts ([6903994](https://github.com/smarter-sh/smarter/commit/6903994613bb4e3fb08e6e1fbf0fa7226c147085))
-* **passthrough:** collapse blocks of json in the server logs tab ([a4c73d0](https://github.com/smarter-sh/smarter/commit/a4c73d07abc8d8cd7db5cd873e69a24bc6e39c4f))
-
-## [0.33.6](https://github.com/smarter-sh/smarter/compare/v0.33.5...v0.33.6) (2026-10-18)
-
-### Bug Fixes
-
-* **llmclient:** describe the api key by name, not by token object ([1d4792a](https://github.com/smarter-sh/smarter/commit/1d4792a917eb307d6ffe5f2d2c1bedbd806f89a3))
-
-## [0.33.5](https://github.com/smarter-sh/smarter/compare/v0.33.4...v0.33.5) (2026-10-18)
-
-### Bug Fixes
-
-* **logging:** keep the config api's chat session key in its request ([6f6636f](https://github.com/smarter-sh/smarter/commit/6f6636fe72bdf33e7eab4f33999287498bca01a1))
-* **passthrough:** keep the server logs' scroll bars visible ([70f4cd7](https://github.com/smarter-sh/smarter/commit/70f4cd7cdeb9e987bc99315e8c4eed5a0d62fce9)), closes [#161a1](https://github.com/smarter-sh/smarter/issues/161a1) [#39424](https://github.com/smarter-sh/smarter/issues/39424) [#4a5663](https://github.com/smarter-sh/smarter/issues/4a5663)
-* **prompt:** edit the llmclient manifest in the workbench console ([05f695e](https://github.com/smarter-sh/smarter/commit/05f695e747717b771c483cfb1bc0a432aa7d6f8d))
-* **provider:** name plugins by their own names in tool messages ([e3f8ed1](https://github.com/smarter-sh/smarter/commit/e3f8ed1b9c2ec91f7f8c0c61c6580bdda1dbead8))
-
-## [0.33.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.33.5-alpha.1...v0.33.5-alpha.2) (2026-10-18)
-
-### Bug Fixes
-
-* **logging:** keep the config api's chat session key in its request ([6f6636f](https://github.com/smarter-sh/smarter/commit/6f6636fe72bdf33e7eab4f33999287498bca01a1))
-* **prompt:** edit the llmclient manifest in the workbench console ([05f695e](https://github.com/smarter-sh/smarter/commit/05f695e747717b771c483cfb1bc0a432aa7d6f8d))
-* **provider:** name plugins by their own names in tool messages ([e3f8ed1](https://github.com/smarter-sh/smarter/commit/e3f8ed1b9c2ec91f7f8c0c61c6580bdda1dbead8))
-
-## [0.33.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.4...v0.33.5-alpha.1) (2026-10-18)
-
-### Bug Fixes
-
-* **passthrough:** keep the server logs' scroll bars visible ([70f4cd7](https://github.com/smarter-sh/smarter/commit/70f4cd7cdeb9e987bc99315e8c4eed5a0d62fce9)), closes [#161a1](https://github.com/smarter-sh/smarter/issues/161a1) [#39424](https://github.com/smarter-sh/smarter/issues/39424) [#4a5663](https://github.com/smarter-sh/smarter/issues/4a5663)
-
-## [0.33.4](https://github.com/smarter-sh/smarter/compare/v0.33.3...v0.33.4) (2026-10-18)
-
-### Bug Fixes
-
-* **llmtool:** add plugin request lifecycle signals, split signals pkg ([e2acf01](https://github.com/smarter-sh/smarter/commit/e2acf01748001c23d4caa69606764a9a946fd490))
-* **logging:** stream each chat's own server logs, by session key ([a4f8af1](https://github.com/smarter-sh/smarter/commit/a4f8af1642018a4b9685d4d539da7ef59423c076))
-
-## [0.33.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.33.4-alpha.1...v0.33.4-alpha.2) (2026-10-18)
-
-### Bug Fixes
-
-* **logging:** stream each chat's own server logs, by session key ([a4f8af1](https://github.com/smarter-sh/smarter/commit/a4f8af1642018a4b9685d4d539da7ef59423c076))
-
-## [0.33.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.3...v0.33.4-alpha.1) (2026-10-18)
-
-### Bug Fixes
-
-* **llmtool:** add plugin request lifecycle signals, split signals pkg ([e2acf01](https://github.com/smarter-sh/smarter/commit/e2acf01748001c23d4caa69606764a9a946fd490))
-
-## [0.33.3](https://github.com/smarter-sh/smarter/compare/v0.33.2...v0.33.3) (2026-10-18)
-
-### Bug Fixes
-
-* **llmclient:** deploy Stackademy LLMClients, drop the smarter example ([c6fda20](https://github.com/smarter-sh/smarter/commit/c6fda209f1a12322a87a154f98f4d68333c47523))
-* **llmclient:** repair stackademy_api, make example data per app ([50c4ec8](https://github.com/smarter-sh/smarter/commit/50c4ec8fc1136fbec60ed072ef007fe191357aae))
-
-### Refactoring
-
-* **management:** base all add_example commands on one class ([a289f22](https://github.com/smarter-sh/smarter/commit/a289f22d870d973812e0378b48e5afdbf386a638))
-
-## [0.33.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.2...v0.33.3-alpha.1) (2026-10-18)
-
-### Bug Fixes
-
-* **llmclient:** repair stackademy_api, make example data per app ([50c4ec8](https://github.com/smarter-sh/smarter/commit/50c4ec8fc1136fbec60ed072ef007fe191357aae))
-
-### Refactoring
-
-* **management:** base all add_example commands on one class ([a289f22](https://github.com/smarter-sh/smarter/commit/a289f22d870d973812e0378b48e5afdbf386a638))
-
-## [0.33.2](https://github.com/smarter-sh/smarter/compare/v0.33.1...v0.33.2) (2026-10-17)
-
-### Bug Fixes
-
-* **console:** refactor the server logs window into a bash terminal ([1e17b3b](https://github.com/smarter-sh/smarter/commit/1e17b3b8b25fd6d952bce8bfbefbc8861b8267df))
-
-## [0.33.1](https://github.com/smarter-sh/smarter/compare/v0.33.0...v0.33.1) (2026-10-17)
-
-### Bug Fixes
-
-- **passthrough:** show each prompt's server logs in a server logs tab ([c46eb29](https://github.com/smarter-sh/smarter/commit/c46eb29b21de1faf2afc4cad5bce949839fd45ed))
-
-## [0.33.0](https://github.com/smarter-sh/smarter/compare/v0.32.2...v0.33.0) (2026-10-17)
-
-### Features
-
-- **console:** open extensions read-only to all, redesign passthrough ([c4724cc](https://github.com/smarter-sh/smarter/commit/c4724cceb9de796b2beb723ce9adeb1fedafb82f))
+- **prompt:** show the owner and a clone guide in the Deployment tab ([ef302d7](https://github.com/smarter-sh/smarter/commit/ef302d7de63814baa5c755842d48bca924cd9b98))
