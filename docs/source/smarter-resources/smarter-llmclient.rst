@@ -51,23 +51,38 @@ a new chat session:
   curl -X POST https://stackademy-sql.3141-5926-5359.api.example.com/config/ \
     -H "Content-Type: application/json"
 
-``/prompt/`` sends a prompt, and returns the LLM's response:
+``/prompt/`` sends a prompt, and returns the LLM's response, as JSON, whose assistant message is
+Markdown:
 
 .. code-block:: bash
 
   curl -X POST https://stackademy-sql.3141-5926-5359.api.example.com/prompt/ \
     -H "Content-Type: application/json" \
-    -d '{"messages": [{"role": "user", "content": "hello world"}]}'
+    -d '{"messages": [{"role": "user", "content": "What courses are there?"}]}'
 
 To continue a chat, send the ``session_key`` that ``/config/`` returned, e.g.
 ``{"session_key": "<SESSION-KEY>", "messages": [...]}``, and the chat's earlier messages. An LLMClient
 with api keys requires one in every request: add ``-H "Authorization: Token <YOUR-API-KEY>"``.
 
-A platform administrator can turn on a page for browsers, with the ``enable_llmclient_endpoints_page``
+The workbench's Console has a Deployment tab, between Manifest and Server Logs, for what comes after
+deploying: the LLMClient's status and url, where to go from here, with the integrations that put its
+chat on a web site (:doc:`WordPress <../smarter-framework/smarter-wordpress>`,
+:doc:`Drupal <../smarter-framework/smarter-drupal>`, :doc:`Shopify <../smarter-framework/smarter-shopify>`,
+the :doc:`npm package and any html page <../smarter-framework/smarter-chat/embedding>`), how to secure
+its url, these commands, and its manifest. The tab lists the account's
+:doc:`api keys <../smarter-platform/api-keys>`, creates one, showing its secret once, and attaches
+it to the LLMClient, which then requires it, or detaches it. Attaching a key there is the same as
+naming it in the manifest's ``spec.apiKey`` and applying it: an LLMClient has one api key, and the
+others are detached. Only the LLMClient's owner or an account admin can attach a key, and only an
+account admin can create one. An LLMClient that isn't deployed shows the url that it will have, and
+the command that deploys it.
+
+A platform administrator can also show that page to browsers, with the ``enable_llmclient_endpoints_page``
 :doc:`waffle switch <../smarter-framework/developer-reference/lib/django/waffle>`, which is off by
-default. A browser that opens a deployed LLMClient's url, or either endpoint, then receives a page with
-these commands, the LLMClient's manifest without its owner's username, and links to The Smarter
-Project. While the switch is off, a GET of an endpoint is answered ``405 Method Not Allowed``.
+default. A browser that opens a deployed LLMClient's url, or either endpoint, then receives it, with
+its api key steps written out rather than as forms, the LLMClient's manifest without its owner's
+username, and links to The Smarter Project. While the switch is off, a GET of an endpoint is answered
+``405 Method Not Allowed``.
 
 The workbench, and the platform's api, reach the same endpoints by the LLMClient's id, at
 ``/api/v1/llm-clients/<id>/config/`` and ``/api/v1/llm-clients/<id>/prompt/``, for a user who may read
