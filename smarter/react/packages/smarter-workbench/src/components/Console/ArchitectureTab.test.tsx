@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { leafTree, stackademyTree } from "@smarter/llmclient-architecture/mocks";
+import { leafArchitecture, stackademyArchitecture } from "@smarter/llmclient-architecture/mocks";
 
 import ArchitectureTab from "@/components/Console/ArchitectureTab";
 import { ARCHITECTURE_URL, workbench } from "@/mocks/fixtures";
@@ -23,7 +23,7 @@ describe("ArchitectureTab", () => {
     server.use(
       http.get(ARCHITECTURE_URL, () => {
         requests += 1;
-        return HttpResponse.json(requests === 1 ? stackademyTree : leafTree);
+        return HttpResponse.json(requests === 1 ? stackademyArchitecture : leafArchitecture);
       }),
     );
     const user = userEvent.setup();

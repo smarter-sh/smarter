@@ -1,5 +1,54 @@
 {
   "$defs": {
+    "LLMClientArchitecture": {
+      "additionalProperties": false,
+      "description": "An LLMClient's architecture, as the workbench's Architecture tab draws it.\n\n``tree`` is the tree of the SAM resources that the LLMClient is built from, as the user may see it. It\nhas no description of its own, which would make the TypeScript generator copy the node's type.",
+      "properties": {
+        "links": {
+          "$ref": "#/$defs/LLMClientArchitectureLinks"
+        },
+        "styled": {
+          "description": "Whether the LLMClient's manifest styles its chat, in spec.config.styles.",
+          "title": "Styled",
+          "type": "boolean"
+        },
+        "tree": {
+          "$ref": "#/$defs/SAMDependencyTreeNode"
+        }
+      },
+      "required": ["tree", "styled", "links"],
+      "title": "LLMClientArchitecture",
+      "type": "object"
+    },
+    "LLMClientArchitectureLinks": {
+      "additionalProperties": false,
+      "description": "The web console's list pages, where a user browses the resources that an LLMClient can add.",
+      "properties": {
+        "extensionsUrl": {
+          "description": "The LLMTools page's Extensions, which an administrator installs.",
+          "title": "Extensionsurl",
+          "type": "string"
+        },
+        "guardrailsUrl": {
+          "description": "The Guardrails page, which lists the built-in Guardrails too.",
+          "title": "Guardrailsurl",
+          "type": "string"
+        },
+        "mcpClientsUrl": {
+          "description": "The MCPClients page.",
+          "title": "Mcpclientsurl",
+          "type": "string"
+        },
+        "pluginsUrl": {
+          "description": "The LLMTools page's Plugins.",
+          "title": "Pluginsurl",
+          "type": "string"
+        }
+      },
+      "required": ["guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl"],
+      "title": "LLMClientArchitectureLinks",
+      "type": "object"
+    },
     "SAMDependencyTreeNode": {
       "description": "A resource in a dependency tree: the resource, and, recursively, every resource that it uses.\n\nIt is the opposite direction of :class:`SAMDependency`, which lists the resources that depend\non a resource. An LLMClient's tree has its Provider, its plugins, their Connections, and those\nConnections' Secrets. See :meth:`smarter.lib.manifest.broker.AbstractBroker.dependency_tree`.\n\nA resource that the user may not read keeps its kind and record locator, so that the tree still\nshows that something is there, but not its name, owner or url, or what it uses in turn.\n\nExample:\n\n.. code-block:: json\n\n    {\n      \"kind\": \"LLMClient\",\n      \"icon\": \"artificial-intelligence\",\n      \"name\": \"stackademy_sql\",\n      \"owner\": \"Ada Lovelace (ada)\",\n      \"recordLocator\": \"llmclient-rMTAwMDAxMwx\",\n      \"url\": \"/workbench/llm-clients/rMTAwMDAxMwx/manifest/\",\n      \"readable\": true,\n      \"children\": [\n        {\n          \"kind\": \"SqlPlugin\",\n          \"icon\": \"file-sheet\",\n          \"name\": \"stackademy_sql\",\n          \"owner\": \"Ada Lovelace (ada)\",\n          \"recordLocator\": \"pluginmeta-rMTEx\",\n          \"url\": \"/llm-tools/plugins/rMTEx/\",\n          \"readable\": true,\n          \"children\": []\n        }\n      ]\n    }",
       "properties": {
@@ -87,6 +136,6 @@
   },
   "$id": "https://smarter.sh/schemas/llmclient-architecture.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "The tree of the SAM resources that an LLMClient is built from, which the Prompt Engineer's Workbench draws in its Architecture tab. Generated from smarter.apps.prompt.views.detailviews.architecture_contract; do not edit.",
+  "description": "An LLMClient's architecture, which the Prompt Engineer's Workbench draws in its Architecture tab: the tree of the SAM resources that it is built from, whether its chat is styled, and the web console pages of the resources that it could add. Generated from smarter.apps.prompt.views.detailviews.architecture_contract; do not edit.",
   "title": "Smarter LLMClient architecture contract"
 }

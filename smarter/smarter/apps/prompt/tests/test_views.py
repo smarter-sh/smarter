@@ -18,6 +18,7 @@ from django.test import RequestFactory, override_settings
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.guardrail.models import Guardrail
+from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llmclient.caching import (
     invalidate_all_cached_llmclients_for_user_profile,
 )
@@ -44,6 +45,9 @@ from smarter.apps.prompt.contract.models import (
 )
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.urls import PromptReverseNames
+from smarter.apps.prompt.views.detailviews.architecture_contract import (
+    LLMClientArchitecture,
+)
 from smarter.apps.prompt.views.detailviews.prompt_config_view import PromptConfigView
 from smarter.apps.prompt.views.detailviews.prompt_deployment_view import (
     OWNERSHIP_DOCS_URL,
@@ -55,6 +59,7 @@ from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterPromptSession,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.logging.redis_log_handler import session_key_context
 from smarter.lib.manifest.models import SAMDependencyTreeNode
@@ -213,7 +218,9 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertIn("no-cache", response["Cache-Control"])
-        tree = SAMDependencyTreeNode.model_validate(response.json())
+        architecture = LLMClientArchitecture.model_validate(response.json())
+        tree = architecture.tree
+        self.assertIsInstance(tree, SAMDependencyTreeNode)
         self.assertEqual((tree.kind, tree.name), ("LLMClient", self.resource.name))
         self.assertEqual(tree.recordLocator, self.resource.record_locator)
         self.assertEqual(tree.url, self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
@@ -223,6 +230,24 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual([child.name for child in guardrails], [guardrail.name])
         self.assertIn(self.admin_user.username, guardrails[0].owner)
         self.assertTrue(guardrails[0].url.startswith("/guardrail/"), guardrails[0].url)
+
+        links = response.json()["links"]
+        self.assertEqual(set(links), {"guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl"})
+        self.assertEqual(
+            links["guardrailsUrl"], reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview)
+        )
+        self.assertTrue(all(url.startswith("/") for url in links.values()), links)
+
+    def test_architecture_styled(self):
+        """Test that the architecture says whether the LLMClient's manifest styles its chat."""
+        original = LLMClient.objects.get(pk=self.resource.pk).styles
+        self.addCleanup(LLMClient.objects.filter(pk=self.resource.pk).update, styles=original)
+        url = self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id)
+
+        LLMClient.objects.filter(pk=self.resource.pk).update(styles={})
+        self.assertFalse(self.client.get(url).json()["styled"])
+        LLMClient.objects.filter(pk=self.resource.pk).update(styles={"googleFont": "Inter"})
+        self.assertTrue(self.client.get(url).json()["styled"])
 
     def test_architecture_is_get_only(self):
         """Test that the architecture refuses a POST."""

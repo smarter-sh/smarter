@@ -1,5 +1,5 @@
 /**
- * The types of the LLMClient architecture. The tree is the backend's contract, generated from its JSON Schema:
+ * The types of the LLMClient architecture. They are the backend's contract, generated from its JSON Schema:
  * see src/contract.gen.ts.
  */
-export type { SAMDependencyTreeNode } from "../contract.gen";
+export type { LLMClientArchitecture, LLMClientArchitectureLinks, SAMDependencyTreeNode } from "../contract.gen";

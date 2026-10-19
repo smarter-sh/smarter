@@ -3,7 +3,7 @@
  * Architecture and Deployment tabs' data. See storybook/preview.ts and test/server.ts in the workspace.
  */
 import { http, HttpResponse } from "msw";
-import { stackademyTree } from "@smarter/llmclient-architecture/mocks";
+import { stackademyArchitecture } from "@smarter/llmclient-architecture/mocks";
 import { workbenchPage } from "@smarter/llmclient-deployment/mocks";
 
 import {
@@ -43,7 +43,7 @@ export const chatHandlers = [
 /** The Manifest, Architecture and Deployment tabs' data. */
 export const tabHandlers = [
   http.get(MANIFEST_URL, () => HttpResponse.json({ manifest: MANIFEST_YAML })),
-  http.get(ARCHITECTURE_URL, () => HttpResponse.json(stackademyTree)),
+  http.get(ARCHITECTURE_URL, () => HttpResponse.json(stackademyArchitecture)),
   http.get(DEPLOYMENT_URL, () => HttpResponse.json(workbenchPage)),
 ];
 

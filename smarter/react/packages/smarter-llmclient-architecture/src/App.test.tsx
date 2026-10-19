@@ -4,11 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import App from "@/App";
 import { DOCS_URLS } from "@/lib/const";
-import { leafTree, lockedTree, stackademyTree } from "@/mocks/fixtures";
+import { leafArchitecture, lockedArchitecture, stackademyArchitecture } from "@/mocks/fixtures";
 
 describe("App", () => {
   it("introduces SAM resources, their manifests, and the LLMClient's tree, with links to the documentation", () => {
-    render(<App tree={stackademyTree} />);
+    render(<App architecture={stackademyArchitecture} />);
     expect(screen.getByRole("heading", { level: 2, name: "How this LLMClient is built" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Everything is a SAM resource" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Edit any manifest here" })).toBeInTheDocument();
@@ -26,7 +26,7 @@ describe("App", () => {
   });
 
   it("draws every resource as a card, and counts them", () => {
-    render(<App tree={stackademyTree} />);
+    render(<App architecture={stackademyArchitecture} />);
     const tree = screen.getByRole("list", { name: "The resources that this LLMClient is built from" });
     // the Provider, and its Secret, are drawn under the LLMClient and under its plugin.
     expect(within(tree).getAllByRole("article")).toHaveLength(10);
@@ -36,7 +36,7 @@ describe("App", () => {
 
   it("hides what a resource uses, and shows it again", async () => {
     const user = userEvent.setup();
-    render(<App tree={stackademyTree} />);
+    render(<App architecture={stackademyArchitecture} />);
     const hide = screen.getByRole("button", { name: "Hide what stackademy_sql uses" });
     expect(hide).toHaveAttribute("aria-expanded", "true");
     await user.click(hide);
@@ -50,7 +50,7 @@ describe("App", () => {
 
   it("collapses and expands every resource", async () => {
     const user = userEvent.setup();
-    render(<App tree={stackademyTree} />);
+    render(<App architecture={stackademyArchitecture} />);
     const expand = screen.getByRole("button", { name: "Expand all" });
     const collapse = screen.getByRole("button", { name: "Collapse all" });
     expect(expand).toBeDisabled();
@@ -65,22 +65,30 @@ describe("App", () => {
   it("reloads the tree, when it can", async () => {
     const user = userEvent.setup();
     const onReload = vi.fn();
-    const { rerender } = render(<App tree={leafTree} onReload={onReload} />);
+    const { rerender } = render(<App architecture={leafArchitecture} onReload={onReload} />);
     await user.click(screen.getByRole("button", { name: "Reload" }));
     expect(onReload).toHaveBeenCalledOnce();
-    rerender(<App tree={leafTree} />);
+    rerender(<App architecture={leafArchitecture} />);
     expect(screen.queryByRole("button", { name: "Reload" })).not.toBeInTheDocument();
   });
 
   it("draws an LLMClient that uses nothing, without the expand and collapse buttons", () => {
-    render(<App tree={leafTree} />);
+    render(<App architecture={leafArchitecture} />);
     expect(screen.getByRole("status")).toHaveTextContent("1 resource · 0 levels deep");
     expect(screen.queryByRole("button", { name: "Collapse all" })).not.toBeInTheDocument();
   });
 
   it("draws a resource that the user can't read as a locked card", () => {
-    render(<App tree={lockedTree} />);
+    render(<App architecture={lockedArchitecture} />);
     expect(screen.getByText("You can't read this resource")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("2 resources · 1 level deep");
+  });
+
+  it("suggests next steps for what the LLMClient is missing, and none when it has everything", () => {
+    const { rerender } = render(<App architecture={leafArchitecture} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Make this LLMClient your own" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Add your first Guardrail" })).toBeInTheDocument();
+    rerender(<App architecture={stackademyArchitecture} />);
+    expect(screen.queryByRole("heading", { name: "Make this LLMClient your own" })).not.toBeInTheDocument();
   });
 });

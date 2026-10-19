@@ -13,10 +13,10 @@ import { fetchArchitecture } from "@/lib/api";
 import type { WorkbenchConfig } from "@/lib/types";
 
 function ArchitectureTree({ url, onReload }: { url: string; onReload: () => void }) {
-  const { data: tree, error } = useTabData(() => fetchArchitecture(url));
+  const { data: architecture, error } = useTabData(() => fetchArchitecture(url));
   if (error) return <TabError error={error} />;
-  if (tree === null) return <Loading />;
-  return <LLMClientArchitecture tree={tree} onReload={onReload} />;
+  if (architecture === null) return <Loading />;
+  return <LLMClientArchitecture architecture={architecture} onReload={onReload} />;
 }
 
 function ArchitectureTab({ workbench }: { workbench: WorkbenchConfig }) {

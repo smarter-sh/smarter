@@ -4,10 +4,51 @@
  */
 
 /**
- * The tree of the SAM resources that an LLMClient is built from, which the Prompt Engineer's Workbench draws in its Architecture tab. Generated from smarter.apps.prompt.views.detailviews.architecture_contract; do not edit.
+ * An LLMClient's architecture, which the Prompt Engineer's Workbench draws in its Architecture tab: the tree of the SAM resources that it is built from, whether its chat is styled, and the web console pages of the resources that it could add. Generated from smarter.apps.prompt.views.detailviews.architecture_contract; do not edit.
  */
 export interface SmarterLLMClientArchitectureContract {
   [k: string]: unknown;
+}
+/**
+ * An LLMClient's architecture, as the workbench's Architecture tab draws it.
+ *
+ * ``tree`` is the tree of the SAM resources that the LLMClient is built from, as the user may see it. It
+ * has no description of its own, which would make the TypeScript generator copy the node's type.
+ *
+ * This interface was referenced by `SmarterLLMClientArchitectureContract`'s JSON-Schema
+ * via the `definition` "LLMClientArchitecture".
+ */
+export interface LLMClientArchitecture {
+  links: LLMClientArchitectureLinks;
+  /**
+   * Whether the LLMClient's manifest styles its chat, in spec.config.styles.
+   */
+  styled: boolean;
+  tree: SAMDependencyTreeNode;
+}
+/**
+ * The web console's list pages, where a user browses the resources that an LLMClient can add.
+ *
+ * This interface was referenced by `SmarterLLMClientArchitectureContract`'s JSON-Schema
+ * via the `definition` "LLMClientArchitectureLinks".
+ */
+export interface LLMClientArchitectureLinks {
+  /**
+   * The LLMTools page's Extensions, which an administrator installs.
+   */
+  extensionsUrl: string;
+  /**
+   * The Guardrails page, which lists the built-in Guardrails too.
+   */
+  guardrailsUrl: string;
+  /**
+   * The MCPClients page.
+   */
+  mcpClientsUrl: string;
+  /**
+   * The LLMTools page's Plugins.
+   */
+  pluginsUrl: string;
 }
 /**
  * A resource in a dependency tree: the resource, and, recursively, every resource that it uses.

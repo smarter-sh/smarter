@@ -482,7 +482,7 @@ gettext("Browse the registry");
 gettext("Install, signature-checked");
 // Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx
 gettext("Enable, then list it in a manifest");
-// Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/App.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx
 gettext("Extensions");
 // Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx
 gettext("New in 0.27");
@@ -616,7 +616,7 @@ gettext("This platform answers questions about itself from its own code and docs
 gettext("Add this platform's MCP server to Claude Code");
 // Translators: used in react/packages/smarter-dashboard/src/components/McpServer/Component.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
 gettext("Tools");
-// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-guardrail-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-guardrail-list/src/App.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 gettext("Guardrails");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-secret-list/src/App.tsx
 gettext("Secrets");
@@ -638,7 +638,7 @@ gettext("You have");
 gettext("%(my_resources_pending_deployments)s pending");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
 gettext("LLM Clients");
-// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("MCPClients");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx
 gettext("LLM Providers");
@@ -1200,6 +1200,84 @@ gettext("Reload");
 gettext("A locked card is a resource that you can't read, such as another account's.");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
 gettext("Who owns a resource, and who may read it");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Open this LLMClient's manifest");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Click Copy on the example, and paste it into the manifest.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Click Save. Smarter applies the manifest at once. Then reload this tab, and the new resource appears in the tree.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Choose it");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Paste it at the start of a new line beneath %(spec)s. If the manifest already has the same key with an empty list, such as %(empty)s, replace that line.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Next steps");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Make this LLMClient your own");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Most LLMClients have Guardrails, tools and a look of their own. This one is missing some of them. Each takes a few lines of YAML: copy an example below into the manifest, and save it.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Add your first Guardrail");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("A Guardrail screens the text that passes between the user and the LLM. An input Guardrail checks each prompt before it is sent to the LLM, and an output Guardrail checks each response before the user sees it. When it finds what it looks for, such as an email address, a prompt injection or a leaked password, it blocks the message, redacts what it found, or logs it.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Guardrails are ordinary software, not the LLM's judgment, so they enforce your rules however the LLM behaves. Smarter comes with built-in Guardrails for the most common cases, which every LLMClient may use by name: personal data, secrets, prompt injection, moderation, off-topic prompts and more.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Browse the Guardrails");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Built-in Guardrails");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Two built-in Guardrails");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("%(pii)s removes credit card numbers, email addresses and phone numbers from each prompt, and %(injection)s blocks prompts that try to override the LLMClient's instructions. Neither calls an LLM.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Add your first tool");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("An LLM knows only what it was trained on and what is in its prompt. Tools give it everything else: today's weather, a row in your database, a calculation that it would otherwise guess at. Smarter offers the LLM the tools that the LLMClient lists, the LLM decides when to call one, and Smarter runs it and hands back the result.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("There are three ways to add tools, which differ in who writes them and where they run. An LLMClient may use all three at once.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+gettext("Plugins");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("A plugin is a manifest that configures one of Smarter's built-in tool patterns: answer from static data, run a SQL query, call a REST api, follow a skill, search the web, or search for images. Nothing is coded or installed, and it runs on Smarter.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("for your own data, databases and apis, without writing code.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("A sample static plugin about a fictional candy, which needs no Connection or Secret. Then ask the LLMClient about the Everlasting Gobstopper.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Browse the plugins");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("An Extension is Python code, packaged and published to the Smarter Extension registry, that a platform administrator installs, much as a WordPress administrator installs a plugin. Its tools do whatever Python can do, and they run on Smarter.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("when a tool needs real code, or for a ready-made tool that is already installed.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("An official Extension, which does arithmetic exactly. The Extensions page lists those that are installed on this platform.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Browse the Extensions");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("An MCPClient is a manifest that connects to a remote MCP server: a third party's tools, published with the Model Context Protocol. Smarter offers the server's tools to the LLM and calls them on that server. Nothing is coded, and nothing runs on Smarter.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("for a service that already publishes an MCP server, such as GitHub, Notion or Stripe.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("An example MCPClient for DeepWiki, which documents public GitHub repositories, and requires no authentication.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Browse the MCPClients");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Plugins, Extensions and MCP servers compared");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Extensibility");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Style its chat");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("This LLMClient's chat has Smarter's default look. A few lines of styles give it yours: your logo in the header, your colors on the message bubbles, your font, a picture behind the conversation. They apply in the workbench and on every web page that embeds the chat. You don't need to know CSS, and every setting is optional.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Styles go in %(styles)s, beside %(prompt)s: paste it at the start of the line after the last line of %(prompt)s, with the same indent as %(prompt)s.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Styling your LLMClient's chat");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("The chat's styles");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Smarter's logo, the Inter font, a dark header, and the user's messages in orange. Swap in your own logo's url and colors.");
 // Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("Architecture");
@@ -1228,6 +1306,10 @@ gettext("LLMClients");
 gettext("Dependency trees");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
 gettext("Its Provider supplies the LLM, its plugins and MCPClients give it tools, its Guardrails screen what goes in and out, and the Connections and Secrets beneath them reach your data, safely. A resource that two others use appears under each of them.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+gettext("Copied");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx
+gettext("Copy");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
 gettext("About %(kind)s, in the documentation");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
@@ -1368,10 +1450,6 @@ gettext("After a reload, send %(config)s with the key. Its response's %(history)
 gettext("Keep a session key private");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
 gettext("Anyone who has a session key, and can call this url, can read its conversation, with the %(config)s request above. Don't put it in a url that people share, in a log, or in an analytics event. It doesn't authenticate the caller: an api key does that.");
-// Translators: used in react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-gettext("Copied");
-// Translators: used in react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx
-gettext("Copy");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Deployed");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
@@ -1681,8 +1759,6 @@ gettext("User-defined list of key-value pairs for informational or platform exte
 gettext("Functions");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 gettext("Comma-separated list of function names attached to this llmclient.");
-// Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-gettext("Plugins");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 gettext("Comma-separated list of plugin names attached to this llmclient.");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx

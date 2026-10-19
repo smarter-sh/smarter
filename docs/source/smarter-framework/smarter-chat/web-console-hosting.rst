@@ -80,7 +80,8 @@ than rendering a broken workbench.
        :py:class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView`,
        which the Console's Architecture tab fetches when it is first opened, and draws with the
        ``@smarter/llmclient-architecture`` component: the tree of the SAM resources that the LLMClient is
-       built from, as cards that open each resource's manifest page. Its data is
+       built from, as cards that open each resource's manifest page, whether its chat is styled, and the
+       web console's Guardrails, Plugins, Extensions and MCPClients pages, for its next steps. Its data is
        :py:mod:`~smarter.apps.prompt.views.detailviews.architecture_contract`.
    * - ``smarter-deployment-url``
      - The path of the LLMClient's deployment page's data,
