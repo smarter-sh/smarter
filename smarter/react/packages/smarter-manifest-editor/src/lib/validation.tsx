@@ -7,7 +7,7 @@ import { EVENT_ID, getScalarValue, load, parseEvents, YAMLException, type Event,
 import type { SessionContext } from "@smarter/common";
 import { fetchDjangoUrl, gettext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../const";
 
 export type ManifestError = {
   /** "yaml" for a syntax error, "sam" for an error of the manifest's SAM model. */

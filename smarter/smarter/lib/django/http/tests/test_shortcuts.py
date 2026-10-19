@@ -1,6 +1,10 @@
-"""Test SmarterHttpResponse classes"""
+"""Test SmarterHttpResponse classes."""
 
+import re
 from unittest.mock import MagicMock, patch
+
+from django.contrib.auth.models import AnonymousUser
+from django.test import RequestFactory
 
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponse,
@@ -66,3 +70,23 @@ class TestSmarterHttpResponses(SmarterTestBase):
         self.assertEqual(resp.status_code, 500)
         self.assertIn(b"servererror", resp.content)
         self.assertEqual(resp.context["message"], "Ugh!!! Something went wrong on our end.")
+
+
+class TestSmarterHttpErrorPages(SmarterTestBase):
+    """Test the error pages' own templates, rendered."""
+
+    def test_return_home_has_the_focus(self):
+        """Each error page's Return Home button has the focus when it loads, so that the Enter key follows it."""
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        for response_class in (
+            SmarterHttpResponseBadRequest,
+            SmarterHttpResponseForbidden,
+            SmarterHttpResponseNotFound,
+            SmarterHttpResponseServerError,
+        ):
+            with self.subTest(response_class=response_class.__name__):
+                html = response_class(request).content.decode()
+                link = re.search(r"<a [^>]*>Return Home</a>", html)
+                self.assertIsNotNone(link, "the page has no Return Home button")
+                self.assertIn(" autofocus", link[0])

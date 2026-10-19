@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prompt Engineer's Workbench</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body class="app-default">
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered by Django. Log in to the web
+    console at http://localhost:9357 first, so that the session and CSRF cookies exist, and replace the
+    LLMClient's hashed id (rMTAwMDAwMQx) with one of yours.
+
+    See:
+    - smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView
+    - smarter.apps.prompt.templatetags.react_workbench.workbench_react_assets
+    - templates/react/workbench.html
+    -->
+    <div
+      id="smarter-workbench-root"
+      style="height: 88vh"
+      smarter-llmclient-api-url="http://localhost:9357/workbench/llm-clients/rMTAwMDAwMQx/"
+      smarter-toggle-metadata="true"
+      smarter-csrf-cookie-name="csrftoken"
+      smarter-session-cookie-name="session_key"
+      smarter-django-session-cookie-name="sessionid"
+      smarter-cookie-domain="localhost"
+      react-debug-mode="true"
+      smarter-request-id="local-development"
+      smarter-log-stream-url="/dashboard/logs/api/stream/"
+      smarter-manifest-url="/workbench/llm-clients/rMTAwMDAwMQx/manifest/editor/"
+      smarter-architecture-url="/workbench/llm-clients/rMTAwMDAwMQx/architecture/"
+      smarter-deployment-url="/workbench/llm-clients/rMTAwMDAwMQx/deployment/"
+      smarter-llmclient-list-url="/workbench/"
+      smarter-apply-api-url="/api/v1/cli/apply/"
+      smarter-validate-api-url="/api/v1/cli/validate/"
+      smarter-delete-api-url="/api/v1/cli/delete/__kind__/"
+      smarter-kind-placeholder="__kind__"
+    ></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+  <script src="/assets/plugins/global/plugins.bundle.js"></script>
+  <script src="/assets/js/scripts.bundle.js"></script>
+</html>

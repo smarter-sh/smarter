@@ -14,12 +14,16 @@
  *
  * At least one of onClose, onOk, or onCancel must be provided.
  *
+ * Its default action is OK, or else Close: when it opens, its button has the focus, unless something in the
+ * dialog already does (e.g. an input with autoFocus), and the Enter key runs it, unless the focus is on another
+ * button, a link or a text area of the dialog, which handle Enter themselves. Escape closes it.
+ *
  * Usage:
  * <Modal show={show} title="My Modal" onClose={handleClose} onOk={handleOk}>
  *   <p>Modal content goes here.</p>
  * </Modal>
  */
-import React, { useEffect, useId } from "react";
+import React, { useEffect, useId, useRef } from "react";
 import { gettext } from "./i18n";
 
 export function Modal({
@@ -40,20 +44,40 @@ export function Modal({
   onCancel?: () => void;
 }) {
   const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const defaultButtonRef = useRef<HTMLButtonElement>(null);
+  // the dialog's default action: OK, or else Close, e.g. for a dialog that reports a result.
+  const defaultAction = onOk || onClose;
+
+  // the focus moves into the dialog that just opened, onto its default button, so that the keyboard acts on the
+  // dialog, rather than on the button that opened it.
+  useEffect(() => {
+    if (!show) return;
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.contains(document.activeElement)) defaultButtonRef.current?.focus();
+  }, [show]);
 
   useEffect(() => {
-    if (!show || !onOk) return;
+    if (!show || !defaultAction) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        onOk();
+      if (e.key !== "Enter" || e.isComposing) return;
+      // a button, a link or a text area of the dialog handles Enter itself: e.g. Cancel cancels.
+      const target = e.target;
+      if (
+        target instanceof Element &&
+        dialogRef.current?.contains(target) &&
+        target.closest("button, a[href], textarea")
+      ) {
+        return;
       }
+      e.preventDefault();
+      defaultAction();
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [show, onOk]);
+  }, [show, defaultAction]);
 
   // Escape closes the dialog, as clicking outside it does: the keyboard's way to dismiss it.
   const dismiss = onClose || onCancel;
@@ -84,6 +108,7 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
+      ref={dialogRef}
       className="modal show"
       style={{
         display: "block",
@@ -117,13 +142,18 @@ export function Modal({
 
           <div className="modal-footer">
             {onClose && (
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                ref={onOk ? undefined : defaultButtonRef}
+                onClick={onClose}
+              >
                 {gettext("Close")}
               </button>
             )}
 
             {onOk && (
-              <button type="button" className="btn btn-primary" onClick={onOk}>
+              <button type="button" className="btn btn-primary" ref={defaultButtonRef} onClick={onOk}>
                 {gettext("OK")}
               </button>
             )}

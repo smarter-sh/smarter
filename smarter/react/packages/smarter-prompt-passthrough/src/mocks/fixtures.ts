@@ -188,12 +188,3 @@ export const bulkLogs = [
     request_id: "0123456789abcdef0123456789abcdef",
   },
 ];
-
-/** A server log of a prompt, which the log stream sends as it is logged. */
-export const liveLog = {
-  message: "2026-01-01 12:00:02,000 ERROR \u001b[31mthe provider responded with HTTP 401\u001b[0m",
-  level: "ERROR",
-  logger: "smarter.apps.prompt",
-  timestamp: 1767268802,
-  request_id: "0123456789abcdef0123456789abcdef",
-};

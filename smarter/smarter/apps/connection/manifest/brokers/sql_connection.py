@@ -1116,6 +1116,22 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         )
         return [(SAMKinds.SQL_PLUGIN.value, plugins)]
 
+    @classmethod
+    def references(cls, instance: SqlConnection) -> SAMDependents:
+        """Return the resources that an SqlConnection uses: the Secrets of its password and its proxy's password.
+
+        :param instance: The SqlConnection.
+        :type instance: SqlConnection
+        :return: Its Secrets.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.secret.models import Secret
+
+        secret_ids = [instance.password_id, instance.proxy_password_id]  # type: ignore[attr-defined]
+        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk__in=[pk for pk in secret_ids if pk]))]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the SqlPlugins that use this SqlConnection.

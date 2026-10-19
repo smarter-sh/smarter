@@ -13,7 +13,7 @@ This module provides Django middleware that injects a per-request logging contex
 - **Real-time log filtering**: Supports real-time log filtering in the Smarter Terminal Emulator for improved debugging and monitoring.
 - **User-scoped or anonymous request tracing**: Authenticated users are identified in logs by their model and username; anonymous users receive a UUID-based identifier.
 - **Request-scoped log streams**: the request id that a web console React app sends in the ``X-Smarter-RequestId`` header is attached to every log record of the request, so that the app can stream the server logs of that one request, e.g. the Server Logs tab of the Prompt Passthrough.
-- **Chat-scoped log streams**: the chat session key of a request to an LLMClient's api, its ``session_key`` query parameter, is attached to every log record of the request, so that Smarter Chat's Console can stream the server logs of that one chat.
+- **Chat-scoped log streams**: the chat session key of a request to an LLMClient's api, its ``session_key`` query parameter, is attached to every log record of the request, so that the workbench's Console can stream the server logs of that one chat.
 
 Features
 --------

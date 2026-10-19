@@ -6,9 +6,9 @@
  */
 import type * as monaco from "monaco-editor";
 
-import type { ManifestError } from "@/lib/validation";
+import type { ManifestError } from "../../lib/validation";
 
-import "@/components/Problems/styles.css";
+import "./styles.css";
 import { gettext, interpolateNodes } from "@smarter/common";
 
 interface ProblemsProps {

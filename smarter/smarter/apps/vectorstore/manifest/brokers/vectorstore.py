@@ -531,6 +531,27 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         return [(SAMKinds.VECTORSEARCH.value, Vectorsearch.objects.filter(vectorstore=instance))]
 
+    @classmethod
+    def references(cls, instance: VectorstoreMeta) -> SAMDependents:
+        """Return the resources that a Vectorstore uses: its ApiConnection, its embeddings Provider, and the Secret of its api key.
+
+        :param instance: The Vectorstore's VectorstoreMeta.
+        :type instance: VectorstoreMeta
+        :return: Its ApiConnection, Provider and Secret, of those that it has.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.connection.models import ApiConnection
+        from smarter.apps.provider.models import Provider
+        from smarter.apps.secret.models import Secret
+
+        return [
+            (SAMKinds.API_CONNECTION.value, ApiConnection.objects.filter(pk=instance.connection_id)),  # type: ignore[attr-defined]
+            (SAMKinds.PROVIDER.value, Provider.objects.filter(pk=instance.embeddings_provider_id)),  # type: ignore[attr-defined]
+            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_secret_id)),  # type: ignore[attr-defined]
+        ]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the Vectorsearches that search this Vectorstore.

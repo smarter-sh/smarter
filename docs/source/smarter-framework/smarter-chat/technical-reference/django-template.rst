@@ -1,5 +1,5 @@
 Django Template
 ===============
 
-.. literalinclude:: ../../../../../smarter/smarter/templates/react/smarter-chat.html
+.. literalinclude:: ../../../../../smarter/smarter/templates/react/workbench.html
    :language: html+django

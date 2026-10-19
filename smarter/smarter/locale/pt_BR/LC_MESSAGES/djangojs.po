@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 19:14+0000\n"
+"POT-Creation-Date: 2026-10-19 17:32+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -51,7 +51,7 @@ msgstr "ID"
 msgid "Manifest URL"
 msgstr "URL do manifesto"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Owner"
 msgstr "Proprietário"
 
@@ -71,11 +71,11 @@ msgstr "Criado"
 msgid "Last Updated"
 msgstr "Última atualização"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Version"
 msgstr "Versão"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Description"
 msgstr "Descrição"
 
@@ -103,7 +103,7 @@ msgstr "Não"
 msgid "Loading..."
 msgstr "Carregando..."
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Name"
 msgstr "Nome"
 
@@ -111,7 +111,7 @@ msgstr "Nome"
 msgid "Updated"
 msgstr "Atualizado"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Status"
 msgstr "Status"
 
@@ -235,7 +235,7 @@ msgstr "Falha ao excluir o authtoken (%(status)s): %(error)s"
 msgid "Successfully deleted authtoken"
 msgstr "Authtoken excluído com sucesso"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, react/packages/smarter-connection-list/src/components/Toolbar/Component.tsx, react/packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, react/packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, react/packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, react/packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, react/packages/smarter-provider-list/src/components/Toolbar/Component.tsx, react/packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, react/packages/smarter-secret-list/src/components/Toolbar/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx, react/packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, react/packages/smarter-connection-list/src/components/Toolbar/Component.tsx, react/packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, react/packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, react/packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, react/packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, react/packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, react/packages/smarter-provider-list/src/components/Toolbar/Component.tsx, react/packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, react/packages/smarter-secret-list/src/components/Toolbar/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx, react/packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
 msgid "Actions"
 msgstr "Ações"
 
@@ -267,7 +267,7 @@ msgstr ""
 msgid "Delete: Delete this authtoken resource"
 msgstr "Excluir: excluir este authtoken"
 
-#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx
+#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
 msgid "Budgets"
 msgstr "Orçamentos"
 
@@ -503,11 +503,11 @@ msgstr "Payload de resposta inválido: era esperado um array de objetos."
 msgid "Unable to load objects."
 msgstr "Não foi possível carregar os objetos."
 
-#. Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx
+#. Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
 msgid "Close"
 msgstr "Fechar"
 
-#. Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx
+#. Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
 msgid "OK"
 msgstr "OK"
 
@@ -737,7 +737,7 @@ msgstr "Nenhum LLMClient usa este domínio"
 msgid "Deployed: the LLMClient is deployed"
 msgstr "Implantado: o LLMClient está implantado"
 
-#. Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/StatusBar/Component.tsx
+#. Translators: used in react/packages/smarter-custom-domain-list/src/components/StatusBar/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/StatusBar/Component.tsx
 msgid "Not deployed"
 msgstr "Não implantado"
 
@@ -974,7 +974,7 @@ msgstr "Ferramentas poderosas para gerenciar seus recursos de IA."
 msgid "Example CLI session"
 msgstr "Exemplo de sessão na CLI"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx, react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/Cli/Component.tsx, react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 msgid "Download"
 msgstr "Baixar"
 
@@ -1082,7 +1082,7 @@ msgstr "Instalação com verificação de assinatura"
 msgid "Enable, then list it in a manifest"
 msgstr "Ative-a e depois liste-a em um manifesto"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/App.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/Extensions/Component.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx
 msgid "Extensions"
 msgstr "Extensões"
 
@@ -1359,7 +1359,7 @@ msgstr "Adicionar o servidor MCP desta plataforma ao Claude Code"
 msgid "Tools"
 msgstr "Ferramentas"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-guardrail-list/src/App.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-guardrail-list/src/App.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Guardrails"
 msgstr "Guardrails"
 
@@ -1399,11 +1399,11 @@ msgstr "Você tem"
 msgid "%(my_resources_pending_deployments)s pending"
 msgstr "%(my_resources_pending_deployments)s pendentes"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
 msgid "LLM Clients"
 msgstr "Clientes LLM"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "MCPClients"
 msgstr "MCPClients"
 
@@ -2239,11 +2239,11 @@ msgstr "Waffle switches"
 msgid "This extension has no waffle switches."
 msgstr "Esta extensão não tem waffle switches."
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
+#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 msgid "On"
 msgstr "Ligado"
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
+#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 msgid "Off"
 msgstr "Desligado"
 
@@ -2331,7 +2331,7 @@ msgstr "Segredo para %(name)s"
 msgid "Choose a Secret"
 msgstr "Escolha um segredo"
 
-#. Translators: used in react/packages/smarter-extension-console/src/lib/api.ts
+#. Translators: used in react/packages/smarter-extension-console/src/lib/api.ts, react/packages/smarter-llmclient-deployment/src/lib/messages.ts, react/packages/smarter-workbench/src/lib/api.ts
 msgid "The request failed: %(status)s %(statusText)s"
 msgstr "A solicitação falhou: %(status)s %(statusText)s"
 
@@ -2600,13 +2600,1636 @@ msgstr "Nenhum recurso corresponde aos filtros."
 msgid "Provider / service"
 msgstr "Provedor / serviço"
 
-#. Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid "%(count)s resource"
+msgid_plural "%(count)s resources"
+msgstr[0] "%(count)s recurso"
+msgstr[1] "%(count)s recursos"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid "%(count)s level deep"
+msgid_plural "%(count)s levels deep"
+msgstr[0] "%(count)s nível de profundidade"
+msgstr[1] "%(count)s níveis de profundidade"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid "Expand all"
+msgstr "Expandir tudo"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid "Collapse all"
+msgstr "Recolher tudo"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid "Fetch the tree again, after a manifest was changed"
+msgstr "Buscar a árvore novamente, depois de alterar um manifesto"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid "Reload"
+msgstr "Recarregar"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid ""
+"A locked card is a resource that you can't read, such as another account's."
+msgstr ""
+"Um cartão bloqueado é um recurso que você não pode ler, como o de outra "
+"conta."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
+msgid "Who owns a resource, and who may read it"
+msgstr "Quem é dono de um recurso, e quem pode lê-lo"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "How this LLMClient is built"
+msgid "Open this LLMClient's manifest"
+msgstr "Como este LLMClient é construído"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "Click Copy on the example, and paste it into the manifest."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Click Save. Smarter applies the manifest at once. Then reload this tab, and "
+"the new resource appears in the tree."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Choose its api key"
+msgid "Choose it"
+msgstr "Escolha sua chave de API"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Paste it at the start of a new line beneath %(spec)s. If the manifest "
+"already has the same key with an empty list, such as %(empty)s, replace that "
+"line."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Your next step"
+msgid "Next steps"
+msgstr "Seu próximo passo"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "This LLMClient isn't yours"
+msgid "Make this LLMClient your own"
+msgstr "Este LLMClient não é seu"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Most LLMClients have Guardrails, tools and a look of their own. This one is "
+"missing some of them. Each takes a few lines of YAML: copy an example below "
+"into the manifest, and save it."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Your Guardrails"
+msgid "Add your first Guardrail"
+msgstr "Seus guardrails"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"A Guardrail screens the text that passes between the user and the LLM. An "
+"input Guardrail checks each prompt before it is sent to the LLM, and an "
+"output Guardrail checks each response before the user sees it. When it finds "
+"what it looks for, such as an email address, a prompt injection or a leaked "
+"password, it blocks the message, redacts what it found, or logs it."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Guardrails are ordinary software, not the LLM's judgment, so they enforce "
+"your rules however the LLM behaves. Smarter comes with built-in Guardrails "
+"for the most common cases, which every LLMClient may use by name: personal "
+"data, secrets, prompt injection, moderation, off-topic prompts and more."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Delete Guardrail"
+msgid "Browse the Guardrails"
+msgstr "Excluir guardrail"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Your Guardrails"
+msgid "Built-in Guardrails"
+msgstr "Seus guardrails"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Your Guardrails"
+msgid "Two built-in Guardrails"
+msgstr "Seus guardrails"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"%(pii)s removes credit card numbers, email addresses and phone numbers from "
+"each prompt, and %(injection)s blocks prompts that try to override the "
+"LLMClient's instructions. Neither calls an LLM."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "Add your first tool"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"An LLM knows only what it was trained on and what is in its prompt. Tools "
+"give it everything else: today's weather, a row in your database, a "
+"calculation that it would otherwise guess at. Smarter offers the LLM the "
+"tools that the LLMClient lists, the LLM decides when to call one, and "
+"Smarter runs it and hands back the result."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"There are three ways to add tools, which differ in who writes them and where "
+"they run. An LLMClient may use all three at once."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+msgid "Plugins"
+msgstr "Plugins"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"A plugin is a manifest that configures one of Smarter's built-in tool "
+"patterns: answer from static data, run a SQL query, call a REST api, follow "
+"a skill, search the web, or search for images. Nothing is coded or "
+"installed, and it runs on Smarter."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "for your own data, databases and apis, without writing code."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"A sample static plugin about a fictional candy, which needs no Connection or "
+"Secret. Then ask the LLMClient about the Everlasting Gobstopper."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Browse the registry"
+msgid "Browse the plugins"
+msgstr "Explorar o registro"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"An Extension is Python code, packaged and published to the Smarter Extension "
+"registry, that a platform administrator installs, much as a WordPress "
+"administrator installs a plugin. Its tools do whatever Python can do, and "
+"they run on Smarter."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"when a tool needs real code, or for a ready-made tool that is already "
+"installed."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"An official Extension, which does arithmetic exactly. The Extensions page "
+"lists those that are installed on this platform."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Back to Extensions"
+msgid "Browse the Extensions"
+msgstr "Voltar para Extensões"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"An MCPClient is a manifest that connects to a remote MCP server: a third "
+"party's tools, published with the Model Context Protocol. Smarter offers the "
+"server's tools to the LLM and calls them on that server. Nothing is coded, "
+"and nothing runs on Smarter."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"for a service that already publishes an MCP server, such as GitHub, Notion "
+"or Stripe."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"An example MCPClient for DeepWiki, which documents public GitHub "
+"repositories, and requires no authentication."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Delete MCPClient"
+msgid "Browse the MCPClients"
+msgstr "Excluir MCPClient"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "Plugins, Extensions and MCP servers compared"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Extension"
+msgid "Extensibility"
+msgstr "Extensão"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Styles"
+msgid "Style its chat"
+msgstr "Estilos"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"This LLMClient's chat has Smarter's default look. A few lines of styles give "
+"it yours: your logo in the header, your colors on the message bubbles, your "
+"font, a picture behind the conversation. They apply in the workbench and on "
+"every web page that embeds the chat. You don't need to know CSS, and every "
+"setting is optional."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Styles go in %(styles)s, beside %(prompt)s: paste it at the start of the "
+"line after the last line of %(prompt)s, with the same indent as %(prompt)s."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+#, fuzzy
+#| msgid "Your LLM Clients"
+msgid "Styling your LLMClient's chat"
+msgstr "Seus clientes LLM"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "The chat's styles"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Smarter's logo, the Inter font, a dark header, and the user's messages in "
+"orange. Swap in your own logo's url and colors."
+msgstr ""
+
+#. Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "Architecture"
+msgstr "Arquitetura"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "How this LLMClient is built"
+msgstr "Como este LLMClient é construído"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid ""
+"An LLMClient is a sophisticated solution, built artisanally from a "
+"hierarchical tree of SAM resources. This is its tree: each card is a "
+"resource that it uses, directly or through another resource."
+msgstr ""
+"Um LLMClient é uma solução sofisticada, construída artesanalmente a partir "
+"de uma árvore hierárquica de recursos SAM. Esta é a sua árvore: cada cartão "
+"é um recurso que ele usa, diretamente ou por meio de outro recurso."
+
+#. Translators: SAM is the Smarter Application Manifest, a product name.
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "Everything is a SAM resource"
+msgstr "Tudo é um recurso SAM"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "Smarter Application Manifests"
+msgstr "Smarter Application Manifests"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid ""
+"LLMClients, Providers, plugins, Connections, Secrets and Guardrails are all "
+"SAM resources. Each is declared in a manifest, a short YAML document that "
+"says what the resource should be, and Smarter makes it so."
+msgstr ""
+"LLMClients, provedores, plugins, conexões, segredos e guardrails são todos "
+"recursos SAM. Cada um é declarado em um manifesto, um breve documento YAML "
+"que diz como o recurso deve ser, e o Smarter o torna realidade."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "Edit any manifest here"
+msgstr "Edite qualquer manifesto aqui"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "The web console"
+msgstr "O console web"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid ""
+"Every manifest can be edited directly in the web console. Click a card to "
+"open its resource's manifest in a new tab, change it, and save it: Smarter "
+"applies it at once."
+msgstr ""
+"Cada manifesto pode ser editado diretamente no console web. Clique em um "
+"cartão para abrir o manifesto do recurso em uma nova aba, altere-o e salve-"
+"o: o Smarter o aplica imediatamente."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "An LLMClient is a tree"
+msgstr "Um LLMClient é uma árvore"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "LLMClients"
+msgstr "LLMClients"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid "Dependency trees"
+msgstr "Árvores de dependências"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+msgid ""
+"Its Provider supplies the LLM, its plugins and MCPClients give it tools, its "
+"Guardrails screen what goes in and out, and the Connections and Secrets "
+"beneath them reach your data, safely. A resource that two others use appears "
+"under each of them."
+msgstr ""
+"Seu provedor fornece o LLM, seus plugins e MCPClients lhe dão ferramentas, "
+"seus guardrails filtram o que entra e sai, e as conexões e segredos abaixo "
+"deles alcançam seus dados, com segurança. Um recurso que outros dois usam "
+"aparece sob cada um deles."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Copied"
+msgstr "Copiado"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx
+msgid "Copy"
+msgstr "Copiar"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
+msgid "About %(kind)s, in the documentation"
+msgstr "Sobre %(kind)s, na documentação"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
+msgid "You can't read this resource"
+msgstr "Você não pode ler este recurso"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
+msgid "Open the manifest of %(name)s in a new tab"
+msgstr "Abrir o manifesto de %(name)s em uma nova aba"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
+msgid "Hide what %(name)s uses"
+msgstr "Ocultar o que %(name)s usa"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
+msgid "Show what %(name)s uses"
+msgstr "Mostrar o que %(name)s usa"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
+msgid "%(count)s more"
+msgid_plural "%(count)s more"
+msgstr[0] "mais %(count)s"
+msgstr[1] "mais %(count)s"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
+msgid "The resources that this LLMClient is built from"
+msgstr "Os recursos com que este LLMClient é construído"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "A tool that the LLM can call"
+msgstr "Uma ferramenta que o LLM pode chamar"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "A chat with an LLM, its tools, and its rules"
+msgstr "Um chat com um LLM, suas ferramentas e suas regras"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "The LLM provider whose models it prompts"
+msgstr "O provedor de LLM cujos modelos ele consulta"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "The tools of a remote MCP server"
+msgstr "As ferramentas de um servidor MCP remoto"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Tools installed from an extension package"
+msgstr "Ferramentas instaladas de um pacote de extensão"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Screens prompts and responses"
+msgstr "Filtra os prompts e as respostas"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "How a plugin reaches a remote api"
+msgstr "Como um plugin alcança uma api remota"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "How a plugin reaches a database"
+msgstr "Como um plugin alcança um banco de dados"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "An encrypted credential"
+msgstr "Uma credencial criptografada"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "The api key that its url requires"
+msgstr "A chave de api que sua url exige"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "The domain that it is served from"
+msgstr "O domínio a partir do qual ele é servido"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Compute that hosts an LLM"
+msgstr "Computação que hospeda um LLM"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Coordinates several LLMClients"
+msgstr "Coordena vários LLMClients"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Forwards requests to an LLM provider"
+msgstr "Encaminha solicitações a um provedor de LLM"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Documents, indexed for search"
+msgstr "Documentos, indexados para busca"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Searches a vector store"
+msgstr "Pesquisa em um armazenamento de vetores"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "Limits what it may spend"
+msgstr "Limita o que ele pode gastar"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
+msgid "A SAM resource"
+msgstr "Um recurso SAM"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "No api key is attached: the url is public."
+msgstr "Nenhuma chave de API está vinculada: a url é pública."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Every request to the url needs %(name)s."
+msgstr "Toda solicitação à url precisa de %(name)s."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid ""
+"%(name)s is attached, but turned off, so the url is public. Turn it on in "
+"API Keys, or attach another key."
+msgstr ""
+"%(name)s está vinculada, mas desativada, então a url é pública. Ative-a em "
+"Chaves de API, ou vincule outra chave."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Detach"
+msgstr "Desvincular"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "snake_case: the name that the manifest's spec.apiKey uses."
+msgstr "snake_case: o nome que spec.apiKey usa no manifesto."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "The chat on www.example.com"
+msgstr "O chat em www.example.com"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "Attach it to this LLMClient"
+msgstr "Vincule-a a este LLMClient"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Create the api key"
+msgstr "Criar a chave de API"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Choose its api key"
+msgstr "Escolha sua chave de API"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Copy its secret now"
+msgstr "Copie o segredo agora"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid ""
+"This is the secret of %(name)s. Smarter keeps only a hash of it, and can't "
+"show it again: store it somewhere safe, such as a password manager or your "
+"hosting's secrets. It is what your front end sends, in place of %"
+"(placeholder)s."
+msgstr ""
+"Este é o segredo de %(name)s. O Smarter guarda apenas um hash dele e não "
+"pode mostrá-lo de novo: guarde-o em um lugar seguro, como um gerenciador de "
+"senhas ou os segredos da sua hospedagem. É o que o seu front end envia, no "
+"lugar de %(placeholder)s."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Your account's api keys"
+msgstr "As chaves de API da sua conta"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Last used"
+msgstr "Último uso"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Never"
+msgstr "Nunca"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Attached"
+msgstr "Vinculada"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "Attach"
+msgstr "Vincular"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid "There are no api keys that you can manage yet."
+msgstr "Ainda não há chaves de API que você possa gerenciar."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid ""
+"Only the LLMClient's owner, or an account admin, can change its api key."
+msgstr ""
+"Somente o proprietário do LLMClient, ou um administrador da conta, pode "
+"alterar sua chave de API."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "Create an api key"
+msgstr "Crie uma chave de API"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid ""
+"The key is yours. Its secret is shown once, right after you create it. The "
+"web console's API Keys page lists your keys, and turns a key off without "
+"deleting it."
+msgstr ""
+"A chave é sua. O segredo é mostrado uma única vez, logo depois de criá-la. A "
+"página Chaves de API do console web lista suas chaves e desativa uma chave "
+"sem excluí-la."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+msgid "API Keys"
+msgstr "Chaves de API"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
+msgid ""
+"Only an account admin can create api keys. Ask one to create a key for you, "
+"then attach it here, or ask them to run:"
+msgstr ""
+"Somente um administrador da conta pode criar chaves de API. Peça a um que "
+"crie uma chave para você e depois vincule-a aqui, ou peça que execute:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Conversations"
+msgstr "Conversas"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Chat sessions"
+msgstr "Sessões de chat"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"Every conversation with %(app_name)s is a chat session, which the platform "
+"identifies by a session key. The session's messages are stored on the "
+"platform, so a conversation survives a page reload, or a visit to another "
+"page: the chat sends its key, and the platform answers with the conversation "
+"so far."
+msgstr ""
+"Cada conversa com %(app_name)s é uma sessão de chat, que a plataforma "
+"identifica por uma chave de sessão. As mensagens da sessão ficam guardadas "
+"na plataforma, então uma conversa sobrevive a um recarregamento da página, "
+"ou a uma visita a outra página: o chat envia sua chave, e a plataforma "
+"responde com a conversa até aquele momento."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "The platform makes it"
+msgstr "A plataforma a cria"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"The first %(config)s request of a chat that has no key gets a new one, 64 "
+"hexadecimal characters, in the response's %(field)s. Don't make up your own: "
+"the platform checks its format."
+msgstr ""
+"A primeira solicitação %(config)s de um chat sem chave recebe uma nova, de "
+"64 caracteres hexadecimais, no campo %(field)s da resposta. Não invente a "
+"sua: a plataforma verifica o formato dela."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "The client keeps it"
+msgstr "O cliente a guarda"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"The key is all that the client stores: the browser, or your own server. The "
+"session's messages, and the platform's records of its tool calls and costs, "
+"stay on the platform."
+msgstr ""
+"A chave é tudo o que o cliente guarda: o navegador, ou o seu próprio "
+"servidor. As mensagens da sessão, e os registros da plataforma sobre suas "
+"chamadas de ferramentas e seus custos, ficam na plataforma."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Forgetting it starts over"
+msgstr "Esquecê-la recomeça"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"A %(config)s request without a key starts a new session, with a new key. "
+"That is all that Smarter Chat's New chat button does."
+msgstr ""
+"Uma solicitação %(config)s sem chave inicia uma sessão nova, com uma chave "
+"nova. É só isso que o botão de novo chat do Smarter Chat faz."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Smarter Chat does it for you"
+msgstr "O Smarter Chat faz isso por você"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"Smarter Chat keeps the key in a cookie, %(cookie)s by default, for one day, "
+"and for the page's path, so that each page has its own conversation. Set %"
+"(cookie_path)s to %(root)s to keep one conversation as the visitor moves "
+"from page to page. The embed script keeps its own cookie, for the whole site."
+msgstr ""
+"O Smarter Chat guarda a chave em um cookie, %(cookie)s por padrão, por um "
+"dia, e para o caminho da página, de modo que cada página tem sua própria "
+"conversa. Defina %(cookie_path)s como %(root)s para manter uma só conversa "
+"enquanto o visitante passa de uma página para outra. O script de "
+"incorporação guarda o seu próprio cookie, para o site inteiro."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"The WordPress, Drupal and Shopify integrations, and the html snippet, use "
+"Smarter Chat, so they need nothing more."
+msgstr ""
+"As integrações de WordPress, Drupal e Shopify, e o trecho de html, usam o "
+"Smarter Chat, então não precisam de mais nada."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "In your own front end"
+msgstr "No seu próprio front end"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Start a session"
+msgstr "Inicie uma sessão"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"Send %(config)s with no key, as the first command in How this url works "
+"does. Its response's %(field)s is the new session's key."
+msgstr ""
+"Envie %(config)s sem chave, como faz o primeiro comando de Como esta url "
+"funciona. O campo %(field)s da resposta é a chave da nova sessão."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Keep the key"
+msgstr "Guarde a chave"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"In the browser, in localStorage or a cookie. In a server-to-server "
+"integration, in your own database, beside your user, so that each of your "
+"users has their own conversation."
+msgstr ""
+"No navegador, no localStorage ou em um cookie. Em uma integração de servidor "
+"para servidor, no seu próprio banco de dados, junto ao seu usuário, para que "
+"cada um dos seus usuários tenha sua própria conversa."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Send it with every prompt"
+msgstr "Envie-a com cada prompt"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"Add it to the body, as %(field)s. The request still carries the whole "
+"conversation, in %(messages)s, and the platform adds the new messages to the "
+"session."
+msgstr ""
+"Adicione-a ao corpo, como %(field)s. A solicitação continua levando a "
+"conversa inteira, em %(messages)s, e a plataforma adiciona as mensagens "
+"novas à sessão."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Come back to it"
+msgstr "Volte a ela"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"After a reload, send %(config)s with the key. Its response's %(history)s is "
+"the conversation so far, to display again, and its %(field)s is the same key."
+msgstr ""
+"Depois de um recarregamento, envie %(config)s com a chave. O campo %"
+"(history)s da resposta é a conversa até aquele momento, para exibir de novo, "
+"e o seu %(field)s é a mesma chave."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid "Keep a session key private"
+msgstr "Mantenha a chave de sessão privada"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
+msgid ""
+"Anyone who has a session key, and can call this url, can read its "
+"conversation, with the %(config)s request above. Don't put it in a url that "
+"people share, in a log, or in an analytics event. It doesn't authenticate "
+"the caller: an api key does that."
+msgstr ""
+"Qualquer pessoa que tenha uma chave de sessão, e possa chamar esta url, pode "
+"ler a conversa dela, com a solicitação %(config)s acima. Não a coloque em "
+"uma url que as pessoas compartilhem, em um log ou em um evento de análise. "
+"Ela não autentica quem chama: isso é o que uma chave de API faz."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+msgid "Deployed"
+msgstr "Implantado"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
+msgid "LLM provider"
+msgstr "Provedor de LLM"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+msgid "Model"
+msgstr "Modelo"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "Access"
+msgstr "Acesso"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "Api key required"
+msgstr "Requer chave de API"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "Public"
+msgstr "Pública"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "This LLMClient"
+msgstr "Este LLMClient"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid ""
+"Every request needs one of this LLMClient's api keys. A key that is in a web "
+"page is public: give each site a key of its own, and revoke it if it is "
+"abused."
+msgstr ""
+"Toda solicitação precisa de uma das chaves de API deste LLMClient. Uma chave "
+"que está em uma página web é pública: dê a cada site sua própria chave, e "
+"revogue-a se houver abuso."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid ""
+"Anyone who has this url can chat with it, and every prompt is charged to its "
+"owner. Attach an api key to require one, or give it a budget."
+msgstr ""
+"Qualquer pessoa que tenha esta url pode conversar com ele, e cada prompt é "
+"cobrado do proprietário. Vincule uma chave de API para exigi-la, ou dê a ele "
+"um orçamento."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "Need to secure this url?"
+msgstr "Precisa proteger esta url?"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "Live"
+msgstr "No ar"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "Not deployed yet"
+msgstr "Ainda não implantado"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid ""
+"%(app_name)s is live. Its system prompt, its LLM and its tools now answer at "
+"its own url:"
+msgstr ""
+"%(app_name)s está no ar. Seu prompt de sistema, seu LLM e suas ferramentas "
+"agora respondem em sua própria url:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid ""
+"%(app_name)s works here, in the workbench, but nobody else can reach it yet. "
+"Deploy it, and it gets its own url, with its own TLS certificate:"
+msgstr ""
+"%(app_name)s funciona aqui, na área de trabalho, mas ninguém mais pode "
+"acessá-lo ainda. Implante-o e ele terá sua própria url, com seu próprio "
+"certificado TLS:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid ""
+"This url is an api, not a web page. It is the backend of Smarter Chat, the "
+"chat window of the workbench, which is also the %(package)s npm package. Put "
+"Smarter Chat on a web page, point it at this url, and your visitors are "
+"talking to %(app_name)s."
+msgstr ""
+"Esta url é uma api, não uma página web. É o backend do Smarter Chat, a "
+"janela de chat da área de trabalho, que também é o pacote npm %(package)s. "
+"Coloque o Smarter Chat em uma página web, aponte-o para esta url, e seus "
+"visitantes estarão conversando com %(app_name)s."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "Deploy it with the smarter cli:"
+msgstr "Implante-o com o cli do smarter:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid ""
+"Smarter then creates its host and its TLS certificate, which can take a few "
+"minutes. Reopen this tab afterwards. Until then, here is what you'll be able "
+"to do with it."
+msgstr ""
+"O Smarter então cria seu host e seu certificado TLS, o que pode levar alguns "
+"minutos. Reabra esta aba depois. Enquanto isso, veja o que você poderá fazer "
+"com ele."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx
+msgid "Back to the workbench"
+msgstr "Voltar à área de trabalho"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Where to go from here?"
+msgstr "E agora?"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "How this url works"
+msgstr "Como esta url funciona"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "Under the hood"
+msgstr "Por dentro"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"Smarter Chat sends this url two kinds of requests, and so can your own code. "
+"Both are POST requests, with JSON in and JSON out. Copy a command into a "
+"terminal to try it."
+msgstr ""
+"O Smarter Chat envia dois tipos de solicitação a esta url, e o seu próprio "
+"código também pode. As duas são solicitações POST, com JSON na entrada e "
+"JSON na saída. Copie um comando em um terminal para experimentar."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"This LLMClient requires a Smarter api key: replace <YOUR-API-KEY> with yours."
+msgstr ""
+"Este LLMClient exige uma chave de API do Smarter: substitua <YOUR-API-KEY> "
+"pela sua."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "starts a chat"
+msgstr "inicia um chat"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"It returns the LLMClient's configuration, such as its name, welcome message, "
+"example prompts and colors, and a session_key for the new chat."
+msgstr ""
+"Retorna a configuração do LLMClient, como nome, mensagem de boas-vindas, "
+"prompts de exemplo e cores, e um session_key para o novo chat."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "sends a prompt"
+msgstr "envia um prompt"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"It returns the messages that the prompt added to the chat. Send the "
+"session_key with every prompt, and Smarter keeps the chat's history."
+msgstr ""
+"Retorna as mensagens que o prompt adicionou ao chat. Envie o session_key com "
+"cada prompt, e o Smarter mantém o histórico do chat."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "Answers are Markdown"
+msgstr "As respostas são Markdown"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"The response is JSON, and the assistant's message in it is Markdown. Smarter "
+"Chat renders it, with code highlighting, math and diagrams. In your own "
+"front end, use any Markdown library."
+msgstr ""
+"A resposta é JSON, e a mensagem do assistente nela é Markdown. O Smarter "
+"Chat a renderiza, com destaque de código, matemática e diagramas. No seu "
+"próprio front end, use qualquer biblioteca de Markdown."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "Secrets stay on the server"
+msgstr "Os segredos ficam no servidor"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"Smarter calls the LLM and runs the tools. Their api keys and credentials "
+"never reach the browser."
+msgstr ""
+"O Smarter chama o LLM e executa as ferramentas. As chaves de API e as "
+"credenciais deles nunca chegam ao navegador."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"The chat's configuration, and a new chat session, whose session_key "
+"continues the chat in later prompts."
+msgstr ""
+"A configuração do chat, e uma nova sessão de chat, cujo session_key continua "
+"o chat nos prompts seguintes."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid ""
+"Sends the LLMClient's first example prompt, and returns the LLM's response."
+msgstr ""
+"Envia o primeiro prompt de exemplo do LLMClient e retorna a resposta do LLM."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "Sends a prompt, and returns the LLM's response."
+msgstr "Envia um prompt e retorna a resposta do LLM."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "The response, abbreviated:"
+msgstr "A resposta, abreviada:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/HowThisUrlWorks.tsx
+msgid "Things to ask it"
+msgstr "Coisas para perguntar a ele"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid "How it was built"
+msgstr "Como foi construído"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid "Designed in the workbench. Declared in YAML."
+msgstr "Projetado na área de trabalho. Declarado em YAML."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid ""
+"%(app_name)s was designed, tested and debugged in the Prompt Engineer's "
+"Workbench of the Smarter web console, and is deployed from a manifest: a "
+"short YAML file that declares everything it is. Change the manifest, apply "
+"it, and the url answers with your changes."
+msgstr ""
+"%(app_name)s foi projetado, testado e depurado na área de trabalho do "
+"engenheiro de prompts do console web do Smarter, e é implantado a partir de "
+"um manifesto: um arquivo YAML curto que declara tudo o que ele é. Altere o "
+"manifesto, aplique-o, e a url responde com suas alterações."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid ""
+"Declarative: the manifest says what the LLMClient is, and Smarter makes it "
+"so."
+msgstr ""
+"Declarativo: o manifesto diz o que o LLMClient é, e o Smarter faz acontecer."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid ""
+"Version controlled: keep manifests in git, review them in pull requests, "
+"apply them from CI."
+msgstr ""
+"Com controle de versão: mantenha os manifestos no git, revise-os em pull "
+"requests, aplique-os a partir da CI."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid ""
+"Two commands from a YAML file to a live api with its own host and TLS "
+"certificate."
+msgstr ""
+"Dois comandos para ir de um arquivo YAML a uma api no ar com seu próprio "
+"host e certificado TLS."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid "Open it in the workbench"
+msgstr "Abra-o na área de trabalho"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid "LLMClient docs"
+msgstr "Documentação do LLMClient"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ManifestSection.tsx
+msgid ""
+"This LLMClient's manifest, as smarter describe llmclient returns it, without "
+"its owner's username. Its status is what Smarter reports about it, and is "
+"read-only."
+msgstr ""
+"O manifesto deste LLMClient, como smarter describe llmclient o retorna, sem "
+"o nome de usuário do proprietário. O status é o que o Smarter informa sobre "
+"ele, e é somente leitura."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "This LLMClient isn't yours"
+msgstr "Este LLMClient não é seu"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"%(name)s belongs to %(owner)s, who shares it with you. You can chat with it, "
+"read its manifest and use everything on this page that only reads it, but "
+"only its owner, or an admin of its account, can change it, deploy it or "
+"attach an api key to it. That leaves you two choices."
+msgstr ""
+"%(name)s pertence a %(owner)s, que o compartilha com você. Você pode "
+"conversar com ele, ler seu manifesto e usar tudo nesta página que apenas o "
+"lê, mas só o seu proprietário, ou um administrador da sua conta, pode alterá-"
+"lo, implantá-lo ou associar uma chave de api a ele. Isso deixa você com duas "
+"opções."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "1. Leave it as it is"
+msgstr "1. Deixe-o como está"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Use it as an example. Chat with it, read its manifest, and borrow whatever "
+"you like for LLMClients of your own. Nothing that you do here changes it."
+msgstr ""
+"Use-o como exemplo. Converse com ele, leia seu manifesto e aproveite o que "
+"quiser para os seus próprios LLMClients. Nada do que você fizer aqui o "
+"altera."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "2. Clone it, and work on your copy"
+msgstr "2. Clone-o e trabalhe na sua cópia"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"A clone is a new LLMClient, owned by you, that starts as an exact copy of "
+"this one: the same instructions, LLM provider and model, and the same "
+"plugins, MCP clients and guardrails, except any that you aren't allowed to "
+"use. It has its own name, and its own url. From then on the two are "
+"independent: your changes to the copy never touch the original, and later "
+"changes to the original never reach your copy."
+msgstr ""
+"Um clone é um novo LLMClient, de sua propriedade, que começa como uma cópia "
+"exata deste: as mesmas instruções, o mesmo provedor e modelo de LLM, e os "
+"mesmos plugins, clientes MCP e guardrails, exceto os que você não tem "
+"permissão para usar. Ele tem seu próprio nome e sua própria url. A partir "
+"daí os dois são independentes: suas alterações na cópia nunca afetam o "
+"original, e as alterações posteriores no original nunca chegam à sua cópia."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Open the %(list)s list, and its %(tab)s tab."
+msgstr "Abra a lista de %(list)s e a sua aba %(tab)s."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx, react/packages/smarter-llmclient-list/src/App.tsx
+msgid "Shared LLM Clients"
+msgstr "Clientes LLM compartilhados"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Find %(name)s, and click its %(clone)s button, the green icon of two pages."
+msgstr ""
+"Encontre %(name)s e clique no seu botão %(clone)s, o ícone verde de duas "
+"páginas."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Clone"
+msgstr "Clonar"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Type a name for your copy, and click %(ok)s. Smarter writes the name in "
+"snake case: %(example)s becomes %(snake_case)s."
+msgstr ""
+"Digite um nome para a sua cópia e clique em %(ok)s. O Smarter escreve o nome "
+"em snake case: %(example)s vira %(snake_case)s."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Your copy appears in the %(your_tab)s tab, under its new name, and the "
+"original stays in %(shared_tab)s, unchanged. Open your copy in the "
+"workbench, and from there edit its manifest, deploy it, and put it on your "
+"site, as this page describes."
+msgstr ""
+"Sua cópia aparece na aba %(your_tab)s, com o novo nome, e o original "
+"continua em %(shared_tab)s, sem alterações. Abra a sua cópia no workbench e, "
+"de lá, edite seu manifesto, implante-a e coloque-a no seu site, como esta "
+"página descreve."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx, react/packages/smarter-llmclient-list/src/App.tsx
 msgid "Your LLM Clients"
 msgstr "Seus clientes LLM"
 
-#. Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
-msgid "Shared LLM Clients"
-msgstr "Clientes LLM compartilhados"
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "How ownership of Smarter resources works"
+msgstr "Como funciona a propriedade dos recursos do Smarter"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "who owns a resource, who can read it, and who can change it."
+msgstr ""
+"quem é o proprietário de um recurso, quem pode lê-lo e quem pode alterá-lo."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Your next step"
+msgstr "Seu próximo passo"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Put %(app_name)s in front of people. Smarter Chat works on any web site, and "
+"these integrations are ready to use: pick the one that matches yours. Each "
+"of them needs only this LLMClient's url."
+msgstr ""
+"Coloque %(app_name)s diante das pessoas. O Smarter Chat funciona em qualquer "
+"site, e estas integrações estão prontas para usar: escolha a que corresponde "
+"ao seu. Cada uma precisa apenas da url deste LLMClient."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "First, allow your site's origin"
+msgstr "Primeiro, permita a origem do seu site"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Browsers let a page call this url only if the LLMClient's manifest lists the "
+"page's origin: its scheme, host and port, without a path. Add your site, and "
+"your development server if you have one, then apply the manifest again, in "
+"the workbench's Manifest tab or with %(command)s. Skip this, and the chat "
+"fails in the browser with a CORS error."
+msgstr ""
+"Os navegadores só permitem que uma página chame esta url se o manifesto do "
+"LLMClient listar a origem da página: seu esquema, host e porta, sem caminho. "
+"Adicione seu site, e seu servidor de desenvolvimento se tiver um, e depois "
+"aplique o manifesto de novo, na aba Manifesto da área de trabalho ou com %"
+"(command)s. Se pular esta etapa, o chat falha no navegador com um erro de "
+"CORS."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"A plugin: a chat launcher on every page, a Smarter Chat block, and a "
+"[smarter_chat] shortcode."
+msgstr ""
+"Um plugin: um lançador de chat em todas as páginas, um bloco Smarter Chat e "
+"um shortcode [smarter_chat]."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Download smarter-chat-<version>.zip from the plugin's latest release, and "
+"upload it in Plugins, Add New, Upload Plugin."
+msgstr ""
+"Baixe smarter-chat-<version>.zip da versão mais recente do plugin e envie-o "
+"em Plugins, Adicionar novo, Enviar plugin."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "In Settings, Smarter Chat, enter this LLMClient's url."
+msgstr "Em Configurações, Smarter Chat, informe a url deste LLMClient."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Guide"
+msgstr "Guia"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"A module for Drupal 10.3 and 11: a chat launcher on every page, and a "
+"Smarter Chat block for any region."
+msgstr ""
+"Um módulo para Drupal 10.3 e 11: um lançador de chat em todas as páginas, e "
+"um bloco Smarter Chat para qualquer região."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Then, in Configuration, Web services, Smarter Chat, enter this LLMClient's "
+"url."
+msgstr ""
+"Depois, em Configuração, Serviços web, Smarter Chat, informe a url deste "
+"LLMClient."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"A theme app extension: a chat launcher on every page, and a Smarter Chat "
+"block for any section."
+msgstr ""
+"Uma extensão de app de tema: um lançador de chat em todas as páginas, e um "
+"bloco Smarter Chat para qualquer seção."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Deploy the extension as your store's own app, from a Shopify Partner "
+"account, and install it on your store."
+msgstr ""
+"Implante a extensão como o app da sua loja, a partir de uma conta Shopify "
+"Partner, e instale-o na sua loja."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"In the theme editor, turn on App embeds, Smarter Chat launcher, and enter "
+"this LLMClient's url."
+msgstr ""
+"No editor de temas, ative Incorporações de app, Smarter Chat launcher, e "
+"informe a url deste LLMClient."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Allow both of your store's origins: its myshopify.com domain, and its own "
+"domain."
+msgstr ""
+"Permita as duas origens da sua loja: o domínio myshopify.com e o domínio "
+"próprio."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "React, from npm"
+msgstr "React, a partir do npm"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"%(package)s, the component that the workbench uses, for a React 19 "
+"application built with Vite, webpack or Next.js."
+msgstr ""
+"%(package)s, o componente que a área de trabalho usa, para uma aplicação "
+"React 19 construída com Vite, webpack ou Next.js."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Any web page, in html"
+msgstr "Qualquer página web, em html"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"One script tag, with no build: for a static site, a server-rendered page, "
+"Squarespace, Wix or Webflow. Paste it before </body>, and a chat button "
+"appears in a corner of the page."
+msgstr ""
+"Uma tag script, sem build: para um site estático, uma página renderizada no "
+"servidor, Squarespace, Wix ou Webflow. Cole-a antes de </body>, e um botão "
+"de chat aparece em um canto da página."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"The chat renders in its own Shadow DOM, so your site's css can't break it. "
+"To put it inside the page instead of a launcher, add %(element)s where it "
+"goes."
+msgstr ""
+"O chat é renderizado em seu próprio Shadow DOM, então o css do seu site não "
+"consegue quebrá-lo. Para colocá-lo dentro da página em vez de um lançador, "
+"adicione %(element)s onde ele deve ficar."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Something else?"
+msgstr "Outra coisa?"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid ""
+"Google Tag Manager, and documentation sites built with Docusaurus, MkDocs, "
+"Sphinx or VitePress, have integrations too. Or build your own front end on "
+"this url's api, below, or with the Python, Node.js and Go SDKs."
+msgstr ""
+"O Google Tag Manager, e os sites de documentação construídos com Docusaurus, "
+"MkDocs, Sphinx ou VitePress, também têm integrações. Ou construa seu próprio "
+"front end sobre a api desta url, abaixo, ou com os SDKs de Python, Node.js e "
+"Go."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "Docs sites"
+msgstr "Sites de documentação"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "SDKs"
+msgstr "SDKs"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "Give it to Smarter Chat"
+msgstr "Entregue-a ao Smarter Chat"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"Smarter Chat sends the key with every request, as %(header)s. The WordPress, "
+"Drupal and Shopify integrations have an api key setting. In html, add %"
+"(attribute)s:"
+msgstr ""
+"O Smarter Chat envia a chave em toda solicitação, como %(header)s. As "
+"integrações de WordPress, Drupal e Shopify têm uma configuração para a chave "
+"de API. Em html, adicione %(attribute)s:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"In React, pass apiKey, from your build's environment rather than from your "
+"source code:"
+msgstr ""
+"Em React, passe apiKey, a partir do ambiente do seu build e não do seu "
+"código-fonte:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"An api key belongs to a staff user of your account, and a platform "
+"administrator creates it with this command. The command prints the key's "
+"name, and its secret, once: store the secret somewhere safe, such as a "
+"password manager or your hosting's secrets."
+msgstr ""
+"Uma chave de API pertence a um usuário staff da sua conta, e um "
+"administrador da plataforma a cria com este comando. O comando mostra o nome "
+"da chave e o segredo, uma única vez: guarde o segredo em um lugar seguro, "
+"como um gerenciador de senhas ou os segredos da sua hospedagem."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"The web console's API Keys page lists your keys, and turns a key off without "
+"deleting it."
+msgstr ""
+"A página Chaves de API do console web lista suas chaves e desativa uma chave "
+"sem excluí-la."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"Name the key in the LLMClient's manifest, and apply the manifest again, in "
+"the workbench's Manifest tab or with %(command)s. From then on, every "
+"request to the url needs the key, and this page says \"Api key required\"."
+msgstr ""
+"Informe o nome da chave no manifesto do LLMClient e aplique o manifesto de "
+"novo, na aba Manifesto da área de trabalho ou com %(command)s. A partir daí, "
+"toda solicitação à url precisa da chave, e esta página mostra \"Requer chave "
+"de API\"."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"To replace a key, create a new one, name it in the manifest instead, and "
+"apply it: Smarter detaches the old key. Then turn the old key off."
+msgstr ""
+"Para substituir uma chave, crie uma nova, informe-a no manifesto no lugar da "
+"anterior e aplique-o: o Smarter desvincula a chave anterior. Depois desative "
+"a chave anterior."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "Api keys"
+msgstr "Chaves de API"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"This LLMClient already requires an api key: the url answers only requests "
+"that carry one of its keys. Here is how to give a key to a front end in "
+"production, and how to replace one."
+msgstr ""
+"Este LLMClient já exige uma chave de API: a url só responde às solicitações "
+"que levam uma de suas chaves. Veja como entregar uma chave a um front end em "
+"produção, e como substituí-la."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"Right now, anyone who has this url can chat with it, and every prompt is "
+"charged to its owner. Attach an api key, and the url answers only requests "
+"that carry it. The workbench keeps working, with your login."
+msgstr ""
+"No momento, qualquer pessoa que tenha esta url pode conversar com ele, e "
+"cada prompt é cobrado do proprietário. Vincule uma chave de API, e a url só "
+"responderá às solicitações que a levem. A área de trabalho continua "
+"funcionando, com o seu login."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "You can do it right here."
+msgstr "Você pode fazer isso aqui mesmo."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "A key in a web page is not a secret"
+msgstr "Uma chave em uma página web não é um segredo"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"Anyone who opens the page can read the key in its source, and use it from "
+"anywhere. On a public site, a key limits who can call the url, rather than "
+"hiding it, so combine it with the rest:"
+msgstr ""
+"Qualquer pessoa que abra a página pode ler a chave no código-fonte e usá-la "
+"de qualquer lugar. Em um site público, uma chave limita quem pode chamar a "
+"url, em vez de escondê-la, então combine-a com o restante:"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "give each site a key of its own, and turn it off if it is abused;"
+msgstr "dê a cada site sua própria chave, e desative-a se houver abuso;"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"list only your site's origins in allowedOrigins, which browsers enforce;"
+msgstr ""
+"liste apenas as origens do seu site em allowedOrigins, que os navegadores "
+"fazem cumprir;"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "give the LLMClient a budget, which caps what its prompts can cost."
+msgstr ""
+"dê um orçamento ao LLMClient, que limita quanto seus prompts podem custar."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid ""
+"For an internal tool, or a server-to-server integration, keep the key on "
+"your server, and call this url from there."
+msgstr ""
+"Para uma ferramenta interna, ou uma integração de servidor para servidor, "
+"mantenha a chave no seu servidor e chame esta url a partir dele."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "The Smarter Project"
+msgstr "The Smarter Project"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Build your own LLM applications"
+msgstr "Construa suas próprias aplicações LLM"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Prompt Engineer's Workbench"
+msgstr "Área de trabalho do engenheiro de prompts"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"Write the system prompt, chat with the LLM, and watch every request, tool "
+"call and response as it happens."
+msgstr ""
+"Escreva o prompt de sistema, converse com o LLM e acompanhe cada "
+"solicitação, chamada de ferramenta e resposta em tempo real."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Declarative manifests"
+msgstr "Manifestos declarativos"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"Every resource, from LLMClients to secrets, is a YAML manifest that you "
+"apply with the cli or the api."
+msgstr ""
+"Cada recurso, dos LLMClients aos segredos, é um manifesto YAML que você "
+"aplica com o cli ou a api."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Tools for the LLM"
+msgstr "Ferramentas para o LLM"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"Give an LLM your apis, databases and MCP servers, with plugins, extensions "
+"and MCP clients."
+msgstr ""
+"Dê a um LLM suas apis, bancos de dados e servidores MCP, com plugins, "
+"extensões e clientes MCP."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Your choice of LLM"
+msgstr "O LLM que você escolher"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Switch the LLM provider and model with one line of the manifest."
+msgstr "Troque o provedor e o modelo do LLM com uma linha do manifesto."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "One-command deploys"
+msgstr "Implantação com um comando"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"A deployed LLMClient gets its own host and TLS certificate, and can move to "
+"your own domain."
+msgstr ""
+"Um LLMClient implantado tem seu próprio host e certificado TLS, e pode "
+"passar para o seu próprio domínio."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Embed it anywhere"
+msgstr "Incorpore-o em qualquer lugar"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"Put the chat on any web page with Smarter Chat, the @smarter.sh/ui-chat "
+"React component."
+msgstr ""
+"Coloque o chat em qualquer página web com o Smarter Chat, o componente React "
+"@smarter.sh/ui-chat."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"Check prompts and responses, for example for personal data and prompt "
+"injection, before they reach the LLM or the user."
+msgstr ""
+"Verifique prompts e respostas, por exemplo em busca de dados pessoais e "
+"injeção de prompts, antes que cheguem ao LLM ou ao usuário."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Cli and SDKs"
+msgstr "Cli e SDKs"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"Script everything with the smarter cli, and the Python, Node.js and Go SDKs."
+msgstr ""
+"Automatize tudo com o cli do smarter, e os SDKs de Python, Node.js e Go."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Open source"
+msgstr "Código aberto"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Free, open source, and yours to run"
+msgstr "Livre, de código aberto, e seu para executar"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"The Smarter Project is open source software, licensed under the GNU Affero "
+"General Public License v3.0. Read the code, run it on your own Kubernetes "
+"cluster, and contribute on GitHub."
+msgstr ""
+"The Smarter Project é software de código aberto, licenciado sob a GNU Affero "
+"General Public License v3.0. Leia o código, execute-o no seu próprio cluster "
+"Kubernetes e contribua no GitHub."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "The platform: Django, Celery and the web console."
+msgstr "A plataforma: Django, Celery e o console web."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "Apply, describe and deploy manifests."
+msgstr "Aplique, descreva e implante manifestos."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "The chat React component, on npm as @smarter.sh/ui-chat."
+msgstr "O componente React do chat, no npm como @smarter.sh/ui-chat."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "The Python SDK. Node.js and Go SDKs too."
+msgstr "O SDK de Python. Também há SDKs de Node.js e Go."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid "For platform administrators"
+msgstr "Para administradores da plataforma"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"This page is meant for configuring a front end before it goes into "
+"production. Turn it off before you go live. It is served while the %"
+"(switch)s waffle switch is active. Turn the switch off, in the Django admin "
+"under Waffle, Switches, or with this command, and a browser's GET of these "
+"endpoints is answered 405 Method Not Allowed again. The api is unaffected."
+msgstr ""
+"Esta página serve para configurar um front end antes de ir para produção. "
+"Desative-a antes de entrar no ar. Ela é servida enquanto o waffle switch %"
+"(switch)s estiver ativo. Desative o switch, no admin do Django em Waffle, "
+"Switches, ou com este comando, e um GET do navegador nestes endpoints volta "
+"a receber 405 Method Not Allowed. A api não é afetada."
+
+#. Translators: the button that opens the dialog of links to the documentation.
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/App.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+msgid "Docs"
+msgstr "Documentação"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
+msgid ""
+"A browser that opens the LLMClient's url sees this page too, while a "
+"platform administrator has turned on the %(switch)s waffle switch. "
+"Otherwise, a browser's GET of the url is answered 405 Method Not Allowed, "
+"because it is an api. This tab is always here."
+msgstr ""
+"Um navegador que abre a url do LLMClient também vê esta página, enquanto um "
+"administrador da plataforma mantiver ativado o waffle switch %(switch)s. "
+"Caso contrário, um GET do navegador na url recebe 405 Method Not Allowed, "
+"porque ela é uma api. Esta aba está sempre aqui."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid ""
+"%(name)s is created, and attached. Every request to the LLMClient's url now "
+"needs it."
+msgstr ""
+"%(name)s foi criada e vinculada. Agora toda solicitação à url do LLMClient "
+"precisa dela."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "%(name)s is created."
+msgstr "%(name)s foi criada."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid ""
+"%(name)s is attached. Every request to the LLMClient's url now needs it."
+msgstr ""
+"%(name)s está vinculada. Agora toda solicitação à url do LLMClient precisa "
+"dela."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "The api key is detached. The LLMClient's url is public again."
+msgstr ""
+"A chave de API foi desvinculada. A url do LLMClient voltou a ser pública."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "The request failed: %(error)s"
+msgstr "A solicitação falhou: %(error)s"
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "Only an account admin can create api keys."
+msgstr "Somente um administrador da conta pode criar chaves de API."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "Only an admin of the LLMClient's account can create its api keys."
+msgstr ""
+"Somente um administrador da conta do LLMClient pode criar suas chaves de API."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "Give the api key a name, in snake_case, e.g. my_site_chat."
+msgstr "Dê um nome à chave de API, em snake_case, por exemplo my_site_chat."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "You already have an api key named %(name)s."
+msgstr "Você já tem uma chave de API chamada %(name)s."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "That api key was not found."
+msgstr "Essa chave de API não foi encontrada."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "This LLMClient was not found. Reload the page."
+msgstr "Este LLMClient não foi encontrado. Recarregue a página."
+
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/lib/messages.ts
+msgid "The request is not valid. Reload the page, and try again."
+msgstr "A solicitação não é válida. Recarregue a página e tente de novo."
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/App.tsx
 msgid "Pending deployment"
@@ -2661,10 +4284,6 @@ msgid ""
 msgstr ""
 "Indica se uma ou mais chaves de API ativas estão vinculadas a este llmclient"
 
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
-msgid "Deployed"
-msgstr "Implantado"
-
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Can Delete"
 msgstr "Pode excluir"
@@ -2705,10 +4324,6 @@ msgstr ""
 "llmclient."
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-msgid "Plugins"
-msgstr "Plugins"
-
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Comma-separated list of plugin names attached to this llmclient."
 msgstr ""
 "Lista, separada por vírgulas, dos nomes dos plugins vinculados a este "
@@ -2733,10 +4348,6 @@ msgid ""
 msgstr ""
 "Lista, separada por vírgulas, dos guardrails que verificam os prompts e as "
 "respostas deste llmclient."
-
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-msgid "API Keys"
-msgstr "Chaves de API"
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "RFC1034 Name"
@@ -2829,10 +4440,6 @@ msgstr "Endpoint somente POST para obter a configuração do llmclient."
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "URL Chatapp"
 msgstr "URL do app de chat"
-
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
-msgid "Model"
-msgstr "Modelo"
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Temperature"
@@ -4276,10 +5883,6 @@ msgid "Website"
 msgstr "Site"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx
-msgid "Docs"
-msgstr "Documentação"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx
 msgid "Terms"
 msgstr "Termos"
 
@@ -4290,10 +5893,6 @@ msgstr "Privacidade"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx
 msgid "Provider links"
 msgstr "Links do provedor"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderSelector/Component.tsx
-msgid "LLM provider"
-msgstr "Provedor de LLM"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughRequest/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/TemplateSelector/Component.tsx
 msgid "Prompt template"
@@ -4400,187 +5999,13 @@ msgstr "Nenhum provedor disponível"
 msgid "LLM Provider API Passthrough"
 msgstr "Acesso direto à API de provedores de LLM"
 
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
 msgid "Server Logs"
 msgstr "Logs do servidor"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 msgid "Send a request to see its server logs here."
 msgstr "Envie uma requisição para ver aqui os logs do servidor dela."
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Top"
-msgstr "Topo"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Bottom, and follow new records"
-msgstr "Final, e acompanhar os novos registros"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Up a line"
-msgstr "Subir uma linha"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Down a line"
-msgstr "Descer uma linha"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Up a page"
-msgstr "Subir uma página"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Down a page"
-msgstr "Descer uma página"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Scroll left"
-msgstr "Rolar para a esquerda"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Scroll right"
-msgstr "Rolar para a direita"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Start of the lines"
-msgstr "Início das linhas"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "End of the longest line"
-msgstr "Fim da linha mais longa"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Wrap long lines, or scroll them"
-msgstr "Quebrar as linhas longas, ou rolá-las"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Follow new records, or stop"
-msgstr "Acompanhar os novos registros, ou parar"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Filter the lines"
-msgstr "Filtrar as linhas"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Copy the lines"
-msgstr "Copiar as linhas"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Full screen, or not"
-msgstr "Tela cheia, ou não"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Show these shortcuts, or hide them"
-msgstr "Mostrar estes atalhos, ou ocultá-los"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Leave full screen, hide the shortcuts, or clear the filter"
-msgstr "Sair da tela cheia, ocultar os atalhos, ou limpar o filtro"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Connecting to the server log stream..."
-msgstr "Conectando ao fluxo de logs do servidor..."
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "%(shown)s of %(total)s lines match."
-msgstr "%(shown)s de %(total)s linhas correspondem."
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Streaming server logs..."
-msgstr "Transmitindo os logs do servidor..."
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Streaming server logs... There are none yet."
-msgstr "Transmitindo os logs do servidor... Ainda não há nenhum."
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Collapse the JSON"
-msgstr "Recolher o JSON"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Expand the JSON"
-msgstr "Expandir o JSON"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "(%(count)s line)"
-msgid_plural "(%(count)s lines)"
-msgstr[0] "(%(count)s linha)"
-msgstr[1] "(%(count)s linhas)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Filter the server logs"
-msgstr "Filtrar os logs do servidor"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Filter (/)"
-msgstr "Filtrar (/)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Wrap lines"
-msgstr "Quebrar linhas"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Scroll long lines (w)"
-msgstr "Rolar as linhas longas (w)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Wrap long lines (w)"
-msgstr "Quebrar as linhas longas (w)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Expand JSON"
-msgstr "Expandir JSON"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Collapse all the JSON"
-msgstr "Recolher todo o JSON"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Expand all the JSON"
-msgstr "Expandir todo o JSON"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Follow"
-msgstr "Acompanhar"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Stop following new records (s)"
-msgstr "Parar de acompanhar os novos registros (s)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Follow new records (s)"
-msgstr "Acompanhar os novos registros (s)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Copied"
-msgstr "Copiado"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Copy the lines (c)"
-msgstr "Copiar as linhas (c)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Full screen"
-msgstr "Tela cheia"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Leave full screen (F, Esc)"
-msgstr "Sair da tela cheia (F, Esc)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Full screen (F)"
-msgstr "Tela cheia (F)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Keyboard shortcuts"
-msgstr "Atalhos de teclado"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Keyboard shortcuts (?)"
-msgstr "Atalhos de teclado (?)"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx
-msgid "Server logs"
-msgstr "Logs do servidor"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 msgid "File New"
@@ -4593,10 +6018,6 @@ msgstr "Salvar arquivo"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
 msgid "Format JSON"
 msgstr "Formatar JSON"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/lib/logStream.ts
-msgid "The log stream disconnected. Reconnecting..."
-msgstr "O fluxo de logs foi desconectado. Reconectando..."
 
 #. Translators: used in react/packages/smarter-provider-list/src/App.tsx
 msgid "Your Providers"
@@ -4902,7 +6323,8 @@ msgstr "Tempo limite"
 msgid "%(timeout)s seconds"
 msgstr "%(timeout)s segundos"
 
-#. Translators: used in react/packages/smarter-proxy-list/src/components/CardView/Component.tsx
+#. Translators: the tab of the Console that edits the LLMClient's YAML manifest.
+#. Translators: used in react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
 msgid "Manifest"
 msgstr "Manifesto"
 
@@ -5185,6 +6607,180 @@ msgstr ""
 #. Translators: used in react/packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 msgid "Delete: Delete this secret resource"
 msgstr "Excluir: excluir este segredo"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Top"
+msgstr "Topo"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Bottom, and follow new records"
+msgstr "Final, e acompanhar os novos registros"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Up a line"
+msgstr "Subir uma linha"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Down a line"
+msgstr "Descer uma linha"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Up a page"
+msgstr "Subir uma página"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Down a page"
+msgstr "Descer uma página"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Scroll left"
+msgstr "Rolar para a esquerda"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Scroll right"
+msgstr "Rolar para a direita"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Start of the lines"
+msgstr "Início das linhas"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "End of the longest line"
+msgstr "Fim da linha mais longa"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Wrap long lines, or scroll them"
+msgstr "Quebrar as linhas longas, ou rolá-las"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Follow new records, or stop"
+msgstr "Acompanhar os novos registros, ou parar"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Filter the lines"
+msgstr "Filtrar as linhas"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Copy the lines"
+msgstr "Copiar as linhas"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Full screen, or not"
+msgstr "Tela cheia, ou não"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Show these shortcuts, or hide them"
+msgstr "Mostrar estes atalhos, ou ocultá-los"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Leave full screen, hide the shortcuts, or clear the filter"
+msgstr "Sair da tela cheia, ocultar os atalhos, ou limpar o filtro"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Connecting to the server log stream..."
+msgstr "Conectando ao fluxo de logs do servidor..."
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "%(shown)s of %(total)s lines match."
+msgstr "%(shown)s de %(total)s linhas correspondem."
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Streaming server logs..."
+msgstr "Transmitindo os logs do servidor..."
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Streaming server logs... There are none yet."
+msgstr "Transmitindo os logs do servidor... Ainda não há nenhum."
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Collapse the JSON"
+msgstr "Recolher o JSON"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Expand the JSON"
+msgstr "Expandir o JSON"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "(%(count)s line)"
+msgid_plural "(%(count)s lines)"
+msgstr[0] "(%(count)s linha)"
+msgstr[1] "(%(count)s linhas)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Filter the server logs"
+msgstr "Filtrar os logs do servidor"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Filter (/)"
+msgstr "Filtrar (/)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Wrap lines"
+msgstr "Quebrar linhas"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Scroll long lines (w)"
+msgstr "Rolar as linhas longas (w)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Wrap long lines (w)"
+msgstr "Quebrar as linhas longas (w)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Expand JSON"
+msgstr "Expandir JSON"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Collapse all the JSON"
+msgstr "Recolher todo o JSON"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Expand all the JSON"
+msgstr "Expandir todo o JSON"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Follow"
+msgstr "Acompanhar"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Stop following new records (s)"
+msgstr "Parar de acompanhar os novos registros (s)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Follow new records (s)"
+msgstr "Acompanhar os novos registros (s)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Copy the lines (c)"
+msgstr "Copiar as linhas (c)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Full screen"
+msgstr "Tela cheia"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Leave full screen (F, Esc)"
+msgstr "Sair da tela cheia (F, Esc)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Full screen (F)"
+msgstr "Tela cheia (F)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Keyboard shortcuts"
+msgstr "Atalhos de teclado"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Keyboard shortcuts (?)"
+msgstr "Atalhos de teclado (?)"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Server logs"
+msgstr "Logs do servidor"
+
+#. Translators: used in react/packages/smarter-serverlogs/src/lib/logStream.ts
+msgid "The log stream disconnected. Reconnecting..."
+msgstr "O fluxo de logs foi desconectado. Reconectando..."
 
 #. Translators: used in react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
 msgid "Terminal"
@@ -5691,6 +7287,135 @@ msgstr "Excluindo"
 #. Translators: used in react/packages/smarter-vectorstore-list/src/lib/format.tsx
 msgid "Its database is being destroyed."
 msgstr "O banco de dados dele está sendo destruído."
+
+#. Translators: used in react/packages/smarter-workbench/src/App.tsx
+msgid "Technical references for prompt engineers and software engineers"
+msgstr ""
+"Referências técnicas para engenheiros de prompts e engenheiros de software"
+
+#. Translators: used in react/packages/smarter-workbench/src/App.tsx
+msgid "Hide the Console"
+msgstr "Ocultar o Console"
+
+#. Translators: used in react/packages/smarter-workbench/src/App.tsx
+msgid "Show the Console"
+msgstr "Mostrar o Console"
+
+#. Translators: the tab of the Console about the LLMClient's deployment: its url, and how to use it.
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "Deployment"
+msgstr "Implantação"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "Tool Calls"
+msgstr "Chamadas de ferramentas"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "No tool calls in this chat session yet."
+msgstr "Ainda não há chamadas de ferramentas nesta sessão de chat."
+
+#. Translators: the tab of the Console that displays the chat's configuration.
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "Config"
+msgstr "Configuração"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "No config in this chat session yet."
+msgstr "Ainda não há configuração nesta sessão de chat."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "Console"
+msgstr "Console"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+msgid "Console output"
+msgstr "Saída do console"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/TabError.tsx
+msgid "This tab couldn't load. Reload the page to try again."
+msgstr ""
+"Esta aba não pôde ser carregada. Recarregue a página para tentar de novo."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+msgid ""
+"Technical references for building LLMClients, and the applications that host "
+"them."
+msgstr ""
+"Referências técnicas para criar LLMClients e as aplicações que os hospedam."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+msgid "Audience"
+msgstr "Público"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid ""
+"The chat workbench: sandbox and production modes, the Console, and the "
+"server logs."
+msgstr ""
+"A área de trabalho do chat: os modos sandbox e de produção, o Console e os "
+"logs do servidor."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "The LLMClient class, which is the main interface to the Smarter API."
+msgstr "A classe LLMClient, a principal interface da API do Smarter."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "How to leverage LLM tool calling with Smarter."
+msgstr "Como aproveitar as chamadas de ferramentas de LLMs com o Smarter."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "How to create and use guardrails with the Smarter API."
+msgstr "Como criar e usar guardrails com a API do Smarter."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "How to create and use budgets with the Smarter API."
+msgstr "Como criar e usar orçamentos com a API do Smarter."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid ""
+"The npm package of this chat component, its props, and how to install it."
+msgstr "O pacote npm deste componente de chat, suas props e como instalá-lo."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "The REST api behind the chat: its configuration and prompt endpoints."
+msgstr ""
+"A api REST por trás do chat: seus endpoints de configuração e de prompts."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "How to host a Smarter chatbot in your own React application."
+msgstr "Como hospedar um chatbot do Smarter na sua própria aplicação React."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid ""
+"What deploying an LLMClient creates in Kubernetes, and how to operate it in "
+"production."
+msgstr ""
+"O que a implantação de um LLMClient cria no Kubernetes, e como operá-lo em "
+"produção."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "Prompt Engineer"
+msgstr "Engenheiro de prompts"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "Building and testing LLMClients in the sandbox."
+msgstr "Criar e testar LLMClients no sandbox."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "Software Engineer"
+msgstr "Engenheiro de software"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/DocsDialog/data.ts
+msgid "Hosting an LLMClient in your own application."
+msgstr "Hospedar um LLMClient na sua própria aplicação."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/ErrorBoundary/Component.tsx
+msgid "Something went wrong."
+msgstr "Algo deu errado."
+
+#. Translators: used in react/packages/smarter-workbench/src/lib/layout.ts
+msgid "Resize the chat and the Console"
+msgstr "Redimensionar o chat e o Console"
 
 #. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/sign-in.js
 msgid "The password is required"

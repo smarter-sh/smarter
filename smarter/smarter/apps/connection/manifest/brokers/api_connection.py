@@ -1001,6 +1001,22 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             (SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(connection=instance)),
         ]
 
+    @classmethod
+    def references(cls, instance: ApiConnection) -> SAMDependents:
+        """Return the resources that an ApiConnection uses: the Secrets of its api key and its proxy's password.
+
+        :param instance: The ApiConnection.
+        :type instance: ApiConnection
+        :return: Its Secrets.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.secret.models import Secret
+
+        secret_ids = [instance.api_key_id, instance.proxy_password_id]  # type: ignore[attr-defined]
+        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk__in=[pk for pk in secret_ids if pk]))]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the ApiPlugins and Vectorstores that use this ApiConnection.

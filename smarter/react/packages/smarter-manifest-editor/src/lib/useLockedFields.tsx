@@ -12,7 +12,7 @@ import { useEffect } from "react";
 import type { Monaco } from "@monaco-editor/react";
 import type * as monaco from "monaco-editor";
 
-import { yamlKeys } from "@/lib/validation";
+import { yamlKeys } from "./validation";
 import { gettext, interpolate } from "@smarter/common";
 
 /** The paths of the locked fields. */
