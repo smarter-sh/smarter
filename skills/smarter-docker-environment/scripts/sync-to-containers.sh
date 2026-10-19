@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copy the host's changed Python, YAML, JSON and template files under
+# Copy the host's changed Python, YAML, JSON, template and XML files under
 # smarter/smarter into the Smarter containers, then restart them and wait
 # until the dev server answers.
 #
@@ -41,7 +41,7 @@ for container in "${CONTAINERS[@]}"; do
       changed+=("$rel")
     fi
   done < <(for p in "${SUBPATHS[@]}"; do
-    find "$HOST_ROOT/$p" -type f \( -name '*.py' -o -name '*.yaml' -o -name '*.json' -o -name '*.html' -o -name '*.txt' \) \
+    find "$HOST_ROOT/$p" -type f \( -name '*.py' -o -name '*.yaml' -o -name '*.json' -o -name '*.html' -o -name '*.txt' -o -name '*.xml' \) \
       -not -path '*/__pycache__/*' -not -path '*/node_modules/*'
   done)
 

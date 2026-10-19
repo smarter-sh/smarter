@@ -183,6 +183,11 @@ class LLMClientHelper(SmarterRequestMixin):
                             self.user_profile,
                         )
 
+            if not isinstance(self._llmclient, LLMClient) and self.is_llmclient_named_url:
+                llmclient = self.llmclient_from_host_label()
+                if isinstance(llmclient, LLMClient):
+                    self.llmclient = llmclient
+
             if not isinstance(self._llmclient, LLMClient):
                 llmclient_helper_logger.warning(
                     "%s.__init__() did not find a LLMClient for url=%s, name=%s, llmclient_id=%s, user_profile=%s",
@@ -287,7 +292,16 @@ class LLMClientHelper(SmarterRequestMixin):
             return self._llmclient_id
 
         if self.llmclient_name and self.user_profile:
-            self.llmclient = LLMClient.get_cached_object(name=self.llmclient_name, user_profile=self.user_profile)
+            try:
+                self.llmclient = LLMClient.get_cached_object(name=self.llmclient_name, user_profile=self.user_profile)
+            except LLMClient.DoesNotExist:
+                llmclient_helper_logger.debug(
+                    "%s.llmclient_id() found no LLMClient with name=%s and user_profile=%s",
+                    self.formatted_class_name,
+                    self.llmclient_name,
+                    self.user_profile,
+                )
+                return None
             llmclient_helper_logger.debug(
                 "llmclient_id() initialized self.llmclient_id=%s from name=%s and account=%s",
                 self._llmclient_id,
@@ -297,6 +311,36 @@ class LLMClientHelper(SmarterRequestMixin):
             return self._llmclient_id
 
         return self._llmclient_id
+
+    def llmclient_from_host_label(self) -> Optional[LLMClient]:
+        """
+        Returns the LLMClient of the url's account whose rfc1034 compliant name is the url's first label.
+
+        A named url's first label is the LLMClient's :attr:`LLMClient.rfc1034_compliant_name`, e.g.
+        ``stackademy-sql`` for the account admin's ``stackademy_sql``, or ``example-username`` for
+        ``example`` owned by ``username``. The label can't be parsed back into a name and a username,
+        because both can contain hyphens, so it is matched against the account's LLMClients instead.
+
+        :returns: The LLMClient, or ``None`` if the url is not a named url or no LLMClient matches.
+        :rtype: Optional[LLMClient]
+        """
+        netloc = self.parsed_url.netloc if self.parsed_url is not None else ""
+        label = netloc.split(".")[0].lower() if netloc else ""
+        account_number = account_number_from_url(url=self.url)
+        if not label or not account_number:
+            return None
+        for llmclient in LLMClient.objects.filter(user_profile__account__account_number=account_number).select_related(
+            "user_profile__user"
+        ):
+            if llmclient.rfc1034_compliant_name == label:
+                llmclient_helper_logger.debug(
+                    "%s.llmclient_from_host_label() resolved %s from host label %s",
+                    self.formatted_class_name,
+                    llmclient,
+                    label,
+                )
+                return llmclient
+        return None
 
     @llmclient_id.setter
     def llmclient_id(self, llmclient_id: int):
