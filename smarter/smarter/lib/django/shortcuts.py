@@ -1,5 +1,7 @@
 """Extensions to Django's built-in shortcuts."""
 
+from typing import Optional
+
 from django.urls import reverse as django_reverse
 
 from smarter.lib import logging
@@ -7,7 +9,7 @@ from smarter.lib import logging
 logger = logging.getSmarterLogger(__name__)
 
 
-def reverse(*args, **kwargs) -> str:
+def reverse(*args, urlconf: Optional[str] = None, **kwargs) -> str:
     """
     Converts a series of args into a URL path.
 
@@ -31,26 +33,33 @@ def reverse(*args, **kwargs) -> str:
     This function will then split the argument into its components and pass
     them to Django's `reverse` function in the correct format.
 
+    Pass ``urlconf`` to reverse against a particular URLconf rather than the
+    one that django-hosts activated for the current request. Code that builds
+    web console links on every request, such as a context processor, passes
+    ``settings.ROOT_URLCONF``, because a deployed LLMClient's host is served by
+    :mod:`smarter.urls.llmclients`, which has none of the console's names.
+
     param args: A series of strings representing namespaces and the view name.
+    param urlconf: The dotted path of the URLconf to reverse against. Defaults to the active one.
     param kwargs: Any keyword arguments to pass to Django's `reverse` function. If any keyword arguments are provided, this function will assume that the caller is not using the expected pattern and will pass all arguments directly to Django's `reverse` function without modification.
     return: The URL path corresponding to the given view name and namespaces.
     rtype: str
     """
     if kwargs:
         # not our pattern, so just pass through to Django's reverse function
-        return django_reverse(*args, **kwargs)
+        return django_reverse(*args, urlconf=urlconf, **kwargs)
 
     path_parts = []
     for arg in args:
         if not isinstance(arg, str):
             # not our pattern, so just pass through to Django's reverse function
-            return django_reverse(*args, **kwargs)
+            return django_reverse(*args, urlconf=urlconf, **kwargs)
 
         # unpack namespaces and view name from the argument, which is expected to be in the format "namespace1:namespace2:view_name"
         path_parts.append(arg.split(":"))
 
     reverse_path = ":".join([item for sublist in path_parts for item in sublist])
-    retval = django_reverse(reverse_path)
+    retval = django_reverse(reverse_path, urlconf=urlconf)
     logger.debug(
         "%s.reverse() view name %s resolved to path %s",
         logging.formatted_text(__name__),
