@@ -6,11 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
-## [0.33.12-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.33.12-alpha.1...v0.33.12-alpha.2) (2026-10-19)
+## [0.33.12](https://github.com/smarter-sh/smarter/compare/v0.33.11...v0.33.12) (2026-10-19)
 
 ### Bug Fixes
 
 * **llmclient:** guide first deployments in a workbench Deployment tab ([e36c81c](https://github.com/smarter-sh/smarter/commit/e36c81cbd61f0efe00433bd928f45fb714b423fb))
+* **llmclient:** let anonymous clients prompt a deployed llmclient ([dd6f9c8](https://github.com/smarter-sh/smarter/commit/dd6f9c8c03ae18afda50ec058cc086101a8f765f))
 
 ## [0.33.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.11...v0.33.12-alpha.1) (2026-10-19)
 
