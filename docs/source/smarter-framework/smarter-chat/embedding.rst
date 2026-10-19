@@ -304,6 +304,11 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
      - The url of the web console's editor of the LLMClient's manifest, for the Console's Manifest
        tab, in an iframe. It must be of the page's own origin, so it is only useful to pages that
        the web console serves itself, such as the workbench. Any other url is ignored.
+   * - ``deploymentUrl``
+     - ``null``
+     - The url of the web console's page about the LLMClient's deployment, for the Console's
+       Deployment tab, in an iframe. Like ``manifestEditorUrl``, it must be of the page's own origin,
+       and any other url is ignored.
 
 
 Recipes

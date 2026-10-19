@@ -153,3 +153,96 @@ Everything else on the page is Keen and Bootstrap, from the global bundles that 
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+/* the status: "Deployed", or "Not deployed yet" */
+.smarter-status-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: calc(1.6rem + 2.5vw);
+  letter-spacing: 0.04em;
+}
+.smarter-status-title i {
+  font-size: 0.9em;
+}
+@media (min-width: 1200px) {
+  .smarter-status-title {
+    font-size: 4rem;
+  }
+}
+
+/* the LLMClient's url, with its copy button, on the dark hero */
+.smarter-url {
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid #4a4a5a;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+.smarter-url code {
+  color: #ffffff;
+  background: none !important;
+  font-size: 1.05rem;
+  padding: 0;
+}
+.smarter-hero code {
+  color: #ffd29a;
+  background: none;
+  padding: 0;
+}
+
+/* the code beside a notice's text */
+@media (min-width: 992px) {
+  .smarter-notice-code {
+    flex: 0 0 26rem;
+  }
+}
+
+/* the integrations' icons: brands without a Keen icon get their initial */
+.smarter-integration-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+.smarter-integration-icon i {
+  color: #ffffff;
+}
+.smarter-integration-wordpress {
+  background-color: #21759b;
+}
+.smarter-integration-drupal {
+  background-color: #0678be;
+}
+.smarter-integration-shopify {
+  background-color: #5e8e3e;
+}
+.smarter-integration-react {
+  background-color: #149eca;
+}
+.smarter-integration-html {
+  background-color: #e34c26;
+}
+
+/* the workbench's "Deployment" tab frames the page: no background or margins of its own. */
+body.app-default:has(.smarter-page-frame) {
+  background: transparent;
+}
+
+/* the numbered steps of securing the url */
+.smarter-step {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 2.25rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 140, 0, 0.12);
+  color: #ff8c00;
+  font-weight: 800;
+}

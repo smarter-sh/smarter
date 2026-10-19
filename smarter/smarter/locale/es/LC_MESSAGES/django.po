@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 23:01+0000\n"
+"POT-Creation-Date: 2026-10-19 10:56+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -93,6 +93,68 @@ msgstr "Te avisaremos cuando se acerque la fecha de lanzamiento."
 msgid "%(email)s is already in our contact list. We'll keep you updated."
 msgstr ""
 "%(email)s ya está en nuestra lista de contactos. Te mantendremos al tanto."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+msgid "Unknown action."
+msgstr "Acción desconocida."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+#: smarter/templates/llmclient/api_keys.html
+msgid ""
+"Only the LLMClient's owner, or an account admin, can change its api key."
+msgstr ""
+"Solo el propietario del LLMClient, o un administrador de la cuenta, puede "
+"cambiar su clave de API."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+msgid "The api key is detached. The LLMClient's url is public again."
+msgstr ""
+"La clave de API está desvinculada. La url del LLMClient vuelve a ser pública."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+msgid "That api key was not found."
+msgstr "No se encontró esa clave de API."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+#, python-format
+msgid ""
+"%(name)s is attached. Every request to the LLMClient's url now needs it."
+msgstr ""
+"%(name)s está vinculada. Ahora cada solicitud a la url del LLMClient la "
+"necesita."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+msgid "Only an account admin can create api keys."
+msgstr "Solo un administrador de la cuenta puede crear claves de API."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+msgid "Give the api key a name, in snake_case, e.g. my_site_chat."
+msgstr "Ponle un nombre a la clave de API, en snake_case, p. ej. my_site_chat."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+msgid "Only an admin of the LLMClient's account can create its api keys."
+msgstr ""
+"Solo un administrador de la cuenta del LLMClient puede crear sus claves de "
+"API."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+#, python-format
+msgid "You already have an api key named %(name)s."
+msgstr "Ya tienes una clave de API llamada %(name)s."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+#, python-format
+msgid "%(name)s is created."
+msgstr "%(name)s está creada."
+
+#: smarter/apps/prompt/views/detailviews/prompt_deployment_view.py
+#, python-format
+msgid ""
+"%(name)s is created, and attached. Every request to the LLMClient's url now "
+"needs it."
+msgstr ""
+"%(name)s está creada y vinculada. Ahora cada solicitud a la url del "
+"LLMClient la necesita."
 
 #: smarter/lib/social_core/backends/multitenant.py
 msgid "Your subscription is not active. Please check your payment status."
@@ -431,6 +493,8 @@ msgstr "Configuración de la cuenta"
 #: smarter/templates/account/dashboard/api-keys.html
 #: smarter/templates/account/dashboard/base.html
 #: smarter/templates/dashboard/sidebar.html
+#: smarter/templates/llmclient/api_keys.html
+#: smarter/templates/llmclient/deployment.html
 msgid "API Keys"
 msgstr "Claves de API"
 
@@ -526,6 +590,7 @@ msgid "Learn"
 msgstr "Aprender"
 
 #: smarter/templates/account/dashboard/api-keys.html
+#: smarter/templates/llmclient/api_keys.html
 msgid "Description"
 msgstr "Descripción"
 
@@ -543,6 +608,7 @@ msgstr "Último uso"
 
 #: smarter/templates/account/dashboard/api-keys.html
 #: smarter/templates/account/dashboard/users.html
+#: smarter/templates/llmclient/api_keys.html
 msgid "Never"
 msgstr "Nunca"
 
@@ -1359,6 +1425,7 @@ msgid "Documentation"
 msgstr "Documentación"
 
 #: smarter/templates/cms/base/footer.html
+#: smarter/templates/llmclient/endpoints.html
 msgid "The Smarter Project"
 msgstr "The Smarter Project"
 
@@ -1491,12 +1558,12 @@ msgid "Dashboard"
 msgstr "Panel"
 
 #: smarter/templates/dashboard/sidebar.html
-msgid "Apply Manifest"
-msgstr "Aplicar manifiesto"
-
-#: smarter/templates/dashboard/sidebar.html
 msgid "Prompt Passthrough"
 msgstr "Prompt directo"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Apply Manifest"
+msgstr "Aplicar manifiesto"
 
 #: smarter/templates/dashboard/sidebar.html
 msgid "Terminal"
@@ -1579,10 +1646,12 @@ msgid "Governance"
 msgstr "Gobernanza"
 
 #: smarter/templates/dashboard/sidebar.html
+#: smarter/templates/llmclient/deployment.html
 msgid "Budgets"
 msgstr "Presupuestos"
 
 #: smarter/templates/dashboard/sidebar.html
+#: smarter/templates/llmclient/endpoints.html
 msgid "Guardrails"
 msgstr "Guardrails"
 
@@ -1904,8 +1973,891 @@ msgstr "Esquemas JSON de SAM"
 msgid "About the contract"
 msgstr "Acerca del contrato"
 
+#: smarter/templates/llmclient/api_key_usage.html
+msgid "Give it to Smarter Chat"
+msgstr "Dásela a Smarter Chat"
+
+#: smarter/templates/llmclient/api_key_usage.html
+msgid ""
+"Smarter Chat sends the key with every request, as <code>Authorization: Token "
+"&lt;key&gt;</code>. The WordPress, Drupal and Shopify integrations have an "
+"api key setting. In html, add <code>data-api-key</code>:"
+msgstr ""
+"Smarter Chat envía la clave con cada solicitud, como <code>Authorization: "
+"Token &lt;key&gt;</code>. Las integraciones de WordPress, Drupal y Shopify "
+"tienen un ajuste para la clave de API. En html, añade <code>data-api-key</"
+"code>:"
+
+#: smarter/templates/llmclient/api_key_usage.html
+msgid ""
+"In React, pass apiKey, from your build's environment rather than from your "
+"source code:"
+msgstr ""
+"En React, pasa apiKey, desde el entorno de tu build y no desde tu código "
+"fuente:"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Choose its api key"
+msgstr "Elige su clave de API"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Copy its secret now"
+msgstr "Copia su secreto ahora"
+
+#: smarter/templates/llmclient/api_keys.html
+#, python-format
+msgid ""
+"This is the secret of %(name)s. Smarter keeps only a hash of it, and can't "
+"show it again: store it somewhere safe, such as a password manager or your "
+"hosting's secrets. It is what your front end sends, in place of &lt;YOUR-API-"
+"KEY&gt;."
+msgstr ""
+"Este es el secreto de %(name)s. Smarter solo guarda un hash de él y no puede "
+"mostrarlo de nuevo: guárdalo en un lugar seguro, como un gestor de "
+"contraseñas o los secretos de tu hosting. Es lo que envía tu front end, en "
+"lugar de &lt;YOUR-API-KEY&gt;."
+
+#: smarter/templates/llmclient/api_keys.html
+#, python-format
+msgid "Every request to the url needs <strong>%(name)s</strong>."
+msgstr "Cada solicitud a la url necesita <strong>%(name)s</strong>."
+
+#: smarter/templates/llmclient/api_keys.html
+#, python-format
+msgid ""
+"<strong>%(name)s</strong> is attached, but turned off, so the url is public. "
+"Turn it on in API Keys, or attach another key."
+msgstr ""
+"<strong>%(name)s</strong> está vinculada, pero desactivada, así que la url "
+"es pública. Actívala en Claves de API, o vincula otra clave."
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "No api key is attached: the url is public."
+msgstr "No hay ninguna clave de API vinculada: la url es pública."
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Detach"
+msgstr "Desvincular"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Your account's api keys"
+msgstr "Las claves de API de tu cuenta"
+
+#: smarter/templates/llmclient/api_keys.html
+#: smarter/templates/llmclient/deployment.html
+msgid "Name"
+msgstr "Nombre"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Owner"
+msgstr "Propietario"
+
+#: smarter/templates/llmclient/api_keys.html
+#: smarter/templates/llmclient/deployment.html
+msgid "Status"
+msgstr "Estado"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Last used"
+msgstr "Último uso"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "On"
+msgstr "Activada"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Off"
+msgstr "Desactivada"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Attached"
+msgstr "Vinculada"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Attach"
+msgstr "Vincular"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "There are no api keys that you can manage yet."
+msgstr "Todavía no hay claves de API que puedas gestionar."
+
+#: smarter/templates/llmclient/api_keys.html
+#: smarter/templates/llmclient/deployment.html
+msgid "Create an api key"
+msgstr "Crea una clave de API"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "snake_case: the name that the manifest's spec.apiKey uses."
+msgstr "snake_case: el nombre que usa spec.apiKey en el manifiesto."
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "The chat on www.example.com"
+msgstr "El chat en www.example.com"
+
+#: smarter/templates/llmclient/api_keys.html
+#: smarter/templates/llmclient/deployment.html
+msgid "Attach it to this LLMClient"
+msgstr "Vincúlala a este LLMClient"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid "Create the api key"
+msgstr "Crear la clave de API"
+
+#: smarter/templates/llmclient/api_keys.html
+msgid ""
+"The key is yours. Its secret is shown once, right after you create it. The "
+"web console's API Keys page lists your keys, and turns a key off without "
+"deleting it."
+msgstr ""
+"La clave es tuya. Su secreto se muestra una sola vez, justo después de "
+"crearla. La página Claves de API de la consola web lista tus claves, y "
+"desactiva una clave sin eliminarla."
+
+#: smarter/templates/llmclient/api_keys.html
+msgid ""
+"Only an account admin can create api keys. Ask one to create a key for you, "
+"then attach it here, or ask them to run:"
+msgstr ""
+"Solo un administrador de la cuenta puede crear claves de API. Pídele a uno "
+"que cree una clave para ti y luego vincúlala aquí, o pídele que ejecute:"
+
+#: smarter/templates/llmclient/deployment.html
+#: smarter/templates/llmclient/endpoints.html
+#: smarter/templates/llmclient/terminal.html
+msgid "Copied"
+msgstr "Copiado"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Live"
+msgstr "En línea"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Not deployed"
+msgstr "No implementado"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Deployed"
+msgstr "Implementado"
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"%(app_name)s is live. Its system prompt, its LLM and its tools now answer at "
+"its own url:"
+msgstr ""
+"%(app_name)s está en línea. Su prompt de sistema, su LLM y sus herramientas "
+"ahora responden en su propia url:"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Not deployed yet"
+msgstr "Aún no implementado"
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"%(app_name)s works here, in the workbench, but nobody else can reach it yet. "
+"Deploy it, and it gets its own url, with its own TLS certificate:"
+msgstr ""
+"%(app_name)s funciona aquí, en el área de trabajo, pero nadie más puede "
+"acceder a él todavía. Impleméntalo y tendrá su propia url, con su propio "
+"certificado TLS:"
+
+#: smarter/templates/llmclient/deployment.html
+#: smarter/templates/llmclient/endpoints.html
+#: smarter/templates/llmclient/terminal.html
+msgid "Copy"
+msgstr "Copiar"
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"This url is an api, not a web page. It is the backend of Smarter Chat, the "
+"chat window of the workbench, which is also the <code>@smarter.sh/ui-chat</"
+"code> npm package. Put Smarter Chat on a web page, point it at this url, and "
+"your visitors are talking to %(app_name)s."
+msgstr ""
+"Esta url es una api, no una página web. Es el backend de Smarter Chat, la "
+"ventana de chat del área de trabajo, que también es el paquete npm "
+"<code>@smarter.sh/ui-chat</code>. Pon Smarter Chat en una página web, "
+"apúntalo a esta url, y tus visitantes estarán hablando con %(app_name)s."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Deploy it with the smarter cli:"
+msgstr "Impleméntalo con el cli de smarter:"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Smarter then creates its host and its TLS certificate, which can take a few "
+"minutes. Reopen this tab afterwards. Until then, here is what you'll be able "
+"to do with it."
+msgstr ""
+"Smarter crea entonces su host y su certificado TLS, lo que puede tardar unos "
+"minutos. Vuelve a abrir esta pestaña después. Mientras tanto, esto es lo que "
+"podrás hacer con él."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Back to the workbench"
+msgstr "Volver al área de trabajo"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Where to go from here?"
+msgstr "¿Y ahora qué?"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "How this url works"
+msgstr "Cómo funciona esta url"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "This LLMClient"
+msgstr "Este LLMClient"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "LLM provider"
+msgstr "Proveedor de LLM"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Model"
+msgstr "Modelo"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Version"
+msgstr "Versión"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Access"
+msgstr "Acceso"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Api key required"
+msgstr "Requiere clave de API"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Public"
+msgstr "Pública"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Every request needs one of this LLMClient's api keys. A key that is in a web "
+"page is public: give each site a key of its own, and revoke it if it is "
+"abused."
+msgstr ""
+"Cada solicitud necesita una de las claves de API de este LLMClient. Una "
+"clave que está en una página web es pública: da a cada sitio su propia "
+"clave, y revócala si se abusa de ella."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Anyone who has this url can chat with it, and every prompt is charged to its "
+"owner. Attach an api key to require one, or give it a budget."
+msgstr ""
+"Cualquiera que tenga esta url puede chatear con él, y cada prompt se cobra a "
+"su propietario. Vincula una clave de API para exigirla, o asígnale un "
+"presupuesto."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Need to secure this url?"
+msgstr "¿Necesitas proteger esta url?"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Your next step"
+msgstr "Tu siguiente paso"
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"Put %(app_name)s in front of people. Smarter Chat works on any web site, and "
+"these integrations are ready to use: pick the one that matches yours. Each "
+"of them needs only this LLMClient's url."
+msgstr ""
+"Pon %(app_name)s frente a la gente. Smarter Chat funciona en cualquier sitio "
+"web, y estas integraciones están listas para usar: elige la que corresponda "
+"a tu sitio. Cada una solo necesita la url de este LLMClient."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "First, allow your site's origin"
+msgstr "Primero, permite el origen de tu sitio"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Browsers let a page call this url only if the LLMClient's manifest lists the "
+"page's origin: its scheme, host and port, without a path. Add your site, and "
+"your development server if you have one, then apply the manifest again, in "
+"the workbench's Manifest tab or with <code>smarter apply</code>. Skip this, "
+"and the chat fails in the browser with a CORS error."
+msgstr ""
+"Los navegadores solo permiten que una página llame a esta url si el "
+"manifiesto del LLMClient incluye el origen de la página: su esquema, host y "
+"puerto, sin ruta. Añade tu sitio, y tu servidor de desarrollo si tienes uno, "
+"y luego vuelve a aplicar el manifiesto, en la pestaña Manifiesto del área de "
+"trabajo o con <code>smarter apply</code>. Si te saltas esto, el chat falla "
+"en el navegador con un error de CORS."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"A plugin: a chat launcher on every page, a Smarter Chat block, and a "
+"[smarter_chat] shortcode."
+msgstr ""
+"Un plugin: un lanzador de chat en cada página, un bloque Smarter Chat y un "
+"shortcode [smarter_chat]."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Download smarter-chat-<version>.zip from the plugin's latest release, and "
+"upload it in Plugins, Add New, Upload Plugin."
+msgstr ""
+"Descarga smarter-chat-<version>.zip de la última versión del plugin, y "
+"súbelo en Plugins, Añadir nuevo, Subir plugin."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "In Settings, Smarter Chat, enter this LLMClient's url."
+msgstr "En Ajustes, Smarter Chat, introduce la url de este LLMClient."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Download"
+msgstr "Descargar"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Guide"
+msgstr "Guía"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"A module for Drupal 10.3 and 11: a chat launcher on every page, and a "
+"Smarter Chat block for any region."
+msgstr ""
+"Un módulo para Drupal 10.3 y 11: un lanzador de chat en cada página, y un "
+"bloque Smarter Chat para cualquier región."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Then, in Configuration, Web services, Smarter Chat, enter this LLMClient's "
+"url."
+msgstr ""
+"Luego, en Configuración, Servicios web, Smarter Chat, introduce la url de "
+"este LLMClient."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"A theme app extension: a chat launcher on every page, and a Smarter Chat "
+"block for any section."
+msgstr ""
+"Una extensión de app de tema: un lanzador de chat en cada página, y un "
+"bloque Smarter Chat para cualquier sección."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Deploy the extension as your store's own app, from a Shopify Partner "
+"account, and install it on your store."
+msgstr ""
+"Implementa la extensión como la app propia de tu tienda, desde una cuenta de "
+"Shopify Partner, e instálala en tu tienda."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"In the theme editor, turn on App embeds, Smarter Chat launcher, and enter "
+"this LLMClient's url."
+msgstr ""
+"En el editor de temas, activa Incrustaciones de app, Smarter Chat launcher, "
+"e introduce la url de este LLMClient."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Allow both of your store's origins: its myshopify.com domain, and its own "
+"domain."
+msgstr ""
+"Permite los dos orígenes de tu tienda: su dominio myshopify.com y su propio "
+"dominio."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "React, from npm"
+msgstr "React, desde npm"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"<code>@smarter.sh/ui-chat</code>, the component that the workbench uses, for "
+"a React 19 application built with Vite, webpack or Next.js."
+msgstr ""
+"<code>@smarter.sh/ui-chat</code>, el componente que usa el área de trabajo, "
+"para una aplicación React 19 construida con Vite, webpack o Next.js."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Any web page, in html"
+msgstr "Cualquier página web, en html"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"One script tag, with no build: for a static site, a server-rendered page, "
+"Squarespace, Wix or Webflow. Paste it before </body>, and a chat button "
+"appears in a corner of the page."
+msgstr ""
+"Una etiqueta script, sin build: para un sitio estático, una página "
+"renderizada en el servidor, Squarespace, Wix o Webflow. Pégala antes de </"
+"body>, y aparece un botón de chat en una esquina de la página."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"The chat renders in its own Shadow DOM, so your site's css can't break it. "
+"To put it inside the page instead of a launcher, add <code>&lt;smarter-chat "
+"chatbot=\"…\"&gt;&lt;/smarter-chat&gt;</code> where it goes."
+msgstr ""
+"El chat se renderiza en su propio Shadow DOM, así que el css de tu sitio no "
+"puede romperlo. Para ponerlo dentro de la página en lugar de un lanzador, "
+"añade <code>&lt;smarter-chat chatbot=\"…\"&gt;&lt;/smarter-chat&gt;</code> "
+"donde vaya."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Something else?"
+msgstr "¿Algo más?"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Google Tag Manager, and documentation sites built with Docusaurus, MkDocs, "
+"Sphinx or VitePress, have integrations too. Or build your own front end on "
+"this url's api, below, or with the Python, Node.js and Go SDKs."
+msgstr ""
+"Google Tag Manager, y los sitios de documentación construidos con "
+"Docusaurus, MkDocs, Sphinx o VitePress, también tienen integraciones. O "
+"construye tu propio front end sobre la api de esta url, más abajo, o con los "
+"SDK de Python, Node.js y Go."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Docs sites"
+msgstr "Sitios de documentación"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "SDKs"
+msgstr "SDK"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Api keys"
+msgstr "Claves de API"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"This LLMClient already requires an api key: the url answers only requests "
+"that carry one of its keys. Here is how to give a key to a front end in "
+"production, and how to replace one."
+msgstr ""
+"Este LLMClient ya requiere una clave de API: la url solo responde a las "
+"solicitudes que llevan una de sus claves. Así es como se da una clave a un "
+"front end en producción, y cómo se reemplaza."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Right now, anyone who has this url can chat with it, and every prompt is "
+"charged to its owner. Attach an api key, and the url answers only requests "
+"that carry it. The workbench keeps working, with your login."
+msgstr ""
+"Ahora mismo, cualquiera que tenga esta url puede chatear con él, y cada "
+"prompt se cobra a su propietario. Vincula una clave de API, y la url solo "
+"responderá a las solicitudes que la lleven. El área de trabajo sigue "
+"funcionando, con tu sesión."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "You can do it right here."
+msgstr "Puedes hacerlo aquí mismo."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"An api key belongs to a staff user of your account, and a platform "
+"administrator creates it with this command. The command prints the key's "
+"name, and its secret, once: store the secret somewhere safe, such as a "
+"password manager or your hosting's secrets."
+msgstr ""
+"Una clave de API pertenece a un usuario staff de tu cuenta, y un "
+"administrador de la plataforma la crea con este comando. El comando muestra "
+"el nombre de la clave y su secreto, una sola vez: guarda el secreto en un "
+"lugar seguro, como un gestor de contraseñas o los secretos de tu hosting."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"The web console's API Keys page lists your keys, and turns a key off without "
+"deleting it."
+msgstr ""
+"La página Claves de API de la consola web lista tus claves, y desactiva una "
+"clave sin eliminarla."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Name the key in the LLMClient's manifest, and apply the manifest again, in "
+"the workbench's Manifest tab or with <code>smarter apply</code>. From then "
+"on, every request to the url needs the key, and this page says \"Api key "
+"required\"."
+msgstr ""
+"Nombra la clave en el manifiesto del LLMClient, y vuelve a aplicar el "
+"manifiesto, en la pestaña Manifiesto del área de trabajo o con <code>smarter "
+"apply</code>. A partir de entonces, cada solicitud a la url necesita la "
+"clave, y esta página dice \"Requiere clave de API\"."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"To replace a key, create a new one, name it in the manifest instead, and "
+"apply it: Smarter detaches the old key. Then turn the old key off."
+msgstr ""
+"Para reemplazar una clave, crea una nueva, nómbrala en el manifiesto en su "
+"lugar, y aplícalo: Smarter desvincula la clave anterior. Luego desactiva la "
+"clave anterior."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "A key in a web page is not a secret"
+msgstr "Una clave en una página web no es un secreto"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Anyone who opens the page can read the key in its source, and use it from "
+"anywhere. On a public site, a key limits who can call the url, rather than "
+"hiding it, so combine it with the rest:"
+msgstr ""
+"Cualquiera que abra la página puede leer la clave en su código fuente, y "
+"usarla desde cualquier lugar. En un sitio público, una clave limita quién "
+"puede llamar a la url, en lugar de ocultarla, así que combínala con lo demás:"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "give each site a key of its own, and turn it off if it is abused;"
+msgstr "da a cada sitio su propia clave, y desactívala si se abusa de ella;"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"list only your site's origins in allowedOrigins, which browsers enforce;"
+msgstr ""
+"incluye solo los orígenes de tu sitio en allowedOrigins, que los navegadores "
+"hacen cumplir;"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "give the LLMClient a budget, which caps what its prompts can cost."
+msgstr ""
+"asigna un presupuesto al LLMClient, que limita lo que pueden costar sus "
+"prompts."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"For an internal tool, or a server-to-server integration, keep the key on "
+"your server, and call this url from there."
+msgstr ""
+"Para una herramienta interna, o una integración de servidor a servidor, "
+"guarda la clave en tu servidor, y llama a esta url desde allí."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Under the hood"
+msgstr "Por dentro"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Smarter Chat sends this url two kinds of requests, and so can your own code. "
+"Both are POST requests, with JSON in and JSON out. Copy a command into a "
+"terminal to try it."
+msgstr ""
+"Smarter Chat envía dos tipos de solicitudes a esta url, y tu propio código "
+"también puede hacerlo. Ambas son solicitudes POST, con JSON de entrada y "
+"JSON de salida. Copia un comando en una terminal para probarlo."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"This LLMClient requires a Smarter api key: replace <YOUR-API-KEY> with yours."
+msgstr ""
+"Este LLMClient requiere una clave de API de Smarter: reemplaza <YOUR-API-"
+"KEY> por la tuya."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "starts a chat"
+msgstr "inicia un chat"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"It returns the LLMClient's configuration, such as its name, welcome message, "
+"example prompts and colors, and a session_key for the new chat."
+msgstr ""
+"Devuelve la configuración del LLMClient, como su nombre, mensaje de "
+"bienvenida, prompts de ejemplo y colores, y un session_key para el nuevo "
+"chat."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "sends a prompt"
+msgstr "envía un prompt"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"It returns the messages that the prompt added to the chat. Send the "
+"session_key with every prompt, and Smarter keeps the chat's history."
+msgstr ""
+"Devuelve los mensajes que el prompt añadió al chat. Envía el session_key con "
+"cada prompt, y Smarter conserva el historial del chat."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Answers are Markdown"
+msgstr "Las respuestas son Markdown"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"The response is JSON, and the assistant's message in it is Markdown. Smarter "
+"Chat renders it, with code highlighting, math and diagrams. In your own "
+"front end, use any Markdown library."
+msgstr ""
+"La respuesta es JSON, y el mensaje del asistente que contiene es Markdown. "
+"Smarter Chat lo renderiza, con resaltado de código, matemáticas y diagramas. "
+"En tu propio front end, usa cualquier biblioteca de Markdown."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Secrets stay on the server"
+msgstr "Los secretos se quedan en el servidor"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Smarter calls the LLM and runs the tools. Their api keys and credentials "
+"never reach the browser."
+msgstr ""
+"Smarter llama al LLM y ejecuta las herramientas. Sus claves de API y "
+"credenciales nunca llegan al navegador."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"The chat's configuration, and a new chat session, whose session_key "
+"continues the chat in later prompts."
+msgstr ""
+"La configuración del chat, y una nueva sesión de chat, cuyo session_key "
+"continúa el chat en los prompts siguientes."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Sends the LLMClient's first example prompt, and returns the LLM's response."
+msgstr ""
+"Envía el primer prompt de ejemplo del LLMClient, y devuelve la respuesta del "
+"LLM."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Sends a prompt, and returns the LLM's response."
+msgstr "Envía un prompt, y devuelve la respuesta del LLM."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "The response, abbreviated:"
+msgstr "La respuesta, abreviada:"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Things to ask it"
+msgstr "Cosas que puedes preguntarle"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "How it was built"
+msgstr "Cómo se construyó"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Designed in the workbench. Declared in YAML."
+msgstr "Diseñado en el área de trabajo. Declarado en YAML."
+
+#: smarter/templates/llmclient/deployment.html
+#, python-format
+msgid ""
+"%(app_name)s was designed, tested and debugged in the Prompt Engineer's "
+"Workbench of the Smarter web console, and is deployed from a manifest: a "
+"short YAML file that declares everything it is. Change the manifest, apply "
+"it, and the url answers with your changes."
+msgstr ""
+"%(app_name)s se diseñó, probó y depuró en el área de trabajo del ingeniero "
+"de prompts de la consola web de Smarter, y se implementa a partir de un "
+"manifiesto: un breve archivo YAML que declara todo lo que es. Cambia el "
+"manifiesto, aplícalo, y la url responde con tus cambios."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Declarative: the manifest says what the LLMClient is, and Smarter makes it "
+"so."
+msgstr ""
+"Declarativo: el manifiesto dice qué es el LLMClient, y Smarter lo hace "
+"realidad."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Version controlled: keep manifests in git, review them in pull requests, "
+"apply them from CI."
+msgstr ""
+"Con control de versiones: guarda los manifiestos en git, revísalos en pull "
+"requests, aplícalos desde CI."
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"Two commands from a YAML file to a live api with its own host and TLS "
+"certificate."
+msgstr ""
+"Dos comandos para pasar de un archivo YAML a una api en línea con su propio "
+"host y certificado TLS."
+
+#: smarter/templates/llmclient/deployment.html
+msgid "Open it in the workbench"
+msgstr "Ábrelo en el área de trabajo"
+
+#: smarter/templates/llmclient/deployment.html
+msgid "LLMClient docs"
+msgstr "Documentación de LLMClient"
+
+#: smarter/templates/llmclient/deployment.html
+msgid ""
+"This LLMClient's manifest, as smarter describe llmclient returns it, without "
+"its owner's username. Its status is what Smarter reports about it, and is "
+"read-only."
+msgstr ""
+"El manifiesto de este LLMClient, tal como lo devuelve smarter describe "
+"llmclient, sin el nombre de usuario de su propietario. Su status es lo que "
+"Smarter informa sobre él, y es de solo lectura."
+
+#: smarter/templates/llmclient/deployment_frame.html
+#, python-format
+msgid ""
+"A browser that opens the LLMClient's url sees this page too, while a "
+"platform administrator has turned on the %(switch)s waffle switch. "
+"Otherwise, a browser's GET of the url is answered 405 Method Not Allowed, "
+"because it is an api. This tab is always here."
+msgstr ""
+"Un navegador que abre la url del LLMClient también ve esta página, mientras "
+"un administrador de la plataforma tenga activado el waffle switch "
+"%(switch)s. De lo contrario, un GET del navegador a la url recibe 405 Method "
+"Not Allowed, porque es una api. Esta pestaña siempre está aquí."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Build your own LLM applications"
+msgstr "Construye tus propias aplicaciones LLM"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Prompt Engineer's Workbench"
+msgstr "Área de trabajo del ingeniero de prompts"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"Write the system prompt, chat with the LLM, and watch every request, tool "
+"call and response as it happens."
+msgstr ""
+"Escribe el prompt de sistema, chatea con el LLM, y observa cada solicitud, "
+"llamada a herramienta y respuesta en tiempo real."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Declarative manifests"
+msgstr "Manifiestos declarativos"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"Every resource, from LLMClients to secrets, is a YAML manifest that you "
+"apply with the cli or the api."
+msgstr ""
+"Cada recurso, desde los LLMClients hasta los secretos, es un manifiesto YAML "
+"que aplicas con el cli o la api."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Tools for the LLM"
+msgstr "Herramientas para el LLM"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"Give an LLM your apis, databases and MCP servers, with plugins, extensions "
+"and MCP clients."
+msgstr ""
+"Dale a un LLM tus apis, bases de datos y servidores MCP, con plugins, "
+"extensiones y clientes MCP."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Your choice of LLM"
+msgstr "El LLM que tú elijas"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Switch the LLM provider and model with one line of the manifest."
+msgstr "Cambia el proveedor y el modelo del LLM con una línea del manifiesto."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "One-command deploys"
+msgstr "Implementación con un comando"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"A deployed LLMClient gets its own host and TLS certificate, and can move to "
+"your own domain."
+msgstr ""
+"Un LLMClient implementado tiene su propio host y certificado TLS, y puede "
+"pasar a tu propio dominio."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Embed it anywhere"
+msgstr "Incrústalo en cualquier lugar"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"Put the chat on any web page with Smarter Chat, the @smarter.sh/ui-chat "
+"React component."
+msgstr ""
+"Pon el chat en cualquier página web con Smarter Chat, el componente React "
+"@smarter.sh/ui-chat."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"Check prompts and responses, for example for personal data and prompt "
+"injection, before they reach the LLM or the user."
+msgstr ""
+"Revisa los prompts y las respuestas, por ejemplo en busca de datos "
+"personales e inyección de prompts, antes de que lleguen al LLM o al usuario."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Cli and SDKs"
+msgstr "Cli y SDK"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"Script everything with the smarter cli, and the Python, Node.js and Go SDKs."
+msgstr ""
+"Automatiza todo con el cli de smarter, y los SDK de Python, Node.js y Go."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Open source"
+msgstr "Código abierto"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Free, open source, and yours to run"
+msgstr "Libre, de código abierto, y tuyo para ejecutar"
+
+#: smarter/templates/llmclient/endpoints.html
+msgid ""
+"The Smarter Project is open source software, licensed under the GNU Affero "
+"General Public License v3.0. Read the code, run it on your own Kubernetes "
+"cluster, and contribute on GitHub."
+msgstr ""
+"The Smarter Project es software de código abierto, con licencia GNU Affero "
+"General Public License v3.0. Lee el código, ejecútalo en tu propio clúster "
+"de Kubernetes, y contribuye en GitHub."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "The platform: Django, Celery and the web console."
+msgstr "La plataforma: Django, Celery y la consola web."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Apply, describe and deploy manifests."
+msgstr "Aplica, describe e implementa manifiestos."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "The chat React component, on npm as @smarter.sh/ui-chat."
+msgstr "El componente React del chat, en npm como @smarter.sh/ui-chat."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "The Python SDK. Node.js and Go SDKs too."
+msgstr "El SDK de Python. También hay SDK de Node.js y Go."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "For platform administrators"
+msgstr "Para administradores de la plataforma"
+
+#: smarter/templates/llmclient/endpoints.html
+#, python-format
+msgid ""
+"This page is meant for configuring a front end before it goes into "
+"production. Turn it off before you go live. It is served while the "
+"%(switch)s waffle switch is active. Turn the switch off, in the Django admin "
+"under Waffle, Switches, or with this command, and a browser's GET of these "
+"endpoints is answered 405 Method Not Allowed again. The api is unaffected."
+msgstr ""
+"Esta página sirve para configurar un front end antes de que pase a "
+"producción. Desactívala antes de salir en vivo. Se sirve mientras el waffle "
+"switch %(switch)s esté activo. Desactiva el switch, en el admin de Django en "
+"Waffle, Switches, o con este comando, y un GET del navegador a estos "
+"endpoints vuelve a recibir 405 Method Not Allowed. La api no se ve afectada."
+
+#: smarter/templates/llmclient/endpoints.html
+msgid "Docs"
+msgstr "Documentación"
+
 #~ msgid "Server Logs"
 #~ msgstr "Registros del servidor"
-
-#~ msgid "Resources"
-#~ msgstr "Recursos"
