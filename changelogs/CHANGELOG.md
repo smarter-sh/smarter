@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.8](https://github.com/smarter-sh/smarter/compare/v0.33.7...v0.33.8) (2026-10-19)
+
+### Bug Fixes
+
+* **llmclient:** serve a page to browsers at a deployed llmclient's api ([b6a85f0](https://github.com/smarter-sh/smarter/commit/b6a85f08e57371cca0b08c360ac0fa1d674bf8d1))
+
 ## [0.33.7](https://github.com/smarter-sh/smarter/compare/v0.33.6...v0.33.7) (2026-10-18)
 
 ### Bug Fixes
