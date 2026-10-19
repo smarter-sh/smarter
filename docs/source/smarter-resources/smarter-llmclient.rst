@@ -42,13 +42,37 @@ LLMClients are managed using the :doc:`Smarter command-line interface (CLI) <../
 Usage
 --------
 
+A deployed LLMClient has its own host, e.g. ``https://stackademy-sql.3141-5926-5359.api.example.com``,
+with two endpoints, which answer POST requests only. ``/config/`` returns the chat's configuration and
+a new chat session:
+
 .. code-block:: bash
 
-  # Smarter Prompt Engineer Workbench
-  curl -X POST http://localhost:9357/api/v1/llm-clients/9/chat/?session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7
+  curl -X POST https://stackademy-sql.3141-5926-5359.api.example.com/config/ \
+    -H "Content-Type: application/json"
 
-  # Deployed Smarter LLMClient - Production
-  curl -X GET https://stackademy.3141-5926-5359.api.example.com/chat/?session_key=<SESSION-KEY>
+``/prompt/`` sends a prompt, and returns the LLM's response:
+
+.. code-block:: bash
+
+  curl -X POST https://stackademy-sql.3141-5926-5359.api.example.com/prompt/ \
+    -H "Content-Type: application/json" \
+    -d '{"messages": [{"role": "user", "content": "hello world"}]}'
+
+To continue a chat, send the ``session_key`` that ``/config/`` returned, e.g.
+``{"session_key": "<SESSION-KEY>", "messages": [...]}``, and the chat's earlier messages. An LLMClient
+with api keys requires one in every request: add ``-H "Authorization: Token <YOUR-API-KEY>"``.
+
+A platform administrator can turn on a page for browsers, with the ``enable_llmclient_endpoints_page``
+:doc:`waffle switch <../smarter-framework/developer-reference/lib/django/waffle>`, which is off by
+default. A browser that opens a deployed LLMClient's url, or either endpoint, then receives a page with
+these commands, the LLMClient's manifest without its owner's username, and links to The Smarter
+Project. While the switch is off, a GET of an endpoint is answered ``405 Method Not Allowed``.
+
+The workbench, and the platform's api, reach the same endpoints by the LLMClient's id, at
+``/api/v1/llm-clients/<id>/config/`` and ``/api/v1/llm-clients/<id>/prompt/``, for a user who may read
+the LLMClient: a logged-in user, or a request with that user's Smarter api key.
+See :doc:`The Chat API Contract <../smarter-framework/smarter-chat/api-contract>`.
 
 Web Pages That Embed It
 -----------------------
@@ -132,6 +156,7 @@ Technical Reference
    llmclient/signals
    llmclient/urls
    llmclient/utils
+   llmclient/views
 
 
 Sandbox Mode

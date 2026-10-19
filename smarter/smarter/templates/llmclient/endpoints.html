@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+{% comment %}
+The page that a browser sees at a deployed LLMClient's endpoints: the curl commands that call its
+api, its manifest, and The Smarter Project, which built it. Its own styles are in
+static/assets/css/llmclient-endpoints.css, and its copy buttons in static/js/llmclient/endpoints.js.
+See smarter.apps.llmclient.views.endpoints.LLMClientEndpointsView.
+{% endcomment %}
+
+{% block head_extra %}
+<link href="{% static 'assets/css/llmclient-endpoints.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block root %}
+{% translate "Copied" as copied_label %}
+<div class="smarter-page d-flex flex-column w-100 bg-body">
+
+  <!--begin::Hero-->
+  <section class="smarter-hero py-15 py-lg-20">
+    <div class="container-xxl">
+      <div class="row align-items-center g-10">
+        <div class="col-lg-7">
+          <a href="{{ branding.smarter_marketing_site_url }}" target="_blank" rel="noopener" class="d-inline-block smarter-logo-tile mb-10">
+            <img alt="The Smarter Project" src="{{ branding.cdn_logo_url }}" class="h-60px" />
+          </a>
+          <div class="mb-4">
+            <span class="badge badge-light-success fs-7 fw-bold me-2">{% translate "Live" %}</span>
+            <span class="badge badge-light-warning fs-7 fw-bold">{% translate "Built with The Smarter Project" %}</span>
+          </div>
+          <h1 class="text-white fw-bolder fs-3hx mb-5">{{ llmclient.app_name }}</h1>
+          {% if llmclient.description %}
+          <p class="smarter-hero-lead fs-3 fw-semibold mb-7">{{ llmclient.description }}</p>
+          {% endif %}
+          {% if llmclient.welcome_message %}
+          <p class="smarter-quote fs-4 mb-10">&ldquo;{{ llmclient.welcome_message }}&rdquo;</p>
+          {% endif %}
+          <div class="d-flex flex-wrap gap-3">
+            <a href="#api" class="btn btn-primary fw-bold">
+              <i class="ki-outline ki-code fs-3"></i>{% translate "Call the api" %}
+            </a>
+            <a href="#manifest" class="btn btn-light fw-bold">
+              <i class="ki-outline ki-document fs-3"></i>{% translate "See its manifest" %}
+            </a>
+            <a href="https://github.com/smarter-sh" target="_blank" rel="noopener" class="btn btn-dark fw-bold border border-gray-600">
+              <i class="ki-outline ki-github fs-3"></i>GitHub
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card bg-transparent border border-gray-700">
+            <div class="card-body p-8">
+              <div class="text-gray-500 fs-7 fw-bold text-uppercase mb-5">{% translate "This LLMClient" %}</div>
+              <table class="table table-borderless align-middle mb-0">
+                <tbody class="fs-6">
+                  <tr><td class="text-gray-500 ps-0">{% translate "Name" %}</td><td class="text-white fw-semibold text-end pe-0">{{ llmclient.name }}</td></tr>
+                  {% if llmclient.provider %}
+                  <tr><td class="text-gray-500 ps-0">{% translate "LLM provider" %}</td><td class="text-white fw-semibold text-end pe-0">{{ llmclient.provider }}</td></tr>
+                  {% endif %}
+                  {% if llmclient.model %}
+                  <tr><td class="text-gray-500 ps-0">{% translate "Model" %}</td><td class="text-white fw-semibold text-end pe-0">{{ llmclient.model }}</td></tr>
+                  {% endif %}
+                  {% if llmclient.version %}
+                  <tr><td class="text-gray-500 ps-0">{% translate "Version" %}</td><td class="text-white fw-semibold text-end pe-0">{{ llmclient.version }}</td></tr>
+                  {% endif %}
+                  <tr><td class="text-gray-500 ps-0">{% translate "Access" %}</td><td class="text-white fw-semibold text-end pe-0">{% if authenticated %}{% translate "Api key required" %}{% else %}{% translate "Public" %}{% endif %}</td></tr>
+                  <tr><td class="text-gray-500 ps-0">{% translate "Url" %}</td><td class="text-white fw-semibold text-end pe-0 text-break">{{ llmclient.url }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!--end::Hero-->
+
+  <!--begin::Api-->
+  <section id="api" class="py-15 py-lg-20">
+    <div class="container-xxl">
+      <div class="text-center mb-12">
+        <div class="smarter-section-kicker fw-bold fs-7 mb-3">{% translate "The api" %}</div>
+        <h2 class="fs-2hx fw-bolder text-gray-900 mb-4">{% translate "Talk to it from anywhere" %}</h2>
+        <p class="fs-5 text-gray-600 mw-750px mx-auto">
+          {% translate "This is a Smarter LLMClient's production api. Its two endpoints answer POST requests only. Copy a command into a terminal to try them." %}
+          {% if authenticated %}{% translate "This LLMClient requires a Smarter api key: replace <YOUR-API-KEY> with yours." %}{% endif %}
+        </p>
+      </div>
+      <div class="row g-8">
+        <div class="col-xl-6">
+          <h3 class="fw-bold text-gray-900 mb-2"><code class="fs-4">POST /config/</code></h3>
+          <p class="text-gray-600 fs-6 mb-5">{% translate "The chat's configuration, and a new chat session, whose session_key continues the chat in later prompts." %}</p>
+          <div class="smarter-terminal">
+            <div class="smarter-terminal-bar">
+              <span class="smarter-terminal-dot smarter-terminal-dot-close"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-minimize"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-zoom"></span>
+              <span class="smarter-terminal-title">bash</span>
+              <button type="button" class="smarter-terminal-copy" data-clipboard-target="#smarter-config-command" data-smarter-copied-label="{{ copied_label }}">{% translate "Copy" %}</button>
+            </div>
+            <pre class="smarter-console"><code id="smarter-config-command">{{ config_command }}</code></pre>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <h3 class="fw-bold text-gray-900 mb-2"><code class="fs-4">POST /prompt/</code></h3>
+          <p class="text-gray-600 fs-6 mb-5">{% translate "Sends a prompt, and returns the LLM's response." %}</p>
+          <div class="smarter-terminal">
+            <div class="smarter-terminal-bar">
+              <span class="smarter-terminal-dot smarter-terminal-dot-close"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-minimize"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-zoom"></span>
+              <span class="smarter-terminal-title">bash</span>
+              <button type="button" class="smarter-terminal-copy" data-clipboard-target="#smarter-prompt-command" data-smarter-copied-label="{{ copied_label }}">{% translate "Copy" %}</button>
+            </div>
+            <pre class="smarter-console"><code id="smarter-prompt-command">{{ prompt_command }}</code></pre>
+          </div>
+        </div>
+      </div>
+      {% if llmclient.example_prompts %}
+      <div class="text-center mt-12">
+        <div class="text-gray-600 fw-semibold fs-6 mb-4">{% translate "Things to ask it" %}</div>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          {% for example in llmclient.example_prompts %}
+          <span class="badge badge-light-primary fs-6 fw-semibold px-4 py-3">{{ example }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  <!--end::Api-->
+
+  <!--begin::Manifest-->
+  <section id="manifest" class="py-15 py-lg-20 bg-light">
+    <div class="container-xxl">
+      <div class="row g-10 align-items-start">
+        <div class="col-lg-5">
+          <div class="smarter-section-kicker fw-bold fs-7 mb-3">{% translate "How it was built" %}</div>
+          <h2 class="fs-2hx fw-bolder text-gray-900 mb-6">{% translate "Designed in the workbench. Declared in YAML." %}</h2>
+          <p class="fs-5 text-gray-700 mb-6">
+            {% blocktranslate with app_name=llmclient.app_name trimmed %}
+            {{ app_name }} was designed, tested and debugged in the Prompt Engineer's Workbench of the Smarter web console, then deployed to this url from a manifest: a short YAML file that declares everything it is.
+            {% endblocktranslate %}
+          </p>
+          <div class="d-flex flex-column gap-5 mb-8">
+            <div class="d-flex align-items-start">
+              <i class="ki-outline ki-check-circle fs-2 text-success me-3 mt-1"></i>
+              <div class="fs-6 text-gray-700">{% translate "Declarative: the manifest says what the LLMClient is, and Smarter makes it so." %}</div>
+            </div>
+            <div class="d-flex align-items-start">
+              <i class="ki-outline ki-check-circle fs-2 text-success me-3 mt-1"></i>
+              <div class="fs-6 text-gray-700">{% translate "Version controlled: keep manifests in git, review them in pull requests, apply them from CI." %}</div>
+            </div>
+            <div class="d-flex align-items-start">
+              <i class="ki-outline ki-check-circle fs-2 text-success me-3 mt-1"></i>
+              <div class="fs-6 text-gray-700">{% translate "Two commands from a YAML file to a live api with its own host and TLS certificate." %}</div>
+            </div>
+          </div>
+          <div class="smarter-terminal mb-6">
+            <div class="smarter-terminal-bar">
+              <span class="smarter-terminal-dot smarter-terminal-dot-close"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-minimize"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-zoom"></span>
+              <span class="smarter-terminal-title">smarter cli</span>
+              <button type="button" class="smarter-terminal-copy" data-clipboard-target="#smarter-deploy-commands" data-smarter-copied-label="{{ copied_label }}">{% translate "Copy" %}</button>
+            </div>
+            <pre class="smarter-console"><code id="smarter-deploy-commands">{{ deploy_commands }}</code></pre>
+          </div>
+          <a href="{{ branding.workbench_exmample_url }}" target="_blank" rel="noopener" class="btn btn-primary fw-bold me-2 mb-2">
+            <i class="ki-outline ki-message-programming fs-3"></i>{% translate "Open the workbench" %}
+          </a>
+          <a href="https://docs.smarter.sh/en/latest/smarter-resources/smarter-llmclient.html" target="_blank" rel="noopener" class="btn btn-light fw-bold mb-2">
+            <i class="ki-outline ki-book-open fs-3"></i>{% translate "LLMClient docs" %}
+          </a>
+        </div>
+        {% if manifest_html %}
+        <div class="col-lg-7">
+          <div class="smarter-terminal">
+            <div class="smarter-terminal-bar">
+              <span class="smarter-terminal-dot smarter-terminal-dot-close"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-minimize"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-zoom"></span>
+              <span class="smarter-terminal-title">{{ llmclient.name }}.yaml</span>
+              <button type="button" class="smarter-terminal-copy" data-clipboard-target="#smarter-manifest" data-smarter-copied-label="{{ copied_label }}">{% translate "Copy" %}</button>
+            </div>
+            <pre class="smarter-console smarter-console-tall"><code id="smarter-manifest">{{ manifest_html }}</code></pre>
+          </div>
+          <p class="text-gray-500 fs-7 mt-3 mb-0">{% translate "This LLMClient's manifest, as smarter describe llmclient returns it, without its owner's username. Its status is what Smarter reports about it, and is read-only." %}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  <!--end::Manifest-->
+
+  <!--begin::Features-->
+  <section class="py-15 py-lg-20">
+    <div class="container-xxl">
+      <div class="text-center mb-12">
+        <div class="smarter-section-kicker fw-bold fs-7 mb-3">{% translate "The Smarter Project" %}</div>
+        <h2 class="fs-2hx fw-bolder text-gray-900 mb-4">{% translate "Build your own LLM applications" %}</h2>
+        <p class="fs-5 text-gray-600 mw-750px mx-auto">{{ branding.smarter_product_description }}</p>
+      </div>
+      <div class="row g-8">
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-message-programming fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "Prompt Engineer's Workbench" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "Write the system prompt, chat with the LLM, and watch every request, tool call and response as it happens." %}</p>
+          </div></div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-document fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "Declarative manifests" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "Every resource, from LLMClients to secrets, is a YAML manifest that you apply with the cli or the api." %}</p>
+          </div></div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-wrench fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "Tools for the LLM" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "Give an LLM your apis, databases and MCP servers, with plugins, extensions and MCP clients." %}</p>
+          </div></div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-technology-2 fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "Your choice of LLM" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "Switch the LLM provider and model with one line of the manifest." %}</p>
+          </div></div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-rocket fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "One-command deploys" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "A deployed LLMClient gets its own host and TLS certificate, and can move to your own domain." %}</p>
+          </div></div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-code fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "Embed it anywhere" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "Put the chat on any web page with Smarter Chat, the @smarter.sh/ui-chat React component." %}</p>
+          </div></div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-shield-tick fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "Guardrails" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "Check prompts and responses, for example for personal data and prompt injection, before they reach the LLM or the user." %}</p>
+          </div></div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="card card-flush h-100 shadow-sm"><div class="card-body p-8">
+            <span class="smarter-feature-icon mb-6"><i class="ki-outline ki-abstract-26 fs-2x"></i></span>
+            <h3 class="fw-bold text-gray-900 mb-3">{% translate "Cli and SDKs" %}</h3>
+            <p class="text-gray-600 fs-6 mb-0">{% translate "Script everything with the smarter cli, and the Python, Node.js and Go SDKs." %}</p>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!--end::Features-->
+
+  <!--begin::Open source-->
+  <section class="pb-15 pb-lg-20">
+    <div class="container-xxl">
+      <div class="card smarter-hero border-0 overflow-hidden">
+        <div class="card-body p-10 p-lg-15">
+          <div class="row g-10 align-items-center">
+            <div class="col-lg-6">
+              <div class="smarter-section-kicker fw-bold fs-7 mb-3">{% translate "Open source" %}</div>
+              <h2 class="text-white fs-2hx fw-bolder mb-5">{% translate "Free, open source, and yours to run" %}</h2>
+              <p class="smarter-hero-lead fs-5 mb-8">{% translate "The Smarter Project is open source software, licensed under the GNU Affero General Public License v3.0. Read the code, run it on your own Kubernetes cluster, and contribute on GitHub." %}</p>
+              <div class="d-flex flex-wrap gap-3">
+                <a href="https://github.com/smarter-sh" target="_blank" rel="noopener" class="btn btn-primary fw-bold">
+                  <i class="ki-outline ki-github fs-3"></i>github.com/smarter-sh
+                </a>
+                <a href="{{ branding.smarter_marketing_site_url }}" target="_blank" rel="noopener" class="btn btn-light fw-bold">
+                  <i class="ki-outline ki-home fs-3"></i>smarter.sh
+                </a>
+                <a href="{{ branding.smarter_project_docs_url }}" target="_blank" rel="noopener" class="btn btn-light fw-bold">
+                  <i class="ki-outline ki-book-open fs-3"></i>docs.smarter.sh
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="row g-4">
+                <div class="col-sm-6">
+                  <a href="https://github.com/smarter-sh/smarter" target="_blank" rel="noopener" class="d-block border border-gray-700 rounded p-5 h-100">
+                    <div class="text-white fw-bold fs-5 mb-1">smarter</div>
+                    <div class="smarter-hero-lead fs-7">{% translate "The platform: Django, Celery and the web console." %}</div>
+                  </a>
+                </div>
+                <div class="col-sm-6">
+                  <a href="https://github.com/smarter-sh/smarter-cli" target="_blank" rel="noopener" class="d-block border border-gray-700 rounded p-5 h-100">
+                    <div class="text-white fw-bold fs-5 mb-1">smarter-cli</div>
+                    <div class="smarter-hero-lead fs-7">{% translate "Apply, describe and deploy manifests." %}</div>
+                  </a>
+                </div>
+                <div class="col-sm-6">
+                  <a href="https://github.com/smarter-sh/smarter-chat" target="_blank" rel="noopener" class="d-block border border-gray-700 rounded p-5 h-100">
+                    <div class="text-white fw-bold fs-5 mb-1">smarter-chat</div>
+                    <div class="smarter-hero-lead fs-7">{% translate "The chat React component, on npm as @smarter.sh/ui-chat." %}</div>
+                  </a>
+                </div>
+                <div class="col-sm-6">
+                  <a href="https://github.com/smarter-sh/smarter-python" target="_blank" rel="noopener" class="d-block border border-gray-700 rounded p-5 h-100">
+                    <div class="text-white fw-bold fs-5 mb-1">smarter-python</div>
+                    <div class="smarter-hero-lead fs-7">{% translate "The Python SDK. Node.js and Go SDKs too." %}</div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!--end::Open source-->
+
+  <!--begin::Administrators-->
+  <section class="pb-12">
+    <div class="container-xxl">
+      <div class="notice d-flex bg-light-warning rounded border-warning border border-dashed p-6">
+        <i class="ki-outline ki-information fs-2tx text-warning me-4"></i>
+        <div class="flex-grow-1 min-w-0">
+          <h4 class="text-gray-900 fw-bold mb-2">{% translate "For platform administrators" %}</h4>
+          <div class="fs-6 text-gray-700 mb-4">
+            {% blocktranslate with switch="enable_llmclient_endpoints_page" trimmed %}
+            This page is served while the {{ switch }} waffle switch is active. Turn the switch off, in the Django admin under Waffle, Switches, or with this command, and a browser's GET of these endpoints is answered 405 Method Not Allowed again. The api is unaffected.
+            {% endblocktranslate %}
+          </div>
+          <div class="smarter-terminal">
+            <div class="smarter-terminal-bar">
+              <span class="smarter-terminal-dot smarter-terminal-dot-close"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-minimize"></span>
+              <span class="smarter-terminal-dot smarter-terminal-dot-zoom"></span>
+              <span class="smarter-terminal-title">bash</span>
+              <button type="button" class="smarter-terminal-copy" data-clipboard-target="#smarter-switch-command" data-smarter-copied-label="{{ copied_label }}">{% translate "Copy" %}</button>
+            </div>
+            <pre class="smarter-console"><code id="smarter-switch-command">python manage.py waffle_switch enable_llmclient_endpoints_page off</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!--end::Administrators-->
+
+  <!--begin::Footer-->
+  <footer class="border-top py-8">
+    <div class="container-xxl d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+      <a href="{{ branding.smarter_marketing_site_url }}" target="_blank" rel="noopener" class="d-flex align-items-center gap-3 text-gray-700 text-hover-primary">
+        <img alt="The Smarter Project" src="{{ branding.cdn_logo_url }}" class="h-30px" />
+        <span class="fw-semibold">{{ branding.smarter_product_name }}</span>
+      </a>
+      <div class="d-flex gap-6 fs-6">
+        <a href="{{ branding.smarter_marketing_site_url }}" target="_blank" rel="noopener" class="text-gray-600 text-hover-primary">smarter.sh</a>
+        <a href="{{ branding.smarter_project_docs_url }}" target="_blank" rel="noopener" class="text-gray-600 text-hover-primary">{% translate "Docs" %}</a>
+        <a href="https://github.com/smarter-sh" target="_blank" rel="noopener" class="text-gray-600 text-hover-primary">GitHub</a>
+      </div>
+    </div>
+  </footer>
+  <!--end::Footer-->
+
+</div>
+{% endblock %}
+
+{% block javascript_extra %}
+{{ block.super }}
+<script src="{% static 'js/llmclient/endpoints.js' %}?v={{ STATIC_VERSION }}"></script>
+{% endblock %}
