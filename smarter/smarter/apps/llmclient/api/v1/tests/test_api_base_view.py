@@ -302,7 +302,13 @@ class TestLLMClientApiForDeployedHosts(TestAccountMixin):
         handler = MagicMock(
             return_value=TestLLMClientApiBaseViewSet.lambda_response(TestLLMClientApiBaseViewSet.COMPLETION)
         )
-        with override_settings(ALLOWED_HOSTS=["*"]), patch(HARNESS) as harness:
+        # the request's LLMClientRequests row is written by a Celery task, in the worker, which would race
+        # the LLMClient's deletion in the test's cleanup.
+        with (
+            override_settings(ALLOWED_HOSTS=["*"]),
+            patch(HARNESS) as harness,
+            patch("smarter.apps.llmclient.receivers.create_llmclient_request"),
+        ):
             harness.get_smarter_harness.return_value = handler
             response = DefaultLLMClientApiView.as_view()(request)
         return response, handler

@@ -283,10 +283,15 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             data: Union[SmarterDictType, list],
             plugins: Optional[List[PluginBase]] = None,
         ) -> SmarterChatCompletionResponseType:
-            """Expose the handler method of the default provider."""
+            """
+            Expose the handler method of the default provider.
 
+            The provider is the one that the prompt's user may read: ``user_profile.user``, which is
+            the LLMClient's owner, not ``request.user``, which is anonymous on a deployed LLMClient's
+            own host. Not the Smarter admin either, who may read every account's providers.
+            """
             client_orm = self.get_client_orm_by_provider_name_and_user(
-                provider_name=provider_name or self.default_handler_name, user=request.user  # type: ignore
+                provider_name=provider_name or self.default_handler_name, user=user_profile.user
             )
             api_key = SecretStr(client_orm.api_key.get_secret()) if client_orm.api_key else None
             smarter_openai_compatible_provider = OpenAISmarterClient(
