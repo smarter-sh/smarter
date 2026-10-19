@@ -19,7 +19,11 @@ from smarter.apps.llmclient.caching import (
     invalidate_all_cached_llmclients_for_user_profile,
 )
 from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey, LLMClientHelper
-from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
+from smarter.apps.prompt.contract.const import (
+    CHAT_CONTRACT_V2_CAPABILITY,
+    PUBLIC_META_DATA_FIELDS,
+    VERBOSE_PARAMETER,
+)
 from smarter.apps.prompt.contract.models import (
     PromptChatApiConfigResponse,
     PromptChatApiConfigResponseV1,
@@ -371,6 +375,40 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertNotIn('"chatbot', content)
         self.assertNotIn("url_chatbot", content)
 
+    def test_config_is_lean_by_default(self):
+        """Test that the complete configuration leaves out its diagnostic parts unless the client asks for them."""
+        response = self.client.post(self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        data = PromptChatApiConfigResponse.model_validate(response.json()).data
+        payload = response.json()["data"]
+        self.assertEqual(set(payload["history"]), {"chat_history"})
+        self.assertLessEqual(set(payload["meta_data"]), set(PUBLIC_META_DATA_FIELDS))
+        self.assertIn("is_authentication_required", payload["meta_data"])
+        self.assertEqual(data.plugins.plugins, [])
+        self.assertEqual(data.plugins.meta_data.plugins_returned, 0)
+        self.assertIsInstance(data.plugins.meta_data.total_plugins, int)
+        self.assertEqual(data.extensions.extensions if data.extensions else [], [])
+        # the complete LLMClient, e.g. its owner's profile, isn't diagnostic.
+        self.assertIn("user_profile", payload["llmclient"])
+
+    def test_config_verbose(self):
+        """Test that ?verbose=true adds the tool calls, the complete meta data, and the plugin and extension lists."""
+        url = self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id)
+        for value in ("true", "1", "True"):
+            with self.subTest(value=value):
+                response = self.client.post(f"{url}?{VERBOSE_PARAMETER}={value}")
+                self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+                data = PromptChatApiConfigResponse.model_validate(response.json()).data
+                payload = response.json()["data"]
+                self.assertEqual(set(payload["history"]), {"chat_history", "prompt_tool_call_history"})
+                self.assertIn("llmclient", payload["meta_data"])
+                self.assertIn("plugins", payload["plugins"])
+                self.assertEqual(
+                    data.plugins.meta_data.plugins_returned, min(data.plugins.meta_data.total_plugins or 0, 10)
+                )
+        response = self.client.post(f"{url}?{VERBOSE_PARAMETER}=false")
+        self.assertEqual(set(response.json()["data"]["history"]), {"chat_history"})
+
     def test_config_tags_its_logs_with_the_session_key(self):
         """Test that the config api tags the rest of its request's logs with the chat's session key, e.g. a new one."""
         module = "smarter.apps.prompt.views.detailviews.prompt_config_view"
@@ -536,6 +574,29 @@ class TestPromptConfigViewForDeployedHosts(TestAccountMixin):
         content = response.content.decode()
         self.assertNotIn(self.admin_user.email, content)
         self.assertNotIn(self.admin_user.username, content)
+
+    def test_public_config_ignores_verbose(self):
+        """Test that a deployed LLMClient's own host returns its public configuration, even with ?verbose=true."""
+        request = RequestFactory().post(
+            f"/config/?{VERBOSE_PARAMETER}=true", data={}, content_type="application/json", HTTP_HOST=self.host
+        )
+        request.user = self.admin_user
+        with (
+            override_settings(ALLOWED_HOSTS=["*"]),
+            patch(
+                "smarter.apps.prompt.views.detailviews.prompt_config_view.get_cached_llmclient_by_request",
+                return_value=self.llmclient,
+            ),
+            patch.object(LLMClientHelper, "to_json") as to_json,
+        ):
+            response = PromptConfigView.as_view()(request)
+        self.addCleanup(Prompt.objects.filter(llmclient=self.llmclient).delete)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        data = json.loads(response.content)["data"]
+        self.assertEqual(set(data["history"]), {"chat_history"})
+        self.assertLessEqual(set(data["meta_data"]), set(PUBLIC_META_DATA_FIELDS))
+        # the complete meta data is never built for the public configuration.
+        to_json.assert_not_called()
 
     def test_public_config_for_an_authenticated_client(self):
         """Test that an api key's user, too, receives only the public configuration from the host."""

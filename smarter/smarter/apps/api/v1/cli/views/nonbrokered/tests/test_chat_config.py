@@ -256,6 +256,19 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         self.validate_data(data=data)
         session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
 
+        # the cli receives every diagnostic part of the configuration.
+        self.assertEqual(
+            set(data["history"]),
+            {
+                "chat_history",
+                "prompt_tool_call_history",
+                "prompt_plugin_usage_history",
+                "plugin_selector_history",
+                "llmclient_request_history",
+            },
+        )
+        self.assertIn("llmclient", data["meta_data"])
+
         # add assertions for existence of the top-level keys
         self.assertIn(SmarterJournalApiResponseKeys.API, response)
         self.assertIn(SmarterJournalApiResponseKeys.THING, response[SmarterJournalApiResponseKeys.METADATA])
