@@ -29,3 +29,23 @@ section#smarter-settings dl.class > dt#smarter\.common\.conf\.Settings.sig.sig-o
 .sphinx-contributors--avatars .sphinx-contributors_list {
   gap: 10px;
 }
+.check-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1em;
+}
+
+.check-list li {
+    position: relative;
+    padding-left: 1.6em;
+    margin-bottom: 0.65em;
+    line-height: 1.6;
+}
+
+.check-list li::before {
+    content: "\2713";
+    position: absolute;
+    left: 0;
+    color: #52677C;
+    font-weight: bold;
+}

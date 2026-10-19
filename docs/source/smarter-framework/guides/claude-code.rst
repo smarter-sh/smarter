@@ -20,5 +20,6 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/getting-started-claude-code-mtran
    claude-code/smarter-claude-plugin
    claude-code/napl-adding-llm-provider
+   claude-code/adding-llm-provider-almafent20
    claude-code/getting-started-claude-code-as-coding-assistant
    claude-code/Getting-Started-With-Jean-Claude
