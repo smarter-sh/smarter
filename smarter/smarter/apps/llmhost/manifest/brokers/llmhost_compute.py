@@ -417,6 +417,17 @@ class SAMLLMHostComputeBroker(AbstractBroker):
 
         return [(SAMKinds.LLM_HOST.value, instance.llmhosts.all())]  # type: ignore[attr-defined]
 
+    @classmethod
+    def references(cls, instance: LLMHostCompute) -> SAMDependents:
+        """Return the resources that an LLMHostCompute uses: none.
+
+        :param instance: The LLMHostCompute.
+        :type instance: LLMHostCompute
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the LLMHosts that run on this LLMHostCompute.

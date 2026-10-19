@@ -392,6 +392,77 @@ class SAMDependency(SmarterBasePydanticModel):
     )
 
 
+class SAMDependencyTreeNode(SmarterBasePydanticModel):
+    """
+    A resource in a dependency tree: the resource, and, recursively, every resource that it uses.
+
+    It is the opposite direction of :class:`SAMDependency`, which lists the resources that depend
+    on a resource. An LLMClient's tree has its Provider, its plugins, their Connections, and those
+    Connections' Secrets. See :meth:`smarter.lib.manifest.broker.AbstractBroker.dependency_tree`.
+
+    A resource that the user may not read keeps its kind and record locator, so that the tree still
+    shows that something is there, but not its name or url, or what it uses in turn.
+
+    Example:
+
+    .. code-block:: json
+
+        {
+          "kind": "LLMClient",
+          "name": "stackademy_sql",
+          "recordLocator": "llmclient-rMTAwMDAxMwx",
+          "url": "/workbench/llm-clients/rMTAwMDAxMwx/prompt/",
+          "readable": true,
+          "children": [
+            {
+              "kind": "SqlPlugin",
+              "name": "stackademy_sql",
+              "recordLocator": "pluginmeta-rMTEx",
+              "url": "/llm-tools/plugins/rMTEx/",
+              "readable": true,
+              "children": []
+            }
+          ]
+        }
+    """
+
+    kind: str = Field(
+        ...,
+        description="kind[String]: The SAM kind of the resource, e.g. LLMClient. Read only.",
+    )
+
+    name: Optional[str] = Field(
+        default=None,
+        description="name[String]: The name of the resource. None if the user may not read it. Read only.",
+    )
+
+    recordLocator: Optional[str] = Field(
+        default=None,
+        description=(
+            "recordLocator[String]: The resource's record locator, e.g. llmclient-rMTAwMDAxMwx, from which its "
+            "web console url is derived. None for a resource that has none, e.g. a User. Read only."
+        ),
+    )
+
+    url: Optional[str] = Field(
+        default=None,
+        description=(
+            "url[String]: The path of the resource's page in the web console, derived from its record locator. "
+            "None if it has no page, or if the user may not read it. Read only."
+        ),
+    )
+
+    readable: bool = Field(
+        default=True,
+        description="readable[Boolean]: Whether the user may read the resource. Read only.",
+    )
+
+    children: List["SAMDependencyTreeNode"] = Field(
+        default_factory=list,
+        description="children[List]: The resources that this resource uses, each with its own tree. Read only.",
+    )
+
+
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class.
 
