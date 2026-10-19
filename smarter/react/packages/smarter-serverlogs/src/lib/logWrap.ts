@@ -1,9 +1,9 @@
 /**
  * Whether the server logs' long lines wrap, as the user last chose, in this browser.
  *
- * The choice is stored under the key of the workbench's Console (smarter-workbench/src/lib/layout.ts),
- * so that the Console and the Prompt Passthrough's Server Logs tab, which are both in the web
- * console, wrap alike.
+ * Every server log viewer in the web console, e.g. the workbench's Console and the Prompt
+ * Passthrough's Server Logs tab, shares the one choice, so that they wrap alike. The key keeps the
+ * name that the workbench gave it, so that users' earlier choices still apply.
  */
 import { useCallback, useState, type SetStateAction } from "react";
 

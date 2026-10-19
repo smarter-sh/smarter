@@ -1,6 +1,7 @@
 /**
- * A test double for what jsdom lacks: EventSource, which the Console's log stream uses. Tests
- * install it with installFakes(), and drive the log stream through FakeEventSource.latest().
+ * A test double for what jsdom lacks: EventSource, which the log stream (src/lib/logStream.ts) uses.
+ * Tests install it with installFakes(), and drive the log stream through FakeEventSource.latest().
+ * The packages that render the viewer import it, as @smarter/serverlogs/fakes, for their own tests.
  */
 import { vi } from "vitest";
 

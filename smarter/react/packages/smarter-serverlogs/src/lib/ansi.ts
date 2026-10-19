@@ -2,9 +2,10 @@
  * ANSI escape codes, as the server's log records have them, e.g. "\x1b[1;34m...\x1b[0m".
  *
  * The text of a log record is split into segments, each with the color and the emphasis that its
- * SGR (Select Graphic Rendition) codes give it, so that the Console displays the records as the
- * Smarter web console's log viewer (smarter-terminal-emulator, an xterm.js terminal) does. Other
+ * SGR (Select Graphic Rendition) codes give it, so that the server log viewer displays the records as
+ * the Smarter web console's terminal (smarter-terminal-emulator, an xterm.js terminal) does. Other
  * escape sequences, e.g. cursor movements, are removed.
+
  */
 import type { CSSProperties } from "react";
 

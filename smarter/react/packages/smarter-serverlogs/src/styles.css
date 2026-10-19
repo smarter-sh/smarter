@@ -1,6 +1,6 @@
-/* The server log viewer, in the palette and font of the workbench's Console. A copy of the server
-   logs rules of smarter-chat's src/components/Console/styles.css: keep the two the same. The
-   lines' height is --console-server-logs-height. */
+/* The server log viewer, in the palette and font of the Smarter web console's terminal, an xterm.js
+   terminal. See lib/ansi.ts. The lines' height is --console-server-logs-height, which a page that
+   renders the viewer may override. */
 .console-server-logs {
   --console-server-logs-height: 60vh;
   background-color: #171b20;

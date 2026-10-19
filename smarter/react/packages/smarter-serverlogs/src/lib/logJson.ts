@@ -1,5 +1,5 @@
 /**
- * The JSON of a server log record, as blocks that the Server Logs tab can collapse.
+ * The JSON of a server log record, as blocks that the server log viewer can collapse.
  *
  * Many records end with pretty-printed JSON, e.g. a prompt's request and response, which can be
  * hundreds of lines long. A block is a line that ends with "{" or "[", the lines inside it, and the
@@ -8,9 +8,6 @@
  * not a block, nor is a bracket that never closes, e.g. in a record that was cut short.
  *
  * The record is split into lines after its ANSI colors are parsed, because a color can span lines.
- *
- * A copy of smarter-chat's src/lib/logJson.ts, which is published separately, as @smarter.sh/ui-chat.
- * Keep the two the same.
  */
 import { parseAnsi, type AnsiSegment } from "./ansi";
 

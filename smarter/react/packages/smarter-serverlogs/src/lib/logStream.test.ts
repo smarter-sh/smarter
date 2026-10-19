@@ -5,16 +5,18 @@ import { FakeEventSource, installFakes } from "@/mocks/fakes";
 import { LOG_STREAM_URL, bulkLogs, liveLog } from "@/mocks/fixtures";
 
 import {
+  DEBUG_LOG_LEVEL,
   MAX_LOG_EVENTS,
-  SANDBOX_LOG_LEVEL,
   logStreamUrlForChat,
   logStreamUrlForLevel,
+  logStreamUrlForRequest,
+  newRequestId,
   useLogStream,
 } from "./logStream";
 
 describe("logStreamUrlForLevel", () => {
   it("adds the log level to the url, and leaves the url alone without one", () => {
-    expect(logStreamUrlForLevel(LOG_STREAM_URL, SANDBOX_LOG_LEVEL)).toBe(`${LOG_STREAM_URL}?level=DEBUG`);
+    expect(logStreamUrlForLevel(LOG_STREAM_URL, DEBUG_LOG_LEVEL)).toBe(`${LOG_STREAM_URL}?level=DEBUG`);
     expect(logStreamUrlForLevel(`${LOG_STREAM_URL}?level=INFO&x=1`, "DEBUG")).toBe(`${LOG_STREAM_URL}?level=DEBUG&x=1`);
     expect(logStreamUrlForLevel("/dashboard/logs/api/stream/", "DEBUG")).toBe(
       `${window.location.origin}/dashboard/logs/api/stream/?level=DEBUG`,
@@ -29,15 +31,43 @@ describe("logStreamUrlForChat", () => {
 
   it("narrows the stream to the chat session, at the log level", () => {
     expect(logStreamUrlForChat(LOG_STREAM_URL, sessionKey)).toBe(`${LOG_STREAM_URL}?session_key=${sessionKey}`);
-    expect(logStreamUrlForChat(LOG_STREAM_URL, sessionKey, SANDBOX_LOG_LEVEL)).toBe(
+    expect(logStreamUrlForChat(LOG_STREAM_URL, sessionKey, DEBUG_LOG_LEVEL)).toBe(
       `${LOG_STREAM_URL}?level=DEBUG&session_key=${sessionKey}`,
     );
   });
 
   it("has no stream without a url or a session key", () => {
     expect(logStreamUrlForChat(null, sessionKey)).toBeNull();
-    expect(logStreamUrlForChat(LOG_STREAM_URL, null, SANDBOX_LOG_LEVEL)).toBeNull();
+    expect(logStreamUrlForChat(LOG_STREAM_URL, null, DEBUG_LOG_LEVEL)).toBeNull();
     expect(logStreamUrlForChat(LOG_STREAM_URL, "")).toBeNull();
+  });
+});
+
+describe("logStreamUrlForRequest", () => {
+  it("narrows the stream to a request's records, at every level", () => {
+    expect(logStreamUrlForRequest(LOG_STREAM_URL, "abc")).toBe(`${LOG_STREAM_URL}?request_id=abc&level=DEBUG`);
+    expect(logStreamUrlForRequest("/dashboard/logs/api/stream/", "abc", "INFO")).toBe(
+      `${window.location.origin}/dashboard/logs/api/stream/?request_id=abc&level=INFO`,
+    );
+  });
+
+  it("has no stream without a url or a request id", () => {
+    expect(logStreamUrlForRequest(null, "abc")).toBeNull();
+    expect(logStreamUrlForRequest(LOG_STREAM_URL, null)).toBeNull();
+  });
+});
+
+describe("newRequestId", () => {
+  it("makes a new id of 32 hexadecimal digits each time", () => {
+    const id = newRequestId();
+    expect(id).toMatch(/^[0-9a-f]{32}$/);
+    expect(newRequestId()).not.toBe(id);
+  });
+
+  it("makes one without crypto.randomUUID", () => {
+    vi.stubGlobal("crypto", {});
+    expect(newRequestId()).toMatch(/^[0-9a-f]{32}$/);
+    vi.unstubAllGlobals();
   });
 });
 

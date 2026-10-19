@@ -1,7 +1,7 @@
 /**
  * The layout of the chat and the Console: the width of the chat, which the user changes by dragging
- * the separator between them, whether the Console is visible, and whether its server logs' long
- * lines wrap. They are remembered in the browser's localStorage, which may be unavailable, e.g. in a private window, so they have defaults.
+ * the separator between them, and whether the Console is visible. Whether its server logs' long lines
+ * wrap is @smarter/serverlogs' useLogWrap(). They are remembered in the browser's localStorage, which may be unavailable, e.g. in a private window, so they have defaults.
  */
 import {
   useCallback,
@@ -24,7 +24,6 @@ export const KEYBOARD_STEP = 5;
 
 export const CHAT_WIDTH_STORAGE_KEY = "smarter-chat.chat-width";
 export const CONSOLE_VISIBLE_STORAGE_KEY = "smarter-chat.console-visible";
-export const LOG_WRAP_STORAGE_KEY = "smarter-chat.log-wrap";
 
 export function clampChatWidth(width: number): number {
   return Math.min(MAX_CHAT_WIDTH, Math.max(MIN_CHAT_WIDTH, width));
@@ -74,11 +73,6 @@ function parseVisible(stored: string | null): boolean {
 /** Whether the Console is visible. It is, until the user hides it. */
 export function useConsoleVisible() {
   return useStoredState(CONSOLE_VISIBLE_STORAGE_KEY, parseVisible, String);
-}
-
-/** Whether the server logs' long lines wrap. They don't, until the user wraps them: they scroll. */
-export function useLogWrap() {
-  return useStoredState(LOG_WRAP_STORAGE_KEY, (stored) => stored === "true", String);
 }
 
 /**

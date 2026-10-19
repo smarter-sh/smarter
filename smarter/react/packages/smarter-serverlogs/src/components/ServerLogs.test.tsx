@@ -4,10 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { stripAnsi } from "@/lib/ansi";
-import { LOG_WRAP_STORAGE_KEY } from "@/lib/layout";
+import { LOG_WRAP_STORAGE_KEY } from "@/lib/logWrap";
 import { bulkLogs, liveLog } from "@/mocks/fixtures";
 
-import ServerLogs from "@/components/Console/ServerLogs";
+import ServerLogs from "@/components/ServerLogs";
 
 const logs = [...bulkLogs, liveLog];
 

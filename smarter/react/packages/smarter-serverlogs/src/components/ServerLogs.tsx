@@ -1,8 +1,10 @@
 /**
- * The Console's "Server Logs" tab: the user's server logs, as they stream in.
+ * The server log viewer: the user's server logs, as they stream in. The workbench's Console and the
+ * Prompt Passthrough render it in their "Server Logs" tabs, with the records of useLogStream()
+ * (src/lib/logStream.ts).
  *
- * The records are displayed as the Smarter web console's log viewers display them: their text, with
- * its ANSI colors, in the viewer's palette and font. Their text already has their time and level.
+ * The records are displayed as the Smarter web console's terminal displays them: their text, with
+ * its ANSI colors, in the terminal's palette and font. Their text already has their time and level.
  * Long lines scroll horizontally, unless the user wraps them. Blocks of pretty-printed JSON, which
  * can be hundreds of lines long, are collapsed, each with a toggle, and the toolbar expands or
  * collapses them all. See src/lib/logJson.ts.
@@ -10,21 +12,20 @@
  * The viewer has the keyboard shortcuts of src/lib/logViewerKeys.ts while it has the focus: w wraps,
  * s follows the newest record, / filters, Ctrl+Up and Ctrl+Down move to the top and the bottom, and
  * so on. "?" lists them.
- *
- * The web console's Prompt Passthrough has a copy of this viewer
- * (smarter-prompt-passthrough/src/components/ServerLogs/Component.tsx). The two look and behave the
- * same: keep them so.
  */
 import { Fragment, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import { ansiCss, parseAnsi, stripAnsi, type AnsiSegment } from "@/lib/ansi";
 import { gettext, interpolate, ngettext } from "@smarter/common";
-import { useLogWrap } from "@/lib/layout";
-import { hasJsonBlock, logNodes, type LogNode } from "@/lib/logJson";
-import type { LogEvent } from "@/lib/logStream";
-import { LOG_VIEWER_SHORTCUTS, logViewerAction, type LogViewerAction } from "@/lib/logViewerKeys";
 
-interface ServerLogsProps {
+import { ansiCss, parseAnsi, stripAnsi, type AnsiSegment } from "../lib/ansi";
+import { hasJsonBlock, logNodes, type LogNode } from "../lib/logJson";
+import type { LogEvent } from "../lib/logStream";
+import { LOG_VIEWER_SHORTCUTS, logViewerAction, type LogViewerAction } from "../lib/logViewerKeys";
+import { useLogWrap } from "../lib/logWrap";
+
+import "../styles.css";
+
+export interface ServerLogsProps {
   logs: LogEvent[];
   connected: boolean;
   error: string | null;

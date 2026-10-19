@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { normalizeConfig } from "@smarter.sh/ui-chat";
 
-import { FakeEventSource, installFakes } from "@/mocks/fakes";
+import { FakeEventSource, installFakes } from "@smarter/serverlogs/fakes";
 import {
   LOG_STREAM_URL,
   MANIFEST_YAML,
