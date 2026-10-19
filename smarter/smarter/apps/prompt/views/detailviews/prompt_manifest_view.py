@@ -249,7 +249,7 @@ class LLMClientManifestEditorView(LLMClientDetailView):
     **Example usage**::
 
         GET /workbench/llm-clients/<str:hashed_id>/manifest/editor/
-        {"manifest": "apiVersion: smarter.sh/v1\nkind: LLMClient\n..."}
+        {"manifest": "apiVersion: smarter.sh/v1\\nkind: LLMClient\\n..."}
     """
 
     @property
