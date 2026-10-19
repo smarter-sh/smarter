@@ -14,7 +14,7 @@ URL Patterns
 .. literalinclude:: ../../../../smarter/smarter/urls/llmclients.py
    :language: python
    :linenos:
-   :lines: 25-
+   :start-at: from django.urls import path
 
 
 PromptConfigView Class Reference
