@@ -3,7 +3,7 @@
  *
  * The text of a log record is split into segments, each with the color and the emphasis that its
  * SGR (Select Graphic Rendition) codes give it, so that the Server Logs tab displays the records in
- * the palette of Smarter Chat's Console. Other escape sequences, e.g. cursor movements, are removed.
+ * the palette of the workbench's Console. Other escape sequences, e.g. cursor movements, are removed.
  *
  * A copy of smarter-chat's src/lib/ansi.ts, which is published separately, as @smarter.sh/ui-chat.
  * Keep the two the same.

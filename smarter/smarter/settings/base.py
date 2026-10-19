@@ -1579,7 +1579,7 @@ default
     ``smarter_settings.log_level_name``.
 redis
     Custom handler (:class:`smarter.lib.logging.RedisLogHandler`) for sending logs
-    to Redis, for the web console's log viewer and Smarter Chat's Server Logs tab.
+    to Redis, for the web console's log viewer and the workbench's Server Logs tab.
     Uses the 'truncated' formatter. Its level is DEBUG, whatever
     ``smarter_settings.log_level_name`` is: the log stream,
     :func:`smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs`,

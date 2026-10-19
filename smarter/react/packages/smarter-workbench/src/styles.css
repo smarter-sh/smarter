@@ -1,0 +1,103 @@
+/*
+The Prompt Engineer's Workbench: the chat, and the Console beside it, with the separator between them that resizes
+them. See App.tsx. The chat's own styles are @smarter.sh/ui-chat's.
+*/
+
+.smarter-workbench {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  margin: 0;
+  padding: 0;
+}
+
+.smarter-workbench-chat,
+.smarter-workbench-console {
+  margin: 0;
+  padding: 5px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* the chat's width is set by the separator, as a percentage. See src/lib/layout.ts. The chat has its own border
+   and padding. */
+.smarter-workbench-chat {
+  padding: 0;
+  flex: 0 0 33.33%;
+  min-width: 280px;
+  transition: flex-basis 0.35s ease-in-out;
+}
+
+.smarter-workbench-chat-full {
+  flex: 1 1 100%;
+}
+
+/* the Console slides out to the right as it hides, while the chat widens, and slides back in from
+   the right. It becomes invisible, to assistive technology too, once it is out of view. */
+.smarter-workbench-console {
+  flex: 1 1 0;
+  min-width: 280px;
+  overflow: hidden;
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    flex-grow 0.35s ease-in-out,
+    min-width 0.35s ease-in-out,
+    padding 0.35s ease-in-out,
+    transform 0.35s ease-in-out,
+    opacity 0.35s ease-in-out,
+    visibility 0s linear 0s;
+}
+
+.smarter-workbench-console-hidden {
+  flex-grow: 0;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  transform: translateX(100%);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    flex-grow 0.35s ease-in-out,
+    min-width 0.35s ease-in-out,
+    padding 0.35s ease-in-out,
+    transform 0.35s ease-in-out,
+    opacity 0.35s ease-in-out,
+    visibility 0s linear 0.35s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smarter-workbench-chat,
+  .smarter-workbench-console,
+  .smarter-workbench-console-hidden {
+    transition: none;
+  }
+}
+
+.smarter-workbench-separator {
+  flex: 0 0 8px;
+  margin: 5px 0;
+  cursor: col-resize;
+  touch-action: none;
+  border-radius: 4px;
+  background-color: rgba(255, 87, 51, 0.25);
+}
+
+.smarter-workbench-separator:hover,
+.smarter-workbench-separator:focus-visible {
+  background-color: rgba(255, 87, 51, 0.75);
+  outline: none;
+}
+
+/* the Console is visible only on large screens */
+@media (max-width: 992px) {
+  .smarter-workbench-chat {
+    flex: 1 1 100% !important;
+  }
+  .smarter-workbench-console,
+  .smarter-workbench-separator,
+  .SmarterChat .smarter-workbench-console-toggle {
+    display: none !important;
+  }
+}

@@ -1,0 +1,283 @@
+div.app-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 5px !important;
+  margin-right: 5px !important;
+}
+
+.console {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  padding: 0px;
+  padding-right: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.console-output {
+  background-color: #2f2f2f;
+  color: whitesmoke;
+  height: 80vh;
+  margin-top: 0px;
+  padding-top: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+}
+
+.console-output-content {
+  text-align: left;
+  margin: 10px;
+  padding: 10px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 16px;
+}
+
+/* the server logs, in the palette and font of the Smarter web console's log viewer, which is an
+   xterm.js terminal. See lib/ansi.ts. */
+.console-output.console-output-logs {
+  background-color: #171b20;
+  color: #d9e1ea;
+}
+
+/* The server log viewer. The Prompt Passthrough has a copy of these rules
+   (smarter-prompt-passthrough/src/components/ServerLogs/styles.css): keep the two the same. The
+   lines' height is --console-server-logs-height. */
+.console-server-logs {
+  --console-server-logs-height: 60vh;
+  background-color: #171b20;
+  color: #d9e1ea;
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.console-server-logs-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.console-server-logs-status {
+  color: #7bd88f;
+}
+
+.console-server-logs-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.console-server-logs-filter {
+  width: 12em;
+  padding: 2px 6px;
+  border: 1px solid #323a45;
+  border-radius: 4px;
+  background-color: #22272e;
+  color: #d9e1ea;
+  font: inherit;
+  font-size: 12px;
+}
+
+.console-server-logs-filter:focus {
+  border-color: #78dce8;
+  outline: none;
+}
+
+.console-server-logs-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid #323a45;
+  border-radius: 4px;
+  background-color: #22272e;
+  color: #8b98a7;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.console-server-logs-button:hover,
+.console-server-logs-button:focus-visible {
+  color: #d9e1ea;
+}
+
+.console-server-logs-button[aria-pressed="true"] {
+  border-color: #78dce8;
+  color: #78dce8;
+}
+
+.console-server-logs-help {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(22em, 1fr));
+  gap: 2px 16px;
+  margin: 0 0 6px;
+  padding: 6px 8px;
+  border: 1px solid #323a45;
+  border-radius: 4px;
+  background-color: #1b1f24;
+  font-size: 12px;
+}
+
+.console-server-logs-help-item {
+  display: flex;
+  gap: 8px;
+}
+
+.console-server-logs-help dt {
+  flex: 0 0 13em;
+  font-weight: normal;
+}
+
+.console-server-logs-help dd {
+  margin: 0;
+  color: #8b98a7;
+}
+
+.console-server-logs-help kbd {
+  margin-right: 4px;
+  padding: 0 4px;
+  border: 1px solid #323a45;
+  border-radius: 3px;
+  background-color: #22272e;
+  color: #d9e1ea;
+  font: inherit;
+  font-size: 11px;
+}
+
+/* the lines scroll in both directions, so that the horizontal scroll bar is always in view. Long
+   lines scroll horizontally, unless they wrap. */
+.console-server-logs-lines {
+  height: var(--console-server-logs-height);
+  overflow: auto;
+  white-space: pre;
+}
+
+/*
+ * scroll bars that are always visible, as the Terminal's are. macOS hides overlay scroll bars until
+ * the user scrolls, which hid the horizontal one of long lines. Chrome and Safari draw classic,
+ * visible scroll bars once ::-webkit-scrollbar is styled, but only without scrollbar-color, which
+ * Chrome 121 and later prefer. So scrollbar-color is only for the browsers without it, e.g. Firefox.
+ */
+.console-server-logs-lines::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.console-server-logs-lines::-webkit-scrollbar-track,
+.console-server-logs-lines::-webkit-scrollbar-corner {
+  background: #161a1f;
+}
+
+.console-server-logs-lines::-webkit-scrollbar-thumb {
+  background: #39424d;
+  border-radius: 999px;
+}
+
+.console-server-logs-lines::-webkit-scrollbar-thumb:hover {
+  background: #4a5663;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .console-server-logs-lines {
+    scrollbar-color: #39424d #161a1f;
+  }
+}
+
+.console-server-logs-lines:focus-visible {
+  outline: 1px solid #78dce8;
+  outline-offset: 2px;
+}
+
+.console-server-logs-wrap .console-server-logs-lines {
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* each line is as wide as the longest, so that the horizontal scrolling is the same for all. */
+.console-log-line {
+  min-width: max-content;
+}
+
+.console-server-logs-wrap .console-log-line {
+  min-width: 0;
+}
+
+/* full screen: the viewer covers the page, until Esc or F. */
+.console-server-logs.console-server-logs-fullscreen {
+  --console-server-logs-height: calc(100vh - 64px);
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  overflow: auto;
+  padding: 8px 12px;
+}
+
+/* in the Console, the lines fill the Console's output, below its shell prompt and the toolbar. */
+.console-output-logs .console-server-logs:not(.console-server-logs-fullscreen) {
+  --console-server-logs-height: calc(80vh - 130px);
+}
+
+.console-empty {
+  color: #75715e;
+}
+
+/* a block of JSON's toggle, and the summary of a collapsed block. */
+.console-log-json-toggle {
+  display: inline-block;
+  min-width: 1.4em;
+  margin: 0 0.4em;
+  padding: 0 0.3em;
+  border: 1px solid #39424d;
+  border-radius: 3px;
+  background: #161a1f;
+  color: #78dce8;
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.console-log-json-toggle:hover,
+.console-log-json-toggle:focus-visible {
+  border-color: #78dce8;
+  outline: none;
+}
+
+.console-log-json-summary {
+  color: #9ba3ad;
+}
+
+.console-log-json-count {
+  font-style: italic;
+}
+
+/* the manifest editor, and the LLMClient's deployment page, as tall as the Console's output. Each scrolls on its
+   own, and its text is aligned as on its own page, rather than centered, as the terminal's is. */
+.console-manifest-editor,
+.console-deployment-page {
+  display: block;
+  width: 100%;
+  height: 80vh;
+  overflow: auto;
+  text-align: start;
+}
+
+/* .console-output is a flex box, which would otherwise override the hidden attribute. */
+.console-output[hidden],
+.console-manifest[hidden],
+.console-deployment[hidden] {
+  display: none;
+}

@@ -7,7 +7,7 @@
 import { fetchDjangoUrl } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../const";
 
 export type CliResult = {
   ok: boolean;

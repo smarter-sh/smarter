@@ -65,8 +65,8 @@ would otherwise display as nothing at all.
 Sandbox Mode and Production Mode
 --------------------------------
 
-*Only in the workbench. Everywhere else, in the npm package and the embed script, the chat is
-always in production mode.*
+*In the workbench. The npm package's chat has it with the* ``toggleMetadata`` *prop, and the embed
+script's is always in production mode.*
 
 The **Sandbox mode / Production mode** button shows and hides the backend's own messages in the
 thread: the system prompt, tool results, Smarter's notes, for example about the plugins it selected
@@ -82,7 +82,7 @@ included, and in production mode only the records at the platform's log level
 (``smarter_settings.log_level``) and above. Switching modes reconnects the stream, which replays
 the recent history at the new level.
 
-Sandbox mode also adds a **Docs** button to the toolbar. It opens a dialog of links to the
+In the workbench, sandbox mode also adds a **Docs** button to the chat's toolbar. It opens a dialog of links to the
 technical references, on two tabs. The **Prompt Engineer** tab, which is selected when the dialog
 opens, is for those who build LLMClients in the sandbox: this Smarter Chat documentation and the
 LLMClient, Plugin, Guardrail and Budget references. The **Software Engineer** tab is for those who
@@ -156,11 +156,12 @@ simulated terminal, and Smarter's progress messages are in English.
 The Console
 -----------
 
-*Only in the workbench. The npm package and the embed script never display it, nor its toggle
-button.*
+*Only in the workbench, whose own app,* ``@smarter/workbench``, *puts it beside the chat. The npm
+package and the embed script have no Console.*
 
-The Console is a simulated terminal beside the chat. Its tabs display the chat session's server logs,
-the LLMClient's manifest, the session's history and configuration, as JSON, and the LLMClient's
+The Console is a simulated terminal beside the chat. Its tabs follow a prompt engineer's work, from
+left to right: the LLMClient's manifest, which each change starts with, the chat session's server logs
+and tool calls, which show what a prompt did, its configuration, as JSON, and the LLMClient's
 deployment:
 
 .. list-table::
@@ -169,22 +170,22 @@ deployment:
 
    * - Tab
      - Contents
-   * - Server Logs
-     - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.
-       Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Blocks of
-       pretty-printed JSON, such as a prompt's request and response, are collapsed to their first
-       line and their length: each block's **+** button expands it, and **Expand JSON** expands or
-       collapses all of them. Copying the lines copies the JSON in full. The tab is the far left one. Present only
-       when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
-       then selected when the Console opens. A new chat clears it.
    * - Manifest
      - The LLMClient's YAML manifest, in the web console's manifest editor, which validates it as you
        type, and saves, clones and deletes the LLMClient with your own permissions. When you save,
        the chat reloads the LLMClient's configuration, so that the next prompt uses your changes, and
        the chat session carries on. The editor loads when you first
-       open it, then keeps your unsaved changes while you look at the other tabs. Present only when
-       the page passes the editor's url (``manifestEditorUrl``), as the workbench does: the editor is
-       a page of the web console, so it must be of the page's own origin.
+       open it, then keeps your unsaved changes while you look at the other tabs. If you delete the
+       LLMClient, the workbench, whose LLMClient is gone, takes you to the LLM Clients list. The tab is
+       the far left one, where each change to the LLMClient starts.
+   * - Server Logs
+     - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.
+       Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Blocks of
+       pretty-printed JSON, such as a prompt's request and response, are collapsed to their first
+       line and their length: each block's **+** button expands it, and **Expand JSON** expands or
+       collapses all of them. Copying the lines copies the JSON in full. The tab is right of Manifest. Present only
+       when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
+       then selected when the Console opens. A new chat clears it.
    * - Tool Calls
      - The chat session's tool calls, each collapsed to its function's name: click one to see its
        request and response.
@@ -195,11 +196,11 @@ deployment:
      - What the prompt engineer needs once the LLMClient is deployed: its status and url, the ways
        to put its chat on a web site (WordPress, Drupal, Shopify, React from npm, and any html page),
        how to secure its url with an api key, how the url works, with curl commands and an example
-       response, and its manifest. Its api key section lists the account's api keys, creates one,
+       response, how chat sessions carry a conversation across page loads, and its manifest. Its api key section lists the account's api keys, creates one,
        showing its secret once, and attaches it to the LLMClient or detaches it. An LLMClient that
-       isn't deployed gets the url that it will have, and the command that deploys it. The tab is the far right one, and the
-       page loads when you first open it. Present only when the page passes its url (``deploymentUrl``), as
-       the workbench does, whatever the ``enable_llmclient_endpoints_page`` waffle switch.
+       isn't deployed gets the url that it will have, and the command that deploys it. The tab is the
+       far right one, and the page loads when you first open it, whatever the
+       ``enable_llmclient_endpoints_page`` waffle switch.
 
 The Tool Calls and Config tabs display the configuration's diagnostic parts, which are costly for
 the platform to build, and grow with the chat session. The chat fetches them only while one of these

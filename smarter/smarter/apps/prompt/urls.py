@@ -15,6 +15,9 @@ from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.detailviews import (
+    LLMClientDeploymentApiKeyAttachView,
+    LLMClientDeploymentApiKeyCreateView,
+    LLMClientDeploymentApiKeyDetachView,
     LLMClientDeploymentView,
     LLMClientDetailView,
     LLMClientManifestEditorView,
@@ -72,6 +75,9 @@ class PromptReverseNames:
     manifest_by_hashed_id = to_snake_case(LLMClientDetailView.__name__)
     manifest_editor_by_hashed_id = to_snake_case(LLMClientManifestEditorView.__name__)
     deployment_by_hashed_id = to_snake_case(LLMClientDeploymentView.__name__)
+    deployment_api_key_create_by_hashed_id = to_snake_case(LLMClientDeploymentApiKeyCreateView.__name__)
+    deployment_api_key_attach_by_hashed_id = to_snake_case(LLMClientDeploymentApiKeyAttachView.__name__)
+    deployment_api_key_detach_by_hashed_id = to_snake_case(LLMClientDeploymentApiKeyDetachView.__name__)
     chat_by_hashed_id = to_snake_case(PromptWorkbenchView.__name__)
     config_by_hashed_id = to_snake_case(PromptConfigView.__name__)
     sandbox_by_hashed_id = to_snake_case(PromptSandboxView.__name__)
@@ -122,6 +128,21 @@ urlpatterns = [
         "llm-clients/<str:hashed_id>/deployment/",
         LLMClientDeploymentView.as_view(),
         name=PromptReverseNames.deployment_by_hashed_id,
+    ),
+    path(
+        "llm-clients/<str:hashed_id>/deployment/api-keys/create/",
+        LLMClientDeploymentApiKeyCreateView.as_view(),
+        name=PromptReverseNames.deployment_api_key_create_by_hashed_id,
+    ),
+    path(
+        "llm-clients/<str:hashed_id>/deployment/api-keys/attach/",
+        LLMClientDeploymentApiKeyAttachView.as_view(),
+        name=PromptReverseNames.deployment_api_key_attach_by_hashed_id,
+    ),
+    path(
+        "llm-clients/<str:hashed_id>/deployment/api-keys/detach/",
+        LLMClientDeploymentApiKeyDetachView.as_view(),
+        name=PromptReverseNames.deployment_api_key_detach_by_hashed_id,
     ),
     path(
         "llm-clients/<str:hashed_id>/prompt/",

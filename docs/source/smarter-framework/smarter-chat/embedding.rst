@@ -222,11 +222,11 @@ That's all. On its first render, the component fetches the LLMClient's configura
 welcome message and example prompts, and is ready to chat. The chat fills the height of its parent
 element, so give the parent a height.
 
-The developer tools, the Console and its toggle button, the Sandbox mode / Production mode button and
-the Docs button, are the Smarter web console's workbench's only. The npm package and the embed script
-never display them, whatever their props: they ignore ``showConsole``, ``toggleMetadata``,
-``logStreamUrl``, ``manifestEditorUrl`` and ``deploymentUrl``, and the chat is always in production
-mode, the conversation as the LLMClient's users see it. See :doc:`Features <features>`.
+By default, the chat is in production mode: the conversation, as the LLMClient's users see it. The
+Smarter web console's Prompt Engineer's Workbench imports the same component, turns on its Sandbox
+mode / Production mode button with ``toggleMetadata``, and puts its own developer Console beside it,
+with the props in *For a Page That Hosts the Chat*, below. See :doc:`Features <features>` and
+:doc:`How the Web Console Hosts It <web-console-hosting>`.
 
 
 Props
@@ -289,6 +289,47 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
      - ``""``
      - An id of the page request, sent as the ``X-Smarter-RequestId`` header, which appears in
        Smarter's logs, for tracing.
+   * - ``toggleMetadata``
+     - ``false``
+     - Show the Sandbox mode / Production mode button, and start in sandbox mode, in which the thread
+       also displays Smarter's system, tool and meta data messages.
+
+
+For a Page That Hosts the Chat
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These props let a page follow the chat, and add to it, as the web console's workbench does with its
+developer Console.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Prop
+     - Default
+     - Description
+   * - ``verbose``
+     - ``false``
+     - Fetch the configuration's diagnostic parts too, e.g. the chat session's tool calls, and again
+       after each prompt. The platform sends them only to a user who may read the LLMClient.
+   * - ``onConfig``
+     -
+     - Called with the configuration each time it loads.
+   * - ``onNewChat``
+     -
+     - Called when the user starts a new chat.
+   * - ``onModeChange``
+     -
+     - Called with ``true`` in sandbox mode, and ``false`` in production mode, when the chat starts
+       and when the user switches.
+   * - ``reloadKey``
+     -
+     - Reload the configuration when it changes, e.g. after the page changed the LLMClient's
+       manifest. The chat session continues.
+   * - ``headerActions``
+     -
+     - Buttons that the page adds to the chat's header, after its own. ``HeaderButton``, which the
+       package exports too, looks like the chat's own buttons.
 
 
 Recipes
@@ -390,8 +431,6 @@ prefixed ``smarter-chat-``, for example:
      - A code block, with its header and copy button.
    * - ``.smarter-chat-image``
      - An image in a message.
-   * - ``.smarter-chat-console``
-     - The Console.
 
 Override them from your own stylesheet, loaded after ``ui-chat.css``.
 
@@ -426,9 +465,6 @@ What the Component Stores in the Browser
    * - ``debug`` (``debugCookieName``)
      - cookie
      - The LLMClient's debug mode.
-   * - ``smarter-chat.chat-width``, ``smarter-chat.console-visible``, ``smarter-chat.log-wrap``
-     - localStorage
-     - The Console's layout, once the visitor changes it.
 
 The chat session itself, its messages, is stored by Smarter, not in the browser. Mention the session
 cookie in your site's cookie notice if you have one.

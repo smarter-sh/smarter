@@ -6,9 +6,9 @@
  * Ctrl+Down for Mission Control, so Cmd+Up and Cmd+Down, Home and End, and g and G move to the
  * top and the bottom too.
  *
- * Smarter Chat's Console (smarter-chat/src/lib/logViewerKeys.ts) and the Prompt Passthrough's
+ * The workbench's Console (smarter-workbench/src/lib/logViewerKeys.ts) and the Prompt Passthrough's
  * Server Logs tab (smarter-prompt-passthrough/src/lib/logViewerKeys.ts) have a copy of this file,
- * because they are published separately. Keep the two the same.
+ * because they are separate apps. Keep the two the same.
  */
 
 /** What a key does in the log viewer. */

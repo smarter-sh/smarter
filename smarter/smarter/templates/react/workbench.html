@@ -1,0 +1,65 @@
+{% extends "dashboard/base.html" %}
+{% load static i18n %}
+{% load react_workbench %}
+{% comment %}
+The Prompt Engineer's Workbench: the @smarter/workbench React app, the chat with an LLMClient and the developer
+Console beside it. Its root element's attributes are the app's configuration.
+See smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView.
+{% endcomment %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the Prompt Engineer's Workbench
+  see: smarter.apps.prompt.templatetags.react_workbench.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% workbench_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/workbench/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <section aria-label="{% translate "Chat with your AI assistant" %}" class="smarter-chat-section">
+    <div
+      id="{{ workbench.root_id }}"
+      style="height: 88vh;"
+      smarter-llmclient-api-url="{{ workbench.llmclient_api_url }}"
+      smarter-toggle-metadata="{{ workbench.toggle_metadata }}"
+      smarter-csrf-cookie-name="{{ workbench.csrf_cookie_name }}"
+      smarter-session-cookie-name="{{ workbench.smarter_session_cookie_name }}"
+      smarter-django-session-cookie-name="{{ workbench.django_session_cookie_name }}"
+      smarter-cookie-domain="{{ workbench.cookie_domain }}"
+      react-debug-mode="{{ workbench.react_debug_mode }}"
+      smarter-request-id="{{ workbench.smarter_request_id }}"
+      smarter-log-stream-url="{{ workbench.log_stream_url }}"
+      smarter-manifest-url="{{ workbench.manifest_url }}"
+      smarter-deployment-url="{{ workbench.deployment_url }}"
+      smarter-llmclient-list-url="{{ workbench.llmclient_list_url }}"
+      smarter-apply-api-url="{{ workbench.apply_api_url }}"
+      smarter-validate-api-url="{{ workbench.validate_api_url }}"
+      smarter-delete-api-url="{{ workbench.delete_api_url }}"
+      smarter-kind-placeholder="{{ workbench.kind_placeholder }}"
+    >
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the Prompt Engineer's Workbench
+  see: smarter.apps.prompt.templatetags.react_workbench.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% workbench_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/workbench/' %}{{ js_file }}"></script>
+  {% endfor %}
+{% endblock %}

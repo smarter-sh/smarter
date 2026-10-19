@@ -9,9 +9,9 @@
  */
 import type * as monaco from "monaco-editor";
 
-import { useCopy } from "@/lib/useCopy";
+import { useCopy } from "../../lib/useCopy";
 
-import "@/components/Toolbar/styles.css";
+import "./styles.css";
 import { gettext, interpolate, ngettext } from "@smarter/common";
 
 // the most paths that a Keenicons duotone icon in this toolbar has: ki-trash has 5.
