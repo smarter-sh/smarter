@@ -328,7 +328,7 @@ See smarter.apps.llmclient.views.endpoints.LLMClientEndpointsView.
           <h4 class="text-gray-900 fw-bold mb-2">{% translate "For platform administrators" %}</h4>
           <div class="fs-6 text-gray-700 mb-4">
             {% blocktranslate with switch="enable_llmclient_endpoints_page" trimmed %}
-            This page is served while the {{ switch }} waffle switch is active. Turn the switch off, in the Django admin under Waffle, Switches, or with this command, and a browser's GET of these endpoints is answered 405 Method Not Allowed again. The api is unaffected.
+            This page is meant for configuring a front end before it goes into production. Turn it off before you go live. It is served while the {{ switch }} waffle switch is active. Turn the switch off, in the Django admin under Waffle, Switches, or with this command, and a browser's GET of these endpoints is answered 405 Method Not Allowed again. The api is unaffected.
             {% endblocktranslate %}
           </div>
           <div class="smarter-terminal">
