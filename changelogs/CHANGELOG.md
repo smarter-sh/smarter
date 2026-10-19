@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.13](https://github.com/smarter-sh/smarter/compare/v0.33.12...v0.33.13) (2026-10-19)
+
+### Bug Fixes
+
+* **llmclient:** show brand icons on the deployment page's cards ([3b39623](https://github.com/smarter-sh/smarter/commit/3b39623edf77d78b6f1f114067501e7b988d7165))
+* **provider:** read a prompt's provider as the llmclient's owner ([66c02cb](https://github.com/smarter-sh/smarter/commit/66c02cb913756211f5b149a08916f4e15902734f))
+
+### Performance
+
+* **prompt:** build the config api's diagnostic parts only on request ([901f579](https://github.com/smarter-sh/smarter/commit/901f5790a227453007303bbed2e5672fedbbdaea))
+
+## [0.33.13-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.12...v0.33.13-alpha.1) (2026-10-19)
+
+### Bug Fixes
+
+* **llmclient:** show brand icons on the deployment page's cards ([3b39623](https://github.com/smarter-sh/smarter/commit/3b39623edf77d78b6f1f114067501e7b988d7165))
+* **provider:** read a prompt's provider as the llmclient's owner ([66c02cb](https://github.com/smarter-sh/smarter/commit/66c02cb913756211f5b149a08916f4e15902734f))
+
+### Performance
+
+* **prompt:** build the config api's diagnostic parts only on request ([901f579](https://github.com/smarter-sh/smarter/commit/901f5790a227453007303bbed2e5672fedbbdaea))
+
 ## [0.33.12](https://github.com/smarter-sh/smarter/compare/v0.33.11...v0.33.12) (2026-10-19)
 
 ### Bug Fixes

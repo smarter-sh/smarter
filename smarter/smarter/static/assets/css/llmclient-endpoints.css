@@ -197,7 +197,7 @@ Everything else on the page is Keen and Bootstrap, from the global bundles that 
   }
 }
 
-/* the integrations' icons: brands without a Keen icon get their initial */
+/* the integrations' icons: each brand's own mark, from Font Awesome's brand icons, on its color */
 .smarter-integration-icon {
   width: 3.5rem;
   height: 3.5rem;
