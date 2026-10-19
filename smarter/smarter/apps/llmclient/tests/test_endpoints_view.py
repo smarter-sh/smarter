@@ -16,20 +16,26 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBrokerError
 from smarter.apps.llmclient.manifest.models.llmclient.model import SAMLLMClient
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.templatetags.react_llmclient_deployment import (
+    DEPLOYMENT_DATA_ID,
+    DEPLOYMENT_ROOT_ID,
+)
+from smarter.apps.llmclient.views.deployment_contract import LLMClientDeploymentPage
 from smarter.apps.llmclient.views.endpoints import (
     EMBED_SCRIPT_URL,
     EXAMPLE_PROMPT,
     EXAMPLE_RESPONSE_CONTENT,
+    SESSION_KEY_PLACEHOLDER,
+    SWITCH_COMMAND,
     api_keys_url,
     browser_friendly,
     cached_manifest_yaml,
     create_api_key_command,
     curl_command,
-    deployment_context,
+    deployment_page,
     embed_html,
     example_prompt,
     example_response,
-    highlight_yaml,
     llmclient_manifest,
     manifest_yaml,
     react_snippet,
@@ -38,6 +44,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptRequest,
     PromptChatApiPromptResponse,
 )
+from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 
 MODULE = "smarter.apps.llmclient.views.endpoints"
 SWITCH = f"{MODULE}.waffle.switch_is_active"
@@ -45,6 +52,15 @@ LLMCLIENTS_URLCONF = "smarter.urls.llmclients"
 CONSOLE_URLCONF = "smarter.urls.console"
 SYSTEM_ROLE = "You are a helpful assistant.\nAnswer in <b>one</b> sentence."
 FIRST_EXAMPLE_PROMPT = "What courses are there?"
+
+
+def page_data(html: str) -> dict:
+    """The deployment page's data, from its json_script, validated by its contract."""
+    match = re.search(rf'<script id="{DEPLOYMENT_DATA_ID}" type="application/json">(.*?)</script>', html, re.S)
+    assert match, "the page has no data"
+    data = json.loads(match[1])
+    LLMClientDeploymentPage.model_validate(data)
+    return data
 
 
 class TestLLMClientEndpointsView(TestAccountMixin):
@@ -88,51 +104,63 @@ class TestLLMClientEndpointsView(TestAccountMixin):
                 self.assertEqual(response.status_code, HTTPStatus.OK)
                 self.assertTrue(response["Content-Type"].startswith("text/html"))
                 html = response.content.decode()
-                self.assertIn(self.llmclient.name, html)
-                self.assertRegex(html, r"<h1[^>]*>\s*<i[^>]*></i>Deployed\s*</h1>")
-                self.assertIn("Where to go from here?", html)
-                # anyone can open the page: it names no owner, and has no clone guide.
-                self.assertNotIn("Owner</td>", html)
-                self.assertNotIn('id="not-yours"', html)
-                self.assertIn(f'href="{self.llmclient.workbench_url}"', html)
-                self.assertIn("Back to the workbench", html)
-                self.assertIn(f"{base_url}/config/", html)
-                self.assertIn(f"{base_url}/prompt/", html)
+                self.assertIn(f'id="{DEPLOYMENT_ROOT_ID}"', html)
+                self.assertIn(f'smarter-deployment-data-id="{DEPLOYMENT_DATA_ID}"', html)
+                # the React app's text is translated with the djangojs catalog, from the LLMClient's own host.
+                self.assertIn('<script src="/jsi18n/"></script>', html)
+                page = page_data(html)
+                self.assertEqual(page["mode"], "public")
+                self.assertTrue(page["deployed"])
+                self.assertFalse(page["authenticated"])
+                # anyone can open the page: it names no owner, and has no api keys.
+                self.assertIsNone(page["ownership"])
+                self.assertIsNone(page["apiKeys"])
+                self.assertNotIn(self.admin_user.username, html)
+                llmclient = page["llmclient"]
+                self.assertEqual(llmclient["name"], self.llmclient.name)
+                self.assertEqual(llmclient["url"], base_url)
+                self.assertEqual(llmclient["workbenchUrl"], self.llmclient.workbench_url)
+                self.assertEqual(llmclient["examplePrompts"], [FIRST_EXAMPLE_PROMPT])
+                snippets = page["snippets"]
+                self.assertIn(f"{base_url}/config/", snippets["configCommand"])
                 # the /prompt/ command sends the LLMClient's first example prompt.
-                self.assertIn(f"&quot;content&quot;:&quot;{FIRST_EXAMPLE_PROMPT}&quot;", html)
-                self.assertNotIn(EXAMPLE_PROMPT, html)
-                self.assertIn("Markdown", html)
-                for integration in ("WordPress", "Drupal", "Shopify", "@smarter.sh/ui-chat", EMBED_SCRIPT_URL):
-                    self.assertIn(integration, html)
-                # each integration's card has its brand's own icon.
-                for brand in ("wordpress", "drupal", "shopify", "react", "html5", "npm"):
-                    self.assertIn(f'class="fa-brands fa-{brand} ', html)
-                self.assertIn(f"data-chatbot=&quot;{base_url}/&quot;", html)
-                self.assertIn("allowedOrigins", html)
-                # how to secure the url: create an api key, attach it, give it to Smarter Chat.
-                self.assertIn("Need to secure this url?", html)
-                self.assertIn(f"--account_number {self.account.account_number}", html)
-                self.assertIn("apiKey: &lt;API-KEY-NAME&gt;", html)
-                self.assertIn(f'href="{api_keys_url()}"', html)
-                self.assertIn("data-api-key=&quot;&lt;YOUR-API-KEY&gt;&quot;", html)
-                self.assertIn("https://github.com/smarter-sh", html)
-                self.assertIn("smarter-crop.png", html)
-                self.assertIn("waffle_switch enable_llmclient_endpoints_page off", html)
-                self.assertIn("assets/css/llmclient-endpoints.css", html)
-                self.assertIn("js/llmclient/endpoints.js", html)
-                self.assertIn('data-clipboard-target="#smarter-prompt-command"', html)
-                self.assertIn('data-smarter-copied-label="Copied"', html)
+                self.assertIn(f"{base_url}/prompt/", snippets["promptCommand"])
+                self.assertIn(f'"content":"{FIRST_EXAMPLE_PROMPT}"', snippets["promptCommand"])
+                self.assertNotIn(EXAMPLE_PROMPT, snippets["promptCommand"])
                 # a public LLMClient's commands send no api key.
-                self.assertNotIn("Authorization", re.search(r'id="smarter-prompt-command">(.*?)</code>', html, re.S)[1])
-                # escaped, in the description and in the manifest's system role.
-                self.assertIn("&lt;courses&gt;", html)
-                self.assertIn("&lt;b&gt;one&lt;/b&gt;", html)
+                self.assertNotIn("Authorization", snippets["promptCommand"])
+                # the chat session's commands carry its key: a prompt, and the config request that continues it.
+                self.assertIn(f"{base_url}/prompt/", snippets["sessionPromptCommand"])
+                self.assertIn(f'"session_key":"{SESSION_KEY_PLACEHOLDER}"', snippets["sessionPromptCommand"])
+                self.assertIn(f'"content":"{FIRST_EXAMPLE_PROMPT}"', snippets["sessionPromptCommand"])
+                self.assertIn(f"{base_url}/config/", snippets["sessionConfigCommand"])
+                self.assertIn(f'\'{{"session_key":"{SESSION_KEY_PLACEHOLDER}"}}\'', snippets["sessionConfigCommand"])
+                self.assertIn(EMBED_SCRIPT_URL, snippets["embedHtml"])
+                self.assertIn(f'data-chatbot="{base_url}/"', snippets["embedHtml"])
+                self.assertIn('data-api-key="<YOUR-API-KEY>"', snippets["embedHtmlWithApiKey"])
+                self.assertIn("allowedOrigins", snippets["allowedOriginsYaml"])
+                self.assertIn(f"--account_number {self.account.account_number}", snippets["createApiKeyCommand"])
+                self.assertEqual(snippets["apiKeyYaml"], "spec:\n  apiKey: <API-KEY-NAME>")
+                self.assertEqual(snippets["switchCommand"], SWITCH_COMMAND)
+                self.assertEqual(page["links"]["apiKeysUrl"], api_keys_url())
+                self.assertTrue(page["links"]["logoUrl"].endswith("smarter-crop.png"))
+                # the manifest, with its system role, is in the data as text: json_script escapes its html.
+                self.assertIn("Answer in <b>one</b> sentence.", page["manifestYaml"])
                 self.assertNotIn("<b>one</b>", html)
+                self.assertNotIn("<courses>", html)
+
+    def test_the_page_is_the_react_app(self):
+        manager = "smarter.apps.llmclient.templatetags.react_llmclient_deployment.templatetag_manager"
+        assets = ReactAppAssets(css=["assets/index.css"], js=["assets/index.js"])
+        with patch(f"{manager}.reactapp_build_assets", assets):
+            html = self.get("/", self.llmclient).content.decode()
+        self.assertIn("/static/react/%40smarter/llmclient-deployment/assets/index.css", html)
+        self.assertIn('type="module" src="/static/react/%40smarter/llmclient-deployment/assets/index.js"', html)
 
     def test_the_manifest_keeps_its_indentation(self):
-        html = self.get("/", self.llmclient).content.decode()
-        self.assertIn('\n  <span class="yaml-key">name</span>', html)
-        self.assertIn('\n    <span class="yaml-key">prompt</span>', html)
+        page = page_data(self.get("/", self.llmclient).content.decode())
+        self.assertIn("\n  name: ", page["manifestYaml"])
+        self.assertIn("\n    prompt:", page["manifestYaml"])
 
     def test_custom_domain_endpoints_serve_the_page(self):
         for path in ("/config/", "/prompt/"):
@@ -148,12 +176,14 @@ class TestLLMClientEndpointsView(TestAccountMixin):
         with patch.object(LLMClient, "is_authentication_required", new_callable=PropertyMock, return_value=True):
             response = self.get("/", self.llmclient)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        html = response.content.decode()
-        self.assertIn("Authorization: Token &lt;YOUR-API-KEY&gt;", html)
-        self.assertIn("Api key required", html)
-        self.assertIn("data-api-key=&quot;&lt;YOUR-API-KEY&gt;&quot;", html)
-        self.assertIn("apiKey={import.meta.env.VITE_SMARTER_API_KEY}", html)
-        self.assertIn("already requires an api key", html)
+        page = page_data(response.content.decode())
+        self.assertTrue(page["authenticated"])
+        self.assertIn("Authorization: Token <YOUR-API-KEY>", page["snippets"]["promptCommand"])
+        self.assertIn("Authorization: Token <YOUR-API-KEY>", page["snippets"]["configCommand"])
+        self.assertIn("Authorization: Token <YOUR-API-KEY>", page["snippets"]["sessionConfigCommand"])
+        self.assertIn("Authorization: Token <YOUR-API-KEY>", page["snippets"]["sessionPromptCommand"])
+        self.assertIn('data-api-key="<YOUR-API-KEY>"', page["snippets"]["embedHtml"])
+        self.assertIn("apiKey={import.meta.env.VITE_SMARTER_API_KEY}", page["snippets"]["reactSnippet"])
 
     def test_a_host_without_an_llmclient(self):
         for urlconf in (LLMCLIENTS_URLCONF, CONSOLE_URLCONF):
@@ -179,9 +209,9 @@ class TestLLMClientEndpointsView(TestAccountMixin):
         with patch(f"{MODULE}.cached_manifest_yaml", side_effect=SAMLLMClientBrokerError("no", thing="LLMClient")):
             response = self.get("/", self.llmclient)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        html = response.content.decode()
-        self.assertNotIn('id="smarter-manifest"', html)
-        self.assertIn(FIRST_EXAMPLE_PROMPT, html)
+        page = page_data(response.content.decode())
+        self.assertIsNone(page["manifestYaml"])
+        self.assertEqual(page["llmclient"]["examplePrompts"], [FIRST_EXAMPLE_PROMPT])
 
     def test_post_goes_to_the_api_view(self):
         api_view = MagicMock(return_value=HttpResponse("api"))
@@ -250,19 +280,46 @@ class TestLLMClientEndpointsView(TestAccountMixin):
         self.assertIn("defaultSystemRole: |", text)
         self.assertIn("\n        Answer in <b>one</b> sentence.", text)
 
-    def test_the_deployment_context_of_an_llmclient_that_is_not_deployed(self):
+    def test_the_deployment_page_of_an_llmclient_that_is_not_deployed(self):
         LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=False)
         self.llmclient.refresh_from_db()
-        context = deployment_context(self.llmclient)
-        self.assertFalse(context["deployed"])
+        page = deployment_page(self.llmclient)
+        self.assertFalse(page.deployed)
+        self.assertEqual(page.mode, "workbench")
         # the url that it will have once it is deployed, not its sandbox url.
-        self.assertEqual(context["llmclient"]["url"], self.llmclient.default_url.rstrip("/"))
-        self.assertNotIn("/workbench/", context["llmclient"]["url"])
-        self.assertEqual(context["deploy_command"], f"smarter deploy llmclient {self.llmclient.name}")
-        self.assertEqual(context["llmclient"]["workbench_url"], self.llmclient.workbench_url)
+        self.assertEqual(page.llmclient.url, self.llmclient.default_url.rstrip("/"))
+        self.assertNotIn("/workbench/", page.llmclient.url)
+        self.assertEqual(page.snippets.deploy_command, f"smarter deploy llmclient {self.llmclient.name}")
+        self.assertEqual(
+            page.snippets.deploy_commands,
+            f"smarter apply -f {self.llmclient.name}.yaml\nsmarter deploy llmclient {self.llmclient.name}",
+        )
+        self.assertEqual(page.llmclient.workbench_url, self.llmclient.workbench_url)
         self.assertTrue(
             self.llmclient.workbench_url.endswith(f"/workbench/llm-clients/{self.llmclient.hashed_id}/prompt/")
         )
+
+    def test_the_public_page(self):
+        """The public copy of the page has no owner or api keys, even if the page has them."""
+        page = deployment_page(self.llmclient)
+        self.assertIsNone(page.ownership)
+        self.assertIsNone(page.api_keys)
+        public = page.public()
+        self.assertEqual(public.mode, "public")
+        self.assertIsNone(public.ownership)
+        self.assertEqual(public.llmclient, page.llmclient)
+
+    def test_example_prompts_that_are_not_strings_are_left_out(self):
+        self.llmclient.app_example_prompts = ["What's new?", 3, None]
+        self.assertEqual(deployment_page(self.llmclient).llmclient.example_prompts, ["What's new?"])
+
+    def test_the_llmclient_host_serves_the_message_catalog(self):
+        match = resolve("/jsi18n/", urlconf=LLMCLIENTS_URLCONF)
+        self.assertEqual(match.url_name, "javascript-catalog")
+        with override_settings(ALLOWED_HOSTS=["*"]):
+            response = match.func(self.request("/jsi18n/"))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIn("django.gettext", response.content.decode())
 
     def test_example_prompt(self):
         self.assertEqual(example_prompt(self.llmclient), FIRST_EXAMPLE_PROMPT)
@@ -272,39 +329,6 @@ class TestLLMClientEndpointsView(TestAccountMixin):
                 self.assertEqual(example_prompt(self.llmclient), EXAMPLE_PROMPT)
         self.llmclient.app_example_prompts = ["  ", " What's new? "]
         self.assertEqual(example_prompt(self.llmclient), "What's new?")
-
-
-class TestHighlightYaml(TestAccountMixin):
-    """Test the YAML highlighter of the page's manifest."""
-
-    def test_keys_values_and_lists(self):
-        html = highlight_yaml("kind: LLMClient\ncount: 3\nok: true\nitems:\n  - one\n  - name: two\n# note")
-        self.assertIn('<span class="yaml-key">kind</span><span class="yaml-punctuation">:</span>', html)
-        self.assertIn('<span class="yaml-string">LLMClient</span>', html)
-        self.assertIn('<span class="yaml-literal">3</span>', html)
-        self.assertIn('<span class="yaml-literal">true</span>', html)
-        self.assertIn('  <span class="yaml-punctuation">- </span><span class="yaml-string">one</span>', html)
-        self.assertIn('<span class="yaml-punctuation">- </span><span class="yaml-key">name</span>', html)
-        self.assertIn("# note", html)
-
-    def test_literal_blocks(self):
-        html = highlight_yaml("role: |\n  line one\n\n  line two\nnext: x")
-        self.assertIn('<span class="yaml-block">|</span>', html)
-        self.assertIn('<span class="yaml-string">  line one</span>', html)
-        self.assertIn('<span class="yaml-string">  line two</span>', html)
-        self.assertIn('<span class="yaml-key">next</span>', html)
-
-    def test_everything_is_escaped(self):
-        html = highlight_yaml("a: <script>x</script>\n- <b>\n  <i>: |\n    <u>\n<p>")
-        for tag in ("<script>", "<b>", "<i>", "<u>", "<p>"):
-            self.assertNotIn(tag, html)
-        self.assertIn("&lt;script&gt;", html)
-        self.assertIn("&lt;p&gt;", html)
-
-    def test_empty_values(self):
-        self.assertEqual(
-            highlight_yaml("spec:"), '<span class="yaml-key">spec</span><span class="yaml-punctuation">:</span>'
-        )
 
 
 class TestCurlCommand(TestAccountMixin):

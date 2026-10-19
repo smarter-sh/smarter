@@ -1,0 +1,542 @@
+{
+  "$defs": {
+    "ApiKeyActionResponse": {
+      "additionalProperties": false,
+      "description": "The page after an api key action, and a new key's secret.",
+      "properties": {
+        "newApiKey": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NewApiKey"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "page": {
+          "$ref": "#/$defs/LLMClientDeploymentPage"
+        }
+      },
+      "required": ["page", "newApiKey"],
+      "title": "ApiKeyActionResponse",
+      "type": "object"
+    },
+    "AttachApiKeyRequest": {
+      "additionalProperties": false,
+      "description": "Attach one of the account's api keys to the LLMClient, in place of any other.",
+      "properties": {
+        "keyId": {
+          "format": "uuid",
+          "title": "Keyid",
+          "type": "string"
+        }
+      },
+      "required": ["keyId"],
+      "title": "AttachApiKeyRequest",
+      "type": "object"
+    },
+    "CreateApiKeyRequest": {
+      "additionalProperties": false,
+      "description": "Create an api key for the user, and attach it to the LLMClient if asked to.",
+      "properties": {
+        "attach": {
+          "default": false,
+          "title": "Attach",
+          "type": "boolean"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "description": "The key's name, in snake_case.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": ["name"],
+      "title": "CreateApiKeyRequest",
+      "type": "object"
+    },
+    "DeploymentApiKey": {
+      "additionalProperties": false,
+      "description": "One of the account's api keys that the user may manage.",
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "isActive": {
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "isAttached": {
+          "description": "Whether it is the LLMClient's api key.",
+          "title": "Isattached",
+          "type": "boolean"
+        },
+        "keyId": {
+          "format": "uuid",
+          "title": "Keyid",
+          "type": "string"
+        },
+        "lastUsedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lastusedat"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "owner": {
+          "description": "The username of the key's owner.",
+          "title": "Owner",
+          "type": "string"
+        }
+      },
+      "required": ["keyId", "name", "description", "isActive", "owner", "lastUsedAt", "isAttached"],
+      "title": "DeploymentApiKey",
+      "type": "object"
+    },
+    "DeploymentApiKeys": {
+      "additionalProperties": false,
+      "description": "The LLMClient's api key, the account's api keys, what the user may do, and where.\n\nWorkbench only.",
+      "properties": {
+        "apiKeys": {
+          "description": "Newest first.",
+          "items": {
+            "$ref": "#/$defs/DeploymentApiKey"
+          },
+          "title": "Apikeys",
+          "type": "array"
+        },
+        "attachUrl": {
+          "title": "Attachurl",
+          "type": "string"
+        },
+        "attached": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeploymentAttachedApiKey"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "canCreate": {
+          "description": "Whether the user may create an api key: staff.",
+          "title": "Cancreate",
+          "type": "boolean"
+        },
+        "canManage": {
+          "description": "Whether the user may attach and detach api keys: ownership.",
+          "title": "Canmanage",
+          "type": "boolean"
+        },
+        "createUrl": {
+          "title": "Createurl",
+          "type": "string"
+        },
+        "detachUrl": {
+          "title": "Detachurl",
+          "type": "string"
+        }
+      },
+      "required": ["apiKeys", "attached", "canManage", "canCreate", "createUrl", "attachUrl", "detachUrl"],
+      "title": "DeploymentApiKeys",
+      "type": "object"
+    },
+    "DeploymentAttachedApiKey": {
+      "additionalProperties": false,
+      "description": "The LLMClient's api key, which every request to its url needs, while it is active.",
+      "properties": {
+        "isActive": {
+          "title": "Isactive",
+          "type": "boolean"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": ["name", "isActive"],
+      "title": "DeploymentAttachedApiKey",
+      "type": "object"
+    },
+    "DeploymentLLMClient": {
+      "additionalProperties": false,
+      "description": "The LLMClient, as the page describes it.",
+      "properties": {
+        "appName": {
+          "description": "The chat's title, or the LLMClient's name if it has none.",
+          "title": "Appname",
+          "type": "string"
+        },
+        "examplePrompts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Exampleprompts",
+          "type": "array"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider"
+        },
+        "url": {
+          "description": "Its url, without a trailing slash: the url that it will have, if it isn't deployed.",
+          "title": "Url",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "workbenchUrl": {
+          "description": "The url of its Prompt Engineer's Workbench.",
+          "title": "Workbenchurl",
+          "type": "string"
+        }
+      },
+      "required": ["name", "appName", "examplePrompts", "provider", "model", "version", "url", "workbenchUrl"],
+      "title": "DeploymentLLMClient",
+      "type": "object"
+    },
+    "DeploymentLinks": {
+      "additionalProperties": false,
+      "description": "The urls that the page links to, which depend on the platform's configuration.",
+      "properties": {
+        "apiKeysUrl": {
+          "description": "The web console's API Keys page, absolute.",
+          "title": "Apikeysurl",
+          "type": "string"
+        },
+        "docsUrl": {
+          "title": "Docsurl",
+          "type": "string"
+        },
+        "logoUrl": {
+          "title": "Logourl",
+          "type": "string"
+        },
+        "marketingSiteUrl": {
+          "title": "Marketingsiteurl",
+          "type": "string"
+        },
+        "productDescription": {
+          "title": "Productdescription",
+          "type": "string"
+        },
+        "productName": {
+          "title": "Productname",
+          "type": "string"
+        }
+      },
+      "required": ["apiKeysUrl", "marketingSiteUrl", "docsUrl", "logoUrl", "productName", "productDescription"],
+      "title": "DeploymentLinks",
+      "type": "object"
+    },
+    "DeploymentOwnership": {
+      "additionalProperties": false,
+      "description": "Who owns the LLMClient, and how a user who may not change it can clone it.\n\nWorkbench only.",
+      "properties": {
+        "canEdit": {
+          "description": "Whether the user may change the LLMClient: ownership permission.",
+          "title": "Canedit",
+          "type": "boolean"
+        },
+        "llmclientListUrl": {
+          "description": "The url of the LLM Clients list, where it can be cloned.",
+          "title": "Llmclientlisturl",
+          "type": "string"
+        },
+        "owner": {
+          "description": "The owner's full name and username, or the username.",
+          "title": "Owner",
+          "type": "string"
+        },
+        "ownershipDocsUrl": {
+          "title": "Ownershipdocsurl",
+          "type": "string"
+        }
+      },
+      "required": ["owner", "canEdit", "llmclientListUrl", "ownershipDocsUrl"],
+      "title": "DeploymentOwnership",
+      "type": "object"
+    },
+    "DeploymentSnippets": {
+      "additionalProperties": false,
+      "description": "The commands, manifest excerpts and code that the page shows, each in a terminal with a Copy button.",
+      "properties": {
+        "allowedOriginsYaml": {
+          "title": "Allowedoriginsyaml",
+          "type": "string"
+        },
+        "apiKeyYaml": {
+          "title": "Apikeyyaml",
+          "type": "string"
+        },
+        "configCommand": {
+          "description": "The curl command that POSTs to its /config/ endpoint.",
+          "title": "Configcommand",
+          "type": "string"
+        },
+        "createApiKeyCommand": {
+          "title": "Createapikeycommand",
+          "type": "string"
+        },
+        "deployCommand": {
+          "description": "The command that deploys the LLMClient.",
+          "title": "Deploycommand",
+          "type": "string"
+        },
+        "deployCommands": {
+          "description": "The commands that apply its manifest, and deploy it.",
+          "title": "Deploycommands",
+          "type": "string"
+        },
+        "drupalInstallCommands": {
+          "title": "Drupalinstallcommands",
+          "type": "string"
+        },
+        "embedHtml": {
+          "title": "Embedhtml",
+          "type": "string"
+        },
+        "embedHtmlWithApiKey": {
+          "title": "Embedhtmlwithapikey",
+          "type": "string"
+        },
+        "exampleResponse": {
+          "description": "An abbreviated /prompt/ response, as indented JSON.",
+          "title": "Exampleresponse",
+          "type": "string"
+        },
+        "npmInstallCommand": {
+          "title": "Npminstallcommand",
+          "type": "string"
+        },
+        "promptCommand": {
+          "description": "The curl command that POSTs a prompt to its /prompt/ endpoint.",
+          "title": "Promptcommand",
+          "type": "string"
+        },
+        "reactSnippet": {
+          "title": "Reactsnippet",
+          "type": "string"
+        },
+        "reactSnippetWithApiKey": {
+          "title": "Reactsnippetwithapikey",
+          "type": "string"
+        },
+        "sessionConfigCommand": {
+          "description": "The curl command that continues a chat session: its /config/ request, with the session's key.",
+          "title": "Sessionconfigcommand",
+          "type": "string"
+        },
+        "sessionPromptCommand": {
+          "description": "The curl command that sends a prompt in a chat session, with the session's key.",
+          "title": "Sessionpromptcommand",
+          "type": "string"
+        },
+        "switchCommand": {
+          "description": "The command that turns off the page at deployed LLMClients' urls, for administrators.",
+          "title": "Switchcommand",
+          "type": "string"
+        }
+      },
+      "required": [
+        "deployCommand",
+        "deployCommands",
+        "configCommand",
+        "promptCommand",
+        "sessionConfigCommand",
+        "sessionPromptCommand",
+        "exampleResponse",
+        "allowedOriginsYaml",
+        "apiKeyYaml",
+        "drupalInstallCommands",
+        "npmInstallCommand",
+        "embedHtml",
+        "embedHtmlWithApiKey",
+        "reactSnippet",
+        "reactSnippetWithApiKey",
+        "createApiKeyCommand",
+        "switchCommand"
+      ],
+      "title": "DeploymentSnippets",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "description": "Why an api key action failed: its code, and an English message for logs and developers.",
+      "properties": {
+        "code": {
+          "enum": [
+            "not_found",
+            "invalid_request",
+            "not_owner",
+            "not_admin",
+            "not_account_admin",
+            "invalid_name",
+            "duplicate_name",
+            "api_key_not_found"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "error": {
+          "title": "Error",
+          "type": "string"
+        }
+      },
+      "required": ["error", "code"],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "LLMClientDeploymentPage": {
+      "additionalProperties": false,
+      "description": "Everything that the page shows.",
+      "properties": {
+        "apiKeys": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeploymentApiKeys"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "authenticated": {
+          "description": "Whether its url requires an api key.",
+          "title": "Authenticated",
+          "type": "boolean"
+        },
+        "deployed": {
+          "title": "Deployed",
+          "type": "boolean"
+        },
+        "links": {
+          "$ref": "#/$defs/DeploymentLinks"
+        },
+        "llmclient": {
+          "$ref": "#/$defs/DeploymentLLMClient"
+        },
+        "manifestYaml": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Its manifest, without its owner's username, or null if it couldn't be built.",
+          "title": "Manifestyaml"
+        },
+        "mode": {
+          "enum": ["public", "workbench"],
+          "title": "Mode",
+          "type": "string"
+        },
+        "ownership": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeploymentOwnership"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "snippets": {
+          "$ref": "#/$defs/DeploymentSnippets"
+        }
+      },
+      "required": [
+        "mode",
+        "llmclient",
+        "deployed",
+        "authenticated",
+        "manifestYaml",
+        "snippets",
+        "links",
+        "ownership",
+        "apiKeys"
+      ],
+      "title": "LLMClientDeploymentPage",
+      "type": "object"
+    },
+    "NewApiKey": {
+      "additionalProperties": false,
+      "description": "An api key that was just created.\n\nIts secret is in this response only.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "secret": {
+          "title": "Secret",
+          "type": "string"
+        }
+      },
+      "required": ["name", "secret"],
+      "title": "NewApiKey",
+      "type": "object"
+    }
+  },
+  "$id": "https://smarter.sh/schemas/llmclient-deployment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "The data of an LLMClient's deployment page, and of its api key actions. Generated from smarter.apps.llmclient.views.deployment_contract; do not edit.",
+  "title": "Smarter LLMClient deployment page contract"
+}

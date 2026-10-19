@@ -69,7 +69,7 @@ deploying: the LLMClient's status and url, where to go from here, with the integ
 chat on a web site (:doc:`WordPress <../smarter-framework/smarter-wordpress>`,
 :doc:`Drupal <../smarter-framework/smarter-drupal>`, :doc:`Shopify <../smarter-framework/smarter-shopify>`,
 the :doc:`npm package and any html page <../smarter-framework/smarter-chat/embedding>`), how to secure
-its url, these commands, and its manifest. The tab lists the account's
+its url, these commands, how its chat sessions work, and its manifest. The tab lists the account's
 :doc:`api keys <../smarter-platform/api-keys>`, creates one, showing its secret once, and attaches
 it to the LLMClient, which then requires it, or detaches it. Attaching a key there is the same as
 naming it in the manifest's ``spec.apiKey`` and applying it: an LLMClient has one api key, and the

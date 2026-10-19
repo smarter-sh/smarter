@@ -1,7 +1,7 @@
 /**
  * The server logs of one prompt, as Server-Sent Events, for the Prompt Passthrough's "Server Logs" tab.
  *
- * The stream is the one that Smarter Chat's Console reads: its first event is a "bulk" event with
+ * The stream is the one that the workbench's Console reads: its first event is a "bulk" event with
  * the recent history, and each later event is one log record, as JSON. See
  * smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs. Its "request_id"
  * query parameter narrows it to the records of one request: the request whose X-Smarter-RequestId

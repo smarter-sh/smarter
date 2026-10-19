@@ -1,4 +1,4 @@
-/* The server log viewer, in the palette and font of Smarter Chat's Console. A copy of the server
+/* The server log viewer, in the palette and font of the workbench's Console. A copy of the server
    logs rules of smarter-chat's src/components/Console/styles.css: keep the two the same. The
    lines' height is --console-server-logs-height. */
 .console-server-logs {

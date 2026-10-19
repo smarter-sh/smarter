@@ -1,7 +1,7 @@
 /**
  * The "Server Logs" tab: the server logs of the prompt that was sent last, as they stream in.
  *
- * The records are displayed as Smarter Chat's Console displays them: their text, with its ANSI
+ * The records are displayed as the workbench's Console displays them: their text, with its ANSI
  * colors, in the Console's palette and font. Their text already has their time and level. Long
  * lines scroll horizontally, unless the user wraps them. Blocks of pretty-printed JSON, which can
  * be hundreds of lines long, are collapsed, each with a toggle, and the toolbar expands or collapses

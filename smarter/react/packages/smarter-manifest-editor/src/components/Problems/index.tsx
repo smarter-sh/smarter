@@ -1,3 +1,3 @@
-import Problems from "@/components/Problems/Component";
+import Problems from "./Component";
 
 export default Problems;

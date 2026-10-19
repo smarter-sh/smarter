@@ -201,19 +201,22 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     Prompt app view for the Smarter web application.
 
     This view is responsible for serving the main prompt application page within the Smarter dashboard web app.
-    It hosts Smarter Chat, a React app that is built with Vite into Django's static files, like every other React
-    app of the web console. The React app then takes over the UI from there.
+    It hosts the Prompt Engineer's Workbench, the ``@smarter/workbench`` React app, which is built with Vite into
+    Django's static files, like every other React app of the web console. The React app then takes over the UI
+    from there.
 
     **Key Features:**
 
     - **Django Template Integration:**
-      The view renders ``react/smarter-chat.html``, whose ``react_smarter_chat`` template tag includes the React
+      The view renders ``react/workbench.html``, whose ``react_workbench`` template tag includes the React
       app's hashed JavaScript and CSS files, from its Vite manifest.json, and whose root div passes the app its
       configuration as attributes.
 
     - **ReactJS UI Bootstrapping:**
-      The React app (https://github.com/smarter-sh/smarter-chat, cloned into smarter/react/packages/smarter-chat)
-      renders the interactive prompt UI after the initial page load.
+      The workbench renders the chat, Smarter Chat (the ``@smarter.sh/ui-chat`` npm package,
+      https://github.com/smarter-sh/smarter-chat, cloned into smarter/react/packages/smarter-chat), and the
+      developer Console beside it, whose Manifest and Deployment tabs fetch their data from
+      :class:`LLMClientManifestEditorView` and :class:`LLMClientDeploymentView` when they are first opened.
 
     - **Flexible URL Patterns:**
       The view supports both sandbox and production URL formats, allowing it to work with deployed and not-yet-deployed LLMClients.
@@ -241,8 +244,8 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         - `PromptConfigView` — for the endpoint that provides configuration data to the React app.
     """
 
-    template_path = "react/smarter-chat.html"
-    root_id = "smarter-chat-root"
+    template_path = "react/workbench.html"
+    root_id = "smarter-workbench-root"
 
     llmclient: Optional[LLMClient] = None
     llmclient_helper: Optional[LLMClientHelper] = None
@@ -250,10 +253,10 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def log_stream_url(self) -> str:
         """
-        The url of the user's server log stream, which Smarter Chat displays in its Console.
+        The url of the user's server log stream, which the workbench displays in its Console.
 
         :returns: The url of :func:`smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs`,
-            or an empty string if log viewing in the browser is disabled, in which case Smarter Chat has no
+            or an empty string if log viewing in the browser is disabled, in which case the Console has no
             "Server Logs" tab. See :func:`smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled`.
         :rtype: str
         """
@@ -279,14 +282,12 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         )
 
     @property
-    def manifest_editor_url(self) -> str:
+    def manifest_url(self) -> str:
         """
-        The url of the llmclient's manifest editor, which Smarter Chat displays in its Console's "Manifest" tab.
-
-        The url is a path, of the workbench's own origin, which Smarter Chat requires of it.
+        The url of the llmclient's manifest, as JSON, which the workbench's Console edits in its "Manifest" tab.
 
         :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientManifestEditorView`, or an
-            empty string if there is no llmclient, in which case Smarter Chat has no "Manifest" tab.
+            empty string if there is no llmclient, in which case the Console has no "Manifest" tab.
         :rtype: str
         """
         # pylint: disable=C0415
@@ -301,13 +302,12 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def deployment_url(self) -> str:
-        """
-        The url of the llmclient's deployment page, which Smarter Chat displays in its Console's "Deployment" tab.
+        """The url of the llmclient's deployment page's data, which the workbench's Console displays in its.
 
-        The url is a path, of the workbench's own origin, which Smarter Chat requires of it.
+        "Deployment" tab.
 
         :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientDeploymentView`, or an
-            empty string if there is no llmclient, in which case Smarter Chat has no "Deployment" tab.
+            empty string if there is no llmclient, in which case the Console has no "Deployment" tab.
         :rtype: str
         """
         # pylint: disable=C0415
@@ -449,8 +449,17 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
         # the basic idea is to pass the names of the necessary cookies to the React app, and then
         # it is supposed to find and read the cookies to get the prompt session key, csrf token, etc.
+        # pylint: disable=C0415
+        from smarter.apps.dashboard.templatetags.react_manifest_editor import (
+            manifest_editor_context,
+        )
+        from smarter.apps.prompt.urls import PromptReverseNames
+
+        # the Manifest tab's editor saves, validates and deletes the manifest with the cli api, as every
+        # manifest page's editor does.
+        manifest_editor = manifest_editor_context()
         context = {
-            "smarter_chat": {
+            "workbench": {
                 "root_id": self.root_id,
                 "llmclient_api_url": self.llmclient.sandbox_url,
                 "toggle_metadata": True,
@@ -461,8 +470,13 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "react_debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
                 "log_stream_url": self.log_stream_url,
-                "manifest_editor_url": self.manifest_editor_url,
+                "manifest_url": self.manifest_url,
                 "deployment_url": self.deployment_url,
+                "llmclient_list_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "apply_api_url": manifest_editor["apply_api_url"],
+                "validate_api_url": manifest_editor["validate_api_url"],
+                "delete_api_url": manifest_editor["delete_api_url"],
+                "kind_placeholder": manifest_editor["kind_placeholder"],
             }
         }
         verbose_logger.debug(
