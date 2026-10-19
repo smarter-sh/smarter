@@ -82,6 +82,7 @@ from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.mixins.helper_mixin import SmarterReadyState
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 from smarter.lib.drf import urls as drf_urls
@@ -164,6 +165,14 @@ for model in models:
 name_prefix = "console"
 
 
+class ConsoleReverseNames:
+    """Reverse view names for the web console's root paths."""
+
+    register_view = to_snake_case(AccountRegisterView.__name__)
+    robots_txt = to_snake_case(RobotsTxtView.__name__)
+    sitemap_xml = to_snake_case(SitemapXmlView.__name__)
+
+
 urlpatterns = [
     # -----------------------------------
     # root paths
@@ -196,7 +205,7 @@ urlpatterns = [
     path("extensions/", include(extension_urls, namespace=extension_urls.namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
-    path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
+    path("register/", AccountRegisterView.as_view(), name=ConsoleReverseNames.register_view),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     # -----------------------------------
@@ -223,8 +232,8 @@ urlpatterns = [
     # static routes
     # -----------------------------------
     path("favicon.png", FaviconView.as_view(), name=f"{name_prefix}_favicon"),
-    path("robots.txt", RobotsTxtView.as_view(), name=f"{name_prefix}_robots_txt"),
-    path("sitemap.xml", SitemapXmlView.as_view(), name=f"{name_prefix}_sitemap_xml"),
+    path("robots.txt", RobotsTxtView.as_view(), name=ConsoleReverseNames.robots_txt),
+    path("sitemap.xml", SitemapXmlView.as_view(), name=ConsoleReverseNames.sitemap_xml),
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
     re_path(
