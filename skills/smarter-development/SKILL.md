@@ -183,6 +183,7 @@ reference implementations.
 | The SAM JSON Schemas, example manifests and cli OpenAPI document | `smarter-api-contract`                 |
 | Python docstrings                                                | `smarter-docstrings`                   |
 | Logger calls: prefixes, levels, waffle switches, secrets         | `smarter-logging`                      |
+| Url patterns, url names, `reverse()`, `*_url` properties         | `smarter-url-names`                    |
 | Text the web console shows, .po catalogs, adding a language      | `smarter-translations`                 |
 | Type annotations, `Any`, the `smarter.lib.typing` aliases        | `smarter-python-typing`                |
 | Sphinx pages                                                     | `smarter-sphinx-docs`                  |

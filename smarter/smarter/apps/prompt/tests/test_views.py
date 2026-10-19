@@ -18,7 +18,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.caching import (
     invalidate_all_cached_llmclients_for_user_profile,
 )
-from smarter.apps.llmclient.models import LLMClient, LLMClientHelper
+from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey, LLMClientHelper
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V2_CAPABILITY
 from smarter.apps.prompt.contract.models import (
     PromptChatApiConfigResponse,
@@ -33,6 +33,7 @@ from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterPromptSession,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.logging.redis_log_handler import session_key_context
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
@@ -162,6 +163,170 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         unknown = LLMClient(id=999999999)
         response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_workbench_deployment_url(self):
+        """Test that the workbench passes the LLMClient's deployment page, of its own origin, to Smarter Chat."""
+        response = self.client.get(
+            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
+        )
+        deployment_url = response.context["smarter_chat"]["deployment_url"]
+        self.assertEqual(deployment_url, self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(deployment_url, f"/workbench/llm-clients/{self.resource.hashed_id}/deployment/")
+        self.assertIn(f'smarter-deployment-url="{deployment_url}"', response.content.decode())
+
+    def test_deployment(self):
+        """Test that the deployment page renders alone, whatever the endpoints page's switch, and may be framed."""
+        LLMClient.objects.filter(pk=self.resource.pk).update(deployed=True)
+        self.addCleanup(LLMClient.objects.filter(pk=self.resource.pk).update, deployed=False)
+        with patch("smarter.apps.llmclient.views.endpoints.waffle.switch_is_active", return_value=False):
+            response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        templates = [template.name for template in response.templates]
+        self.assertIn("llmclient/deployment_frame.html", templates)
+        self.assertIn("llmclient/deployment.html", templates)
+        self.assertNotIn("dashboard/base.html", templates)
+        self.assertFalse(response.context["standalone"])
+        self.assertTrue(response.context["deployed"])
+        content = response.content.decode()
+        self.assertIn("Where to go from here?", content)
+        self.assertIn(self.resource.default_url.rstrip("/"), content)
+        # the tab is in the workbench: no way back to it, and none of the endpoints page's own sections.
+        self.assertNotIn("Back to the workbench", content)
+        self.assertNotIn("waffle_switch enable_llmclient_endpoints_page off", content)
+        self.assertIn("enable_llmclient_endpoints_page", content)
+        self.assertEqual(response["X-Frame-Options"], "SAMEORIGIN")
+        self.assertIn("no-cache", response["Cache-Control"])
+
+    def test_deployment_of_an_llmclient_that_is_not_deployed(self):
+        """Test that the deployment page tells how to deploy an LLMClient that isn't deployed."""
+        LLMClient.objects.filter(pk=self.resource.pk).update(deployed=False)
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        content = response.content.decode()
+        self.assertIn("Not deployed yet", content)
+        self.assertIn(f"smarter deploy llmclient {self.resource.name}", content)
+
+    def test_deployment_not_found(self):
+        """Test that the deployment page is a 404 for an unknown LLMClient, and for another account's."""
+        unknown = LLMClient(id=999999999)
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=unknown.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id="not-a-hashed-id"))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+        other_admin_user, _, _ = admin_user_factory()
+        other_admin_user.is_superuser = False
+        other_admin_user.save()
+        self.client.force_login(other_admin_user)
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def deployment_post(self, **data):
+        """POST the deployment page's api key form."""
+        return self.client.post(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id), data)
+
+    def api_key(self, name: str) -> SmarterAuthToken:
+        """An api key of the admin user, deleted after the test."""
+        api_key, _ = SmarterAuthToken.objects.create(
+            user=self.admin_user, user_profile=self.user_profile, name=f"{name}_{secrets.token_hex(4)}"
+        )
+        self.addCleanup(SmarterAuthToken.objects.filter(pk=api_key.pk).delete)
+        return api_key
+
+    def detach_api_keys(self):
+        self.addCleanup(LLMClientAPIKey.detach, self.resource)
+
+    def test_deployment_lists_attaches_and_detaches_api_keys(self):
+        """Test that the deployment page lists the account's api keys, attaches one in place of another, and detaches it."""
+        self.detach_api_keys()
+        first, second = self.api_key("first"), self.api_key("second")
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        content = response.content.decode()
+        self.assertIn(first.name, content)
+        self.assertIn(second.name, content)
+        self.assertIn("No api key is attached: the url is public.", content)
+        self.assertIn("csrfmiddlewaretoken", content)
+
+        response = self.deployment_post(action="attach", key_id=str(first.key_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertIn(f"{first.name} is attached", response.content.decode())
+        self.assertTrue(LLMClient.objects.get(pk=self.resource.pk).is_authentication_required)
+        self.assertEqual(response.context["attached_api_key"]["name"], first.name)
+        self.assertTrue(response.context["authenticated"])
+
+        # one api key: attaching another detaches the first.
+        self.deployment_post(action="attach", key_id=str(second.key_id))
+        self.assertEqual(
+            list(LLMClientAPIKey.objects.filter(llmclient=self.resource).values_list("api_key", flat=True)),
+            [second.pk],
+        )
+
+        response = self.deployment_post(action="detach")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertFalse(LLMClientAPIKey.objects.filter(llmclient=self.resource).exists())
+        self.assertFalse(LLMClient.objects.get(pk=self.resource.pk).is_authentication_required)
+
+    def test_deployment_creates_an_api_key(self):
+        """Test that the deployment page creates an api key, shows its secret once, and attaches it."""
+        self.detach_api_keys()
+        name = f"test_deployment_{secrets.token_hex(4)}"
+        self.addCleanup(SmarterAuthToken.objects.filter(name=name).delete)
+        response = self.deployment_post(action="create", name=name, description="the chat", attach="1")
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        api_key = SmarterAuthToken.objects.get(name=name, user=self.admin_user)
+        self.assertEqual(api_key.description, "the chat")
+        secret = response.context["new_api_key"]["secret"]
+        self.assertIn(secret, response.content.decode())
+        self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.resource, api_key=api_key).exists())
+        # the secret is the key: it authenticates.
+        self.assertTrue(secret.startswith(api_key.token_key))
+        # shown once: not on the next page.
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertNotIn(secret, response.content.decode())
+
+        # a second key of the same name is refused, and so is an invalid name.
+        self.assertEqual(self.deployment_post(action="create", name=name).status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(self.deployment_post(action="create", name="").status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_deployment_creates_an_api_key_without_attaching_it(self):
+        """Test that the deployment page creates an api key without attaching it, when asked to."""
+        self.detach_api_keys()
+        name = f"test_deployment_{secrets.token_hex(4)}"
+        self.addCleanup(SmarterAuthToken.objects.filter(name=name).delete)
+        response = self.deployment_post(action="create", name=name)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertFalse(LLMClientAPIKey.objects.filter(llmclient=self.resource).exists())
+
+    def test_deployment_api_key_errors(self):
+        """Test that the deployment page refuses an unknown action and an unknown api key."""
+        self.assertEqual(self.deployment_post(action="nope").status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(self.deployment_post(action="attach").status_code, HTTPStatus.BAD_REQUEST)
+        response = self.deployment_post(action="attach", key_id="00000000-0000-0000-0000-000000000000")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        unknown = LLMClient(id=999999999)
+        response = self.client.post(
+            self.url("deployment_by_hashed_id", hashed_id=unknown.hashed_id), {"action": "detach"}
+        )
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_deployment_api_keys_of_a_user_who_is_not_an_admin(self):
+        """Test that a user who isn't an account admin sees the LLMClient's api key, but can't change it or create one."""
+        self.detach_api_keys()
+        api_key = self.api_key("admins")
+        LLMClientAPIKey.attach(self.resource, api_key)
+        self.client.force_login(self.non_admin_user)
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertFalse(response.context["can_manage_api_keys"])
+        self.assertFalse(response.context["can_create_api_keys"])
+        content = response.content.decode()
+        self.assertIn("Only an account admin can create api keys.", content)
+        self.assertNotIn('value="detach"', content)
+
+        self.assertEqual(self.deployment_post(action="detach").status_code, HTTPStatus.FORBIDDEN)
+        self.assertEqual(self.deployment_post(action="create", name="not_allowed").status_code, HTTPStatus.FORBIDDEN)
+        self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.resource, api_key=api_key).exists())
+        self.assertFalse(SmarterAuthToken.objects.filter(name="not_allowed").exists())
 
     def test_detail_page_may_not_be_framed(self):
         """Test that the manifest detail page, unlike the manifest editor page, may not be framed."""

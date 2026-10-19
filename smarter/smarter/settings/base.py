@@ -1499,6 +1499,9 @@ LOGGING = {
         "health_check": {
             "()": "smarter.lib.logging.filters.HealthCheckFilter",
         },
+        "asyncio_shielded_cancel": {
+            "()": "smarter.lib.logging.filters.AsyncioShieldedCancelFilter",
+        },
     },
     "handlers": {
         "default": {
@@ -1525,6 +1528,10 @@ LOGGING = {
         "level": "DEBUG",
     },
     "loggers": {
+        "asyncio": {
+            "filters": ["asyncio_shielded_cancel"],
+            "propagate": True,
+        },
         "uvicorn.access": {
             "handlers": ["uvicorn"],
             "level": smarter_settings.log_level_name,
@@ -1559,6 +1566,10 @@ Filters
 health_check
     Uses :class:`smarter.lib.logging.filters.HealthCheckFilter` to suppress log entries
     for health check endpoints (e.g., /healthz/, /readiness/).
+asyncio_shielded_cancel
+    Uses :class:`smarter.lib.logging.filters.AsyncioShieldedCancelFilter` to suppress
+    asyncio's ``CancelledError exception in shielded future`` error, which a client
+    that disconnects in the middle of a request causes under uvicorn.
 
 Handlers
 --------
@@ -1583,6 +1594,8 @@ filters by its own level, so the console's output is unchanged.
 
 Loggers
 -------
+asyncio
+    Propagates to the root logger, with the asyncio_shielded_cancel filter.
 celery, celery.task
     Both propagate to the root logger and use the same log level as the rest
     of the application.
