@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.10...v0.33.11-alpha.1) (2026-10-19)
+
+### Bug Fixes
+
+* **llmclient:** reverse console urls on deployed llmclient hosts ([3b1abc5](https://github.com/smarter-sh/smarter/commit/3b1abc53b85798e08eb0efbb073b86160191ae72))
+
 ## [0.33.10](https://github.com/smarter-sh/smarter/compare/v0.33.9...v0.33.10) (2026-10-19)
 
 ### Bug Fixes
