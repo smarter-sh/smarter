@@ -65,8 +65,8 @@ would otherwise display as nothing at all.
 Sandbox Mode and Production Mode
 --------------------------------
 
-*Turned on in the workbench; off by default in the npm package (the* ``toggleMetadata`` *prop),
-which is then always in production mode.*
+*Only in the workbench. Everywhere else, in the npm package and the embed script, the chat is
+always in production mode.*
 
 The **Sandbox mode / Production mode** button shows and hides the backend's own messages in the
 thread: the system prompt, tool results, Smarter's notes, for example about the plugins it selected
@@ -156,8 +156,8 @@ simulated terminal, and Smarter's progress messages are in English.
 The Console
 -----------
 
-*Turned on in the workbench; on by default in the npm package too (the* ``showConsole`` *prop),
-which suits only wide pages.*
+*Only in the workbench. The npm package and the embed script never display it, nor its toggle
+button.*
 
 The Console is a simulated terminal beside the chat. Its tabs display the LLMClient's manifest, its
 deployment, the chat session's server logs and, as JSON, its history and configuration:
@@ -193,14 +193,17 @@ deployment, the chat session's server logs and, as JSON, its history and configu
        collapses all of them. Copying the lines copies the JSON in full. Present only
        when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
        then selected when the Console opens. A new chat clears it.
-   * - Api Calls
-     - The chat session's requests to the LLM provider.
    * - Tool Calls
-     - The chat session's tool calls.
-   * - Plugin Usage
-     - The plugins that the chat session used.
+     - The chat session's tool calls, each collapsed to its function's name: click one to see its
+       request and response.
    * - Config
-     - The LLMClient's complete configuration, as the config api returns it.
+     - The LLMClient's complete configuration, as the config api returns it with ``?verbose=true``,
+       collapsed to its top-level keys.
+
+The Tool Calls and Config tabs display the configuration's diagnostic parts, which are costly for
+the platform to build, and grow with the chat session. The chat fetches them only while one of these
+tabs is selected and the Console is visible, and again after each prompt while it still is. The rest
+of the time, and in production mode, the chat fetches only what it needs, once per page load.
 
 Drag the separator between the chat and the Console to resize them, or focus it and use the arrow
 keys. The chat takes between 20% and 80% of the width, a third by default. The panel button in the

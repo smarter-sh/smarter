@@ -7182,7 +7182,7 @@
       },
       "PromptChatApiExtensionList": {
         "additionalProperties": true,
-        "description": "The LLMClient's extensions.\n\nThe list itself is returned only in the complete configuration.",
+        "description": "The LLMClient's extensions.\n\nThe list itself is returned only in the complete configuration, with ``?verbose=true``.",
         "properties": {
           "extensions": {
             "items": {
@@ -7288,7 +7288,7 @@
       },
       "PromptChatApiHistory": {
         "additionalProperties": false,
-        "description": "The chat session's history, in version 2.\n\nOnly ``chat_history`` is public.",
+        "description": "The chat session's history, in version 2.\n\nOnly ``chat_history`` is public. ``prompt_tool_call_history`` is in the complete configuration with\n``?verbose=true``, and the other histories are returned only to the cli.",
         "properties": {
           "chat_history": {
             "description": "The session's messages, which restore the chat thread.",
@@ -8090,8 +8090,34 @@
       },
       "PromptChatApiMetaData": {
         "additionalProperties": true,
-        "description": "The LLMClient's state.",
+        "description": "The LLMClient's state.\n\nThe complete configuration, with ``?verbose=true``, adds the rest of ``LLMClientHelper.to_json()``.",
         "properties": {
+          "is_authentication_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "True if the LLMClient requires a Smarter api key, or a logged-in user.",
+            "title": "Is Authentication Required"
+          },
+          "is_custom_domain": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "True if the request's host is a custom domain.",
+            "title": "Is Custom Domain"
+          },
           "is_deployed": {
             "anyOf": [
               {
@@ -8134,7 +8160,7 @@
       },
       "PromptChatApiPluginList": {
         "additionalProperties": true,
-        "description": "The LLMClient's plugins.\n\nThe list itself is returned only in the complete configuration.",
+        "description": "The LLMClient's plugins.\n\nThe list itself is returned only in the complete configuration, with ``?verbose=true``.",
         "properties": {
           "meta_data": {
             "$ref": "#/components/schemas/PromptChatApiListMetaData"
@@ -23534,6 +23560,16 @@
             "schema": {
               "default": "chat-contract-v2",
               "type": "string"
+            }
+          },
+          {
+            "description": "true adds the configuration's diagnostic parts: the session's tool calls (history.prompt_tool_call_history), the complete meta_data, and the lists of the LLMClient's plugins and extensions. Without it, the configuration has what a chat needs, and the counts of the plugins and extensions. A deployed LLMClient's own host ignores it.",
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],
