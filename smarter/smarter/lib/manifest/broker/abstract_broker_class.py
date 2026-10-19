@@ -1691,10 +1691,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         others, such as Secrets. A resource that two others use is in the tree twice, once under each.
         A resource that is already one of its own ancestors is a leaf, so that a cycle ends.
 
-        Each node has the resource's record locator, and the path of its web console page, derived
-        from the record locator by :func:`smarter.lib.manifest.record_locator.console_url`, so that a
-        web console page can draw the tree with a link on each resource. A resource that the
-        authenticated user may not read has only its kind and record locator, and no children.
+        Each node has the kind's icon, from :meth:`smarter.apps.api.v1.manifests.enum.SAMKinds.icon`, the
+        resource's owner, its record locator, and the path of its manifest page in the web console, derived
+        from the record locator by :func:`smarter.lib.manifest.record_locator.console_url`, so that a web
+        console page can draw the tree with a card for each resource. A resource that the authenticated user may not read has only
+        its kind and record locator, and no children.
 
         Example:
 
@@ -1703,8 +1704,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             broker = SAMLLMClientBroker(request=request, name="stackademy_sql", kind="LLMClient")
             tree = broker.dependency_tree()
             tree.model_dump(mode="json")
-            # {"kind": "LLMClient", "name": "stackademy_sql", "recordLocator": "llmclient-rMTAwMDAxMwx",
-            #  "url": "/workbench/llm-clients/rMTAwMDAxMwx/prompt/", "readable": True,
+            # {"kind": "LLMClient", "icon": "artificial-intelligence", "name": "stackademy_sql",
+            #  "owner": "Ada Lovelace (ada)",
+            #  "recordLocator": "llmclient-rMTAwMDAxMwx",
+            #  "url": "/workbench/llm-clients/rMTAwMDAxMwx/manifest/", "readable": True,
             #  "children": [{"kind": "SqlPlugin", "name": "stackademy_sql", ...,
             #                "children": [{"kind": "SqlConnection", ..., "children": [{"kind": "Secret", ...}]}]}]}
 
@@ -1734,10 +1737,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.brokers import Brokers
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
 
         record_locator: Optional[str] = getattr(instance, "record_locator", None)
+        icon = SAMKinds.icon(kind)
         if not self.dependency_tree_readable(instance):
-            return SAMDependencyTreeNode(kind=kind, recordLocator=record_locator, readable=False)
+            return SAMDependencyTreeNode(kind=kind, icon=icon, recordLocator=record_locator, readable=False)
         children: List[SAMDependencyTreeNode] = []
         broker_class = Brokers.get_broker(kind)
         if broker_class is not None and record_locator not in ancestors:
@@ -1752,11 +1757,34 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 ]
         return SAMDependencyTreeNode(
             kind=kind,
+            icon=icon,
             name=getattr(instance, "name", None),
+            owner=self.dependency_tree_owner(instance),
             recordLocator=record_locator,
             url=console_url(record_locator),
             children=sorted(children, key=lambda node: (node.kind, node.name or "")),
         )
+
+    @staticmethod
+    def dependency_tree_owner(instance: models.Model) -> Optional[str]:
+        """Return who owns a resource of :meth:`dependency_tree`, as the web console names a person.
+
+        It is the full name and username of the user of the resource's ``user_profile``, e.g.
+        ``Ada Lovelace (ada)``, or the username alone if the user has no name. An Extension, which no
+        user owns, has its publisher.
+
+        :param instance: The resource's Django ORM instance.
+        :type instance: models.Model
+        :return: The owner, or None if the resource has none, e.g. a Budget.
+        :rtype: Optional[str]
+        """
+        user_profile = getattr(instance, "user_profile", None)
+        user = getattr(user_profile, "user", None)
+        if user is None:
+            publisher = getattr(instance, "publisher", None)
+            return str(publisher) if publisher else None
+        full_name = user.get_full_name()
+        return f"{full_name} ({user.username})" if full_name else user.username
 
     def dependency_tree_readable(self, instance: models.Model) -> bool:
         """Return True if the authenticated user may read a resource of :meth:`dependency_tree`.

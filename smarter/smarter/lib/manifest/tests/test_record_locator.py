@@ -41,7 +41,7 @@ class TestRecordLocator(SmarterTestBase):
 
     def test_console_url(self):
         """Test that an LLMClient's record locator leads to its workbench, and a Guardrail's to its page."""
-        self.assertEqual(console_url(f"llmclient-{HASHED_ID}"), f"/workbench/llm-clients/{HASHED_ID}/prompt/")
+        self.assertEqual(console_url(f"llmclient-{HASHED_ID}"), f"/workbench/llm-clients/{HASHED_ID}/manifest/")
         self.assertEqual(console_url(Guardrail(id=1).record_locator), f"/guardrail/guardrails/{HASHED_ID}/")
 
     def test_every_page_reverses(self):
