@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.33.14](https://github.com/smarter-sh/smarter/compare/v0.33.13...v0.33.14) (2026-10-19)
+
+### Bug Fixes
+
+* **llmclient:** escape literal tags in the deployment page's messages ([b55dcdb](https://github.com/smarter-sh/smarter/commit/b55dcdb920ed84d03cd528b05a631d62e509badc))
+
+### Refactoring
+
+* **prompt:** pass Field defaults by keyword in the chat contract ([9c8ff42](https://github.com/smarter-sh/smarter/commit/9c8ff428d200cc392ca33252b2929c44167c9a0b))
+
 ## [0.33.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.33.13...v0.33.14-alpha.1) (2026-10-19)
 
 ### Bug Fixes
