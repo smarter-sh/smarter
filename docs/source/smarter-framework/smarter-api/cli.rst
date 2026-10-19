@@ -14,7 +14,7 @@ URL Patterns
 .. literalinclude:: ../../../../smarter/smarter/apps/api/v1/cli/urls.py
    :language: python
    :linenos:
-   :lines: 31-
+   :start-at: from django.urls import path, re_path
 
 Base Class Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~
