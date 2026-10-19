@@ -1088,6 +1088,17 @@ class SAMUserBroker(AbstractBroker):
         retval.append((None, PluginMeta.objects.filter(user_profile__user=instance)))
         return retval
 
+    @classmethod
+    def references(cls, instance: User) -> SAMDependents:
+        """Return the resources that a User uses: none.
+
+        :param instance: The User.
+        :type instance: User
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that this User owns.

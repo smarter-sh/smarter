@@ -1,0 +1,75 @@
+div.app-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 5px !important;
+  margin-right: 5px !important;
+}
+
+.console {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  padding: 0px;
+  padding-right: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.console-output {
+  background-color: #2f2f2f;
+  color: whitesmoke;
+  height: 80vh;
+  margin-top: 0px;
+  padding-top: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+}
+
+.console-output-content {
+  text-align: left;
+  margin: 10px;
+  padding: 10px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 16px;
+}
+
+/* the server logs, in the palette and font of the server log viewer, @smarter/serverlogs, whose
+   stylesheet is its own. */
+.console-output.console-output-logs {
+  background-color: #171b20;
+  color: #d9e1ea;
+}
+
+/* in the Console, the lines fill the Console's output, below its shell prompt and the toolbar. */
+.console-output-logs .console-server-logs:not(.console-server-logs-fullscreen) {
+  --console-server-logs-height: calc(80vh - 130px);
+}
+
+.console-empty {
+  color: #75715e;
+}
+
+/* the manifest editor, and the LLMClient's deployment page, as tall as the Console's output. Each scrolls on its
+   own, and its text is aligned as on its own page, rather than centered, as the terminal's is. */
+.console-manifest-editor,
+.console-architecture-page,
+.console-deployment-page {
+  display: block;
+  width: 100%;
+  height: 80vh;
+  overflow: auto;
+  text-align: start;
+}
+
+/* .console-output is a flex box, which would otherwise override the hidden attribute. */
+.console-output[hidden],
+.console-manifest[hidden],
+.console-architecture[hidden],
+.console-deployment[hidden] {
+  display: none;
+}

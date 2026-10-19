@@ -512,6 +512,19 @@ class SAMBudgetBroker(AbstractBroker):
         """
         return []
 
+    @classmethod
+    def references(cls, instance: Budget) -> SAMDependents:
+        """Return the resources that a Budget uses: none.
+
+        A Budget limits the resources of its ``spec.resources``, but does not use them.
+
+        :param instance: The Budget.
+        :type instance: Budget
+        :return: An empty list.
+        :rtype: SAMDependents
+        """
+        return []
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this Budget.

@@ -424,6 +424,24 @@ class SAMGuardrailBroker(AbstractBroker):
         )
         return [(SAMKinds.LLM_CLIENT.value, llmclients)]
 
+    @classmethod
+    def references(cls, instance: Guardrail) -> SAMDependents:
+        """Return the resources that a Guardrail uses: the Provider that its ``spec.config.provider`` names.
+
+        :param instance: The Guardrail.
+        :type instance: Guardrail
+        :return: Its Provider, if it names one.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+
+        provider_name = str((instance.config or {}).get("provider") or "")
+        if not provider_name:
+            return []
+        return [(SAMKinds.PROVIDER.value, SAMProviderBroker.providers_named(provider_name, instance.user_profile))]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the LLMClients that use this Guardrail.

@@ -1,8 +1,8 @@
 Developing Smarter Chat
 =======================
 
-This guide is for developers who write React code in Smarter Chat, whether for the web console's
-prompt engineering workbench or for the npm package. It assumes you know React and TypeScript, and
+This guide is for developers who write React code in Smarter Chat, the ``@smarter.sh/ui-chat`` npm
+package, which the web console's prompt engineering workbench imports too. It assumes you know React and TypeScript, and
 explains how Smarter Chat is put together, how to run it, how to test it, and how to make the most
 common kinds of change. For the conventions that it shares with the web console's other React apps,
 see :doc:`Django-React Integration <../developer-reference/react-integration>`.
@@ -27,8 +27,11 @@ Storybook, ESLint and Prettier configuration as the other React apps. Two things
 - **It is its own git repository.** Commit, branch and push from inside
   ``smarter/react/packages/smarter-chat``. Nothing you do there shows up in Smarter's ``git status``.
   ``make react-install`` never changes an existing clone, so work in progress in it is safe.
-- **Its app name is** ``@smarter.sh/ui-chat``, its npm package name, rather than the
-  ``@smarter/<name>`` of the other apps. Its build is in ``static/react/@smarter.sh/ui-chat/``.
+- **It is a library, not a page.** Its name is ``@smarter.sh/ui-chat``, its npm package name, rather
+  than the ``@smarter/<name>`` of the console's apps, and its build is its ``dist/``. The web
+  console's workbench, ``@smarter/workbench``, imports it from there, as any React application does,
+  so the workspace builds it before the workbench (``npm run build:deps``). See
+  :doc:`How the Web Console Hosts It <web-console-hosting>`.
 
 The GitHub Actions workflows of the Smarter repository clone Smarter Chat before the React build
 (``.github/actions/react-build``, whose ``smarter-chat-branch`` input defaults to ``main``), so a
@@ -66,49 +69,49 @@ the session and CSRF cookies exist, and set ``smarter-llmclient-api-url`` in ``i
 element to the workbench url of one of your LLMClients, for example
 ``http://localhost:9357/workbench/llm-clients/<hashed_id>/``.
 
-**The web console itself.** ``make react-build``, in the Smarter repository, builds every React app
-into Django's static files, collects them, and builds the Docker image. Then restart
+**The web console itself.** ``make react-build``, in the Smarter repository, builds Smarter Chat's
+library, then every React app, the workbench among them, into Django's static files, collects them,
+and builds the Docker image. Then restart
 ``smarter-app``, and open an LLMClient's workbench. Use ``make react-build``, not ``make build``,
 which reuses the static files that were collected before. A page whose React app is missing its
 build renders an empty root element, with no console errors, and the template tag caches the
 missing manifest until ``smarter-app`` restarts.
 
 
-Two Builds From One Source
---------------------------
+Builds
+------
 
-``vite.config.ts`` builds Smarter Chat two ways:
+``npm run build`` runs the package's two builds, into ``dist/``:
 
 .. list-table::
    :header-rows: 1
    :widths: 20 40 40
 
    * -
-     - The web console app
      - The npm library
+     - The embed script
    * - Command
-     - ``npm run build``
      - ``npm run build:lib`` (``vite build --mode lib``)
+     - ``npm run build:embed`` (``--mode embed``, then ``embed-mermaid``)
    * - Entry point
-     - ``src/main.tsx``, which reads its props from the root element's attributes, and renders
-       ``App``, which is ``SmarterChat`` with the Console
      - ``src/index.ts``, the package's public api
+     - ``src/embed/index.ts``, the ``<smarter-chat>`` element
    * - Output
-     - ``smarter/smarter/static/react/@smarter.sh/ui-chat/``, with a Vite ``manifest.json`` that
-       Django's template tag reads; ``build/`` in a plain clone
-     - ``dist/``: ES and UMD bundles, ``ui-chat.css``, and type declarations
+     - ES and UMD bundles, ``ui-chat.css``, and type declarations
+     - ``embed.js``, one classic script, and ``embed/``
    * - React
-     - bundled, in a ``vendor`` chunk with the other dependencies
      - a peer dependency, not bundled
-   * - Mermaid
-     - its own chunks, downloaded when a message first has a diagram
-     - left to the consuming page's bundler
-   * - KaTeX css and fonts
      - bundled
+   * - Mermaid
+     - left to the consuming page's bundler
+     - its own ES module build, imported when a message first has a diagram
+   * - KaTeX css and fonts
      - left out; pages import ``katex/dist/katex.min.css``
+     - in the shadow root, and the fonts beside ``embed.js``
 
 Both builds strip ``console.debug`` calls, so use ``console.debug`` freely for development logging,
-and never for anything a production user needs.
+and never for anything a production user needs. ``npm run dev`` serves ``index.html``, the chat
+alone, for development; there is no app build.
 
 ``src/index.ts`` is the package's public api. Anything exported from it is a promise to the
 package's users: removing or renaming an export, or a prop, is a breaking change (see
@@ -128,15 +131,13 @@ Source layout
    * - Path
      - Responsibility
    * - ``src/components/SmarterChat/``
-     - The chat: state, the api calls' orchestration, the header, the thread, the message box, and
-       the layout of the chat beside the Console. ``icons.tsx`` has the toolbar's svg icons.
-   * - ``src/components/Console/``
-     - The Console: its tabs (``enums.ts``), the JSON to show for each (``data.ts``), and the Server
-       Logs tab (``ServerLogs.tsx``).
+     - The chat: state, the api calls' orchestration, the header, the thread and the message box.
+       ``HeaderButton.tsx`` is a button of the header, for a page's ``headerActions``, and
+       ``icons.tsx`` has the toolbar's svg icons.
    * - ``src/components/AppTitle/``
      - The title, with its valid and deployed icons.
    * - ``src/components/ErrorBoundary/``
-     - Displays a rendering error instead of an empty page. The chat and the Console each have one.
+     - Displays a rendering error instead of an empty page.
    * - ``src/lib/api.ts``
      - Every request to the Smarter api: urls, headers, the configuration, prompts, and the
        prompt's Server-Sent Events. The only module that calls ``fetch``.
@@ -147,11 +148,6 @@ Source layout
      - Code blocks (highlight.js), math (KaTeX, as a ``marked`` extension) and diagrams (Mermaid).
    * - ``src/lib/cookie.ts``
      - Reading Django's CSRF cookie, and the chat session and debug cookies.
-   * - ``src/lib/logStream.ts``, ``ansi.ts``
-     - The server log stream (``EventSource``), and its ANSI colors.
-   * - ``src/lib/layout.ts``
-     - The chat's width, the Console's visibility and the log wrap setting, remembered in
-       ``localStorage``.
    * - ``src/lib/enums.ts``
      - Message directions and sender roles.
    * - ``src/types.ts``
@@ -177,8 +173,8 @@ What happens when the chat loads
    returns the ``ChatConfig``.
 4. ``chatInit()`` builds the thread: the restored ``history.chat_history`` if there is one, else the
    system prompt, the welcome message and the example prompts.
-5. The header, placeholder and attach button are rendered from ``config.llmclient``, and the
-   Console from the whole configuration.
+5. The header, placeholder and attach button are rendered from ``config.llmclient``, and
+   ``onConfig`` passes the whole configuration to the page, e.g. to the workbench's Console.
 
 A failure sets ``configError``, which the thread and header display.
 
@@ -196,8 +192,8 @@ What happens when the user sends a message
    version 1) are added to the thread. Backend
    messages are hidden if the chat is in production mode. A failed prompt resolves too, with a
    ``smarter_error`` message.
-5. ``refreshConfig()`` fetches the configuration again, so that the Console shows the session's new
-   history.
+5. With ``verbose``, ``refreshConfig()`` fetches the configuration again, with its diagnostic parts,
+   so that the page, e.g. the workbench's Console, gets the session's new tool calls.
 
 See :doc:`The Chat API Contract <api-contract>` for the requests and responses themselves.
 
@@ -222,10 +218,9 @@ State
      - Sandbox mode (``true``) or production mode. It starts as ``toggleMetadata``.
    * - ``isTyping``, ``progress``
      - A prompt is running, and its steps so far.
-   * - ``chatCount``
-     - Incremented by each new chat, which clears the Console's server logs.
-   * - ``consoleVisible``, ``chatWidth``
-     - The layout, from ``useConsoleVisible()`` and ``useChatWidth()`` in ``layout.ts``.
+   * - ``configVerbose``
+     - Whether the configuration's diagnostic parts are current: fetched with ``verbose``, and since
+       the last prompt.
 
 Rendering messages
 ~~~~~~~~~~~~~~~~~~
@@ -258,11 +253,9 @@ the page with its diagram. Diagrams are cached by their source, so a re-render d
 Styling
 ~~~~~~~
 
-Each component imports its own ``styles.css``. Class names are prefixed ``smarter-chat-`` (or
-``console-`` in the Console), because the npm package's css shares the page with its host's.
-chatscope's classes (``cs-*``) are overridden in ``SmarterChat/styles.css``. The Console's markup
-uses the web console's Bootstrap utility classes, which the npm package's users don't have; it is a
-developer tool, and is styled well enough by its own css.
+Each component imports its own ``styles.css``. Class names are prefixed ``smarter-chat-``, because the
+npm package's css shares the page with its host's. chatscope's classes (``cs-*``) are overridden in
+``SmarterChat/styles.css``.
 
 
 Testing
@@ -308,9 +301,8 @@ Adding a prop
 1. Add it to ``SmarterChatProps`` in ``src/types.ts``, optional, with a doc comment.
 2. Give it a default in ``SmarterChat``'s parameter list. The default must suit the npm package's
    users.
-3. If the web console sets it, read it from a root element attribute in ``src/main.tsx``, add the
-   attribute to ``index.html``, and to ``templates/react/smarter-chat.html`` and the ``smarter_chat``
-   context of ``PromptWorkbenchView``, in the Smarter repository (see
+3. If the web console's workbench sets it, pass it in the workbench's ``App.tsx``, in the Smarter
+   repository, once the release that has it is in the workspace's clone (see
    :doc:`How the Web Console Hosts It <web-console-hosting>`).
 4. Add it to the props table of the README, and of :doc:`Embedding Smarter Chat <embedding>`.
 5. Test it, and add a story if it changes what the chat looks like.
@@ -365,10 +357,11 @@ specially, switch on ``event.type`` in ``SmarterChat``'s ``onProgress``, and add
 Adding a Console tab
 ~~~~~~~~~~~~~~~~~~~~
 
-Add its id to ``MenuItems`` in ``Console/enums.ts``, its label to ``MENU`` in
-``Console/Component.tsx``, and its data to ``consoleData()`` in ``Console/data.ts``, which reads it
-from the configuration. ``MenuItems`` is exported by the package, so adding to it is a feature, and
-removing from it is a breaking change.
+The Console is the workbench's, in the Smarter repository (``smarter/react/packages/smarter-workbench``),
+not Smarter Chat's. Add the tab's id to ``MenuItems`` in ``Console/enums.ts``, its label to ``tabs()``
+in ``Console/Component.tsx``, and its data to ``consoleData()`` in ``Console/data.ts``, which reads it
+from the configuration that ``onConfig`` passes. A tab that fetches its own data, as the Manifest and
+Deployment tabs do, uses ``useTabData()``.
 
 Extending markdown
 ~~~~~~~~~~~~~~~~~~
