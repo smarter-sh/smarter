@@ -1200,6 +1200,9 @@ gettext("Reload");
 gettext("A locked card is a resource that you can't read, such as another account's.");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/App.tsx
 gettext("Who owns a resource, and who may read it");
+// Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
+gettext("Architecture");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
 gettext("How this LLMClient is built");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
@@ -3025,9 +3028,6 @@ gettext("Technical references for prompt engineers and software engineers");
 gettext("Hide the Console");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
 gettext("Show the Console");
-// Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
-// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
-gettext("Architecture");
 // Translators: the tab of the Console about the LLMClient's deployment: its url, and how to use it.
 // Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("Deployment");

@@ -1,30 +1,74 @@
 /*
-An LLMClient's architecture: the introduction, and the tree of resource cards, joined by lines. Everything else is
-Keen and Bootstrap, from the global bundles that base.html loads. The colors are the theme's variables, so that the
-tree follows the web console's light and dark modes.
+An LLMClient's architecture: the introduction, on a dark hero like the deployment page's, and the tree of resource
+cards, joined by lines, on a dotted canvas. Everything else is Keen and Bootstrap, from the global bundles that
+base.html loads. The canvas and the cards use the theme's variables, so that the tree follows the web console's
+light and dark modes; the hero is dark in both.
 */
 
 .smarter-architecture {
   --architecture-line: var(--bs-gray-300);
   --architecture-row-center: 3rem;
-  padding: 1.5rem;
+  --architecture-accent: #ff8c00;
+  overflow: hidden;
+  border: 1px solid var(--bs-gray-200);
   border-radius: 0.75rem;
   background-color: var(--bs-body-bg);
   color: var(--bs-gray-800);
   text-align: start;
 }
 
-/* the introduction's concepts */
+/* the introduction: a hero */
+.architecture-hero {
+  padding: 2.5rem 2rem;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255, 140, 0, 0.35), transparent 45%),
+    radial-gradient(circle at 10% 90%, rgba(241, 65, 108, 0.18), transparent 40%),
+    linear-gradient(135deg, #1e1e2d 0%, #2b2b40 100%);
+  color: #ffffff;
+}
+.architecture-hero-lead {
+  color: #c9c9d6;
+}
+.architecture-kicker {
+  color: var(--architecture-accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* the introduction's concepts: glass cards on the hero */
+.architecture-concept-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.85rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(4px);
+}
 .architecture-concept-icon {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  background-color: var(--bs-primary-light);
-  color: var(--bs-primary);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: rgba(255, 140, 0, 0.15);
+  color: var(--architecture-accent);
+}
+.architecture-concept-icon i {
+  color: var(--architecture-accent);
+}
+
+/* the tree's canvas: a dot grid, beneath the cards */
+.architecture-canvas {
+  padding: 2rem;
+  background-color: var(--bs-gray-100);
+  background-image: radial-gradient(var(--bs-gray-300) 1px, transparent 1px);
+  background-size: 1.25rem 1.25rem;
+}
+@media (max-width: 575.98px) {
+  .architecture-hero,
+  .architecture-canvas {
+    padding: 1.5rem 1rem;
+  }
 }
 
 /* the tree: nested lists, each child joined to its parent by an elbow */
