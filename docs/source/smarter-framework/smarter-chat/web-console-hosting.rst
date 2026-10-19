@@ -89,6 +89,13 @@ is missing, so the page fails loudly rather than rendering a broken chat.
        own pages may frame (``X-Frame-Options: SAMEORIGIN``). When the editor saves, it posts a
        ``smarter:manifest-saved`` message to the workbench, which the chat accepts only from that
        frame, and then reloads the LLMClient's configuration.
+   * - ``smarter-deployment-url``
+     - ``deploymentUrl``
+     - The path of the LLMClient's deployment page,
+       :py:class:`~smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView`,
+       for the Console's Deployment tab: the content of the page at a deployed LLMClient's url, and
+       its api key, without the console's header and sidebar. Like the manifest editor, the console's
+       own pages may frame it (``X-Frame-Options: SAMEORIGIN``).
 
 Boolean attributes are compared case-insensitively with ``"true"``, so Django's ``True`` works.
 
