@@ -90,6 +90,14 @@ FIX_REF = (
 GUARDRAIL_MANIFEST = os.path.join(
     PROJECT_ROOT, "apps", "guardrail", "manifest", "brokers", "tests", "data", "guardrail.yaml"
 )
+# Celery tasks that write rows that refer to the prompt, or charge for it. Celery is not eager in tests, so
+# unpatched, they run in the live worker, which can write a row while the test deletes the prompt.
+PROMPT_TASK_PATCHES = (
+    "smarter.apps.prompt.receivers.create_prompt_history",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_tool_call_history",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_plugin_usage",
+    "smarter.apps.provider.services.text_completion.lib.mixins.create_charge",
+)
 
 
 def refs(value) -> list[str]:
@@ -506,6 +514,13 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
                 events.append((lines["event"], json.loads(lines["data"])))
         return events
 
+    def patch_prompt_tasks(self):
+        """Keep the prompt's Celery tasks out of the live worker, until the test ends."""
+        for target in PROMPT_TASK_PATCHES:
+            patcher = mock.patch(target)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def test_chat_api(self):
         """The chat api's configuration, its prompt as JSON and as a stream, and its error, with real LLM calls."""
         llmclient = LLMClient.objects.create(
@@ -518,6 +533,7 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
             app_welcome_message="Welcome to Smarter!",
         )
         self.addCleanup(llmclient.delete)
+        self.patch_prompt_tasks()
 
         status, response = self.chat_post(f"llm-clients/{llmclient.id}/config/", {"session_key": None})
         self.assertEqual(status, HTTPStatus.OK, response.content)
@@ -566,6 +582,7 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
             app_welcome_message="Welcome to Smarter!",
         )
         self.addCleanup(llmclient.delete)
+        self.patch_prompt_tasks()
         query = urlencode({"uid": f"{self.name}_uid", "new_session": "true"})
         self.assertValid("PromptChatApiConfigResponse", self.post(f"prompt/config/{self.name}/?{query}"))
         body = self.post(f"prompt/{self.name}/?{query}", {"prompt": "Say hello in two words."})
