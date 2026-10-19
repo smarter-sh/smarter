@@ -59,6 +59,14 @@ inside the `smarter-app` container.
    `Smarter...Type` aliases in `smarter.lib.typing` (e.g. `SmarterDictType`
    for `dict[str, Any]`). See `smarter-python-typing`.
 
+## When the user reports that something didn't happen
+
+If the user says that something didn't happen, e.g. "it did not create a release", "the deploy
+didn't run" or "the page didn't change", that is a problem to fix, not a claim to debate. Don't
+answer with evidence that it did happen somewhere else, e.g. a prerelease on `alpha` when they mean
+`main`. Find out what is missing from their point of view, why, and fix it, or hand them the one
+command or click that fixes it.
+
 ## Pattern-first workflow
 
 Smarter is large and highly consistent. Almost every change has a precedent.
