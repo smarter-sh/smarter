@@ -91,6 +91,9 @@ class TestLLMClientEndpointsView(TestAccountMixin):
                 self.assertIn(self.llmclient.name, html)
                 self.assertRegex(html, r"<h1[^>]*>\s*<i[^>]*></i>Deployed\s*</h1>")
                 self.assertIn("Where to go from here?", html)
+                # anyone can open the page: it names no owner, and has no clone guide.
+                self.assertNotIn("Owner</td>", html)
+                self.assertNotIn('id="not-yours"', html)
                 self.assertIn(f'href="{self.llmclient.workbench_url}"', html)
                 self.assertIn("Back to the workbench", html)
                 self.assertIn(f"{base_url}/config/", html)

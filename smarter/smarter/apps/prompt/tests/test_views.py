@@ -5,6 +5,7 @@ See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
 import json
+import re
 import secrets
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, call, patch
@@ -32,6 +33,9 @@ from smarter.apps.prompt.contract.models import (
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.prompt.views.detailviews.prompt_config_view import PromptConfigView
+from smarter.apps.prompt.views.detailviews.prompt_deployment_view import (
+    OWNERSHIP_DOCS_URL,
+)
 from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterChatappViewError,
     SmarterPromptSession,
@@ -200,6 +204,35 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertIn("enable_llmclient_endpoints_page", content)
         self.assertEqual(response["X-Frame-Options"], "SAMEORIGIN")
         self.assertIn("no-cache", response["Cache-Control"])
+
+    def test_deployment_shows_the_owner_to_the_owner(self):
+        """Test that the deployment page shows the LLMClient's owner, and no clone guide to a user who may change it."""
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertTrue(response.context["can_edit_llmclient"])
+        owner = response.context["owner"]
+        self.assertIn(self.admin_user.username, owner)
+        content = response.content.decode()
+        self.assertRegex(content, rf"Owner</td><td[^>]*>{re.escape(owner)}</td>")
+        self.assertNotIn('id="not-yours"', content)
+
+    def test_deployment_explains_cloning_to_a_user_who_is_not_the_owner(self):
+        """Test that the deployment page tells a user who may not change the LLMClient how to clone it."""
+        self.client.force_login(self.non_admin_user)
+        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertFalse(response.context["can_edit_llmclient"])
+        self.assertIn(self.admin_user.username, response.context["owner"])
+        content = response.content.decode()
+        self.assertIn('id="not-yours"', content)
+        self.assertIn("This LLMClient isn't yours", content)
+        self.assertIn("Clone it, and work on your copy", content)
+        self.assertIn("Shared LLM Clients", content)
+        self.assertIn("Your LLM Clients", content)
+        list_url = self.url("listview")
+        self.assertEqual(response.context["llmclient_list_url"], list_url)
+        self.assertIn(f'href="{list_url}" target="_top"', content)
+        self.assertIn(f'href="{OWNERSHIP_DOCS_URL}"', content)
 
     def test_deployment_of_an_llmclient_that_is_not_deployed(self):
         """Test that the deployment page tells how to deploy an LLMClient that isn't deployed."""
