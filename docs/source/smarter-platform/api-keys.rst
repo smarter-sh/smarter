@@ -11,6 +11,11 @@ for more details. Smarter adds a toggle to enable/disable API keys without delet
 Creating API Keys
 -----------------
 
+The quickest way, for an LLMClient, is the Deployment tab of its Prompt Engineer's Workbench: an
+account admin creates a key there, sees its secret once, and attaches it to the LLMClient in the same
+step. The tab also attaches an existing key, or detaches it. A platform administrator can also create
+a key from the command line:
+
 .. code-block:: bash
 
    python manage.py create_api_key \
@@ -57,7 +62,17 @@ Extensions to the Django Know model include the following fields and methods:
 Using API Keys
 -----------------
 
-To use an API key, associate it with LLMClient/Agent resources when creating them via the Smarter REST API. The Smarter API will validate the API key on each request,
+To use an API key, attach it to an LLMClient, in its workbench's Deployment tab, or by naming it in the
+LLMClient's manifest and applying the manifest:
+
+.. code-block:: yaml
+
+  spec:
+    apiKey: my_site_chat
+
+An LLMClient with an active api key attached requires one of its keys in every request, as
+``Authorization: Token <api key>``. Smarter Chat sends its ``apiKey`` prop, or the embed script's
+``data-api-key``, that way. The Smarter API will validate the API key on each request,
 which includes business rule enforcement like rate limiting, access control, and basic declarative referential integrity such as ensuring the API key belongs
 to the same Account as the resource being accessed.
 

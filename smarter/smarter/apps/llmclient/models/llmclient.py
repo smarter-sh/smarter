@@ -543,6 +543,24 @@ class LLMClient(MetaDataWithOwnershipModel):
         return url
 
     @property
+    def workbench_url(self) -> str:
+        """
+        The URL of the LLMClient's Prompt Engineer's Workbench, in the web console.
+
+        example: 'https://alpha.platform.smarter.sh/workbench/llm-clients/<str:hashed_id>/prompt/'
+
+        :returns: workbench URL
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseNames
+
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id}, urlconf=settings.ROOT_URLCONF)  # type: ignore[arg-type]
+        url = urljoin(smarter_settings.environment_url, path)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
+        return url
+
+    @property
     def hostname(self) -> str:
         """
         The hostname for the LLMClient depending on its deployment status.

@@ -159,8 +159,8 @@ The Console
 *Turned on in the workbench; on by default in the npm package too (the* ``showConsole`` *prop),
 which suits only wide pages.*
 
-The Console is a simulated terminal beside the chat. Its tabs display the LLMClient's manifest, the
-chat session's server logs and, as JSON, its history and configuration:
+The Console is a simulated terminal beside the chat. Its tabs display the LLMClient's manifest, its
+deployment, the chat session's server logs and, as JSON, its history and configuration:
 
 .. list-table::
    :header-rows: 1
@@ -176,6 +176,15 @@ chat session's server logs and, as JSON, its history and configuration:
        open it, then keeps your unsaved changes while you look at the other tabs. Present only when
        the page passes the editor's url (``manifestEditorUrl``), as the workbench does: the editor is
        a page of the web console, so it must be of the page's own origin.
+   * - Deployment
+     - What the prompt engineer needs once the LLMClient is deployed: its status and url, the ways
+       to put its chat on a web site (WordPress, Drupal, Shopify, React from npm, and any html page),
+       how to secure its url with an api key, how the url works, with curl commands and an example
+       response, and its manifest. Its api key section lists the account's api keys, creates one,
+       showing its secret once, and attaches it to the LLMClient or detaches it. An LLMClient that
+       isn't deployed gets the url that it will have, and the command that deploys it. The page loads
+       when you first open the tab. Present only when the page passes its url (``deploymentUrl``), as
+       the workbench does, whatever the ``enable_llmclient_endpoints_page`` waffle switch.
    * - Server Logs
      - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.
        Long lines scroll horizontally, or wrap, with the tab's **Wrap lines** button. Blocks of

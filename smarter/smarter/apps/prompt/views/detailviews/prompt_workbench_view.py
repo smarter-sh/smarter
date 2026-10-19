@@ -299,6 +299,27 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             kwargs={"hashed_id": self.llmclient.hashed_id},
         )
 
+    @property
+    def deployment_url(self) -> str:
+        """
+        The url of the llmclient's deployment page, which Smarter Chat displays in its Console's "Deployment" tab.
+
+        The url is a path, of the workbench's own origin, which Smarter Chat requires of it.
+
+        :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientDeploymentView`, or an
+            empty string if there is no llmclient, in which case Smarter Chat has no "Deployment" tab.
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseNames
+
+        if not self.llmclient:
+            return ""
+        return reverse(
+            f"{PromptReverseNames.namespace}:{PromptReverseNames.deployment_by_hashed_id}",
+            kwargs={"hashed_id": self.llmclient.hashed_id},
+        )
+
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch method to handle the request for the main prompt application page.
@@ -441,6 +462,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "smarter_request_id": self.generate_smarter_request_id(),
                 "log_stream_url": self.log_stream_url,
                 "manifest_editor_url": self.manifest_editor_url,
+                "deployment_url": self.deployment_url,
             }
         }
         verbose_logger.debug(
