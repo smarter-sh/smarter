@@ -126,6 +126,11 @@ Overview
                                             ◀───  the manifest editor, which saves with the cli
                                                   api, then posts "smarter:manifest-saved"
 
+  once the Console's Deployment tab is opened, in an iframe:
+    GET <deploymentUrl>                     ───▶  LLMClientDeploymentView
+                                            ◀───  the LLMClient's deployment, whose api key
+                                                  forms post back to the same url
+
 The configuration tells the chat where to send prompts, so ``apiUrl`` is the only url a page has to
 know.
 
