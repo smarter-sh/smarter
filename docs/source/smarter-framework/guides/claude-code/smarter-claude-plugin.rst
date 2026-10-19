@@ -1186,7 +1186,7 @@ stylesheet, and the LLMClient's url:
    import { SmarterChat } from "@smarter.sh/ui-chat";
    import "@smarter.sh/ui-chat/dist/ui-chat.css";
 
-   <SmarterChat apiUrl="https://<llmclient-name>.<account-id>.api.smarter.sh/" showConsole={false} />
+   <SmarterChat apiUrl="https://<llmclient-name>.<account-id>.api.smarter.sh/" />
 
 See :doc:`Smarter Chat <../../smarter-chat>`.
 

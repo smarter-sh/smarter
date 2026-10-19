@@ -101,6 +101,9 @@ class TestLLMClientEndpointsView(TestAccountMixin):
                 self.assertIn("Markdown", html)
                 for integration in ("WordPress", "Drupal", "Shopify", "@smarter.sh/ui-chat", EMBED_SCRIPT_URL):
                     self.assertIn(integration, html)
+                # each integration's card has its brand's own icon.
+                for brand in ("wordpress", "drupal", "shopify", "react", "html5", "npm"):
+                    self.assertIn(f'class="fa-brands fa-{brand} ', html)
                 self.assertIn(f"data-chatbot=&quot;{base_url}/&quot;", html)
                 self.assertIn("allowedOrigins", html)
                 # how to secure the url: create an api key, attach it, give it to Smarter Chat.

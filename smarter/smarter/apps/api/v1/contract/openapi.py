@@ -552,6 +552,17 @@ CAPABILITIES_PARAMETER = OpenApiParameter(
     schema_={"type": "string", "default": CHAT_CONTRACT_V2_CAPABILITY},
 )
 
+VERBOSE_CONFIG_PARAMETER = OpenApiParameter(
+    name="verbose",
+    in_="query",
+    required=False,
+    description="true adds the configuration's diagnostic parts: the session's tool calls "
+    "(history.prompt_tool_call_history), the complete meta_data, and the lists of the LLMClient's plugins and "
+    "extensions. Without it, the configuration has what a chat needs, and the counts of the plugins and "
+    "extensions. A deployed LLMClient's own host ignores it.",
+    schema_={"type": "boolean", "default": False},
+)
+
 ACCEPT_PARAMETER = OpenApiParameter(
     name="Accept",
     in_="header",
@@ -784,7 +795,7 @@ def chat_paths() -> dict[str, OpenApiPathItem]:
         "whose key is sent. Its session_key identifies the session in the following prompts, and "
         "url_llmclient is where to send them.",
         tags=[TAG_CHAT],
-        parameters=parameters,
+        parameters=[*parameters, VERBOSE_CONFIG_PARAMETER],
         requestBody=OpenApiRequestBody(
             required=False,
             content={"application/json": OpenApiMediaType(schema_=ref(PromptChatApiConfigRequest.__name__))},
