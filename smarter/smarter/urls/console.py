@@ -56,6 +56,7 @@ from smarter.apps.infrastructure.const import namespace as infrastructure_namesp
 from smarter.apps.llmclient import urls as llmclient_urls
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.const import namespace as llmclient_namespace
+from smarter.apps.llmclient.views.endpoints import browser_friendly
 from smarter.apps.llmhost import urls as llmhost_urls
 from smarter.apps.llmhost.const import namespace as llmhost_namespace
 from smarter.apps.llmtool import urls as llmtool_urls
@@ -202,8 +203,8 @@ urlpatterns = [
     # LLMClients on their verified custom domains, which smarter.hosts doesn't match, so they are
     # served by this urlconf. Deployed LLMClients' default hosts are served by smarter.urls.llmclients.
     # -----------------------------------
-    path("prompt/", DefaultLLMClientApiView.as_view(), name=f"{name_prefix}_chat"),
-    path("config/", PromptConfigView.as_view(), name=f"{name_prefix}_config"),
+    path("prompt/", browser_friendly(DefaultLLMClientApiView.as_view()), name=f"{name_prefix}_chat"),
+    path("config/", browser_friendly(PromptConfigView.as_view()), name=f"{name_prefix}_config"),
     # -----------------------------------
     # password management
     # -----------------------------------
