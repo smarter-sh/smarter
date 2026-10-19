@@ -1,6 +1,7 @@
 """Smarter API V1 Manifests Enumerations."""
 
 import re
+from typing import Union
 
 import inflection
 
@@ -87,6 +88,49 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
+SAM_KIND_ICON_DEFAULT = "abstract-26"
+"""The icon of a kind that has none of its own in :data:`SAM_KIND_ICONS`, e.g. an Extension, which isn't a SAM kind."""
+
+SAM_KIND_ICONS: dict[str, str] = {
+    # plugins
+    STATICPLUGIN_MANIFEST_KIND: "document",
+    APIPLUGIN_MANIFEST_KIND: "code",
+    SKILLPLUGIN_MANIFEST_KIND: "wrench",
+    SQLPLUGIN_MANIFEST_KIND: "file-sheet",
+    WEBSEARCHPLUGIN_MANIFEST_KIND: "magnifier",
+    IMAGESEARCHPLUGIN_MANIFEST_KIND: "picture",
+    # connections
+    APICONNECTION_MANIFEST_KIND: "router",
+    SQLCONNECTION_MANIFEST_KIND: "data",
+    # account resources
+    ACCOUNT_MANIFEST_KIND: "bank",
+    AUTH_TOKEN_MANIFEST_KIND: "key",
+    BUDGET_MANIFEST_KIND: "wallet",
+    USER_MANIFEST_KIND: "profile-circle",
+    SECRET_MANIFEST_KIND: "lock-2",
+    GUARDRAIL_MANIFEST_KIND: "shield-tick",
+    # prompt resources
+    PROMPT_MANIFEST_KIND: "message-text-2",
+    LLM_CLIENT_MANIFEST_KIND: "artificial-intelligence",
+    CUSTOM_DOMAIN_MANIFEST_KIND: "share",
+    LLM_HOST_MANIFEST_KIND: "technology-4",
+    LLM_HOST_COMPUTE_MANIFEST_KIND: "cube-3",
+    MCP_CLIENT_MANIFEST_KIND: "switch",
+    ORCHESTRATOR_MANIFEST_KIND: "category",
+    # provider, proxy and vectorstore resources
+    PROVIDER_MANIFEST_KIND: "cloud",
+    PROXY_MANIFEST_KIND: "exit-right-corner",
+    VECTORSEARCH_MANIFEST_KIND: "filter-search",
+    VECTORSTORE_MANIFEST_KIND: "cube-2",
+}
+"""
+The icon of each SAM kind in the web console: the name of a `Keen Icons <https://keenthemes.com/keenicons>`__.
+
+icon, without its ``ki-`` prefix, which the console's global stylesheet provides, e.g. ``<i class="ki-outline
+ki-lock-2"></i>`` for a Secret. Each kind has its own. See :meth:`SAMKinds.icon`.
+"""
+
+
 class SAMKinds(SmarterEnumAbstract):
     """
     Enumeration of all Smarter Application Manifest (SAM) resource kinds.
@@ -141,6 +185,9 @@ class SAMKinds(SmarterEnumAbstract):
         str_to_kind(kind_str):
             Convert a manifest kind string into the corresponding
             :class:`SAMKinds` enumeration value.
+
+        icon(kind):
+            Return the kind's icon in the web console.
 
         all_plugins():
             Return the supported plugin manifest kinds.
@@ -235,6 +282,29 @@ class SAMKinds(SmarterEnumAbstract):
                 return str(member)
 
         raise SmarterValueError(f"Invalid SAMKinds value: {kind_str}.")
+
+    @classmethod
+    def icon(cls, kind: Union[str, "SAMKinds"]) -> str:
+        """
+        Return the web console's icon of a kind of resource, e.g. for the cards of an LLMClient's architecture.
+
+        The icon is a `Keen Icons <https://keenthemes.com/keenicons>`__ name, without its ``ki-`` prefix, which
+        the web console's global stylesheet provides.
+
+        .. code-block:: python
+
+            SAMKinds.icon(SAMKinds.SECRET)  # "lock-2", i.e. <i class="ki-outline ki-lock-2"></i>
+            SAMKinds.icon("sqlplugin")  # "file-sheet"
+            SAMKinds.icon("Extension")  # "abstract-26", the default: an Extension isn't a SAM kind
+
+        :param kind: The kind, as a member or its value, in any case.
+        :type kind: Union[str, SAMKinds]
+        :returns: The icon's name, or :data:`SAM_KIND_ICON_DEFAULT` for a kind that isn't a SAM kind.
+        :rtype: str
+        """
+        value = kind.value if isinstance(kind, SAMKinds) else str(kind)
+        icons = {key.lower(): icon for key, icon in SAM_KIND_ICONS.items()}
+        return icons.get(value.lower(), SAM_KIND_ICON_DEFAULT)
 
     @classmethod
     def all_plugins(cls):

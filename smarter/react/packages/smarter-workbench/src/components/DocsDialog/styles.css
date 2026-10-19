@@ -1,0 +1,128 @@
+/* the Docs dialog, a modal over the chat and the Console. */
+.smarter-chat-docs-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.smarter-chat-docs-dialog {
+  width: 100%;
+  max-width: 36em;
+  max-height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 1em 1.25em;
+  border-radius: 0.5em;
+  background-color: #fff;
+  color: #333;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  text-align: left;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.smarter-chat-docs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.smarter-chat-docs-header h2 {
+  margin: 0;
+  font-size: 1.25em;
+}
+
+.smarter-chat-docs-close {
+  padding: 0 0.3em;
+  border: none;
+  border-radius: 0.3em;
+  background: transparent;
+  color: #6ea9d7;
+  font-size: 1.5em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.smarter-chat-docs-close:hover,
+.smarter-chat-docs-close:focus-visible {
+  background-color: rgba(110, 169, 215, 0.15);
+}
+
+.smarter-chat-docs-intro {
+  margin: 0.5em 0 0.75em;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.smarter-chat-docs-tabs {
+  display: flex;
+  gap: 0.25em;
+  border-bottom: 1px solid #ddd;
+}
+
+.smarter-chat-docs-tab {
+  margin-bottom: -1px;
+  padding: 0.45em 0.9em;
+  border: 1px solid transparent;
+  border-radius: 0.4em 0.4em 0 0;
+  background: transparent;
+  color: #1a73c9;
+  font: inherit;
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.smarter-chat-docs-tab:hover,
+.smarter-chat-docs-tab:focus-visible {
+  background-color: rgba(110, 169, 215, 0.15);
+}
+
+.smarter-chat-docs-tab[aria-selected="true"] {
+  border-color: #ddd #ddd #fff;
+  background-color: #fff;
+  color: #333;
+}
+
+.smarter-chat-docs-section-description {
+  margin: 0.75em 0 0.4em;
+  font-size: 0.85em;
+  color: #666;
+}
+
+.smarter-chat-docs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.smarter-chat-docs-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  padding: 0.6em 0;
+  border-top: 1px solid #eee;
+}
+
+.smarter-chat-docs-list a {
+  color: #1a73c9;
+  font-weight: 600;
+}
+
+.smarter-chat-docs-list a:hover {
+  text-decoration: underline;
+}
+
+.smarter-chat-docs-description {
+  font-size: 0.9em;
+}
+
+.smarter-chat-docs-url {
+  font-size: 0.8em;
+  color: #888;
+  overflow-wrap: anywhere;
+}

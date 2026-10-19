@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type * as monaco from "monaco-editor";
 
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../const";
 
 /** Copy the editor's YAML to the clipboard, and briefly show that it was copied. */
 export function useCopy(editor: monaco.editor.IStandaloneCodeEditor | null) {

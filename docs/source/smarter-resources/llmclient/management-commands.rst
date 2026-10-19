@@ -9,6 +9,7 @@ Management Commands
    commands/add-example-llmclients
    commands/deploy-example-llmclients
    commands/deploy-llmclient
+   commands/export-llmclient-deployment-schema
    commands/get-llmclients
    commands/load-from-github
    commands/register-custom-domain

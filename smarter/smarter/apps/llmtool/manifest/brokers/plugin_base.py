@@ -431,6 +431,62 @@ class SAMPluginBaseBroker(AbstractBroker):
         )
         return [(SAMKinds.LLM_CLIENT.value, llmclients)]
 
+    @classmethod
+    def references(cls, instance: PluginMeta) -> SAMDependents:
+        """Return the resources that a plugin uses.
+
+        Every plugin uses the Provider that its ``spec.prompt.provider`` names. An SqlPlugin and an
+        ApiPlugin also use their Connection, and a WebsearchPlugin the Secret of its search api key.
+
+        :param instance: The plugin's PluginMeta.
+        :type instance: PluginMeta
+        :return: Its Provider, Connection and Secret, of those that it has.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.connection.models import ApiConnection, SqlConnection
+        from smarter.apps.llmtool.models import (
+            PluginDataApi,
+            PluginDataSql,
+            PluginDataWebsearch,
+            PluginPrompt,
+        )
+        from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+        from smarter.apps.secret.models import Secret
+
+        provider_name = PluginPrompt.objects.filter(plugin=instance).values_list("provider", flat=True).first()
+        return [
+            (SAMKinds.PROVIDER.value, SAMProviderBroker.providers_named(provider_name, instance.user_profile)),
+            (
+                SAMKinds.SQL_CONNECTION.value,
+                SqlConnection.objects.filter(
+                    id__in=PluginDataSql.objects.filter(plugin=instance).values("connection_id")
+                ),
+            ),
+            (
+                SAMKinds.API_CONNECTION.value,
+                ApiConnection.objects.filter(
+                    id__in=PluginDataApi.objects.filter(plugin=instance).values("connection_id")
+                ),
+            ),
+            (
+                SAMKinds.SECRET.value,
+                Secret.objects.filter(
+                    id__in=PluginDataWebsearch.objects.filter(plugin=instance).values("search_api_key_id")
+                ),
+            ),
+        ]
+
+    @property
+    def dependency_tree_instance(self) -> Optional[PluginMeta]:
+        """The plugin's PluginMeta, which the resources that use the plugin refer to.
+
+        :return: The PluginMeta, or None if the plugin does not exist.
+        :rtype: Optional[PluginMeta]
+        """
+        return self.plugin_meta
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the LLMClients that use this plugin.

@@ -17,6 +17,7 @@
  *
  * Dependencies:
  * - @monaco-editor/react — code editor
+ * - @smarter/serverlogs — the Server Logs tab's log viewer and log stream
  * - @/components/Toolbar, LLMProviderSelector, TemplateSelector, Response — UI components
  * - @/lib/cookie, @/lib/django — CSRF and fetch utilities
  * - ./templates, ./llmApis — request template and URL helpers
@@ -26,6 +27,7 @@ import type * as monaco from "monaco-editor";
 
 import { fetchDjangoUrl, gettext } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
+import { ServerLogs, logStreamUrlForRequest, newRequestId, useLogStream } from "@smarter/serverlogs";
 
 import { loggerPrefix } from "@/const";
 import getPromptTemplate from "@/components/Prompt/templates";
@@ -34,8 +36,6 @@ import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
 import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
 import type { PassthroughResponse } from "@/components/LLMProviderPassthroughResponse/summary";
 import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
-import ServerLogs from "@/components/ServerLogs";
-import { logStreamUrlForRequest, newRequestId, useLogStream } from "@/lib/logStream";
 
 import "@/components/Prompt/styles.css";
 
