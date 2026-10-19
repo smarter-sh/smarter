@@ -3,6 +3,7 @@
 from typing import Optional
 
 from django.db import models
+from django.utils import timezone
 
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -140,6 +141,61 @@ class LLMClientAPIKey(TimestampedModel):
             return LLMClientAPIKey.objects.none()
 
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
+
+    @classmethod
+    def attach(cls, llmclient: LLMClient, api_key: SmarterAuthToken) -> "LLMClientAPIKey":
+        """
+        Attach an api key to an llmclient, in place of any other, as applying ``spec.apiKey`` does.
+
+        An llmclient has one api key: the others are detached. The llmclient's cached api keys are
+        invalidated, so that it requires the key at once, and its ``updated_at`` is touched, so that its
+        cached manifest, whose ``spec.apiKey`` names the key, is rebuilt.
+
+        :param llmclient: The llmclient.
+        :type llmclient: LLMClient
+        :param api_key: The api key, of the llmclient's account.
+        :type api_key: SmarterAuthToken
+        :returns: The attachment.
+        :rtype: LLMClientAPIKey
+        """
+        cls.objects.filter(llmclient=llmclient).exclude(api_key=api_key).delete()
+        attachment, created = cls.objects.get_or_create(llmclient=llmclient, api_key=api_key)
+        cls._attachments_changed(llmclient)
+        logger.debug(
+            "%s.attach() %s api key %s to llmclient %s",
+            logging.formatted_text(__name__ + "." + cls.__name__),
+            "attached" if created else "kept",
+            api_key.name,
+            llmclient.name,
+        )
+        return attachment
+
+    @classmethod
+    def detach(cls, llmclient: LLMClient) -> int:
+        """
+        Detach every api key from an llmclient, which is then public once it is deployed.
+
+        :param llmclient: The llmclient.
+        :type llmclient: LLMClient
+        :returns: The number of api keys detached.
+        :rtype: int
+        """
+        count, _ = cls.objects.filter(llmclient=llmclient).delete()
+        cls._attachments_changed(llmclient)
+        logger.debug(
+            "%s.detach() detached %s api keys from llmclient %s",
+            logging.formatted_text(__name__ + "." + cls.__name__),
+            count,
+            llmclient.name,
+        )
+        return count
+
+    @classmethod
+    def _attachments_changed(cls, llmclient: LLMClient) -> None:
+        """Invalidate the caches that depend on an llmclient's api keys, and touch its ``updated_at``."""
+        cls.get_cached_objects(invalidate=True, llmclient=llmclient)
+        LLMClient.objects.filter(pk=llmclient.pk).update(updated_at=timezone.now())
+        LLMClient.get_cached_object(pk=llmclient.pk, invalidate=True)
 
 
 __all__ = [
