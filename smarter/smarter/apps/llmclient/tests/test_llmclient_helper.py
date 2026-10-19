@@ -98,3 +98,42 @@ class TestLLMClientHelper(TestAccountMixin):
                 self.assertTrue(helper.ready)
             with patch.object(LLMClientHelper, "is_helper_ready", new_callable=PropertyMock, return_value=False):
                 self.assertFalse(helper.ready)
+
+
+class TestLLMClientHelperNamedUrl(TestAccountMixin):
+    """Test that a named url resolves the LLMClient whose rfc1034 compliant name is the url's first label."""
+
+    def setUp(self):
+        super().setUp()
+        self.admin_llmclient = LLMClient.objects.create(
+            name=f"named_url_{self.hash_suffix}_sql", user_profile=self.user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=self.admin_llmclient.pk).delete)
+        self.user_llmclient = LLMClient.objects.create(
+            name=f"named_url_{self.hash_suffix}", user_profile=self.non_admin_user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=self.user_llmclient.pk).delete)
+
+    def helper(self, label: str) -> LLMClientHelper:
+        host = f"{label}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
+        request = RequestFactory().get("/", HTTP_HOST=host)
+        request.user = AnonymousUser()
+        return LLMClientHelper(request)
+
+    def test_a_hyphenated_label_of_an_admin_llmclient(self):
+        """The label of ``<name>_sql`` is ``<name>-sql``, which must not be read as ``<name>`` and a username."""
+        helper = self.helper(self.admin_llmclient.rfc1034_compliant_name)
+        self.assertEqual(helper.llmclient, self.admin_llmclient)
+        self.assertEqual(helper.llmclient_id, self.admin_llmclient.id)
+
+    def test_the_label_of_a_non_admin_llmclient(self):
+        """The label of a non-admin user's LLMClient is ``<name>-<username>``."""
+        helper = self.helper(self.user_llmclient.rfc1034_compliant_name)
+        self.assertEqual(helper.llmclient, self.user_llmclient)
+
+    def test_an_unknown_label_resolves_nothing(self):
+        """A label that matches no LLMClient resolves None, and llmclient_id doesn't raise."""
+        helper = self.helper(f"no-such-{self.hash_suffix}")
+        self.assertIsNone(helper.llmclient)
+        self.assertIsNone(helper.llmclient_id)
+        self.assertIsNone(helper.llmclient_from_host_label())
