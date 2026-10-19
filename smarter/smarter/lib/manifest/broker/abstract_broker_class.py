@@ -52,7 +52,12 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.keys import unknown_keys
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.manifest.models import AbstractSAMBase, client_manifest_validation
+from smarter.lib.manifest.models import (
+    AbstractSAMBase,
+    SAMDependencyTreeNode,
+    client_manifest_validation,
+)
+from smarter.lib.manifest.record_locator import console_url
 from smarter.lib.typing import SmarterDictType
 
 from .error_classes import (
@@ -1636,6 +1641,138 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :raises SAMBrokerErrorNotImplemented: If the broker does not implement :meth:`dependents`.
         """
         return any(dependents_exist(rows) for _, rows in cls.dependents(instance))
+
+    @classmethod
+    def references(cls, instance: models.Model) -> SAMDependents:
+        """Return the resources that a resource uses, as Django ORM rows: the opposite of :meth:`dependents`.
+
+        A resource uses another when it refers to it, by name in its manifest or by a foreign key,
+        e.g. an LLMClient uses the Guardrails in its ``spec.guardrails``, and an SqlConnection uses
+        the Secret of its password. Each edge here is the same edge that the other kind's
+        :meth:`dependents` lists, seen from this end. :meth:`dependency_tree` follows them, recursively.
+
+        A kind of resource that uses no others returns an empty list.
+
+        Example:
+
+        .. code-block:: python
+
+            @classmethod
+            def references(cls, instance: MCPClient) -> SAMDependents:
+                secrets = Secret.objects.filter(pk=instance.credentials_id)
+                return [(SAMKinds.SECRET.value, secrets)]
+
+        :param instance: The resource's Django ORM instance, e.g. an LLMClient.
+        :type instance: models.Model
+        :return: The kinds and rows of the resources that it uses, or an empty list. A kind of None
+            means that each row has its own kind, in its ``kind`` field, as a plugin's PluginMeta does.
+        :rtype: SAMDependents
+        :raises SAMBrokerErrorNotImplemented: If the broker does not implement it.
+        """
+        raise SAMBrokerErrorNotImplemented(message=f"{cls.__name__}.references() not implemented")
+
+    @property
+    def dependency_tree_instance(self) -> Optional[models.Model]:
+        """The Django ORM instance that is the root of :meth:`dependency_tree`, and that :meth:`references` takes.
+
+        It is :attr:`orm_instance`, unless a broker's ORM instance is not the row that the other kinds
+        refer to, e.g. a plugin's, whose rows are referred to by their PluginMeta.
+
+        :return: The instance, or None if the resource does not exist.
+        :rtype: Optional[models.Model]
+        """
+        return self.orm_instance
+
+    def dependency_tree(self) -> Optional[SAMDependencyTreeNode]:
+        """Return the tree of every resource that this resource uses, recursively, by record locator.
+
+        The root is this resource. Its children are the resources that it uses, as :meth:`references`
+        lists them, and theirs are the resources that they use, down to the resources that use no
+        others, such as Secrets. A resource that two others use is in the tree twice, once under each.
+        A resource that is already one of its own ancestors is a leaf, so that a cycle ends.
+
+        Each node has the resource's record locator, and the path of its web console page, derived
+        from the record locator by :func:`smarter.lib.manifest.record_locator.console_url`, so that a
+        web console page can draw the tree with a link on each resource. A resource that the
+        authenticated user may not read has only its kind and record locator, and no children.
+
+        Example:
+
+        .. code-block:: python
+
+            broker = SAMLLMClientBroker(request=request, name="stackademy_sql", kind="LLMClient")
+            tree = broker.dependency_tree()
+            tree.model_dump(mode="json")
+            # {"kind": "LLMClient", "name": "stackademy_sql", "recordLocator": "llmclient-rMTAwMDAxMwx",
+            #  "url": "/workbench/llm-clients/rMTAwMDAxMwx/prompt/", "readable": True,
+            #  "children": [{"kind": "SqlPlugin", "name": "stackademy_sql", ...,
+            #                "children": [{"kind": "SqlConnection", ..., "children": [{"kind": "Secret", ...}]}]}]}
+
+        :return: The tree, or None if the resource does not exist.
+        :rtype: Optional[SAMDependencyTreeNode]
+        :raises SAMBrokerErrorNotImplemented: If a broker in the tree does not implement :meth:`references`.
+        """
+        instance = self.dependency_tree_instance
+        if instance is None:
+            logger.debug(
+                "%s.dependency_tree() %s %s does not exist", self.abstract_broker_logger_prefix, self.kind, self.name
+            )
+            return None
+        return self.dependency_tree_node(str(self.kind), instance, ancestors=frozenset())
+
+    def dependency_tree_node(self, kind: str, instance: models.Model, ancestors: frozenset) -> SAMDependencyTreeNode:
+        """Return one resource's node of :meth:`dependency_tree`, with the nodes of the resources that it uses.
+
+        :param kind: The SAM kind of the resource, e.g. ``SAMKinds.LLM_CLIENT.value``.
+        :type kind: str
+        :param instance: The resource's Django ORM instance.
+        :type instance: models.Model
+        :param ancestors: The record locators of the resource's ancestors in the tree.
+        :type ancestors: frozenset
+        :return: The node.
+        :rtype: SAMDependencyTreeNode
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.brokers import Brokers
+
+        record_locator: Optional[str] = getattr(instance, "record_locator", None)
+        if not self.dependency_tree_readable(instance):
+            return SAMDependencyTreeNode(kind=kind, recordLocator=record_locator, readable=False)
+        children: List[SAMDependencyTreeNode] = []
+        broker_class = Brokers.get_broker(kind)
+        if broker_class is not None and record_locator not in ancestors:
+            path = ancestors | {record_locator}
+            for child_kind, rows in broker_class.references(instance):
+                unique = {row.pk: row for row in rows}
+                children += [
+                    self.dependency_tree_node(
+                        child_kind or str(getattr(row.kind, "value", row.kind)), row, path  # type: ignore[attr-defined]
+                    )
+                    for row in unique.values()
+                ]
+        return SAMDependencyTreeNode(
+            kind=kind,
+            name=getattr(instance, "name", None),
+            recordLocator=record_locator,
+            url=console_url(record_locator),
+            children=sorted(children, key=lambda node: (node.kind, node.name or "")),
+        )
+
+    def dependency_tree_readable(self, instance: models.Model) -> bool:
+        """Return True if the authenticated user may read a resource of :meth:`dependency_tree`.
+
+        A resource whose manager has no read permissions, e.g. an Extension, which every account
+        that has it enabled may use, is readable.
+
+        :param instance: The resource's Django ORM instance.
+        :type instance: models.Model
+        :return: Whether the user may read it.
+        :rtype: bool
+        """
+        manager = type(instance)._default_manager  # pylint: disable=protected-access
+        if self.user is None or not hasattr(manager, "with_read_permission_for"):
+            return True
+        return manager.filter(pk=instance.pk).with_read_permission_for(self.user).exists()  # type: ignore[attr-defined]
 
     def dependency_brokers_for(self, instance: Optional[models.Model]) -> List[SAMDependency]:
         """Return a broker for each resource that depends on a resource, as :meth:`dependents` lists them.
