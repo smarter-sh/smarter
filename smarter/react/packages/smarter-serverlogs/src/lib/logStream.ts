@@ -1,14 +1,19 @@
 /**
- * The user's server logs, as Server-Sent Events, for the Console's "Server Logs" tab.
+ * The user's server logs, as Server-Sent Events, for the server log viewer.
  *
- * The stream is the one that the Smarter web console's log viewer reads: its first event is a
- * "bulk" event with the recent history, and each later event is one log record, as JSON. See
+ * The stream is the one that the Smarter web console's terminal reads: its first event is a "bulk"
+ * event with the recent history, and each later event is one log record, as JSON. See
  * smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs.
  *
  * The stream sends the records at or above its "level" query parameter, or, without it, at or above
- * the server's log level, smarter_settings.log_level. Sandbox mode asks for DEBUG. Its "session_key"
- * query parameter narrows it to the records of one chat: the requests to the LLMClient's api with
- * that chat session key. Without it, the stream sends every record of the user, e.g. other chats'.
+ * the server's log level, smarter_settings.log_level. Two query parameters narrow it:
+ *
+ * - "session_key", to the records of one chat: the requests to an LLMClient's api with that chat
+ *   session key. The workbench's Console uses it, and asks for DEBUG in sandbox mode.
+ * - "request_id", to the records of one request: the request whose X-Smarter-RequestId header had
+ *   that id. The Prompt Passthrough uses it, for the prompt that it sent last, at DEBUG.
+ *
+ * Without either, the stream sends every record of the user, e.g. other chats'.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -27,8 +32,8 @@ export interface LogEvent {
 /** The most records to keep. Older records are dropped. */
 export const MAX_LOG_EVENTS = 2000;
 
-/** The log level of the stream in sandbox mode. Production mode uses the server's log level. */
-export const SANDBOX_LOG_LEVEL = "DEBUG";
+/** The lowest log level: every record. E.g. the workbench's sandbox mode, and the Prompt Passthrough, ask for it. */
+export const DEBUG_LOG_LEVEL = "DEBUG";
 
 /**
  * The log stream's url, for the records at or above the given log level, e.g. "DEBUG". Without a
@@ -56,6 +61,30 @@ export function logStreamUrlForChat(
   return url.toString();
 }
 
+/**
+ * The log stream's url, for the records of one request, at or above the given log level. Without
+ * a stream url, or a request id, there is no stream.
+ */
+export function logStreamUrlForRequest(
+  streamUrl: string | null,
+  requestId: string | null,
+  level: string = DEBUG_LOG_LEVEL,
+): string | null {
+  if (!streamUrl || !requestId) return null;
+  const url = new URL(streamUrl, window.location.href);
+  url.searchParams.set("request_id", requestId);
+  url.searchParams.set("level", level);
+  return url.toString();
+}
+
+/** A new request id: 32 hexadecimal digits, as Django's SmarterRequestMixin.generate_smarter_request_id() makes. */
+export function newRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID().replace(/-/g, "");
+  }
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+}
+
 function parseLogEvent(data: string): LogEvent {
   try {
     const parsed = JSON.parse(data) as unknown;
@@ -79,7 +108,7 @@ function keepRecent(logs: LogEvent[]): LogEvent[] {
 /**
  * The log stream's records, and its connection state. Connects only while streamUrl is set.
  *
- * A new url, e.g. for a new chat session, starts with no records. clear() removes the records. The
+ * A new url, e.g. for a new chat session or the next prompt, starts with no records. clear() removes the records. The
  * records that were logged before then are not displayed again, even when a reconnection replays the
  * history.
  */

@@ -1,8 +1,8 @@
 /**
  * Example data for the workbench's stories and tests: its configuration, the LLMClient's chat configuration, as the
  * config api returns it (a trimmed copy of a real response, for the stackademy_sql LLMClient, as Smarter Chat's own
- * fixtures have it), the user's server logs, and the LLMClient's manifest. The architecture and the deployment page
- * are @smarter/llmclient-architecture's and @smarter/llmclient-deployment's own fixtures.
+ * fixtures have it), and the LLMClient's manifest. The server logs, the architecture and the deployment page are
+ * @smarter/serverlogs', @smarter/llmclient-architecture's and @smarter/llmclient-deployment's own fixtures.
  */
 import { normalizeConfig, type ChatConfig, type Contract } from "@smarter.sh/ui-chat";
 import type { SessionContext } from "@smarter/common";
@@ -134,29 +134,8 @@ export function leanConfig(chatConfig: ChatConfig): ChatConfig {
   return makeConfig({ ...chatConfig, history });
 }
 
-/** The user's recent server logs, which the log stream sends first, as its "bulk" event. */
-export const bulkLogs = [
-  {
-    message: "2026-01-01 12:00:00,000 INFO \u001b[1;34msmarter.apps.prompt\u001b[0m prompt started",
-    level: "INFO",
-    logger: "smarter.apps.prompt",
-    timestamp: 1767268800,
-  },
-  {
-    message: "2026-01-01 12:00:01,000 WARNING plugin stackademy_sql is slow",
-    level: "WARNING",
-    logger: "smarter.apps.plugin",
-    timestamp: 1767268801,
-  },
-];
-
-/** A server log record that arrives after the bulk history. */
-export const liveLog = {
-  message: "2026-01-01 12:00:02,000 ERROR \u001b[31mprompt finished\u001b[0m",
-  level: "ERROR",
-  logger: "smarter.apps.prompt",
-  timestamp: 1767268802,
-};
+/** The user's recent server logs, and a record that arrives after them: the server log viewer's own fixtures. */
+export { bulkLogs, liveLog } from "@smarter/serverlogs/mocks";
 
 /** The LLMClient's manifest, as the Manifest tab fetches it. */
 export const MANIFEST_YAML = `apiVersion: smarter.sh/v1

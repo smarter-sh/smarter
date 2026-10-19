@@ -15,6 +15,7 @@
 import { useCallback, useRef, useState } from "react";
 import { gettext } from "@smarter/common";
 import { HeaderButton, SmarterChat, type ChatConfig } from "@smarter.sh/ui-chat";
+import { DEBUG_LOG_LEVEL } from "@smarter/serverlogs";
 
 import Console from "@/components/Console";
 import { initialMenuItem, VERBOSE_MENU_ITEMS, type MenuItem } from "@/components/Console/enums";
@@ -22,7 +23,6 @@ import DocsDialog from "@/components/DocsDialog";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ConsoleIcon, DocsIcon } from "@/components/icons";
 import { useChatWidth, useConsoleVisible } from "@/lib/layout";
-import { SANDBOX_LOG_LEVEL } from "@/lib/logStream";
 import type { WorkbenchConfig } from "@/lib/types";
 
 export default function App({ workbench }: { workbench: WorkbenchConfig }) {
@@ -108,7 +108,7 @@ export default function App({ workbench }: { workbench: WorkbenchConfig }) {
           <Console
             workbench={workbench}
             config={config}
-            logLevel={sandbox ? SANDBOX_LOG_LEVEL : null}
+            logLevel={sandbox ? DEBUG_LOG_LEVEL : null}
             resetKey={chatCount}
             onManifestSaved={handleManifestSaved}
             onSelect={setConsoleTab}

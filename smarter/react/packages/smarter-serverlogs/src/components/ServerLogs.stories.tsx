@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { bulkLogs, liveLog } from "@/mocks/fixtures";
+import { bulkLogs, jsonLog, liveLog } from "@/mocks/fixtures";
 
-import ServerLogs from "@/components/ServerLogs/Component";
+import ServerLogs from "@/components/ServerLogs";
 
 const longLine = {
   message: `2026-01-01 12:00:03,000 DEBUG smarter.apps.prompt request body: ${JSON.stringify({
@@ -12,16 +12,16 @@ const longLine = {
 };
 
 /**
- * The server logs of a prompt. Focus the lines, and press ? for the keyboard shortcuts: w wraps,
+ * The server logs, as they stream in. Focus the lines, and press ? for the keyboard shortcuts: w wraps,
  * s follows the newest record, / filters, Ctrl+Up and Ctrl+Down move to the top and the bottom.
  */
 const meta = {
-  title: "Prompt Passthrough/ServerLogs",
+  title: "Server Logs/ServerLogs",
   component: ServerLogs,
-  args: { logs: [...bulkLogs, longLine, liveLog], connected: true, error: null },
+  args: { logs: [...bulkLogs, longLine, jsonLog, liveLog], connected: true, error: null },
   decorators: [
     (Story) => (
-      <div className="passthrough-server-logs rounded p-3" style={{ backgroundColor: "#171b20" }}>
+      <div className="rounded p-3" style={{ backgroundColor: "#171b20" }}>
         <Story />
       </div>
     ),
@@ -33,7 +33,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Streaming: Story = {};
 
-/** Before the first prompt. */
+/** Before there is a stream, e.g. before the first prompt. */
 export const Idle: Story = {
   args: { logs: [], connected: false, idleText: "Send a request to see its server logs here." },
 };

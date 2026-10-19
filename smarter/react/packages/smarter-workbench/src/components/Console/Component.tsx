@@ -6,14 +6,13 @@
 import { useEffect, useRef, useState } from "react";
 import ReactJsonView from "@microlink/react-json-view";
 import { gettext } from "@smarter/common";
+import { ServerLogs, logStreamUrlForChat, useLogStream } from "@smarter/serverlogs";
 
 import ArchitectureTab from "@/components/Console/ArchitectureTab";
 import { consoleData, type ConsoleConfig } from "@/components/Console/data";
 import DeploymentTab from "@/components/Console/DeploymentTab";
 import { initialMenuItem, MenuItems, type MenuItem } from "@/components/Console/enums";
 import ManifestTab from "@/components/Console/ManifestTab";
-import ServerLogs from "@/components/Console/ServerLogs";
-import { logStreamUrlForChat, useLogStream } from "@/lib/logStream";
 import type { WorkbenchConfig } from "@/lib/types";
 import "@/components/Console/styles.css";
 

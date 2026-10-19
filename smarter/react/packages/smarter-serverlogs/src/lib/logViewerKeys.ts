@@ -5,10 +5,7 @@
  * Ctrl+W and Cmd+W, which close its tab, so wrap is "w", as in k9s. macOS keeps Ctrl+Up and
  * Ctrl+Down for Mission Control, so Cmd+Up and Cmd+Down, Home and End, and g and G move to the
  * top and the bottom too.
- *
- * The workbench's Console (smarter-workbench/src/lib/logViewerKeys.ts) and the Prompt Passthrough's
- * Server Logs tab (smarter-prompt-passthrough/src/lib/logViewerKeys.ts) have a copy of this file,
- * because they are separate apps. Keep the two the same.
+
  */
 
 /** What a key does in the log viewer. */

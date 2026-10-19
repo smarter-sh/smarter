@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { FakeEventSource, installFakes } from "@smarter/serverlogs/fakes";
+
 import App from "@/App";
-import { FakeEventSource, installFakes } from "@/mocks/fakes";
 import { CONFIG_URL, LOG_STREAM_URL, configWithHistory, leanConfig, plainWorkbench, workbench } from "@/mocks/fixtures";
 import { chatHandlers, tabHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
