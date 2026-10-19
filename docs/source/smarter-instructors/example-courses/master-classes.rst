@@ -24,6 +24,10 @@ sessions and grade weights, and uses the rubric levels and course policies in
      - Experienced developers building full-stack AI applications
      - Python, Django, React and the OpenAI API
      - 18 hours, as a three-day classroom course or a six-week online course
+   * - :doc:`master-classes/python-agentic-ai`
+     - Experienced Python developers responsible for a large codebase
+     - Python, with an AI coding agent
+     - 18 hours, as a three-day classroom course or a six-week online course
 
 .. toctree::
    :maxdepth: 1
@@ -31,3 +35,4 @@ sessions and grade weights, and uses the rubric levels and course policies in
 
    master-classes/django-master-class
    master-classes/ai-application-development
+   master-classes/python-agentic-ai
