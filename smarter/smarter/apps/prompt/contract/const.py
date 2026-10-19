@@ -95,7 +95,7 @@ The configuration api's query parameter that asks for its diagnostic parts: ``?v
 Without it, the configuration has what a chat needs: the LLMClient, its state, the session's
 messages, and the counts of its plugins and extensions. With it, a client that may read the
 LLMClient also receives the session's tool calls, the complete ``meta_data``, and the lists of
-plugins and extensions, which Smarter Chat's Console displays. A deployed LLMClient's own host
+plugins and extensions, which the workbench's Console displays. A deployed LLMClient's own host
 ignores it.
 """
 

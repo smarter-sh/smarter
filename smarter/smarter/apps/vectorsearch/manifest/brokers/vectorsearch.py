@@ -796,6 +796,25 @@ class SAMVectorsearchBroker(AbstractBroker):
         """
         return []
 
+    @classmethod
+    def references(cls, instance: Vectorsearch) -> SAMDependents:
+        """Return the resources that a Vectorsearch uses: its Vectorstore, and the Secret that authenticates it.
+
+        :param instance: The Vectorsearch.
+        :type instance: Vectorsearch
+        :return: Its Vectorstore and Secret.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.secret.models import Secret
+        from smarter.apps.vectorstore.models import VectorstoreMeta
+
+        return [
+            (SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(pk=instance.vectorstore_id)),  # type: ignore[attr-defined]
+            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.auth_secret_id)),  # type: ignore[attr-defined]
+        ]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the resources that depend on this Vectorsearch.
