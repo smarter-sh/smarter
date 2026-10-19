@@ -2661,26 +2661,24 @@ msgid "Who owns a resource, and who may read it"
 msgstr "Qui possède une ressource, et qui peut la lire"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "How this LLMClient is built"
 msgid "Open this LLMClient's manifest"
-msgstr "Comment ce LLMClient est construit"
+msgstr "Ouvrez le manifeste de ce LLMClient"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Click Copy on the example, and paste it into the manifest."
-msgstr ""
+msgstr "Cliquez sur Copier dans l'exemple, puis collez-le dans le manifeste."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "Click Save. Smarter applies the manifest at once. Then reload this tab, and "
 "the new resource appears in the tree."
 msgstr ""
+"Cliquez sur Enregistrer. Smarter applique aussitôt le manifeste. Rechargez "
+"ensuite cet onglet : la nouvelle ressource apparaît dans l'arbre."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Choose its api key"
 msgid "Choose it"
-msgstr "Choisissez sa clé d'API"
+msgstr "Choisissez cette option"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2688,18 +2686,17 @@ msgid ""
 "already has the same key with an empty list, such as %(empty)s, replace that "
 "line."
 msgstr ""
+"Collez-le au début d'une nouvelle ligne sous %(spec)s. Si le manifeste "
+"contient déjà la même clé avec une liste vide, comme %(empty)s, remplacez "
+"cette ligne."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Your next step"
 msgid "Next steps"
-msgstr "Votre prochaine étape"
+msgstr "Prochaines étapes"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "This LLMClient isn't yours"
 msgid "Make this LLMClient your own"
-msgstr "Ce LLMClient n'est pas à vous"
+msgstr "Personnalisez ce LLMClient"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2707,12 +2704,14 @@ msgid ""
 "missing some of them. Each takes a few lines of YAML: copy an example below "
 "into the manifest, and save it."
 msgstr ""
+"La plupart des LLMClients ont des garde-fous, des outils et une apparence "
+"qui leur sont propres. Il en manque à celui-ci. Chacun ne demande que "
+"quelques lignes de YAML : copiez un exemple ci-dessous dans le manifeste, "
+"puis enregistrez-le."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Your Guardrails"
 msgid "Add your first Guardrail"
-msgstr "Vos garde-fous"
+msgstr "Ajoutez votre premier garde-fou"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2722,6 +2721,12 @@ msgid ""
 "what it looks for, such as an email address, a prompt injection or a leaked "
 "password, it blocks the message, redacts what it found, or logs it."
 msgstr ""
+"Un garde-fou filtre le texte qui passe entre l'utilisateur et le LLM. Un "
+"garde-fou d'entrée vérifie chaque prompt avant son envoi au LLM, et un "
+"garde-fou de sortie vérifie chaque réponse avant que l'utilisateur ne la "
+"voie. Lorsqu'il trouve ce qu'il cherche, comme une adresse e-mail, une "
+"injection de prompt ou un mot de passe divulgué, il bloque le message, "
+"masque ce qu'il a trouvé ou le journalise."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2730,24 +2735,23 @@ msgid ""
 "for the most common cases, which every LLMClient may use by name: personal "
 "data, secrets, prompt injection, moderation, off-topic prompts and more."
 msgstr ""
+"Les garde-fous sont du logiciel ordinaire, et non le jugement du LLM : ils "
+"appliquent donc vos règles quel que soit le comportement du LLM. Smarter "
+"fournit des garde-fous intégrés pour les cas les plus courants, que tout "
+"LLMClient peut utiliser par leur nom : données personnelles, secrets, "
+"injection de prompt, modération, prompts hors sujet, et plus encore."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Delete Guardrail"
 msgid "Browse the Guardrails"
-msgstr "Supprimer le garde-fou"
+msgstr "Parcourir les garde-fous"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Your Guardrails"
 msgid "Built-in Guardrails"
-msgstr "Vos garde-fous"
+msgstr "Garde-fous intégrés"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Your Guardrails"
 msgid "Two built-in Guardrails"
-msgstr "Vos garde-fous"
+msgstr "Deux garde-fous intégrés"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2755,10 +2759,14 @@ msgid ""
 "each prompt, and %(injection)s blocks prompts that try to override the "
 "LLMClient's instructions. Neither calls an LLM."
 msgstr ""
+"%(pii)s retire de chaque prompt les numéros de carte bancaire, les adresses "
+"e-mail et les numéros de téléphone, et %(injection)s bloque les prompts qui "
+"tentent de contourner les instructions du LLMClient. Aucun des deux "
+"n'appelle de LLM."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Add your first tool"
-msgstr ""
+msgstr "Ajoutez votre premier outil"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2768,12 +2776,19 @@ msgid ""
 "tools that the LLMClient lists, the LLM decides when to call one, and "
 "Smarter runs it and hands back the result."
 msgstr ""
+"Un LLM ne connaît que ce sur quoi il a été entraîné et ce que contient son "
+"prompt. Les outils lui donnent tout le reste : la météo du jour, une ligne "
+"de votre base de données, un calcul qu'il devinerait autrement. Smarter "
+"propose au LLM les outils que le LLMClient liste, le LLM décide quand en "
+"appeler un, et Smarter l'exécute et lui renvoie le résultat."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "There are three ways to add tools, which differ in who writes them and where "
 "they run. An LLMClient may use all three at once."
 msgstr ""
+"Il existe trois façons d'ajouter des outils, qui diffèrent par qui les écrit"
+" et où ils s'exécutent. Un LLMClient peut utiliser les trois à la fois."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Plugins"
@@ -2786,22 +2801,28 @@ msgid ""
 "a skill, search the web, or search for images. Nothing is coded or "
 "installed, and it runs on Smarter."
 msgstr ""
+"Un plugin est un manifeste qui configure l'un des modèles d'outils intégrés "
+"de Smarter : répondre à partir de données statiques, exécuter une requête "
+"SQL, appeler une api REST, suivre une skill, chercher sur le web ou chercher"
+" des images. Rien n'est codé ni installé, et il s'exécute sur Smarter."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "for your own data, databases and apis, without writing code."
 msgstr ""
+"pour vos propres données, bases de données et api, sans écrire de code."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "A sample static plugin about a fictional candy, which needs no Connection or "
 "Secret. Then ask the LLMClient about the Everlasting Gobstopper."
 msgstr ""
+"Un exemple de plugin statique sur un bonbon imaginaire, qui ne demande ni "
+"connexion ni secret. Interrogez ensuite le LLMClient sur l'Everlasting "
+"Gobstopper."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Browse the registry"
 msgid "Browse the plugins"
-msgstr "Parcourir le registre"
+msgstr "Parcourir les plugins"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2810,24 +2831,30 @@ msgid ""
 "administrator installs a plugin. Its tools do whatever Python can do, and "
 "they run on Smarter."
 msgstr ""
+"Une extension est du code Python, empaqueté et publié dans le registre des "
+"extensions Smarter, qu'un administrateur de la plateforme installe, comme un"
+" administrateur WordPress installe un plugin. Ses outils font tout ce que "
+"Python sait faire, et ils s'exécutent sur Smarter."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "when a tool needs real code, or for a ready-made tool that is already "
 "installed."
 msgstr ""
+"quand un outil demande du vrai code, ou pour un outil prêt à l'emploi déjà "
+"installé."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "An official Extension, which does arithmetic exactly. The Extensions page "
 "lists those that are installed on this platform."
 msgstr ""
+"Une extension officielle, qui fait des calculs arithmétiques exacts. La page"
+" Extensions liste celles qui sont installées sur cette plateforme."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Back to Extensions"
 msgid "Browse the Extensions"
-msgstr "Retour aux extensions"
+msgstr "Parcourir les extensions"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2836,40 +2863,42 @@ msgid ""
 "server's tools to the LLM and calls them on that server. Nothing is coded, "
 "and nothing runs on Smarter."
 msgstr ""
+"Un MCPClient est un manifeste qui se connecte à un serveur MCP distant : les"
+" outils d'un tiers, publiés avec le Model Context Protocol. Smarter propose "
+"les outils du serveur au LLM et les appelle sur ce serveur. Rien n'est codé,"
+" et rien ne s'exécute sur Smarter."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "for a service that already publishes an MCP server, such as GitHub, Notion "
 "or Stripe."
 msgstr ""
+"pour un service qui publie déjà un serveur MCP, comme GitHub, Notion ou "
+"Stripe."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "An example MCPClient for DeepWiki, which documents public GitHub "
 "repositories, and requires no authentication."
 msgstr ""
+"Un exemple de MCPClient pour DeepWiki, qui documente les dépôts GitHub "
+"publics, et ne demande aucune authentification."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Delete MCPClient"
 msgid "Browse the MCPClients"
-msgstr "Supprimer le MCPClient"
+msgstr "Parcourir les MCPClients"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Plugins, Extensions and MCP servers compared"
-msgstr ""
+msgstr "Plugins, extensions et serveurs MCP comparés"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Extension"
 msgid "Extensibility"
-msgstr "Extension"
+msgstr "Extensibilité"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Styles"
 msgid "Style its chat"
-msgstr "Styles"
+msgstr "Personnalisez le style de son chat"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2879,28 +2908,37 @@ msgid ""
 "every web page that embeds the chat. You don't need to know CSS, and every "
 "setting is optional."
 msgstr ""
+"Le chat de ce LLMClient a l'apparence par défaut de Smarter. Quelques lignes"
+" de styles lui donnent la vôtre : votre logo dans l'en-tête, vos couleurs "
+"sur les bulles des messages, votre police, une image derrière la "
+"conversation. Ils s'appliquent dans le workbench et sur chaque page web qui "
+"intègre le chat. Inutile de connaître CSS, et chaque réglage est facultatif."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "Styles go in %(styles)s, beside %(prompt)s: paste it at the start of the "
 "line after the last line of %(prompt)s, with the same indent as %(prompt)s."
 msgstr ""
+"Les styles se placent dans %(styles)s, à côté de %(prompt)s : collez-le au "
+"début de la ligne qui suit la dernière ligne de %(prompt)s, avec la même "
+"indentation que %(prompt)s."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-#, fuzzy
-#| msgid "Your LLM Clients"
 msgid "Styling your LLMClient's chat"
-msgstr "Vos clients LLM"
+msgstr "Styles du chat de votre LLMClient"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "The chat's styles"
-msgstr ""
+msgstr "Les styles du chat"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
 "Smarter's logo, the Inter font, a dark header, and the user's messages in "
 "orange. Swap in your own logo's url and colors."
 msgstr ""
+"Le logo de Smarter, la police Inter, un en-tête sombre et les messages de "
+"l'utilisateur en orange. Remplacez l'url du logo et les couleurs par les "
+"vôtres."
 
 #. Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx

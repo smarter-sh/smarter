@@ -27,7 +27,8 @@ describe("ManifestSnippet", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<ManifestSnippet snippet={GUARDRAIL_SNIPPET} label="x" />);
     await user.click(screen.getByRole("button", { name: "Copy" }));
-    await user.click(screen.getByRole("button", { name: "Copied" }));
+    // The label changes only once the clipboard write resolves, which can lag the click on a slow runner.
+    await user.click(await screen.findByRole("button", { name: "Copied" }));
     act(() => {
       vi.advanceTimersByTime(COPIED_MILLISECONDS);
     });
