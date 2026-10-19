@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 488" role="img" aria-label="Figure 1: Concept Overview. Programmer key stops at Smarter; only Smarter holds the Anthropic key" font-family="Helvetica, Arial, sans-serif" font-size="13">
+  <title>Figure 1: Concept Overview. Programmer key stops at Smarter; only Smarter holds the Anthropic key</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="488" fill="#ffffff"/>
+
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#1f2328">Figure 1: Concept Overview</text>
+  <text x="24" y="56" font-size="13" fill="#57606a">Programmer key stops at Smarter; only Smarter holds the Anthropic key</text>
+  <g transform="translate(0 32)">
+
+  <!-- connectors -->
+  <g fill="none" stroke="#8a8f98" stroke-width="1.25">
+    <path d="M340 128V184" marker-end="url(#arrow)"/>
+    <path d="M420 184V128" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+    <path d="M340 304V360" marker-end="url(#arrow)"/>
+    <path d="M420 360V304" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+    <path d="M584 244H560" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- programmer machine -->
+  <rect x="200" y="56" width="360" height="72" rx="8" fill="#ffffff" stroke="#8a8f98" stroke-width="1.25"/>
+  <text x="216" y="80" font-weight="600" fill="#1f2328">Programmer machine: Claude Code</text>
+  <text x="216" y="96" font-size="11.5" fill="#57606a">ANTHROPIC_BASE_URL points at the proxy</text>
+  <text x="216" y="112" font-size="11.5" fill="#57606a">ANTHROPIC_API_KEY holds a Smarter key</text>
+
+  <!-- proxy -->
+  <rect x="200" y="184" width="360" height="120" rx="8" fill="#e8f0fe" stroke="#2f6fd6" stroke-width="2"/>
+  <text x="216" y="208" font-weight="600" fill="#1f2328">Smarter: the anthropic proxy</text>
+  <text x="216" y="224" font-size="11.5" fill="#1f2328">1. Checks the key is active (else HTTP 401)</text>
+  <text x="216" y="240" font-size="11.5" fill="#1f2328">2. Removes it and adds the Anthropic key</text>
+  <text x="216" y="256" font-size="11.5" fill="#1f2328">3. Forwards the request to Anthropic</text>
+  <text x="216" y="272" font-size="11.5" fill="#1f2328">4. Records which key was used</text>
+  <text x="216" y="288" font-size="11.5" fill="#1f2328">5. Passes Claude's reply back unchanged</text>
+
+  <!-- anthropic -->
+  <rect x="200" y="360" width="360" height="72" rx="8" fill="#ffffff" stroke="#8a8f98" stroke-width="1.25"/>
+  <text x="216" y="384" font-weight="600" fill="#1f2328">Anthropic API</text>
+  <text x="216" y="400" font-size="11.5" fill="#57606a">Sees one customer: the company</text>
+  <text x="216" y="416" font-size="11.5" fill="#57606a">Sends back Claude's reply</text>
+
+  <!-- secret -->
+  <rect x="584" y="216" width="152" height="56" rx="8" fill="#ffffff" stroke="#8a8f98" stroke-width="1.25"/>
+  <text x="600" y="240" font-weight="600" fill="#1f2328">Encrypted Secret</text>
+  <text x="600" y="256" font-size="11.5" fill="#57606a">anthropic_api_key</text>
+
+  <!-- edge labels -->
+  <text x="328" y="160" text-anchor="end" font-size="11.5" fill="#57606a">request + the programmer's Smarter key</text>
+  <text x="432" y="160" font-size="11.5" fill="#57606a">Claude's reply</text>
+  <text x="328" y="336" text-anchor="end" font-size="11.5" fill="#57606a">same request + the company's Anthropic key</text>
+  <text x="432" y="336" font-size="11.5" fill="#57606a">Claude's reply</text>
+</g>
+</svg>
