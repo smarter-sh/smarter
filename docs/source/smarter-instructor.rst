@@ -97,7 +97,7 @@ or a startup actually uses.
 Free Course Designs
 --------------------
 
-The :doc:`Free Course Designs <smarter-instructors/example-courses/index>` has 21 complete,
+The :doc:`Free Course Designs <smarter-instructors/example-courses/index>` has 22 complete,
 ready-to-teach course designs, from prompt engineering for non-programmers to
 Kubernetes for platform engineers. Each course design comes with turnkey course plans,
 with schedules, graded assignments and rubrics, capstone projects and reading lists, so
