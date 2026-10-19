@@ -1,20 +1,21 @@
 """
-Record locators, and the web console pages that they lead to.
+Record locators, and the web console manifest pages that they lead to.
 
 A record locator identifies one row of a Smarter resource, e.g. ``llmclient-rMTAwMDAxMwx``: the
 lower-cased name of its Django model class, a hyphen, and the row's hashed id. A manifest returns it
 as ``status.recordLocator``. See
 :attr:`smarter.lib.django.models.timestamped_model.TimestampedModel.record_locator`.
 
-Most web console pages of a resource are addressed by the same hashed id, so that a record locator
-is enough to build the url of the resource's page, without a database query:
+Each kind of resource has a page in the web console that shows its manifest, in the manifest editor,
+where it can be changed. Most are addressed by the same hashed id, so that a record locator is enough
+to build the url of the resource's manifest page, without a database query:
 
 .. code-block:: python
 
     from smarter.lib.manifest.record_locator import console_url
 
     console_url("llmclient-rMTAwMDAxMwx")
-    # '/workbench/llm-clients/rMTAwMDAxMwx/prompt/'
+    # '/workbench/llm-clients/rMTAwMDAxMwx/manifest/'
 
 The exceptions are an api key (:class:`smarter.lib.drf.models.SmarterAuthToken`), whose record
 locator ends with its ``key_id``, and an Extension, whose page is addressed by its slug, which is
@@ -93,7 +94,10 @@ def by_hashed_id(namespace: str, name: str) -> ConsolePath:
 
 def console_paths() -> dict[str, ConsolePath]:
     """
-    The web console page of each kind of resource that has one, by record locator prefix.
+    The web console manifest page of each kind of resource that has one, by record locator prefix.
+
+    An LLMClient's is its manifest page, not the Prompt Engineer's Workbench, so that every kind's
+    page is one where its manifest can be edited. An Extension, which has no manifest, has its own page.
 
     The views are imported here, not at module level, because the url modules import the apps' views,
     which import the manifest brokers, which import this module.
@@ -150,7 +154,7 @@ def console_paths() -> dict[str, ConsolePath]:
         Budget: by_hashed_id(BudgetReverseNames.namespace, BudgetReverseNames.detailview),
         Extension: extension_path,
         Guardrail: by_hashed_id(GuardrailReverseNames.namespace, GuardrailReverseNames.detailview),
-        LLMClient: by_hashed_id(PromptReverseNames.namespace, PromptReverseNames.chat_by_hashed_id),
+        LLMClient: by_hashed_id(PromptReverseNames.namespace, PromptReverseNames.manifest_by_hashed_id),
         LLMClientCustomDomain: by_hashed_id(
             LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_detailview
         ),
@@ -172,7 +176,7 @@ def console_paths() -> dict[str, ConsolePath]:
 
 def console_url(record_locator: Optional[str]) -> Optional[str]:
     """
-    The path of a resource's page in the web console, from its record locator.
+    The path of a resource's manifest page in the web console, from its record locator.
 
     It is a path, not an absolute url, because the web console's own pages use it. A kind of resource
     that has no page, e.g. a Prompt, or a page that this platform does not serve, e.g. the Proxy pages

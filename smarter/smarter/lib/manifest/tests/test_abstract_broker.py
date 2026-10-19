@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 from django.utils.crypto import get_random_string
 
-from smarter.apps.account.models import Account, Budget, User
+from smarter.apps.account.models import Account, Budget, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.brokers import Brokers
@@ -28,6 +28,7 @@ from smarter.apps.llmclient.models import (
     LLMClientMCPClients,
 )
 from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
+from smarter.apps.llmtool.models import Extension
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.orchestrator.models import Orchestrator, OrchestratorHarness
 from smarter.apps.prompt.models import Prompt
@@ -287,7 +288,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         tree = self.llmclient_tree(llmclient)
         self.assertEqual((tree.kind, tree.name), ("LLMClient", self.name))
         self.assertEqual(tree.recordLocator, llmclient.record_locator)
-        self.assertEqual(tree.url, f"/workbench/llm-clients/{llmclient.hashed_id}/prompt/")
+        self.assertEqual(tree.url, f"/workbench/llm-clients/{llmclient.hashed_id}/manifest/")
         self.assertTrue(tree.readable)
 
         guardrail = self.child(tree, "Guardrail")
@@ -304,7 +305,25 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         self.assertEqual(secret.children, [])
 
         data = tree.model_dump(mode="json")
-        self.assertEqual(set(data), {"kind", "name", "recordLocator", "url", "readable", "children"})
+        self.assertEqual(set(data), {"kind", "icon", "name", "owner", "recordLocator", "url", "readable", "children"})
+        self.assertEqual(tree.icon, SAMKinds.icon(SAMKinds.LLM_CLIENT))
+        self.assertEqual(guardrail.icon, "shield-tick")
+        self.assertEqual(tree.owner, AbstractBroker.dependency_tree_owner(llmclient))
+        self.assertIn(self.user_profile.user.username, tree.owner)
+
+    def test_dependency_tree_owner(self):
+        """Test that an owner is named by full name and username, or username, and an Extension by its publisher."""
+        user = User(username="ada", first_name="Ada", last_name="Lovelace")
+        self.assertEqual(
+            AbstractBroker.dependency_tree_owner(Guardrail(user_profile=UserProfile(user=user))), "Ada Lovelace (ada)"
+        )
+        user = User(username="ada")
+        self.assertEqual(AbstractBroker.dependency_tree_owner(Guardrail(user_profile=UserProfile(user=user))), "ada")
+        self.assertEqual(
+            AbstractBroker.dependency_tree_owner(Extension(publisher="The Smarter Project")), "The Smarter Project"
+        )
+        self.assertIsNone(AbstractBroker.dependency_tree_owner(Extension(publisher="")))
+        self.assertIsNone(AbstractBroker.dependency_tree_owner(Budget()))
 
     def test_dependency_tree_hides_what_the_user_may_not_read(self):
         """Test that a resource of another account keeps its kind and record locator, but not its name, url or children."""
