@@ -343,6 +343,21 @@ class SAMPromptBroker(AbstractBroker):
         """
         return []
 
+    @classmethod
+    def references(cls, instance: Prompt) -> SAMDependents:
+        """Return the resources that a Prompt uses: its LLMClient.
+
+        :param instance: The Prompt.
+        :type instance: Prompt
+        :return: Its LLMClient.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient
+
+        return [(SAMKinds.LLM_CLIENT.value, LLMClient.objects.filter(pk=instance.llmclient_id))]  # type: ignore[attr-defined]
+
     @memoized_dependencies
     def dependencies(self) -> typing.List[SAMDependency]:
         """Return brokers for the resources that depend on this Prompt.

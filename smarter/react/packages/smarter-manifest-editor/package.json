@@ -3,6 +3,10 @@
   "description": "A React app for viewing and editing Smarter manifests in the Smarter web console.",
   "version": "0.1.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
     "build": "tsc -b && vite build",

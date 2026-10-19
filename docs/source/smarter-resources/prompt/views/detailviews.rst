@@ -8,3 +8,4 @@ Prompt Details Views
    detailviews/prompt_workbench_view
    detailviews/prompt_sandbox_view
    detailviews/prompt_manifest_view
+   detailviews/prompt_architecture_view

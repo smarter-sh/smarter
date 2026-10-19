@@ -3,6 +3,7 @@
 
 from typing import Optional
 
+from django.conf import settings
 from django.db import models
 from django.db.models import QuerySet
 
@@ -194,6 +195,10 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             self.rfc1034_compliant_kind  # 'static'
             self.rfc1034_compliant_name  # 'example-plugin
             self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+
+        The url is reversed against the platform's urlconf, because this property
+        also runs on a deployed LLMClient's host, whose urlconf has no plugin pages,
+        e.g. when a prompt's tool call serializes the plugin.
         """
         # pylint: disable=C0415
         from smarter.apps.llmtool.urls import PluginReverseNames
@@ -201,6 +206,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         return reverse(
             f"{PluginReverseNames.namespace}:{PluginReverseNames.detailview}",
             kwargs={"hashed_id": self.hashed_id},
+            urlconf=settings.ROOT_URLCONF,
         )
 
     @property

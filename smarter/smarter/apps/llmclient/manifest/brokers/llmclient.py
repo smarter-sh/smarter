@@ -1268,6 +1268,47 @@ class SAMLLMClientBroker(AbstractBroker):
         )
         return [(SAMKinds.ORCHESTRATOR.value, orchestrators)]
 
+    @classmethod
+    def references(cls, instance: LLMClient) -> SAMDependents:
+        """Return the resources that an LLMClient uses.
+
+        Its Provider, which ``spec.config.provider`` names, or the default Provider; the plugins, MCPClients,
+        Guardrails and Extensions that it lists; its Custom Domain; and the api key that its url requires.
+        An Extension is not a SAM kind, so it is a leaf of :meth:`dependency_tree`.
+
+        :param instance: The LLMClient.
+        :type instance: LLMClient
+        :return: The resources that it uses. The plugins have their own kinds.
+        :rtype: SAMDependents
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.guardrail.models import Guardrail
+        from smarter.apps.llmclient.models import (
+            LLMClientAPIKey,
+            LLMClientCustomDomain,
+            LLMClientExtensions,
+            LLMClientGuardrails,
+            LLMClientMCPClients,
+            LLMClientPlugin,
+        )
+        from smarter.apps.llmtool.models import Extension, PluginMeta
+        from smarter.apps.mcpclient.models import MCPClient
+        from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+
+        def linked(link_model, field: str):
+            return link_model.objects.filter(llmclient=instance).values(field)
+
+        return [
+            (SAMKinds.PROVIDER.value, SAMProviderBroker.providers_named(instance.provider, instance.user_profile)),
+            (None, PluginMeta.objects.filter(id__in=linked(LLMClientPlugin, "plugin_meta_id"))),
+            (SAMKinds.MCP_CLIENT.value, MCPClient.objects.filter(id__in=linked(LLMClientMCPClients, "mcpclient_id"))),
+            (SAMKinds.GUARDRAIL.value, Guardrail.objects.filter(id__in=linked(LLMClientGuardrails, "guardrail_id"))),
+            (Extension.__name__, Extension.objects.filter(id__in=linked(LLMClientExtensions, "extension_id"))),
+            (SAMKinds.CUSTOM_DOMAIN.value, LLMClientCustomDomain.objects.filter(pk=instance.custom_domain_id)),  # type: ignore[attr-defined]
+            (SAMKinds.AUTH_TOKEN.value, SmarterAuthToken.objects.filter(pk__in=linked(LLMClientAPIKey, "api_key_id"))),
+        ]
+
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:
         """Return brokers for the Orchestrators that use this LLMClient.

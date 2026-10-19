@@ -7,7 +7,7 @@ falls back to the account admin's plugins, and then to the smarter admin's.
 """
 
 from django.test import Client
-from django.urls import reverse
+from django.urls import get_urlconf, reverse, set_urlconf
 
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.llmtool.models import PluginMeta
@@ -60,6 +60,16 @@ class TestPluginDetailView(PluginAppTestBase):
         """Test that PluginMeta.manifest_url is the detail page's url."""
         plugin_meta = self.static_plugin.plugin_meta
         self.assertEqual(plugin_meta.manifest_url, self.url(plugin_meta))  # type: ignore[union-attr]
+
+    def test_manifest_url_from_llmclient_host(self):
+        """Test that PluginMeta.manifest_url builds while a deployed LLMClient's urlconf is active, e.g. for a tool call."""
+        plugin_meta = self.static_plugin.plugin_meta
+        expected = self.url(plugin_meta)
+        previous = get_urlconf()
+        self.addCleanup(set_urlconf, previous)
+        set_urlconf("smarter.urls.llmclients")
+
+        self.assertEqual(plugin_meta.manifest_url, expected)  # type: ignore[union-attr]
 
     def test_get(self):
         """Test that the owner gets the plugin's manifest, as yaml."""
