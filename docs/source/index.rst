@@ -452,6 +452,7 @@ MCPClient, and four guardrails, and it contains no code.
    smarter-framework
    adr
    contributors
+   anthropic-llm
 
 .. toctree::
    :maxdepth: 1
