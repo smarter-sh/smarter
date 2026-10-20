@@ -2,10 +2,12 @@
 
 import os
 from http import HTTPStatus
+from warnings import deprecated
 
 from django import forms, http
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.views.dashboard import ACCOUNT_UI_DEPRECATION_MESSAGE
 from smarter.common.utils import get_readonly_csv_file
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAdminWebView
@@ -39,8 +41,15 @@ class AccountForm(forms.ModelForm):
         fields = "__all__"
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class SettingsView(SmarterAdminWebView):
-    """View for the account settings."""
+    """
+    View for the account settings.
+
+    mcdaniel: shelving plans on this view for now,
+    as it is not being used in the current UI and is orthogonal to running open source
+    software. We will revisit this in the future if the need arises.
+    """
 
     template_path = "account/dashboard/settings.html"
 

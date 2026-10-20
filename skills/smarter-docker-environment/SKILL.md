@@ -78,7 +78,9 @@ docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.
 ```
 
 `make build` doesn't collect static files. After a React change, use
-`make react-build` instead (see `smarter-django-react`).
+`make react-build` instead (see `smarter-django-react`). It is safe to run
+without asking: its build output isn't tracked, and it changes no
+infrastructure.
 
 **When a rebuild isn't possible**, e.g. while the user is running the stack
 themselves, [scripts/sync-changed-files.sh](scripts/sync-changed-files.sh)

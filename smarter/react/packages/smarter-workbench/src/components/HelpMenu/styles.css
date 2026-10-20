@@ -1,0 +1,50 @@
+/* the Help menu, below its button in the chat's header, aligned to the button's right edge. See Component.tsx. */
+.smarter-workbench-help {
+  position: relative;
+  display: inline-flex;
+}
+
+.smarter-workbench-help-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 14em;
+  margin: 0;
+  padding: 0.3em;
+  list-style: none;
+  border: 1px solid #d1dbe3;
+  border-radius: 0.5em;
+  background-color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.smarter-workbench-help-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  width: 100%;
+  padding: 0.5em 0.7em;
+  border: none;
+  border-radius: 0.35em;
+  background: transparent;
+  color: #333;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.smarter-workbench-help-item svg {
+  flex-shrink: 0;
+  color: #6ea9d7;
+  font-size: 1.15em;
+}
+
+.smarter-workbench-help-item:hover,
+.smarter-workbench-help-item:focus-visible {
+  background-color: rgba(110, 169, 215, 0.15);
+  outline: none;
+}

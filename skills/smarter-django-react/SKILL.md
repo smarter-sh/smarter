@@ -140,6 +140,10 @@ template tag then finds no `manifest.json` and emits no script tags.
 
 - Check `staticfiles/react/<app>/manifest.json` in `smarter-app` first.
 - Use `make react-build` (npm build, collectstatic, image build), not
-  `make build`, after any React change.
+  `make build`, after any React change. It is safe to run without asking:
+  its output (`smarter/staticfiles/`, `smarter/smarter/static/react/`, the
+  image) isn't tracked by git, and it touches no infrastructure. It returns when
+  it's done, so run it in the foreground. Unlike `make run`, it doesn't
+  restart the containers: follow it with `make run` in the background.
 - The template tag caches a missing manifest for the life of the process, so
   restart `smarter-app` after fixing the static files.

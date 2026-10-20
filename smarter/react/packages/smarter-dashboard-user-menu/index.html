@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smarter User Menu</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered
+    by Django.
+
+    See:
+    - smarter.apps.dashboard.templatetags.react_dashboard_user_menu
+    - templates/react/dashboard-user-menu.html, which templates/dashboard/navbar.html includes
+    - smarter.apps.account.views.dashboard.user_profiles
+    - smarter.apps.account.views.dashboard.profile_image
+    -->
+    <div class="d-flex justify-content-end p-5">
+      <div
+        id="smarter-dashboard-user-menu-root"
+        smarter-csrf-cookie-name="csrftoken"
+        smarter-django-session-cookie-name="sessionid"
+        smarter-cookie-domain="localhost"
+        smarter-is-authenticated="true"
+        smarter-username="ada"
+        smarter-email="ada@example.edu"
+        smarter-first-name="Ada"
+        smarter-last-name="Lovelace"
+        smarter-is-superuser="false"
+        smarter-is-staff="false"
+        smarter-profile-image-url="/static/images/avatars/default-profile.svg"
+        smarter-user-profile-count="2"
+        smarter-account-number="1234-5678-9012"
+        smarter-account-name="Introduction to Prompt Engineering"
+        smarter-languages='[{"code": "en", "name": "English"}, {"code": "es", "name": "Español"}]'
+        smarter-current-language="en"
+        smarter-set-language-url="/i18n/setlang/"
+        smarter-next-url="/dashboard/"
+        smarter-profile-image-api-url="/account/dashboard/profile-image/"
+        smarter-user-profiles-api-url="/account/dashboard/user-profiles/"
+        smarter-user-profile-select-api-url="/account/dashboard/user-profiles/select/"
+        smarter-login-url="/login/"
+        smarter-logout-url="/logout/"
+        smarter-request-id="dev-request-id"
+      ></div>
+    </div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

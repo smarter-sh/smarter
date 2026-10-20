@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import GettingStarted from "@/components/GettingStarted";
 import { consoleLinks, leafTree, lockedTree } from "@/mocks/fixtures";
 
-/** The next steps, beneath the tree, for an LLMClient that has no Guardrail, no tools or no styles. */
+/** The next steps, beneath the tree, for an LLMClient that has no Guardrail, no tools, no styles or no api key. */
 const meta = {
   title: "LLMClient Architecture/GettingStarted",
   component: GettingStarted,

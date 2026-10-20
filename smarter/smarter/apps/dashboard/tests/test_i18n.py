@@ -201,33 +201,6 @@ class TestI18nViews(TestAccountMixin):
         self.client.logout()
 
 
-class TestLanguageMenu(SmarterTestBase):
-    """Test the language menu in the user menu of the dashboard's navbar."""
-
-    template = "dashboard/navbar/user-menu-item.html"
-
-    def render(self) -> str:
-        """Render the user menu for an anonymous request."""
-        request = RequestFactory().get("/dashboard/?tab=1")
-        return render_to_string(self.template, {}, request=request)
-
-    def test_hidden_with_one_language(self):
-        """With only English, there is nothing to choose, so there is no language menu."""
-        with override_settings(LANGUAGES=[("en", "English")]):
-            self.assertNotIn('name="language"', self.render())
-
-    def test_lists_every_language_in_its_own_name(self):
-        """With more than one language, the menu lists each one, and posts the choice to set_language."""
-        with override_settings(LANGUAGES=[("en", "English"), ("es", "Spanish")]):
-            html = self.render()
-        self.assertIn(f'action="{reverse("set_language")}"', html)
-        self.assertIn('value="/dashboard/?tab=1"', html)
-        self.assertIn('value="en"', html)
-        self.assertIn('value="es"', html)
-        self.assertIn("English", html)
-        self.assertIn("Español", html)
-
-
 class TestToLocaleFilter(SmarterTestBase):
     """Test the to_locale template filter."""
 
