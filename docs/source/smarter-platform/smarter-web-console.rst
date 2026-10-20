@@ -38,10 +38,22 @@ See :doc:`@smarter/didyouknow <../smarter-framework/developer-reference/react-in
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Smarter Dashboard"/>
 
+User Menu
+~~~~~~~~~
+
+Your profile image, at the top right of every page, opens your user menu. It shows your name and
+email, and lets you choose the console's language, change or remove your profile image, take the
+welcome tour again, and sign out. If you belong to more than one account, for example as a student
+who is enrolled in two courses at once, the menu also shows the account that the console is acting
+as, and a **Change Profile** item. It lists your profiles, with each one's account number, account
+name and the date that it was created, and **Switch** makes the console act as another one for the
+rest of your session. Until you choose, the console acts as your newest profile.
+See :doc:`@smarter/dashboard-user-menu <../smarter-framework/developer-reference/react-integration/dashboard-user-menu>`.
+
 Languages
 ~~~~~~~~~
 
-The console is shown in the language that you choose in the language menu of your user menu, which
+The console is shown in the language that you choose in the Language item of your user menu, which
 it remembers in a cookie, or else in your browser's preferred language, when it is available. The
 console is available in English, which is the default, Spanish (in Latin American Spanish), French
 and Brazilian Portuguese. A browser that prefers any variant of Spanish, such as ``es-MX`` or

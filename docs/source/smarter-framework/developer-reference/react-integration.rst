@@ -662,6 +662,7 @@ pipelines and advanced React development workflows.
   :caption: Technical Reference
 
   react-integration/dashboard
+  react-integration/dashboard-user-menu
   react-integration/didyouknow
   react-integration/onboarding
   react-integration/llmclient-list
