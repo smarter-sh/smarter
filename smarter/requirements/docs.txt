@@ -547,7 +547,7 @@ social-auth-app-django==6.1.0
     # via
     #   -r smarter/requirements/in/base.in
     #   -r smarter/requirements/in/constraints.in
-social-auth-core==5.2.0
+social-auth-core==5.0.2
     # via
     #   -r smarter/requirements/in/constraints.in
     #   social-auth-app-django
