@@ -5,8 +5,9 @@
  * or red badge, how long the request took and how big the response was, and buttons to copy or
  * download its JSON. The body starts with a summary: the assistant's reply, with its model, finish
  * reason and token counts, or the error, with its stack trace folded away. The raw JSON follows, in a
- * read-only editor like the request's. Before the first request, the body says how to get a response,
- * and while a request is on its way, a spinner says so.
+ * read-only editor like the request's, under the same toolbar (EditorViewToolbar): wrap, expand or
+ * collapse the JSON, and copy. Before the first request, the body says how to get a response, and
+ * while a request is on its way, a spinner says so.
  *
  * :param apiResponse: The last response, or null before the first.
  * :type apiResponse: PassthroughResponse | null
@@ -15,10 +16,12 @@
  */
 import { useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
+import type * as monaco from "monaco-editor";
 
 import { gettext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
+import EditorViewToolbar from "@/components/EditorViewToolbar";
 import { CompletionPanel, ErrorPanel } from "@/components/LLMProviderPassthroughResponse/ResponseSummary";
 import SuccessEmoji from "@/components/LLMProviderPassthroughResponse/status_success";
 import FailureEmoji from "@/components/LLMProviderPassthroughResponse/status_failure";
@@ -129,6 +132,41 @@ function Placeholder({ busy }: { busy: boolean }) {
   );
 }
 
+/** The response as it is, in a read-only editor, under its toolbar. */
+function RawResponse({ text, isText }: { text: string; isText: boolean }) {
+  // this component unmounts with its editor, so that the toolbar never has a disposed one.
+  const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+  return (
+    <section aria-label={isText ? gettext("Raw response") : gettext("Raw JSON")}>
+      <h4 className="passthrough-response-label mb-3">
+        <i className="ki-outline ki-code fs-6 me-2" aria-hidden="true"></i>
+        {isText ? gettext("Raw response") : gettext("Raw JSON")}
+      </h4>
+      <EditorViewToolbar editor={editor} />
+      <Editor
+        height={`${editorHeight(text)}px`}
+        language={isText ? "plaintext" : "json"}
+        theme="vs-dark"
+        value={text}
+        onMount={setEditor}
+        options={{
+          ariaLabel: gettext("Response JSON"),
+          readOnly: true,
+          domReadOnly: true,
+          minimap: { enabled: false },
+          fontSize: 14,
+          fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
+          fontLigatures: true,
+          lineHeight: 22,
+          folding: true,
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+        }}
+      />
+    </section>
+  );
+}
+
 function LLMProviderPassthroughResponse({ apiResponse, isProcessing = false }: ResponseProps) {
   const response = isProcessing ? null : apiResponse;
   const isText = typeof response?.body === "string";
@@ -173,34 +211,7 @@ function LLMProviderPassthroughResponse({ apiResponse, isProcessing = false }: R
           {!response && <Placeholder busy={isProcessing} />}
           {completion && <CompletionPanel completion={completion} />}
           {error && <ErrorPanel error={error} />}
-          {response && (
-            <section aria-label={isText ? gettext("Raw response") : gettext("Raw JSON")}>
-              <h4 className="passthrough-response-label mb-3">
-                <i className="ki-outline ki-code fs-6 me-2" aria-hidden="true"></i>
-                {isText ? gettext("Raw response") : gettext("Raw JSON")}
-              </h4>
-              <Editor
-                height={`${editorHeight(text)}px`}
-                language={isText ? "plaintext" : "json"}
-                theme="vs-dark"
-                value={text}
-                options={{
-                  ariaLabel: gettext("Response JSON"),
-                  readOnly: true,
-                  domReadOnly: true,
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
-                  fontLigatures: true,
-                  lineHeight: 22,
-                  wordWrap: "on",
-                  folding: true,
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true,
-                }}
-              />
-            </section>
-          )}
+          {response && <RawResponse text={text} isText={isText} />}
         </div>
       </div>
     </div>

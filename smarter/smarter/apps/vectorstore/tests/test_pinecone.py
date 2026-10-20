@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from pinecone.core.openapi.db_data.models import QueryResponse, ScoredVector
+from pinecone import QueryResponse, ScoredVector
 
 from smarter.apps.vectorstore.backends import (
     PineconeBackend,
@@ -118,7 +118,6 @@ class TestPineconeBackend(VectorstoreTestBase):
                 ScoredVector(id="x", score=0.8, metadata={"team": "a"}),
             ],
             namespace="",
-            _check_type=False,
         )
         results = backend.search("q", k=3, metadata_filter={"team": "a"})
         self.assertEqual([(r.id, r.text, r.score) for r in results], [("c1", "one", 0.9), ("c2", "two", 0.2)])
