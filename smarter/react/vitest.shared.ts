@@ -43,6 +43,8 @@ export function smarterVitestProject(packageDir: string) {
       setupFiles: [path.join(WORKSPACE, "test", "setup.ts")],
       include: ["src/**/*.test.{ts,tsx}"],
       restoreMocks: true,
+      // Above test/setup.ts's 5 second waitFor(), so that a slow CI runner fails on the assertion.
+      testTimeout: 15000,
     },
   });
 }
