@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.1](https://github.com/smarter-sh/smarter/compare/v0.35.0...v0.35.1) (2026-10-20)
+
+### Bug Fixes
+
+* **api:** regenerate the api contract for pydantic 2.14 ([3468c09](https://github.com/smarter-sh/smarter/commit/3468c097978cf96bcc34d3a0cf9f970f05efb5cb))
+
 ## [0.35.0](https://github.com/smarter-sh/smarter/compare/v0.34.1...v0.35.0) (2026-10-20)
 
 ### Features
