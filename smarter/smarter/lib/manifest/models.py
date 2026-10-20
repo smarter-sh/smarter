@@ -449,7 +449,10 @@ class SAMDependencyTreeNode(SmarterBasePydanticModel):
 
     name: Optional[str] = Field(
         default=None,
-        description="name[String]: The name of the resource. None if the user may not read it. Read only.",
+        description=(
+            "name[String]: The name of the resource, or an Extension's slug, e.g. weather. None if the user may not "
+            "read it. Read only."
+        ),
     )
 
     owner: Optional[str] = Field(
