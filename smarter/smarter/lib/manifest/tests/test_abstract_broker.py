@@ -46,6 +46,7 @@ from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
+    SAMBrokerInternalError,
     dependents_exist,
 )
 from smarter.lib.manifest.record_locator import console_url
@@ -96,6 +97,19 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         broker = self.orm_broker(self.user_profile)
         broker._name = None  # pylint: disable=protected-access
         self.assertIsNone(broker.orm_instance)
+
+    def test_command_result(self):
+        """Test that a command's result identifies the resource by api version, kind and name."""
+        result = self.orm_broker(self.user_profile).command_result()
+        self.assertEqual(result["kind"], KIND)
+        self.assertEqual(result["name"], self.name)
+
+    def test_command_result_without_kind(self):
+        """Test that a broker without a kind cannot describe a command's result."""
+        broker = self.orm_broker(self.user_profile)
+        with patch.object(SAMGuardrailBroker, "kind", new=property(lambda self: None)):
+            with self.assertRaises(SAMBrokerInternalError):
+                broker.command_result()
 
     def test_orm_instance_account_admin_fallback(self):
         """Test that a resource of the account's admin is found for another user of the account."""
@@ -324,6 +338,13 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         )
         self.assertIsNone(AbstractBroker.dependency_tree_owner(Extension(publisher="")))
         self.assertIsNone(AbstractBroker.dependency_tree_owner(Budget()))
+
+    def test_dependency_tree_name(self):
+        """Test that a resource is named by its name, and an Extension, which has no name, by its slug."""
+        self.assertEqual(AbstractBroker.dependency_tree_name(Guardrail(name="pii")), "pii")
+        self.assertEqual(AbstractBroker.dependency_tree_name(Extension(slug="weather")), "weather")
+        self.assertIsNone(AbstractBroker.dependency_tree_name(Extension(slug="")))
+        self.assertIsNone(AbstractBroker.dependency_tree_name(Budget()))
 
     def test_dependency_tree_hides_what_the_user_may_not_read(self):
         """Test that a resource of another account keeps its kind and record locator, but not its name, url or children."""
