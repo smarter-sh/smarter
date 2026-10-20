@@ -1,0 +1,55 @@
+{% load static react_dashboard_user_menu %}
+{% comment %}
+The web console's user menu, at the top right of every page: the @smarter/dashboard-user-menu React app.
+templates/dashboard/navbar.html includes it. Its avatar opens a menu with the user's name and email, the
+Language, Change Profile Image, Remove Profile Image, Change Profile (for a user with more than one
+UserProfile), Welcome Tour and Sign Out items, or only Sign In, for an anonymous request.
+
+The avatar inside the root element shows until React replaces it.
+
+see: smarter.apps.dashboard.templatetags.react_dashboard_user_menu, which reads the React manifest.json
+file to determine the correct hashed filenames to include, smarter.apps.account.views.dashboard.profile_image
+and smarter.apps.account.views.dashboard.user_profiles.
+{% endcomment %}
+{% dashboard_user_menu_react_assets as user_menu_assets %}
+{% dashboard_user_menu as user_menu %}
+{% for css_file in user_menu_assets.css %}
+  <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/dashboard-user-menu/' %}{{ css_file }}">
+{% endfor %}
+<div class="app-navbar-item ms-2 ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
+  <div
+    id="{{ user_menu.root_id }}"
+    smarter-csrf-cookie-name="{{ user_menu.csrf_cookie_name }}"
+    smarter-django-session-cookie-name="{{ user_menu.django_session_cookie_name }}"
+    smarter-cookie-domain="{{ user_menu.cookie_domain }}"
+    smarter-is-authenticated="{{ user_menu.is_authenticated|yesno:'true,false' }}"
+    smarter-username="{{ user_menu.username }}"
+    smarter-email="{{ user_menu.email }}"
+    smarter-first-name="{{ user_menu.first_name }}"
+    smarter-last-name="{{ user_menu.last_name }}"
+    smarter-is-superuser="{{ user_menu.is_superuser|yesno:'true,false' }}"
+    smarter-is-staff="{{ user_menu.is_staff|yesno:'true,false' }}"
+    smarter-profile-image-url="{{ user_menu.profile_image_url }}"
+    smarter-user-profile-count="{{ user_menu.user_profile_count }}"
+    smarter-account-number="{{ user_menu.account_number }}"
+    smarter-account-name="{{ user_menu.account_name }}"
+    smarter-languages="{{ user_menu.languages }}"
+    smarter-current-language="{{ user_menu.current_language }}"
+    smarter-set-language-url="{{ user_menu.set_language_url }}"
+    smarter-next-url="{{ user_menu.next_url }}"
+    smarter-profile-image-api-url="{{ user_menu.profile_image_api_url }}"
+    smarter-user-profiles-api-url="{{ user_menu.user_profiles_api_url }}"
+    smarter-user-profile-select-api-url="{{ user_menu.user_profile_select_api_url }}"
+    smarter-login-url="{{ user_menu.login_url }}"
+    smarter-logout-url="{{ user_menu.logout_url }}"
+    react-debug-mode="{{ user_menu.react_debug_mode|yesno:'true,false' }}"
+    smarter-request-id="{{ user_menu.smarter_request_id }}"
+  >
+    <div class="symbol symbol-circle symbol-35px symbol-md-40px">
+      <img alt="" src="{{ user_menu.profile_image_url }}" />
+    </div>
+  </div>
+</div>
+{% for js_file in user_menu_assets.js %}
+  <script class="smarter" type="module" src="{% static 'react/@smarter/dashboard-user-menu/' %}{{ js_file }}"></script>
+{% endfor %}

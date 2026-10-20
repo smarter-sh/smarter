@@ -5,8 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@smarter/common && npm run build --workspaces --if-present",
-    "build:deps": "npm run build --workspace=@smarter/common && npm run build:lib --workspace=@smarter.sh/ui-chat",
+    "build": "npm run build --workspace=@smarter/common && npm run build:lib --workspace=@smarter/didyouknow && npm run build --workspace=@smarter/onboarding && npm run build --workspaces --if-present",
+    "build:deps": "npm run build --workspace=@smarter/common && npm run build:lib --workspace=@smarter/didyouknow && npm run build --workspace=@smarter/onboarding && npm run build:lib --workspace=@smarter.sh/ui-chat",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",

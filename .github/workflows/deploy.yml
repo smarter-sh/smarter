@@ -19,6 +19,7 @@ env:
   NAMESPACE_BASE: "smarter-ubc"
   PLATFORM_SUBDOMAIN: "ubc"
   ROOT_DOMAIN: "smarter.sh"
+  SMARTER_CACHE_EXPIRATION: "60"
   SMARTER_ENABLE_WEB_CONSOLE_TERMINAL: "true"
   VERSION: "latest"
 
@@ -105,6 +106,7 @@ jobs:
           smarter-branding-support-hours: ${{ secrets.SMARTER_BRANDING_SUPPORT_HOURS }}
           smarter-branding-support-phone-number: ${{ secrets.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER }}
           smarter-email-admin: ${{ secrets.SMARTER_EMAIL_ADMIN }}
+          smarter-cache-expiration: ${{ env.SMARTER_CACHE_EXPIRATION }}
           smarter-enable-web-console-terminal: ${{ env.SMARTER_ENABLE_WEB_CONSOLE_TERMINAL }}
           smarter-logo: ${{ secrets.SMARTER_LOGO }}
           smarter-mariadb-test_database_password: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD}}

@@ -1,0 +1,46 @@
+/*
+ * The note below the web console's title. The Keen theme's header has a fixed height, 70px, which the
+ * title and one line of small, muted text fill, so the note is one line as wide as the title bar: a
+ * fact that is still too long is cut short with an ellipsis, and shown in full on hover, and the
+ * link stays visible after it.
+ * Colors come from the Keen theme's variables, which [data-bs-theme=dark] redefines.
+ */
+.smarter-didyouknow-header {
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  margin-top: -0.5rem;
+  color: var(--bs-gray-600);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.smarter-didyouknow-header-title {
+  flex-shrink: 0;
+  color: var(--bs-gray-700);
+  font-weight: 600;
+}
+
+.smarter-didyouknow-header-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.smarter-didyouknow-header-link {
+  flex-shrink: 0;
+  color: var(--bs-primary);
+}
+
+.smarter-didyouknow-header-link:hover,
+.smarter-didyouknow-header-link:focus-visible {
+  text-decoration: underline;
+}
+
+/* the title is hidden below the lg breakpoint, templates/dashboard/header.html, and so is the note. */
+@media (max-width: 991.98px) {
+  .smarter-didyouknow-header {
+    display: none;
+  }
+}

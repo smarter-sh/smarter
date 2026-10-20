@@ -21,4 +21,5 @@ export const DOCS_URLS = {
   extensions: `${DOCS}/smarter-framework/smarter-extensions.html`,
   mcpClients: `${DOCS}/smarter-resources/smarter-mcpclient.html`,
   styles: `${DOCS}/smarter-resources/llmclient/styles.html`,
+  apiKeys: `${DOCS}/smarter-platform/api-keys.html`,
 };

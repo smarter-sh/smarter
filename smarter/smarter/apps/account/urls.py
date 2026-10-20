@@ -1,7 +1,6 @@
 """URL configuration for the web platform."""
 
 from django.urls import include, path
-from django.views.generic.base import RedirectView
 
 from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.common.conf import smarter_settings
@@ -29,6 +28,7 @@ logger = logging.getLogger(__name__)
 class AccountReverseNames:
     """
     Class to hold named URL patterns for the account app.
+
     This class provides constants for all named URL patterns used in the account dashboard views.
     The names follow the convention: 'account_<view_name>'.
     These are referenced in Django templates as 'reverse' or 'url' tags.
@@ -38,7 +38,6 @@ class AccountReverseNames:
       .. html::
 
       <a href="{% url 'dashboard_account_dashboard_overview' %}">Go to Dashboard Overview</a>
-
     """
 
     namespace = namespace
@@ -66,11 +65,12 @@ urlpatterns = [
         SocialAuthAlreadyAssociatedView.as_view(),
         name=AccountReverseNames.ACCOUNT_ALREADY_ASSOCIATED,
     ),
-    path(
-        "",
-        RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
-        name="dashboard_account_dashboard",
-    ),
+    # mcdaniel disabled: it redirected to the deprecated Account UI. See smarter.apps.account.views.dashboard.urls.
+    # path(
+    #     "",
+    #     RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
+    #     name="dashboard_account_dashboard",
+    # ),
     path("api-keys/", APIKeyListView.as_view(), name=AccountReverseNames.API_KEYS_LIST),
     path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN),
     path("logout/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT),

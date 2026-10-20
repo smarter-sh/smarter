@@ -15,14 +15,17 @@ Usage:
   wp.py get ID [--raw FILE]
   wp.py publish POST.md --title TITLE --slug SLUG [--category ID] [--status draft|publish]
                 [--excerpt TEXT] [--id ID]
+  wp.py upload IMAGE [--alt TEXT]
 
 publish converts POST.md with md2wp.py. With --id it updates that post instead of
-creating one. It prints the post's id, status and link.
+creating one. It prints the post's id, status and link. upload adds a file to the
+media library and prints its id and url, for a ``![alt](url)`` line in a post.
 """
 
 import argparse
 import http.cookiejar
 import json
+import mimetypes
 import os
 import pathlib
 import sys
@@ -91,6 +94,22 @@ class Blog:
         except urllib.error.HTTPError as error:
             sys.exit(f"{method} {route}: HTTP {error.code}: {error.read().decode()[:500]}")
 
+    def upload(self, path: pathlib.Path, alt: str = "") -> dict:
+        """Upload a file to the media library, and set its alt text."""
+        content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        req = urllib.request.Request(f"{self.base}/wp-json/wp/v2/media", data=path.read_bytes(), method="POST")
+        req.add_header("X-WP-Nonce", self.nonce)
+        req.add_header("Content-Type", content_type)
+        req.add_header("Content-Disposition", f'attachment; filename="{path.name}"')
+        try:
+            with self.opener.open(req) as response:
+                media = json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            sys.exit(f"POST media: HTTP {error.code}: {error.read().decode()[:500]}")
+        if alt:
+            media = self.request("POST", f"media/{media['id']}", {"alt_text": alt})
+        return media
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -111,6 +130,9 @@ def main() -> None:
     publish.add_argument("--status", choices=("draft", "publish"), default="draft")
     publish.add_argument("--excerpt", default="")
     publish.add_argument("--id", help="update this post instead of creating one")
+    upload = sub.add_parser("upload")
+    upload.add_argument("file")
+    upload.add_argument("--alt", default="", help="the image's alt text")
     args = parser.parse_args()
 
     blog = Blog()
@@ -132,6 +154,9 @@ def main() -> None:
             pathlib.Path(args.raw).write_text(post["content"]["raw"], encoding="utf-8")
         print(json.dumps({k: post[k] for k in ("id", "date", "status", "slug", "link", "categories")}))
         print(post["title"]["raw"])
+    elif args.command == "upload":
+        media = blog.upload(pathlib.Path(args.file), args.alt)
+        print(json.dumps({k: media[k] for k in ("id", "source_url", "alt_text")}))
     else:
         markdown = pathlib.Path(args.markdown).read_text(encoding="utf-8")
         body = {

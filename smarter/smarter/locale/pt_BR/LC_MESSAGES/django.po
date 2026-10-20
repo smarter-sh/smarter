@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 14:51+0000\n"
+"POT-Creation-Date: 2026-10-20 16:14+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -358,7 +358,6 @@ msgid "Cancel"
 msgstr "Cancelar"
 
 #: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Sign In"
 msgstr "Entrar"
 
@@ -422,7 +421,6 @@ msgstr "Atividade"
 #: smarter/templates/account/dashboard/api-key.html
 #: smarter/templates/account/dashboard/settings.html
 #: smarter/templates/account/dashboard/user.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Account Settings"
 msgstr "Configurações da conta"
 
@@ -567,7 +565,6 @@ msgid "Home"
 msgstr "Início"
 
 #: smarter/templates/account/dashboard/base.html
-#: smarter/templates/dashboard/sidebar.html
 msgid "Account"
 msgstr "Conta"
 
@@ -1014,7 +1011,6 @@ msgid "Phone number"
 msgstr "Número de telefone"
 
 #: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Language"
 msgstr "Idioma"
 
@@ -1455,34 +1451,6 @@ msgstr "Escuro"
 msgid "System"
 msgstr "Sistema"
 
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Change Profile Image"
-msgstr "Alterar foto de perfil"
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Profile Image"
-msgstr "Foto de perfil"
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Superuser"
-msgstr "Superusuário"
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Staff"
-msgstr "Equipe"
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Remove Profile Image"
-msgstr "Remover foto de perfil"
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "The profile image could not be saved."
-msgstr "Não foi possível salvar a foto de perfil."
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Sign Out"
-msgstr "Sair"
-
 #: smarter/templates/dashboard/sidebar.html
 msgid "Workbench"
 msgstr "Área de trabalho"
@@ -1903,6 +1871,30 @@ msgstr "JSON Schemas do SAM"
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr "Sobre o contrato"
+
+#~ msgid "Change Profile Image"
+#~ msgstr "Alterar foto de perfil"
+
+#~ msgid "Profile Image"
+#~ msgstr "Foto de perfil"
+
+#~ msgid "Superuser"
+#~ msgstr "Superusuário"
+
+#~ msgid "Staff"
+#~ msgstr "Equipe"
+
+#~ msgid "Remove Profile Image"
+#~ msgstr "Remover foto de perfil"
+
+#~ msgid "The profile image could not be saved."
+#~ msgstr "Não foi possível salvar a foto de perfil."
+
+#~ msgid "Welcome Tour"
+#~ msgstr "Tour de boas-vindas"
+
+#~ msgid "Sign Out"
+#~ msgstr "Sair"
 
 #~ msgid "Unknown action."
 #~ msgstr "Ação desconhecida."

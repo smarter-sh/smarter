@@ -52,7 +52,7 @@ than rendering a broken workbench.
      - The LLMClient's ``sandbox_url``, ``https://<platform>/workbench/llm-clients/<hashed_id>/``, the
        chat's ``apiUrl``. Required.
    * - ``smarter-toggle-metadata``
-     - ``True``: the chat shows the Sandbox mode / Production mode button (``toggleMetadata``).
+     - ``True``: the chat shows the Sandbox / Production mode switch (``toggleMetadata``).
    * - ``smarter-csrf-cookie-name``
      - Django's ``CSRF_COOKIE_NAME``. Required.
    * - ``smarter-session-cookie-name``
@@ -81,7 +81,7 @@ than rendering a broken workbench.
        which the Console's Architecture tab fetches when it is first opened, and draws with the
        ``@smarter/llmclient-architecture`` component: the tree of the SAM resources that the LLMClient is
        built from, as cards that open each resource's manifest page, whether its chat is styled, and the
-       web console's Guardrails, Plugins, Extensions and MCPClients pages, for its next steps. Its data is
+       web console's Guardrails, Plugins, Extensions, MCPClients and API Keys pages, for its next steps. Its data is
        :py:mod:`~smarter.apps.prompt.views.detailviews.architecture_contract`.
    * - ``smarter-deployment-url``
      - The path of the LLMClient's deployment page's data,
@@ -112,12 +112,14 @@ The workbench passes the chat its props, and follows it with the props that
 - ``onConfig``: the Console displays the configuration that the chat fetched, and streams the server
   logs of its chat session.
 - ``onNewChat``: a new chat clears the Console's server logs.
-- ``onModeChange``: in production mode, the Console, its button and the Docs button are hidden, and
+- ``onModeChange``: in production mode, the Console, its button and the Help menu are hidden, and
   the server logs are at the server's own level, rather than DEBUG.
 - ``reloadKey``: when the Manifest tab's editor saves the manifest, the chat reloads the LLMClient's
   configuration, and the chat session continues.
-- ``headerActions``: the workbench's Docs and Console buttons, in the chat's header, as
-  ``HeaderButton`` s, which look like the chat's own.
+- ``headerActions``: the workbench's Help menu and Console button, in the chat's header, as
+  ``HeaderButton`` s, which look like the chat's own. The Help menu opens and closes with
+  ``useDropdown()`` from ``@smarter/common``, as the console's user menu does, and returns the focus
+  to its button through ``HeaderButton``'s ``ref``.
 
 Changing what the chat passes to the workbench is a change in both repositories: a prop of
 ``SmarterChat`` in Smarter Chat, released, and the workbench here. Changing only what Django passes to
