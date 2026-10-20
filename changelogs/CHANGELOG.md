@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.34.1...v0.35.0-alpha.1) (2026-10-20)
+
+### Features
+
+* **dashboard:** add a welcome tour; deprecate the Account UI ([7142050](https://github.com/smarter-sh/smarter/commit/7142050c202eaba1001f38b593615ad151b4b4b0))
+
 ## [0.34.1](https://github.com/smarter-sh/smarter/compare/v0.34.0...v0.34.1) (2026-10-19)
 
 ### Bug Fixes
