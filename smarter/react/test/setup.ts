@@ -6,17 +6,20 @@
  * - Resolves relative fetch() URLs against the page, as browsers do. Node's fetch() rejects
  *   them, and the apps request relative URLs, e.g. /secret/react-integration/api/listview/.
  * - Applies the shared Storybook parameters to the stories that the tests render.
+ * - Gives waitFor() and findBy*() 5 seconds instead of 1. The CI runner runs 268 test files at once,
+ *   and a mocked request or a re-render can take longer than a second there.
  */
 import "@testing-library/jest-dom/vitest";
 
 import { setProjectAnnotations } from "@storybook/react-vite";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
 import { sharedParameters } from "../storybook/parameters";
 import { server } from "./server";
 
 setProjectAnnotations([{ parameters: sharedParameters }]);
+configure({ asyncUtilTimeout: 5000 });
 
 const nodeFetch = globalThis.fetch;
 globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) =>
