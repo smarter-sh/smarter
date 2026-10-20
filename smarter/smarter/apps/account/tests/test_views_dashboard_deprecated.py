@@ -30,6 +30,10 @@ from smarter.apps.account.views.dashboard.urls import (
     deprecated_urlpatterns,
     urlpatterns,
 )
+from smarter.apps.account.views.dashboard.user_profiles import (
+    UserProfileSelectView,
+    UserProfilesView,
+)
 from smarter.apps.account.views.dashboard.users import UsersView, UserView
 from smarter.apps.dashboard.context_processors import sidebar_context
 
@@ -68,8 +72,11 @@ class TestDeprecatedAccountUI(TestAccountMixin):
                     self.assertEqual(self.client.get(prefix + page).status_code, HTTPStatus.NOT_FOUND)
 
     def test_deprecated_urlpatterns_are_kept(self):
-        """Test that the disabled urls are kept, and that only the profile image url is still routed."""
-        self.assertEqual([pattern.callback.view_class for pattern in urlpatterns], [ProfileImageView])  # type: ignore[attr-defined]
+        """Test that the disabled urls are kept, and that only the user menu's urls are still routed."""
+        self.assertEqual(
+            [pattern.callback.view_class for pattern in urlpatterns],  # type: ignore[attr-defined]
+            [ProfileImageView, UserProfilesView, UserProfileSelectView],
+        )
         kept = {pattern.callback.view_class for pattern in deprecated_urlpatterns}  # type: ignore[attr-defined]
         self.assertTrue(kept.issuperset({SettingsView, OverviewView, BillingView, APIKeyView, UsersView}))
 

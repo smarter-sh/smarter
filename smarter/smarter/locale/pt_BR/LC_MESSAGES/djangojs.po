@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 15:30+0000\n"
+"POT-Creation-Date: 2026-10-20 16:16+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -59,7 +59,7 @@ msgstr "Proprietário"
 msgid "Owner Email"
 msgstr "E-mail do proprietário"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 msgid "Account Number"
 msgstr "Número da conta"
 
@@ -417,7 +417,7 @@ msgstr "Semana de %(date)s"
 msgid "Failed to load the budget series (%(status)s)."
 msgstr "Falha ao carregar a série do orçamento (%(status)s)."
 
-#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Loading…"
 msgstr "Carregando…"
 
@@ -1375,7 +1375,7 @@ msgstr "VectorStores"
 msgid "LLMHosts"
 msgstr "LLMHosts"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, react/packages/smarter-welcome/src/App.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, react/packages/smarter-dashboard-user-menu/src/lib/api.ts, react/packages/smarter-welcome/src/App.tsx
 msgid "Request failed: %(status)s"
 msgstr "A solicitação falhou: %(status)s"
 
@@ -1867,6 +1867,86 @@ msgstr "Novidades"
 #. Translators: used in react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx
 msgid "Recently added Smarter features"
 msgstr "Recursos do Smarter adicionados recentemente"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Change Profile"
+msgstr "Trocar perfil"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+msgid ""
+"You belong to more than one account. Choose the one that the console acts "
+"as, for this session."
+msgstr ""
+"Você pertence a mais de uma conta. Escolha aquela com que o console atua "
+"nesta sessão."
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+msgid "Account Name"
+msgstr "Nome da conta"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+msgid "Profile Created"
+msgstr "Perfil criado"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+msgid "Switch"
+msgstr "Trocar"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+msgid "Current"
+msgstr "Atual"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+msgid "Switch to %(account)s"
+msgstr "Trocar para %(account)s"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+msgid "Switching…"
+msgstr "Trocando…"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/LanguageMenu/Component.tsx
+msgid "Language"
+msgstr "Idioma"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+msgid "Profile Image"
+msgstr "Foto de perfil"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
+msgid "Change Profile Image"
+msgstr "Alterar foto de perfil"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+msgid "Superuser"
+msgstr "Superusuário"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+msgid "Staff"
+msgstr "Equipe"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+msgid "Account"
+msgstr "Conta"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
+msgid "Remove Profile Image"
+msgstr "Remover foto de perfil"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Sign In"
+msgstr "Entrar"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Welcome Tour"
+msgstr "Tour de boas-vindas"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Sign Out"
+msgstr "Sair"
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/lib/api.ts
+msgid "The profile image could not be saved."
+msgstr "Não foi possível salvar a foto de perfil."
 
 #. Translators: used in react/packages/smarter-didyouknow/src/components/DidYouKnow/Component.tsx
 msgid "Did you know?"
@@ -6419,10 +6499,6 @@ msgstr "Segredo da chave de API"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Ownership"
 msgstr "Propriedade"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-msgid "Account"
-msgstr "Conta"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Ownership requested"

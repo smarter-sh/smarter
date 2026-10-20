@@ -142,7 +142,9 @@ class TestWelcomeApiViews(TestAccountMixin):
         self.assertIn('id="smarter-welcome-root"', content)
         self.assertIn('smarter-welcome-show="true"', content)
         self.assertIn(f'smarter-welcome-dismiss-api-url="{self.dismiss_url}"', content)
-        self.assertIn("data-smarter-welcome-open", content)
+        # the user menu's Welcome Tour item, which reopens the dialog, is rendered by the
+        # @smarter/dashboard-user-menu React app.
+        self.assertIn('id="smarter-dashboard-user-menu-root"', content)
         self.post(self.dismiss_url)
         content = self.client.get("/dashboard/").content.decode()
         self.assertIn('smarter-welcome-show="false"', content)

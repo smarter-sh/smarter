@@ -6,6 +6,7 @@ from django import forms, http
 from django.utils.translation import gettext_lazy as _
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.profile_selection import selected_user_profile_id
 from smarter.apps.account.utils import get_cached_avatar_url
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -64,15 +65,21 @@ class ProfileImageView(SmarterAuthenticatedNeverCachedWebView):
         """
         Return the authenticated user's UserProfile, fresh from the database, since it is saved.
 
-        The view's setup has already refused a user without one.
+        It is the profile that the user chose in the user menu, for this session, else their newest.
+        See :mod:`smarter.apps.account.profile_selection`. The view's setup has already refused a user
+        without one.
 
         :param request: The request, whose user owns the profile image.
         :returns: The UserProfile.
         """
-        return UserProfile.objects.filter(user=request.user).order_by("-pk").first()  # type: ignore[return-value]
+        user_profiles = UserProfile.objects.filter(user=request.user)
+        profile_id = selected_user_profile_id.get()
+        selected = user_profiles.filter(pk=profile_id).first() if profile_id else None
+        return selected or user_profiles.order_by("-pk").first()  # type: ignore[return-value]
 
     def _response(self, request, user_profile: UserProfile) -> http.JsonResponse:
         UserProfile.get_cached_object(invalidate=True, user=request.user, account=user_profile.account)
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.pk)
         url = get_cached_avatar_url(user_id=request.user.id, invalidate=True)
         return http.JsonResponse(status=HTTPStatus.OK.value, data={"profile_image_url": url})
 
