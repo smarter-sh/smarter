@@ -5,7 +5,7 @@
 # usage: developer support packages for code syntax and type checking, testing,
 #        formatting, security, quality, vanity, debugging, build & packaging
 #
-#       pip-compile smarter/requirements/in/local.in --upgrade -o smarter/requirements/local.txt
+#       pip-compile --upgrade smarter/requirements/in/local.in --upgrade -o smarter/requirements/local.txt
 # -----------------------------------------------------------------------------
 
 -r constraints.in
@@ -37,6 +37,7 @@ mypy_extensions                    # Type annotations for Python
 # ------------
 pytest
 pytest_mock
+unittest-xml-reporting             # JUnit XML test reports, for the GitHub Actions job summary
 
 
 # Code linters, formatters, and security scanners

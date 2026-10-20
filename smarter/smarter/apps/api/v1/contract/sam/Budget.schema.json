@@ -30,10 +30,6 @@
                       "type": "string"
                     },
                     {
-                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                      "type": "string"
-                    },
-                    {
                       "format": "uuid",
                       "type": "string"
                     },
@@ -148,7 +144,6 @@
               "type": "number"
             },
             {
-              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             }
           ],
@@ -206,7 +201,6 @@
               "type": "number"
             },
             {
-              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             }
           ],
@@ -377,7 +371,6 @@
               "type": "number"
             },
             {
-              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             }
           ],
@@ -440,7 +433,6 @@
               "type": "number"
             },
             {
-              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             }
           ],
