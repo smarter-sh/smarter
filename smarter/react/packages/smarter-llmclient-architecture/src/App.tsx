@@ -1,7 +1,7 @@
 /**
  * An LLMClient's architecture: an introduction to SAM resources and their manifests, then the tree of the
  * resources that the LLMClient is built from, as cards that open each resource's manifest in a new tab, then the
- * next steps for an LLMClient that has no Guardrail, no tools or no styles. The Prompt Engineer's Workbench renders
+ * next steps for an LLMClient that has no Guardrail, no tools, no styles or no api key. The Prompt Engineer's Workbench renders
  * it in its Console's "Architecture" tab.
  */
 import { useState } from "react";

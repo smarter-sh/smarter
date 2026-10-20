@@ -291,7 +291,7 @@ Only ``apiUrl`` is required. The defaults suit a page that embeds one public LLM
        Smarter's logs, for tracing.
    * - ``toggleMetadata``
      - ``false``
-     - Show the Sandbox mode / Production mode button, and start in sandbox mode, in which the thread
+     - Show the Sandbox / Production mode switch, and start in sandbox mode, in which the thread
        also displays Smarter's system, tool and meta data messages.
 
 

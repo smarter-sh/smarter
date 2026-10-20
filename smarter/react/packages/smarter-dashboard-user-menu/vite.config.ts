@@ -1,0 +1,175 @@
+/**
+ * Vite Configuration for the React App
+ *
+ * This configuration file sets up the Vite build and development environment for the
+ * React application, which is integrated into a Django project. It handles:
+ *
+ * - Building React assets with Vite and outputting them to the Django static directory for collectstatic.
+ * - Injecting custom build metadata (version, build time, environment) into the manifest for Django use.
+ * - Proxying API and static asset requests to the Django development server during local development.
+ * - Optimizing caching by bundling xterm.js separately from the main app code.
+ * - Removing console.debug statements from production builds via the Oxc minifier
+ *   to avoid leaking sensitive info.
+ *
+ * Usage:
+ * - For development, run the Vite dev server. Static and API requests are proxied to Django.
+ * - For production, build assets with Vite. Output is placed in Django's static directory.
+ *
+ * Integration:
+ * - The manifest.json is used by Django templatetags to resolve hashed asset filenames for cache busting.
+ *
+ * See README.md for more details on development and deployment workflows.
+ */
+import { defineConfig, type ConfigEnv, type PluginOption } from "vite";
+import react from "@vitejs/plugin-react";
+import fs from "fs";
+import path from "path";
+import packageJson from "./package.json" with { type: "json" };
+
+const packageName = packageJson.name;
+
+/**
+ * Vite Plugin: addCustomManifestData
+ *
+ * This plugin injects custom metadata into the generated manifest.json file after each build.
+ * The metadata includes:
+ *   - buildTime: ISO timestamp of the build
+ *   - version: The version from package.json
+ *   - buildEnv: The current NODE_ENV or 'development'
+ *
+ * This information is used by Django to display build details and for debugging purposes.
+ */
+const addCustomManifestData: PluginOption = {
+  name: "add-custom-manifest-data",
+  writeBundle() {
+    const manifestPath = path.resolve(
+      import.meta.dirname,
+      `../../../smarter/static/react/${packageName}/manifest.json`,
+    );
+    if (fs.existsSync(manifestPath)) {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+      manifest._custom = {
+        buildTime: new Date().toISOString(),
+        version: packageJson.version,
+        buildEnv: process.env.NODE_ENV || "development",
+      };
+      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    }
+  },
+};
+
+/**
+ * Main Vite Configuration Export
+ *
+ * This function exports the Vite configuration for the React app, dynamically adjusting
+ * settings based on the build command (development or production). It sets up plugins, build output,
+ * asset handling, and development server proxying to integrate seamlessly with the Django backend.
+ *
+ * Key features:
+ * - Uses a custom plugin for manifest metadata
+ * - Removes console.debug in production builds
+ * - Outputs assets to Django's static directory for collectstatic
+ * - Proxies API and static requests to Django during development
+ */
+export default defineConfig(({ command }: ConfigEnv) => ({
+  plugins: [react(), addCustomManifestData],
+  // Builds are also saved into the Django static directory so that these
+  // files can be included in the Django collectstatic process and served by
+  // Django at runtime in local development environments. For development
+  // we need to be able to support serving these files both from the Vite
+  // dev server as well as the Django dev server. We set the base to '/'
+  // so that Vite's dev server can serve these files. Separately, we persist
+  // the actual build files to the Django static directory and set up a proxy
+  // in the Vite dev server to forward requests to the Django dev server.
+  base: command === "serve" ? "/" : `/static/react/${packageName}/`,
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "./src"),
+    },
+  },
+  build: {
+    // ------------------------------------------------------------------------
+    // The manifest is needed for hosting builds from Django (both dev and prod).
+    // It is used by Django templatetags to determine the correct file names to include
+    // in the HTML template. This is necessary because Vite includes a
+    // hash in the file names for cache busting.
+    // ------------------------------------------------------------------------
+    manifest: "manifest.json",
+    // ------------------------------------------------------------------------
+    // we're placing our build output in the primary Django static directory so
+    // that these files are automatically included in the Django collectstatic
+    // process and served by Django at runtime.
+    //
+    // In development, we rely on Vite's dev server to serve these files, so we
+    // set the outDir to a directory that is not used by the Django dev server.
+    // ------------------------------------------------------------------------
+    outDir: `../../../smarter/static/react/${packageName}`,
+    emptyOutDir: true,
+    // ------------------------------------------------------------------------
+    // We want to bundle xterm.js and its addons separately from the rest of the
+    // application code in order to optimize caching. This way, if we make changes
+    // to our application code, the xterm.js bundle can still be cached by the
+    // browser and won't need to be re-downloaded.
+    // ------------------------------------------------------------------------
+    rolldownOptions: {
+      output: {
+        entryFileNames: "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+        manualChunks(id: string) {
+          if (id.includes("node_modules/xterm") || id.includes("node_modules/@xterm")) {
+            return "xterm";
+          }
+          return undefined;
+        },
+        // Vite 8 minifies with the Oxc minifier instead of esbuild, so esbuild's
+        // `pure` option no longer has any effect. This is the Oxc equivalent:
+        // mark console.debug() calls as side-effect-free so dead-code elimination
+        // strips them from production builds (avoids leaking sensitive info).
+        minify: {
+          compress: {
+            treeshake: {
+              manualPureFunctions: ["console.debug"],
+            },
+          },
+        },
+      },
+    },
+  },
+  // Django collects static files and serves them from /static/
+  // We need to create proxy servers in React's dev environment
+  // so that these requests are served from the Django dev server instead
+  // of the React dev server.
+  //
+  // Most of these cases stem from <link> elements added to this index.html
+  // containing platform-wide stylesheets and scripts that originate from
+  // and are served by the Django dev server. These are added to index.html
+  // in order to keep this React dev environment as close to the runtime
+  // environment as possible.
+  server: {
+    proxy: {
+      "/api": "http://localhost:9357",
+      "/assets": {
+        target: "http://localhost:9357", // Django dev server
+        changeOrigin: true,
+        rewrite: (path: string) => `/static${path}`,
+      },
+      "/common-styles.css": {
+        target: "http://localhost:9357",
+        changeOrigin: true,
+        rewrite: (path: string) => `/static${path}`,
+      },
+      "/dashboard/": "http://localhost:9357",
+      [`/static/react/${packageName}/`]: {
+        target: "http://localhost:5173",
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(new RegExp(`^/static/react/${packageName}/`), "/"),
+      },
+      "/static": {
+        target: "http://localhost:9357",
+        changeOrigin: true,
+      },
+      "/workbench/": "http://localhost:9357",
+    },
+  },
+}));

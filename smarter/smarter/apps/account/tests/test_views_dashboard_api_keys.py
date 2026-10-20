@@ -3,17 +3,17 @@
 
 import uuid
 from http import HTTPStatus
+from unittest import mock
 
 from django.contrib.auth import authenticate
-from django.test import Client, RequestFactory
-from django.urls import reverse
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.test import RequestFactory
 
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 
 # our stuff
 from smarter.apps.account.views.dashboard.api_keys import APIKeysView, APIKeyView
-from smarter.apps.account.views.dashboard.urls import DashboardNamedUrls
 
 # python stuff
 from smarter.lib import json, logging
@@ -96,8 +96,16 @@ class TestAPIKeys(TestAccountMixin):
         response = APIKeyView.as_view()(request, key_id=nonexistent_api_key_id)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_post_api_key_not_found(self):
-        """Test that we can't get an api key that doesn't exist."""
+    @mock.patch(
+        "smarter.apps.account.views.dashboard.api_keys.reverse",
+        side_effect=lambda name, kwargs: f"/account/dashboard/api-keys/{kwargs['key_id']}/{kwargs['new_api_key']}/",
+    )
+    def test_post_api_key_not_found(self, _reverse):
+        """
+        Test that we can't get an api key that doesn't exist.
+
+        The url of a new api key's page is patched: the deprecated Account UI's urls are disabled.
+        """
         nonexistent_api_key_id = str(uuid.uuid4())
         url = self.base_url + nonexistent_api_key_id + "/"
         factory = RequestFactory()
@@ -132,7 +140,10 @@ class TestAPIKeys(TestAccountMixin):
 
 class TestAPIKeyViewRequests(TestAccountMixin):
     """
-    Test the api key views through their urls: create, get, update, activate, deactivate and delete.
+    Test the api key views' requests: create, get, update, activate, deactivate and delete.
+
+    The deprecated Account UI's urls are disabled, so each request calls the view directly, and the
+    url of a new api key's page, which the view reverses, is patched.
 
     A second account's admin verifies that an admin cannot see or change another account's api keys.
     The TestAccountMixin teardown deletes it.
@@ -148,9 +159,14 @@ class TestAPIKeyViewRequests(TestAccountMixin):
 
     def setUp(self):
         super().setUp()
-        self.client = Client()
-        self.addCleanup(self.client.logout)
-        self.client.force_login(self.admin_user)
+        self.factory = RequestFactory()
+        self.user = self.admin_user
+        patcher = mock.patch(
+            "smarter.apps.account.views.dashboard.api_keys.reverse",
+            side_effect=lambda name, kwargs: f"/account/dashboard/api-keys/{kwargs['key_id']}/{kwargs['new_api_key']}/",
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.api_key, self.token = SmarterAuthToken.objects.create(  # type: ignore[misc]
             user_profile=self.user_profile,
             name="test_api_key_view_requests",
@@ -160,19 +176,18 @@ class TestAPIKeyViewRequests(TestAccountMixin):
         )
         self.addCleanup(SmarterAuthToken.objects.filter(pk=self.api_key.pk).delete)
 
-    def url(self, key_id=None, new_api_key=None) -> str:
-        if key_id is None:
-            return reverse(f"{DashboardNamedUrls.namespace}:{DashboardNamedUrls.ACCOUNT_API_KEY_NEW}")
-        if new_api_key is None:
-            return reverse(f"{DashboardNamedUrls.namespace}:{DashboardNamedUrls.ACCOUNT_API_KEY}", args=[key_id])
-        return reverse(
-            f"{DashboardNamedUrls.namespace}:{DashboardNamedUrls.ACCOUNT_API_KEY_NEW}", args=[key_id, new_api_key]
+    def call(self, method: str, key_id=None, new_api_key=None, data=None, content_type="application/json"):
+        """Send a request to :class:`APIKeyView` as ``self.user``, with the url's ``key_id`` and ``new_api_key``."""
+        request = getattr(self.factory, method)(
+            "/account/dashboard/api-keys/", data=data, content_type=content_type, HTTP_HOST="testserver"
         )
+        SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
+        request.user = self.user
+        kwargs = {"key_id": key_id, "new_api_key": new_api_key}
+        return APIKeyView.as_view()(request, **{key: value for key, value in kwargs.items() if value is not None})
 
     def patch_json(self, data: SmarterDictType, key_id=None):
-        return self.client.patch(
-            self.url(key_id or self.api_key.key_id), data=json.dumps(data), content_type="application/json"
-        )
+        return self.call("patch", key_id or self.api_key.key_id, data=json.dumps(data))
 
     def refreshed(self) -> SmarterAuthToken:
         return SmarterAuthToken.objects.get(pk=self.api_key.pk)
@@ -187,37 +202,39 @@ class TestAPIKeyViewRequests(TestAccountMixin):
 
     def test_create_with_get(self):
         """Test that a GET of api-keys/new/ creates an api key."""
-        self.assert_created(self.client.get(self.url()))
+        self.assert_created(self.call("get"))
 
     def test_create_with_post(self):
         """Test that a POST creates an api key."""
-        self.assert_created(self.client.post(self.url()))
+        self.assert_created(self.call("post"))
 
     def test_new_api_key_page(self):
         """Test that the page that a new api key redirects to shows its token, once."""
-        url = self.assert_created(self.client.post(self.url()))
-        token = url.rstrip("/").split("/")[-1]
-        page = self.client.get(url)
+        url = self.assert_created(self.call("post"))
+        key_id, token = url.rstrip("/").split("/")[-2:]
+        page = self.call("get", key_id, token)
         self.assertEqual(page.status_code, HTTPStatus.OK)
         self.assertIn(token.encode(), page.content)
 
     def test_get_with_wrong_token(self):
         """Test that a token that is not the api key's is a 404."""
-        response = self.client.get(self.url(self.api_key.key_id, "not-the-token"))
+        response = self.call("get", self.api_key.key_id, "not-the-token")
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_get(self):
         """Test that the api key's page shows only the end of its token."""
-        response = self.client.get(self.url(self.api_key.key_id))
+        response = self.call("get", self.api_key.key_id)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertNotIn(self.token.encode(), response.content)
 
     def test_get_invalid_key_id(self):
         """Test that a key id that is not a uuid is a 404."""
-        self.assertEqual(self.client.get(self.url("not-a-uuid")).status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(self.call("get", "not-a-uuid").status_code, HTTPStatus.NOT_FOUND)
 
     def test_list(self):
-        response = self.client.get(reverse(f"{DashboardNamedUrls.namespace}:{DashboardNamedUrls.ACCOUNT_API_KEYS}"))
+        request = self.factory.get("/account/dashboard/api-keys/")
+        request.user = self.user
+        response = APIKeysView.as_view()(request)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_patch_actions(self):
@@ -240,24 +257,24 @@ class TestAPIKeyViewRequests(TestAccountMixin):
     def test_patch_invalid(self):
         """Test that a PATCH of an unknown api key is a 404, and of another content type is a 400."""
         self.assertEqual(self.patch_json({"action": "activate"}, key_id=uuid.uuid4()).status_code, HTTPStatus.NOT_FOUND)
-        response = self.client.patch(self.url(self.api_key.key_id), data="x", content_type="text/plain")
+        response = self.call("patch", self.api_key.key_id, data="x", content_type="text/plain")
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
     def test_delete(self):
-        response = self.client.delete(self.url(self.api_key.key_id))
+        response = self.call("delete", self.api_key.key_id)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertFalse(SmarterAuthToken.objects.filter(pk=self.api_key.pk).exists())
 
     def test_other_account_admin_get_and_delete(self):
         """Test that another account's admin can neither see nor delete the api key."""
-        self.client.force_login(self.other_admin_user)
-        self.assertEqual(self.client.get(self.url(self.api_key.key_id)).status_code, HTTPStatus.FORBIDDEN)
-        self.assertEqual(self.client.delete(self.url(self.api_key.key_id)).status_code, HTTPStatus.FORBIDDEN)
+        self.user = self.other_admin_user
+        self.assertEqual(self.call("get", self.api_key.key_id).status_code, HTTPStatus.FORBIDDEN)
+        self.assertEqual(self.call("delete", self.api_key.key_id).status_code, HTTPStatus.FORBIDDEN)
         self.assertTrue(SmarterAuthToken.objects.filter(pk=self.api_key.pk).exists())
 
     def test_other_account_admin_patch_json(self):
         """Test that another account's admin cannot deactivate the api key."""
-        self.client.force_login(self.other_admin_user)
+        self.user = self.other_admin_user
         response = self.patch_json({"action": "deactivate"})
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertTrue(self.refreshed().is_active)

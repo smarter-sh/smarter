@@ -3,7 +3,9 @@
 import datetime
 import os
 from pathlib import Path
+from warnings import deprecated
 
+from smarter.apps.account.views.dashboard import ACCOUNT_UI_DEPRECATION_MESSAGE
 from smarter.common.utils import get_readonly_csv_file
 from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAdminWebView
@@ -23,6 +25,7 @@ COUNTRIES = get_readonly_csv_file(countries_csv)
 
 
 # pylint: disable=W0511,C0415
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class BillingView(SmarterAdminWebView):
     """View for the account billing."""
 
@@ -30,7 +33,8 @@ class BillingView(SmarterAdminWebView):
 
     def get(self, request):
         """
-        Composite View for account billing, including JSON data for
+        Composite View for account billing, including JSON data for.
+
         payment methods and billing addresses.
         """
         payment_method_form = PaymentMethodForm()
