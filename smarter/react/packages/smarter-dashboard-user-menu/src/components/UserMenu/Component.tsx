@@ -13,8 +13,8 @@
  * :param appContext: The root element's attributes.
  * :param onSwitched: Passed to the Change Profile dialog. Reloads the page by default.
  */
-import { useEffect, useId, useRef, useState } from "react";
-import { getCookie, gettext } from "@smarter/common";
+import { useId, useState } from "react";
+import { getCookie, gettext, useDropdown } from "@smarter/common";
 
 import ChangeProfile from "@/components/ChangeProfile";
 import LanguageMenu from "@/components/LanguageMenu";
@@ -29,32 +29,11 @@ interface UserMenuProps {
 
 function UserMenu({ appContext, onSwitched }: UserMenuProps) {
   const { sessionContext, isAuthenticated, user, urls } = appContext;
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, toggle, rootRef, buttonRef, menuId } = useDropdown();
   const [changingProfile, setChangingProfile] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState(appContext.profileImageUrl);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuId = useId();
   const fileInputId = useId();
   const csrfToken = getCookie({ name: sessionContext.csrfCookieName, domain: sessionContext.cookieDomain }) || "";
-
-  useEffect(() => {
-    if (!open) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false);
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      buttonRef.current?.focus();
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open]);
 
   const openChangeProfile = () => {
     setOpen(false);
@@ -78,7 +57,7 @@ function UserMenu({ appContext, onSwitched }: UserMenuProps) {
         aria-label={label}
         aria-expanded={open}
         aria-controls={menuId}
-        onClick={() => setOpen(!open)}
+        onClick={toggle}
       >
         <img className="smarter-profile-image" alt="" src={profileImageUrl} />
       </button>

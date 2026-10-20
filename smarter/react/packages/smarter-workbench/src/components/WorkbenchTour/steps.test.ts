@@ -17,7 +17,7 @@ describe("workbenchTourSteps", () => {
   it("points to each of the Console's tabs, within the Console, and selects it", () => {
     const steps = workbenchTourSteps();
     const targets = steps.map((step) => step.target);
-    // only the tabs: a click on the mode toggle, the Console's button, Docs or Tour would change the page.
+    // only the tabs: a click on the mode switch, the Console's button or the Help menu would change the page.
     expect(steps.filter((step) => step.activate).map((step) => step.target)).toEqual(
       targets.filter((target) => target?.startsWith("#chatapp_console")),
     );

@@ -58,17 +58,29 @@ describe("App", () => {
     vi.unstubAllGlobals();
   });
 
-  it("opens and closes the Docs dialog, whose button is only in sandbox mode", async () => {
+  it("opens and closes the Docs dialog from the Help menu, which is only in sandbox mode", async () => {
     const user = userEvent.setup();
     render(<App workbench={plainWorkbench} />);
     await screen.findByText(WELCOME);
-    await user.click(screen.getByRole("button", { name: "Docs" }));
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    await user.click(screen.getByRole("button", { name: "Technical references" }));
     expect(screen.getByRole("dialog", { name: "Docs" })).toBeInTheDocument();
+    // the menu closed as the dialog opened.
+    expect(screen.queryByRole("button", { name: "Technical references" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Sandbox mode" }));
-    expect(screen.queryByRole("button", { name: "Docs" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Production" }));
+    expect(screen.queryByRole("button", { name: "Help" })).not.toBeInTheDocument();
+  });
+
+  it("has the guided tour, but no Docs, in its Help menu without the mode switch", async () => {
+    const user = userEvent.setup();
+    render(<App workbench={{ ...plainWorkbench, toggleMetadata: false }} />);
+    await screen.findByText(WELCOME);
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    expect(screen.getByRole("button", { name: "Take the guided tour" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Technical references" })).not.toBeInTheDocument();
   });
 
   it("hides the Console and its button in production mode, and restores them in sandbox mode", async () => {
@@ -77,12 +89,12 @@ describe("App", () => {
     await screen.findByText(WELCOME);
     expect(screen.getByRole("button", { name: "Show the Console" })).toHaveAttribute("aria-pressed", "true");
 
-    await user.click(screen.getByRole("button", { name: "Sandbox mode" }));
+    await user.click(screen.getByRole("button", { name: "Production" }));
     expect(screen.queryByRole("navigation", { name: "Console" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Show the Console" })).not.toBeInTheDocument();
     expect(screen.queryByRole("separator")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Production mode" }));
+    await user.click(screen.getByRole("button", { name: "Sandbox" }));
     expect(screen.getByRole("navigation", { name: "Console" })).toBeInTheDocument();
   });
 
@@ -129,7 +141,7 @@ describe("App", () => {
     cookieDomain: "localhost",
   };
 
-  it("takes the guided tour from the Tour button, which opens the Console first", async () => {
+  it("takes the guided tour from the Help menu, which opens the Console first", async () => {
     layOutThePage();
     const user = userEvent.setup();
     render(<App workbench={plainWorkbench} onboarding={null} />);
@@ -137,7 +149,8 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Show the Console" }));
     expect(screen.queryByRole("navigation", { name: "Console" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Tour" }));
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    await user.click(screen.getByRole("button", { name: "Take the guided tour" }));
     expect(
       await screen.findByRole("dialog", { name: "Welcome to the Prompt Engineer's Workbench" }),
     ).toBeInTheDocument();
@@ -166,7 +179,8 @@ describe("App", () => {
     render(<App workbench={plainWorkbench} onboarding={onboarding} />);
     await user.click(await screen.findByRole("button", { name: "Skip tour" }, { timeout: 3000 }));
     await waitFor(() => expect(posted).toEqual([{ hint: "workbench_tour", outcome: "dismissed" }]));
-    await user.click(screen.getByRole("button", { name: "Tour" }));
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    await user.click(screen.getByRole("button", { name: "Take the guided tour" }));
     await user.click(await screen.findByRole("button", { name: "Skip tour" }));
     expect(posted).toHaveLength(1);
   });
@@ -216,8 +230,8 @@ describe("App", () => {
     );
 
     // production mode streams the server's own log level.
-    await user.click(screen.getByRole("button", { name: "Sandbox mode" }));
-    await user.click(screen.getByRole("button", { name: "Production mode" }));
+    await user.click(screen.getByRole("button", { name: "Production" }));
+    await user.click(screen.getByRole("button", { name: "Sandbox" }));
     expect(FakeEventSource.instances.length).toBeGreaterThan(streams);
     vi.unstubAllGlobals();
   });
