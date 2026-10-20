@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.1...v0.35.0-alpha.2) (2026-10-20)
+
+### Bug Fixes
+
+* **console:** api key next step, tour show at startup, kubernetes step ([de57e90](https://github.com/smarter-sh/smarter/commit/de57e9040526bc72ed72f00bb220a311afbfa98f))
+
 ## [0.35.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.34.1...v0.35.0-alpha.1) (2026-10-20)
 
 ### Features
