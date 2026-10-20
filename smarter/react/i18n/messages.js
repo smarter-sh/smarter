@@ -1215,7 +1215,7 @@ gettext("Next steps");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("Make this LLMClient your own");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-gettext("Most LLMClients have Guardrails, tools and a look of their own. This one is missing some of them. Each takes a few lines of YAML: copy an example below into the manifest, and save it.");
+gettext("Most LLMClients have Guardrails, tools, a look of their own and an api key. This one is missing some of them. Each takes a few lines of YAML: copy an example below into the manifest, and save it.");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("Add your first Guardrail");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
@@ -1278,6 +1278,22 @@ gettext("Styling your LLMClient's chat");
 gettext("The chat's styles");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("Smarter's logo, the Inter font, a dark header, and the user's messages in orange. Swap in your own logo's url and colors.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Add an api key");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Without an api key, this LLMClient is public once it is deployed: anyone who has its url can chat with it, and every prompt is charged to its owner. Attach an api key, and its url requires it: each request must send the key in an %(header)s header, and Smarter refuses those that don't. The workbench doesn't need the key, because you are signed in.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("The quickest way is this workbench's Deployment tab, which creates an api key, shows its secret once, and attaches it, in one step. To attach a key that you already have, name it in the manifest. An LLMClient has one api key, and only an account admin can create one.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Paste it at the start of a new line beneath %(spec)s. If the manifest already has an %(apiKey)s line, replace that line.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Browse your api keys");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+gettext("API Keys");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("The LLMClient's api key");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Change %(name)s to the name of one of your own api keys, as the API Keys page lists them.");
 // Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("Architecture");
@@ -1400,8 +1416,6 @@ gettext("Only the LLMClient's owner, or an account admin, can change its api key
 gettext("Create an api key");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 gettext("The key is yours. Its secret is shown once, right after you create it. The web console's API Keys page lists your keys, and turns a key off without deleting it.");
-// Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-gettext("API Keys");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 gettext("Only an account admin can create api keys. Ask one to create a key for you, then attach it here, or ask them to run:");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
@@ -3123,6 +3137,8 @@ gettext("You can take this tour again at any time from the user menu.");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Go to step %(step)s");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Show at startup");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Skip tour");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Back");
@@ -3222,6 +3238,22 @@ gettext("Pick the kind of GPU node that the model runs on, and how much of it ea
 gettext("Real servers, real costs");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 gettext("An LLMHost runs on real cloud infrastructure, which costs real money for as long as it runs, whether or not anyone sends it a prompt.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Built for production, at scale");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Smarter runs AI solutions in production on Kubernetes, the same cloud orchestration technology behind global platforms such as Netflix, YouTube and TikTok.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("State-of-the-art orchestration");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Kubernetes grew out of Borg, the system that runs Google's services, YouTube among them. Netflix and ByteDance, TikTok's parent, run their platforms on it too.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Grows with demand");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Smarter's web servers and workers run as several copies, Kubernetes replaces any that fail, and the cluster adds servers when they need more room.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Every LLMClient at its own url");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Deploying an LLMClient gives it its own host name, with a TLS certificate that the cluster issues and renews by itself.");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 gettext("Where to start");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx

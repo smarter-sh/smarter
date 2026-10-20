@@ -1,6 +1,7 @@
 /**
  * The welcome dialog's steps: a short tour of what Smarter is, what the new account holds, what
- * it teaches, MCP servers, RAG with Vectorstores, how it hosts open models, and where to start. The text follows the
+ * it teaches, MCP servers, RAG with Vectorstores, how it hosts open models, how it runs in production on
+ * Kubernetes, and where to start. The text follows the
  * welcome email that the new user received, templates/account/email/welcome.html, so that the
  * two read as one message.
  *
@@ -195,6 +196,36 @@ export function welcomeSteps(firstName: string): WelcomeStep[] {
           title: gettext("Real servers, real costs"),
           description: gettext(
             "An LLMHost runs on real cloud infrastructure, which costs real money for as long as it runs, whether or not anyone sends it a prompt.",
+          ),
+        },
+      ],
+    },
+    {
+      illustration: 6,
+      title: gettext("Built for production, at scale"),
+      lead: gettext(
+        "Smarter runs AI solutions in production on Kubernetes, the same cloud orchestration technology behind global platforms such as Netflix, YouTube and TikTok.",
+      ),
+      highlights: [
+        {
+          icon: "ki-cloud",
+          title: gettext("State-of-the-art orchestration"),
+          description: gettext(
+            "Kubernetes grew out of Borg, the system that runs Google's services, YouTube among them. Netflix and ByteDance, TikTok's parent, run their platforms on it too.",
+          ),
+        },
+        {
+          icon: "ki-graph-up",
+          title: gettext("Grows with demand"),
+          description: gettext(
+            "Smarter's web servers and workers run as several copies, Kubernetes replaces any that fail, and the cluster adds servers when they need more room.",
+          ),
+        },
+        {
+          icon: "ki-shield-tick",
+          title: gettext("Every LLMClient at its own url"),
+          description: gettext(
+            "Deploying an LLMClient gives it its own host name, with a TLS certificate that the cluster issues and renews by itself.",
           ),
         },
       ],

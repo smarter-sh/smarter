@@ -6,7 +6,7 @@ import { branchIds, childId, countResources, depth, ROOT_ID } from "@/lib/tree";
 describe("tree", () => {
   it("counts a resource that appears twice once", () => {
     // the Provider, and its Secret, are under the LLMClient and under its plugin.
-    expect(countResources(stackademyTree)).toBe(8);
+    expect(countResources(stackademyTree)).toBe(9);
     expect(countResources(leafTree)).toBe(1);
   });
 

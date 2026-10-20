@@ -11,7 +11,9 @@ function renderDialog({
   firstName = "Ada",
   urls = welcome.urls,
   error = null,
-}: { firstName?: string; urls?: WelcomeUrls | null; error?: string | null } = {}) {
+  showAtStartup = true,
+}: { firstName?: string; urls?: WelcomeUrls | null; error?: string | null; showAtStartup?: boolean } = {}) {
+  const onShowAtStartupChange = vi.fn();
   const onLastStep = vi.fn();
   const onClose = vi.fn();
   render(
@@ -21,11 +23,13 @@ function renderDialog({
       illustrationsUrl={appContext.illustrationsUrl}
       urls={urls}
       error={error}
+      showAtStartup={showAtStartup}
+      onShowAtStartupChange={onShowAtStartupChange}
       onLastStep={onLastStep}
       onClose={onClose}
     />,
   );
-  return { onLastStep, onClose };
+  return { onShowAtStartupChange, onLastStep, onClose };
 }
 
 describe("WelcomeDialog", () => {
@@ -55,7 +59,7 @@ describe("WelcomeDialog", () => {
     const { onLastStep, onClose } = renderDialog();
     await user.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByRole("heading", { name: "Your account is ready to explore" })).toBeInTheDocument();
-    expect(screen.getByText("Step 2 of 7")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 8")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.getByRole("heading", { name: "Welcome to Smarter, Ada!" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Next" }));
@@ -69,6 +73,9 @@ describe("WelcomeDialog", () => {
     await user.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByRole("heading", { name: "Host open models yourself" })).toBeInTheDocument();
     expect(screen.getByText("Real servers, real costs")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("heading", { name: "Built for production, at scale" })).toBeInTheDocument();
+    expect(screen.getByText("State-of-the-art orchestration")).toBeInTheDocument();
     expect(onLastStep).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByRole("heading", { name: "Where to start" })).toBeInTheDocument();
@@ -83,18 +90,38 @@ describe("WelcomeDialog", () => {
     await user.keyboard("{ArrowLeft}");
     expect(screen.getByRole("heading", { name: "Welcome to Smarter, Ada!" })).toBeInTheDocument();
     await user.keyboard("{ArrowRight}");
-    expect(screen.getByText("Step 2 of 7")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Go to step 7" }));
+    expect(screen.getByText("Step 2 of 8")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     await user.keyboard("{ArrowRight}");
-    expect(screen.getByText("Step 7 of 7")).toBeInTheDocument();
+    expect(screen.getByText("Step 8 of 8")).toBeInTheDocument();
     await user.keyboard("{ArrowLeft}");
-    expect(screen.getByText("Step 6 of 7")).toBeInTheDocument();
+    expect(screen.getByText("Step 7 of 8")).toBeInTheDocument();
+  });
+
+  it("has a Show at startup box on its first step only", async () => {
+    const user = userEvent.setup();
+    const { onShowAtStartupChange } = renderDialog();
+    const box = screen.getByRole("checkbox", { name: "Show at startup" });
+    expect(box).toBeChecked();
+    await user.click(box);
+    expect(onShowAtStartupChange).toHaveBeenCalledWith(false);
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("leaves the Show at startup box unticked for a user who unticked it", async () => {
+    const user = userEvent.setup();
+    const { onShowAtStartupChange } = renderDialog({ showAtStartup: false });
+    const box = screen.getByRole("checkbox", { name: "Show at startup" });
+    expect(box).not.toBeChecked();
+    await user.click(box);
+    expect(onShowAtStartupChange).toHaveBeenCalledWith(true);
   });
 
   it("links to where to start, opening the external sites in a new tab", async () => {
     const user = userEvent.setup();
     renderDialog();
-    await user.click(screen.getByRole("button", { name: "Go to step 7" }));
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     expect(screen.getByRole("link", { name: /Try the Get Weather LLMClient/ })).toHaveAttribute(
       "href",
       welcome.urls.weather,
@@ -113,7 +140,7 @@ describe("WelcomeDialog", () => {
   it("leaves out the Get Weather LLMClient when the user can't read one", async () => {
     const user = userEvent.setup();
     renderDialog({ urls: { ...welcome.urls, weather: null } });
-    await user.click(screen.getByRole("button", { name: "Go to step 7" }));
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     expect(screen.queryByRole("link", { name: /Get Weather/ })).not.toBeInTheDocument();
     expect(screen.getAllByRole("link")).toHaveLength(3);
   });
@@ -121,14 +148,14 @@ describe("WelcomeDialog", () => {
   it("says so while the links load", async () => {
     const user = userEvent.setup();
     renderDialog({ urls: null });
-    await user.click(screen.getByRole("button", { name: "Go to step 7" }));
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     expect(screen.getByRole("status")).toHaveTextContent("Loading…");
   });
 
   it("shows why the links failed to load", async () => {
     const user = userEvent.setup();
     renderDialog({ urls: null, error: "Request failed: 503" });
-    await user.click(screen.getByRole("button", { name: "Go to step 7" }));
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     expect(screen.getByText("Failed to load the links: Request failed: 503")).toBeInTheDocument();
   });
 
@@ -167,6 +194,8 @@ describe("WelcomeDialog", () => {
         illustrationsUrl=""
         urls={null}
         error={null}
+        showAtStartup={true}
+        onShowAtStartupChange={() => {}}
         onLastStep={() => {}}
         onClose={() => {}}
       />,

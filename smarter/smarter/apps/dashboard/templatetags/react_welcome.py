@@ -12,7 +12,10 @@ from django.conf import settings
 from django.template.context import RequestContext
 
 from smarter.apps.account.models import User, get_resolved_user
-from smarter.apps.dashboard.views.views.api.welcome import user_was_welcomed
+from smarter.apps.dashboard.views.views.api.welcome import (
+    WELCOME_SHOWN_SESSION_KEY,
+    user_was_welcomed,
+)
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
@@ -53,9 +56,11 @@ def welcome_dialog(context: RequestContext) -> dict[str, str | bool]:
 
     :param context: The template context, whose request's user is the signed-in user.
     :type context: django.template.context.RequestContext
-    :returns: The root element's id, the cookie names, the welcome api urls, and
-        ``show``: whether the dialog opens by itself, because the user hasn't closed it before.
-        It never opens by itself for a request without a signed-in user.
+    :returns: The root element's id, the cookie names, the welcome api urls,
+        ``show_at_startup``: whether the dialog opens by itself each time the user signs in, which is
+        its Show at startup box, and ``show``: whether it opens by itself on this page, because it
+        shows at startup, and the user hasn't closed it yet in this session. It never opens by itself
+        for a request without a signed-in user.
     :rtype: dict[str, str | bool]
     """
     # pylint: disable=import-outside-toplevel
@@ -66,6 +71,9 @@ def welcome_dialog(context: RequestContext) -> dict[str, str | bool]:
     # templates/dashboard/base.html includes the dialog only for a signed-in user, but a None or an
     # AnonymousUser has neither an id nor a first name.
     signed_in = isinstance(user, User)
+    show_at_startup = signed_in and not user_was_welcomed(user.pk)
+    # a request from a RequestFactory, e.g. in a test, has no session.
+    session = getattr(context["request"], "session", None) or {}
     namespaces = (DashboardReverseNames.namespace, DashboardApiReverseNames.namespace)
     return {
         "root_id": "smarter-welcome-root",
@@ -76,7 +84,8 @@ def welcome_dialog(context: RequestContext) -> dict[str, str | bool]:
         "dismiss_api_url": reverse(
             *namespaces, DashboardApiReverseNames.welcome_dismiss, urlconf=settings.ROOT_URLCONF
         ),
-        "show": signed_in and not user_was_welcomed(user.pk),
+        "show_at_startup": show_at_startup,
+        "show": show_at_startup and not session.get(WELCOME_SHOWN_SESSION_KEY, False),
         "first_name": (user.first_name if signed_in else "") or "",
         "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
         "smarter_request_id": uuid.uuid4().hex,

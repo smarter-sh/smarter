@@ -1,8 +1,8 @@
 {% load static react_welcome %}
 {% comment %}
 The web console's welcome dialog, the @smarter/welcome React app. dashboard/base.html includes it on
-every page, for signed-in users. It opens by itself until the user closes it once, and the user menu's
-Welcome Tour item (data-smarter-welcome-open) opens it again.
+every page, for signed-in users. It opens by itself once each time the user signs in, until they untick
+its Show at startup box, and the user menu's Welcome Tour item (data-smarter-welcome-open) opens it again.
 
 see: smarter.apps.dashboard.templatetags.react_welcome, which reads the React manifest.json file to
 determine the correct hashed filenames to include, and smarter.apps.dashboard.views.views.api.welcome.
@@ -20,6 +20,7 @@ determine the correct hashed filenames to include, and smarter.apps.dashboard.vi
   smarter-welcome-api-url="{{ welcome.api_url }}"
   smarter-welcome-dismiss-api-url="{{ welcome.dismiss_api_url }}"
   smarter-welcome-show="{{ welcome.show|yesno:'true,false' }}"
+  smarter-welcome-show-at-startup="{{ welcome.show_at_startup|yesno:'true,false' }}"
   smarter-first-name="{{ welcome.first_name }}"
   smarter-logo-url="{% static 'images/logo/smarter-crop.png' %}"
   smarter-illustrations-url="{% static 'assets/media/illustrations/dozzy-1/' %}"

@@ -188,10 +188,12 @@ deployment:
        do it for every one, and **Reload** fetches the tree again, after a manifest was changed in
        another tab. A resource that you may not read, such as another account's, is a locked card with
        only its kind and record locator. Beneath the tree, an LLMClient that has no Guardrail, no tools
-       (no plugin, Extension or MCPClient) or no styles gets a next step for each: what the resource is,
-       where to browse the ones available, such as the built-in Guardrails, a manifest excerpt to copy into
-       the LLMClient's manifest and save, and links to this documentation. The tools' step compares
-       plugins, Extensions and MCPClients. A step disappears once the LLMClient has what it suggests.
+       (no plugin, Extension or MCPClient), no styles or no api key gets a next step for each: what the
+       resource is, where to browse the ones available, such as the built-in Guardrails or your api keys,
+       a manifest excerpt to copy into the LLMClient's manifest and save, and links to this documentation.
+       The tools' step compares plugins, Extensions and MCPClients. The api key's step explains that an
+       LLMClient without one is public once it is deployed, and points to the Deployment tab, which creates
+       and attaches a key in one step. A step disappears once the LLMClient has what it suggests.
        The tab is right of Manifest, and loads when you first open it.
    * - Server Logs
      - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.

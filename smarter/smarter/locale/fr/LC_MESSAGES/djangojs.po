@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 12:10+0000\n"
+"POT-Creation-Date: 2026-10-20 12:35+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -2700,14 +2700,14 @@ msgstr "Personnalisez ce LLMClient"
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
-"Most LLMClients have Guardrails, tools and a look of their own. This one is "
-"missing some of them. Each takes a few lines of YAML: copy an example below "
-"into the manifest, and save it."
+"Most LLMClients have Guardrails, tools, a look of their own and an api key. "
+"This one is missing some of them. Each takes a few lines of YAML: copy an "
+"example below into the manifest, and save it."
 msgstr ""
-"La plupart des LLMClients ont des garde-fous, des outils et une apparence "
-"qui leur sont propres. Il en manque à celui-ci. Chacun ne demande que "
-"quelques lignes de YAML : copiez un exemple ci-dessous dans le manifeste, "
-"puis enregistrez-le."
+"La plupart des LLMClients ont des garde-fous, des outils, une apparence qui "
+"leur est propre et une clé d'API. Il en manque à celui-ci. Chacun ne demande "
+"que quelques lignes de YAML : copiez un exemple ci-dessous dans le "
+"manifeste, puis enregistrez-le."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Add your first Guardrail"
@@ -2939,6 +2939,65 @@ msgstr ""
 "Le logo de Smarter, la police Inter, un en-tête sombre et les messages de "
 "l'utilisateur en orange. Remplacez l'url du logo et les couleurs par les "
 "vôtres."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "Add an api key"
+msgstr "Ajoutez une clé d'API"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Without an api key, this LLMClient is public once it is deployed: anyone who "
+"has its url can chat with it, and every prompt is charged to its owner. "
+"Attach an api key, and its url requires it: each request must send the key "
+"in an %(header)s header, and Smarter refuses those that don't. The workbench "
+"doesn't need the key, because you are signed in."
+msgstr ""
+"Sans clé d'API, ce LLMClient est public une fois déployé : toute personne "
+"qui a son url peut discuter avec lui, et chaque prompt est facturé à son "
+"propriétaire. Attachez une clé d'API, et son url l'exige : chaque requête "
+"doit envoyer la clé dans un en-tête %(header)s, et Smarter refuse celles qui "
+"ne le font pas. L'atelier n'a pas besoin de la clé, car vous êtes connecté."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"The quickest way is this workbench's Deployment tab, which creates an api "
+"key, shows its secret once, and attaches it, in one step. To attach a key "
+"that you already have, name it in the manifest. An LLMClient has one api "
+"key, and only an account admin can create one."
+msgstr ""
+"Le plus rapide est l'onglet Déploiement de cet atelier, qui crée une clé "
+"d'API, affiche son secret une seule fois et l'attache, en une seule étape. "
+"Pour attacher une clé que vous avez déjà, indiquez son nom dans le "
+"manifeste. Un LLMClient a une seule clé d'API, et seul un administrateur du "
+"compte peut en créer une."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Paste it at the start of a new line beneath %(spec)s. If the manifest "
+"already has an %(apiKey)s line, replace that line."
+msgstr ""
+"Collez-le au début d'une nouvelle ligne sous %(spec)s. Si le manifeste a "
+"déjà une ligne %(apiKey)s, remplacez cette ligne."
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "Browse your api keys"
+msgstr "Parcourez vos clés d'API"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+msgid "API Keys"
+msgstr "Clés d'API"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid "The LLMClient's api key"
+msgstr "La clé d'API du LLMClient"
+
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+msgid ""
+"Change %(name)s to the name of one of your own api keys, as the API Keys "
+"page lists them."
+msgstr ""
+"Remplacez %(name)s par le nom de l'une de vos propres clés d'API, tel que la "
+"page Clés d'API l'affiche."
 
 #. Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
@@ -3231,10 +3290,6 @@ msgstr ""
 "La clé est à vous. Son secret n'est affiché qu'une fois, juste après sa "
 "création. La page Clés d'API de la console web liste vos clés, et désactive "
 "une clé sans la supprimer."
-
-#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-msgid "API Keys"
-msgstr "Clés d'API"
 
 #. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 msgid ""
@@ -7494,6 +7549,10 @@ msgid "Go to step %(step)s"
 msgstr "Aller à l'étape %(step)s"
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Show at startup"
+msgstr "Afficher au démarrage"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Skip tour"
 msgstr "Passer la visite"
 
@@ -7796,6 +7855,59 @@ msgstr ""
 "Un LLMHost s'exécute sur une véritable infrastructure cloud, qui coûte de "
 "l'argent réel tant qu'elle fonctionne, que quelqu'un lui envoie un prompt ou "
 "non."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Built for production, at scale"
+msgstr "Conçu pour la production, à grande échelle"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Smarter runs AI solutions in production on Kubernetes, the same cloud "
+"orchestration technology behind global platforms such as Netflix, YouTube "
+"and TikTok."
+msgstr ""
+"Smarter exécute des solutions d'IA en production sur Kubernetes, la même "
+"technologie d'orchestration cloud qui fait tourner des plateformes mondiales"
+" comme Netflix, YouTube et TikTok."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "State-of-the-art orchestration"
+msgstr "Une orchestration de pointe"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Kubernetes grew out of Borg, the system that runs Google's services, YouTube "
+"among them. Netflix and ByteDance, TikTok's parent, run their platforms on "
+"it too."
+msgstr ""
+"Kubernetes est issu de Borg, le système qui fait tourner les services de "
+"Google, dont YouTube. Netflix et ByteDance, la maison mère de TikTok, y font"
+" aussi tourner leurs plateformes."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Grows with demand"
+msgstr "Suit la demande"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Smarter's web servers and workers run as several copies, Kubernetes replaces "
+"any that fail, and the cluster adds servers when they need more room."
+msgstr ""
+"Les serveurs web et les workers de Smarter tournent en plusieurs copies, "
+"Kubernetes remplace celles qui échouent, et le cluster ajoute des serveurs "
+"quand elles ont besoin de plus de place."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Every LLMClient at its own url"
+msgstr "Chaque LLMClient à sa propre url"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Deploying an LLMClient gives it its own host name, with a TLS certificate "
+"that the cluster issues and renews by itself."
+msgstr ""
+"Déployer un LLMClient lui donne son propre nom d'hôte, avec un certificat "
+"TLS que le cluster émet et renouvelle de lui-même."
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 msgid "Where to start"

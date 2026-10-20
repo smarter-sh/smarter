@@ -5,13 +5,16 @@
  * It is a modal. Escape, the close button, Skip tour and a click on the backdrop close it. Next and
  * Back, the step dots, and the left and right arrow keys move between the steps, and Tab keeps the
  * focus inside it. The last step links to the Get Weather example LLMClient, the LLMClients, the
- * documentation and the project's website, and its Get started button closes it.
+ * documentation and the project's website, and its Get started button closes it. The first step has a
+ * Show at startup box, whose choice the app records when the dialog closes.
  *
  * :param firstName: The user's first name, which the first step greets, or an empty string.
  * :param logoUrl: The Smarter logo.
  * :param illustrationsUrl: The folder of the Keen dozzy-1 illustrations, ending in a slash.
  * :param urls: The last step's links, or null while they load.
  * :param error: Why the links failed to load, or null.
+ * :param showAtStartup: Whether the Show at startup box is ticked.
+ * :param onShowAtStartupChange: Called when the user ticks or unticks it.
  * :param onLastStep: Called when the last step shows.
  * :param onClose: Called when the user closes the dialog.
  */
@@ -28,6 +31,8 @@ interface WelcomeDialogProps {
   illustrationsUrl: string;
   urls: WelcomeUrls | null;
   error: string | null;
+  showAtStartup: boolean;
+  onShowAtStartupChange: (showAtStartup: boolean) => void;
   onLastStep: () => void;
   onClose: () => void;
 }
@@ -78,9 +83,19 @@ function welcomeLinks(urls: WelcomeUrls): WelcomeLink[] {
   return links;
 }
 
-const FOCUSABLE = "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])";
+const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
-function WelcomeDialog({ firstName, logoUrl, illustrationsUrl, urls, error, onLastStep, onClose }: WelcomeDialogProps) {
+function WelcomeDialog({
+  firstName,
+  logoUrl,
+  illustrationsUrl,
+  urls,
+  error,
+  showAtStartup,
+  onShowAtStartupChange,
+  onLastStep,
+  onClose,
+}: WelcomeDialogProps) {
   const steps = welcomeSteps(firstName);
   const last = steps.length - 1;
   const [index, setIndex] = useState(0);
@@ -269,6 +284,17 @@ function WelcomeDialog({ firstName, logoUrl, illustrationsUrl, urls, error, onLa
               ))}
             </div>
             <div className="smarter-welcome-actions">
+              {index === 0 && (
+                <label className="form-check form-check-sm form-check-custom form-check-solid smarter-welcome-startup">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={showAtStartup}
+                    onChange={(event) => onShowAtStartupChange(event.target.checked)}
+                  />
+                  <span className="form-check-label">{gettext("Show at startup")}</span>
+                </label>
+              )}
               {index === 0 ? (
                 <button type="button" className="btn btn-sm btn-link text-muted" onClick={onClose}>
                   {gettext("Skip tour")}
