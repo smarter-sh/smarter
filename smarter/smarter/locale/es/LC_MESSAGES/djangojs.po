@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 12:35+0000\n"
+"POT-Creation-Date: 2026-10-20 14:52+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -1868,6 +1868,491 @@ msgstr "Novedades"
 #. Translators: used in react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx
 msgid "Recently added Smarter features"
 msgstr "Funciones de Smarter agregadas recientemente"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/components/DidYouKnow/Component.tsx
+msgid "Did you know?"
+msgstr "¿Sabías que…?"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The Smarter Project is coded in part using Agentic AI techniques that you "
+"can learn about by following this project on GitHub."
+msgstr ""
+"El Proyecto Smarter está programado en parte con técnicas de IA agéntica, "
+"que puedes conocer siguiendo este proyecto en GitHub."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Follow Smarter on GitHub"
+msgstr "Sigue a Smarter en GitHub"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The Smarter Project has around 500,000 lines of code, across two dozen "
+"repositories."
+msgstr ""
+"The Smarter Project tiene alrededor de 500.000 líneas de código, en dos "
+"docenas de repositorios."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Browse the repositories"
+msgstr "Explorar los repositorios"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The main Smarter repository alone has about 400,000 lines of code, including "
+"about 180,000 lines of Python and 45,000 of TypeScript."
+msgstr ""
+"Solo el repositorio principal de Smarter tiene unas 400.000 líneas de "
+"código, entre ellas unas 180.000 de Python y 45.000 de TypeScript."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Browse the repository"
+msgstr "Explorar el repositorio"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter is written in Python, with Django and Django REST Framework, and its "
+"web console is written in React."
+msgstr ""
+"Smarter está escrito en Python, con Django y Django REST Framework, y su "
+"consola web está escrita en React."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about its technologies"
+msgstr "Leer sobre sus tecnologías"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"In October 2026, Claude Code wrote Smarter's source code at almost 30 times "
+"the long-run pace of its author, a senior developer."
+msgstr ""
+"En octubre de 2026, Claude Code escribió el código fuente de Smarter a casi "
+"30 veces el ritmo habitual de su autor, un desarrollador sénior."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the story"
+msgstr "Leer la historia"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+#, javascript-format
+msgid "More than 95% of Smarter's code is covered by its automated tests."
+msgstr ""
+"Más del 95% del código de Smarter está cubierto por sus pruebas "
+"automatizadas."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read how it got there"
+msgstr "Leer cómo lo logró"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter is a Docker application that runs on Debian Linux, so it can run "
+"anywhere, from your own laptop to any data center in the world."
+msgstr ""
+"Smarter es una aplicación Docker que se ejecuta en Debian Linux, así que "
+"puede funcionar en cualquier lugar, desde tu propia laptop hasta cualquier "
+"centro de datos del mundo."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read why Smarter uses Docker"
+msgstr "Leer por qué Smarter usa Docker"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "You can install Smarter on your own laptop in around 20 minutes."
+msgstr "Puedes instalar Smarter en tu propia laptop en unos 20 minutos."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Get started"
+msgstr "Comenzar"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter closely follows the 12-Factor App methodology, a set of principles "
+"for building software that runs in the cloud."
+msgstr ""
+"Smarter sigue de cerca la metodología 12-Factor App, un conjunto de "
+"principios para crear software que se ejecuta en la nube."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the 12-Factor App decision"
+msgstr "Leer la decisión sobre 12-Factor App"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's web console users can watch the real server logs of their own "
+"prompts, live, as the server writes them."
+msgstr ""
+"Los usuarios de la consola web de Smarter pueden ver los registros reales "
+"del servidor de sus propios prompts, en vivo, a medida que el servidor los "
+"escribe."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the live server logs"
+msgstr "Leer sobre los registros del servidor en vivo"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's major design decisions, from Django and Kubernetes to Pydantic, "
+"are written down as Architecture Decision Records in its documentation."
+msgstr ""
+"Las principales decisiones de diseño de Smarter, desde Django y Kubernetes "
+"hasta Pydantic, están documentadas como Architecture Decision Records en su "
+"documentación."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the Architecture Decision Records"
+msgstr "Leer los Architecture Decision Records"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Every Smarter platform runs an MCP server that answers questions about The "
+"Smarter Project from its own source code and documentation."
+msgstr ""
+"Cada plataforma Smarter ejecuta un servidor MCP que responde preguntas sobre "
+"The Smarter Project a partir de su propio código fuente y documentación."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the MCP server"
+msgstr "Leer sobre el servidor MCP"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter has SDKs for Python, Node.js and Go, a command-line interface "
+"written in Go, and a VS Code extension for its YAML manifests."
+msgstr ""
+"Smarter tiene SDK para Python, Node.js y Go, una interfaz de línea de "
+"comandos escrita en Go y una extensión de VS Code para sus manifiestos YAML."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "See the APIs and SDKs"
+msgstr "Ver las API y los SDK"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The Smarter Project was inspired by the Kubernetes Project, which is open "
+"source software for declarative cloud infrastructure management."
+msgstr ""
+"The Smarter Project se inspiró en el proyecto Kubernetes, un software de "
+"código abierto para la gestión declarativa de infraestructura en la nube."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about manifests"
+msgstr "Leer sobre los manifiestos"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's manifests are programmed with Pydantic, the popular open source "
+"Python data validation library on PyPI."
+msgstr ""
+"Los manifiestos de Smarter están programados con Pydantic, la popular "
+"biblioteca de código abierto de Python para validar datos, disponible en "
+"PyPI."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read why Smarter uses Pydantic"
+msgstr "Leer por qué Smarter usa Pydantic"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's repository has Agent Skills: instructions that teach AI coding "
+"agents its conventions, from its tests to its translations."
+msgstr ""
+"El repositorio de Smarter tiene Agent Skills: instrucciones que enseñan sus "
+"convenciones a los agentes de programación con IA, desde sus pruebas hasta "
+"sus traducciones."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Browse the skills"
+msgstr "Explorar las skills"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter was first used in a classroom in January 2026, by AI students at the "
+"University of British Columbia."
+msgstr ""
+"Smarter se usó por primera vez en un aula en enero de 2026, con estudiantes "
+"de IA de la University of British Columbia."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the Instructor Guide"
+msgstr "Leer la Guía para instructores"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter has a Free Course Catalog of ready-to-teach courses, from prompt "
+"engineering for non-programmers to Kubernetes for platform engineers."
+msgstr ""
+"Smarter tiene un Catálogo de cursos gratuitos listos para enseñar, desde "
+"ingeniería de prompts para quienes no programan hasta Kubernetes para "
+"ingenieros de plataforma."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The chat in the Prompt Engineer's Workbench is its own open source npm "
+"package, @smarter.sh/ui-chat, which you can embed in any website."
+msgstr ""
+"El chat del Prompt Engineer's Workbench es un paquete npm de código abierto "
+"propio, @smarter.sh/ui-chat, que puedes integrar en cualquier sitio web."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "See it on npm"
+msgstr "Verlo en npm"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Claude Code translated Smarter's web console into Spanish, French and "
+"Brazilian Portuguese in a single day, October 16, 2026."
+msgstr ""
+"Claude Code tradujo la consola web de Smarter al español, al francés y al "
+"portugués de Brasil en un solo día, el 16 de octubre de 2026."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the translations"
+msgstr "Leer sobre las traducciones"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's ImageSearchPlugin was written by Claude Code during a live, in-"
+"class demonstration for AI students at the University of British Columbia. "
+"It went into production the following day."
+msgstr ""
+"El ImageSearchPlugin de Smarter lo escribió Claude Code durante una "
+"demostración en vivo, en clase, para estudiantes de IA de la University of "
+"British Columbia. Pasó a producción al día siguiente."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the ImageSearchPlugin"
+msgstr "Leer sobre el ImageSearchPlugin"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The web console speaks English, Spanish, French and Brazilian Portuguese. "
+"You can choose a language from the user menu."
+msgstr ""
+"La consola web habla inglés, español, francés y portugués de Brasil. Puedes "
+"elegir un idioma en el menú de usuario."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter Chat has a WordPress plugin, a Drupal module and a Shopify app "
+"block, which put a deployed LLMClient on your site."
+msgstr ""
+"Smarter Chat tiene un plugin de WordPress, un módulo de Drupal y un bloque "
+"de aplicación de Shopify, que ponen un LLMClient desplegado en tu sitio."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about Smarter Chat"
+msgstr "Leer sobre Smarter Chat"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's manifests can be edited not only in the web console, but also in "
+"code editors such as VS Code."
+msgstr ""
+"Los manifiestos de Smarter se pueden editar no solo en la consola web, sino "
+"también en editores de código como VS Code."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the VS Code extension"
+msgstr "Leer sobre la extensión de VS Code"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's VS Code extension checks your YAML manifests as you type, "
+"completes their keys and values, and fixes common mistakes."
+msgstr ""
+"La extensión de VS Code de Smarter revisa tus manifiestos YAML mientras "
+"escribes, completa sus claves y valores y corrige errores comunes."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's command-line interface works much like kubectl and runs on "
+"Windows, macOS and Linux. Like the aws cli, you set it up with one command: "
+"smarter configure."
+msgstr ""
+"La interfaz de línea de comandos de Smarter funciona de forma muy parecida a "
+"kubectl y se ejecuta en Windows, macOS y Linux. Como la aws cli, se "
+"configura con un solo comando: smarter configure."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the command-line interface"
+msgstr "Leer sobre la interfaz de línea de comandos"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"On a Mac, you can install the smarter command-line interface with Homebrew."
+msgstr ""
+"En una Mac, puedes instalar la interfaz de línea de comandos smarter con "
+"Homebrew."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Every Smarter platform publishes an OpenAPI document of its REST API, which "
+"SDKs and AI agents can read."
+msgstr ""
+"Cada plataforma Smarter publica un documento OpenAPI de su API REST, que los "
+"SDK y los agentes de IA pueden leer."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the OpenAPI document"
+msgstr "Leer sobre el documento OpenAPI"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's server log messages are designed to help AI agents diagnose run-"
+"time errors: each one starts with the dotted path of the code that wrote it, "
+"so it reads like a stack trace."
+msgstr ""
+"Los mensajes de registro del servidor de Smarter están diseñados para ayudar "
+"a los agentes de IA a diagnosticar errores en tiempo de ejecución: cada uno "
+"empieza con la ruta con puntos del código que lo escribió, así que se lee "
+"como un stack trace."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the logging style guide"
+msgstr "Leer la guía de estilo de los registros"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter has more than 50 Waffle switches that turn optional features and "
+"logging on and off, including whether these Did you know? notes appear."
+msgstr ""
+"Smarter tiene más de 50 interruptores de Waffle que activan y desactivan "
+"funciones opcionales y registros, incluido si aparecen estas notas de "
+"¿Sabías que…?."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the Waffle switches"
+msgstr "Leer sobre los interruptores de Waffle"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's authors invented their own object caching system, the "
+"@cache_results() decorator, which builds each cache key from the arguments "
+"of the function that it caches."
+msgstr ""
+"Los autores de Smarter inventaron su propio sistema de caché de objetos, el "
+"decorador @cache_results(), que construye cada clave de caché a partir de "
+"los argumentos de la función que almacena en caché."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about @cache_results()"
+msgstr "Leer sobre @cache_results()"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's authors created their own Django base model, "
+"MetaDataWithOwnershipModel, which gives each AI resource its name, "
+"description, version, tags and owner."
+msgstr ""
+"Los autores de Smarter crearon su propio modelo base de Django, "
+"MetaDataWithOwnershipModel, que da a cada recurso de IA su nombre, "
+"descripción, versión, etiquetas y propietario."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read its source code"
+msgstr "Leer su código fuente"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's version numbers and changelogs are generated from its commit "
+"messages, by semantic-release."
+msgstr ""
+"Los números de versión y los registros de cambios de Smarter se generan a "
+"partir de sus mensajes de commit, con semantic-release."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "See the releases"
+msgstr "Ver las versiones"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's authors designed their own Django-React integration: Vite builds "
+"each page's React app, and a Django template tag mounts it."
+msgstr ""
+"Los autores de Smarter diseñaron su propia integración de Django y React: "
+"Vite compila la aplicación React de cada página y una etiqueta de plantilla "
+"de Django la monta."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read about the React integration"
+msgstr "Leer sobre la integración con React"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Most pages of this web console are small React apps that Django hosts, and "
+"every one of their Storybook stories also runs as a unit test."
+msgstr ""
+"La mayoría de las páginas de esta consola web son pequeñas aplicaciones "
+"React que aloja Django, y cada una de sus historias de Storybook también se "
+"ejecuta como prueba unitaria."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter is an open source project, and anyone can contribute to it, "
+"including you."
+msgstr ""
+"Smarter es un proyecto de código abierto, y cualquiera puede contribuir, "
+"incluido tú."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read how to contribute"
+msgstr "Leer cómo contribuir"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The Get Weather LLMClient's tool is a Smarter Extension written in Python. "
+"Beginning Python programmers can write extensions too."
+msgstr ""
+"La herramienta del LLMClient Get Weather es una Smarter Extension escrita en "
+"Python. Quienes empiezan a programar en Python también pueden escribir "
+"extensiones."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the extension developer guide"
+msgstr "Leer la guía para desarrollar extensiones"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter Extensions, such as weather, calculator and date-calculator, are "
+"published in a public registry on GitHub."
+msgstr ""
+"Las Smarter Extensions, como weather, calculator y date-calculator, se "
+"publican en un registro público en GitHub."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Browse the extensions registry"
+msgstr "Explorar el registro de extensiones"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Smarter's Python docstrings are published, by Sphinx, as the technical "
+"reference of its documentation."
+msgstr ""
+"Los docstrings de Python de Smarter se publican, con Sphinx, como la "
+"referencia técnica de su documentación."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Read the documentation"
+msgstr "Lee la documentación"
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"The first drafts of the Sphinx docstrings of Smarter's Python modules, "
+"classes and functions were written with GitHub Copilot."
+msgstr ""
+"Los primeros borradores de los docstrings de Sphinx de los módulos, clases y "
+"funciones de Python de Smarter se escribieron con GitHub Copilot."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+#, javascript-format
+msgid "Agentic AI wrote more than 70% of Smarter's unit tests."
+msgstr ""
+"La IA agéntica escribió más del 70% de las pruebas unitarias de Smarter."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Smarter's first commit was made in February 2023."
+msgstr "El primer commit de Smarter se hizo en febrero de 2023."
 
 #. Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 msgid "The publisher's trust badge"
@@ -7422,10 +7907,6 @@ msgid "Chatbots, agents and harnesses, ready to run and customize."
 msgstr "Chatbots, agentes y harnesses, listos para ejecutar y personalizar."
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-msgid "Read the documentation"
-msgstr "Lee la documentación"
-
-#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid ""
 "Guides, manifests, the command-line interface and the API, at "
 "docs.smarter.sh."
@@ -7473,10 +7954,6 @@ msgstr "Omitir recorrido"
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Back"
 msgstr "Atrás"
-
-#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-msgid "Get started"
-msgstr "Comenzar"
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 msgid "Welcome to Smarter, %(firstName)s!"
@@ -7777,8 +8254,8 @@ msgid ""
 "and TikTok."
 msgstr ""
 "Smarter ejecuta soluciones de IA en producción sobre Kubernetes, la misma "
-"tecnología de orquestación en la nube que hay detrás de plataformas globales"
-" como Netflix, YouTube y TikTok."
+"tecnología de orquestación en la nube que hay detrás de plataformas globales "
+"como Netflix, YouTube y TikTok."
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 msgid "State-of-the-art orchestration"
@@ -8244,6 +8721,13 @@ msgstr "La confirmación de la contraseña es obligatoria"
 #. Translators: used in smarter/static/js/coming-soon.js
 msgid "Added"
 msgstr "Agregado"
+
+#~ msgid ""
+#~ "Smarter's YAML manifests closely resemble Kubernetes manifests: each one "
+#~ "has an apiVersion, a kind, metadata and a spec."
+#~ msgstr ""
+#~ "Los manifiestos YAML de Smarter se parecen mucho a los de Kubernetes: "
+#~ "cada uno tiene un apiVersion, un kind, metadata y un spec."
 
 #~ msgid "logs@smarter:~"
 #~ msgstr "logs@smarter:~"

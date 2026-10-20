@@ -146,6 +146,9 @@ class SmarterWaffleSwitches:
     ENABLE_MIDDLEWARE_HTML_MINIFY = "enable_middleware_html_minify"
     """Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses."""
 
+    ENABLE_WEB_CONSOLE_DID_YOU_KNOW = "enable_web_console_did_you_know"
+    """Enables the Did you know? note, a fact of the day about The Smarter Project, below the web console's title."""
+
     ENABLE_WEB_CONSOLE_SERVER_LOGS = "enable_web_console_server_logs"
     """Enables SmarterRequestLogContextMiddleware, which adds request-specific context to log records for enhanced logging capabilities."""
 
@@ -380,6 +383,11 @@ class SmarterWaffleSwitches:
         ENABLE_MIDDLEWARE_HTML_MINIFY: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_HTML_MINIFY,
             comment="Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses.",
+            default=True,
+        ),
+        ENABLE_WEB_CONSOLE_DID_YOU_KNOW: SmarterWaffleSwitch(
+            name=ENABLE_WEB_CONSOLE_DID_YOU_KNOW,
+            comment="Enables the Did you know? note, a fact of the day about The Smarter Project, below the web console's title.",
             default=True,
         ),
         ENABLE_WEB_CONSOLE_SERVER_LOGS: SmarterWaffleSwitch(

@@ -17,6 +17,15 @@ documentation, and the project's website. Its text and its orange accent follow
 the welcome email that the platform sent the user, so that the dialog reads as
 the next page of that email.
 
+Each time the dialog opens, it picks one of its steps at random, and that step
+shows a **Did you know?** note below its illustration: a piece of trivia about
+the Smarter project, also picked at random, such as how it is coded in part with
+agentic AI, its Architecture Decision Records, its SDKs, or the languages that
+the web console speaks. The facts, and the unstyled note, come from
+:doc:`@smarter/didyouknow <didyouknow>`, and the dialog styles the note as a card
+of its own. On a phone, where the illustration shrinks into a band above the
+text, the note is hidden.
+
 The dialog's first step has a **Show at startup** box, which is ticked for a new
 user. While it is ticked, the dialog opens by itself on the first web console page
 that the user visits each time they sign in. When the user closes the dialog, in

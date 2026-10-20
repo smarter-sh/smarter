@@ -19,7 +19,7 @@
 #   python-init    -> venv/                     key: Python version + local.txt
 #                     node_modules/             key: Node version + package-lock.json
 #   react-install  -> smarter/react/**/node_modules
-#   react-build    -> smarter/smarter/static/react/, smarter-common/dist/
+#   react-build    -> smarter/smarter/static/react/, smarter-common/dist/, smarter-didyouknow/dist/
 #                                               key: git tree hash of smarter/react
 #   docker-build   -> BuildKit layer cache (type=gha)
 #
@@ -67,11 +67,11 @@ jobs:
   # rendered as a test), as `make react-lint && make react-test` do. It needs
   # only Node, so it runs alongside the test job, in a few minutes.
   #
-  # @smarter/common's and Smarter Chat's dist/ are not committed. The apps
+  # @smarter/common's, @smarter/didyouknow's and Smarter Chat's dist/ are not committed. The apps
   # type-check against their declarations, and the workbench imports the chat
-  # library as an npm package does, so both are built (build:deps) before the
-  # type check and the tests. The other tests use @smarter/common's TypeScript
-  # source.
+  # library as an npm package does, so all three are built (build:deps) before the
+  # type check and the tests. The other tests use @smarter/common's and
+  # @smarter/didyouknow's TypeScript source.
   #----------------------------------------------------------------------------
   react:
     runs-on: ubuntu-latest

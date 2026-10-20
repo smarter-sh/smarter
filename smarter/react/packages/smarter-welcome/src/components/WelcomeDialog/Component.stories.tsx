@@ -4,6 +4,7 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import { appContext, welcome } from "@/mocks/fixtures";
 
 import WelcomeDialog from "@/components/WelcomeDialog/Component";
+import { didYouKnowFacts } from "@smarter/didyouknow";
 
 /** The welcome dialog's steps, from the greeting to the links of the last one. */
 const meta = {
@@ -19,6 +20,8 @@ const meta = {
     onShowAtStartupChange: fn(),
     onLastStep: fn(),
     onClose: fn(),
+    // the first step shows the Did you know? note, so that the stories don't change from run to run.
+    didYouKnow: { step: 0, fact: didYouKnowFacts()[0] },
   },
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof WelcomeDialog>;
