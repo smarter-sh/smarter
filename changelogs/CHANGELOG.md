@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.4...v0.35.0-alpha.5) (2026-10-20)
+
+### Features
+
+* **console:** rebuild the user menu in react, with change profile ([2846bca](https://github.com/smarter-sh/smarter/commit/2846bca6b3305d51f34a954a3fa95fd1d3e8ca09))
+
 ## [0.35.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.3...v0.35.0-alpha.4) (2026-10-20)
 
 ### Features
