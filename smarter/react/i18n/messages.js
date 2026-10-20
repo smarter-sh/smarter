@@ -1514,7 +1514,7 @@ gettext("LLMClients");
 gettext("Dependency trees");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
 gettext("Its Provider supplies the LLM, its plugins and MCPClients give it tools, its Guardrails screen what goes in and out, and the Connections and Secrets beneath them reach your data, safely. A resource that two others use appears under each of them.");
-// Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx, react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 gettext("Copied");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx
 gettext("Copy");
@@ -2624,6 +2624,20 @@ gettext("Rename: Rename this orchestrator resource");
 gettext("Delete: You can't delete this orchestrator, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this orchestrator resource");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+gettext("Wrap lines");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx
+gettext("Scroll long lines");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx
+gettext("Wrap long lines");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+gettext("Expand JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+gettext("Collapse all the JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+gettext("Expand all the JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx
+gettext("Copy the text");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
 gettext("Unverified");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
@@ -2706,6 +2720,12 @@ gettext("No response yet");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 gettext("Send a request, and the provider's response will appear here.");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Raw response");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Raw JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+gettext("Response JSON");
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 gettext("The response isn't JSON. It's shown below, as it is.");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
 gettext("Response");
@@ -2713,12 +2733,6 @@ gettext("Response");
 gettext("Time to respond");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 gettext("Response size");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-gettext("Raw response");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-gettext("Raw JSON");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-gettext("Response JSON");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 gettext("Reply");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
@@ -3064,17 +3078,9 @@ gettext("Filter the server logs");
 // Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 gettext("Filter (/)");
 // Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-gettext("Wrap lines");
-// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 gettext("Scroll long lines (w)");
 // Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 gettext("Wrap long lines (w)");
-// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-gettext("Expand JSON");
-// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-gettext("Collapse all the JSON");
-// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-gettext("Expand all the JSON");
 // Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 gettext("Follow");
 // Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx

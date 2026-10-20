@@ -102,6 +102,12 @@ from any package, for example `packages/smarter-guardrail-list/`:
 - **`NODE_ENV=production` in your shell** makes React load its production build,
   and tests fail with "React.act is not a function". `vitest.shared.ts` forces
   `NODE_ENV=test`. Keep it that way.
+- **A test that passes locally can time out in CI.** The CI runner is much
+  slower, and a mocked request or a re-render can take over a second there.
+  `test/setup.ts` gives Testing Library's `waitFor()` and `findBy*()` 5 seconds,
+  and `vitest.shared.ts` gives each test 15. Don't shorten them. Vitest's own
+  `vi.waitFor()` doesn't use that setting and still defaults to 1 second, so
+  prefer Testing Library's `waitFor()`, or pass `vi.waitFor()` a `timeout`.
 - **Locale and time zone**: amounts rendered as "US$" and shifted dates come
   from the machine's locale. They're pinned in `vitest.shared.ts`.
 - **MSW's `sse()` needs a global `EventSource` when the handler is created**,

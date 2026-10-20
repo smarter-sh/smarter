@@ -13,7 +13,7 @@
  * s follows the newest record, / filters, Ctrl+Up and Ctrl+Down move to the top and the bottom, and
  * so on. "?" lists them.
  */
-import { Fragment, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 
 import { gettext, interpolate, ngettext } from "@smarter/common";
 
@@ -22,6 +22,7 @@ import { hasJsonBlock, logNodes, type LogNode } from "../lib/logJson";
 import type { LogEvent } from "../lib/logStream";
 import { LOG_VIEWER_SHORTCUTS, logViewerAction, type LogViewerAction } from "../lib/logViewerKeys";
 import { useLogWrap } from "../lib/logWrap";
+import ToolbarButton from "./ToolbarButton";
 
 import "../styles.css";
 
@@ -157,33 +158,6 @@ function LogLine({ message, expandAll }: { message: string; expandAll: boolean }
         <Segments segments={parseAnsi(message)} />
       )}
     </div>
-  );
-}
-
-interface ToolbarButtonProps {
-  label: string;
-  title: string;
-  pressed?: boolean;
-  onClick: () => void;
-  children: ReactNode;
-  showLabel?: boolean;
-}
-
-function ToolbarButton({ label, title, pressed, onClick, children, showLabel = false }: ToolbarButtonProps) {
-  return (
-    <button
-      type="button"
-      className="console-server-logs-button"
-      aria-pressed={pressed}
-      aria-label={showLabel ? undefined : label}
-      title={title}
-      onClick={onClick}
-    >
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor">
-        {children}
-      </svg>
-      {showLabel && label}
-    </button>
   );
 }
 
@@ -349,55 +323,49 @@ function ServerLogs(props: ServerLogsProps) {
             onKeyDown={onFilterKeyDown}
           />
           <ToolbarButton
+            icon="wrap"
             label={gettext("Wrap lines")}
             title={wrap ? gettext("Scroll long lines (w)") : gettext("Wrap long lines (w)")}
             pressed={wrap}
             onClick={() => setWrap((previous) => !previous)}
             showLabel
-          >
-            <path d="M1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5Zm0 4a.5.5 0 0 1 .5-.5h11a2.5 2.5 0 0 1 0 5H9.707l.647.646a.5.5 0 0 1-.708.708l-1.5-1.5a.5.5 0 0 1 0-.708l1.5-1.5a.5.5 0 1 1 .708.708L9.707 11H12.5a1.5 1.5 0 0 0 0-3h-11a.5.5 0 0 1-.5-.5Zm0 4a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5Z" />
-          </ToolbarButton>
+          />
           <ToolbarButton
+            icon="expandJson"
             label={gettext("Expand JSON")}
             title={expandAll ? gettext("Collapse all the JSON") : gettext("Expand all the JSON")}
             pressed={expandAll}
             onClick={toggleExpandAll}
             showLabel
-          >
-            <path d="M3.5 2a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5H5a.5.5 0 0 0 0-1H4V3h1a.5.5 0 0 0 0-1H3.5Zm9 0H11a.5.5 0 0 0 0 1h1v10h-1a.5.5 0 0 0 0 1h1.5a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5ZM6 8a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm3 0a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z" />
-          </ToolbarButton>
+          />
           <ToolbarButton
+            icon="follow"
             label={gettext("Follow")}
             title={follow ? gettext("Stop following new records (s)") : gettext("Follow new records (s)")}
             pressed={follow}
             onClick={() => perform(follow ? "follow" : "bottom")}
             showLabel
-          >
-            <path d="M8 1a.5.5 0 0 1 .5.5v9.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 1 1 .708-.708L7.5 11.293V1.5A.5.5 0 0 1 8 1ZM2 14.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5Z" />
-          </ToolbarButton>
+          />
           <ToolbarButton
+            icon="copy"
             label={copied ? gettext("Copied") : gettext("Copy the lines")}
             title={copied ? gettext("Copied") : gettext("Copy the lines (c)")}
             onClick={copy}
-          >
-            <path d="M4 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2Zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6ZM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2Z" />
-          </ToolbarButton>
+          />
           <ToolbarButton
+            icon="fullscreen"
             label={gettext("Full screen")}
             title={fullscreen ? gettext("Leave full screen (F, Esc)") : gettext("Full screen (F)")}
             pressed={fullscreen}
             onClick={() => setFullscreen((previous) => !previous)}
-          >
-            <path d="M1.5 1h4a.5.5 0 0 1 0 1H2v3.5a.5.5 0 0 1-1 0v-4a.5.5 0 0 1 .5-.5Zm9 0h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V2h-3.5a.5.5 0 0 1 0-1ZM1.5 10a.5.5 0 0 1 .5.5V14h3.5a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5Zm13 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1 0-1H14v-3.5a.5.5 0 0 1 .5-.5Z" />
-          </ToolbarButton>
+          />
           <ToolbarButton
+            icon="help"
             label={gettext("Keyboard shortcuts")}
             title={gettext("Keyboard shortcuts (?)")}
             pressed={help}
             onClick={() => setHelp((previous) => !previous)}
-          >
-            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14Zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16Zm-2.5-10.5a2.5 2.5 0 1 1 3.4 2.33c-.53.21-.9.6-.9 1.17v.5a.5.5 0 0 1-1 0V9c0-1.1.73-1.86 1.53-2.18A1.5 1.5 0 1 0 6.5 5.5a.5.5 0 0 1-1 0ZM8 12.25a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-          </ToolbarButton>
+          />
         </div>
       </div>
       {help && (
