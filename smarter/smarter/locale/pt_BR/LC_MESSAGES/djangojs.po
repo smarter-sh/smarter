@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 16:46+0000\n"
+"POT-Creation-Date: 2026-10-20 20:12+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -3615,7 +3615,7 @@ msgstr ""
 "deles alcançam seus dados, com segurança. Um recurso que outros dois usam "
 "aparece sob cada um deles."
 
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx, react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 msgid "Copied"
 msgstr "Copiado"
 
@@ -6450,6 +6450,34 @@ msgstr ""
 msgid "Delete: Delete this orchestrator resource"
 msgstr "Excluir: excluir este orquestrador"
 
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Wrap lines"
+msgstr "Quebrar linhas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx
+msgid "Scroll long lines"
+msgstr "Rolar as linhas longas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx
+msgid "Wrap long lines"
+msgstr "Quebrar as linhas longas"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Expand JSON"
+msgstr "Expandir JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Collapse all the JSON"
+msgstr "Recolher todo o JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+msgid "Expand all the JSON"
+msgstr "Expandir todo o JSON"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx
+msgid "Copy the text"
+msgstr "Copiar o texto"
+
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/Component.tsx
 msgid "Unverified"
 msgstr "Não verificado"
@@ -6610,6 +6638,18 @@ msgid "Send a request, and the provider's response will appear here."
 msgstr "Envie uma solicitação e a resposta do provedor aparecerá aqui."
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Raw response"
+msgstr "Resposta bruta"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Raw JSON"
+msgstr "JSON bruto"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
+msgid "Response JSON"
+msgstr "JSON da resposta"
+
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 msgid "The response isn't JSON. It's shown below, as it is."
 msgstr "A resposta não é JSON. Ela é mostrada abaixo, como está."
 
@@ -6624,18 +6664,6 @@ msgstr "Tempo de resposta"
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
 msgid "Response size"
 msgstr "Tamanho da resposta"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-msgid "Raw response"
-msgstr "Resposta bruta"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-msgid "Raw JSON"
-msgstr "JSON bruto"
-
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx
-msgid "Response JSON"
-msgstr "JSON da resposta"
 
 #. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 msgid "Reply"
@@ -7394,28 +7422,12 @@ msgid "Filter (/)"
 msgstr "Filtrar (/)"
 
 #. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-msgid "Wrap lines"
-msgstr "Quebrar linhas"
-
-#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 msgid "Scroll long lines (w)"
 msgstr "Rolar as linhas longas (w)"
 
 #. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 msgid "Wrap long lines (w)"
 msgstr "Quebrar as linhas longas (w)"
-
-#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-msgid "Expand JSON"
-msgstr "Expandir JSON"
-
-#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-msgid "Collapse all the JSON"
-msgstr "Recolher todo o JSON"
-
-#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
-msgid "Expand all the JSON"
-msgstr "Expandir todo o JSON"
 
 #. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 msgid "Follow"
