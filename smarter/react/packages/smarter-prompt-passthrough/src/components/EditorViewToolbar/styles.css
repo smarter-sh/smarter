@@ -1,0 +1,9 @@
+/* the log viewer's toolbar, as a bar on top of the editor, in the editor's vs-dark background. */
+.console-server-logs-toolbar.passthrough-editor-toolbar {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 0.475rem 0.475rem 0 0;
+  background-color: #1e1e1e;
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  font-size: 13px;
+}
