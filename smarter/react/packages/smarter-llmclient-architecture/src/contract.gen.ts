@@ -107,7 +107,7 @@ export interface SAMDependencyTreeNode {
    */
   kind: string;
   /**
-   * name[String]: The name of the resource. None if the user may not read it. Read only.
+   * name[String]: The name of the resource, or an Extension's slug, e.g. weather. None if the user may not read it. Read only.
    */
   name: string | null;
   /**
