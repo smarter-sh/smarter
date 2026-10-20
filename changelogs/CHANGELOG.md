@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.2](https://github.com/smarter-sh/smarter/compare/v0.35.1...v0.35.2) (2026-10-20)
+
+### Bug Fixes
+
+* **passthrough:** add wrap, fold and copy toolbars to the json editors ([f69296e](https://github.com/smarter-sh/smarter/commit/f69296e7530a1e4caad063d36686ced219277d23))
+
+## [0.35.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.35.1...v0.35.2-alpha.1) (2026-10-20)
+
+### Bug Fixes
+
+* **passthrough:** add wrap, fold and copy toolbars to the json editors ([f69296e](https://github.com/smarter-sh/smarter/commit/f69296e7530a1e4caad063d36686ced219277d23))
+
 ## [0.35.1](https://github.com/smarter-sh/smarter/compare/v0.35.0...v0.35.1) (2026-10-20)
 
 ### Bug Fixes
