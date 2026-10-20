@@ -5,7 +5,7 @@
 # usage:      Mariadb requirements. These are excluded from remote Sphinx builds and
 #             therefore are spec'd independently.
 #
-#       pip-compile smarter/requirements/in/mariadb.in --upgrade -o smarter/requirements/mariadb.txt
+#       pip-compile --upgrade smarter/requirements/in/mariadb.in --upgrade -o smarter/requirements/mariadb.txt
 # -----------------------------------------------------------------------------
 
 mariadb                                 # MySQL-compatible client
