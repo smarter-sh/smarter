@@ -142,7 +142,7 @@ change-log:
 	@echo "==============================================================================="
 	@echo "Generating changelog..."
 	@echo "==============================================================================="
-	npx conventional-changelog -p angular -i CHANGELOG.md -s
+	npx conventional-changelog -p angular -i changelogs/CHANGELOG.md -s
 
 pre-commit-init:
 	@echo "==============================================================================="
@@ -521,7 +521,7 @@ help:
 	@echo 'pre-commit-init        - Install and configure pre-commit'
 	@echo 'pre-commit-run         - Run all pre-commit hooks on all files'
 	@echo 'release                - Force a new Github release'
-	@echo 'change-log             - Update CHANGELOG.md file'
+	@echo 'change-log             - Update changelogs/CHANGELOG.md file'
 	@echo '<************************** Docker **************************>'
 	@echo 'docker-check           - Verify Docker is installed and running'
 	@echo 'docker-init            - Initialize MariaDB and create the smarter database'

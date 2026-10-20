@@ -49,7 +49,7 @@ will agree on a disclosure date with you.
 ## Supported Versions
 
 Security fixes are released as patch releases of the latest minor version,
-and are announced in the [changelog](https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md)
+and are announced in the [changelog](https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md)
 and the advisory. The Docker image on
 [Docker Hub](https://hub.docker.com/r/mcdaniel0073/smarter) and the
 [Helm chart](https://artifacthub.io/packages/helm/project-smarter/smarter) are
