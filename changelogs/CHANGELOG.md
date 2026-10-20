@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.3...v0.35.0-alpha.4) (2026-10-20)
+
+### Features
+
+* **console:** add onboarding hints and a guided tour of the workbench ([4fe4f2e](https://github.com/smarter-sh/smarter/commit/4fe4f2e80bb1651e430e662fb20a191222535b1f))
+
 ## [0.35.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.2...v0.35.0-alpha.3) (2026-10-20)
 
 ### Features
