@@ -31,7 +31,7 @@ homepage = "https://smarter.sh/"
 documentation = "https://docs.smarter.sh/"
 repository = "https://github.com/smarter-sh/smarter"
 bugtracker = "https://github.com/smarter-sh/smarter/issues"
-changelog = "https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
+changelog = "https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md"
 
 [build-system]
 requires = ["setuptools>=80.0", "wheel"]

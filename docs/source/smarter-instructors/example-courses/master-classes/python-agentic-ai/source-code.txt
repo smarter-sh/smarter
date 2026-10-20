@@ -21,7 +21,7 @@ Converge or Diverge
        first feature that Claude Code designed and wrote, the manifest-declared Guardrail, and
        the three-part *Converge or Diverge* series on blog.smarter.sh that measures what
        happened.
-     - `CHANGELOG.md <https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md>`__,
+     - `CHANGELOG.md <https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md>`__,
        `commit 329527e8e <https://github.com/smarter-sh/smarter/commit/329527e8e607a9adf830b71518e385f812d1b9f7>`__,
        `Part 1 <https://blog.smarter.sh/2026/10/10/claude-code-large-django-codebase/>`__
    * - 2. Telescoping and geometric series
