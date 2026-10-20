@@ -1,5 +1,5 @@
 /**
- * What the tab suggests beneath the tree, for an LLMClient that has no Guardrail, no tools or no styles, and the
+ * What the tab suggests beneath the tree, for an LLMClient that has no Guardrail, no tools, no styles or no api key, and the
  * manifest excerpts that it suggests, to copy into the LLMClient's manifest. The names in the excerpts are
  * resources that every platform has: the built-in Guardrails, the sample plugins, the example MCPClients and the
  * official Extensions, which `manage.py initialize_platform` adds.
@@ -19,6 +19,9 @@ export const hasGuardrail = (tree: SAMDependencyTreeNode) => usesKind(tree, ["Gu
 
 /** Whether the LLMClient has tools: a plugin, an Extension or an MCPClient. */
 export const hasTools = (tree: SAMDependencyTreeNode) => usesKind(tree, TOOL_KINDS);
+
+/** Whether the LLMClient has an api key, a SmarterAuthToken, which its url then requires. */
+export const hasApiKey = (tree: SAMDependencyTreeNode) => usesKind(tree, ["SmarterAuthToken"]);
 
 /**
  * A manifest excerpt: the lines that the user adds, and above them, the lines of the manifest that they go
@@ -53,6 +56,12 @@ export const EXTENSION_SNIPPET: ManifestSnippet = {
 export const MCPCLIENT_SNIPPET: ManifestSnippet = {
   context: "spec:",
   code: "  mcpClients:\n    - deepwiki",
+};
+
+/** An api key, by its name. An api key is the user's own, so there is no example that every platform has. */
+export const API_KEY_SNIPPET: ManifestSnippet = {
+  context: "spec:",
+  code: "  apiKey: my_api_key",
 };
 
 /** A logo, a font, and the colors of the header and of the user's messages. */

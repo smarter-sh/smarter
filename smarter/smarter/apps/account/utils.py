@@ -245,6 +245,11 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
     """
     Locate the Account associated with a given user, using caching for performance.
 
+    The account is that of the UserProfile that the user chose in the web console's user menu, for
+    this request (see :meth:`UserProfile.get_selected_object()
+    <smarter.apps.account.models.UserProfile.get_selected_object>`), else the default account, if the
+    user belongs to it, else the account of the user's first profile.
+
     :param user: User instance. The user whose account should be located.
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :returns: Account instance if found, otherwise None.
@@ -273,6 +278,11 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
     if not user_id:
         logger.warning("%s.get_cached_account_for_user() user has no ID: %s", HERE, user)
         raise Account.DoesNotExist()
+
+    # the account of the profile that the user chose in the web console's user menu, if any.
+    selected_user_profile = UserProfile.get_selected_object(user_id)
+    if selected_user_profile:
+        return selected_user_profile.cached_account
 
     @cache_results()
     def get_cached_account_for_user_by_id(user_id, class_name=UserProfile.__name__):
@@ -357,7 +367,8 @@ def get_cached_avatar_url(user_id: int, invalidate: Optional[bool] = False) -> s
 
     The url is :attr:`UserProfile.avatar_url`: the image the user uploaded, else the
     one the oauth provider supplied, else the default profile image. A user with no
-    UserProfile gets the default profile image.
+    UserProfile gets the default profile image. The UserProfile is the one that the
+    user chose in the web console's user menu, for this request, else their newest.
 
     :param user_id: Integer. The primary key of the user.
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
@@ -381,6 +392,11 @@ def get_cached_avatar_url(user_id: int, invalidate: Optional[bool] = False) -> s
 
     if invalidate:
         _get_avatar_url.invalidate(user_id, class_name=UserProfile.__name__)
+
+    # the image of the profile that the user chose in the web console's user menu, if any.
+    selected_user_profile = UserProfile.get_selected_object(user_id)
+    if selected_user_profile:
+        return selected_user_profile.avatar_url
 
     return _get_avatar_url(user_id, class_name=UserProfile.__name__)
 

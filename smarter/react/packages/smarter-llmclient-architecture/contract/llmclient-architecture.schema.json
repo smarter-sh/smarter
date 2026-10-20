@@ -24,6 +24,11 @@
       "additionalProperties": false,
       "description": "The web console's list pages, where a user browses the resources that an LLMClient can add.",
       "properties": {
+        "apiKeysUrl": {
+          "description": "The API Keys page, which lists the user's api keys.",
+          "title": "Apikeysurl",
+          "type": "string"
+        },
         "extensionsUrl": {
           "description": "The LLMTools page's Extensions, which an administrator installs.",
           "title": "Extensionsurl",
@@ -45,7 +50,7 @@
           "type": "string"
         }
       },
-      "required": ["guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl"],
+      "required": ["guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl", "apiKeysUrl"],
       "title": "LLMClientArchitectureLinks",
       "type": "object"
     },

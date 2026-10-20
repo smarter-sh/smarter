@@ -1,6 +1,6 @@
 /**
- * The next steps, beneath the tree, for an LLMClient that is missing one of the three things that most LLMClients
- * have: a Guardrail, tools (a plugin, an Extension or an MCPClient), and styles. Each section explains the idea,
+ * The next steps, beneath the tree, for an LLMClient that is missing one of the four things that most LLMClients
+ * have: a Guardrail, tools (a plugin, an Extension or an MCPClient), styles, and an api key. Each section explains the idea,
  * says where to browse what is available, and gives a manifest excerpt to paste into the LLMClient's manifest and
  * save. A section disappears once the LLMClient has what it suggests; with nothing missing, there is none.
  */
@@ -10,8 +10,10 @@ import { gettext, interpolateNodes } from "@smarter/common";
 import ManifestSnippet from "./ManifestSnippet";
 import { DOCS_URLS } from "../lib/const";
 import {
+  API_KEY_SNIPPET,
   EXTENSION_SNIPPET,
   GUARDRAIL_SNIPPET,
+  hasApiKey,
   hasGuardrail,
   hasTools,
   MCPCLIENT_SNIPPET,
@@ -142,7 +144,8 @@ export default function GettingStarted({ tree, styled, links }: GettingStartedPr
   const needsGuardrail = !hasGuardrail(tree);
   const needsTools = !hasTools(tree);
   const needsStyles = !styled;
-  if (!needsGuardrail && !needsTools && !needsStyles) return null;
+  const needsApiKey = !hasApiKey(tree);
+  if (!needsGuardrail && !needsTools && !needsStyles && !needsApiKey) return null;
 
   const beneathSpec = interpolateNodes(
     gettext(
@@ -159,7 +162,7 @@ export default function GettingStarted({ tree, styled, links }: GettingStartedPr
       </h2>
       <p className="fs-6 text-gray-700 mw-750px mb-8">
         {gettext(
-          "Most LLMClients have Guardrails, tools and a look of their own. This one is missing some of them. Each takes a few lines of YAML: copy an example below into the manifest, and save it.",
+          "Most LLMClients have Guardrails, tools, a look of their own and an api key. This one is missing some of them. Each takes a few lines of YAML: copy an example below into the manifest, and save it.",
         )}
       </p>
       <div className="d-flex flex-column gap-8">
@@ -291,6 +294,52 @@ export default function GettingStarted({ tree, styled, links }: GettingStartedPr
                 <p className="fs-8 text-gray-500 mt-2 mb-0">
                   {gettext(
                     "Smarter's logo, the Inter font, a dark header, and the user's messages in orange. Swap in your own logo's url and colors.",
+                  )}
+                </p>
+              </div>
+            </div>
+          </Suggestion>
+        )}
+
+        {needsApiKey && (
+          <Suggestion icon="key" title={gettext("Add an api key")}>
+            <p className="fs-6 text-gray-700 mb-3">
+              {interpolateNodes(
+                gettext(
+                  "Without an api key, this LLMClient is public once it is deployed: anyone who has its url can chat with it, and every prompt is charged to its owner. Attach an api key, and its url requires it: each request must send the key in an %(header)s header, and Smarter refuses those that don't. The workbench doesn't need the key, because you are signed in.",
+                ),
+                { header: code("Authorization: Token") },
+              )}
+            </p>
+            <p className="fs-6 text-gray-700 mb-5">
+              {gettext(
+                "The quickest way is this workbench's Deployment tab, which creates an api key, shows its secret once, and attaches it, in one step. To attach a key that you already have, name it in the manifest. An LLMClient has one api key, and only an account admin can create one.",
+              )}
+            </p>
+            <div className="row g-6 align-items-start">
+              <div className="col-12 col-lg-6">
+                <Steps
+                  manifestUrl={tree.url}
+                  where={interpolateNodes(
+                    gettext(
+                      "Paste it at the start of a new line beneath %(spec)s. If the manifest already has an %(apiKey)s line, replace that line.",
+                    ),
+                    { spec: code("spec:"), apiKey: code("apiKey:") },
+                  )}
+                />
+                <div className="d-flex flex-wrap align-items-center gap-4 fs-7">
+                  <BrowseLink href={links.apiKeysUrl}>{gettext("Browse your api keys")}</BrowseLink>
+                  <DocsLink href={DOCS_URLS.apiKeys}>{gettext("API Keys")}</DocsLink>
+                </div>
+              </div>
+              <div className="col-12 col-lg-6">
+                <ManifestSnippet snippet={API_KEY_SNIPPET} label={gettext("The LLMClient's api key")} />
+                <p className="fs-8 text-gray-500 mt-2 mb-0">
+                  {interpolateNodes(
+                    gettext(
+                      "Change %(name)s to the name of one of your own api keys, as the API Keys page lists them.",
+                    ),
+                    { name: code("my_api_key") },
                   )}
                 </p>
               </div>

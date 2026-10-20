@@ -5,9 +5,11 @@
  */
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
+import { useOnboarding, type OnboardingContext } from "@smarter/onboarding";
 import type { LLMClient, LLMClientListViewProps, LLMClientCardViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
+import WeatherHint from "@/components/WeatherHint";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your LLM Clients") },
@@ -35,9 +37,15 @@ const providerTabbedListViewContext: ProviderTabbedViewContext = {
 
 interface AppProps {
   sessionContext: SessionContext;
+  /**
+   * The page's onboarding state, for the hint on the Get Weather LLMClient. By default, the one that
+   * templates/react/onboarding.html writes into the page. Tests and stories pass their own.
+   */
+  onboarding?: OnboardingContext | null;
 }
 
-function App({ sessionContext }: AppProps) {
+function App({ sessionContext, onboarding }: AppProps) {
+  const onboardingState = useOnboarding(onboarding);
   const title = gettext("LLM Clients (aka 'Harnesses')");
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llmclient.html";
@@ -50,6 +58,7 @@ function App({ sessionContext }: AppProps) {
         <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={providerTabbedListViewContext} />
       </section>
+      <WeatherHint onboarding={onboardingState} />
     </>
   );
 }

@@ -27,16 +27,33 @@ shown as alerts at the top of the dashboard, and new users see a getting started
 they have created and deployed their first LLM Client. It also provides quick access to the complete
 suite of The Smarter Project tools, resources, online tutorials, and documentation.
 
+Below the console's title, on every page, a **Did you know?** note shows a fact of the day about The
+Smarter Project, with a link to learn more. Everyone sees the same fact from midnight to midnight UTC.
+A platform administrator can turn it off with the ``enable_web_console_did_you_know`` waffle switch.
+See :doc:`@smarter/didyouknow <../smarter-framework/developer-reference/react-integration/didyouknow>`.
+
 .. raw:: html
 
    <img src="https://cdn.smarter.sh/docs/smarter-framework/smarter-web-dashboard/console-dashboard.png"
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Smarter Dashboard"/>
 
+User Menu
+~~~~~~~~~
+
+Your profile image, at the top right of every page, opens your user menu. It shows your name and
+email, and lets you choose the console's language, change or remove your profile image, take the
+welcome tour again, and sign out. If you belong to more than one account, for example as a student
+who is enrolled in two courses at once, the menu also shows the account that the console is acting
+as, and a **Change Profile** item. It lists your profiles, with each one's account number, account
+name and the date that it was created, and **Switch** makes the console act as another one for the
+rest of your session. Until you choose, the console acts as your newest profile.
+See :doc:`@smarter/dashboard-user-menu <../smarter-framework/developer-reference/react-integration/dashboard-user-menu>`.
+
 Languages
 ~~~~~~~~~
 
-The console is shown in the language that you choose in the language menu of your user menu, which
+The console is shown in the language that you choose in the Language item of your user menu, which
 it remembers in a cookie, or else in your browser's preferred language, when it is available. The
 console is available in English, which is the default, Spanish (in Latin American Spanish), French
 and Brazilian Portuguese. A browser that prefers any variant of Spanish, such as ``es-MX`` or
@@ -64,6 +81,14 @@ LLM Prompt Workbench
 
 The web console includes a powerful prompt engineering workbench that gives authors a comprehensive view
 of all prompts, including interim steps on multi-pass prompts, token usage, and raw LLM responses.
+
+New users are guided there step by step. After the welcome tour, a sparkling spotlight on the sidebar's
+**LLM Clients** link suggests where to start, then one on the Get Weather example LLMClient, and the
+workbench itself opens with a guided tour of its chat and its Console, written for people who have never
+programmed. Each hint shows until the user has acted on it once, on any device, and the workbench's
+**Help** menu takes the tour again at any time. A platform administrator can turn the hints off with the
+``enable_web_console_onboarding_hints`` waffle switch. See
+:doc:`@smarter/onboarding <../smarter-framework/developer-reference/react-integration/onboarding>`.
 
 
 .. raw:: html

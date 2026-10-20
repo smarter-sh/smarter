@@ -35,6 +35,10 @@
 	<!--end::Wrapper-->
 </div>
 <!--end::Page-->
+{% if user.is_authenticated %}
+  {% include 'react/onboarding.html' %}
+  {% include 'react/welcome.html' %}
+{% endif %}
 {% endblock %}
 
 <!--begin::Scrolltop-->

@@ -68,8 +68,12 @@ export default defineConfig([
   },
   {
     // a library, not an app: its index files re-export its api, and it has no hot reloading.
-    // (Inside the package, packages/smarter-common/eslint.config.js does the same.)
-    files: ["packages/smarter-common/src/**/*.{ts,tsx}"],
+    // (Inside the packages, their eslint.config.js files do the same.)
+    files: [
+      "packages/smarter-common/src/**/*.{ts,tsx}",
+      "packages/smarter-didyouknow/src/**/*.{ts,tsx}",
+      "packages/smarter-onboarding/src/**/*.{ts,tsx}",
+    ],
     rules: {
       "react-refresh/only-export-components": "off",
     },

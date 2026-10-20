@@ -13,6 +13,23 @@ describe("ListView", () => {
     }
   });
 
+  it("marks the Get Weather LLMClient's name for the onboarding hint, and no other", async () => {
+    const weather = { ...makeObject(200), name: "weather" };
+    render(
+      <ListView
+        isLoading={false}
+        sessionContext={sessionContext}
+        objects={[weather, ...ownedObjects]}
+        onRequery={() => {}}
+      />,
+    );
+    expect(await screen.findByRole("link", { name: "weather" })).toHaveAttribute(
+      "data-smarter-onboarding",
+      "llmclient-weather",
+    );
+    expect(screen.getByRole("link", { name: ownedObjects[0].name })).not.toHaveAttribute("data-smarter-onboarding");
+  });
+
   it("shows skeleton rows while loading", () => {
     render(<ListView isLoading sessionContext={sessionContext} objects={[]} onRequery={() => {}} />);
     // the header row, and a skeleton row for each of the ghostRows.

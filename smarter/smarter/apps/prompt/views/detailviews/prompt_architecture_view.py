@@ -5,8 +5,8 @@ The tab is in the Prompt Engineer's Workbench, between "Manifest" and "Server Lo
 SAM resources that the llmclient is built from: the llmclient, the Provider, plugins, MCPClients, Guardrails and
 api key that it uses, and, recursively, what those use, such as Connections and Secrets. Each resource is a
 card with its kind, its name and its owner, which opens the resource's manifest page, where its manifest can
-be edited. Beneath the tree, the tab suggests what an llmclient that has no Guardrail, no tools or no styles
-could add, with links to the web console pages where those resources are browsed. The workbench, the ``@smarter/workbench`` React app, renders the ``@smarter/llmclient-architecture``
+be edited. Beneath the tree, the tab suggests what an llmclient that has no Guardrail, no tools, no styles or
+no api key could add, with links to the web console pages where those resources are browsed. The workbench, the ``@smarter/workbench`` React app, renders the ``@smarter/llmclient-architecture``
 component, whose contract is :mod:`smarter.apps.prompt.views.detailviews.architecture_contract`, and fetches the
 tree from :class:`LLMClientArchitectureView` when the tab is first opened.
 """
@@ -32,6 +32,7 @@ from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.urls import AuthTokenReverseNames
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
 
@@ -45,7 +46,7 @@ class LLMClientArchitectureView(SmarterAuthenticatedNeverCachedWebView):
     llmclient's :meth:`~smarter.lib.manifest.broker.AbstractBroker.dependency_tree`, a
     :class:`~smarter.lib.manifest.models.SAMDependencyTreeNode`, as the signed-in user may see it (a
     resource that the user may not read has only its kind and record locator), whether its chat is styled,
-    and the urls of the web console's Guardrails, Plugins, Extensions and MCPClients pages.
+    and the urls of the web console's Guardrails, Plugins, Extensions, MCPClients and API Keys pages.
 
     The response is never cached, so that the tab shows the llmclient as it is when the workbench is
     reloaded. An llmclient that the user may not read is a 404.
@@ -96,6 +97,7 @@ class LLMClientArchitectureView(SmarterAuthenticatedNeverCachedWebView):
                 plugins_url=reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 extensions_url=reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
                 mcp_clients_url=reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
+                api_keys_url=reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             ),
         )
         logger.debug("%s.get() architecture of %s", self.formatted_class_name, llmclient)
