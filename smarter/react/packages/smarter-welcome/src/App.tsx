@@ -10,10 +10,15 @@
  * whose links leave the page, it tells the welcome dismiss api the box's choice, if the api doesn't
  * know it yet: unticked, the dialog doesn't open by itself again, on any device; either way, not again
  * in this session. Closing it returns the focus to where it was before it opened.
+ *
+ * While the dialog is closed, the app shows the first onboarding hint, a spotlight on the sidebar's LLM
+ * Clients link, until the user has seen it. See SidebarHint.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
+import { useOnboarding } from "@smarter/onboarding";
 
+import SidebarHint from "@/components/SidebarHint";
 import WelcomeDialog from "@/components/WelcomeDialog";
 import { loggerPrefix } from "@/lib/const";
 import type { AppContext, WelcomeApiResponse, WelcomeUrls } from "@/lib/Types";
@@ -37,6 +42,7 @@ function App({ appContext }: { appContext: AppContext }) {
   const recorded = useRef({ closed: !appContext.show, showAtStartup: appContext.showAtStartup });
   // the element that had the focus before the dialog opened, which gets it back when the dialog closes.
   const opener = useRef<HTMLElement | null>(null);
+  const onboarding = useOnboarding(appContext.onboarding);
 
   const openDialog = useCallback(() => {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -88,7 +94,7 @@ function App({ appContext }: { appContext: AppContext }) {
     opener.current = null;
   }, [dismiss]);
 
-  if (!open) return null;
+  if (!open) return <SidebarHint onboarding={onboarding} />;
   return (
     <WelcomeDialog
       firstName={appContext.firstName}

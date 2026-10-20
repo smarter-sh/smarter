@@ -23,6 +23,39 @@ function useWelcomeApis(dismissStatus = 200) {
 }
 
 describe("App", () => {
+  it("spotlights the sidebar's LLM Clients link once the dialog is closed, not while it is open", async () => {
+    const user = userEvent.setup();
+    useWelcomeApis();
+    server.use(http.post("/dashboard/api/onboarding/seen/", () => HttpResponse.json({ seen: [] })));
+    const link = document.createElement("a");
+    link.href = "/workbench/";
+    link.setAttribute("data-smarter-onboarding", "sidebar-llmclients");
+    document.body.append(link);
+    vi.spyOn(link, "getBoundingClientRect").mockReturnValue({
+      top: 200,
+      left: 20,
+      width: 200,
+      height: 40,
+      x: 20,
+      y: 200,
+      right: 220,
+      bottom: 240,
+      toJSON: () => ({}),
+    } as DOMRect);
+    const onboarding = {
+      enabled: true,
+      apiUrl: "/dashboard/api/onboarding/seen/",
+      seen: [],
+      csrfCookieName: "csrftoken",
+      cookieDomain: "localhost",
+    };
+    render(<App appContext={{ ...appContext, onboarding }} />);
+    expect(screen.queryByRole("button", { name: "Got it" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Skip tour" }));
+    expect(await screen.findByRole("dialog", { name: "Start building your AI masterpiece here." })).toBeInTheDocument();
+    link.remove();
+  });
+
   it("opens by itself for a user who hasn't been welcomed, and records it when closed", async () => {
     const user = userEvent.setup();
     const dismissed = useWelcomeApis();

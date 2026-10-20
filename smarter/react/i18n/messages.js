@@ -1314,7 +1314,7 @@ gettext("First");
 gettext("Previous");
 // Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 gettext("Page %(page)s of %(numPages)s");
-// Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+// Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Next");
 // Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 gettext("Last");
@@ -1871,7 +1871,7 @@ gettext("For platform administrators");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
 gettext("This page is meant for configuring a front end before it goes into production. Turn it off before you go live. It is served while the %(switch)s waffle switch is active. Turn the switch off, in the Django admin under Waffle, Switches, or with this command, and a browser's GET of these endpoints is answered 405 Method Not Allowed again. The api is unaffected.");
 // Translators: the button that opens the dialog of links to the documentation.
-// Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/App.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+// Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/App.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Docs");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
 gettext("A browser that opens the LLMClient's url sees this page too, while a platform administrator has turned on the %(switch)s waffle switch. Otherwise, a browser's GET of the url is answered 405 Method Not Allowed, because it is an api. This tab is always here.");
@@ -2077,6 +2077,10 @@ gettext("Rename: Rename this llmclient resource");
 gettext("Delete: You can't delete this llmclient, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this llmclient resource");
+// Translators: used in react/packages/smarter-llmclient-list/src/components/WeatherHint/Component.tsx
+gettext("Start with the weather LLMClient");
+// Translators: used in react/packages/smarter-llmclient-list/src/components/WeatherHint/Component.tsx
+gettext("Click its name to chat with it in the Prompt Engineer's Workbench. Ask it about the weather anywhere in the world, and see how an LLM uses a tool to answer.");
 // Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
 gettext("Your LLMHost Compute");
 // Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
@@ -2511,6 +2515,16 @@ gettext("Rename: Rename this mcpclient resource");
 gettext("Delete: You can't delete this mcpclient, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this mcpclient resource");
+// Translators: used in react/packages/smarter-onboarding/src/components/Spotlight/Component.tsx
+gettext("Got it");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Step %(step)s of %(steps)s");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Skip tour");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Back");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx
+gettext("Done");
 // Translators: used in react/packages/smarter-orchestrator-list/src/App.tsx
 gettext("Your Orchestrators");
 // Translators: used in react/packages/smarter-orchestrator-list/src/App.tsx
@@ -2672,7 +2686,7 @@ gettext("Raw JSON");
 gettext("Response JSON");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 gettext("Reply");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Tool calls");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 gettext("The reply is empty.");
@@ -3044,7 +3058,7 @@ gettext("Full screen (F)");
 gettext("Keyboard shortcuts");
 // Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 gettext("Keyboard shortcuts (?)");
-// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Server logs");
 // Translators: used in react/packages/smarter-serverlogs/src/lib/logStream.ts
 gettext("The log stream disconnected. Reconnecting...");
@@ -3266,6 +3280,8 @@ gettext("See its status message.");
 gettext("Deleting");
 // Translators: used in react/packages/smarter-vectorstore-list/src/lib/format.tsx
 gettext("Its database is being destroyed.");
+// Translators: used in react/packages/smarter-welcome/src/components/SidebarHint/Component.tsx
+gettext("Start building your AI masterpiece here.");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Try the Get Weather LLMClient");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
@@ -3281,8 +3297,6 @@ gettext("Visit the Smarter project");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("The open source project, its source code and its community, at smarter.sh.");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-gettext("Step %(step)s of %(steps)s");
-// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Failed to load the links: %(error)s");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("You can take this tour again at any time from the user menu.");
@@ -3290,10 +3304,6 @@ gettext("You can take this tour again at any time from the user menu.");
 gettext("Go to step %(step)s");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Show at startup");
-// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-gettext("Skip tour");
-// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-gettext("Back");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 gettext("Welcome to Smarter, %(firstName)s!");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
@@ -3411,18 +3421,23 @@ gettext("A few good first stops on your journey:");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
 gettext("Technical references for prompt engineers and software engineers");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
+gettext("Take a guided tour of the workbench");
+// Translators: the button that starts the guided tour of the workbench.
+// Translators: used in react/packages/smarter-workbench/src/App.tsx
+gettext("Tour");
+// Translators: used in react/packages/smarter-workbench/src/App.tsx
 gettext("Hide the Console");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
 gettext("Show the Console");
 // Translators: the tab of the Console about the LLMClient's deployment: its url, and how to use it.
-// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Deployment");
 // Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("Tool Calls");
 // Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("No tool calls in this chat session yet.");
 // Translators: the tab of the Console that displays the chat's configuration.
-// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Config");
 // Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("No config in this chat session yet.");
@@ -3464,6 +3479,48 @@ gettext("Software Engineer");
 gettext("Hosting an LLMClient in your own application.");
 // Translators: used in react/packages/smarter-workbench/src/components/ErrorBoundary/Component.tsx
 gettext("Something went wrong.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Welcome to the Prompt Engineer's Workbench");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("This is where you talk to an LLMClient, and see how it works behind the scenes. An LLMClient is an AI application, such as a chatbot, built on a large language model, an LLM. This short tour shows you around.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The chat");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("On the left is the conversation. It works like the AI chat apps that you may know: you write a message, and the LLMClient answers. Smarter sends your message to the LLM, together with the LLMClient's instructions.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Ask a question");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Type your message here, and press Enter to send it. With the weather LLMClient, try: What's the weather in Vancouver today?");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Sandbox and production modes");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("In sandbox mode, the chat also shows what Smarter does behind the scenes, step by step. Production mode shows only the conversation, as the LLMClient's users would see it. The button beside it starts a new chat.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The Console");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("This button shows and hides the Console, on the right: your window into how the LLMClient works. Drag the bar between the chat and the Console to make either one wider.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The manifest");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Every LLMClient is described by a short text file, its manifest: which LLM it uses, its instructions, which are called its system prompt, and its tools. Change it here and save, and the chat uses your changes right away. No programming needed.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The architecture");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("A diagram of everything that this LLMClient is built from, such as its tools, its secrets and its api key, with suggestions for what to add next.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The messages that the Smarter server writes while it answers your prompts, as they happen. They help when something doesn't work as you expect.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("An LLM can't look up today's weather by itself. Instead, it asks Smarter to run a tool, such as get_weather, and answers from the result. Each tool call of this chat shows up here.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The complete configuration that the chat received from Smarter: everything that the LLMClient is set up with, for reference.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("When your LLMClient is ready, deploy it, to give it its own web address that people and other programs can use. This tab shows how.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Links to the documentation, for when you want to learn more about any of this.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Now try it yourself");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Ask the LLMClient a question, then look at the Console's Tool Calls and Server Logs tabs to see what happened. You can take this tour again at any time with this button.");
 // Translators: used in react/packages/smarter-workbench/src/lib/layout.ts
 gettext("Resize the chat and the Console");
 // Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/sign-in.js

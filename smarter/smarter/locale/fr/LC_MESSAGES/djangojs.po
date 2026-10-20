@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 14:52+0000\n"
+"POT-Creation-Date: 2026-10-20 15:30+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -3058,7 +3058,7 @@ msgstr "Précédent"
 msgid "Page %(page)s of %(numPages)s"
 msgstr "Page %(page)s sur %(numPages)s"
 
-#. Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+#. Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Next"
 msgstr "Suivant"
 
@@ -4769,7 +4769,7 @@ msgstr ""
 "affectée."
 
 #. Translators: the button that opens the dialog of links to the documentation.
-#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/App.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/App.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid "Docs"
 msgstr "Documentation"
 
@@ -5271,6 +5271,20 @@ msgstr ""
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 msgid "Delete: Delete this llmclient resource"
 msgstr "Supprimer : supprimer cette ressource LLMClient"
+
+#. Translators: used in react/packages/smarter-llmclient-list/src/components/WeatherHint/Component.tsx
+msgid "Start with the weather LLMClient"
+msgstr "Commencez par le LLMClient weather"
+
+#. Translators: used in react/packages/smarter-llmclient-list/src/components/WeatherHint/Component.tsx
+msgid ""
+"Click its name to chat with it in the Prompt Engineer's Workbench. Ask it "
+"about the weather anywhere in the world, and see how an LLM uses a tool to "
+"answer."
+msgstr ""
+"Cliquez sur son nom pour discuter avec lui dans l'Atelier de l'ingénieur de "
+"prompts. Demandez-lui la météo n'importe où dans le monde, et voyez comment "
+"un LLM utilise un outil pour répondre."
 
 #. Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
 msgid "Your LLMHost Compute"
@@ -6264,6 +6278,26 @@ msgstr ""
 msgid "Delete: Delete this mcpclient resource"
 msgstr "Supprimer : supprimer cette ressource MCPClient"
 
+#. Translators: used in react/packages/smarter-onboarding/src/components/Spotlight/Component.tsx
+msgid "Got it"
+msgstr "Compris"
+
+#. Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Step %(step)s of %(steps)s"
+msgstr "Étape %(step)s sur %(steps)s"
+
+#. Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Skip tour"
+msgstr "Passer la visite"
+
+#. Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Back"
+msgstr "Retour"
+
+#. Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx
+msgid "Done"
+msgstr "Terminé"
+
 #. Translators: used in react/packages/smarter-orchestrator-list/src/App.tsx
 msgid "Your Orchestrators"
 msgstr "Vos orchestrateurs"
@@ -6611,7 +6645,7 @@ msgstr "JSON de la réponse"
 msgid "Reply"
 msgstr "Réponse du modèle"
 
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid "Tool calls"
 msgstr "Appels d'outils"
 
@@ -7439,7 +7473,7 @@ msgstr "Raccourcis clavier"
 msgid "Keyboard shortcuts (?)"
 msgstr "Raccourcis clavier (?)"
 
-#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+#. Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid "Server logs"
 msgstr "Journaux du serveur"
 
@@ -7978,6 +8012,10 @@ msgstr "Suppression"
 msgid "Its database is being destroyed."
 msgstr "Sa base de données est en cours de destruction."
 
+#. Translators: used in react/packages/smarter-welcome/src/components/SidebarHint/Component.tsx
+msgid "Start building your AI masterpiece here."
+msgstr "Commencez à créer votre chef-d'œuvre d'IA ici."
+
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Try the Get Weather LLMClient"
 msgstr "Essayez le LLMClient Get Weather"
@@ -8013,10 +8051,6 @@ msgstr ""
 "Le projet open source, son code source et sa communauté, sur smarter.sh."
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-msgid "Step %(step)s of %(steps)s"
-msgstr "Étape %(step)s sur %(steps)s"
-
-#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Failed to load the links: %(error)s"
 msgstr "Impossible de charger les liens : %(error)s"
 
@@ -8032,14 +8066,6 @@ msgstr "Aller à l'étape %(step)s"
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Show at startup"
 msgstr "Afficher au démarrage"
-
-#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-msgid "Skip tour"
-msgstr "Passer la visite"
-
-#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-msgid "Back"
-msgstr "Retour"
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 msgid "Welcome to Smarter, %(firstName)s!"
@@ -8401,6 +8427,15 @@ msgstr ""
 "logiciels"
 
 #. Translators: used in react/packages/smarter-workbench/src/App.tsx
+msgid "Take a guided tour of the workbench"
+msgstr "Faites une visite guidée de l'atelier"
+
+#. Translators: the button that starts the guided tour of the workbench.
+#. Translators: used in react/packages/smarter-workbench/src/App.tsx
+msgid "Tour"
+msgstr "Visite"
+
+#. Translators: used in react/packages/smarter-workbench/src/App.tsx
 msgid "Hide the Console"
 msgstr "Masquer la console"
 
@@ -8409,7 +8444,7 @@ msgid "Show the Console"
 msgstr "Afficher la console"
 
 #. Translators: the tab of the Console about the LLMClient's deployment: its url, and how to use it.
-#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid "Deployment"
 msgstr "Déploiement"
 
@@ -8422,7 +8457,7 @@ msgid "No tool calls in this chat session yet."
 msgstr "Aucun appel d'outil dans cette session de chat pour l'instant."
 
 #. Translators: the tab of the Console that displays the chat's configuration.
-#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+#. Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid "Config"
 msgstr "Configuration"
 
@@ -8521,6 +8556,164 @@ msgstr "Héberger un LLMClient dans votre propre application."
 #. Translators: used in react/packages/smarter-workbench/src/components/ErrorBoundary/Component.tsx
 msgid "Something went wrong."
 msgstr "Une erreur s'est produite."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "Welcome to the Prompt Engineer's Workbench"
+msgstr "Bienvenue dans l'Atelier de l'ingénieur de prompts"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"This is where you talk to an LLMClient, and see how it works behind the "
+"scenes. An LLMClient is an AI application, such as a chatbot, built on a "
+"large language model, an LLM. This short tour shows you around."
+msgstr ""
+"C'est ici que vous parlez à un LLMClient, et que vous voyez comment il "
+"fonctionne en coulisses. Un LLMClient est une application d'IA, comme un "
+"chatbot, construite sur un grand modèle de langage, un LLM. Cette courte "
+"visite vous fait faire le tour."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "The chat"
+msgstr "Le chat"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"On the left is the conversation. It works like the AI chat apps that you may "
+"know: you write a message, and the LLMClient answers. Smarter sends your "
+"message to the LLM, together with the LLMClient's instructions."
+msgstr ""
+"À gauche se trouve la conversation. Elle fonctionne comme les applications "
+"de chat d'IA que vous connaissez peut-être : vous écrivez un message, et le "
+"LLMClient répond. Smarter envoie votre message au LLM, avec les instructions "
+"du LLMClient."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "Ask a question"
+msgstr "Posez une question"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"Type your message here, and press Enter to send it. With the weather "
+"LLMClient, try: What's the weather in Vancouver today?"
+msgstr ""
+"Tapez votre message ici, et appuyez sur Entrée pour l'envoyer. Avec le "
+"LLMClient weather, essayez : Quel temps fait-il à Vancouver aujourd'hui ?"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "Sandbox and production modes"
+msgstr "Modes sandbox et production"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"In sandbox mode, the chat also shows what Smarter does behind the scenes, "
+"step by step. Production mode shows only the conversation, as the "
+"LLMClient's users would see it. The button beside it starts a new chat."
+msgstr ""
+"En mode sandbox, le chat montre aussi ce que Smarter fait en coulisses, "
+"étape par étape. Le mode production ne montre que la conversation, telle que "
+"les utilisateurs du LLMClient la verraient. Le bouton d'à côté démarre un "
+"nouveau chat."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "The Console"
+msgstr "La console"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"This button shows and hides the Console, on the right: your window into how "
+"the LLMClient works. Drag the bar between the chat and the Console to make "
+"either one wider."
+msgstr ""
+"Ce bouton affiche et masque la console, à droite : votre fenêtre sur le "
+"fonctionnement du LLMClient. Faites glisser la barre entre le chat et la "
+"console pour élargir l'un ou l'autre."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "The manifest"
+msgstr "Le manifeste"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"Every LLMClient is described by a short text file, its manifest: which LLM "
+"it uses, its instructions, which are called its system prompt, and its "
+"tools. Change it here and save, and the chat uses your changes right away. "
+"No programming needed."
+msgstr ""
+"Chaque LLMClient est décrit par un court fichier texte, son manifeste : le "
+"LLM qu'il utilise, ses instructions, qu'on appelle son prompt système, et "
+"ses outils. Modifiez-le ici et enregistrez, et le chat utilise vos "
+"changements aussitôt. Aucune programmation nécessaire."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "The architecture"
+msgstr "L'architecture"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"A diagram of everything that this LLMClient is built from, such as its "
+"tools, its secrets and its api key, with suggestions for what to add next."
+msgstr ""
+"Un schéma de tout ce dont ce LLMClient est fait, comme ses outils, ses "
+"secrets et sa clé d'api, avec des suggestions de ce qu'il faut ajouter "
+"ensuite."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"The messages that the Smarter server writes while it answers your prompts, "
+"as they happen. They help when something doesn't work as you expect."
+msgstr ""
+"Les messages que le serveur Smarter écrit pendant qu'il répond à vos "
+"prompts, au fur et à mesure. Ils aident quand quelque chose ne fonctionne "
+"pas comme prévu."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"An LLM can't look up today's weather by itself. Instead, it asks Smarter to "
+"run a tool, such as get_weather, and answers from the result. Each tool call "
+"of this chat shows up here."
+msgstr ""
+"Un LLM ne peut pas consulter la météo du jour tout seul. Il demande plutôt à "
+"Smarter d'exécuter un outil, comme get_weather, et répond à partir du "
+"résultat. Chaque appel d'outil de ce chat apparaît ici."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"The complete configuration that the chat received from Smarter: everything "
+"that the LLMClient is set up with, for reference."
+msgstr ""
+"La configuration complète que le chat a reçue de Smarter : tout ce avec quoi "
+"le LLMClient est configuré, pour référence."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"When your LLMClient is ready, deploy it, to give it its own web address that "
+"people and other programs can use. This tab shows how."
+msgstr ""
+"Quand votre LLMClient est prêt, déployez-le, pour lui donner sa propre "
+"adresse web, que les gens et d'autres programmes peuvent utiliser. Cet "
+"onglet montre comment."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"Links to the documentation, for when you want to learn more about any of "
+"this."
+msgstr ""
+"Des liens vers la documentation, pour quand vous voulez en savoir plus sur "
+"tout cela."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid "Now try it yourself"
+msgstr "À vous d'essayer"
+
+#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+msgid ""
+"Ask the LLMClient a question, then look at the Console's Tool Calls and "
+"Server Logs tabs to see what happened. You can take this tour again at any "
+"time with this button."
+msgstr ""
+"Posez une question au LLMClient, puis regardez les onglets Appels d'outils "
+"et Journaux du serveur de la console pour voir ce qui s'est passé. Vous "
+"pouvez refaire cette visite à tout moment avec ce bouton."
 
 #. Translators: used in react/packages/smarter-workbench/src/lib/layout.ts
 msgid "Resize the chat and the Console"

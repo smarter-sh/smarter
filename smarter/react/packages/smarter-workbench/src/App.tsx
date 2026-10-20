@@ -11,21 +11,50 @@
  *
  * The chat fetches the configuration's diagnostic parts (verbose) only while the Console displays them: in its Tool
  * Calls and Config tabs. When the Manifest tab's editor saves the manifest, the chat reloads the configuration.
+ *
+ * A guided tour, for new users, explains each part of the workbench. It starts by itself, once the chat is ready
+ * and the welcome dialog is closed, until the user has finished or skipped it once, and again whenever they click
+ * the Tour button in the chat's header. It opens the Console first, so that it can point to the Console's tabs.
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { gettext } from "@smarter/common";
 import { HeaderButton, SmarterChat, type ChatConfig } from "@smarter.sh/ui-chat";
+import {
+  OnboardingHints,
+  Tour,
+  useOnboarding,
+  waitForTarget,
+  waitUntil,
+  type OnboardingContext,
+  type TourOutcome,
+} from "@smarter/onboarding";
 import { DEBUG_LOG_LEVEL } from "@smarter/serverlogs";
 
 import Console from "@/components/Console";
 import { initialMenuItem, VERBOSE_MENU_ITEMS, type MenuItem } from "@/components/Console/enums";
 import DocsDialog from "@/components/DocsDialog";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { ConsoleIcon, DocsIcon } from "@/components/icons";
+import { ConsoleIcon, DocsIcon, TourIcon } from "@/components/icons";
+import { workbenchTourSteps } from "@/components/WorkbenchTour/steps";
 import { useChatWidth, useConsoleVisible } from "@/lib/layout";
 import type { WorkbenchConfig } from "@/lib/types";
 
-export default function App({ workbench }: { workbench: WorkbenchConfig }) {
+/** The chat's message input, once the chat is ready for a message. */
+const CHAT_READY = ".cs-message-input:not(.cs-message-input--disabled)";
+
+/** The welcome dialog, which the tour waits for the user to close. See @smarter/welcome. */
+const WELCOME_DIALOG = ".smarter-welcome-backdrop";
+
+interface AppProps {
+  workbench: WorkbenchConfig;
+  /**
+   * The page's onboarding state, for the guided tour. By default, the one that templates/react/onboarding.html
+   * writes into the page. Tests and stories pass their own.
+   */
+  onboarding?: OnboardingContext | null;
+}
+
+export default function App({ workbench, onboarding }: AppProps) {
   const [config, setConfig] = useState<ChatConfig | null>(null);
   // the chat starts in sandbox mode when it has the mode toggle. onModeChange tells the workbench when it changes.
   const [sandbox, setSandbox] = useState(workbench.toggleMetadata);
@@ -38,6 +67,35 @@ export default function App({ workbench }: { workbench: WorkbenchConfig }) {
   const [consoleTab, setConsoleTab] = useState<MenuItem>(() => initialMenuItem(workbench.logStreamUrl));
   const containerRef = useRef<HTMLDivElement>(null);
   const { chatWidth, separatorProps } = useChatWidth(containerRef);
+  const { shouldShow, record } = useOnboarding(onboarding);
+  const [tourOpen, setTourOpen] = useState(false);
+
+  // the Console opens first, and the tour on the next frame, once its tabs are on screen.
+  const startTour = useCallback(() => {
+    setConsoleVisible(true);
+    window.requestAnimationFrame(() => setTourOpen(true));
+  }, [setConsoleVisible]);
+
+  const finishTour = useCallback(
+    (outcome: TourOutcome) => {
+      setTourOpen(false);
+      record(OnboardingHints.WORKBENCH_TOUR, outcome);
+    },
+    [record],
+  );
+
+  const autoStartTour = shouldShow(OnboardingHints.WORKBENCH_TOUR);
+  useEffect(() => {
+    if (!autoStartTour) return;
+    const controller = new AbortController();
+    const { signal } = controller;
+    waitForTarget(CHAT_READY, { signal, timeout: 60000 })
+      .then((ready) => (ready ? waitUntil(() => !document.querySelector(WELCOME_DIALOG), { signal }) : null))
+      .then((welcomeClosed) => {
+        if (welcomeClosed) startTour();
+      });
+    return () => controller.abort();
+  }, [autoStartTour, startTour]);
 
   // production mode, switched to with the chat's mode toggle, hides the Console and its button. The browser's
   // remembered visibility is kept, and restored on switching back to sandbox mode.
@@ -52,6 +110,7 @@ export default function App({ workbench }: { workbench: WorkbenchConfig }) {
     <>
       {sandbox && (
         <HeaderButton
+          className="smarter-workbench-docs-button"
           icon={<DocsIcon />}
           onClick={() => setDocsOpen(true)}
           title={gettext("Technical references for prompt engineers and software engineers")}
@@ -59,6 +118,18 @@ export default function App({ workbench }: { workbench: WorkbenchConfig }) {
         >
           {/* Translators: the button that opens the dialog of links to the documentation. */}
           {gettext("Docs")}
+        </HeaderButton>
+      )}
+      {!isProduction && (
+        <HeaderButton
+          className="smarter-workbench-tour-button"
+          icon={<TourIcon />}
+          onClick={startTour}
+          title={gettext("Take a guided tour of the workbench")}
+          aria-haspopup="dialog"
+        >
+          {/* Translators: the button that starts the guided tour of the workbench. */}
+          {gettext("Tour")}
         </HeaderButton>
       )}
       {!isProduction && (
@@ -116,6 +187,7 @@ export default function App({ workbench }: { workbench: WorkbenchConfig }) {
         </ErrorBoundary>
       </div>
       {docsOpen && <DocsDialog onClose={() => setDocsOpen(false)} />}
+      {tourOpen && <Tour steps={workbenchTourSteps()} onFinish={finishTour} />}
     </div>
   );
 }

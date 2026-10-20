@@ -149,6 +149,9 @@ class SmarterWaffleSwitches:
     ENABLE_WEB_CONSOLE_DID_YOU_KNOW = "enable_web_console_did_you_know"
     """Enables the Did you know? note, a fact of the day about The Smarter Project, below the web console's title."""
 
+    ENABLE_WEB_CONSOLE_ONBOARDING_HINTS = "enable_web_console_onboarding_hints"
+    """Enables the onboarding hints, which point a new user from the sidebar to the Get Weather LLMClient, and the workbench's guided tour."""
+
     ENABLE_WEB_CONSOLE_SERVER_LOGS = "enable_web_console_server_logs"
     """Enables SmarterRequestLogContextMiddleware, which adds request-specific context to log records for enhanced logging capabilities."""
 
@@ -388,6 +391,14 @@ class SmarterWaffleSwitches:
         ENABLE_WEB_CONSOLE_DID_YOU_KNOW: SmarterWaffleSwitch(
             name=ENABLE_WEB_CONSOLE_DID_YOU_KNOW,
             comment="Enables the Did you know? note, a fact of the day about The Smarter Project, below the web console's title.",
+            default=True,
+        ),
+        ENABLE_WEB_CONSOLE_ONBOARDING_HINTS: SmarterWaffleSwitch(
+            name=ENABLE_WEB_CONSOLE_ONBOARDING_HINTS,
+            comment=(
+                "Enables the onboarding hints, which point a new user from the sidebar to the Get Weather "
+                "LLMClient, and the workbench's guided tour."
+            ),
             default=True,
         ),
         ENABLE_WEB_CONSOLE_SERVER_LOGS: SmarterWaffleSwitch(

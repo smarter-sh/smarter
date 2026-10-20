@@ -3,6 +3,7 @@
  * welcome api returns. See smarter.apps.dashboard.views.views.api.welcome.
  */
 import type { SessionContext } from "@smarter/common";
+import type { OnboardingContext } from "@smarter/onboarding";
 
 /** The links that the dialog's last step offers. See WelcomeUrls in the welcome api. */
 export interface WelcomeUrls {
@@ -40,4 +41,9 @@ export interface AppContext {
   logoUrl: string;
   /** The folder of the Keen dozzy-1 illustrations, ending in a slash. */
   illustrationsUrl: string;
+  /**
+   * The page's onboarding state. By default, the one that templates/react/onboarding.html writes into the
+   * page. Tests and stories pass their own.
+   */
+  onboarding?: OnboardingContext | null;
 }

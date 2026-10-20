@@ -37,6 +37,10 @@ next sign in. The user can take the tour again at any time from **Welcome Tour**
 in the user menu, and tick or untick the box there: any element with the
 ``data-smarter-welcome-open`` attribute opens it.
 
+While the dialog is closed, the app shows the first of the
+:doc:`onboarding hints <onboarding>`: a sparkling spotlight on the sidebar's
+**LLM Clients** link, with the note "Start building your AI masterpiece here."
+
 Unlike the other React components, which each have their own page,
 ``@smarter/welcome`` is mounted on every web console page:
 ``templates/dashboard/base.html`` includes ``templates/react/welcome.html`` for
