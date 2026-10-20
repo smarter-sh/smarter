@@ -18,7 +18,7 @@ gettext("Manifest URL");
 gettext("Owner");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx
 gettext("Owner Email");
-// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+// Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Account Number");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
 gettext("Created");
@@ -180,7 +180,7 @@ ngettext("%(count)s token", "%(count)s tokens", 1);
 gettext("Week of %(date)s");
 // Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx
 gettext("Failed to load the budget series (%(status)s).");
-// Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+// Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Loading…");
 // Translators: used in react/packages/smarter-common/src/components/Loading/Component.tsx
 gettext("Loading");
@@ -224,7 +224,7 @@ gettext("Failed to load objects (%(status)s)");
 gettext("Invalid response payload: expected objects array.");
 // Translators: used in react/packages/smarter-common/src/lib/load.tsx
 gettext("Unable to load objects.");
-// Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+// Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
 gettext("Close");
 // Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
 gettext("OK");
@@ -624,7 +624,7 @@ gettext("Secrets");
 gettext("VectorStores");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx
 gettext("LLMHosts");
-// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, react/packages/smarter-dashboard-user-menu/src/lib/api.ts, react/packages/smarter-welcome/src/App.tsx
 gettext("Request failed: %(status)s");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
 gettext("Unknown error");
@@ -848,6 +848,198 @@ gettext("Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinec
 gettext("What's New");
 // Translators: used in react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx
 gettext("Recently added Smarter features");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+gettext("Change Profile");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+gettext("You belong to more than one account. Choose the one that the console acts as, for this session.");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+gettext("Account Name");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+gettext("Profile Created");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+gettext("Switch");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+gettext("Current");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+gettext("Switch to %(account)s");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
+gettext("Switching…");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/LanguageMenu/Component.tsx
+gettext("Language");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+gettext("Profile Image");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
+gettext("Change Profile Image");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+gettext("Superuser");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+gettext("Staff");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+gettext("Account");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
+gettext("Remove Profile Image");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+gettext("Sign In");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+gettext("Welcome Tour");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+gettext("Sign Out");
+// Translators: used in react/packages/smarter-dashboard-user-menu/src/lib/api.ts
+gettext("The profile image could not be saved.");
+// Translators: used in react/packages/smarter-didyouknow/src/components/DidYouKnow/Component.tsx
+gettext("Did you know?");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Smarter Project is coded in part using Agentic AI techniques that you can learn about by following this project on GitHub.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Follow Smarter on GitHub");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Smarter Project has around 500,000 lines of code, across two dozen repositories.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the repositories");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The main Smarter repository alone has about 400,000 lines of code, including about 180,000 lines of Python and 45,000 of TypeScript.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the repository");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter is written in Python, with Django and Django REST Framework, and its web console is written in React.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about its technologies");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("In October 2026, Claude Code wrote Smarter's source code at almost 30 times the long-run pace of its author, a senior developer.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the story");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("More than 95% of Smarter's code is covered by its automated tests.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read how it got there");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter is a Docker application that runs on Debian Linux, so it can run anywhere, from your own laptop to any data center in the world.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read why Smarter uses Docker");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("You can install Smarter on your own laptop in around 20 minutes.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Get started");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter closely follows the 12-Factor App methodology, a set of principles for building software that runs in the cloud.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the 12-Factor App decision");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's web console users can watch the real server logs of their own prompts, live, as the server writes them.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the live server logs");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's major design decisions, from Django and Kubernetes to Pydantic, are written down as Architecture Decision Records in its documentation.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the Architecture Decision Records");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Every Smarter platform runs an MCP server that answers questions about The Smarter Project from its own source code and documentation.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the MCP server");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter has SDKs for Python, Node.js and Go, a command-line interface written in Go, and a VS Code extension for its YAML manifests.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("See the APIs and SDKs");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Smarter Project was inspired by the Kubernetes Project, which is open source software for declarative cloud infrastructure management.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about manifests");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's manifests are programmed with Pydantic, the popular open source Python data validation library on PyPI.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read why Smarter uses Pydantic");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's repository has Agent Skills: instructions that teach AI coding agents its conventions, from its tests to its translations.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the skills");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter was first used in a classroom in January 2026, by AI students at the University of British Columbia.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the Instructor Guide");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter has a Free Course Catalog of ready-to-teach courses, from prompt engineering for non-programmers to Kubernetes for platform engineers.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The chat in the Prompt Engineer's Workbench is its own open source npm package, @smarter.sh/ui-chat, which you can embed in any website.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("See it on npm");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Claude Code translated Smarter's web console into Spanish, French and Brazilian Portuguese in a single day, October 16, 2026.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the translations");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's ImageSearchPlugin was written by Claude Code during a live, in-class demonstration for AI students at the University of British Columbia. It went into production the following day.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the ImageSearchPlugin");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The web console speaks English, Spanish, French and Brazilian Portuguese. You can choose a language from the user menu.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter Chat has a WordPress plugin, a Drupal module and a Shopify app block, which put a deployed LLMClient on your site.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about Smarter Chat");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's manifests can be edited not only in the web console, but also in code editors such as VS Code.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the VS Code extension");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's VS Code extension checks your YAML manifests as you type, completes their keys and values, and fixes common mistakes.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's command-line interface works much like kubectl and runs on Windows, macOS and Linux. Like the aws cli, you set it up with one command: smarter configure.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the command-line interface");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("On a Mac, you can install the smarter command-line interface with Homebrew.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Every Smarter platform publishes an OpenAPI document of its REST API, which SDKs and AI agents can read.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the OpenAPI document");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's server log messages are designed to help AI agents diagnose run-time errors: each one starts with the dotted path of the code that wrote it, so it reads like a stack trace.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the logging style guide");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter has more than 50 Waffle switches that turn optional features and logging on and off, including whether these Did you know? notes appear.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the Waffle switches");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's authors invented their own object caching system, the @cache_results() decorator, which builds each cache key from the arguments of the function that it caches.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about @cache_results()");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's authors created their own Django base model, MetaDataWithOwnershipModel, which gives each AI resource its name, description, version, tags and owner.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read its source code");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's version numbers and changelogs are generated from its commit messages, by semantic-release.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("See the releases");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's authors designed their own Django-React integration: Vite builds each page's React app, and a Django template tag mounts it.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the React integration");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Most pages of this web console are small React apps that Django hosts, and every one of their Storybook stories also runs as a unit test.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter is an open source project, and anyone can contribute to it, including you.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read how to contribute");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Get Weather LLMClient's tool is a Smarter Extension written in Python. Beginning Python programmers can write extensions too.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the extension developer guide");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter Extensions, such as weather, calculator and date-calculator, are published in a public registry on GitHub.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the extensions registry");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's Python docstrings are published, by Sphinx, as the technical reference of its documentation.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Read the documentation");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The first drafts of the Sphinx docstrings of Smarter's Python modules, classes and functions were written with GitHub Copilot.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Agentic AI wrote more than 70% of Smarter's unit tests.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's first commit was made in February 2023.");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("The publisher's trust badge");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/secrets.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
@@ -1160,7 +1352,7 @@ gettext("First");
 gettext("Previous");
 // Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 gettext("Page %(page)s of %(numPages)s");
-// Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
+// Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Next");
 // Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 gettext("Last");
@@ -1215,7 +1407,7 @@ gettext("Next steps");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("Make this LLMClient your own");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
-gettext("Most LLMClients have Guardrails, tools and a look of their own. This one is missing some of them. Each takes a few lines of YAML: copy an example below into the manifest, and save it.");
+gettext("Most LLMClients have Guardrails, tools, a look of their own and an api key. This one is missing some of them. Each takes a few lines of YAML: copy an example below into the manifest, and save it.");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("Add your first Guardrail");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
@@ -1278,6 +1470,22 @@ gettext("Styling your LLMClient's chat");
 gettext("The chat's styles");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("Smarter's logo, the Inter font, a dark header, and the user's messages in orange. Swap in your own logo's url and colors.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Add an api key");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Without an api key, this LLMClient is public once it is deployed: anyone who has its url can chat with it, and every prompt is charged to its owner. Attach an api key, and its url requires it: each request must send the key in an %(header)s header, and Smarter refuses those that don't. The workbench doesn't need the key, because you are signed in.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("The quickest way is this workbench's Deployment tab, which creates an api key, shows its secret once, and attaches it, in one step. To attach a key that you already have, name it in the manifest. An LLMClient has one api key, and only an account admin can create one.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Paste it at the start of a new line beneath %(spec)s. If the manifest already has an %(apiKey)s line, replace that line.");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Browse your api keys");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
+gettext("API Keys");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("The LLMClient's api key");
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
+gettext("Change %(name)s to the name of one of your own api keys, as the API Keys page lists them.");
 // Translators: the tab of the Console that draws the tree of resources that the LLMClient is built from.
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("Architecture");
@@ -1300,7 +1508,7 @@ gettext("The web console");
 gettext("Every manifest can be edited directly in the web console. Click a card to open its resource's manifest in a new tab, change it, and save it: Smarter applies it at once.");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
 gettext("An LLMClient is a tree");
-// Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+// Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 gettext("LLMClients");
 // Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
 gettext("Dependency trees");
@@ -1400,8 +1608,6 @@ gettext("Only the LLMClient's owner, or an account admin, can change its api key
 gettext("Create an api key");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 gettext("The key is yours. Its secret is shown once, right after you create it. The web console's API Keys page lists your keys, and turns a key off without deleting it.");
-// Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-gettext("API Keys");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 gettext("Only an account admin can create api keys. Ask one to create a key for you, then attach it here, or ask them to run:");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/ChatSessions.tsx
@@ -1702,8 +1908,7 @@ gettext("The Python SDK. Node.js and Go SDKs too.");
 gettext("For platform administrators");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
 gettext("This page is meant for configuring a front end before it goes into production. Turn it off before you go live. It is served while the %(switch)s waffle switch is active. Turn the switch off, in the Django admin under Waffle, Switches, or with this command, and a browser's GET of these endpoints is answered 405 Method Not Allowed again. The api is unaffected.");
-// Translators: the button that opens the dialog of links to the documentation.
-// Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/App.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+// Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
 gettext("Docs");
 // Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx
 gettext("A browser that opens the LLMClient's url sees this page too, while a platform administrator has turned on the %(switch)s waffle switch. Otherwise, a browser's GET of the url is answered 405 Method Not Allowed, because it is an api. This tab is always here.");
@@ -1909,6 +2114,10 @@ gettext("Rename: Rename this llmclient resource");
 gettext("Delete: You can't delete this llmclient, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this llmclient resource");
+// Translators: used in react/packages/smarter-llmclient-list/src/components/WeatherHint/Component.tsx
+gettext("Start with the weather LLMClient");
+// Translators: used in react/packages/smarter-llmclient-list/src/components/WeatherHint/Component.tsx
+gettext("Click its name to chat with it in the Prompt Engineer's Workbench. Ask it about the weather anywhere in the world, and see how an LLM uses a tool to answer.");
 // Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
 gettext("Your LLMHost Compute");
 // Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
@@ -2343,6 +2552,16 @@ gettext("Rename: Rename this mcpclient resource");
 gettext("Delete: You can't delete this mcpclient, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this mcpclient resource");
+// Translators: used in react/packages/smarter-onboarding/src/components/Spotlight/Component.tsx
+gettext("Got it");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Step %(step)s of %(steps)s");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Skip tour");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Back");
+// Translators: used in react/packages/smarter-onboarding/src/components/Tour/Component.tsx
+gettext("Done");
 // Translators: used in react/packages/smarter-orchestrator-list/src/App.tsx
 gettext("Your Orchestrators");
 // Translators: used in react/packages/smarter-orchestrator-list/src/App.tsx
@@ -2431,8 +2650,6 @@ gettext("API key secret");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("Ownership");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
-gettext("Account");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("Ownership requested");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("Terms of service");
@@ -2504,7 +2721,7 @@ gettext("Raw JSON");
 gettext("Response JSON");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 gettext("Reply");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Tool calls");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 gettext("The reply is empty.");
@@ -2876,7 +3093,7 @@ gettext("Full screen (F)");
 gettext("Keyboard shortcuts");
 // Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
 gettext("Keyboard shortcuts (?)");
-// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx
+// Translators: used in react/packages/smarter-serverlogs/src/components/ServerLogs.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Server logs");
 // Translators: used in react/packages/smarter-serverlogs/src/lib/logStream.ts
 gettext("The log stream disconnected. Reconnecting...");
@@ -2994,7 +3211,7 @@ gettext("Delete: Delete this vectorsearch resource");
 gettext("Your Vectorstores");
 // Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx
 gettext("Shared Vectorstores");
-// Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx
+// Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 gettext("Vectorstores");
 // Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx
 gettext("A Vectorstore is a vector database for retrieval-augmented generation (RAG): documents, such as PDFs, are split into chunks, embedded, and loaded into it, and searched by meaning. Smarter runs Qdrant on its own Kubernetes cluster, or connects to Pinecone or Qdrant Cloud. It creates and destroys the database, loads and removes documents, and takes scheduled snapshots. Create one with a Vectorstore manifest.");
@@ -3098,21 +3315,157 @@ gettext("See its status message.");
 gettext("Deleting");
 // Translators: used in react/packages/smarter-vectorstore-list/src/lib/format.tsx
 gettext("Its database is being destroyed.");
-// Translators: used in react/packages/smarter-workbench/src/App.tsx
-gettext("Technical references for prompt engineers and software engineers");
+// Translators: used in react/packages/smarter-welcome/src/components/SidebarHint/Component.tsx
+gettext("Start building your AI masterpiece here.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Try the Get Weather LLMClient");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Chat with an example that calls a tool to look up the weather.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Explore your LLMClients");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Chatbots, agents and harnesses, ready to run and customize.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Guides, manifests, the command-line interface and the API, at docs.smarter.sh.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Visit the Smarter project");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("The open source project, its source code and its community, at smarter.sh.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Failed to load the links: %(error)s");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("You can take this tour again at any time from the user menu.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Go to step %(step)s");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Show at startup");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Welcome to Smarter, %(firstName)s!");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Welcome to Smarter!");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Smarter is a platform for designing and running the kinds of sophisticated AI solutions that large organizations require. It is made for non-programmers.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Free and open source");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Licensed under the GNU AGPL v3. Download it, read its source code, and run it on your laptop.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Made for learning");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("A hands-on place to learn how real AI solutions are designed and built.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("No code required");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Every resource is a short YAML manifest that you can read, copy and change.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Your account is ready to explore");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Your new account is preloaded with dozens of AI resources and solutions. Open any of them to see how it works, then customize it and make it your own.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Chatbots, agents and harnesses, each with its own LLM, system prompt and tools.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("LLM Tools");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Tool calling that connects an LLM to SQL databases, REST APIs, web search and more.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Guardrails, secrets, API keys and budgets");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("The controls that organizations need to run AI safely and affordably, such as API keys that secure your LLMClients.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Get hands-on with the real thing");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Smarter supports popular generative AI technologies, vendors, protocols and best practices. It's a good place to try them out and learn how they work.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Thousands of LLMs from nine providers");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Anthropic, Cohere, Fireworks AI, Google AI, Hugging Face, Meta AI, Mistral, OpenAI and Together AI, side by side.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("MCP, Agent Skills and tool calling");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Connect LLMs to tools and data with the protocols that the industry uses.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Real prompts, real costs");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Every prompt is a real, billable request to an LLM provider. Experiment freely, but please don't run automated loads.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Connect MCP Servers");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("MCP Servers give your LLMClients the tools of other services, through the Model Context Protocol. Connect one, and its tools are ready for your LLMClients to use, with no code to write.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Dozens ready to connect");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("GitHub, Hugging Face, Notion, Linear, Sentry, Stripe and many more.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Your credentials stay secret");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("A server's access token is kept in an encrypted Smarter Secret, and you choose which of its tools the LLM may call.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Governed like everything else");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Every tool call is logged and charged, and is subject to the same access controls as your other resources.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Answer from your own documents");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Retrieval-augmented generation (RAG) lets an LLM answer from your own material, such as manuals, policies and support articles, rather than from its training data alone.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Vector databases, Qdrant or Pinecone, that Smarter creates and manages for you. Add PDFs, text, web pages and more, and Smarter splits, embeds and loads them.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Search by meaning");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("A question finds the passages that are closest to it in meaning, not just those that share its words, and the LLM answers from them.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Real databases, real costs");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("A Vectorstore runs on real cloud infrastructure, which costs real money for as long as it exists, whether or not anyone searches it.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Host open models yourself");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("LLMHosts run open-weight models on your own GPU servers, rather than calling a provider's API. Your LLMClients use them just as they use a commercial model.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Models from Hugging Face");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Choose a model and a revision, and Smarter deploys it on Kubernetes with an inference engine such as vLLM.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("You choose the hardware");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Pick the kind of GPU node that the model runs on, and how much of it each replica gets.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Real servers, real costs");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("An LLMHost runs on real cloud infrastructure, which costs real money for as long as it runs, whether or not anyone sends it a prompt.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Built for production, at scale");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Smarter runs AI solutions in production on Kubernetes, the same cloud orchestration technology behind global platforms such as Netflix, YouTube and TikTok.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("State-of-the-art orchestration");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Kubernetes grew out of Borg, the system that runs Google's services, YouTube among them. Netflix and ByteDance, TikTok's parent, run their platforms on it too.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Grows with demand");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Smarter's web servers and workers run as several copies, Kubernetes replaces any that fail, and the cluster adds servers when they need more room.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Every LLMClient at its own url");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Deploying an LLMClient gives it its own host name, with a TLS certificate that the cluster issues and renews by itself.");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("Where to start");
+// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+gettext("A few good first stops on your journey:");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
 gettext("Hide the Console");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
 gettext("Show the Console");
 // Translators: the tab of the Console about the LLMClient's deployment: its url, and how to use it.
-// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Deployment");
 // Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("Tool Calls");
 // Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("No tool calls in this chat session yet.");
 // Translators: the tab of the Console that displays the chat's configuration.
-// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
+// Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 gettext("Config");
 // Translators: used in react/packages/smarter-workbench/src/components/Console/Component.tsx
 gettext("No config in this chat session yet.");
@@ -3154,6 +3507,57 @@ gettext("Software Engineer");
 gettext("Hosting an LLMClient in your own application.");
 // Translators: used in react/packages/smarter-workbench/src/components/ErrorBoundary/Component.tsx
 gettext("Something went wrong.");
+// Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+gettext("The documentation, and a guided tour of the workbench");
+// Translators: the button that opens the workbench's Help menu.
+// Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+gettext("Help");
+// Translators: the Help menu's item that opens the dialog of links to the documentation.
+// Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+gettext("Technical references");
+// Translators: the Help menu's item that starts the guided tour of the workbench.
+// Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+gettext("Take the guided tour");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Welcome to the Prompt Engineer's Workbench");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("This is where you talk to an LLMClient, and see how it works behind the scenes. An LLMClient is an AI application, such as a chatbot, built on a large language model, an LLM. This short tour shows you around.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The chat");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("On the left is the conversation. It works like the AI chat apps that you may know: you write a message, and the LLMClient answers. Smarter sends your message to the LLM, together with the LLMClient's instructions.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Ask a question");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Type your message here, and press Enter to send it. With the weather LLMClient, try: What's the weather in Vancouver today?");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Sandbox and production modes");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("In sandbox mode, the chat also shows what Smarter does behind the scenes, step by step. Production mode shows only the conversation, as the LLMClient's users would see it. The button beside it starts a new chat.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The Console");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("This button shows and hides the Console, on the right: your window into how the LLMClient works. Drag the bar between the chat and the Console to make either one wider.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The manifest");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Every LLMClient is described by a short text file, its manifest: which LLM it uses, its instructions, which are called its system prompt, and its tools. Change it here and save, and the chat uses your changes right away. No programming needed.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The architecture");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("A diagram of everything that this LLMClient is built from, such as its tools, its secrets and its api key, with suggestions for what to add next.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The messages that the Smarter server writes while it answers your prompts, as they happen. They help when something doesn't work as you expect.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("An LLM can't look up today's weather by itself. Instead, it asks Smarter to run a tool, such as get_weather, and answers from the result. Each tool call of this chat shows up here.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("The complete configuration that the chat received from Smarter: everything that the LLMClient is set up with, for reference.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("When your LLMClient is ready, deploy it, to give it its own web address that people and other programs can use. This tab shows how.");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Now try it yourself");
+// Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+gettext("Ask the LLMClient a question, then look at the Console's Tool Calls and Server Logs tabs to see what happened. The Help menu has links to the documentation, and takes you on this tour again at any time.");
 // Translators: used in react/packages/smarter-workbench/src/lib/layout.ts
 gettext("Resize the chat and the Console");
 // Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/sign-in.js

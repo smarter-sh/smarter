@@ -5,9 +5,11 @@ import random
 import uuid
 from datetime import datetime
 from http import HTTPStatus
+from warnings import deprecated
 
 from django import forms, http
 
+from smarter.apps.account.views.dashboard import ACCOUNT_UI_DEPRECATION_MESSAGE
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -58,6 +60,7 @@ class PaymentMethodForm(forms.Form):
     card_cvc = forms.IntegerField()
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class PaymentMethodsView(SmarterAdminWebView):
     """View for the account billing payment methods listview."""
 
@@ -70,6 +73,7 @@ class PaymentMethodsView(SmarterAdminWebView):
         return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK.value)
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class PaymentMethodView(SmarterAdminWebView):
     """View for the account billing detail payment method."""
 

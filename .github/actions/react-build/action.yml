@@ -69,6 +69,8 @@ runs:
         path: |
           smarter/smarter/static/react
           smarter/react/packages/smarter-common/dist
+          smarter/react/packages/smarter-didyouknow/dist
+          smarter/react/packages/smarter-onboarding/dist
         key: react-build-${{ runner.os }}-${{ steps.react-src.outputs.tree }}
 
     - name: Install Node
@@ -121,4 +123,6 @@ runs:
         path: |
           smarter/smarter/static/react
           smarter/react/packages/smarter-common/dist
+          smarter/react/packages/smarter-didyouknow/dist
+          smarter/react/packages/smarter-onboarding/dist
         key: ${{ steps.react-build.outputs.cache-primary-key }}

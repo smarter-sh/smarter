@@ -7,7 +7,8 @@ table, quote, separator) plus the SyntaxHighlighter plugin's code block, so a po
 converted here edits in the block editor like the posts that were written there.
 Only the Markdown that the release announcements use is supported: ATX headings,
 paragraphs, ``-`` and ``1.`` lists (one level), pipe tables, ``>`` quotes, ``---``,
-fenced code, and inline bold, italics, code and links.
+fenced code, ``![alt](url "caption")`` images on a line of their own, and inline
+bold, italics, code and links.
 
 Usage: md2wp.py post.md > post.html
 """
@@ -20,6 +21,7 @@ import sys
 FENCE = re.compile(r"^```\s*([\w+-]*)\s*$")
 HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 BULLET = re.compile(r"^(\s*)(?:[-*]|(\d+)\.)\s+(.*)$")
+IMAGE = re.compile(r'^!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)\s*$')
 
 
 def inline(text: str) -> str:
@@ -63,6 +65,17 @@ def table(rows: list[str]) -> str:
     return block("table", figure)
 
 
+def image(alt: str, url: str, caption: str | None) -> str:
+    """An image block, linked to the full-size file, with an optional caption."""
+    src = html.escape(url)
+    figcaption = f'<figcaption class="wp-element-caption">{inline(caption)}</figcaption>' if caption else ""
+    figure = (
+        f'<figure class="wp-block-image"><a href="{src}"><img src="{src}" alt="{html.escape(alt)}"/></a>'
+        f"{figcaption}</figure>"
+    )
+    return block("image", figure, {"linkDestination": "media"})
+
+
 def bullets(items: list[str], ordered: bool) -> str:
     tag = "ol" if ordered else "ul"
     lis = "\n\n".join(block("list-item", f"<li>{inline(i)}</li>") for i in items)
@@ -104,6 +117,11 @@ def convert(markdown: str) -> str:
             }.get(fence.group(1), fence.group(1))
             pre = f'<pre class="wp-block-syntaxhighlighter-code">{html.escape(chr(10).join(code), quote=False)}</pre>'
             blocks.append(block("syntaxhighlighter/code", pre, {"language": language} if language else None))
+            continue
+        picture = IMAGE.match(line)
+        if picture:
+            blocks.append(image(*picture.groups()))
+            i += 1
             continue
         heading = HEADING.match(line)
         if heading:
@@ -154,6 +172,7 @@ def convert(markdown: str) -> str:
             and lines[i].strip()
             and not (
                 FENCE.match(lines[i])
+                or IMAGE.match(lines[i])
                 or HEADING.match(lines[i])
                 or BULLET.match(lines[i])
                 or lines[i].lstrip().startswith(("|", ">"))

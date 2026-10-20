@@ -28,6 +28,7 @@ import { loggerPrefix } from "@/const";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
+import { weatherTargetAttribute } from "@/components/WeatherHint/const";
 
 import "@/components/CardView/styles.css";
 import { gettext } from "@smarter/common";
@@ -64,7 +65,11 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
               </div>
               <div className="card-body">
                 <h5 className="card-title mb-3 text-primary fw-bold text-center">
-                  <a href={llmclient.urlChatapp} className="text-decoration-none text-primary">
+                  <a
+                    href={llmclient.urlChatapp}
+                    className="text-decoration-none text-primary"
+                    {...weatherTargetAttribute(llmclient.name)}
+                  >
                     {llmclient.name}
                   </a>
                 </h5>

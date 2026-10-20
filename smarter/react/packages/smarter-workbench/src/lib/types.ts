@@ -8,7 +8,7 @@ import type { SessionContext } from "@smarter/common";
 export interface WorkbenchConfig {
   /** The LLMClient's api, for the chat: its sandbox url. */
   apiUrl: string;
-  /** Show the chat's Sandbox mode / Production mode button, and start in sandbox mode. */
+  /** Show the chat's Sandbox / Production mode switch, and start in sandbox mode. */
   toggleMetadata: boolean;
   csrfCookieName: string;
   /** The name of the cookie of the chat session's key. */
