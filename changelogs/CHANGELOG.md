@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.35.2...v0.35.3-alpha.1) (2026-10-20)
+
+### Bug Fixes
+
+* **manifest:** name an extension by its slug in the architecture tree ([68185cb](https://github.com/smarter-sh/smarter/commit/68185cb0223a5287f05a5619abf194949bec2922))
+
 ## [0.35.2](https://github.com/smarter-sh/smarter/compare/v0.35.1...v0.35.2) (2026-10-20)
 
 ### Bug Fixes
