@@ -37,6 +37,7 @@ mypy_extensions                    # Type annotations for Python
 # ------------
 pytest
 pytest_mock
+unittest-xml-reporting             # JUnit XML test reports, for the GitHub Actions job summary
 
 
 # Code linters, formatters, and security scanners
