@@ -1,4 +1,12 @@
-"""URL configuration for the web platform."""
+"""
+URL configuration for the account dashboard.
+
+The Account UI that these urls served, at ``/dashboard/account/dashboard/`` and
+``/account/dashboard/`` (overview, settings, users, activity, logs, billing,
+statements and api keys), is deprecated, and its urls are disabled: they are kept
+in :data:`deprecated_urlpatterns`, which no urlconf includes. Only the profile
+image url, which the user menu uploads to, is still routed.
+"""
 
 from django.urls import path
 from django.views.generic.base import RedirectView
@@ -63,6 +71,11 @@ class DashboardNamedUrls:
 
 
 urlpatterns = [
+    path("profile-image/", ProfileImageView.as_view(), name=DashboardNamedUrls.ACCOUNT_PROFILE_IMAGE),
+]
+"""The account dashboard's urls that are still routed."""
+
+deprecated_urlpatterns = [
     path(
         "",
         RedirectView.as_view(url="/dashboard/account/dashboard/overview/", permanent=False),
@@ -70,7 +83,6 @@ urlpatterns = [
     ),
     path("overview/", OverviewView.as_view(), name=DashboardNamedUrls.ACCOUNT_DASHBOARD_OVERVIEW),
     path("settings/", SettingsView.as_view(), name=DashboardNamedUrls.ACCOUNT_SETTINGS),
-    path("profile-image/", ProfileImageView.as_view(), name=DashboardNamedUrls.ACCOUNT_PROFILE_IMAGE),
     path("activity/", ActivityView.as_view(), name=DashboardNamedUrls.ACCOUNT_ACTIVITY),
     path("logs/", LogsView.as_view(), name=DashboardNamedUrls.ACCOUNT_LOGS),
     # users
@@ -117,3 +129,9 @@ urlpatterns = [
     path("api-keys/<str:key_id>/", APIKeyView.as_view(), name=DashboardNamedUrls.ACCOUNT_API_KEY),
     path("api-keys/<str:key_id>/<str:new_api_key>/", APIKeyView.as_view(), name=DashboardNamedUrls.ACCOUNT_API_KEY_NEW),
 ]
+"""
+The deprecated Account UI's urls.
+
+Disabled: no urlconf includes them. They are kept,
+with their views, templates and static assets, until the Account UI is removed.
+"""

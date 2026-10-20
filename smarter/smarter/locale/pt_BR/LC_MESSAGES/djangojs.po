@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 17:32+0000\n"
+"POT-Creation-Date: 2026-10-20 12:10+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -417,7 +417,7 @@ msgstr "Semana de %(date)s"
 msgid "Failed to load the budget series (%(status)s)."
 msgstr "Falha ao carregar a série do orçamento (%(status)s)."
 
-#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx
+#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Loading…"
 msgstr "Carregando…"
 
@@ -503,7 +503,7 @@ msgstr "Payload de resposta inválido: era esperado um array de objetos."
 msgid "Unable to load objects."
 msgstr "Não foi possível carregar os objetos."
 
-#. Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+#. Translators: used in react/packages/smarter-common/src/lib/modalDialogue.tsx, react/packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
 msgid "Close"
 msgstr "Fechar"
 
@@ -1375,7 +1375,7 @@ msgstr "VectorStores"
 msgid "LLMHosts"
 msgstr "LLMHosts"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, react/packages/smarter-welcome/src/App.tsx
 msgid "Request failed: %(status)s"
 msgstr "A solicitação falhou: %(status)s"
 
@@ -2552,7 +2552,7 @@ msgstr "Anterior"
 msgid "Page %(page)s of %(numPages)s"
 msgstr "Página %(page)s de %(numPages)s"
 
-#. Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
+#. Translators: used in react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Next"
 msgstr "Próximo"
 
@@ -2684,8 +2684,8 @@ msgid ""
 "into the manifest, and save it."
 msgstr ""
 "A maioria dos LLMClients tem guardrails, ferramentas e uma aparência "
-"própria. Faltam alguns a este. Cada um exige poucas linhas de YAML: copie um"
-" exemplo abaixo para o manifesto e salve-o."
+"própria. Faltam alguns a este. Cada um exige poucas linhas de YAML: copie um "
+"exemplo abaixo para o manifesto e salve-o."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Add your first Guardrail"
@@ -2702,8 +2702,8 @@ msgstr ""
 "Um guardrail filtra o texto que passa entre o usuário e o LLM. Um guardrail "
 "de entrada verifica cada prompt antes de ele ser enviado ao LLM, e um "
 "guardrail de saída verifica cada resposta antes de o usuário vê-la. Quando "
-"encontra o que procura, como um endereço de e-mail, uma injeção de prompt ou"
-" uma senha vazada, ele bloqueia a mensagem, oculta o que encontrou ou o "
+"encontra o que procura, como um endereço de e-mail, uma injeção de prompt ou "
+"uma senha vazada, ele bloqueia a mensagem, oculta o que encontrou ou o "
 "registra."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
@@ -2715,8 +2715,8 @@ msgid ""
 msgstr ""
 "Guardrails são software comum, não o julgamento do LLM, então aplicam suas "
 "regras independentemente de como o LLM se comporta. O Smarter inclui "
-"guardrails integrados para os casos mais comuns, que qualquer LLMClient pode"
-" usar pelo nome: dados pessoais, segredos, injeção de prompt, moderação, "
+"guardrails integrados para os casos mais comuns, que qualquer LLMClient pode "
+"usar pelo nome: dados pessoais, segredos, injeção de prompt, moderação, "
 "prompts fora do tema e mais."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
@@ -2754,8 +2754,8 @@ msgid ""
 "Smarter runs it and hands back the result."
 msgstr ""
 "Um LLM só sabe aquilo com que foi treinado e o que está no seu prompt. As "
-"ferramentas lhe dão todo o resto: o clima de hoje, uma linha do seu banco de"
-" dados, um cálculo que de outra forma ele adivinharia. O Smarter oferece ao "
+"ferramentas lhe dão todo o resto: o clima de hoje, uma linha do seu banco de "
+"dados, um cálculo que de outra forma ele adivinharia. O Smarter oferece ao "
 "LLM as ferramentas que o LLMClient lista, o LLM decide quando chamar uma, e "
 "o Smarter a executa e devolve o resultado."
 
@@ -2786,8 +2786,7 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "for your own data, databases and apis, without writing code."
-msgstr ""
-"para seus próprios dados, bancos de dados e apis, sem escrever código."
+msgstr "para seus próprios dados, bancos de dados e apis, sem escrever código."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2843,8 +2842,8 @@ msgid ""
 msgstr ""
 "Um MCPClient é um manifesto que se conecta a um servidor MCP remoto: as "
 "ferramentas de um terceiro, publicadas com o Model Context Protocol. O "
-"Smarter oferece as ferramentas do servidor ao LLM e as chama nesse servidor."
-" Nada é programado, e nada é executado no Smarter."
+"Smarter oferece as ferramentas do servidor ao LLM e as chama nesse servidor. "
+"Nada é programado, e nada é executado no Smarter."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid ""
@@ -2859,8 +2858,8 @@ msgid ""
 "An example MCPClient for DeepWiki, which documents public GitHub "
 "repositories, and requires no authentication."
 msgstr ""
-"Um MCPClient de exemplo para o DeepWiki, que documenta repositórios públicos"
-" do GitHub e não exige autenticação."
+"Um MCPClient de exemplo para o DeepWiki, que documenta repositórios públicos "
+"do GitHub e não exige autenticação."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Browse the MCPClients"
@@ -2898,8 +2897,7 @@ msgid ""
 "line after the last line of %(prompt)s, with the same indent as %(prompt)s."
 msgstr ""
 "Os estilos ficam em %(styles)s, ao lado de %(prompt)s: cole-o no início da "
-"linha seguinte à última linha de %(prompt)s, com o mesmo recuo de "
-"%(prompt)s."
+"linha seguinte à última linha de %(prompt)s, com o mesmo recuo de %(prompt)s."
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Styling your LLMClient's chat"
@@ -2977,7 +2975,7 @@ msgstr ""
 msgid "An LLMClient is a tree"
 msgstr "Um LLMClient é uma árvore"
 
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx
+#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/Introduction.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 msgid "LLMClients"
 msgstr "LLMClients"
 
@@ -7086,7 +7084,7 @@ msgstr "Seus bancos vetoriais"
 msgid "Shared Vectorstores"
 msgstr "Bancos vetoriais compartilhados"
 
-#. Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx
+#. Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 msgid "Vectorstores"
 msgstr "Bancos vetoriais"
 
@@ -7323,6 +7321,366 @@ msgstr "Excluindo"
 #. Translators: used in react/packages/smarter-vectorstore-list/src/lib/format.tsx
 msgid "Its database is being destroyed."
 msgstr "O banco de dados dele está sendo destruído."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Try the Get Weather LLMClient"
+msgstr "Experimente o LLMClient Get Weather"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Chat with an example that calls a tool to look up the weather."
+msgstr ""
+"Converse com um exemplo que chama uma ferramenta para consultar o clima."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Explore your LLMClients"
+msgstr "Explore seus LLMClients"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Chatbots, agents and harnesses, ready to run and customize."
+msgstr "Chatbots, agentes e harnesses, prontos para executar e personalizar."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Read the documentation"
+msgstr "Leia a documentação"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid ""
+"Guides, manifests, the command-line interface and the API, at "
+"docs.smarter.sh."
+msgstr ""
+"Guias, manifestos, a interface de linha de comando e a API, em "
+"docs.smarter.sh."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Visit the Smarter project"
+msgstr "Visite o projeto Smarter"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid ""
+"The open source project, its source code and its community, at smarter.sh."
+msgstr ""
+"O projeto de código aberto, seu código-fonte e sua comunidade, em smarter.sh."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Step %(step)s of %(steps)s"
+msgstr "Etapa %(step)s de %(steps)s"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Failed to load the links: %(error)s"
+msgstr "Não foi possível carregar os links: %(error)s"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "You can take this tour again at any time from the user menu."
+msgstr "Você pode refazer este tour a qualquer momento pelo menu do usuário."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Go to step %(step)s"
+msgstr "Ir para a etapa %(step)s"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Skip tour"
+msgstr "Pular tour"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Back"
+msgstr "Voltar"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Get started"
+msgstr "Começar"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Welcome to Smarter, %(firstName)s!"
+msgstr "Boas-vindas ao Smarter, %(firstName)s!"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Welcome to Smarter!"
+msgstr "Boas-vindas ao Smarter!"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Smarter is a platform for designing and running the kinds of sophisticated "
+"AI solutions that large organizations require. It is made for non-"
+"programmers."
+msgstr ""
+"Smarter é uma plataforma para projetar e executar o tipo de soluções de IA "
+"sofisticadas que grandes organizações exigem. Ela é feita para quem não "
+"programa."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Free and open source"
+msgstr "Livre e de código aberto"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Licensed under the GNU AGPL v3. Download it, read its source code, and run "
+"it on your laptop."
+msgstr ""
+"Licenciado sob a GNU AGPL v3. Baixe-o, leia seu código-fonte e execute-o no "
+"seu notebook."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Made for learning"
+msgstr "Feito para aprender"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "A hands-on place to learn how real AI solutions are designed and built."
+msgstr ""
+"Um lugar prático para aprender como soluções reais de IA são projetadas e "
+"construídas."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "No code required"
+msgstr "Sem necessidade de programar"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Every resource is a short YAML manifest that you can read, copy and change."
+msgstr ""
+"Cada recurso é um manifesto YAML curto que você pode ler, copiar e alterar."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Your account is ready to explore"
+msgstr "Sua conta está pronta para explorar"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Your new account is preloaded with dozens of AI resources and solutions. "
+"Open any of them to see how it works, then customize it and make it your own."
+msgstr ""
+"Sua nova conta vem pré-carregada com dezenas de recursos e soluções de IA. "
+"Abra qualquer um deles para ver como funciona, depois personalize-o e torne-"
+"o seu."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Chatbots, agents and harnesses, each with its own LLM, system prompt and "
+"tools."
+msgstr ""
+"Chatbots, agentes e harnesses, cada um com seu próprio LLM, prompt de "
+"sistema e ferramentas."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "LLM Tools"
+msgstr "Ferramentas de LLM"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Tool calling that connects an LLM to SQL databases, REST APIs, web search "
+"and more."
+msgstr ""
+"Chamadas de ferramentas que conectam um LLM a bancos de dados SQL, APIs "
+"REST, busca na web e muito mais."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Guardrails, secrets, API keys and budgets"
+msgstr "Guardrails, segredos, chaves de API e orçamentos"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"The controls that organizations need to run AI safely and affordably, such "
+"as API keys that secure your LLMClients."
+msgstr ""
+"Os controles de que as organizações precisam para executar IA com segurança "
+"e a um custo acessível, como as chaves de API que protegem seus LLMClients."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Get hands-on with the real thing"
+msgstr "Coloque a mão na massa com tecnologia real"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Smarter supports popular generative AI technologies, vendors, protocols and "
+"best practices. It's a good place to try them out and learn how they work."
+msgstr ""
+"Smarter oferece suporte a tecnologias, fornecedores, protocolos e boas "
+"práticas populares de IA generativa. É um bom lugar para experimentá-los e "
+"aprender como funcionam."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Thousands of LLMs from nine providers"
+msgstr "Milhares de LLMs de nove provedores"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Anthropic, Cohere, Fireworks AI, Google AI, Hugging Face, Meta AI, Mistral, "
+"OpenAI and Together AI, side by side."
+msgstr ""
+"Anthropic, Cohere, Fireworks AI, Google AI, Hugging Face, Meta AI, Mistral, "
+"OpenAI e Together AI, lado a lado."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "MCP, Agent Skills and tool calling"
+msgstr "MCP, Agent Skills e chamadas de ferramentas"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Connect LLMs to tools and data with the protocols that the industry uses."
+msgstr "Conecte LLMs a ferramentas e dados com os protocolos que o setor usa."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Real prompts, real costs"
+msgstr "Prompts reais, custos reais"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Every prompt is a real, billable request to an LLM provider. Experiment "
+"freely, but please don't run automated loads."
+msgstr ""
+"Cada prompt é uma solicitação real e cobrada a um provedor de LLM. "
+"Experimente à vontade, mas, por favor, não execute carga automatizada."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Connect MCP Servers"
+msgstr "Conecte servidores MCP"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"MCP Servers give your LLMClients the tools of other services, through the "
+"Model Context Protocol. Connect one, and its tools are ready for your "
+"LLMClients to use, with no code to write."
+msgstr ""
+"Os servidores MCP dão aos seus LLMClients as ferramentas de outros serviços, "
+"por meio do Model Context Protocol. Conecte um, e suas ferramentas ficam "
+"prontas para seus LLMClients usarem, sem escrever código."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Dozens ready to connect"
+msgstr "Dezenas prontos para conectar"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "GitHub, Hugging Face, Notion, Linear, Sentry, Stripe and many more."
+msgstr "GitHub, Hugging Face, Notion, Linear, Sentry, Stripe e muitos outros."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Your credentials stay secret"
+msgstr "Suas credenciais continuam secretas"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"A server's access token is kept in an encrypted Smarter Secret, and you "
+"choose which of its tools the LLM may call."
+msgstr ""
+"O token de acesso de um servidor fica guardado em um Secret criptografado do "
+"Smarter, e você escolhe quais das ferramentas dele o LLM pode chamar."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Governed like everything else"
+msgstr "Governados como todo o resto"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Every tool call is logged and charged, and is subject to the same access "
+"controls as your other resources."
+msgstr ""
+"Cada chamada de ferramenta é registrada e cobrada, e está sujeita aos mesmos "
+"controles de acesso que seus outros recursos."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Answer from your own documents"
+msgstr "Responda a partir dos seus próprios documentos"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Retrieval-augmented generation (RAG) lets an LLM answer from your own "
+"material, such as manuals, policies and support articles, rather than from "
+"its training data alone."
+msgstr ""
+"A geração aumentada por recuperação (RAG) permite que um LLM responda a "
+"partir do seu próprio material, como manuais, políticas e artigos de "
+"suporte, e não apenas dos seus dados de treinamento."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Vector databases, Qdrant or Pinecone, that Smarter creates and manages for "
+"you. Add PDFs, text, web pages and more, and Smarter splits, embeds and "
+"loads them."
+msgstr ""
+"Bancos de dados vetoriais, Qdrant ou Pinecone, que o Smarter cria e gerencia "
+"para você. Adicione PDFs, textos, páginas da web e muito mais, e o Smarter "
+"os divide, gera seus embeddings e os carrega."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Search by meaning"
+msgstr "Busca por significado"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"A question finds the passages that are closest to it in meaning, not just "
+"those that share its words, and the LLM answers from them."
+msgstr ""
+"Uma pergunta encontra os trechos mais próximos dela em significado, não "
+"apenas os que compartilham suas palavras, e o LLM responde a partir deles."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Real databases, real costs"
+msgstr "Bancos de dados reais, custos reais"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"A Vectorstore runs on real cloud infrastructure, which costs real money for "
+"as long as it exists, whether or not anyone searches it."
+msgstr ""
+"Um Vectorstore é executado em infraestrutura real na nuvem, que custa "
+"dinheiro real enquanto existir, quer alguém o consulte ou não."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Host open models yourself"
+msgstr "Hospede você mesmo modelos abertos"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"LLMHosts run open-weight models on your own GPU servers, rather than calling "
+"a provider's API. Your LLMClients use them just as they use a commercial "
+"model."
+msgstr ""
+"Os LLMHosts executam modelos de pesos abertos nos seus próprios servidores "
+"com GPU, em vez de chamar a API de um provedor. Seus LLMClients os usam "
+"assim como usam um modelo comercial."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Models from Hugging Face"
+msgstr "Modelos do Hugging Face"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Choose a model and a revision, and Smarter deploys it on Kubernetes with an "
+"inference engine such as vLLM."
+msgstr ""
+"Escolha um modelo e uma revisão, e o Smarter o implanta no Kubernetes com um "
+"mecanismo de inferência como o vLLM."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "You choose the hardware"
+msgstr "Você escolhe o hardware"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"Pick the kind of GPU node that the model runs on, and how much of it each "
+"replica gets."
+msgstr ""
+"Escolha o tipo de nó com GPU em que o modelo é executado e quanto dele cada "
+"réplica recebe."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Real servers, real costs"
+msgstr "Servidores reais, custos reais"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid ""
+"An LLMHost runs on real cloud infrastructure, which costs real money for as "
+"long as it runs, whether or not anyone sends it a prompt."
+msgstr ""
+"Um LLMHost é executado em infraestrutura real na nuvem, que custa dinheiro "
+"real enquanto estiver em execução, quer alguém lhe envie um prompt ou não."
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Where to start"
+msgstr "Por onde começar"
+
+#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "A few good first stops on your journey:"
+msgstr "Algumas boas primeiras paradas na sua jornada:"
 
 #. Translators: used in react/packages/smarter-workbench/src/App.tsx
 msgid "Technical references for prompt engineers and software engineers"

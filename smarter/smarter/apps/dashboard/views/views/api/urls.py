@@ -12,6 +12,10 @@ from smarter.apps.dashboard.views.views.api.getting_started import GettingStarte
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.quick_actions import QuickActionsView
 from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
+from smarter.apps.dashboard.views.views.api.welcome import (
+    WelcomeDismissView,
+    WelcomeView,
+)
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
@@ -35,6 +39,8 @@ class DashboardApiReverseNames:
     activity = to_snake_case(ActivityView.__name__)
     getting_started = to_snake_case(GettingStartedView.__name__)
     quick_actions = to_snake_case(QuickActionsView.__name__)
+    welcome = to_snake_case(WelcomeView.__name__)
+    welcome_dismiss = to_snake_case(WelcomeDismissView.__name__)
 
 
 urlpatterns = [
@@ -50,4 +56,6 @@ urlpatterns = [
     path("activity/", ActivityView.as_view(), name=DashboardApiReverseNames.activity),
     path("getting-started/", GettingStartedView.as_view(), name=DashboardApiReverseNames.getting_started),
     path("quick-actions/", QuickActionsView.as_view(), name=DashboardApiReverseNames.quick_actions),
+    path("welcome/", WelcomeView.as_view(), name=DashboardApiReverseNames.welcome),
+    path("welcome/dismiss/", WelcomeDismissView.as_view(), name=DashboardApiReverseNames.welcome_dismiss),
 ]

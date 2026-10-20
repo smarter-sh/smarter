@@ -2,12 +2,14 @@
 """Views for the account settings."""
 
 from http import HTTPStatus
+from warnings import deprecated
 
 from django import forms, http
 from django.db import transaction
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import User, UserProfile
+from smarter.apps.account.views.dashboard import ACCOUNT_UI_DEPRECATION_MESSAGE
 from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -28,15 +30,14 @@ class UserForm(forms.ModelForm):
         fields = [f.name for f in User._meta.fields if f.name not in excluded_fields]
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class UsersView(SmarterAdminWebView):
     """View for user management."""
 
     template_path = "account/dashboard/users.html"
 
     def get(self, request, *args, **kwargs):
-        """
-        Get the users for the account, but exclude any superusers.
-        """
+        """Get the users for the account, but exclude any superusers."""
         user_profile = UserProfile.get_cached_object(user=request.user)
         if not user_profile:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "User profile not found."})
@@ -55,6 +56,7 @@ class UsersView(SmarterAdminWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class UserView(SmarterAdminWebView):
     """View for user management."""
 
@@ -106,7 +108,10 @@ class UserView(SmarterAdminWebView):
 
     # pylint: disable=W0221
     def get(self, request, *args, user_id=None, **kwargs):
-        """Get the user for the account. We also use this to create a new user."""
+        """Get the user for the account.
+
+        We also use this to create a new user.
+        """
         try:
             user = User.objects.get(id=user_id)
             user_form = UserForm(instance=user)

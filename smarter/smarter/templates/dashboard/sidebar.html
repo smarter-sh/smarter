@@ -762,24 +762,6 @@
             </div>
             {% endif %}
 
-            <!--begin:Menu item Account -->
-            {% if user.is_superuser %}
-            <div class="menu-item">
-              <!--begin:Menu link-->
-              <a
-                class="menu-link"
-                href="{{ sidebar.account }}"
-              >
-                <span class="menu-bullet">
-                  <span class="bullet bullet-dot"></span>
-                </span>
-                <span class="menu-title">{% translate "Account" %}</span>
-              </a>
-              <!--end:Menu link-->
-            </div>
-            {% endif %}
-            <!--end:Menu item-->
-
             <!--begin:Menu item Infrastructure Resources -->
             {% if user.is_superuser %}
             <div class="menu-item">
