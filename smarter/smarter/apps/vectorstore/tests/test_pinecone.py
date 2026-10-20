@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from pinecone import QueryResponse, ScoredVector
-
 from smarter.apps.vectorstore.backends import (
     PineconeBackend,
     VectorStoreBackendConnectionError,
@@ -85,8 +83,8 @@ class TestPineconeBackend(VectorstoreTestBase):
     def test_upsert(self):
         """Test that chunks are embedded and upserted in batches, with their text in the metadata."""
         backend, client = self.backend()
-        backend._embeddings = MagicMock()  # pylint: disable=protected-access
-        backend.embeddings.embed_documents.side_effect = lambda texts: [[float(len(text))] for text in texts]
+        embeddings = backend._embeddings = MagicMock()  # pylint: disable=protected-access
+        embeddings.embed_documents.side_effect = lambda texts: [[float(len(text))] for text in texts]
         backend.upsert(["c1", "c2", "c3"], ["a", "bb", "ccc"], [{"team": "a"}, {}, {"team": "c"}], batch_size=2)
         upsert = client.Index.return_value.upsert
         self.assertEqual(upsert.call_count, 2)
@@ -108,17 +106,20 @@ class TestPineconeBackend(VectorstoreTestBase):
         threshold, and that vectors without text are skipped.
         """
         backend, client = self.backend()
-        backend._embeddings = MagicMock()  # pylint: disable=protected-access
-        backend.embeddings.embed_query.return_value = [1.0, 0.0]
+        embeddings = backend._embeddings = MagicMock()  # pylint: disable=protected-access
+        embeddings.embed_query.return_value = [1.0, 0.0]
         query = client.Index.return_value.query
-        query.return_value = QueryResponse(
-            matches=[
-                ScoredVector(id="c1", score=0.9, metadata={"text": "one", "team": "a"}),
-                ScoredVector(id="c2", score=0.2, metadata={"text": "two", "team": "a"}),
-                ScoredVector(id="x", score=0.8, metadata={"team": "a"}),
+        # A response object with to_dict(), like Pinecone's QueryResponse. The model's import path
+        # changes between pinecone releases, so the test doesn't import it.
+        query.return_value = MagicMock()
+        query.return_value.to_dict.return_value = {
+            "matches": [
+                {"id": "c1", "score": 0.9, "metadata": {"text": "one", "team": "a"}},
+                {"id": "c2", "score": 0.2, "metadata": {"text": "two", "team": "a"}},
+                {"id": "x", "score": 0.8, "metadata": {"team": "a"}},
             ],
-            namespace="",
-        )
+            "namespace": "",
+        }
         results = backend.search("q", k=3, metadata_filter={"team": "a"})
         self.assertEqual([(r.id, r.text, r.score) for r in results], [("c1", "one", 0.9), ("c2", "two", 0.2)])
         self.assertEqual(results[0].metadata, {"team": "a"})
@@ -129,8 +130,8 @@ class TestPineconeBackend(VectorstoreTestBase):
     def test_search_mmr(self):
         """Test that MMR fetches fetch_k matches with their values, and prefers diverse ones."""
         backend, client = self.backend()
-        backend._embeddings = MagicMock()  # pylint: disable=protected-access
-        backend.embeddings.embed_query.return_value = [1.0, 0.0]
+        embeddings = backend._embeddings = MagicMock()  # pylint: disable=protected-access
+        embeddings.embed_query.return_value = [1.0, 0.0]
         query = client.Index.return_value.query
         query.return_value = {
             "matches": [
