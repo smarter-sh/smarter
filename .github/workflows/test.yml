@@ -513,12 +513,56 @@ jobs:
       # workspace for the Codecov upload. Its paths are container paths,
       # /home/smarter_user/smarter/smarter/..., which codecov.yml maps back
       # to the repository's smarter/smarter/....
+      #
+      # SMARTER_TEST_JUNIT_XML makes the test runner also write the results as
+      # a JUnit XML report (see smarter/smarter/lib/unittest/runner.py), which
+      # the "Test summary" step renders in the job summary. coverage.json
+      # carries the totals for the "Coverage summary" step.
       #========================================================================
       - name: Run unit tests with coverage
         shell: bash
         run: |
-          docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report && coverage xml -o coverage.xml"
+          docker exec -e SMARTER_TEST_JUNIT_XML=test-results.xml smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report && coverage xml -o coverage.xml && coverage json -o coverage.json"
           docker cp smarter-app:/home/smarter_user/smarter/coverage.xml ./coverage.xml
+          docker cp smarter-app:/home/smarter_user/smarter/coverage.json ./coverage.json
+
+      #========================================================================
+      # Job summary: the test results, like the react job's Vitest report, and
+      # the total coverage only. The per-file coverage report (some 2,000
+      # lines) stays in the log of the step above, and in Codecov.
+      #
+      # Both run even when a test fails, which is when the summary matters
+      # most. The test report is written as the tests run, so it exists
+      # whenever the suite ran to the end.
+      #========================================================================
+      - name: Copy test results from the container
+        if: always()
+        shell: bash
+        run: |
+          docker cp smarter-app:/home/smarter_user/smarter/test-results.xml ./test-results.xml || echo "No test results were written."
+
+      - name: Test summary
+        if: always()
+        uses: test-summary/action@v2
+        with:
+          paths: test-results.xml
+          show: "fail, skip"
+
+      - name: Coverage summary
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -f coverage.json ]; then
+            echo "No coverage report was written."
+            exit 0
+          fi
+          jq -r '
+            .totals as $t |
+            "## Python coverage\n",
+            "| Statements | Missed | Coverage |",
+            "| ---: | ---: | ---: |",
+            "| \($t.num_statements) | \($t.missing_lines) | **\($t.percent_covered_display)%** |"
+          ' coverage.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7

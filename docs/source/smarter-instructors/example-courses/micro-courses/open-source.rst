@@ -53,7 +53,7 @@ the bus factor; and sustaining contribution, from triage to becoming a maintaine
   `SECURITY.md <https://github.com/smarter-sh/smarter/blob/main/SECURITY.md>`__ and
   `release.config.js <https://github.com/smarter-sh/smarter/blob/main/release.config.js>`__.
 - The `releases <https://github.com/smarter-sh/smarter/releases>`__ and the
-  `CHANGELOG.md <https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md>`__ they produce.
+  `CHANGELOG.md <https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md>`__ they produce.
 
 Each course plan lists every file and page that it uses under *Smarter in the Source Code*.
 

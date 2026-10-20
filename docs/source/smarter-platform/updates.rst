@@ -10,7 +10,7 @@ that is regularly updated to support the latest Smarter Docker image versions.
 
 Change logs are available on both repositories, as well as in the official Smarter GitHub repository:
 
-- GitHub smarter-sh/smarter: `CHANGELOG <https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md>`__
+- GitHub smarter-sh/smarter: `CHANGELOG <https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md>`__
 - GitHub smarter-sh/smarter: `Releases <https://github.com/smarter-sh/smarter/releases>`_
 - Docker Hub mcdaniel0073/smarter/: `Tags & Change Log <https://hub.docker.com/r/mcdaniel0073/smarter/tags>`_
 - Artifact Hub helm/project-smarter/smarter: `Changelog <https://artifacthub.io/packages/helm/project-smarter/smarter?modal=changelog>`__

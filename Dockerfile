@@ -283,7 +283,7 @@ WORKDIR /home/smarter_user/
 
 COPY --chown=smarter_user:smarter_user ./docs ./data/docs
 COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
-COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
+COPY --chown=smarter_user:smarter_user ./changelogs/CHANGELOG.md ./data/docs/CHANGELOG.md
 COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
 COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
