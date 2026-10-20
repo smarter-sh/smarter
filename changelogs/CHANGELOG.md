@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.2...v0.35.0-alpha.3) (2026-10-20)
+
+### Features
+
+* **console:** add did you know trivia to the welcome tour and header ([0255e62](https://github.com/smarter-sh/smarter/commit/0255e6265d969d44bc99824f85e3db359318e4d2))
+
 ## [0.35.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.1...v0.35.0-alpha.2) (2026-10-20)
 
 ### Bug Fixes
