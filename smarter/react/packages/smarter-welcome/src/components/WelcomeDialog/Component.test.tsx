@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -6,13 +6,25 @@ import { appContext, welcome } from "@/mocks/fixtures";
 import type { WelcomeUrls } from "@/lib/Types";
 
 import WelcomeDialog from "@/components/WelcomeDialog/Component";
+import { didYouKnowFacts, type DidYouKnowFact } from "@smarter/didyouknow";
+
+import type { DidYouKnow } from "@/components/WelcomeDialog/didYouKnow";
+
+const AGENTIC_FACT = didYouKnowFacts()[0];
 
 function renderDialog({
   firstName = "Ada",
   urls = welcome.urls,
   error = null,
   showAtStartup = true,
-}: { firstName?: string; urls?: WelcomeUrls | null; error?: string | null; showAtStartup?: boolean } = {}) {
+  didYouKnow = { step: 1, fact: AGENTIC_FACT },
+}: {
+  firstName?: string;
+  urls?: WelcomeUrls | null;
+  error?: string | null;
+  showAtStartup?: boolean;
+  didYouKnow?: DidYouKnow;
+} = {}) {
   const onShowAtStartupChange = vi.fn();
   const onLastStep = vi.fn();
   const onClose = vi.fn();
@@ -27,6 +39,7 @@ function renderDialog({
       onShowAtStartupChange={onShowAtStartupChange}
       onLastStep={onLastStep}
       onClose={onClose}
+      didYouKnow={didYouKnow}
     />,
   );
   return { onShowAtStartupChange, onLastStep, onClose };
@@ -157,6 +170,51 @@ describe("WelcomeDialog", () => {
     renderDialog({ urls: null, error: "Request failed: 503" });
     await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     expect(screen.getByText("Failed to load the links: Request failed: 503")).toBeInTheDocument();
+  });
+
+  it("shows the Did you know? note on its step only, with its link opening in a new tab", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+    expect(screen.queryByRole("complementary", { name: "Did you know?" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    const note = screen.getByRole("complementary", { name: "Did you know?" });
+    expect(note).toHaveTextContent(AGENTIC_FACT.text);
+    const link = within(note).getByRole("link", { name: "Follow Smarter on GitHub" });
+    expect(link).toHaveAttribute("href", "https://github.com/smarter-sh/smarter");
+    expect(link).toHaveAttribute("target", "_blank");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.queryByRole("complementary", { name: "Did you know?" })).not.toBeInTheDocument();
+  });
+
+  it("shows a fact without a link", () => {
+    const fact = didYouKnowFacts().find((candidate) => !candidate.link) as DidYouKnowFact;
+    renderDialog({ didYouKnow: { step: 0, fact } });
+    const note = screen.getByRole("complementary", { name: "Did you know?" });
+    expect(note).toHaveTextContent(fact.text);
+    expect(within(note).queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("picks the Did you know? note's step and fact at random when it isn't given one", async () => {
+    const user = userEvent.setup();
+    // the first call picks the step, the second the fact.
+    const random = vi.spyOn(Math, "random").mockReturnValueOnce(0.99).mockReturnValueOnce(0);
+    render(
+      <WelcomeDialog
+        firstName=""
+        logoUrl=""
+        illustrationsUrl=""
+        urls={welcome.urls}
+        error={null}
+        showAtStartup={true}
+        onShowAtStartupChange={() => {}}
+        onLastStep={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    random.mockRestore();
+    expect(screen.queryByRole("complementary", { name: "Did you know?" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
+    expect(screen.getByRole("complementary", { name: "Did you know?" })).toHaveTextContent(AGENTIC_FACT.text);
   });
 
   it("closes with Escape, the close button, Skip tour and the backdrop, but not a click inside it", async () => {

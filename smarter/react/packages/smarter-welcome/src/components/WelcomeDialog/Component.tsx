@@ -6,7 +6,8 @@
  * Back, the step dots, and the left and right arrow keys move between the steps, and Tab keeps the
  * focus inside it. The last step links to the Get Weather example LLMClient, the LLMClients, the
  * documentation and the project's website, and its Get started button closes it. The first step has a
- * Show at startup box, whose choice the app records when the dialog closes.
+ * Show at startup box, whose choice the app records when the dialog closes. One step, picked at random
+ * each time the dialog opens, shows a Did you know? note below its illustration.
  *
  * :param firstName: The user's first name, which the first step greets, or an empty string.
  * :param logoUrl: The Smarter logo.
@@ -17,10 +18,13 @@
  * :param onShowAtStartupChange: Called when the user ticks or unticks it.
  * :param onLastStep: Called when the last step shows.
  * :param onClose: Called when the user closes the dialog.
+ * :param didYouKnow: The step and the fact of the Did you know? note. Picked at random when omitted.
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { gettext, interpolate, interpolateNodes } from "@smarter/common";
+import { DidYouKnow as DidYouKnowNote } from "@smarter/didyouknow";
 
+import { pickDidYouKnow, type DidYouKnow } from "@/components/WelcomeDialog/didYouKnow";
 import { welcomeSteps } from "@/components/WelcomeDialog/steps";
 import type { WelcomeUrls } from "@/lib/Types";
 import "@/components/WelcomeDialog/styles.css";
@@ -35,6 +39,7 @@ interface WelcomeDialogProps {
   onShowAtStartupChange: (showAtStartup: boolean) => void;
   onLastStep: () => void;
   onClose: () => void;
+  didYouKnow?: DidYouKnow;
 }
 
 interface WelcomeLink {
@@ -95,11 +100,14 @@ function WelcomeDialog({
   onShowAtStartupChange,
   onLastStep,
   onClose,
+  didYouKnow,
 }: WelcomeDialogProps) {
   const steps = welcomeSteps(firstName);
   const last = steps.length - 1;
   const [index, setIndex] = useState(0);
   const step = steps[index];
+  // picked once, when the dialog opens, so that the note stays on its step while the user moves around.
+  const [note] = useState(() => didYouKnow ?? pickDidYouKnow(steps.length));
   const titleId = useId();
   const leadId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -180,19 +188,34 @@ function WelcomeDialog({
           <i className="ki-outline ki-cross fs-1"></i>
         </button>
 
-        <div className="smarter-welcome-art" aria-hidden="true">
-          <img
-            key={`light-${step.illustration}`}
-            className="smarter-welcome-illustration theme-light-show"
-            src={`${illustrationsUrl}${step.illustration}.png`}
-            alt=""
-          />
-          <img
-            key={`dark-${step.illustration}`}
-            className="smarter-welcome-illustration theme-dark-show"
-            src={`${illustrationsUrl}${step.illustration}-dark.png`}
-            alt=""
-          />
+        <div className="smarter-welcome-art">
+          <div className="smarter-welcome-figure" aria-hidden="true">
+            <img
+              key={`light-${step.illustration}`}
+              className="smarter-welcome-illustration theme-light-show"
+              src={`${illustrationsUrl}${step.illustration}.png`}
+              alt=""
+            />
+            <img
+              key={`dark-${step.illustration}`}
+              className="smarter-welcome-illustration theme-dark-show"
+              src={`${illustrationsUrl}${step.illustration}-dark.png`}
+              alt=""
+            />
+          </div>
+          {index === note.step && (
+            <DidYouKnowNote
+              fact={note.fact}
+              classNames={{
+                root: "smarter-welcome-trivia",
+                title: "smarter-welcome-trivia-title",
+                text: "smarter-welcome-trivia-text",
+                link: "smarter-welcome-trivia-link",
+              }}
+              icon={<i className="ki-outline ki-information-5 fs-5 me-1" aria-hidden="true"></i>}
+              linkIcon={<i className="ki-outline ki-exit-right-corner fs-7 ms-1" aria-hidden="true"></i>}
+            />
+          )}
         </div>
 
         <div className="smarter-welcome-body">

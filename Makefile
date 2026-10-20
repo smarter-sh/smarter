@@ -381,7 +381,7 @@ react-test:
 	cd smarter/react && npm run build:deps && npm run coverage
 
 # Check the formatting, lint and types of every React app, as CI does. The apps type-check
-# against @smarter/common's and Smarter Chat's declarations, which build:deps builds.
+# against @smarter/common's, @smarter/didyouknow's and Smarter Chat's declarations, which build:deps builds.
 react-lint:
 	cd smarter/react && npm run build:deps && npm run format:check && npm run lint && npm run typecheck
 

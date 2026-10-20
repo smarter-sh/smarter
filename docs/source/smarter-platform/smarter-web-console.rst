@@ -27,6 +27,11 @@ shown as alerts at the top of the dashboard, and new users see a getting started
 they have created and deployed their first LLM Client. It also provides quick access to the complete
 suite of The Smarter Project tools, resources, online tutorials, and documentation.
 
+Below the console's title, on every page, a **Did you know?** note shows a fact of the day about The
+Smarter Project, with a link to learn more. Everyone sees the same fact from midnight to midnight UTC.
+A platform administrator can turn it off with the ``enable_web_console_did_you_know`` waffle switch.
+See :doc:`@smarter/didyouknow <../smarter-framework/developer-reference/react-integration/didyouknow>`.
+
 .. raw:: html
 
    <img src="https://cdn.smarter.sh/docs/smarter-framework/smarter-web-dashboard/console-dashboard.png"

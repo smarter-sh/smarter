@@ -848,6 +848,160 @@ gettext("Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinec
 gettext("What's New");
 // Translators: used in react/packages/smarter-dashboard/src/components/WhatsNew/Component.tsx
 gettext("Recently added Smarter features");
+// Translators: used in react/packages/smarter-didyouknow/src/components/DidYouKnow/Component.tsx
+gettext("Did you know?");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Smarter Project is coded in part using Agentic AI techniques that you can learn about by following this project on GitHub.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Follow Smarter on GitHub");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Smarter Project has around 500,000 lines of code, across two dozen repositories.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the repositories");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The main Smarter repository alone has about 400,000 lines of code, including about 180,000 lines of Python and 45,000 of TypeScript.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the repository");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter is written in Python, with Django and Django REST Framework, and its web console is written in React.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about its technologies");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("In October 2026, Claude Code wrote Smarter's source code at almost 30 times the long-run pace of its author, a senior developer.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the story");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("More than 95% of Smarter's code is covered by its automated tests.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read how it got there");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter is a Docker application that runs on Debian Linux, so it can run anywhere, from your own laptop to any data center in the world.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read why Smarter uses Docker");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("You can install Smarter on your own laptop in around 20 minutes.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Get started");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter closely follows the 12-Factor App methodology, a set of principles for building software that runs in the cloud.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the 12-Factor App decision");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's web console users can watch the real server logs of their own prompts, live, as the server writes them.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the live server logs");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's major design decisions, from Django and Kubernetes to Pydantic, are written down as Architecture Decision Records in its documentation.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the Architecture Decision Records");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Every Smarter platform runs an MCP server that answers questions about The Smarter Project from its own source code and documentation.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the MCP server");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter has SDKs for Python, Node.js and Go, a command-line interface written in Go, and a VS Code extension for its YAML manifests.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("See the APIs and SDKs");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Smarter Project was inspired by the Kubernetes Project, which is open source software for declarative cloud infrastructure management.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about manifests");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's manifests are programmed with Pydantic, the popular open source Python data validation library on PyPI.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read why Smarter uses Pydantic");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's repository has Agent Skills: instructions that teach AI coding agents its conventions, from its tests to its translations.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the skills");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter was first used in a classroom in January 2026, by AI students at the University of British Columbia.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the Instructor Guide");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter has a Free Course Catalog of ready-to-teach courses, from prompt engineering for non-programmers to Kubernetes for platform engineers.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The chat in the Prompt Engineer's Workbench is its own open source npm package, @smarter.sh/ui-chat, which you can embed in any website.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("See it on npm");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Claude Code translated Smarter's web console into Spanish, French and Brazilian Portuguese in a single day, October 16, 2026.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the translations");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's ImageSearchPlugin was written by Claude Code during a live, in-class demonstration for AI students at the University of British Columbia. It went into production the following day.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the ImageSearchPlugin");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The web console speaks English, Spanish, French and Brazilian Portuguese. You can choose a language from the user menu.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter Chat has a WordPress plugin, a Drupal module and a Shopify app block, which put a deployed LLMClient on your site.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about Smarter Chat");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's manifests can be edited not only in the web console, but also in code editors such as VS Code.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the VS Code extension");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's VS Code extension checks your YAML manifests as you type, completes their keys and values, and fixes common mistakes.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's command-line interface works much like kubectl and runs on Windows, macOS and Linux. Like the aws cli, you set it up with one command: smarter configure.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the command-line interface");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("On a Mac, you can install the smarter command-line interface with Homebrew.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Every Smarter platform publishes an OpenAPI document of its REST API, which SDKs and AI agents can read.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the OpenAPI document");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's server log messages are designed to help AI agents diagnose run-time errors: each one starts with the dotted path of the code that wrote it, so it reads like a stack trace.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the logging style guide");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter has more than 50 Waffle switches that turn optional features and logging on and off, including whether these Did you know? notes appear.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the Waffle switches");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's authors invented their own object caching system, the @cache_results() decorator, which builds each cache key from the arguments of the function that it caches.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about @cache_results()");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's authors created their own Django base model, MetaDataWithOwnershipModel, which gives each AI resource its name, description, version, tags and owner.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read its source code");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's version numbers and changelogs are generated from its commit messages, by semantic-release.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("See the releases");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's authors designed their own Django-React integration: Vite builds each page's React app, and a Django template tag mounts it.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read about the React integration");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Most pages of this web console are small React apps that Django hosts, and every one of their Storybook stories also runs as a unit test.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter is an open source project, and anyone can contribute to it, including you.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read how to contribute");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The Get Weather LLMClient's tool is a Smarter Extension written in Python. Beginning Python programmers can write extensions too.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the extension developer guide");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter Extensions, such as weather, calculator and date-calculator, are published in a public registry on GitHub.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Browse the extensions registry");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's Python docstrings are published, by Sphinx, as the technical reference of its documentation.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+gettext("Read the documentation");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("The first drafts of the Sphinx docstrings of Smarter's Python modules, classes and functions were written with GitHub Copilot.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Agentic AI wrote more than 70% of Smarter's unit tests.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Smarter's first commit was made in February 2023.");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("The publisher's trust badge");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/secrets.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
@@ -3121,8 +3275,6 @@ gettext("Explore your LLMClients");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Chatbots, agents and harnesses, ready to run and customize.");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-gettext("Read the documentation");
-// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Guides, manifests, the command-line interface and the API, at docs.smarter.sh.");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Visit the Smarter project");
@@ -3142,8 +3294,6 @@ gettext("Show at startup");
 gettext("Skip tour");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Back");
-// Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-gettext("Get started");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 gettext("Welcome to Smarter, %(firstName)s!");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
