@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to Smarter</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered
+    by Django.
+
+    See:
+    - smarter.apps.dashboard.templatetags.react_welcome
+    - templates/react/welcome.html, which templates/dashboard/base.html includes
+    - smarter.apps.dashboard.views.views.api.welcome
+    -->
+    <a href="#" data-smarter-welcome-open="true">Welcome Tour</a>
+    <div
+      id="smarter-welcome-root"
+      smarter-csrf-cookie-name="csrftoken"
+      smarter-django-session-cookie-name="sessionid"
+      smarter-cookie-domain="localhost"
+      smarter-welcome-api-url="/dashboard/api/welcome/"
+      smarter-welcome-dismiss-api-url="/dashboard/api/welcome/dismiss/"
+      smarter-welcome-show="true"
+      smarter-first-name="Ada"
+      smarter-logo-url="/static/images/logo/smarter-crop.png"
+      smarter-illustrations-url="/static/assets/media/illustrations/dozzy-1/"
+      smarter-request-id="dev-request-id"
+    ></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

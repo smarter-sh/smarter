@@ -16,7 +16,10 @@ To upload an image, click the image in the user menu, or choose
 accepted; SVG is not, because it can carry script. **Remove Profile Image**
 deletes the upload, and the console falls back to the oauth image, if any.
 Uploads are stored in Django's default storage (the platform's S3 bucket when
-AWS is configured) under a random file name.
+AWS is configured) under a random file name. Each UserProfile has its own image:
+for a user with more than one, it is that of the profile that the console acts
+as, which they choose with the user menu's **Change Profile** item. See
+:doc:`../../../react-integration/dashboard-user-menu`.
 
 .. automodule:: smarter.apps.account.views.dashboard.profile_image
     :members:

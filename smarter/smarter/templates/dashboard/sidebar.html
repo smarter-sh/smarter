@@ -278,16 +278,17 @@
             </div>
             <!--end:Menu item Harnesses-->
 
-            <!--begin:Menu item LLMClients -->
+            <!--begin:Menu item LLMClients: the console's most important link, so its icon is in the theme's primary color-->
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
                 class="menu-link"
                 href="{{ sidebar.workbench }}"
                 target="_self"
+                data-smarter-onboarding="sidebar-llmclients"
               >
                 <span class="menu-icon">
-                  <i class="ki-duotone ki-message-programming fs-2">
+                  <i class="ki-duotone ki-message-programming fs-2 text-primary">
                     <span class="path1"></span>
                     <span class="path2"></span>
                     <span class="path3"></span>
@@ -761,24 +762,6 @@
               <!--end:Menu content-->
             </div>
             {% endif %}
-
-            <!--begin:Menu item Account -->
-            {% if user.is_superuser %}
-            <div class="menu-item">
-              <!--begin:Menu link-->
-              <a
-                class="menu-link"
-                href="{{ sidebar.account }}"
-              >
-                <span class="menu-bullet">
-                  <span class="bullet bullet-dot"></span>
-                </span>
-                <span class="menu-title">{% translate "Account" %}</span>
-              </a>
-              <!--end:Menu link-->
-            </div>
-            {% endif %}
-            <!--end:Menu item-->
 
             <!--begin:Menu item Infrastructure Resources -->
             {% if user.is_superuser %}

@@ -1,0 +1,20 @@
+{% load static react_didyouknow %}
+{% comment %}
+The Did you know? note below the web console's title: the fact of the day about The Smarter Project,
+from the @smarter/didyouknow React app. dashboard/header.html includes it on every page, and it renders
+only while the enable_web_console_did_you_know waffle switch is active.
+
+see: smarter.apps.dashboard.templatetags.react_didyouknow, which reads the React manifest.json file to
+determine the correct hashed filenames to include.
+{% endcomment %}
+{% didyouknow_enabled as didyouknow_on %}
+{% if didyouknow_on %}
+  {% didyouknow_react_assets as didyouknow_assets %}
+  {% for css_file in didyouknow_assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/didyouknow/' %}{{ css_file }}">
+  {% endfor %}
+  <div id="smarter-didyouknow-root"></div>
+  {% for js_file in didyouknow_assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/didyouknow/' %}{{ js_file }}"></script>
+  {% endfor %}
+{% endif %}

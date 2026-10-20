@@ -8,12 +8,13 @@ import { consoleLinks, leafTree, lockedTree, stackademyTree } from "@/mocks/fixt
 const section = (name: string) => screen.getByRole("region", { name });
 
 describe("GettingStarted", () => {
-  it("suggests a Guardrail, tools and styles for an unstyled LLMClient that uses nothing", () => {
+  it("suggests a Guardrail, tools, styles and an api key for an unstyled LLMClient that uses nothing", () => {
     render(<GettingStarted tree={leafTree} styled={false} links={consoleLinks} />);
     expect(screen.getByRole("heading", { level: 2, name: "Make this LLMClient your own" })).toBeInTheDocument();
     expect(section("Add your first Guardrail")).toBeInTheDocument();
     expect(section("Add your first tool")).toBeInTheDocument();
     expect(section("Style its chat")).toBeInTheDocument();
+    expect(section("Add an api key")).toBeInTheDocument();
   });
 
   it("explains Guardrails, links to the Guardrails page and the docs, and opens the manifest", () => {
@@ -65,11 +66,30 @@ describe("GettingStarted", () => {
     );
   });
 
+  it("explains api keys, with an example, the API Keys page and the docs", () => {
+    render(<GettingStarted tree={leafTree} styled={false} links={consoleLinks} />);
+    const apiKey = within(section("Add an api key"));
+    expect(apiKey.getByText(/this LLMClient is public once it is deployed/)).toBeInTheDocument();
+    expect(apiKey.getByText(/Deployment tab/)).toBeInTheDocument();
+    expect(apiKey.getByRole("group", { name: "The LLMClient's api key" })).toHaveTextContent("apiKey: my_api_key");
+    expect(apiKey.getByRole("link", { name: "Browse your api keys" })).toHaveAttribute("href", "/authtoken/");
+    expect(apiKey.getByRole("link", { name: "API Keys" })).toHaveAttribute("href", DOCS_URLS.apiKeys);
+    expect(apiKey.getByRole("link", { name: "Open this LLMClient's manifest" })).toHaveAttribute("href", leafTree.url);
+  });
+
   it("suggests only what is missing", () => {
     render(<GettingStarted tree={lockedTree} styled={true} links={consoleLinks} />);
     expect(screen.queryByRole("region", { name: "Add your first Guardrail" })).not.toBeInTheDocument();
     expect(section("Add your first tool")).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Style its chat" })).not.toBeInTheDocument();
+    expect(section("Add an api key")).toBeInTheDocument();
+  });
+
+  it("doesn't suggest an api key for an LLMClient that has one", () => {
+    const apiKey = stackademyTree.children.find((child) => child.kind === "SmarterAuthToken")!;
+    render(<GettingStarted tree={{ ...leafTree, children: [apiKey] }} styled={false} links={consoleLinks} />);
+    expect(screen.queryByRole("region", { name: "Add an api key" })).not.toBeInTheDocument();
+    expect(section("Add your first Guardrail")).toBeInTheDocument();
   });
 
   it("suggests nothing for an LLMClient that has everything", () => {

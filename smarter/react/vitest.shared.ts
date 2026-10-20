@@ -6,7 +6,8 @@
  *
  * - Tests are the package's src/**\/*.test.{ts,tsx} files, run in jsdom, a simulated browser.
  * - test/setup.ts adds jest-dom's matchers, and MSW, which answers the tests' API requests.
- * - @smarter/common resolves to its TypeScript source, so that tests never depend on a stale build.
+ * - @smarter/common, @smarter/didyouknow and @smarter/onboarding resolve to their TypeScript source, so
+ *   that tests never depend on a stale build.
  * - @/ resolves to the package's src/, as in its vite.config.ts, and @test/ to this test/ folder.
  */
 import path from "node:path";
@@ -28,6 +29,8 @@ export function smarterVitestProject(packageDir: string) {
     resolve: {
       alias: {
         "@smarter/common": path.join(WORKSPACE, "packages", "smarter-common", "src", "index.tsx"),
+        "@smarter/didyouknow": path.join(WORKSPACE, "packages", "smarter-didyouknow", "src", "index.tsx"),
+        "@smarter/onboarding": path.join(WORKSPACE, "packages", "smarter-onboarding", "src", "index.tsx"),
         "@test": path.join(WORKSPACE, "test"),
         "@": path.join(packageDir, "src"),
       },
