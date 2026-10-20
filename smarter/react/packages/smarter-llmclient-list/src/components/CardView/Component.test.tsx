@@ -21,6 +21,7 @@ describe("CardView", () => {
 
   it("shows an LLMClient's details", () => {
     render(<CardView sessionContext={sessionContext} objects={[makeObject(1)]} onRequery={() => {}} />);
+    expect(screen.getByRole("link", { name: makeObject(1).name })).not.toHaveAttribute("data-smarter-onboarding");
     expect(screen.getByRole("link", { name: "example_1" })).toBeInTheDocument();
     expect(detail("Status")).toHaveTextContent("Not deployed");
     expect(detail("Functions")).toHaveTextContent("get_current_weather()");

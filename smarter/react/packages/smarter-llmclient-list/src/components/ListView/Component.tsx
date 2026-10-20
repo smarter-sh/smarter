@@ -35,6 +35,7 @@ import type { LLMClient } from "@/lib/Types";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/const";
+import { weatherTargetAttribute } from "@/components/WeatherHint/const";
 
 import "@/components/ListView/styles.css";
 
@@ -122,7 +123,9 @@ const LLMClientRow = React.memo(function LLMClientRow({
     <tr className="" key={llmclient.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={llmclient.urlChatapp}>{llmclient.name}</a>
+        <a href={llmclient.urlChatapp} {...weatherTargetAttribute(llmclient.name)}>
+          {llmclient.name}
+        </a>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

@@ -42,9 +42,8 @@ format and the same languages, in the smarter-chat repository. It follows the co
 through the ``<html lang>`` attribute of ``base.html``. See
 :doc:`Developing Smarter Chat <../smarter-chat/development>`.
 
-The language menu, in the user menu of the console's navbar, lists each language in its own name,
-
-and posts the choice to Django's ``set_language`` view at ``/i18n/setlang/``. It is shown only when
+The language menu, in the user menu of the console's navbar (the ``@smarter/dashboard-user-menu``
+React app), lists each language in its own name, and posts the choice to Django's ``set_language`` view at ``/i18n/setlang/``. It is shown only when
 ``settings.LANGUAGES`` has more than one language.
 
 The Message Catalogs

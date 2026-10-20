@@ -1,6 +1,6 @@
 ---
 name: blog.smarter.sh-publish
-description: Use when asked to publish, upload, post, update or draft a post on blog.smarter.sh (WordPress) yourself, e.g. "publish the release announcements to the blog", "post this to the WordPress blog", "fix the typo in the v0.21 post", or when asked which release announcement was published last. Covers the credentials in .env, why the scripts log in with a cookie and REST nonce instead of Application Passwords, converting a Markdown post to the Gutenberg blocks the blog uses (md2wp.py), wp.py's whoami/list/get/publish commands, titles, slugs and categories, the draft-check-publish routine, verifying the public page, and choosing which releases to group into one announcement.
+description: Use when asked to publish, upload, post, update or draft a post on blog.smarter.sh (WordPress) yourself, e.g. "publish the release announcements to the blog", "post this to the WordPress blog", "fix the typo in the v0.21 post", or when asked which release announcement was published last. Covers the credentials in .env, why the scripts log in with a cookie and REST nonce instead of Application Passwords, converting a Markdown post to the Gutenberg blocks the blog uses (md2wp.py), wp.py's whoami/list/get/publish/upload commands, adding screenshots and images, titles, slugs and categories, the draft-check-publish routine, verifying the public page, and choosing which releases to group into one announcement.
 ---
 
 # Publishing to blog.smarter.sh
@@ -59,7 +59,9 @@ opens cleanly in the block editor, and the user can edit it there.
 - Supported: ATX headings, paragraphs, one level of `-` or `1.` lists (an
   indented line continues the item), pipe tables, `>` quotes, `---`, fenced
   code, and inline `**bold**`, `*italics*`, `` `code` `` and `[links](url)`.
-  Nested lists, images and raw HTML are not. Keep the post within that.
+  An image is `![alt](url "caption")` on a line of its own, and becomes an
+  image block linked to the full-size file. Nested lists, inline images and
+  raw HTML are not supported. Keep the post within that.
 - Code fences need a language that SyntaxHighlighter has a brush for: `bash`,
   `yaml`, `python`, `jscript`, `sql`, `xml`, `css`, `diff` or `plain`. An
   unknown language, such as `typescript` or `toml`, renders as unhighlighted
@@ -83,7 +85,18 @@ $S/wp.py get 132 --raw /tmp/x.html # a post's metadata, and its block markup
 $S/wp.py publish ~/desktop/blog-v0.21-v0.23.md --title "Release v0.21 – v0.23" \
   --slug release-v0-21-v0-23 --category 4 --status draft
 $S/wp.py publish ... --status publish --id 319   # update post 319, here to publish it
+$S/wp.py upload ~/desktop/shot.png --alt "What the image shows"  # id and source_url
 ```
+
+To add a screenshot, `upload` it and put its `source_url` in an image line.
+Resize it to 1680 px wide first (`sips --resampleWidth 1680 in.png --out
+<scratchpad>/out.png`). A larger image, such as a 3000 px Retina screenshot,
+makes WordPress answer 500 while it builds the resized copies. The file is
+saved anyway, but without its large sizes and never moved to
+`cdn.blog.smarter.sh`. If that happens, delete the broken media item
+(`DELETE media/<id>` with `force=true`) and upload the resized file. Read an
+image before uploading it. It is public too, so check it shows no keys,
+hostnames, account numbers or customer data.
 
 `publish` without `--id` creates a new post every time. To change a post, pass
 its `--id`, or you'll publish a duplicate. It closes comments, like the earlier

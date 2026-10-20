@@ -15,6 +15,7 @@ from django.db.models.query import Prefetch
 from django.templatetags.static import static
 
 # our stuff
+from smarter.apps.account.profile_selection import selected_user_profile_id
 from smarter.apps.account.signals import new_user_created
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
@@ -297,6 +298,8 @@ class UserProfile(MetaDataModel):
     :param profile_image_url: URLField. The profile image that the oauth provider supplied at login.
     :param profile_image: ImageField. The profile image that the user uploaded. Takes precedence over ``profile_image_url``.
     :param is_test: Boolean. Indicates if this profile is for testing purposes.
+    :param welcomed_at: DateTimeField. When the user closed the web console's welcome dialog, or ``None`` if they
+        haven't seen it yet. See :mod:`smarter.apps.dashboard.views.views.api.welcome`.
 
     .. important::
 
@@ -336,6 +339,11 @@ class UserProfile(MetaDataModel):
     )
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
+    )
+    welcomed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When the user closed the web console's welcome dialog. Empty until they have seen it.",
     )
 
     @property
@@ -550,6 +558,42 @@ class UserProfile(MetaDataModel):
         return _get_admin_for_account(account_id=account.id, class_name=UserProfile.__name__)  # type: ignore[return-value]
 
     @classmethod
+    def get_selected_object(cls, user_id: Optional[int]) -> Optional["UserProfile"]:
+        """
+        Return the UserProfile that the user chose in the web console's user menu, if any.
+
+        A user with more than one UserProfile can choose which one the console acts as, with the user
+        menu's **Change Profile** item, which stores its id in the session. For the length of a request,
+        the id is in :data:`~smarter.apps.account.profile_selection.selected_user_profile_id`. See
+        :mod:`smarter.apps.account.profile_selection`.
+
+        :param user_id: The primary key of the user whose profile is being resolved.
+        :type user_id: Optional[int]
+        :returns: The chosen UserProfile, or ``None`` if the request has no choice, the user is another
+            user, or the chosen profile no longer exists.
+        :rtype: Optional[UserProfile]
+
+        **Example usage**::
+
+            user_profile = UserProfile.get_selected_object(request.user.pk) or newest_user_profile
+        """
+        profile_id = selected_user_profile_id.get()
+        if not profile_id or not user_id:
+            return None
+        try:
+            user_profile = cls.get_cached_object(pk=profile_id)
+        except cls.DoesNotExist:
+            logger.debug(
+                "%s.get_selected_object() the chosen UserProfile %s no longer exists",
+                logging.formatted_text(__name__ + ".UserProfile"),
+                profile_id,
+            )
+            return None
+        if user_profile.user_id != user_id:  # type: ignore[attr-defined]
+            return None
+        return user_profile
+
+    @classmethod
     def get_cached_object(
         cls,
         *args,
@@ -566,6 +610,10 @@ class UserProfile(MetaDataModel):
 
         This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
+
+        Given a ``user`` (or ``username``) and no ``account``, it returns the profile that the user chose in
+        the web console's user menu, for this request (see :meth:`get_selected_object`), else the user's
+        newest profile.
 
         Example usage:
 
@@ -729,7 +777,10 @@ class UserProfile(MetaDataModel):
             if user and account:
                 retval = _get_object_by_user_and_account(user, account, UserProfile.__name__)
             elif user:
-                retval = _get_object_by_user(user=user, class_name=UserProfile.__name__)
+                # the profile that the user chose in the user menu, else their newest one.
+                retval = cls.get_selected_object(user.pk) or _get_object_by_user(
+                    user=user, class_name=UserProfile.__name__
+                )
             else:
                 retval = _get_object_by_account(account=account, class_name=UserProfile.__name__)
             return retval

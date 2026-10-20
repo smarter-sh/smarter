@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 14:51+0000\n"
+"POT-Creation-Date: 2026-10-20 16:14+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -351,7 +351,6 @@ msgid "Cancel"
 msgstr ""
 
 #: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Sign In"
 msgstr ""
 
@@ -413,7 +412,6 @@ msgstr ""
 #: smarter/templates/account/dashboard/api-key.html
 #: smarter/templates/account/dashboard/settings.html
 #: smarter/templates/account/dashboard/user.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Account Settings"
 msgstr ""
 
@@ -547,7 +545,6 @@ msgid "Home"
 msgstr ""
 
 #: smarter/templates/account/dashboard/base.html
-#: smarter/templates/dashboard/sidebar.html
 msgid "Account"
 msgstr ""
 
@@ -970,7 +967,6 @@ msgid "Phone number"
 msgstr ""
 
 #: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Language"
 msgstr ""
 
@@ -1391,34 +1387,6 @@ msgstr ""
 
 #: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
 msgid "System"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Change Profile Image"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Profile Image"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Superuser"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Staff"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Remove Profile Image"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "The profile image could not be saved."
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/user-menu-item.html
-msgid "Sign Out"
 msgstr ""
 
 #: smarter/templates/dashboard/sidebar.html

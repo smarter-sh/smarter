@@ -4,11 +4,13 @@
 from http import HTTPStatus
 from typing import Optional
 from uuid import UUID
+from warnings import deprecated
 
 from django import forms, http
 from django.http import HttpResponseRedirect
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.views.dashboard import ACCOUNT_UI_DEPRECATION_MESSAGE
 from smarter.lib import json, logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
@@ -38,6 +40,7 @@ class APIKeyBase(SmarterAdminWebView):
     """Base class for API key views."""
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class APIKeysView(APIKeyBase):
     """View for the account API keys."""
 
@@ -54,6 +57,7 @@ class APIKeysView(APIKeyBase):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class APIKeyView(APIKeyBase):
     """Detail View for api key management."""
 

@@ -136,6 +136,9 @@ inputs:
   smarter-branding-support-phone-number:
     description: "The support phone number to use in the branding info"
     required: false
+  smarter-cache-expiration:
+    description: "The cache expiration time in seconds for all cacheable views"
+    required: false
   smarter-email-admin:
     description: "The admin email to use in the branding info"
     required: false
@@ -423,6 +426,7 @@ runs:
             "SMARTER_BRANDING_PRIMARY_CONTACT": ${{ inputs.smarter-branding-primary-contact && format('"{0}"', inputs.smarter-branding-primary-contact) || 'null' }},
             "SMARTER_BRANDING_SUPPORT_HOURS": ${{ inputs.smarter-branding-support-hours && format('"{0}"', inputs.smarter-branding-support-hours) || 'null' }},
             "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ inputs.smarter-branding-support-phone-number && format('"{0}"', inputs.smarter-branding-support-phone-number) || 'null' }},
+            "SMARTER_CACHE_EXPIRATION": ${{ inputs.smarter-cache-expiration && format('"{0}"', inputs.smarter-cache-expiration) || 'null' }},
             "SMARTER_BRAVE_SEARCH_API_KEY": ${{ inputs.brave-search-api-key && format('"{0}"', inputs.brave-search-api-key) || 'null' }},
             "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},

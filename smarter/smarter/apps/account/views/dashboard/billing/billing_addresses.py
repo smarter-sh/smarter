@@ -2,10 +2,12 @@
 """Billing Views for the account dashboard."""
 
 from http import HTTPStatus
+from warnings import deprecated
 
 from django import forms, http
 
 from smarter.apps.account.tests.factories import billing_address_factory
+from smarter.apps.account.views.dashboard import ACCOUNT_UI_DEPRECATION_MESSAGE
 from smarter.lib.django.views import SmarterAdminWebView
 
 
@@ -22,6 +24,7 @@ class BillingAddressForm(forms.Form):
     country = forms.CharField()
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class BillingAddressesView(SmarterAdminWebView):
     """View for the account billing payment methods."""
 
@@ -31,6 +34,7 @@ class BillingAddressesView(SmarterAdminWebView):
         return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK.value)
 
 
+@deprecated(ACCOUNT_UI_DEPRECATION_MESSAGE)
 class BillingAddressView(SmarterAdminWebView):
     """View for the account billing detail payment method."""
 

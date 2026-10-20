@@ -58,17 +58,29 @@ describe("App", () => {
     vi.unstubAllGlobals();
   });
 
-  it("opens and closes the Docs dialog, whose button is only in sandbox mode", async () => {
+  it("opens and closes the Docs dialog from the Help menu, which is only in sandbox mode", async () => {
     const user = userEvent.setup();
     render(<App workbench={plainWorkbench} />);
     await screen.findByText(WELCOME);
-    await user.click(screen.getByRole("button", { name: "Docs" }));
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    await user.click(screen.getByRole("button", { name: "Technical references" }));
     expect(screen.getByRole("dialog", { name: "Docs" })).toBeInTheDocument();
+    // the menu closed as the dialog opened.
+    expect(screen.queryByRole("button", { name: "Technical references" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Sandbox mode" }));
-    expect(screen.queryByRole("button", { name: "Docs" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Production" }));
+    expect(screen.queryByRole("button", { name: "Help" })).not.toBeInTheDocument();
+  });
+
+  it("has the guided tour, but no Docs, in its Help menu without the mode switch", async () => {
+    const user = userEvent.setup();
+    render(<App workbench={{ ...plainWorkbench, toggleMetadata: false }} />);
+    await screen.findByText(WELCOME);
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    expect(screen.getByRole("button", { name: "Take the guided tour" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Technical references" })).not.toBeInTheDocument();
   });
 
   it("hides the Console and its button in production mode, and restores them in sandbox mode", async () => {
@@ -77,12 +89,12 @@ describe("App", () => {
     await screen.findByText(WELCOME);
     expect(screen.getByRole("button", { name: "Show the Console" })).toHaveAttribute("aria-pressed", "true");
 
-    await user.click(screen.getByRole("button", { name: "Sandbox mode" }));
+    await user.click(screen.getByRole("button", { name: "Production" }));
     expect(screen.queryByRole("navigation", { name: "Console" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Show the Console" })).not.toBeInTheDocument();
     expect(screen.queryByRole("separator")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Production mode" }));
+    await user.click(screen.getByRole("button", { name: "Sandbox" }));
     expect(screen.getByRole("navigation", { name: "Console" })).toBeInTheDocument();
   });
 
@@ -104,6 +116,81 @@ describe("App", () => {
     expect(screen.queryByRole("navigation", { name: "Console" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show the Console" }));
     expect(screen.getByRole("navigation", { name: "Console" })).toBeInTheDocument();
+  });
+
+  /** Lays every element out with a size, so that the tour finds the parts that it points to. jsdom has no layout. */
+  function layOutThePage() {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+      top: 100,
+      left: 100,
+      width: 120,
+      height: 40,
+      x: 100,
+      y: 100,
+      right: 220,
+      bottom: 140,
+      toJSON: () => ({}),
+    } as DOMRect);
+  }
+
+  const onboarding = {
+    enabled: true,
+    apiUrl: "/dashboard/api/onboarding/seen/",
+    seen: [],
+    csrfCookieName: "csrftoken",
+    cookieDomain: "localhost",
+  };
+
+  it("takes the guided tour from the Help menu, which opens the Console first", async () => {
+    layOutThePage();
+    const user = userEvent.setup();
+    render(<App workbench={plainWorkbench} onboarding={null} />);
+    await screen.findByText(WELCOME);
+    await user.click(screen.getByRole("button", { name: "Show the Console" }));
+    expect(screen.queryByRole("navigation", { name: "Console" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    await user.click(screen.getByRole("button", { name: "Take the guided tour" }));
+    expect(
+      await screen.findByRole("dialog", { name: "Welcome to the Prompt Engineer's Workbench" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Console" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("dialog", { name: "The chat" })).toBeInTheDocument();
+    // the Console's Manifest tab, among others, isn't on this page: the tour leaves its step out.
+    for (let step = 0; step < 4; step++) await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("dialog", { name: "Tool calls" })).toBeInTheDocument();
+    // the step selects the tab that it is about, so that the Console shows its content.
+    expect(screen.getByRole("button", { name: "Tool Calls" })).toHaveAttribute("aria-pressed", "true");
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("starts the tour by itself once the chat is ready, and records it, once", async () => {
+    layOutThePage();
+    const posted: unknown[] = [];
+    server.use(
+      http.post(onboarding.apiUrl, async ({ request }) => {
+        posted.push(await request.json());
+        return HttpResponse.json({ seen: ["workbench_tour"] });
+      }),
+    );
+    const user = userEvent.setup();
+    render(<App workbench={plainWorkbench} onboarding={onboarding} />);
+    await user.click(await screen.findByRole("button", { name: "Skip tour" }, { timeout: 3000 }));
+    await waitFor(() => expect(posted).toEqual([{ hint: "workbench_tour", outcome: "dismissed" }]));
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    await user.click(screen.getByRole("button", { name: "Take the guided tour" }));
+    await user.click(await screen.findByRole("button", { name: "Skip tour" }));
+    expect(posted).toHaveLength(1);
+  });
+
+  it("doesn't start the tour by itself for a user who has taken it", async () => {
+    layOutThePage();
+    render(<App workbench={plainWorkbench} onboarding={{ ...onboarding, seen: ["workbench_tour"] }} />);
+    await screen.findByText(WELCOME);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("resizes the chat with the separator", async () => {
@@ -143,8 +230,8 @@ describe("App", () => {
     );
 
     // production mode streams the server's own log level.
-    await user.click(screen.getByRole("button", { name: "Sandbox mode" }));
-    await user.click(screen.getByRole("button", { name: "Production mode" }));
+    await user.click(screen.getByRole("button", { name: "Production" }));
+    await user.click(screen.getByRole("button", { name: "Sandbox" }));
     expect(FakeEventSource.instances.length).toBeGreaterThan(streams);
     vi.unstubAllGlobals();
   });
