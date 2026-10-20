@@ -8,6 +8,9 @@ session management, template rendering, routing, and deployment while
 enabling modern, highly interactive user interfaces. The core design principle
 is that React build artifacts are treated as ordinary Django static assets that
 leverage Django's existing serving and management of authentication and session data.
+This approach has scaled extremely well. As of Q4-2026, Smarter hosts more than 30
+independent React applications within a single Django deployment, each with its own
+runtime configuration, API endpoints, and authentication context.
 
 React applications are compiled by `Vite.js <https://vite.dev/>`__ into versioned JavaScript and CSS
 bundles and emitted directly into Django's static file hierarchy. At runtime,
@@ -664,6 +667,7 @@ pipelines and advanced React development workflows.
   react-integration/prompt-passthrough
   react-integration/smarter-chat
   react-integration/terminal-application
+  react-integration/welcome
   lib/django/templatetags
 
 .. toctree::

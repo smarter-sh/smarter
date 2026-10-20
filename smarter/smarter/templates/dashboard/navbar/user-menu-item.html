@@ -178,13 +178,15 @@
     </script>
     <!--end::Menu item Profile Image-->
     {% endif %}
-    <!--begin::Menu item-->
-    <div class="menu-item px-5 my-1">
-      <a href="/dashboard/account/dashboard/settings/" class="menu-link px-5"
-        >{% translate "Account Settings" %}</a
+    {% if user.is_authenticated %}
+    <!--begin::Menu item Welcome Tour: reopens the welcome dialog, the @smarter/welcome React app. See templates/react/welcome.html-->
+    <div class="menu-item px-5 mt-1">
+      <a href="#" class="menu-link px-5" data-smarter-welcome-open="true"
+        >{% translate "Welcome Tour" %}</a
       >
     </div>
-    <!--end::Menu item-->
+    <!--end::Menu item Welcome Tour-->
+    {% endif %}
     <!--begin::Menu item-->
     {% if user.is_authenticated %}
     <div class="menu-item px-5">

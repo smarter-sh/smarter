@@ -1,0 +1,31 @@
+{% load static react_welcome %}
+{% comment %}
+The web console's welcome dialog, the @smarter/welcome React app. dashboard/base.html includes it on
+every page, for signed-in users. It opens by itself until the user closes it once, and the user menu's
+Welcome Tour item (data-smarter-welcome-open) opens it again.
+
+see: smarter.apps.dashboard.templatetags.react_welcome, which reads the React manifest.json file to
+determine the correct hashed filenames to include, and smarter.apps.dashboard.views.views.api.welcome.
+{% endcomment %}
+{% welcome_react_assets as welcome_assets %}
+{% welcome_dialog as welcome %}
+{% for css_file in welcome_assets.css %}
+  <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/welcome/' %}{{ css_file }}">
+{% endfor %}
+<div
+  id="{{ welcome.root_id }}"
+  smarter-csrf-cookie-name="{{ welcome.csrf_cookie_name }}"
+  smarter-django-session-cookie-name="{{ welcome.django_session_cookie_name }}"
+  smarter-cookie-domain="{{ welcome.cookie_domain }}"
+  smarter-welcome-api-url="{{ welcome.api_url }}"
+  smarter-welcome-dismiss-api-url="{{ welcome.dismiss_api_url }}"
+  smarter-welcome-show="{{ welcome.show|yesno:'true,false' }}"
+  smarter-first-name="{{ welcome.first_name }}"
+  smarter-logo-url="{% static 'images/logo/smarter-crop.png' %}"
+  smarter-illustrations-url="{% static 'assets/media/illustrations/dozzy-1/' %}"
+  react-debug-mode="{{ welcome.react_debug_mode|yesno:'true,false' }}"
+  smarter-request-id="{{ welcome.smarter_request_id }}"
+></div>
+{% for js_file in welcome_assets.js %}
+  <script class="smarter" type="module" src="{% static 'react/@smarter/welcome/' %}{{ js_file }}"></script>
+{% endfor %}

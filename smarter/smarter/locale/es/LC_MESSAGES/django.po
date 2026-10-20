@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 14:51+0000\n"
+"POT-Creation-Date: 2026-10-20 11:45+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -423,7 +423,6 @@ msgstr "Actividad"
 #: smarter/templates/account/dashboard/api-key.html
 #: smarter/templates/account/dashboard/settings.html
 #: smarter/templates/account/dashboard/user.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Account Settings"
 msgstr "Configuración de la cuenta"
 
@@ -568,7 +567,6 @@ msgid "Home"
 msgstr "Inicio"
 
 #: smarter/templates/account/dashboard/base.html
-#: smarter/templates/dashboard/sidebar.html
 msgid "Account"
 msgstr "Cuenta"
 
@@ -1477,6 +1475,10 @@ msgstr "Quitar imagen de perfil"
 #: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "The profile image could not be saved."
 msgstr "No se pudo guardar la imagen de perfil."
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Welcome Tour"
+msgstr "Recorrido de bienvenida"
 
 #: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Sign Out"

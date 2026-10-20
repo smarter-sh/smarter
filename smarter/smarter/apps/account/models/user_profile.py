@@ -297,6 +297,8 @@ class UserProfile(MetaDataModel):
     :param profile_image_url: URLField. The profile image that the oauth provider supplied at login.
     :param profile_image: ImageField. The profile image that the user uploaded. Takes precedence over ``profile_image_url``.
     :param is_test: Boolean. Indicates if this profile is for testing purposes.
+    :param welcomed_at: DateTimeField. When the user closed the web console's welcome dialog, or ``None`` if they
+        haven't seen it yet. See :mod:`smarter.apps.dashboard.views.views.api.welcome`.
 
     .. important::
 
@@ -336,6 +338,11 @@ class UserProfile(MetaDataModel):
     )
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
+    )
+    welcomed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When the user closed the web console's welcome dialog. Empty until they have seen it.",
     )
 
     @property

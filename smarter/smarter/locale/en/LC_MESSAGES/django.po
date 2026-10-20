@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 14:51+0000\n"
+"POT-Creation-Date: 2026-10-20 11:43+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -413,7 +413,6 @@ msgstr ""
 #: smarter/templates/account/dashboard/api-key.html
 #: smarter/templates/account/dashboard/settings.html
 #: smarter/templates/account/dashboard/user.html
-#: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "Account Settings"
 msgstr ""
 
@@ -547,7 +546,6 @@ msgid "Home"
 msgstr ""
 
 #: smarter/templates/account/dashboard/base.html
-#: smarter/templates/dashboard/sidebar.html
 msgid "Account"
 msgstr ""
 
@@ -1415,6 +1413,10 @@ msgstr ""
 
 #: smarter/templates/dashboard/navbar/user-menu-item.html
 msgid "The profile image could not be saved."
+msgstr ""
+
+#: smarter/templates/dashboard/navbar/user-menu-item.html
+msgid "Welcome Tour"
 msgstr ""
 
 #: smarter/templates/dashboard/navbar/user-menu-item.html
