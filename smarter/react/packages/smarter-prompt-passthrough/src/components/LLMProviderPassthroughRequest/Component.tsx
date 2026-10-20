@@ -2,6 +2,7 @@ import React from "react";
 import Editor from "@monaco-editor/react";
 import type { editor as monaco } from "monaco-editor";
 import Toolbar from "@/components/Toolbar";
+import EditorViewToolbar from "@/components/EditorViewToolbar";
 import LLMProviderSelector from "@/components/LLMProviderSelector";
 import TemplateSelector from "@/components/TemplateSelector/";
 
@@ -75,6 +76,7 @@ export default function LLMProviderPassthroughRequest({
 
       <div className="card-body">
         <Toolbar editor={editor} />
+        <EditorViewToolbar editor={editor} />
         <Editor
           height="500px"
           defaultLanguage="json"
@@ -88,7 +90,6 @@ export default function LLMProviderPassthroughRequest({
             fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
             fontLigatures: true,
             lineHeight: 22,
-            wordWrap: "on",
             formatOnPaste: true,
             formatOnType: true,
             automaticLayout: true,
