@@ -111,17 +111,11 @@ export function workbenchTourSteps(): TourStep[] {
       ),
     },
     {
-      target: ".smarter-workbench-docs-button",
-      icon: "ki-book-open",
-      title: gettext("Docs"),
-      text: gettext("Links to the documentation, for when you want to learn more about any of this."),
-    },
-    {
-      target: ".smarter-workbench-tour-button",
+      target: ".smarter-workbench-help-button",
       icon: "ki-medal-star",
       title: gettext("Now try it yourself"),
       text: gettext(
-        "Ask the LLMClient a question, then look at the Console's Tool Calls and Server Logs tabs to see what happened. You can take this tour again at any time with this button.",
+        "Ask the LLMClient a question, then look at the Console's Tool Calls and Server Logs tabs to see what happened. The Help menu has links to the documentation, and takes you on this tour again at any time.",
       ),
     },
   ];

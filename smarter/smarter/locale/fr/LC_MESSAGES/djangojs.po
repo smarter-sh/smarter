@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 16:16+0000\n"
+"POT-Creation-Date: 2026-10-20 16:46+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -4848,8 +4848,7 @@ msgstr ""
 "navigateur reçoit de nouveau 405 Method Not Allowed. L'api n'est pas "
 "affectée."
 
-#. Translators: the button that opens the dialog of links to the documentation.
-#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/App.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx, react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
+#. Translators: used in react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderLinks.tsx, react/packages/smarter-workbench/src/components/DocsDialog/Component.tsx
 msgid "Docs"
 msgstr "Documentation"
 
@@ -8497,21 +8496,6 @@ msgid "A few good first stops on your journey:"
 msgstr "Quelques bonnes premières étapes pour votre parcours :"
 
 #. Translators: used in react/packages/smarter-workbench/src/App.tsx
-msgid "Technical references for prompt engineers and software engineers"
-msgstr ""
-"Références techniques pour les ingénieurs de prompts et les ingénieurs "
-"logiciels"
-
-#. Translators: used in react/packages/smarter-workbench/src/App.tsx
-msgid "Take a guided tour of the workbench"
-msgstr "Faites une visite guidée de l'atelier"
-
-#. Translators: the button that starts the guided tour of the workbench.
-#. Translators: used in react/packages/smarter-workbench/src/App.tsx
-msgid "Tour"
-msgstr "Visite"
-
-#. Translators: used in react/packages/smarter-workbench/src/App.tsx
 msgid "Hide the Console"
 msgstr "Masquer la console"
 
@@ -8632,6 +8616,25 @@ msgstr "Héberger un LLMClient dans votre propre application."
 #. Translators: used in react/packages/smarter-workbench/src/components/ErrorBoundary/Component.tsx
 msgid "Something went wrong."
 msgstr "Une erreur s'est produite."
+
+#. Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+msgid "The documentation, and a guided tour of the workbench"
+msgstr "La documentation et une visite guidée de l'atelier"
+
+#. Translators: the button that opens the workbench's Help menu.
+#. Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+msgid "Help"
+msgstr "Aide"
+
+#. Translators: the Help menu's item that opens the dialog of links to the documentation.
+#. Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+msgid "Technical references"
+msgstr "Références techniques"
+
+#. Translators: the Help menu's item that starts the guided tour of the workbench.
+#. Translators: used in react/packages/smarter-workbench/src/components/HelpMenu/Component.tsx
+msgid "Take the guided tour"
+msgstr "Faire la visite guidée"
 
 #. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid "Welcome to the Prompt Engineer's Workbench"
@@ -8770,26 +8773,19 @@ msgstr ""
 "onglet montre comment."
 
 #. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
-msgid ""
-"Links to the documentation, for when you want to learn more about any of "
-"this."
-msgstr ""
-"Des liens vers la documentation, pour quand vous voulez en savoir plus sur "
-"tout cela."
-
-#. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid "Now try it yourself"
 msgstr "À vous d'essayer"
 
 #. Translators: used in react/packages/smarter-workbench/src/components/WorkbenchTour/steps.ts
 msgid ""
 "Ask the LLMClient a question, then look at the Console's Tool Calls and "
-"Server Logs tabs to see what happened. You can take this tour again at any "
-"time with this button."
+"Server Logs tabs to see what happened. The Help menu has links to the "
+"documentation, and takes you on this tour again at any time."
 msgstr ""
 "Posez une question au LLMClient, puis regardez les onglets Appels d'outils "
-"et Journaux du serveur de la console pour voir ce qui s'est passé. Vous "
-"pouvez refaire cette visite à tout moment avec ce bouton."
+"et Journaux du serveur de la Console pour voir ce qui s'est passé. Le menu "
+"Aide a des liens vers la documentation, et vous refait faire cette visite à "
+"tout moment."
 
 #. Translators: used in react/packages/smarter-workbench/src/lib/layout.ts
 msgid "Resize the chat and the Console"
@@ -9082,6 +9078,21 @@ msgstr "La confirmation du mot de passe est obligatoire"
 #. Translators: used in smarter/static/js/coming-soon.js
 msgid "Added"
 msgstr "Ajouté"
+
+#~ msgid "Technical references for prompt engineers and software engineers"
+#~ msgstr ""
+#~ "Références techniques pour les ingénieurs de prompts et les ingénieurs "
+#~ "logiciels"
+
+#~ msgid "Tour"
+#~ msgstr "Visite"
+
+#~ msgid ""
+#~ "Links to the documentation, for when you want to learn more about any of "
+#~ "this."
+#~ msgstr ""
+#~ "Des liens vers la documentation, pour quand vous voulez en savoir plus "
+#~ "sur tout cela."
 
 #~ msgid ""
 #~ "Smarter's YAML manifests closely resemble Kubernetes manifests: each one "

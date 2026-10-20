@@ -3,18 +3,18 @@
  * package, and the developer Console beside it.
  *
  * The user resizes the chat and the Console by dragging the separator between them, and hides the Console, which
- * slides out to the right, with the Console button in the chat's header. The browser remembers both. In sandbox
- * mode, the chat's header also has a Docs button, which opens a dialog of links to the technical references. In
- * production mode, the chat displays only the conversation, as the LLMClient's users see it, and the Console, its
- * button and the Docs button are hidden. The Console's server logs follow the mode: DEBUG and above in sandbox mode,
- * and the server's own log level in production mode. A new chat clears them.
+ * slides out to the right, with the Console button at the right end of the chat's header. The browser remembers
+ * both. Beside it, the Help menu starts the guided tour, and in sandbox mode it also opens the Docs dialog of links
+ * to the technical references. In production mode, the chat displays only the conversation, as the LLMClient's users
+ * see it, and the Console, its button and the Help menu are hidden. The Console's server logs follow the mode: DEBUG
+ * and above in sandbox mode, and the server's own log level in production mode. A new chat clears them.
  *
  * The chat fetches the configuration's diagnostic parts (verbose) only while the Console displays them: in its Tool
  * Calls and Config tabs. When the Manifest tab's editor saves the manifest, the chat reloads the configuration.
  *
  * A guided tour, for new users, explains each part of the workbench. It starts by itself, once the chat is ready
  * and the welcome dialog is closed, until the user has finished or skipped it once, and again whenever they click
- * the Tour button in the chat's header. It opens the Console first, so that it can point to the Console's tabs.
+ * the Help menu's Take the guided tour. It opens the Console first, so that it can point to the Console's tabs.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { gettext } from "@smarter/common";
@@ -34,7 +34,8 @@ import Console from "@/components/Console";
 import { initialMenuItem, VERBOSE_MENU_ITEMS, type MenuItem } from "@/components/Console/enums";
 import DocsDialog from "@/components/DocsDialog";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { ConsoleIcon, DocsIcon, TourIcon } from "@/components/icons";
+import HelpMenu from "@/components/HelpMenu";
+import { ConsoleIcon } from "@/components/icons";
 import { workbenchTourSteps } from "@/components/WorkbenchTour/steps";
 import { useChatWidth, useConsoleVisible } from "@/lib/layout";
 import type { WorkbenchConfig } from "@/lib/types";
@@ -108,30 +109,7 @@ export default function App({ workbench, onboarding }: AppProps) {
 
   const headerActions = (
     <>
-      {sandbox && (
-        <HeaderButton
-          className="smarter-workbench-docs-button"
-          icon={<DocsIcon />}
-          onClick={() => setDocsOpen(true)}
-          title={gettext("Technical references for prompt engineers and software engineers")}
-          aria-haspopup="dialog"
-        >
-          {/* Translators: the button that opens the dialog of links to the documentation. */}
-          {gettext("Docs")}
-        </HeaderButton>
-      )}
-      {!isProduction && (
-        <HeaderButton
-          className="smarter-workbench-tour-button"
-          icon={<TourIcon />}
-          onClick={startTour}
-          title={gettext("Take a guided tour of the workbench")}
-          aria-haspopup="dialog"
-        >
-          {/* Translators: the button that starts the guided tour of the workbench. */}
-          {gettext("Tour")}
-        </HeaderButton>
-      )}
+      {!isProduction && <HelpMenu onDocs={sandbox ? () => setDocsOpen(true) : undefined} onTour={startTour} />}
       {!isProduction && (
         <HeaderButton
           className="smarter-workbench-console-toggle"

@@ -86,7 +86,7 @@ New users are guided there step by step. After the welcome tour, a sparkling spo
 **LLM Clients** link suggests where to start, then one on the Get Weather example LLMClient, and the
 workbench itself opens with a guided tour of its chat and its Console, written for people who have never
 programmed. Each hint shows until the user has acted on it once, on any device, and the workbench's
-**Tour** button takes the tour again at any time. A platform administrator can turn the hints off with the
+**Help** menu takes the tour again at any time. A platform administrator can turn the hints off with the
 ``enable_web_console_onboarding_hints`` waffle switch. See
 :doc:`@smarter/onboarding <../smarter-framework/developer-reference/react-integration/onboarding>`.
 

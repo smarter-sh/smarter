@@ -20,8 +20,8 @@ LLMClient, and explain what they see along the way:
    dialog closed, the workbench opens its Console and starts a tour, step by
    step, in plain words: the chat, the message box, sandbox and production
    modes, the Console and each of its tabs (the manifest, the architecture,
-   the server logs, the tool calls, the configuration and the deployment), the
-   docs, and the **Tour** button, which takes the tour again at any time. A step
+   the server logs, the tool calls, the configuration and the deployment), and
+   the **Help** menu, which has the docs and takes the tour again at any time. A step
    about a part that the page doesn't have, e.g. the Server Logs tab when the
    server logs are off, is left out.
 
