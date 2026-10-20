@@ -5,7 +5,7 @@
 # usage: Sphinx remote build requirements for
 #        https://app.readthedocs.org/projects/smarter/builds
 #
-#       pip-compile smarter/requirements/in/docs.in --upgrade -o smarter/requirements/docs.txt
+#       pip-compile --upgrade smarter/requirements/in/docs.in --upgrade -o smarter/requirements/docs.txt
 # -----------------------------------------------------------------------------
 
 -r constraints.in
