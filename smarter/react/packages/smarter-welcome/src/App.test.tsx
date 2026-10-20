@@ -8,14 +8,15 @@ import { server } from "@test/server";
 
 import App, { OPEN_ATTRIBUTE } from "@/App";
 
-/** Answers both welcome apis, and counts the dismiss api's requests. */
+/** Answers both welcome apis, and records the dismiss api's request bodies. */
 function useWelcomeApis(dismissStatus = 200) {
   const dismissed = vi.fn();
   server.use(
     http.post(appContext.apiUrl, () => HttpResponse.json(welcome)),
-    http.post(appContext.dismissApiUrl, () => {
-      dismissed();
-      return HttpResponse.json({ ...welcome, welcomed: true }, { status: dismissStatus });
+    http.post(appContext.dismissApiUrl, async ({ request }) => {
+      const body = (await request.json()) as { showAtStartup: boolean };
+      dismissed(body);
+      return HttpResponse.json({ ...welcome, welcomed: !body.showAtStartup }, { status: dismissStatus });
     }),
   );
   return dismissed;
@@ -30,13 +31,50 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Skip tour" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() => expect(dismissed).toHaveBeenCalledTimes(1));
+    // Show at startup is ticked for a new user: the dialog opens again when they next sign in.
+    expect(dismissed).toHaveBeenCalledWith({ showAtStartup: true });
+  });
+
+  it("records an unticked Show at startup box, so that it no longer opens by itself", async () => {
+    const user = userEvent.setup();
+    const dismissed = useWelcomeApis();
+    render(<App appContext={appContext} />);
+    await user.click(screen.getByRole("checkbox", { name: "Show at startup" }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(dismissed).toHaveBeenCalledWith({ showAtStartup: false }));
+  });
+
+  it("records a box ticked again from the user menu, and nothing when it is unchanged", async () => {
+    const user = userEvent.setup();
+    const dismissed = useWelcomeApis();
+    render(
+      <>
+        <button type="button" {...{ [OPEN_ATTRIBUTE]: "true" }}>
+          Welcome Tour
+        </button>
+        <App appContext={{ ...appContext, show: false, showAtStartup: false }} />
+      </>,
+    );
+    const menuItem = screen.getByRole("button", { name: "Welcome Tour" });
+    await user.click(menuItem);
+    expect(screen.getByRole("checkbox", { name: "Show at startup" })).not.toBeChecked();
+    await user.keyboard("{Escape}");
+    expect(dismissed).not.toHaveBeenCalled();
+    await user.click(menuItem);
+    await user.click(screen.getByRole("checkbox", { name: "Show at startup" }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(dismissed).toHaveBeenCalledWith({ showAtStartup: true }));
+    await user.click(menuItem);
+    expect(screen.getByRole("checkbox", { name: "Show at startup" })).toBeChecked();
+    await user.keyboard("{Escape}");
+    expect(dismissed).toHaveBeenCalledTimes(1);
   });
 
   it("records it once the last step shows, before the user follows a link", async () => {
     const user = userEvent.setup();
     const dismissed = useWelcomeApis();
     render(<App appContext={appContext} />);
-    await user.click(screen.getByRole("button", { name: "Go to step 7" }));
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     expect(await screen.findByRole("link", { name: /Try the Get Weather LLMClient/ })).toBeInTheDocument();
     await waitFor(() => expect(dismissed).toHaveBeenCalledTimes(1));
     await user.click(screen.getByRole("button", { name: "Get started" }));
@@ -83,7 +121,7 @@ describe("App", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     server.use(http.post(appContext.apiUrl, () => new HttpResponse(null, { status: 503 })));
     render(<App appContext={appContext} />);
-    await user.click(screen.getByRole("button", { name: "Go to step 7" }));
+    await user.click(screen.getByRole("button", { name: "Go to step 8" }));
     expect(await screen.findByText("Failed to load the links: Request failed: 503")).toBeInTheDocument();
   });
 

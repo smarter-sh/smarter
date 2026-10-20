@@ -34,6 +34,10 @@ export interface LLMClientArchitecture {
  */
 export interface LLMClientArchitectureLinks {
   /**
+   * The API Keys page, which lists the user's api keys.
+   */
+  apiKeysUrl: string;
+  /**
    * The LLMTools page's Extensions, which an administrator installs.
    */
   extensionsUrl: string;

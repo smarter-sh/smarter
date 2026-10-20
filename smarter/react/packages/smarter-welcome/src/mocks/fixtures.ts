@@ -26,6 +26,7 @@ export const appContext: AppContext = {
   apiUrl: "/dashboard/api/welcome/",
   dismissApiUrl: "/dashboard/api/welcome/dismiss/",
   show: true,
+  showAtStartup: true,
   firstName: "Ada",
   logoUrl: `${STATIC_URL}images/logo/smarter-crop.png`,
   illustrationsUrl: `${STATIC_URL}assets/media/illustrations/dozzy-1/`,

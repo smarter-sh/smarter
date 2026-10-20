@@ -2,12 +2,14 @@
  * The Smarter welcome dialog.
  *
  * The console's base template mounts this app on every page, for signed-in users. The dialog opens by
- * itself when the user hasn't closed it before (``appContext.show``), and again whenever they click an
- * element with the ``data-smarter-welcome-open`` attribute, such as the user menu's Welcome Tour item.
+ * itself once each time the user signs in, while its Show at startup box is ticked (``appContext.show``),
+ * and again whenever they click an element with the ``data-smarter-welcome-open`` attribute, such as the
+ * user menu's Welcome Tour item.
  *
- * Opening it loads its links from the welcome api. The first time the user closes it, or reaches its
- * last step, whose links leave the page, it tells the welcome dismiss api, so that it doesn't open by
- * itself again, on any device. Closing it returns the focus to where it was before it opened.
+ * Opening it loads its links from the welcome api. When the user closes it, or reaches its last step,
+ * whose links leave the page, it tells the welcome dismiss api the box's choice, if the api doesn't
+ * know it yet: unticked, the dialog doesn't open by itself again, on any device; either way, not again
+ * in this session. Closing it returns the focus to where it was before it opened.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
@@ -19,8 +21,8 @@ import type { AppContext, WelcomeApiResponse, WelcomeUrls } from "@/lib/Types";
 /** The attribute of the elements that open the dialog, e.g. the user menu's Welcome Tour item. */
 export const OPEN_ATTRIBUTE = "data-smarter-welcome-open";
 
-async function post(appContext: AppContext, url: string): Promise<WelcomeApiResponse> {
-  const response = await fetchDjangoUrl(appContext.sessionContext, url, JSON.stringify({}));
+async function post(appContext: AppContext, url: string, body: object = {}): Promise<WelcomeApiResponse> {
+  const response = await fetchDjangoUrl(appContext.sessionContext, url, JSON.stringify(body));
   if (!response.ok) throw new Error(interpolate(gettext("Request failed: %(status)s"), { status: response.status }));
   return (await response.json()) as WelcomeApiResponse;
 }
@@ -29,8 +31,10 @@ function App({ appContext }: { appContext: AppContext }) {
   const [open, setOpen] = useState(appContext.show);
   const [urls, setUrls] = useState<WelcomeUrls | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // whether the dismiss api has recorded that the user was welcomed, or is recording it.
-  const welcomed = useRef(!appContext.show);
+  const [showAtStartup, setShowAtStartup] = useState(appContext.showAtStartup);
+  // what the dismiss api has recorded, or is recording: whether the dialog was closed in this session,
+  // and the Show at startup box.
+  const recorded = useRef({ closed: !appContext.show, showAtStartup: appContext.showAtStartup });
   // the element that had the focus before the dialog opened, which gets it back when the dialog closes.
   const opener = useRef<HTMLElement | null>(null);
 
@@ -67,14 +71,15 @@ function App({ appContext }: { appContext: AppContext }) {
   }, [appContext, open, urls]);
 
   const dismiss = useCallback(() => {
-    if (welcomed.current) return;
-    welcomed.current = true;
-    post(appContext, appContext.dismissApiUrl).catch((err: Error) => {
-      // the dialog opens again on the next page. Nothing else is lost.
+    const previous = recorded.current;
+    if (previous.closed && previous.showAtStartup === showAtStartup) return;
+    recorded.current = { closed: true, showAtStartup };
+    post(appContext, appContext.dismissApiUrl, { showAtStartup }).catch((err: Error) => {
+      // the dialog opens again on the next page, with the box as it was. Nothing else is lost.
       console.error(loggerPrefix, "Error fetching", appContext.dismissApiUrl, err);
-      welcomed.current = false;
+      recorded.current = previous;
     });
-  }, [appContext]);
+  }, [appContext, showAtStartup]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -91,6 +96,8 @@ function App({ appContext }: { appContext: AppContext }) {
       illustrationsUrl={appContext.illustrationsUrl}
       urls={urls}
       error={error}
+      showAtStartup={showAtStartup}
+      onShowAtStartupChange={setShowAtStartup}
       onLastStep={dismiss}
       onClose={close}
     />

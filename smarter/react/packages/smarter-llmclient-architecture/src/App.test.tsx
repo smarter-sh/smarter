@@ -29,9 +29,9 @@ describe("App", () => {
     render(<App architecture={stackademyArchitecture} />);
     const tree = screen.getByRole("list", { name: "The resources that this LLMClient is built from" });
     // the Provider, and its Secret, are drawn under the LLMClient and under its plugin.
-    expect(within(tree).getAllByRole("article")).toHaveLength(10);
+    expect(within(tree).getAllByRole("article")).toHaveLength(11);
     expect(within(tree).getAllByRole("article", { name: "Provider openai" })).toHaveLength(2);
-    expect(screen.getByRole("status")).toHaveTextContent("8 resources · 3 levels deep");
+    expect(screen.getByRole("status")).toHaveTextContent("9 resources · 3 levels deep");
   });
 
   it("hides what a resource uses, and shows it again", async () => {
@@ -56,10 +56,11 @@ describe("App", () => {
     expect(expand).toBeDisabled();
     await user.click(collapse);
     expect(collapse).toBeDisabled();
-    // the root's children stay: Extension, Guardrail, Provider and SqlPlugin, and the LLMClient itself.
-    expect(screen.getAllByRole("article")).toHaveLength(5);
+    // the root's children stay: Extension, Guardrail, Provider, SqlPlugin and SmarterAuthToken, and the LLMClient
+    // itself.
+    expect(screen.getAllByRole("article")).toHaveLength(6);
     await user.click(expand);
-    expect(screen.getAllByRole("article")).toHaveLength(10);
+    expect(screen.getAllByRole("article")).toHaveLength(11);
   });
 
   it("reloads the tree, when it can", async () => {

@@ -27,6 +27,7 @@ const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "tr
 const apiUrl = rootEl.getAttribute("smarter-welcome-api-url");
 const dismissApiUrl = rootEl.getAttribute("smarter-welcome-dismiss-api-url");
 const show = rootEl.getAttribute("smarter-welcome-show")?.toLowerCase() === "true";
+const showAtStartup = rootEl.getAttribute("smarter-welcome-show-at-startup")?.toLowerCase() === "true";
 const firstName = rootEl.getAttribute("smarter-first-name") || "";
 const logoUrl = rootEl.getAttribute("smarter-logo-url") || "";
 const illustrationsUrl = rootEl.getAttribute("smarter-illustrations-url") || "";
@@ -57,6 +58,7 @@ const appContext: AppContext = {
   apiUrl,
   dismissApiUrl,
   show,
+  showAtStartup,
   firstName,
   logoUrl,
   illustrationsUrl,

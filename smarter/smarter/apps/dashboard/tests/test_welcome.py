@@ -38,9 +38,12 @@ class TestWelcomeApiViews(TestAccountMixin):
         UserProfile.objects.filter(user=self.non_admin_user).update(welcomed_at=None)
         welcome.user_was_welcomed.invalidate(self.non_admin_user.id)
 
-    def post(self, url: str) -> SmarterDictType:
+    def post(self, url: str, body: SmarterDictType | None = None) -> SmarterDictType:
         self.client.force_login(self.non_admin_user)
-        response = self.client.post(url)
+        if body is None:
+            response = self.client.post(url)
+        else:
+            response = self.client.post(url, data=json.dumps(body), content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
         return json.loads(response.content)
 
@@ -80,6 +83,23 @@ class TestWelcomeApiViews(TestAccountMixin):
         self.post(self.dismiss_url)
         self.assertEqual(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at, welcomed_at)
 
+    def test_dismiss_show_at_startup(self):
+        """Test that dismissing with Show at startup ticked clears the date, and unticked records it."""
+        self.assertTrue(self.post(self.dismiss_url, {"showAtStartup": False})["welcomed"])
+        self.assertIsNotNone(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at)
+        self.assertFalse(self.post(self.dismiss_url, {"showAtStartup": True})["welcomed"])
+        self.assertIsNone(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at)
+        self.assertFalse(welcome.user_was_welcomed(self.non_admin_user.id))
+
+    def test_dismiss_invalid_body(self):
+        """Test that a body that isn't a WelcomeDismissRequest is refused, and records nothing."""
+        self.client.force_login(self.non_admin_user)
+        for body in ("not json", "[]", '{"showAtStartup": "maybe"}', '{"other": true}'):
+            with self.subTest(body=body):
+                response = self.client.post(self.dismiss_url, data=body, content_type="application/json")
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIsNone(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at)
+
     def test_anonymous(self):
         for url in (self.url, self.dismiss_url):
             with self.subTest(url=url):
@@ -99,11 +119,18 @@ class TestWelcomeApiViews(TestAccountMixin):
         request.user = self.non_admin_user
         attributes = welcome_dialog({"request": request})
         self.assertTrue(attributes["show"])
+        self.assertTrue(attributes["show_at_startup"])
         self.assertEqual(attributes["first_name"], self.non_admin_user.first_name or "")
+        request.session = {welcome.WELCOME_SHOWN_SESSION_KEY: True}
+        attributes = welcome_dialog({"request": request})
+        self.assertFalse(attributes["show"])
+        self.assertTrue(attributes["show_at_startup"])
+        del request.session
         self.assertEqual(attributes["dismiss_api_url"], self.dismiss_url)
         request.user = AnonymousUser()
         attributes = welcome_dialog({"request": request})
         self.assertFalse(attributes["show"])
+        self.assertFalse(attributes["show_at_startup"])
         self.assertEqual(attributes["first_name"], "")
 
     def test_console_pages_mount_the_dialog(self):
@@ -117,4 +144,18 @@ class TestWelcomeApiViews(TestAccountMixin):
         self.assertIn(f'smarter-welcome-dismiss-api-url="{self.dismiss_url}"', content)
         self.assertIn("data-smarter-welcome-open", content)
         self.post(self.dismiss_url)
-        self.assertIn('smarter-welcome-show="false"', self.client.get("/dashboard/").content.decode())
+        content = self.client.get("/dashboard/").content.decode()
+        self.assertIn('smarter-welcome-show="false"', content)
+        self.assertIn('smarter-welcome-show-at-startup="false"', content)
+
+    def test_shows_once_per_session_at_startup(self):
+        """Test that, with Show at startup ticked, the dialog opens by itself once per session, i.e. per sign-in."""
+        self.client.force_login(self.non_admin_user)
+        self.post(self.dismiss_url, {"showAtStartup": True})
+        content = self.client.get("/dashboard/").content.decode()
+        self.assertIn('smarter-welcome-show="false"', content)
+        self.assertIn('smarter-welcome-show-at-startup="true"', content)
+        # signing in again starts a new session.
+        self.client.logout()
+        self.client.force_login(self.non_admin_user)
+        self.assertIn('smarter-welcome-show="true"', self.client.get("/dashboard/").content.decode())

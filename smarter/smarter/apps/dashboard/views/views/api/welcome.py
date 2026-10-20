@@ -2,28 +2,32 @@
 """
 API views for the web console's welcome dialog, the ``@smarter/welcome`` React app.
 
-The dialog opens by itself on the first console page that a new user visits,
-and again whenever they choose Welcome Tour in the user menu. Closing it, in
-any way, records the date in :attr:`UserProfile.welcomed_at
+The dialog opens by itself on the first console page that a user visits after
+they sign in, for as long as its first step's **Show at startup** box is ticked,
+which it is for a new user. It opens again whenever they choose Welcome Tour in
+the user menu. Closing it, in any way, records the box's choice: unticked, the
+date in :attr:`UserProfile.welcomed_at
 <smarter.apps.account.models.UserProfile.welcomed_at>`, so that it doesn't open
-by itself again, on any device.
+by itself again, on any device; ticked, no date. Either way, it doesn't open by
+itself again in the same session.
 
 - ``welcome/`` returns the links that the dialog's last step offers. The
   dialog's text lives in the React app, where it is translated.
-- ``welcome/dismiss/`` records that the user has been welcomed.
+- ``welcome/dismiss/`` records that the user has been welcomed, and whether it
+  shows at startup.
 """
 
 from http import HTTPStatus
 
 from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.common.conf import smarter_settings
-from smarter.lib import logging
+from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedWebView
@@ -35,6 +39,12 @@ WEATHER_LLMCLIENT_NAME = "weather"
 """The example LLMClient that the welcome dialog suggests trying first.
 
 See ``apps/llmclient/data/llm-clients/llmclient-weather.yaml``.
+"""
+
+WELCOME_SHOWN_SESSION_KEY = "smarter_welcome_shown"
+"""The session key that is set once the user has closed the welcome dialog in this session.
+
+The dialog opens by itself at most once per session, i.e. once each time the user signs in.
 """
 
 
@@ -57,11 +67,25 @@ class WelcomeUrls(BaseModel):
     project: str
 
 
+class WelcomeDismissRequest(BaseModel):
+    """
+    The body of a request to the welcome dismiss api.
+
+    :param show_at_startup: Whether the dialog opens by itself each time the user signs in: the first
+        step's **Show at startup** box. An empty body is ``False``.
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    show_at_startup: bool = Field(False, alias="showAtStartup")
+
+
 class WelcomeApiResponse(BaseModel):
     """
     The response of both welcome dialog api views.
 
-    :param welcomed: Whether the user has closed the welcome dialog before.
+    :param welcomed: Whether the user has closed the welcome dialog before, with its **Show at startup**
+        box unticked, so that it no longer opens by itself.
     :param urls: The links that the dialog's last step offers.
     """
 
@@ -74,14 +98,16 @@ class WelcomeApiResponse(BaseModel):
 @cache_results()
 def user_was_welcomed(user_id: int) -> bool:
     """
-    Whether the user has closed the welcome dialog before, in any of their accounts.
+    Whether the user has closed the welcome dialog with its **Show at startup** box unticked, in any of.
+
+    their accounts.
 
     The console's base template asks on every page, so the answer is cached until
     :class:`WelcomeDismissView` invalidates it.
 
     :param user_id: The id of the Django user.
     :type user_id: int
-    :returns: True once the user has closed the welcome dialog.
+    :returns: True once the user has closed the welcome dialog, until they tick Show at startup again.
     :rtype: bool
     """
     return UserProfile.objects.filter(user_id=user_id, welcomed_at__isnull=False).exists()
@@ -170,23 +196,45 @@ class WelcomeView(SmarterAuthenticatedWebView):
 
 class WelcomeDismissView(SmarterAuthenticatedWebView):
     """
-    Records that the user has closed the welcome dialog, so that it doesn't open by itself again.
+    Records that the user has closed the welcome dialog, and whether it shows at startup.
 
-    Sets :attr:`UserProfile.welcomed_at <smarter.apps.account.models.UserProfile.welcomed_at>` on each
-    of the user's profiles that hasn't got one, and keeps the date of an earlier visit. Its response is
-    that of :class:`WelcomeView`.
+    The body is a :class:`WelcomeDismissRequest`, as JSON; a request that isn't JSON is an empty one. With ``showAtStartup`` false, or an empty body, it sets
+    :attr:`UserProfile.welcomed_at <smarter.apps.account.models.UserProfile.welcomed_at>` on each of the
+    user's profiles that hasn't got one, and keeps the date of an earlier visit, so that the dialog
+    doesn't open by itself again. With ``showAtStartup`` true, it clears the date, so that the dialog
+    opens by itself the next time the user signs in. Either way, it sets
+    :data:`WELCOME_SHOWN_SESSION_KEY`, so that the dialog doesn't open by itself again in this session.
+    Its response is that of :class:`WelcomeView`.
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         user = get_resolved_user(request.user)
         if not isinstance(user, User):
             return not_signed_in()
-        profiles = UserProfile.objects.filter(user=user, welcomed_at__isnull=True)
+        # the React app sends JSON. Any other request, e.g. an empty form post, is an empty body.
+        data = request.body if request.content_type == "application/json" and request.body else b"{}"
+        try:
+            body = WelcomeDismissRequest.model_validate(json.loads(data))
+        except (ValueError, ValidationError) as e:
+            logger.warning("%s.WelcomeDismissView.post() invalid body for user %s: %s", logger_prefix, user.pk, e)
+            return JsonResponse({"error": "Invalid request body."}, status=HTTPStatus.BAD_REQUEST)
+        if body.show_at_startup:
+            profiles = UserProfile.objects.filter(user=user, welcomed_at__isnull=False)
+            welcomed_at = None
+        else:
+            profiles = UserProfile.objects.filter(user=user, welcomed_at__isnull=True)
+            welcomed_at = timezone.now()
         profile_ids = list(profiles.values_list("id", flat=True))
         # an update(), rather than save(), so that no other field of a profile is written back.
-        profiles.update(welcomed_at=timezone.now())
+        profiles.update(welcomed_at=welcomed_at)
         for profile_id in profile_ids:
             UserProfile.get_cached_object(invalidate=True, pk=profile_id)
         user_was_welcomed.invalidate(user.pk)
-        logger.info("%s.WelcomeDismissView.post() welcomed user %s", logger_prefix, user.pk)
+        request.session[WELCOME_SHOWN_SESSION_KEY] = True
+        logger.info(
+            "%s.WelcomeDismissView.post() welcomed user %s, show at startup: %s",
+            logger_prefix,
+            user.pk,
+            body.show_at_startup,
+        )
         return JsonResponse(welcome_response(user).model_dump(mode="json"), status=HTTPStatus.OK)

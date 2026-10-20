@@ -61,6 +61,7 @@ from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
 from smarter.common.conf import smarter_settings
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.drf.urls import AuthTokenReverseNames
 from smarter.lib.logging.redis_log_handler import session_key_context
 from smarter.lib.manifest.models import SAMDependencyTreeNode
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
@@ -232,10 +233,11 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertTrue(guardrails[0].url.startswith("/guardrail/"), guardrails[0].url)
 
         links = response.json()["links"]
-        self.assertEqual(set(links), {"guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl"})
+        self.assertEqual(set(links), {"guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl", "apiKeysUrl"})
         self.assertEqual(
             links["guardrailsUrl"], reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview)
         )
+        self.assertEqual(links["apiKeysUrl"], reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview))
         self.assertTrue(all(url.startswith("/") for url in links.values()), links)
 
     def test_architecture_styled(self):
@@ -248,6 +250,23 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertFalse(self.client.get(url).json()["styled"])
         LLMClient.objects.filter(pk=self.resource.pk).update(styles={"googleFont": "Inter"})
         self.assertTrue(self.client.get(url).json()["styled"])
+
+    def test_architecture_api_key(self):
+        """Test that the LLMClient's api key is a SmarterAuthToken child of the tree's root, once it is attached."""
+        self.detach_api_keys()
+        LLMClientAPIKey.detach(self.resource)
+        url = self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id)
+        kinds = [
+            child.kind for child in LLMClientArchitecture.model_validate(self.client.get(url).json()).tree.children
+        ]
+        self.assertNotIn("SmarterAuthToken", kinds)
+
+        api_key = self.api_key("architecture")
+        LLMClientAPIKey.objects.create(llmclient=self.resource, api_key=api_key)
+        tree = LLMClientArchitecture.model_validate(self.client.get(url).json()).tree
+        api_keys = [child for child in tree.children if child.kind == "SmarterAuthToken"]
+        self.assertEqual([child.name for child in api_keys], [api_key.name])
+        self.assertEqual(api_keys[0].icon, "key")
 
     def test_architecture_is_get_only(self):
         """Test that the architecture refuses a POST."""
