@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.5...v0.35.0-alpha.6) (2026-10-20)
+
+### Bug Fixes
+
+* **workbench:** merge the Docs and Tour buttons into a Help menu ([272c453](https://github.com/smarter-sh/smarter/commit/272c453d7a01dbdf6258339dc106344ca4a4a035))
+
 ## [0.35.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.35.0-alpha.4...v0.35.0-alpha.5) (2026-10-20)
 
 ### Features
