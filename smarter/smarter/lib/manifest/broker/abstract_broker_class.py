@@ -6,7 +6,18 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
-from typing import Any, Callable, ClassVar, Iterable, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 from urllib.parse import parse_qs, urlparse
 
 import inflect
@@ -240,7 +251,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        request: HttpRequest,
+        request: Optional[HttpRequest],
         *args,
         name: Optional[str] = None,
         kind: Optional[str] = None,
@@ -292,12 +303,15 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # ----------------------------------------------------------------------
         # Resolve all initialization parameters to pass to the mixins.
         # ----------------------------------------------------------------------
-        request = (
+        # the request can also be a DRF Request or a PreparedRequest, which SmarterRequestMixin accepts
+        # although it annotates only HttpRequest. See params.
+        request = cast(
+            Optional[HttpRequest],
             request
             or kwargs.pop("request", None)
             or next(
                 (arg for arg in args if isinstance(arg, (Request, HttpRequest, ASGIRequest, PreparedRequest))), None
-            )
+            ),
         )
         user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
         account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
@@ -438,8 +452,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
+    # a property, not SmarterHelperMixin's classproperty, so that the prefix has the instance's id.
     @property
-    def formatted_class_name(self) -> str:
+    def formatted_class_name(self) -> str:  # type: ignore[override]  # pylint: disable=arguments-renamed
         """Return the logger prefix for the AbstractBroker.
 
         :return: The logger prefix for the AbstractBroker.
@@ -617,8 +632,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         return self.smarter_request
 
+    # a property, not SmarterRequestMixin's cached_property, because it also reads a PreparedRequest.
     @property
-    def params(self) -> Optional[QueryDict]:
+    def params(self) -> Optional[QueryDict]:  # type: ignore[override]
         """
         Return the query parameters from the url of the request.
 
@@ -1758,12 +1774,26 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return SAMDependencyTreeNode(
             kind=kind,
             icon=icon,
-            name=getattr(instance, "name", None),
+            name=self.dependency_tree_name(instance),
             owner=self.dependency_tree_owner(instance),
             recordLocator=record_locator,
             url=console_url(record_locator),
             children=sorted(children, key=lambda node: (node.kind, node.name or "")),
         )
+
+    @staticmethod
+    def dependency_tree_name(instance: models.Model) -> Optional[str]:
+        """Return a resource's name in :meth:`dependency_tree`.
+
+        It is the resource's ``name``. An Extension, which has no name, has its slug, e.g. ``weather``,
+        which is how its manifest and the extension registry identify it.
+
+        :param instance: The resource's Django ORM instance.
+        :type instance: models.Model
+        :return: The name, or None if the resource has neither a name nor a slug.
+        :rtype: Optional[str]
+        """
+        return getattr(instance, "name", None) or getattr(instance, "slug", None) or None
 
     @staticmethod
     def dependency_tree_owner(instance: models.Model) -> Optional[str]:
@@ -1851,22 +1881,22 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         broker_class = Brokers.get_broker(kind)
         if broker_class is None:
             raise SAMBrokerInternalError(f"No broker for kind {kind}", thing=self.thing)
-        name = name or getattr(instance, "name")
+        resource_name: str = name or getattr(instance, "name")
         user_profile = user_profile or getattr(instance, "user_profile")
         try:
-            return broker_class(None, name=name, kind=kind, user_profile=user_profile)
+            return broker_class(None, name=resource_name, kind=kind, user_profile=user_profile)
         # any error in the dependent's own data. pylint: disable=W0718
         except Exception as e:
             logger.warning(
                 "%s.dependency_broker() could not initialize the broker of %s %s, which depends on %s %s: %s",
                 self.abstract_broker_logger_prefix,
                 kind,
-                name,
+                resource_name,
                 self.kind,
                 self.name,
                 e,
             )
-            return SAMDependencyReference(kind=kind, name=name, user_profile=user_profile)
+            return SAMDependencyReference(kind=kind, name=resource_name, user_profile=user_profile)
 
     def dependency_brokers(self, kind: Optional[str], instances: Iterable[models.Model]) -> List[SAMDependency]:
         """Return a broker for each resource that depends on this resource.
@@ -1902,7 +1932,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             names = sorted(f"{dependency.kind} {dependency.name}" for dependency in visible)
             hidden = len(dependencies) - len(visible)
             if hidden:
-                names.append(f"{hidden} {inflect_engine.plural('resource', hidden)} in other accounts")
+                names.append(
+                    f"{hidden} {inflect_engine.plural('resource', hidden)} in other accounts"  # type: ignore[arg-type]
+                )
             raise SAMBrokerErrorDependencies(
                 f"Cannot delete {self.kind} {self.name}, because these resources depend on it: {', '.join(names)}. "
                 "Delete them, or remove their references to it, first.",
@@ -2558,7 +2590,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         includes the broker's request, authentication and cache key, which a client must not see.
 
         :returns: The resource's api version, kind and name.
+        :raises SAMBrokerInternalError: If the broker has no kind.
         """
+        if not self.kind:
+            raise SAMBrokerInternalError(f"{self.__class__.__name__} {self.name} has no kind")
         return SAMBrokerCommandResult(apiVersion=self.api_version, kind=self.kind, name=self.name).dump()
 
     def to_json(self) -> SmarterDictType:
@@ -2658,7 +2693,7 @@ class BrokerNotImplemented(AbstractBroker):
         )
 
     @property
-    def ORMModelClass(self) -> Type[models.Model]:
+    def ORMModelClass(self) -> Type[MetaDataWithOwnershipModel]:
         raise SAMBrokerErrorNotImplemented(
             message="Subclasses must implement the ORMModelClass", thing=self.thing, command=None
         )
@@ -2673,29 +2708,29 @@ class BrokerNotImplemented(AbstractBroker):
     def manifest(self) -> Optional[Union[AbstractSAMBase, SmarterDictType]]:
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
-    def prompt(self, request: SmarterRequest, *args, **kwargs):
-        super().prompt(request, args, kwargs)
+    def prompt(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().prompt(request, *args, **kwargs)
 
-    def dependencies(self) -> List[AbstractBroker]:
+    def dependencies(self) -> List[SAMDependency]:
         return super().dependencies()
 
-    def delete(self, request: SmarterRequest, *args, **kwargs):
-        super().delete(request, args, kwargs)
+    def delete(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().delete(request, *args, **kwargs)
 
-    def deploy(self, request: SmarterRequest, *args, **kwargs):
-        super().deploy(request, args, kwargs)
+    def deploy(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().deploy(request, *args, **kwargs)
 
-    def describe(self, request: SmarterRequest, *args, **kwargs):
-        super().describe(request, args, kwargs)
+    def describe(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().describe(request, *args, **kwargs)
 
-    def example_manifest(self, request: SmarterRequest, *args, **kwargs):
-        super().example_manifest(request, args, kwargs)
+    def example_manifest(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().example_manifest(request, *args, **kwargs)
 
-    def get(self, request: SmarterRequest, *args, **kwargs):
-        super().get(request, args, kwargs)
+    def get(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().get(request, *args, **kwargs)
 
-    def logs(self, request: SmarterRequest, *args, **kwargs):
-        super().logs(request, args, kwargs)
+    def logs(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().logs(request, *args, **kwargs)
 
-    def undeploy(self, request: SmarterRequest, *args, **kwargs):
-        super().undeploy(request, args, kwargs)
+    def undeploy(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().undeploy(request, *args, **kwargs)
