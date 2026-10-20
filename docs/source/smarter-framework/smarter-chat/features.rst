@@ -68,11 +68,16 @@ Sandbox Mode and Production Mode
 *In the workbench. The npm package's chat has it with the* ``toggleMetadata`` *prop, and the embed
 script's is always in production mode.*
 
-The **Sandbox mode / Production mode** button shows and hides the backend's own messages in the
+The **Sandbox | Production** switch in the chat's header shows and hides the backend's own messages in the
 thread: the system prompt, tool results, Smarter's notes, for example about the plugins it selected
 and the tokens it charged, and the prompt's progress. In production mode, the thread is the
-conversation as the LLMClient's users see it, and the Console and the button that shows and hides
-it are hidden too. Switching back to sandbox mode restores the Console as you left it.
+conversation as the LLMClient's users see it, and the Console, the button that shows and hides
+it, and the **Help** menu are hidden too. Switching back to sandbox mode restores the Console as you left it.
+
+The header puts the switch first, then a divider, then the buttons: **New chat** and, in the workbench,
+**Help** and the Console's button at the right end. When the chat is narrow, for example beside the
+Console, the header shows only the buttons' icons. Their names are still read by screen readers, and
+each button's tooltip explains it.
 
 The Console's Server Logs tab shows the server logs of its own chat session: the records of the
 requests that carry the chat's session key, so that other chats, and other work on your account,
@@ -82,8 +87,8 @@ included, and in production mode only the records at the platform's log level
 (``smarter_settings.log_level``) and above. Switching modes reconnects the stream, which replays
 the recent history at the new level.
 
-In the workbench, sandbox mode also adds a **Docs** button to the chat's toolbar. It opens a dialog of links to the
-technical references, on two tabs. The **Prompt Engineer** tab, which is selected when the dialog
+In the workbench, the **Help** menu takes the guided tour of the workbench again, and in sandbox mode it also has
+**Technical references**, which opens a dialog of links to the technical references, on two tabs. The **Prompt Engineer** tab, which is selected when the dialog
 opens, is for those who build LLMClients in the sandbox: this Smarter Chat documentation and the
 LLMClient, Plugin, Guardrail and Budget references. The **Software Engineer** tab is for those who
 build the applications that host them: the
@@ -188,10 +193,12 @@ deployment:
        do it for every one, and **Reload** fetches the tree again, after a manifest was changed in
        another tab. A resource that you may not read, such as another account's, is a locked card with
        only its kind and record locator. Beneath the tree, an LLMClient that has no Guardrail, no tools
-       (no plugin, Extension or MCPClient) or no styles gets a next step for each: what the resource is,
-       where to browse the ones available, such as the built-in Guardrails, a manifest excerpt to copy into
-       the LLMClient's manifest and save, and links to this documentation. The tools' step compares
-       plugins, Extensions and MCPClients. A step disappears once the LLMClient has what it suggests.
+       (no plugin, Extension or MCPClient), no styles or no api key gets a next step for each: what the
+       resource is, where to browse the ones available, such as the built-in Guardrails or your api keys,
+       a manifest excerpt to copy into the LLMClient's manifest and save, and links to this documentation.
+       The tools' step compares plugins, Extensions and MCPClients. The api key's step explains that an
+       LLMClient without one is public once it is deployed, and points to the Deployment tab, which creates
+       and attaches a key in one step. A step disappears once the LLMClient has what it suggests.
        The tab is right of Manifest, and loads when you first open it.
    * - Server Logs
      - The chat session's server logs, as they stream in, in the colors and font of the web console's log viewer.

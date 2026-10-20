@@ -1,0 +1,342 @@
+/*
+ * The onboarding hints. Their accent is the welcome dialog's orange, so that the hints read as the next
+ * pages of the welcome tour. Colors otherwise come from the Keen theme's variables, which
+ * [data-bs-theme=dark] redefines.
+ *
+ * They sit above the page and its sidebar, and below the welcome dialog (z-index 1060), which they wait for.
+ */
+:root {
+  --smarter-onboarding-accent: #ff5733;
+  --smarter-onboarding-accent-hover: #e64a28;
+  --smarter-onboarding-accent-light: rgba(255, 87, 51, 0.12);
+  --smarter-onboarding-sparkle: #ffc93c;
+  --smarter-onboarding-dim: rgba(15, 17, 26, 0.55);
+  /* the welcome dialog's warm wash, fading into the page's background. */
+  --smarter-onboarding-note-bg: linear-gradient(160deg, #fff3ed 0%, var(--bs-body-bg, #ffffff) 60%);
+  --smarter-onboarding-note-edge: #fff3ed;
+  --smarter-onboarding-note-border: rgba(255, 87, 51, 0.22);
+}
+
+[data-bs-theme="dark"] {
+  --smarter-onboarding-accent-light: rgba(255, 87, 51, 0.18);
+  --smarter-onboarding-dim: rgba(0, 0, 0, 0.7);
+  --smarter-onboarding-note-bg: linear-gradient(160deg, #2e211d 0%, var(--bs-body-bg, #1e1e2d) 60%);
+  --smarter-onboarding-note-edge: #2e211d;
+  --smarter-onboarding-note-border: rgba(255, 87, 51, 0.3);
+}
+
+.smarter-onboarding-ring {
+  position: fixed;
+  z-index: 1055;
+  border: 2px solid var(--smarter-onboarding-accent);
+  pointer-events: none;
+  transition:
+    top 120ms ease,
+    left 120ms ease,
+    width 120ms ease,
+    height 120ms ease;
+}
+
+.smarter-onboarding-ring-pill {
+  border-radius: 999px;
+}
+
+.smarter-onboarding-ring-rounded {
+  border-radius: 0.85rem;
+}
+
+/* the tour dims the page around the ring. */
+.smarter-onboarding-ring-dim {
+  box-shadow: 0 0 0 9999px var(--smarter-onboarding-dim);
+}
+
+/* the glow, which pulses. */
+.smarter-onboarding-ring::before {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0.6rem 0.15rem rgba(255, 87, 51, 0.55),
+    inset 0 0 0.4rem rgba(255, 87, 51, 0.35);
+  content: "";
+  animation: smarter-onboarding-pulse 1.6s ease-in-out infinite;
+}
+
+/* four-pointed sparkles, which twinkle on the ring's edge, one after another. */
+.smarter-onboarding-sparkle {
+  position: absolute;
+  width: 0.7rem;
+  height: 0.7rem;
+  background: var(--smarter-onboarding-sparkle);
+  clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
+  opacity: 0;
+  animation: smarter-onboarding-twinkle 2.4s ease-in-out infinite;
+}
+
+.smarter-onboarding-sparkle:nth-child(1) {
+  top: -0.45rem;
+  left: 12%;
+}
+
+.smarter-onboarding-sparkle:nth-child(2) {
+  top: -0.5rem;
+  right: 18%;
+  animation-delay: 0.4s;
+}
+
+.smarter-onboarding-sparkle:nth-child(3) {
+  top: 35%;
+  right: -0.45rem;
+  animation-delay: 0.8s;
+}
+
+.smarter-onboarding-sparkle:nth-child(4) {
+  bottom: -0.45rem;
+  right: 30%;
+  animation-delay: 1.2s;
+}
+
+.smarter-onboarding-sparkle:nth-child(5) {
+  bottom: -0.5rem;
+  left: 22%;
+  animation-delay: 1.6s;
+}
+
+.smarter-onboarding-sparkle:nth-child(6) {
+  top: 30%;
+  left: -0.45rem;
+  animation-delay: 2s;
+}
+
+/* blocks the page while the tour is open. Without a ring, it dims the page itself. */
+.smarter-onboarding-blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 1054;
+}
+
+.smarter-onboarding-blocker-dim {
+  background-color: var(--smarter-onboarding-dim);
+}
+
+.smarter-onboarding-note {
+  position: fixed;
+  z-index: 1056;
+  width: max-content;
+  max-width: min(23rem, calc(100vw - 1rem));
+  padding: 1.25rem 1.35rem 1.1rem;
+  border: 1px solid var(--smarter-onboarding-note-border);
+  border-radius: 1rem;
+  background: var(--smarter-onboarding-note-bg);
+  box-shadow:
+    0 1.25rem 3rem rgba(0, 0, 0, 0.22),
+    0 0.35rem 1.25rem rgba(255, 87, 51, 0.18);
+  animation: smarter-onboarding-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* the accent bar along the top, from the welcome dialog's orange to the sparkles' gold. */
+.smarter-onboarding-note::before {
+  position: absolute;
+  top: 0;
+  right: 1rem;
+  left: 1rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--smarter-onboarding-accent), var(--smarter-onboarding-sparkle));
+  content: "";
+}
+
+/* the arrow, on the side that faces the element, across from its middle: --smarter-onboarding-arrow. */
+.smarter-onboarding-note::after {
+  position: absolute;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 1px solid var(--smarter-onboarding-note-border);
+  background: var(--smarter-onboarding-note-edge);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.smarter-onboarding-note-right::after {
+  top: calc(var(--smarter-onboarding-arrow, 50%) - 0.425rem);
+  left: -0.45rem;
+  border-top-color: transparent;
+  border-right-color: transparent;
+}
+
+.smarter-onboarding-note-left::after {
+  top: calc(var(--smarter-onboarding-arrow, 50%) - 0.425rem);
+  right: -0.45rem;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+}
+
+.smarter-onboarding-note-bottom::after {
+  top: -0.45rem;
+  left: calc(var(--smarter-onboarding-arrow, 50%) - 0.425rem);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.smarter-onboarding-note-top::after {
+  bottom: -0.45rem;
+  left: calc(var(--smarter-onboarding-arrow, 50%) - 0.425rem);
+  border-top-color: transparent;
+  border-left-color: transparent;
+  background: var(--bs-body-bg, #ffffff);
+}
+
+.smarter-onboarding-note-center::after {
+  display: none;
+}
+
+.smarter-onboarding-note-header {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.smarter-onboarding-note-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.8rem;
+  background: var(--smarter-onboarding-accent-light);
+  box-shadow: inset 0 0 0 1px rgba(255, 87, 51, 0.15);
+}
+
+.smarter-onboarding-note-icon i {
+  color: var(--smarter-onboarding-accent);
+  font-size: 1.5rem;
+}
+
+.smarter-onboarding-note-heading {
+  min-width: 0;
+}
+
+.smarter-onboarding-note-eyebrow {
+  margin-bottom: 0.15rem;
+  color: var(--smarter-onboarding-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.smarter-onboarding-note-title {
+  color: var(--bs-gray-900);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* the text of a note without a title, beside its icon. */
+.smarter-onboarding-note-lead {
+  color: var(--bs-gray-900);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.smarter-onboarding-note-text {
+  margin: 0 0 0.9rem;
+  color: var(--bs-gray-700);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* the tour's progress, under its title. */
+.smarter-onboarding-progress {
+  height: 4px;
+  margin: 0 0 0.85rem;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--smarter-onboarding-accent-light);
+}
+
+.smarter-onboarding-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--smarter-onboarding-accent), var(--smarter-onboarding-sparkle));
+  transition: width 300ms ease;
+}
+
+.smarter-onboarding-note-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.smarter-onboarding-primary,
+.smarter-onboarding-primary:focus {
+  min-width: 5.5rem;
+  background-color: var(--smarter-onboarding-accent);
+  box-shadow: 0 0.35rem 0.9rem rgba(255, 87, 51, 0.3);
+  color: #ffffff;
+}
+
+.smarter-onboarding-primary:hover,
+.smarter-onboarding-primary:focus-visible {
+  background-color: var(--smarter-onboarding-accent-hover) !important;
+  color: #ffffff !important;
+}
+
+@keyframes smarter-onboarding-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes smarter-onboarding-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+  40% {
+    opacity: 0;
+    transform: scale(0.3) rotate(90deg);
+  }
+}
+
+@keyframes smarter-onboarding-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smarter-onboarding-ring,
+  .smarter-onboarding-ring::before,
+  .smarter-onboarding-sparkle,
+  .smarter-onboarding-note,
+  .smarter-onboarding-progress-bar {
+    transition: none;
+    animation: none;
+  }
+
+  .smarter-onboarding-ring::before {
+    opacity: 0.8;
+  }
+
+  .smarter-onboarding-sparkle {
+    display: none;
+  }
+}

@@ -1,0 +1,12 @@
+{% load react_onboarding %}
+{% comment %}
+The onboarding state of the page, as JSON, for the React package @smarter/onboarding: whether hints
+show, which the user has seen, and the api that records a new one. dashboard/base.html includes it on
+every page, for signed-in users, and the welcome dialog, the list of LLMClients and the workbench read
+it, with readOnboardingContext().
+
+see: smarter.apps.dashboard.templatetags.react_onboarding and
+smarter.apps.dashboard.views.views.api.onboarding.
+{% endcomment %}
+{% onboarding as onboarding_state %}
+{{ onboarding_state|json_script:"smarter-onboarding" }}

@@ -25,7 +25,10 @@ const openai: SAMDependencyTreeNode = {
   children: [openaiKey],
 };
 
-/** stackademy_sql: a Provider, a SQL plugin, its Connection and their Secrets, a Guardrail, and an Extension. */
+/**
+ * stackademy_sql: a Provider, a SQL plugin, its Connection and their Secrets, a Guardrail, an Extension, and an api
+ * key.
+ */
 export const stackademyTree: SAMDependencyTreeNode = {
   ...leaf(
     "LLMClient",
@@ -62,6 +65,13 @@ export const stackademyTree: SAMDependencyTreeNode = {
         },
       ],
     },
+    leaf(
+      "SmarterAuthToken",
+      "key",
+      "stackademy_sql_production",
+      "smarterauthtoken-1a2b3c4d",
+      "/authtoken/0b8f4d3e-5c1a-4f7e-9d2b-6a1c3e5f7a9b/",
+    ),
   ],
 };
 
@@ -97,6 +107,7 @@ export const consoleLinks: LLMClientArchitectureLinks = {
   pluginsUrl: "/llm-tools/",
   extensionsUrl: "/extensions/",
   mcpClientsUrl: "/mcpclient/",
+  apiKeysUrl: "/authtoken/",
 };
 
 /** stackademy_sql, styled: it has everything, so the tab suggests nothing. */
@@ -106,8 +117,8 @@ export const stackademyArchitecture: LLMClientArchitecture = {
   links: consoleLinks,
 };
 
-/** hello_world, which uses nothing, and isn't styled: the tab suggests a Guardrail, tools and styles. */
+/** hello_world, which uses nothing, and isn't styled: the tab suggests a Guardrail, tools, styles and an api key. */
 export const leafArchitecture: LLMClientArchitecture = { tree: leafTree, styled: false, links: consoleLinks };
 
-/** An LLMClient with another account's Guardrail, unstyled: the tab suggests tools and styles. */
+/** An LLMClient with another account's Guardrail, unstyled: the tab suggests tools, styles and an api key. */
 export const lockedArchitecture: LLMClientArchitecture = { tree: lockedTree, styled: false, links: consoleLinks };

@@ -796,6 +796,12 @@ MIDDLEWARE = [
     # -------------------------------
     "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     #
+    # applies the UserProfile that a user with more than one chose in the
+    # user menu, for the length of each request. It must come after
+    # SessionMiddleware. See smarter.apps.account.profile_selection.
+    # -------------------------------
+    "smarter.apps.account.middleware.SmarterUserProfileSelectionMiddleware",
+    #
     #
     "waffle.middleware.WaffleMiddleware",
     #

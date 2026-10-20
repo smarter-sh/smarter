@@ -4,8 +4,8 @@ The contract of the Prompt Engineer's Workbench's "Architecture" tab: the JSON t
 The tab draws an LLMClient's architecture, an :class:`LLMClientArchitecture`: the tree of the SAM resources
 that it is built from, which :meth:`smarter.lib.manifest.broker.AbstractBroker.dependency_tree` returns as
 :class:`~smarter.lib.manifest.models.SAMDependencyTreeNode`, whether its chat is styled, and the web console
-pages where a user browses the Guardrails and tools that it could use. Beneath the tree, the tab suggests the
-next steps for an LLMClient that has no Guardrail, no tools or no styles. The JSON is camelCase. The
+pages where a user browses the Guardrails, tools and api keys that it could use. Beneath the tree, the tab
+suggests the next steps for an LLMClient that has no Guardrail, no tools, no styles or no api key. The JSON is camelCase. The
 ``@smarter/llmclient-architecture`` React package draws it, and the workbench fetches it from
 :class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView` when the
 tab is first opened.
@@ -58,6 +58,7 @@ class LLMClientArchitectureLinks(LLMClientArchitectureModel):
     plugins_url: str = Field(..., description="The LLMTools page's Plugins.")
     extensions_url: str = Field(..., description="The LLMTools page's Extensions, which an administrator installs.")
     mcp_clients_url: str = Field(..., description="The MCPClients page.")
+    api_keys_url: str = Field(..., description="The API Keys page, which lists the user's api keys.")
 
 
 class LLMClientArchitecture(LLMClientArchitectureModel):
