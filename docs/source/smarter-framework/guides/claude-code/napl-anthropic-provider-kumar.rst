@@ -255,3 +255,7 @@ explains authentication, stream forwarding and error codes
 The `Claude Code gateway compatibility guide
 <https://code.claude.com/docs/en/llm-gateway-protocol>`_ defines the client-side
 protocol requirements to recheck when upgrading
+
+AI Usage note:
+-------------------------------------
+This RST file was made with the help of ChatGPT
