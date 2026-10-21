@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import ResourceCard from "@/components/ResourceCard";
-import { leafTree, lockedTree, stackademyTree } from "@/mocks/fixtures";
+import ResourceCard from "@/components/ResourceTree/ResourceCard";
+import { leafTree, lockedTree, stackademyTree } from "@/mocks/resourceTree";
 
 /** One resource of the tree. */
 const meta = {
-  title: "LLMClient Architecture/ResourceCard",
+  title: "Widgets/ResourceCard",
   component: ResourceCard,
   args: { node: stackademyTree.children[3] },
   decorators: [

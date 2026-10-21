@@ -7,7 +7,7 @@
  * - the library uses React's production JSX runtime, whatever NODE_ENV the build ran with,
  * - dist/ has none of the Keen theme's files: its stylesheet and images stay with the pages that serve them,
  * - the library is within its size budget,
- * - the library works: rendered on the server, each widget renders its labelled card.
+ * - the library works: rendered on the server, each widget renders its labelled card, and the tree's helpers work.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -66,14 +66,32 @@ if (source) {
     const widgets = await import(pathToFileURL(copy).href);
     const { createElement } = await import("react");
     const { renderToStaticMarkup } = await import("react-dom/server");
-    const names = Object.keys(widgets).sort();
-    check(names.length >= 10, `the library exports its widgets (${names.join(", ")})`);
+    // the components: the exports whose names are capitalized. The others are the tree's helpers.
+    const names = Object.keys(widgets)
+      .filter((name) => /^[A-Z]/.test(name) && typeof widgets[name] === "function")
+      .sort();
+    check(names.length >= 12, `the library exports its widgets (${names.join(", ")})`);
+    const tree = {
+      kind: "LLMClient",
+      icon: "artificial-intelligence",
+      name: "check_dist",
+      owner: null,
+      recordLocator: "llmclient-check",
+      url: null,
+      readable: true,
+      children: [],
+    };
+    const props = { ResourceTree: { tree }, ResourceCard: { node: tree, isRoot: true } };
     for (const name of names) {
-      // every widget is a card in a labelled <section>, or <div> (VSCodeExtension). React puts its image
-      // preload <link>s first.
-      const html = renderToStaticMarkup(createElement(widgets[name]));
-      check(/<(section|div) [^>]*aria-label="[^"]+"/.test(html), `${name} renders its labelled card`);
+      // every widget is a card in a labelled <section>, <div> (VSCodeExtension), <article> (ResourceCard) or <ul>
+      // (ResourceTree). React puts its image preload <link>s first.
+      const html = renderToStaticMarkup(createElement(widgets[name], props[name] ?? {}));
+      check(/<(section|div|article|ul) [^>]*aria-label="[^"]+"/.test(html), `${name} renders its labelled card`);
     }
+    check(
+      typeof widgets.countResources === "function" && widgets.countResources(tree) === 1,
+      "the tree's helpers work (countResources)",
+    );
   } finally {
     fs.rmSync(copy, { force: true });
   }

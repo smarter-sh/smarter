@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import ResourceCard from "@/components/ResourceCard";
-import { leafTree, lockedTree, stackademyTree } from "@/mocks/fixtures";
+import ResourceCard from "@/components/ResourceTree/ResourceCard";
+import { leafTree, lockedTree, stackademyTree } from "@/mocks/resourceTree";
 
 describe("ResourceCard", () => {
   it("shows the kind, the name and the owner, and opens the manifest in a new tab", () => {
