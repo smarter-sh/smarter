@@ -17,6 +17,9 @@ Command-line Options
 - ``--company_name``: The company name to which the user belongs.
 - ``--username``: The username of the user.
 - ``--email``: The email address of the user.
+- ``--language``: The language of the email, one of ``settings.LANGUAGES``, e.g. ``es``.
+  Defaults to the user's preferred language (``UserProfile.language``), or English for a contact
+  who isn't a user.
 
 Typical Usage
 -------------
@@ -26,7 +29,12 @@ the welcome email to new or existing users for onboarding or support purposes.
 
 from typing import Optional
 
-from smarter.apps.account.models import Account, AccountContact, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    AccountContact,
+    UserProfile,
+    welcome_email_languages,
+)
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -41,6 +49,12 @@ class Command(SmarterCommand):
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
         parser.add_argument("--username", type=str, help="The username")
         parser.add_argument("--email", type=str, help="The email address")
+        parser.add_argument(
+            "--language",
+            type=str,
+            choices=welcome_email_languages(),
+            help="The language of the welcome email. Default: the user's preferred language, or English",
+        )
 
     def handle(self, *args, **options):
         """Create the superuser account."""
@@ -50,6 +64,7 @@ class Command(SmarterCommand):
         company_name = options["company_name"]
         username = options["username"]
         email = options["email"]
+        language = options.get("language")
 
         account: Optional[Account] = None
 
@@ -75,13 +90,11 @@ class Command(SmarterCommand):
                 "You must provide a username, or an email address, and optionally an account number or company name."
             )
 
-        account_contact, created = AccountContact.objects.get_or_create(
-            account=account,
-            email=email,
-        )
-
         # a new contact is sent the welcome email when it is saved, so it is only re-sent to an existing contact.
-        if not created:
-            account_contact.send_welcome_email()
+        account_contact = AccountContact.objects.filter(account=account, email=email).first()
+        if account_contact:
+            account_contact.send_welcome_email(language=language)
+        else:
+            AccountContact(account=account, email=email).save(language=language)
 
         self.handle_completed_success()

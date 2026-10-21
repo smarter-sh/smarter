@@ -21,6 +21,11 @@ Command-line Arguments
     The username for the new superuser. If provided, the email will be derived
     from the associated user profile.
 
+--language : str, optional
+    The language of the welcome email that a new contact is sent, one of
+    ``settings.LANGUAGES``, e.g. ``es``. Defaults to the user's preferred language
+    (``UserProfile.language``), or English for a contact who isn't a user.
+
 Exceptions
 ==========
 SmarterValueError
@@ -31,11 +36,17 @@ Usage Example
 =============
     python manage.py add_account_contact --account_number=<number> --email=<email>
     python manage.py add_account_contact --company_name="<name>" --username=<username>
+    python manage.py add_account_contact --account_number=<number> --email=<email> --language=es
 """
 
 from typing import Optional
 
-from smarter.apps.account.models import Account, AccountContact, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    AccountContact,
+    UserProfile,
+    welcome_email_languages,
+)
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -50,6 +61,12 @@ class Command(SmarterCommand):
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
         parser.add_argument("--email", type=str, help="The email address for the new superuser")
         parser.add_argument("--username", type=str, help="The username for the new superuser")
+        parser.add_argument(
+            "--language",
+            type=str,
+            choices=welcome_email_languages(),
+            help="The language of the welcome email that a new contact is sent. Default: the user's preferred language, or English",
+        )
 
     def handle(self, *args, **options):
         """Create the superuser account."""
@@ -59,6 +76,7 @@ class Command(SmarterCommand):
         company_name = options["company_name"]
         username = options["username"]
         email = options["email"]
+        language = options.get("language")
 
         account: Optional[Account] = None
 
@@ -87,12 +105,10 @@ class Command(SmarterCommand):
             user_profile = UserProfile.objects.get(user__username=username)
             email = user_profile.user.email
 
-        account_contact, created = AccountContact.objects.get_or_create(
-            account=account,
-            email=email,
-        )
-
-        if created:
+        # a new contact is sent the welcome email, in the given language, when it is saved.
+        account_contact = AccountContact.objects.filter(account=account, email=email).first()
+        if not account_contact:
+            AccountContact(account=account, email=email).save(language=language)
             self.handle_completed_success(
                 msg=f"Account Contact {email} added to account {account.account_number} {account.company_name}."
             )

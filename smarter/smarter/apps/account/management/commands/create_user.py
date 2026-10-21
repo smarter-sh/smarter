@@ -25,6 +25,10 @@ Command-line Arguments
     The password for the new user. If not provided, a random password is generated.
 --admin : bool (flag), optional
     Set to true to mark the new user as an admin.
+--language : str, optional
+    The user's preferred language, one of ``settings.LANGUAGES``, e.g. ``es``, which is stored as
+    ``UserProfile.language``. The password email and the welcome email are written in it.
+    Defaults to English for a new user, and leaves an existing user's preference unchanged.
 
 Functionality
 =============
@@ -37,16 +41,25 @@ Functionality
 
 Usage Example
 =============
-    python manage.py create_user --account_number=<number> --username=<name> --email=<email> --first_name=<first> --last_name=<last> [--password=<pwd>] [--admin]
+    python manage.py create_user --account_number=<number> --username=<name> --email=<email> --first_name=<first> --last_name=<last> [--password=<pwd>] [--admin] [--language=<code>]
 """
 
 import secrets
 import string
 from urllib.parse import urljoin
 
+from django.conf import settings
 from django.db import transaction
+from django.utils import translation
+from django.utils.translation import gettext as _
 
-from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    AccountContact,
+    User,
+    UserProfile,
+    welcome_email_languages,
+)
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
@@ -62,7 +75,7 @@ class Command(SmarterCommand):
     """
 
     def create_user(
-        self, account_number, username, email, first_name, last_name, password=None, is_admin=False
+        self, account_number, username, email, first_name, last_name, password=None, is_admin=False, language=None
     ) -> bool:
         """
         Create a new user for the specified account.
@@ -90,12 +103,15 @@ class Command(SmarterCommand):
               sending, log a failure but do not return False since the user account has
               been created successfully.
           5. Attempt to get or create a UserProfile for the user and account. If there
-              is an error during this process, log a failure and return False. If the
-              UserProfile was created, log a success message.
+              is an error during this process, log a failure and return False. The
+              profile's language is set to the given language. A new UserProfile adds
+              the user to the account's contacts, which sends the welcome email in its
+              language. If the UserProfile was created, log a success message.
           6. Attempt to get an AccountContact for the account and email. If it exists,
               update the first name and last name and save it. If it does not exist,
-              create a new AccountContact. If there is an error during this process,
-              log a failure and return False.
+              create a new AccountContact, which sends it the welcome email in the
+              user's language. If there is an error during this process, log a failure
+              and return False.
           7. If all steps are successful, log a success message that the create_user
               command completed successfully and return True.
 
@@ -106,6 +122,9 @@ class Command(SmarterCommand):
         :param str last_name: The last name of the new user.
         :param str password: The password for the new user. If not provided, a random password will be generated. Defaults to None.
         :param bool is_admin: Whether the new user should be an admin. Defaults to False.
+        :param str language: The user's preferred language, one of ``settings.LANGUAGES``, e.g. ``es``,
+            in which the password and welcome emails are written. Defaults to None: English for a new
+            user, and an existing user's preference is kept.
         :returns: True if the user was created or updated successfully, False otherwise.
         :rtype: bool
         """
@@ -160,19 +179,23 @@ class Command(SmarterCommand):
         self.handle_completed_success(msg=f"User {username} {email} has been created.")
 
         if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
-            # Send email to user
+            # Send email to user, in the language of the welcome email.
             login_url = urljoin(smarter_settings.environment_url, "login")
-            body = f"""Your Smarter user account has been created. Do not share your account credentials with anyone.
-
-            Url: {login_url}
-            Username: {username}
-            Email: {email}
-            Password: {password}
-            """
+            with translation.override(language or settings.LANGUAGE_CODE):
+                subject = _("Your Smarter user account has been created")
+                # Translators: a plain-text email. Keep the line breaks, and the values after each colon.
+                body = _(
+                    "Your Smarter user account has been created. Do not share your account credentials with anyone.\n"
+                    "\n"
+                    "Url: %(login_url)s\n"
+                    "Username: %(username)s\n"
+                    "Email: %(email)s\n"
+                    "Password: %(password)s\n"
+                ) % {"login_url": login_url, "username": username, "email": email, "password": password}
             try:
                 # the email has the user's password, so the admin gets no blind copy.
                 infrastructure.email.send_email(
-                    subject="Your Smarter user account has been created",
+                    subject=subject,
                     to=email,
                     body=body,
                     html=False,
@@ -192,7 +215,14 @@ class Command(SmarterCommand):
             )
 
         try:
-            user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
+            # a new profile adds the user to the account's contacts, which sends the welcome email
+            # in the profile's language.
+            user_profile, created = UserProfile.objects.get_or_create(
+                user=user, account=account, defaults={"language": language or settings.LANGUAGE_CODE}
+            )
+            if language and user_profile.language != language:
+                user_profile.language = language
+                user_profile.save()
         # pylint: disable=broad-except
         except Exception as e:
             self.handle_completed_failure(msg=f"Error creating user profile for user {username}: {str(e)}")
@@ -211,7 +241,9 @@ class Command(SmarterCommand):
             self.handle_completed_success(msg="smarter.apps.account.management.commands.create_user completed.")
         except AccountContact.DoesNotExist:
             try:
-                AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
+                AccountContact(account=account, first_name=first_name, last_name=last_name, email=email).save(
+                    language=language
+                )
                 self.handle_completed_success(
                     msg=f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
                 )
@@ -240,6 +272,12 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--admin", action="store_true", default=False, help="True if the new user is an admin, False otherwise."
         )
+        parser.add_argument(
+            "--language",
+            type=str,
+            choices=welcome_email_languages(),
+            help="The user's preferred language, for the password and welcome emails. Default: English",
+        )
 
     def handle(self, *args, **options):
         """Create the user."""
@@ -252,6 +290,7 @@ class Command(SmarterCommand):
         last_name = options["last_name"]
         password = options["password"]
         is_admin = options["admin"]
+        language = options.get("language")
         retval = False
 
         with transaction.atomic():
@@ -263,6 +302,7 @@ class Command(SmarterCommand):
                 last_name=last_name,
                 password=password,
                 is_admin=is_admin,
+                language=language,
             )
 
         if not retval:

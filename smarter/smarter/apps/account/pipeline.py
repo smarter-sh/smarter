@@ -10,7 +10,7 @@ from django.shortcuts import redirect
 from social_core.exceptions import AuthAlreadyAssociated
 from social_django.middleware import SocialAuthExceptionMiddleware
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import UserProfile, active_language
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import get_cached_avatar_url, smarter_cached_objects
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
@@ -69,7 +69,10 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
     """
     Custom user creation function to replace the default one in the social auth pipeline.
 
-    This allows for additional customization during user creation if needed.
+    This allows for additional customization during user creation if needed. The new user's
+    UserProfile gets the request's language (:func:`smarter.apps.account.models.active_language`),
+    which the web console chose from the language cookie or the browser's Accept-Language header,
+    so that the welcome email is written in it.
 
     expecting details to contain the following:
     details={
@@ -106,7 +109,8 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
     fields["is_active"] = False  # Ensure the user is inactive upon creation
     user = strategy.create_user(**fields)
     logger.info("%s.create_user() Created new user: %s", logger_prefix, user)
-    UserProfile.objects.create(user=user, account=smarter_cached_objects.smarter_account)
+    # the browser's language, as the web console chose it for this request, is the user's preferred language.
+    UserProfile.objects.create(user=user, account=smarter_cached_objects.smarter_account, language=active_language())
     return {
         "is_new": True,
         "user": user,
@@ -175,7 +179,9 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
     try:
         user_profile = UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
-        user_profile = UserProfile.objects.create(user=user, account=smarter_cached_objects.smarter_account)
+        user_profile = UserProfile.objects.create(
+            user=user, account=smarter_cached_objects.smarter_account, language=active_language()
+        )
         logger.error("%s.user_details() No UserProfile found for user: %s. This is a bug.", logger_prefix, user)
 
     if user_profile.profile_image_url is None or user_profile.profile_image_url != profile_image_url:

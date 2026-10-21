@@ -6,6 +6,8 @@ The email is never sent: send_welcome_email() is patched.
 import unittest
 from unittest.mock import patch
 
+from django.core.management.base import CommandError
+
 from smarter.apps.account.models import AccountContact
 from smarter.common.exceptions import SmarterValueError
 
@@ -67,4 +69,21 @@ class TestSendWelcomeEmail(CommandTestBase):
             with self.subTest(options=options):
                 with self.assertRaises(SmarterValueError):
                     self.run_command("send_welcome_email", **options)
+        self.send.assert_not_called()
+
+    def test_language(self):
+        """Test that the language reaches the email, for a new and an existing contact."""
+        self.run_command("send_welcome_email", username=self.non_admin_user.username, language="es")
+        self.send.assert_called_once_with(language="es")
+        self.send.reset_mock()
+        self.run_command("send_welcome_email", username=self.non_admin_user.username, language="pt-br")
+        self.send.assert_called_once_with(language="pt-br")
+
+    def test_default_language(self):
+        self.run_command("send_welcome_email", username=self.non_admin_user.username)
+        self.send.assert_called_once_with(language=None)
+
+    def test_unknown_language_is_refused(self):
+        with self.assertRaises(CommandError):
+            self.run_command("send_welcome_email", "--language=xx", username=self.non_admin_user.username)
         self.send.assert_not_called()

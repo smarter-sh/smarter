@@ -9,7 +9,7 @@ from .account import (
     is_authenticated_user,
     welcome_email_context,
 )
-from .account_contact import AccountContact
+from .account_contact import AccountContact, welcome_email_languages
 from .budget import (
     Budget,
     BudgetAction,
@@ -30,7 +30,7 @@ from .metadata_with_ownership import (
     MetaDataWithOwnershipModelManager,
     SmarterQuerySetWithPermissions,
 )
-from .user_profile import UserProfile
+from .user_profile import UserProfile, active_language
 
 __all__ = [
     "Account",
@@ -60,5 +60,7 @@ __all__ = [
     "MetaDataWithOwnershipModelManager",
     "SmarterQuerySetWithPermissions",
     "User",
+    "active_language",
     "welcome_email_context",
+    "welcome_email_languages",
 ]

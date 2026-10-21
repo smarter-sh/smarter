@@ -7,12 +7,14 @@ from typing import Any, Optional, TypeVar, overload
 from urllib.parse import urljoin
 
 # django stuff
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Manager, QuerySet
 from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
 from django.templatetags.static import static
+from django.utils import translation
 
 # our stuff
 from smarter.apps.account.profile_selection import selected_user_profile_id
@@ -287,6 +289,23 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
         return self.get_queryset().with_ownership_permission_for(user)
 
 
+def active_language() -> str:
+    """
+    Return the active language, as a code of ``settings.LANGUAGES``.
+
+    During a request, this is the language that Django's ``LocaleMiddleware`` chose for the web
+    console: the language cookie's, or else the best match for the browser's ``Accept-Language``
+    header. A console sign-up stores it as the new :attr:`UserProfile.language`. Outside a request,
+    or for a language that isn't in ``settings.LANGUAGES``, it is ``settings.LANGUAGE_CODE``.
+
+    :returns: The language code, e.g. ``en``, ``es`` or ``pt-br``.
+    """
+    try:
+        return translation.get_supported_language_variant(translation.get_language() or settings.LANGUAGE_CODE)
+    except LookupError:
+        return settings.LANGUAGE_CODE
+
+
 class UserProfile(MetaDataModel):
     """
     UserProfile model for associating Django users with Smarter accounts.
@@ -300,6 +319,9 @@ class UserProfile(MetaDataModel):
     :param is_test: Boolean. Indicates if this profile is for testing purposes.
     :param welcomed_at: DateTimeField. When the user closed the web console's welcome dialog, or ``None`` if they
         haven't seen it yet. See :mod:`smarter.apps.dashboard.views.views.api.welcome`.
+    :param language: CharField. The user's preferred language, a code of ``settings.LANGUAGES``, e.g. ``es``.
+        Defaults to English. The emails that the user is sent, such as the welcome email, are written in it. A
+        console sign-up stores the language of the sign-up request (see :func:`active_language`).
 
     .. important::
 
@@ -344,6 +366,12 @@ class UserProfile(MetaDataModel):
         blank=True,
         null=True,
         help_text="When the user closed the web console's welcome dialog. Empty until they have seen it.",
+    )
+    language = models.CharField(
+        max_length=10,
+        choices=settings.LANGUAGES,
+        default=settings.LANGUAGE_CODE,
+        help_text="The user's preferred language, in which they are sent emails, e.g. the welcome email.",
     )
 
     @property
@@ -425,7 +453,8 @@ class UserProfile(MetaDataModel):
         Add the user to the account's contact list.
 
         Creates or updates an `AccountContact` entry for the user, ensuring their email and name are registered with the account.
-        Optionally sets the contact as primary.
+        Optionally sets the contact as primary. A new contact is sent the welcome email, in the user's
+        :attr:`language`.
 
         :param is_primary: Boolean. If True, marks the contact as the primary contact for the account. Defaults to False.
 
@@ -441,13 +470,18 @@ class UserProfile(MetaDataModel):
 
             :class:`AccountContact`
         """
-        account_contact, _ = AccountContact.objects.get_or_create(
-            account=self.account,
-            email=self.user.email,
-            is_test=self.is_test,
-            first_name=self.user.first_name or "account",
-            last_name=self.user.last_name or "contact",
-        )
+        contact = {
+            "account": self.account,
+            "email": self.user.email,
+            "is_test": self.is_test,
+            "first_name": self.user.first_name or "account",
+            "last_name": self.user.last_name or "contact",
+        }
+        account_contact = AccountContact.objects.filter(**contact).first()
+        if account_contact is None:
+            # saving a new contact sends it the welcome email, in the user's language.
+            account_contact = AccountContact(**contact)
+            account_contact.save(language=self.language)
         if account_contact.is_primary != is_primary:
             account_contact.is_primary = is_primary
             account_contact.save()
