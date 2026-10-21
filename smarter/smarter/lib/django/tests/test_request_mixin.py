@@ -1314,3 +1314,31 @@ class TestSmarterRequestMixin(TestAccountMixin):
         srm = SmarterRequestMixin(request)
         self.assertEqual(srm.smarter_client, "smarter-cli")
         self.assertEqual(srm.smarter_client_version, "1.2.3")
+
+    def test_log_ready_status_anonymous_is_debug(self):
+        """An anonymous caller leaves the AccountMixin not ready by design: DEBUG, not WARNING."""
+        srm = SmarterRequestMixin(self.wsgi_request_factory().get("/"))
+        with (
+            patch.object(SmarterRequestMixin, "srm_ready", new_callable=PropertyMock, return_value=False),
+            patch.object(SmarterRequestMixin, "am_ready", new_callable=PropertyMock, return_value=False),
+        ):
+            with self.assertNoLogs("smarter.lib.django.request", level="WARNING"):
+                srm._srm_log_ready_status()
+
+    def test_log_ready_status_not_ready_with_account_is_warning(self):
+        """Not ready for any other reason is still a WARNING."""
+        srm = SmarterRequestMixin(self.wsgi_request_factory().get("/"))
+        with (
+            patch.object(SmarterRequestMixin, "srm_ready", new_callable=PropertyMock, return_value=False),
+            patch.object(SmarterRequestMixin, "am_ready", new_callable=PropertyMock, return_value=True),
+        ):
+            with self.assertLogs("smarter.lib.django.request", level="WARNING") as captured:
+                srm._srm_log_ready_status()
+        self.assertIn("._srm_log_ready_status() is", captured.output[0])
+
+    def test_log_ready_status_ready_is_debug(self):
+        """A ready request is logged at DEBUG."""
+        srm = SmarterRequestMixin(self.wsgi_request_factory().get("/"))
+        with patch.object(SmarterRequestMixin, "srm_ready", new_callable=PropertyMock, return_value=True):
+            with self.assertNoLogs("smarter.lib.django.request", level="WARNING"):
+                srm._srm_log_ready_status()
