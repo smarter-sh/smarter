@@ -88,11 +88,6 @@ jobs:
           echo "dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
           echo "Publishing $version with the $dist_tag dist-tag"
 
-      # The workspace's package-lock.json includes Smarter Chat, which is
-      # managed in its own repository. See the react-smarter-chat target.
-      - name: Clone Smarter Chat
-        run: make react-smarter-chat
-
       - name: Install Node
         uses: actions/setup-node@v6
         with:

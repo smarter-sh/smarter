@@ -1,0 +1,32 @@
+#------------------------------------------------------------------------------
+# Codecov configuration
+#
+# .github/workflows/test.yml uploads coverage/lcov.info, written by
+# `make coverage` (see vitest.coverage.config.ts, which also decides which
+# files count). Its paths are relative to the repository root (src/...), so
+# Codecov needs no path fixes.
+#
+# - project: a commit fails if it lowers the repository's coverage by more
+#   than 1% from its base.
+# - patch: the lines a pull request adds or changes need 90% coverage.
+#------------------------------------------------------------------------------
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "80...100"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 90%
+
+comment:
+  layout: "condensed_header, diff, files"
+  behavior: default
+  require_changes: true
