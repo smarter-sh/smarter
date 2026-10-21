@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.4...v0.36.0-alpha.5) (2026-10-21)
+
+### Bug Fixes
+
+* **chat:** paste plain text into the message input ([56f0c00](https://github.com/smarter-sh/smarter/commit/56f0c00756f40ce0175e726db6fec9cd9aca99f4))
+* **react:** keep the Extensions widget light in dark mode ([37cd619](https://github.com/smarter-sh/smarter/commit/37cd6194dba8488534f480d2de7188706db996d5))
+
+### Refactoring
+
+* **react:** move ResourceTree into [@smarter](https://github.com/smarter).sh/ui-widgets ([5234456](https://github.com/smarter-sh/smarter/commit/52344569bcda351d95def2ec6fa2a9a7768f0733))
+
 ## [0.36.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.3...v0.36.0-alpha.4) (2026-10-21)
 
 ### Bug Fixes
