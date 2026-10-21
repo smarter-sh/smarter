@@ -51,6 +51,12 @@ class PromptChatApiError(Exception):
         self.message = message
 
 
+class PromptChatApiErrorBadRequest(PromptChatApiError):
+    """The request is malformed, e.g. a prompt without a body."""
+
+    status = HTTPStatus.BAD_REQUEST.value
+
+
 class PromptChatApiErrorNotFound(PromptChatApiError):
     """The LLMClient doesn't exist, or the client may not use it."""
 
@@ -225,6 +231,7 @@ def prompt_result_v2(response: Any) -> tuple[SmarterDictType, Optional[SmarterDi
 
 __all__ = [
     "PromptChatApiError",
+    "PromptChatApiErrorBadRequest",
     "PromptChatApiErrorForbidden",
     "PromptChatApiErrorInternal",
     "PromptChatApiErrorLLMProvider",

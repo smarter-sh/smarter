@@ -21,6 +21,7 @@ from smarter.apps.llmclient.signals import llmclient_called
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.prompt.contract.builders import (
     PromptChatApiError,
+    PromptChatApiErrorBadRequest,
     PromptChatApiErrorForbidden,
     PromptChatApiErrorNotFound,
     PromptChatApiErrorNotReady,
@@ -183,6 +184,8 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
             self._chat_helper = PromptHelper(
                 request=self.smarter_request, session_key=self.session_key, llmclient=self.llmclient
             )
+            # PromptHelper starts a new session when the key belongs to another llmclient's session.
+            self._session_key = self._chat_helper.session_key
             if self._chat_helper is not None:
                 self.helper_logger(
                     f"{self.formatted_class_name} initialized with prompt: {self.chat_helper.prompt}, llmclient: {self.llmclient}"
@@ -649,14 +652,18 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
             raise SmarterLLMClientException(
                 f"Prompt not found. This is a bug. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             )
-        if not self.data:
-            raise SmarterLLMClientException(
-                f"POST data is empty. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
+        # RequestMixin.data is more relaxed than the provider expects, so we validate here. A missing or
+        # malformed body is the client's mistake: a 400, not an exception.
+        if not self.data or not isinstance(self.data, (dict, list)):
+            logger.warning(
+                "%s.post() rejected a prompt whose body is empty or not JSON. name=%s, llmclient_id=%s, data_type=%s",
+                self.formatted_class_name,
+                self.name,
+                self.llmclient_id,
+                type(self.data).__name__,
             )
-        # RequestMixin.data is more relaxed than the provider expects, so we validate here
-        if not isinstance(self.data, (dict, list)):
-            raise SmarterLLMClientException(
-                f"POST data is not a dict or list. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}, data_type={type(self.data)}"
+            return self.error_response(
+                request, PromptChatApiErrorBadRequest("The prompt's body is empty, or isn't a JSON object.")
             )
         # likewise, AccountMixin.user can accept AnonymousUser, but providers expect a real User
         if not isinstance(self.user, User):

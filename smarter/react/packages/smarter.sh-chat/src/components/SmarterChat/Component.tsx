@@ -55,6 +55,7 @@ import {
   chatInit,
   chatMessages2RequestMessages,
   messageFactory,
+  replaceBrokenImage,
   sanitizeInput,
   toggleMetadataMessages,
 } from "@/lib/messages";
@@ -229,10 +230,12 @@ function SmarterChat({
   }, []);
 
   useEffect(() => {
-    // a logo or avatar whose image fails to load is hidden, rather than displayed as a broken image.
-    // Errors don't bubble, so they're listened to as they are captured.
+    // a logo or avatar whose image fails to load is hidden, rather than displayed as a broken image,
+    // and a message's image is replaced with its description. Errors don't bubble, so they're
+    // listened to as they are captured.
     const chatApp = chatAppRef.current;
     const handleError = (event: Event) => {
+      if (replaceBrokenImage(event.target)) return;
       const image = event.target;
       if (!(image instanceof HTMLImageElement) || !image.closest(".cs-avatar")) return;
       const src = image.getAttribute("src") ?? "";
