@@ -1,0 +1,674 @@
+.SmarterChat {
+  border: 1px solid rgba(255, 87, 51, 0.75);
+  height: 100%;
+  overflow-x: auto;
+}
+
+.SmarterChat a {
+  text-decoration: inherit;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ------------------------- layout ------------------------- */
+
+.smarter-chat-container {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  margin: 0;
+  padding: 0;
+}
+
+.smarter-chat-app {
+  flex: 1 1 100%;
+  min-width: 280px;
+  margin: 0;
+  padding: 5px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.chat-app {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.smarter-chat-container-inner,
+.smarter-chat-message-list {
+  width: 100%;
+}
+
+/* ------------------------- the LLMClient's styles -------------------------
+
+   The LLMClient's manifest's spec.config.styles are css variables on the .SmarterChat element (see
+   lib/styles.ts), which these rules apply to chatscope's components. Each variable's fallback is
+   chatscope's own value, or Smarter's, so a setting that is left out changes nothing. The rules are
+   prefixed with .SmarterChat, so that they win over chatscope's. */
+
+.SmarterChat .cs-main-container {
+  font-family: var(--smarter-chat-font-family, Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif);
+  font-size: var(--smarter-chat-font-size, 1rem);
+  color: var(--smarter-chat-main-container-color, rgba(0, 0, 0, 0.87));
+  background-color: var(--smarter-chat-main-container-bg, #fff);
+  border-color: var(--smarter-chat-main-container-border-color, #d1dbe3);
+}
+
+.SmarterChat .smarter-chat-container-inner {
+  color: var(--smarter-chat-message-list-color, lightgray);
+  background-color: var(--smarter-chat-chat-container-bg, rgba(0, 0, 0, 0.1)) !important;
+}
+
+.SmarterChat .smarter-chat-message-list {
+  color: var(--smarter-chat-message-list-color, lightgray);
+  background-color: var(--smarter-chat-message-list-bg, rgba(0, 0, 0, 0.1)) !important;
+  background-image: var(--smarter-chat-background-image, none);
+  background-size: var(--smarter-chat-background-size, cover);
+  background-repeat: var(--smarter-chat-background-repeat, no-repeat);
+  background-position: center;
+}
+
+.SmarterChat .cs-conversation-header {
+  font-family: var(--smarter-chat-font-family, Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif);
+  background-color: var(--smarter-chat-header-bg, #f6fbff);
+  border-bottom-color: var(--smarter-chat-header-border-color, #d1dbe3);
+}
+
+.SmarterChat .cs-conversation-header__content .cs-conversation-header__user-name {
+  color: var(--smarter-chat-header-color, rgba(0, 0, 0, 0.87));
+  background-color: transparent;
+}
+
+.SmarterChat .cs-conversation-header__content .cs-conversation-header__info {
+  color: var(--smarter-chat-header-info-color, rgba(0, 0, 0, 0.6));
+  background-color: transparent;
+}
+
+/* the LLMClient's logo, in the header. chatscope displays avatars as circles, so the whole logo is
+   fitted into a white circle. */
+.SmarterChat .cs-conversation-header__avatar .smarter-chat-logo img {
+  box-sizing: border-box;
+  padding: 3px;
+  object-fit: contain;
+  background-color: #fff;
+}
+
+/* Smarter's own messages (sandbox mode's system, tool and progress messages, and errors) keep their
+   look. */
+.SmarterChat .cs-message__content {
+  font-family: var(--smarter-chat-font-family, Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif);
+}
+
+.SmarterChat
+  .cs-message.cs-message--incoming.cs-message--single:not(
+    .smarter-message,
+    .smarter-error-message,
+    .smarter-progress-message,
+    .system-message
+  )
+  .cs-message__content {
+  color: var(--smarter-chat-incoming-color, rgba(0, 0, 0, 0.87));
+  background-color: var(--smarter-chat-incoming-bg, #c6e3fa);
+  border: 1px solid var(--smarter-chat-incoming-border-color, transparent);
+  border-radius: 0 var(--smarter-chat-border-radius, 0.7em) var(--smarter-chat-border-radius, 0.7em)
+    var(--smarter-chat-border-radius, 0.7em);
+}
+
+.SmarterChat
+  .cs-message.cs-message--outgoing.cs-message--single:not(
+    .smarter-message,
+    .smarter-error-message,
+    .smarter-progress-message,
+    .system-message
+  )
+  .cs-message__content {
+  color: var(--smarter-chat-outgoing-color, rgba(0, 0, 0, 0.87));
+  background-color: var(--smarter-chat-outgoing-bg, #6ea9d7);
+  border: 1px solid var(--smarter-chat-outgoing-border-color, transparent);
+  border-radius: var(--smarter-chat-border-radius, 0.7em) var(--smarter-chat-border-radius, 0.7em) 0
+    var(--smarter-chat-border-radius, 0.7em);
+}
+
+/* Smarter's own messages have their own colors, e.g. beige on dark for tool responses, which the
+   filter would turn black. */
+.SmarterChat
+  .cs-message--incoming:not(.smarter-message, .smarter-error-message, .smarter-progress-message, .system-message)
+  div.cs-message__html-content
+  a {
+  color: var(--smarter-chat-incoming-link-color, inherit);
+  filter: var(--smarter-chat-incoming-link-filter, invert(1) contrast(2));
+}
+
+.SmarterChat
+  .cs-message--outgoing:not(.smarter-message, .smarter-error-message, .smarter-progress-message, .system-message)
+  div.cs-message__html-content
+  a {
+  color: var(--smarter-chat-outgoing-link-color, inherit);
+  filter: var(--smarter-chat-outgoing-link-filter, invert(1) contrast(2));
+}
+
+.SmarterChat .cs-chat-container .cs-message-input {
+  color: var(--smarter-chat-input-color, rgba(0, 0, 0, 0.87));
+  background-color: var(--smarter-chat-input-bg, #fff);
+  border-top-color: var(--smarter-chat-input-border-color, #d1dbe3);
+}
+
+.SmarterChat .cs-message-input__content-editor-wrapper,
+.SmarterChat .cs-message-input__content-editor-container,
+.SmarterChat .cs-message-input__content-editor {
+  background-color: var(--smarter-chat-input-editor-bg, #c6e3fa);
+}
+
+.SmarterChat .cs-message-input__content-editor-wrapper {
+  border-radius: var(--smarter-chat-border-radius, 0.7em);
+}
+
+.SmarterChat .cs-message-input__content-editor {
+  font-family: var(--smarter-chat-font-family, Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif);
+  color: var(--smarter-chat-input-color, rgba(0, 0, 0, 0.87));
+}
+
+.SmarterChat .cs-message-input__content-editor[data-placeholder]:empty:before {
+  color: var(--smarter-chat-input-placeholder-color, rgba(0, 0, 0, 0.38));
+}
+
+.SmarterChat .cs-button--send,
+.SmarterChat .cs-button--attachment {
+  color: var(--smarter-chat-button-color, #6ea9d7);
+}
+
+.SmarterChat .cs-typing-indicator__text {
+  color: var(--smarter-chat-typing-color, #6ea9d7);
+}
+
+.SmarterChat .cs-typing-indicator__dot {
+  background-color: var(--smarter-chat-typing-color, #6ea9d7);
+}
+
+/* the avatars beside messages. */
+.SmarterChat .cs-message__avatar .cs-avatar img {
+  object-fit: cover;
+}
+
+/* ------------------------- messages ------------------------- */
+
+.cs-message-separator::before,
+.cs-message-separator::after {
+  background-color: lightgray !important;
+}
+
+.cs-conversation-header {
+  text-align: center;
+}
+
+/* the toolbar: the sandbox or production mode switch, new chat, and the page's own buttons (headerActions, see
+   HeaderButton.tsx), e.g. the web console's Help and Console buttons. The buttons are on the header, so they take the header's text color,
+   which an LLMClient's styles choose to contrast with the header's background. The buttons color
+   is for the send and attach buttons, on the message input, whose background is usually the
+   opposite of the header's: used here, it made the toolbar invisible on a header of the same
+   color. Without a header color, the buttons color is still used. */
+.cs-conversation-header__actions .cs-button.smarter-chat-toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.2em 0.4em;
+  font-size: 1.3em;
+  color: var(--smarter-chat-header-color, var(--smarter-chat-button-color, #6ea9d7));
+  background-color: transparent;
+  border-radius: 0.4em;
+}
+
+.cs-conversation-header__actions .cs-button.smarter-chat-toolbar-button:hover,
+.cs-conversation-header__actions .cs-button.smarter-chat-toolbar-button:focus-visible {
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+/* the mode switch: two options in one outline, the current one filled. A divider separates it from the buttons
+   after it, which are actions. */
+.cs-conversation-header__actions .smarter-chat-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.4em;
+  padding-right: 0.4em;
+  border-right: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  color: var(--smarter-chat-header-color, var(--smarter-chat-button-color, #6ea9d7));
+}
+
+.cs-conversation-header__actions .smarter-chat-mode-toggle .cs-button.smarter-chat-mode-option {
+  font-size: 0.85em;
+  white-space: nowrap;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, currentColor 60%, transparent);
+  border-radius: 0;
+}
+
+.cs-conversation-header__actions .smarter-chat-mode-toggle .cs-button.smarter-chat-mode-option:first-child {
+  border-radius: 0.4em 0 0 0.4em;
+}
+
+.cs-conversation-header__actions .smarter-chat-mode-toggle .cs-button.smarter-chat-mode-option:last-child {
+  border-left: none;
+  border-radius: 0 0.4em 0.4em 0;
+}
+
+.cs-conversation-header__actions .smarter-chat-mode-toggle .cs-button.smarter-chat-mode-option[aria-pressed="true"] {
+  background-color: color-mix(in srgb, currentColor 22%, transparent);
+  font-weight: 600;
+}
+
+.cs-conversation-header__actions .cs-button.smarter-chat-toolbar-button-labeled {
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.cs-conversation-header__actions .cs-button.smarter-chat-mode-option svg,
+.cs-conversation-header__actions .cs-button.smarter-chat-toolbar-button-labeled svg {
+  font-size: 1.2em;
+}
+
+/* a narrow chat, e.g. beside the workbench's Console, shows only its header buttons' icons. Their labels are
+   hidden visually, but still name the buttons for screen readers; the buttons' titles explain them on hover. */
+.smarter-chat-app {
+  container: smarter-chat / inline-size;
+}
+
+@container smarter-chat (max-width: 560px) {
+  .cs-conversation-header__actions .smarter-chat-toolbar-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .cs-conversation-header__actions .cs-button.smarter-chat-toolbar-button {
+    gap: 0;
+  }
+}
+
+/* the user's messages are displayed as they were typed. The others are markdown, whose html has
+   its own line breaks. See lib/messages.ts. */
+.cs-message--outgoing div.cs-message__html-content {
+  white-space: pre-wrap;
+}
+
+div.cs-message__html-content > :first-child {
+  margin-top: 0;
+}
+
+div.cs-message__html-content > :last-child {
+  margin-bottom: 0;
+}
+
+div.cs-message__html-content :is(p, ul, ol, blockquote, table) {
+  margin: 0 0 0.6em;
+}
+
+div.cs-message__html-content :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0.6em 0 0.3em;
+  font-weight: bold;
+  line-height: 1.25;
+}
+
+div.cs-message__html-content h1 {
+  font-size: 1.4em;
+}
+div.cs-message__html-content h2 {
+  font-size: 1.25em;
+}
+div.cs-message__html-content h3 {
+  font-size: 1.1em;
+}
+div.cs-message__html-content :is(h4, h5, h6) {
+  font-size: 1em;
+}
+
+div.cs-message__html-content :is(ul, ol) {
+  padding-left: 1.5em;
+}
+
+div.cs-message__html-content li > :is(ul, ol) {
+  margin-bottom: 0;
+}
+
+div.cs-message__html-content code {
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* a message can be narrower than its widest line of code, which then scrolls sideways. Its content
+   is a flex item, whose minimum width would otherwise be that line's, so that the message, which
+   hides its overflow, would cut off the code block's right side, and its buttons. */
+section.cs-message .cs-message__content-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* code blocks, as GitHub displays them in its dark theme: a header with the language and a copy
+   button, and the highlighted code, which scrolls sideways rather than wrapping. See lib/code.ts. */
+div.cs-message__html-content .smarter-chat-code {
+  max-width: 100%;
+  margin: 0 0 0.6em;
+  overflow: hidden;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background-color: #0d1117;
+  text-align: left;
+}
+
+div.cs-message__html-content .smarter-chat-code:last-child {
+  margin-bottom: 0;
+}
+
+div.cs-message__html-content .smarter-chat-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.3em 0.5em 0.3em 1em;
+  border-bottom: 1px solid #30363d;
+  background-color: #161b22;
+  color: #8b949e;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif;
+  font-size: 0.8em;
+}
+
+div.cs-message__html-content .smarter-chat-code-copy {
+  padding: 0.2em 0.6em;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background-color: #21262d;
+  color: #c9d1d9;
+  font: inherit;
+  cursor: pointer;
+}
+
+div.cs-message__html-content .smarter-chat-code-copy:hover,
+div.cs-message__html-content .smarter-chat-code-copy:focus-visible {
+  border-color: #8b949e;
+  background-color: #30363d;
+  outline: none;
+}
+
+div.cs-message__html-content pre {
+  margin: 0;
+  padding: 1em;
+  overflow-x: auto;
+  background-color: #0d1117;
+  color: #c9d1d9;
+  white-space: pre;
+  word-wrap: normal;
+  tab-size: 4;
+}
+
+div.cs-message__html-content pre code {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.85em;
+  line-height: 1.45;
+  background-color: transparent;
+  color: inherit;
+}
+
+/* highlight.js's tokens, in GitHub's dark theme colors. */
+div.cs-message__html-content
+  .hljs
+  :is(.hljs-doctag, .hljs-keyword, .hljs-template-tag, .hljs-template-variable, .hljs-type, .hljs-variable.language_) {
+  color: #ff7b72;
+}
+div.cs-message__html-content .hljs :is(.hljs-title, .hljs-title.class_, .hljs-title.function_) {
+  color: #d2a8ff;
+}
+div.cs-message__html-content
+  .hljs
+  :is(
+    .hljs-attr,
+    .hljs-attribute,
+    .hljs-literal,
+    .hljs-meta,
+    .hljs-number,
+    .hljs-operator,
+    .hljs-selector-attr,
+    .hljs-selector-class,
+    .hljs-selector-id,
+    .hljs-variable
+  ) {
+  color: #79c0ff;
+}
+div.cs-message__html-content .hljs :is(.hljs-string, .hljs-regexp, .hljs-meta .hljs-string) {
+  color: #a5d6ff;
+}
+div.cs-message__html-content .hljs :is(.hljs-built_in, .hljs-symbol) {
+  color: #ffa657;
+}
+div.cs-message__html-content .hljs :is(.hljs-comment, .hljs-code, .hljs-formula) {
+  color: #8b949e;
+}
+div.cs-message__html-content .hljs :is(.hljs-name, .hljs-quote, .hljs-selector-tag, .hljs-selector-pseudo) {
+  color: #7ee787;
+}
+div.cs-message__html-content .hljs .hljs-meta .hljs-keyword {
+  color: #ff7b72;
+}
+div.cs-message__html-content .hljs .hljs-subst {
+  color: #c9d1d9;
+}
+div.cs-message__html-content .hljs .hljs-section {
+  color: #1f6feb;
+  font-weight: bold;
+}
+div.cs-message__html-content .hljs .hljs-bullet {
+  color: #f2cc60;
+}
+div.cs-message__html-content .hljs .hljs-emphasis {
+  color: #c9d1d9;
+  font-style: italic;
+}
+div.cs-message__html-content .hljs .hljs-strong {
+  color: #c9d1d9;
+  font-weight: bold;
+}
+div.cs-message__html-content .hljs .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+div.cs-message__html-content .hljs .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+
+div.cs-message__html-content blockquote {
+  padding: 0 0 0 0.8em;
+  border-left: 3px solid rgba(0, 0, 0, 0.25);
+  opacity: 0.85;
+}
+
+div.cs-message__html-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+div.cs-message__html-content :is(th, td) {
+  padding: 0.25em 0.6em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  text-align: left;
+}
+
+div.cs-message__html-content th {
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+div.cs-message__html-content hr {
+  margin: 0.6em 0;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+div.cs-message__html-content a {
+  text-decoration: underline !important;
+}
+div.cs-message__html-content a:hover {
+  text-decoration: underline;
+  color: orange;
+}
+
+section.smarter-message .cs-message__content {
+  color: brown !important;
+  background-color: blanchedalmond;
+  border: 1px solid brown;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  text-align: left;
+}
+
+section.smarter-error-message .cs-message__content {
+  position: relative;
+  color: black !important;
+  background-color: #f5f5f5;
+  border: 3px solid crimson;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  font-family: "Courier New", Courier, monospace;
+  text-align: left;
+}
+
+/* a step of the running prompt, e.g. a tool call, until its response arrives. Larger than the
+   response's messages, and in a warmer amber, so that it reads as work in progress. The current
+   step has a spinner and a pulsing border. The steps before it have a check mark. */
+section.smarter-progress-message .cs-message__content {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 0.8em 1.1em;
+  color: #8a3b12 !important;
+  background-color: #fff4dc;
+  border: 2px dashed #d2691e;
+  border-radius: 10px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.15em;
+  font-style: italic;
+  font-weight: bold;
+  text-align: left;
+}
+
+section.smarter-progress-message .cs-message__content::before {
+  content: "";
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 1.2em;
+  height: 1.2em;
+}
+
+section.smarter-progress-message-active .cs-message__content {
+  animation: smarter-progress-pulse 1.6s ease-in-out infinite;
+}
+
+section.smarter-progress-message-active .cs-message__content::before {
+  border: 3px solid rgba(210, 105, 30, 0.25);
+  border-top-color: #d2691e;
+  border-radius: 50%;
+  animation: smarter-progress-spin 0.8s linear infinite;
+}
+
+section.smarter-progress-message-done .cs-message__content {
+  opacity: 0.7;
+}
+
+section.smarter-progress-message-done .cs-message__content::before {
+  content: "\2713";
+  color: #d2691e;
+  font-style: normal;
+  line-height: 1.2em;
+  text-align: center;
+}
+
+@keyframes smarter-progress-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes smarter-progress-pulse {
+  0%,
+  100% {
+    border-color: #d2691e;
+    box-shadow: 0 0 0 0 rgba(210, 105, 30, 0.45);
+  }
+  50% {
+    border-color: #ff8c1a;
+    box-shadow: 0 0 0 5px rgba(210, 105, 30, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  section.smarter-progress-message-active .cs-message__content,
+  section.smarter-progress-message-active .cs-message__content::before {
+    animation: none;
+  }
+}
+
+/* markdown images, sized to fit their chat bubble. See lib/messages.ts. */
+div.cs-message__html-content img.smarter-chat-image {
+  display: block;
+  max-width: min(100%, 480px);
+  max-height: 360px;
+  width: auto;
+  height: auto;
+  margin: 4px 0;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.SmarterChat .cs-message div.cs-message__html-content a:has(> img.smarter-chat-image) {
+  filter: none;
+}
+
+section.system-message .cs-message__content {
+  color: beige !important;
+  background-color: rgb(39, 40, 34);
+  border: 1px solid brown;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+}
+
+.smarter-chat-error-boundary {
+  padding: 1rem;
+  color: crimson;
+}

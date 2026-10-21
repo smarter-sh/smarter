@@ -1,5 +1,6 @@
 {
   "name": "@smarter/llmclient-deployment",
+  "private": true,
   "description": "A React app for an LLMClient's deployment page: at the deployed LLMClient's url, and in the Deployment tab of the Smarter web console's Prompt Engineer's Workbench.",
   "version": "0.1.0",
   "type": "module",

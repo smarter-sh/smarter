@@ -1,4 +1,7 @@
-"""Test the create_smarter_admin management command, with a new superuser in the platform's account."""
+"""Test the create_smarter_admin management command, with a new superuser in the platform's account.
+
+The api key email is never sent: the infrastructure email service is patched.
+"""
 
 from unittest.mock import patch
 
@@ -11,8 +14,46 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 from .base import CommandTestBase
 
+MODULE = "smarter.apps.account.management.commands.create_smarter_admin"
+
 
 class TestCreateSmarterAdmin(CommandTestBase):
+    def setUp(self):
+        super().setUp()
+        patcher = patch(f"{MODULE}.infrastructure")
+        self.infrastructure = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_api_key_is_emailed_not_printed(self):
+        """Test that a new api key's value is emailed to its owner, without a blind copy, and never printed."""
+        username = self.unique("test_smarter_admin")
+        email = f"{username}@example.com"
+        self.addCleanup(User.objects.filter(username=username).delete)
+        self.addCleanup(SmarterAuthToken.objects.filter(user__username=username).delete)
+        self.infrastructure.email.send_email.return_value = True
+        output = self.run_command("create_smarter_admin", username=username, email=email)
+        self.infrastructure.email.send_email.assert_called_once()
+        kwargs = self.infrastructure.email.send_email.call_args.kwargs
+        self.assertEqual(kwargs["to"], email)
+        self.assertFalse(kwargs["bcc_admin"])
+        token_key = kwargs["body"].split("API key: ")[1].strip()
+        auth_token = SmarterAuthToken.objects.get(user__username=username)
+        self.assertTrue(token_key.startswith(auth_token.token_key))
+        self.assertIn(str(auth_token.key_id), kwargs["body"])
+        self.assertNotIn(token_key, output)
+
+    def test_api_key_email_failure_is_reported(self):
+        """Test that an email that can't be sent says how to create another key, without printing this one."""
+        username = self.unique("test_smarter_admin")
+        self.addCleanup(User.objects.filter(username=username).delete)
+        self.addCleanup(SmarterAuthToken.objects.filter(user__username=username).delete)
+        self.infrastructure.email.send_email.return_value = False
+        output = self.run_command("create_smarter_admin", username=username, email=f"{username}@example.com")
+        self.assertIn(f"could not email it to {username}@example.com", output)
+        self.assertIn(f"create_api_key --username {username}", output)
+        token_key = self.infrastructure.email.send_email.call_args.kwargs["body"].split("API key: ")[1].strip()
+        self.assertNotIn(token_key, output)
+
     def test_create_and_update(self):
         username = self.unique("test_smarter_admin")
         self.addCleanup(User.objects.filter(username=username).delete)

@@ -2,6 +2,8 @@
 
 from unittest.mock import ANY, patch
 
+from django.core.management.base import CommandError
+
 from smarter.common.const import SmarterEnvironments
 
 from .base import CommandTestBase
@@ -55,21 +57,21 @@ class TestInitializePlatform(CommandTestBase):
                 raise RuntimeError(name)
 
         with patch(f"{MODULE}.call_command", side_effect=call), patch(f"{MODULE}.logger") as logger:
-            with self.assertRaises(SystemExit):
+            with self.assertRaises(CommandError):
                 self.run_command("initialize_platform", password="pw")
         self.assertGreaterEqual(logger.error.call_count, 10)
 
     def test_extension_failure_is_fatal(self):
-        """Test that a failure of add_example_extensions lets the remaining steps run, then exits with code 1."""
+        """Test that a failure of add_example_extensions lets the remaining steps run, then fails with a CommandError, which exits with code 1."""
 
         def call(name, **kwargs):
             if name == "add_example_extensions":
                 raise SystemExit(1)
 
         with patch(f"{MODULE}.call_command", side_effect=call) as called:
-            with self.assertRaises(SystemExit) as raised:
+            with self.assertRaisesRegex(CommandError, "these steps failed: add_example_extensions") as raised:
                 self.run_command("initialize_platform", password="pw")
-        self.assertEqual(raised.exception.code, 1)
+        self.assertEqual(raised.exception.returncode, 1)
         self.assertEqual(called.call_args_list[-1].args[0], "sync_infrastructure_inventory")
 
     def test_defaults(self):

@@ -182,6 +182,9 @@ reference implementations.
 | Adding or changing a SAM resource (manifest, broker, kind)       | `smarter-sam-resource`                 |
 | A web console list page, or any Django-hosted React app          | `smarter-django-react`                 |
 | React stories, tests, ESLint, Prettier                           | `smarter-react-testing`                |
+| Smarter Chat (`@smarter.sh/ui-chat`), the chat UI of LLMClients  | `smarter-chat-development`             |
+| Smarter Chat's tests, stories, coverage and `check:dist`         | `smarter-chat-testing`                 |
+| Smarter Chat's embed script, its options and the integrations    | `smarter-chat-embed`                   |
 | Python unit tests and coverage                                   | `smarter-python-testing`               |
 | Syncing code into the Docker containers, running anything there  | `smarter-docker-environment`           |
 | Code that calls Kubernetes, AWS, Route53, ACM, or Celery         | `smarter-infrastructure-safety`        |
@@ -191,6 +194,7 @@ reference implementations.
 | The SAM JSON Schemas, example manifests and cli OpenAPI document | `smarter-api-contract`                 |
 | Python docstrings                                                | `smarter-docstrings`                   |
 | Logger calls: prefixes, levels, waffle switches, secrets         | `smarter-logging`                      |
+| Reviewing a log: init job, backups, workers, dev server          | `smarter-log-review`                   |
 | Url patterns, url names, `reverse()`, `*_url` properties         | `smarter-url-names`                    |
 | Text the web console shows, .po catalogs, adding a language      | `smarter-translations`                 |
 | Type annotations, `Any`, the `smarter.lib.typing` aliases        | `smarter-python-typing`                |

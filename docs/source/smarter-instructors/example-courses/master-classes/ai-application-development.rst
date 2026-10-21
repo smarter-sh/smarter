@@ -22,7 +22,7 @@ any OpenAI SDK use a provider without ever seeing its key. The front end and the
 on a `chat contract
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/models.py>`__
 written in Pydantic, published as JSON Schema, and compiled into the TypeScript types of
-`Smarter Chat <https://github.com/smarter-sh/smarter-chat>`__, a React chat app built from the
+`Smarter Chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, a React chat app built from the
 open-source ``@chatscope/chat-ui-kit-react``, ``@chatscope/chat-ui-kit-styles`` and
 ``@microlink/react-json-view`` packages.
 
@@ -62,7 +62,7 @@ lab, in six themes:
 - `smarter/smarter/apps/secret/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/secret>`__
   and `smarter/smarter/apps/proxy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy>`__,
   where API keys are kept and how callers use them without seeing them.
-- `github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__, the React
+- `smarter/react/packages/smarter.sh-chat/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, the React
   chat app that Smarter's LLMClient workbench is built on, and a case study in composing a chat
   UI from open-source packages.
 

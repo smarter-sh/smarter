@@ -18,7 +18,7 @@ Usage Example
 
 import re
 
-from django.core.exceptions import ValidationError
+from django.core.management.base import CommandError
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.serializers import AccountSerializer
@@ -55,8 +55,7 @@ class Command(SmarterCommand):
             if self.validate_regex(regex=name_spec):
                 accounts = Account.objects.filter(name__regex=name_spec)
             else:
-                self.handle_completed_failure(msg="Invalid regular expression provided for name_spec")
-                raise ValidationError("Invalid regular expression provided for name_spec")
+                raise CommandError(f"{name_spec} is not a valid regular expression.")
         else:
             accounts = Account.objects.all()
 

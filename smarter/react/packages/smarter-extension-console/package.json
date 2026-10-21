@@ -1,5 +1,6 @@
 {
   "name": "@smarter/extension-console",
+  "private": true,
   "description": "A React app for managing Smarter Extensions in the Smarter web console: the Extensions list, the registry, and each extension's page.",
   "version": "0.1.0",
   "type": "module",
