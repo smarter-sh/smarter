@@ -3,11 +3,13 @@
 The email is never sent: send_welcome_email() is patched.
 """
 
+import re
 import unittest
 from unittest.mock import patch
 
-from smarter.apps.account.models import AccountContact
-from smarter.common.exceptions import SmarterValueError
+from django.core.management.base import CommandError
+
+from smarter.apps.account.models import AccountContact, UserProfile
 
 from .base import CommandTestBase
 
@@ -54,8 +56,34 @@ class TestSendWelcomeEmail(CommandTestBase):
         self.assertEqual(self.send.call_count, 2)
 
     def test_unknown_account(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaisesRegex(
+            CommandError, re.escape("There is no account with the account number 0000-0000-0000.")
+        ):
             self.run_command("send_welcome_email", account_number="0000-0000-0000", email="a@example.com")
+
+    def test_unknown_user_is_refused(self):
+        """Test that an unknown username or email address is refused with a message, not a traceback."""
+        for options, message in (
+            ({"username": "no_such_user"}, "There is no user with the username no_such_user."),
+            (
+                {"email": "no_such_user@example.com"},
+                "There is no user with the email address no_such_user@example.com.",
+            ),
+        ):
+            with self.subTest(options=options):
+                with self.assertRaisesRegex(CommandError, re.escape(message)):
+                    self.run_command("send_welcome_email", **options)
+        self.send.assert_not_called()
+
+    def test_email_of_a_user_in_several_accounts_is_refused(self):
+        """Test that an email address that matches several user profiles asks for the account."""
+        with patch(
+            "smarter.apps.account.management.commands.send_welcome_email.UserProfile.objects.get",
+            side_effect=UserProfile.MultipleObjectsReturned,
+        ):
+            with self.assertRaisesRegex(CommandError, re.escape("belongs to several accounts")):
+                self.run_command("send_welcome_email", email=self.non_admin_user.email)
+        self.send.assert_not_called()
 
     def test_by_account_without_email_is_refused(self):
         """Test that an account without a username or an email is refused."""
@@ -65,6 +93,23 @@ class TestSendWelcomeEmail(CommandTestBase):
             {},
         ):
             with self.subTest(options=options):
-                with self.assertRaises(SmarterValueError):
+                with self.assertRaisesRegex(CommandError, re.escape("Provide a --username, or an --email")):
                     self.run_command("send_welcome_email", **options)
+        self.send.assert_not_called()
+
+    def test_language(self):
+        """Test that the language reaches the email, for a new and an existing contact."""
+        self.run_command("send_welcome_email", username=self.non_admin_user.username, language="es")
+        self.send.assert_called_once_with(language="es")
+        self.send.reset_mock()
+        self.run_command("send_welcome_email", username=self.non_admin_user.username, language="pt-br")
+        self.send.assert_called_once_with(language="pt-br")
+
+    def test_default_language(self):
+        self.run_command("send_welcome_email", username=self.non_admin_user.username)
+        self.send.assert_called_once_with(language=None)
+
+    def test_unknown_language_is_refused(self):
+        with self.assertRaises(CommandError):
+            self.run_command("send_welcome_email", "--language=xx", username=self.non_admin_user.username)
         self.send.assert_not_called()

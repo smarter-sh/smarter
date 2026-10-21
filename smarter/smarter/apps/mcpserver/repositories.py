@@ -126,8 +126,10 @@ SMARTER_PROJECT_REPOSITORIES: tuple[ProjectRepository, ...] = (
         title="the Smarter platform, and its documentation",
         description=(
             "The Smarter platform: its Django backend, SAM manifests and resources (LLMClients, "
-            "Plugins, MCPClients, Guardrails, Secrets, ...), its api, its React web console, its "
-            f"Helm chart, and the source of its documentation, {SMARTER_PROJECT_DOCS_URL}, in docs/source."
+            "Plugins, MCPClients, Guardrails, Secrets, ...), its api, its React web console and its "
+            "npm packages (SmarterChat, the React chat component of LLMClients, as @smarter.sh/ui-chat, and "
+            "@smarter.sh/ui-widgets), its Helm chart, and the source of its documentation, "
+            f"{SMARTER_PROJECT_DOCS_URL}, in docs/source."
         ),
         docs_root="docs/source",
         docs_url=SMARTER_PROJECT_DOCS_LATEST_URL,
@@ -161,11 +163,6 @@ SMARTER_PROJECT_REPOSITORIES: tuple[ProjectRepository, ...] = (
         name="smarter-infrastructure",
         title="the Smarter cloud infrastructure",
         description="The Terraform and Kubernetes code of the cloud infrastructure that the Smarter platform runs on.",
-    ),
-    ProjectRepository(
-        name="smarter-chat",
-        title="the SmarterChat React component",
-        description="SmarterChat, the React chat component of Smarter LLMClients, published to npm.",
     ),
     ProjectRepository(
         name="smarter-deploy",

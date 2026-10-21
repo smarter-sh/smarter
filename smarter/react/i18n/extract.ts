@@ -37,10 +37,10 @@ export const STATIC_JS_DIR = path.join(PROJECT_ROOT, "smarter", "static", "js");
 export const MESSAGES_FILE = path.join(WORKSPACE, "i18n", "messages.js");
 
 /**
- * Packages whose messages aren't extracted. Smarter Chat is its own repository, cloned into the
- * workspace, and is published to npm for sites other than the web console.
+ * Packages whose messages aren't extracted. Smarter Chat (@smarter.sh/ui-chat) is published to npm
+ * for sites other than the web console, and has its own gettext catalogs, in its locale/ folder.
  */
-const EXCLUDED_PACKAGES = new Set(["smarter-chat"]);
+const EXCLUDED_PACKAGES = new Set(["smarter.sh-chat"]);
 
 /** The translation functions, and the positions of their context, singular and plural arguments. */
 const KEYWORDS: Record<string, { context?: number; singular: number; plural?: number }> = {

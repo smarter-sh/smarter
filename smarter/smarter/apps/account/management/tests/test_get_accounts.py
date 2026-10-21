@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from django.core.exceptions import ValidationError
+from django.core.management.base import CommandError
 
 from .base import CommandTestBase
 
@@ -22,5 +22,5 @@ class TestGetAccounts(CommandTestBase):
         )
 
     def test_invalid_regex(self):
-        with self.assertRaises(ValidationError):
+        with self.assertRaisesRegex(CommandError, r"\[unclosed is not a valid regular expression"):
             self.run_command("get_accounts", "[unclosed")

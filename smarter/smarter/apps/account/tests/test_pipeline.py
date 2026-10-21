@@ -49,6 +49,20 @@ class TestPipeline(TestAccountMixin):
         self.assertFalse(result["user"].is_active)
         self.assertTrue(UserProfile.objects.filter(user=result["user"]).exists())
 
+    def test_create_user_stores_the_request_language(self):
+        """Test that a new user's preferred language is the one that the request activated."""
+        # pylint: disable=import-outside-toplevel
+        from django.utils import translation
+
+        username = "test_pipeline_language_user"
+        self.addCleanup(User.objects.filter(username=username).delete)
+        strategy = MagicMock()
+        strategy.create_user.side_effect = lambda **fields: User.objects.create(**fields)
+        details = {"username": username, "email": "language@example.com", "first_name": "New", "last_name": "User"}
+        with translation.override("pt-br"):
+            result = pipeline.create_user(strategy, details, None)
+        self.assertEqual(UserProfile.objects.get(user=result["user"]).language, "pt-br")
+
     def test_create_user_without_names(self):
         """Test that a user is created when the provider doesn't send their names, as GitHub often doesn't."""
         username = "test_pipeline_unnamed_user"

@@ -1,7 +1,6 @@
 Every lecture, lab and assignment in this course follows features through the files below, from
 the database to the browser. Every reference is to the ``main`` branch of
-`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, or of
-`github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__ where named, so
+`github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, so
 that students can open each one during class. Python paths are under ``smarter/smarter/``.
 
 One List Page, Database to Pixel
@@ -82,7 +81,7 @@ A Typed Contract Across the Stack
      - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``chat-contract``)
    * - TypeScript types
      - Generated from the schema, and tested against example payloads.
-     - `smarter-chat: src/contract.gen.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__
+     - `smarter.sh-chat: src/contract.gen.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__
 
 Building, Testing and Shipping
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

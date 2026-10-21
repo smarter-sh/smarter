@@ -1,5 +1,6 @@
 {
   "name": "@smarter/llmtool-list",
+  "private": true,
   "description": "A React component library for displaying a list of LLMTool Plugins on the Smarter web console.",
   "version": "0.3.0",
   "type": "module",

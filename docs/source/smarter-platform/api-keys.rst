@@ -93,7 +93,7 @@ API Backend: see `smarter/lib/drf/views/token_authentication_helpers.py <https:/
       authentication_classes = [SmarterTokenAuthentication]
 
 
-Client front-end: see `https://github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`_
+Client front-end: see `smarter/react/packages/smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`_
 
 .. code-block:: json
 

@@ -21,6 +21,11 @@ Command-line Arguments
     The username for the new superuser. If provided, the email will be derived
     from the associated user profile.
 
+--language : str, optional
+    The language of the welcome email that a new contact is sent, one of
+    ``settings.LANGUAGES``, e.g. ``es``. Defaults to the user's preferred language
+    (``UserProfile.language``), or English for a contact who isn't a user.
+
 Exceptions
 ==========
 SmarterValueError
@@ -31,12 +36,13 @@ Usage Example
 =============
     python manage.py add_account_contact --account_number=<number> --email=<email>
     python manage.py add_account_contact --company_name="<name>" --username=<username>
+    python manage.py add_account_contact --account_number=<number> --email=<email> --language=es
 """
 
-from typing import Optional
+from django.core.management.base import CommandError
 
-from smarter.apps.account.models import Account, AccountContact, UserProfile
-from smarter.common.exceptions import SmarterValueError
+from smarter.apps.account.management.lookups import get_account, get_user
+from smarter.apps.account.models import AccountContact, welcome_email_languages
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -50,49 +56,33 @@ class Command(SmarterCommand):
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
         parser.add_argument("--email", type=str, help="The email address for the new superuser")
         parser.add_argument("--username", type=str, help="The username for the new superuser")
+        parser.add_argument(
+            "--language",
+            type=str,
+            choices=welcome_email_languages(),
+            help="The language of the welcome email that a new contact is sent. Default: the user's preferred language, or English",
+        )
 
     def handle(self, *args, **options):
-        """Create the superuser account."""
+        """Add the contact to the account."""
         self.handle_begin()
 
         account_number = options["account_number"]
         company_name = options["company_name"]
         username = options["username"]
         email = options["email"]
+        language = options.get("language")
 
-        account: Optional[Account] = None
-
-        if options["account_number"]:
-            try:
-                account = Account.objects.get(account_number=account_number)
-            except Account.DoesNotExist as e:
-                self.handle_completed_failure(
-                    e,
-                    f"Account {account_number} not found.",
-                )
-                return
-        elif options["company_name"]:
-            try:
-                account = Account.objects.get(company_name=company_name)
-            except Account.DoesNotExist as e:
-                self.handle_completed_failure(
-                    e,
-                    f"Account {company_name} not found.",
-                )
-                return
-        else:
-            raise SmarterValueError("You must provide either an account number or a company name.")
-
+        account = get_account(account_number=account_number, company_name=company_name)
         if username:
-            user_profile = UserProfile.objects.get(user__username=username)
-            email = user_profile.user.email
+            email = get_user(username).email
+        if not email:
+            raise CommandError("Provide an --email, or the --username of a user.")
 
-        account_contact, created = AccountContact.objects.get_or_create(
-            account=account,
-            email=email,
-        )
-
-        if created:
+        # a new contact is sent the welcome email, in the given language, when it is saved.
+        account_contact = AccountContact.objects.filter(account=account, email=email).first()
+        if not account_contact:
+            AccountContact(account=account, email=email).save(language=language)
             self.handle_completed_success(
                 msg=f"Account Contact {email} added to account {account.account_number} {account.company_name}."
             )

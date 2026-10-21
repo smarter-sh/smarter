@@ -172,13 +172,15 @@ Page scripts can open and close the launcher, e.g. from a "Chat with us" button,
 ``SmarterChat.open()``, ``SmarterChat.close()`` and ``SmarterChat.toggle()``, add a chat with
 ``SmarterChat.mount(options)``, and listen for the element's ``smarter-chat-toggle`` event, whose
 ``event.detail.open`` says whether it opened. The site's css can style the launcher's parts:
-``smarter-chat::part(launcher)``, ``::part(panel)`` and ``::part(chat)``.
+``smarter-chat::part(launcher)``, ``::part(panel)`` and ``::part(chat)``. ``SmarterChat.version`` is
+the version of the script that the page loaded.
 
 ``embed.js`` loads its other files from an ``embed/`` directory beside it: Mermaid, only when a
 message has a diagram, and KaTeX's fonts, only when one has math. To host the script yourself, copy
 ``dist/embed.js`` and ``dist/embed/`` from the npm package together, anywhere. On a CDN url, pin a
-version (``@0.9.0``) if you want to review changes before your visitors see them; ``@0`` follows the
-latest 0.x release.
+version (``@0.36.0``) if you want to review changes before your visitors see them; ``@0`` follows the
+latest 0.x release. CDN ranges such as ``@0`` and ``@0.36`` only follow releases with npm's
+``latest`` dist-tag, never an ``alpha`` or ``beta`` prerelease.
 
 A site with a Content Security Policy must allow the script's origin in ``script-src`` (and
 ``https://fonts.googleapis.com`` in ``style-src``, if the LLMClient's styles use a Google font), and
@@ -510,9 +512,13 @@ Open the browser's developer tools, and look at the console and the network tab.
 Versions
 --------
 
-The package follows `semantic versioning <https://semver.org>`__, and its
-`changelog <https://github.com/smarter-sh/smarter-chat/blob/main/CHANGELOG.md>`__ lists every
-release. It asks the platform for the current version of the api contract, and reads the previous one from
+The package is released with the Smarter platform, and has the platform's version, which follows
+`semantic versioning <https://semver.org>`__. Smarter's
+`changelog <https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md>`__ lists every
+release; releases up to 0.16.2, before the package's version became the platform's, are in its
+`own changelog <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/CHANGELOG.md>`__.
+``npm install @smarter.sh/ui-chat`` installs the latest release from Smarter's ``main`` branch;
+prereleases are published with the ``alpha`` and ``beta`` dist-tags. It asks the platform for the current version of the api contract, and reads the previous one from
 older platforms, so a new version of the package works with older Smarter platforms; when a feature
-needs a newer platform, its release notes say so. Pin a minor version, ``~0.7.0``, if you want to
+needs a newer platform, its release notes say so. Pin a minor version, ``~0.36.0``, if you want to
 review changes before your visitors see them.

@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from smarter.apps.account.management.commands.reset_cache import Command
+from django.core.management.base import CommandError
 
 from .base import CommandTestBase
 
@@ -18,7 +18,7 @@ class TestResetCache(CommandTestBase):
         cache.clear.assert_called_once()
 
     def test_reset_cache_error(self):
-        with patch(f"{MODULE}.cache") as cache, patch.object(Command, "handle_completed_failure") as failure:
+        with patch(f"{MODULE}.cache") as cache:
             cache.clear.side_effect = Exception("redis down")
-            self.run_command("reset_cache")
-        failure.assert_called_once()
+            with self.assertRaisesRegex(CommandError, "Could not clear the cache: redis down"):
+                self.run_command("reset_cache")

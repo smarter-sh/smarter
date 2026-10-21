@@ -2,9 +2,9 @@
 Django template tags for the Prompt Engineer's Workbench, the ``@smarter/workbench`` React app.
 
 The workbench is the chat with an LLMClient, Smarter Chat, which it imports from the ``@smarter.sh/ui-chat`` npm
-package (https://github.com/smarter-sh/smarter-chat, cloned into smarter/react/packages/smarter-chat), with the
-developer Console beside it, whose Manifest and Deployment tabs render the ``@smarter/manifest-editor`` and
-``@smarter/llmclient-deployment`` components.
+package (smarter/react/packages/smarter.sh-chat in this repository), with the developer Console beside it, whose
+Manifest and Deployment tabs render the ``@smarter/manifest-editor`` and ``@smarter/llmclient-deployment``
+components.
 """
 
 from django import template
