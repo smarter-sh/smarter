@@ -2320,12 +2320,23 @@ class SmarterRequestMixin(AccountMixin):
                     self.__dict__.pop(name, None)
 
     def _srm_log_ready_status(self):
-        """Logs the srm_ready status of the SmarterRequestMixin."""
-        msg = f"{self.srm_formatted_class_name} is {self._srm_ready_state} - {self.url if self._url else 'URL not initialized'} - authenticated user: {self.user_profile if self.user_profile else 'Anonymous'}"
-        if self.srm_ready:
-            logger.debug(msg)
-        else:
-            logger.warning(msg)
+        """
+        Logs the srm_ready status of the SmarterRequestMixin.
+
+        Not ready is logged at WARNING only when something is wrong with the
+        request itself. An anonymous caller, such as a deployed LLMClient's
+        public ``/config/`` endpoint, leaves the AccountMixin not ready by
+        design, so that case is logged at DEBUG.
+        """
+        ready = self.srm_ready
+        log = logger.debug if ready or not self.am_ready else logger.warning
+        log(
+            "%s._srm_log_ready_status() is %s - %s - authenticated user: %s",
+            self.srm_formatted_class_name,
+            self.formatted_state_ready if ready else self.formatted_state_not_ready,
+            self.url if self._url else "URL not initialized",
+            self.user_profile if self.user_profile else "Anonymous",
+        )
 
     def log_ready_status(self):
         """Logs the ready status of the view."""
