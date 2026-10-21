@@ -110,6 +110,10 @@ jobs:
           npm run build:deps
           npm run typecheck
 
+      # The npm package that uiWidgetsRelease.yml publishes. build:deps built it.
+      - name: Check @smarter.sh/ui-widgets
+        run: npm run check:dist --workspace=@smarter.sh/ui-widgets
+
       - name: Unit tests (Vitest), with coverage
         run: npm run coverage
 
