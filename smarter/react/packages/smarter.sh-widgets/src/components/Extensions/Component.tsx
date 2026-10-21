@@ -50,7 +50,12 @@ const STEPS = [
 function Extensions() {
   return (
     <>
-      <section id="extensions" aria-label={gettext("Extensions")} className="card border-transparent extensions-card">
+      <section
+        id="extensions"
+        aria-label={gettext("Extensions")}
+        className="card border-transparent h-100 extensions-card"
+        data-bs-theme="light"
+      >
         <div className="card-body ps-xl-15">
           <div className="row g-7 align-items-center">
             {/* begin::Pitch */}
