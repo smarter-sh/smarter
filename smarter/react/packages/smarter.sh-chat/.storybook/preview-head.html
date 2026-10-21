@@ -1,0 +1,40 @@
+<!--
+  Stylesheets for the stories.
+
+  When the Smarter Django dev server is running (http://localhost:9357), the stories use the web
+  console's own stylesheets, as index.html does, so components look as they do in the web console.
+  Without it, the first of them fails to load, and Bootstrap and Bootstrap Icons, which the web
+  console's theme is built on, are loaded instead from node_modules (see main.ts, staticDirs). So the
+  Smarter backend is optional: the stories render close to the web console's look, offline.
+-->
+<script>
+  function smarterChatStyleFallback() {
+    if (window.smarterChatStyleFallbackLoaded) return;
+    window.smarterChatStyleFallbackLoaded = true;
+    for (const href of ["fallback/bootstrap/bootstrap.min.css", "fallback/bootstrap-icons/bootstrap-icons.min.css"]) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    }
+  }
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+<link
+  href="http://localhost:9357/static/assets/plugins/global/plugins.bundle.css"
+  rel="stylesheet"
+  type="text/css"
+  onerror="smarterChatStyleFallback()"
+/>
+<link
+  href="http://localhost:9357/static/assets/css/style.bundle.css"
+  rel="stylesheet"
+  type="text/css"
+  onerror="smarterChatStyleFallback()"
+/>
+<link
+  href="http://localhost:9357/static/common-styles.css"
+  rel="stylesheet"
+  type="text/css"
+  onerror="smarterChatStyleFallback()"
+/>

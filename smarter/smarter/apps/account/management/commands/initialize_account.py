@@ -103,9 +103,7 @@ class Command(SmarterCommand):
 
         except User.DoesNotExist:
             if not password:
-                msg = (
-                    "No password was provided. Using a random value. You will need to reset the password for this user."
-                )
+                msg = f"There is no user {username}, and no password to create it with. Add --password."
                 self.stdout.write(self.style.ERROR(msg))
                 logger.error(msg)
                 self.handle_completed_failure(msg=msg)
@@ -243,10 +241,9 @@ class Command(SmarterCommand):
 
         all_accounts = options.get("all")
         if all_accounts:
-            if self.initialize_all_accounts():
-                self.handle_completed_success()
-            else:
-                self.handle_completed_failure(msg="Failed to initialize all accounts.")
+            if not self.initialize_all_accounts():
+                raise CommandError("Some accounts could not be initialized. See the errors above.")
+            self.handle_completed_success()
             return
 
         # ----------------------------------------------------------------------
@@ -256,29 +253,17 @@ class Command(SmarterCommand):
         account_number = options.get("account_number")
         if not account_number:
             msg = "account number is required."
-            self.stdout.write(self.style.ERROR(msg))
-            logger.error(msg)
-            self.handle_completed_failure(msg=msg)
-            return
+            raise CommandError(msg)
         if not SmarterValidator.is_valid_account_number(account_number):
             msg = f"account number {account_number} is not valid."
-            self.stdout.write(self.style.ERROR(msg))
-            logger.error(msg)
-            self.handle_completed_failure(msg=msg)
-            return
+            raise CommandError(msg)
         username = options.get("username")
         if not username:
             msg = "username is required."
-            self.stdout.write(self.style.ERROR(msg))
-            logger.error(msg)
-            self.handle_completed_failure(msg=msg)
-            return
+            raise CommandError(msg)
         if not SmarterValidator.is_valid_username(username):
             msg = f"username {username} is not valid."
-            self.stdout.write(self.style.ERROR(msg))
-            logger.error(msg)
-            self.handle_completed_failure(msg=msg)
-            return
+            raise CommandError(msg)
         email = options.get("email")
         if not email:
             email = f"{username}@{smarter_settings.root_domain}"
@@ -294,18 +279,12 @@ class Command(SmarterCommand):
         password = options.get("password")
         if not password:
             msg = "password is required."
-            self.stdout.write(self.style.ERROR(msg))
-            logger.error(msg)
-            self.handle_completed_failure(msg=msg)
-            return
+            raise CommandError(msg)
 
         company_name = options.get("company_name")
         if not company_name:
             msg = "company name is required."
-            self.stdout.write(self.style.ERROR(msg))
-            logger.error(msg)
-            self.handle_completed_failure(msg=msg)
-            return
+            raise CommandError(msg)
 
         self.initialize_account(
             account_number=account_number,

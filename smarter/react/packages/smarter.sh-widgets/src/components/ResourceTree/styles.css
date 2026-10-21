@@ -1,0 +1,217 @@
+/* The tree of an LLMClient's resources: nested lists, and a card for each resource. Moved from
+   @smarter/llmclient-architecture, which imports it from here. */
+
+/* the tree: nested lists, each child joined to its parent by an elbow */
+.architecture-tree,
+.architecture-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.architecture-children {
+  /* the vertical line runs beneath the center of the parent's toggle button. */
+  margin-left: 1rem;
+}
+.architecture-node-root > .architecture-children {
+  /* beneath the center of the LLMClient's icon. */
+  margin-left: 2.25rem;
+}
+.architecture-children > .architecture-node {
+  position: relative;
+  padding-top: 0.75rem;
+  padding-left: 1.5rem;
+}
+.architecture-children > .architecture-node::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-left: 2px solid var(--architecture-line);
+}
+.architecture-children > .architecture-node:last-child::before {
+  bottom: auto;
+  height: var(--architecture-row-center);
+}
+.architecture-children > .architecture-node::after {
+  content: "";
+  position: absolute;
+  top: var(--architecture-row-center);
+  left: 0;
+  width: 1.5rem;
+  border-top: 2px solid var(--architecture-line);
+}
+
+.architecture-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.architecture-toggle,
+.architecture-toggle-spacer {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+}
+.architecture-toggle {
+  position: relative;
+  z-index: 1;
+}
+.architecture-hidden-count {
+  flex-shrink: 0;
+}
+
+/* a resource's card */
+.architecture-card {
+  --architecture-tone: var(--bs-gray-500);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: min(26rem, 100%);
+  min-width: 0;
+  min-height: 4.5rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--bs-gray-300);
+  border-left: 4px solid var(--architecture-tone);
+  border-radius: 0.75rem;
+  background-color: var(--bs-body-bg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease,
+    border-color 0.15s ease;
+}
+.architecture-card-primary {
+  --architecture-tone: var(--bs-primary);
+}
+.architecture-card-info {
+  --architecture-tone: var(--bs-info);
+}
+.architecture-card-success {
+  --architecture-tone: var(--bs-success);
+}
+.architecture-card-warning {
+  --architecture-tone: var(--bs-warning);
+}
+.architecture-card-danger {
+  --architecture-tone: var(--bs-danger);
+}
+.architecture-card-dark {
+  --architecture-tone: var(--bs-gray-700);
+}
+/* the theme's dark tone, a Guardrail's, is a dark gray, which a dark mode's card would hide. */
+[data-bs-theme="dark"] .architecture-card-dark .text-dark {
+  color: var(--bs-gray-700) !important;
+}
+[data-bs-theme="dark"] .architecture-card-dark .bg-light-dark {
+  background-color: var(--bs-gray-200) !important;
+}
+.architecture-card-link:hover,
+.architecture-card-link:focus-within {
+  border-color: var(--architecture-tone);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+.architecture-card-root {
+  width: min(30rem, 100%);
+  min-height: 5.25rem;
+  background-image: linear-gradient(135deg, var(--bs-primary-light) 0%, var(--bs-body-bg) 70%);
+}
+.architecture-card-locked {
+  border-style: dashed;
+  border-left-style: solid;
+  border-left-color: var(--bs-gray-400);
+  background-color: var(--bs-gray-100);
+}
+
+.architecture-card-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.625rem;
+  font-size: 1.35rem;
+}
+.architecture-card-root .architecture-card-icon {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.6rem;
+}
+.architecture-card-locked .architecture-card-icon {
+  background-color: var(--bs-gray-200) !important;
+  color: var(--bs-gray-500) !important;
+}
+
+.architecture-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+.architecture-card-kind {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.architecture-card-locked .architecture-card-kind {
+  color: var(--bs-gray-600) !important;
+}
+/* the docs link stays clickable above the card's stretched link. */
+.architecture-card-docs {
+  position: relative;
+  z-index: 2;
+  line-height: 1;
+}
+.architecture-card-name {
+  overflow: hidden;
+  color: var(--bs-gray-900);
+  font-size: 1rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.architecture-card-name:hover,
+a.architecture-card-name:focus {
+  color: var(--architecture-tone);
+}
+.architecture-card-root .architecture-card-name {
+  font-size: 1.15rem;
+}
+.architecture-card-meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  color: var(--bs-gray-600);
+  font-size: 0.8rem;
+}
+.architecture-card-locator {
+  padding: 0;
+  background: none;
+  color: var(--bs-gray-600);
+  font-size: 0.75rem;
+}
+.architecture-card-open {
+  flex-shrink: 0;
+  align-self: flex-start;
+  font-size: 1rem;
+  transition: color 0.15s ease;
+}
+.architecture-card-link:hover .architecture-card-open {
+  color: var(--architecture-tone) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .architecture-card {
+    transition: none;
+  }
+  .architecture-card-link:hover,
+  .architecture-card-link:focus-within {
+    transform: none;
+  }
+}

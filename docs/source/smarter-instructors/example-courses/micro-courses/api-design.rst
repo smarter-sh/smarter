@@ -36,7 +36,7 @@ consistent design that is worth taking apart:
 On the client side, the API has real consumers: the Go
 `smarter-cli <https://github.com/smarter-sh/smarter-cli>`__, with one subcommand per API command
 and packages for macOS, Linux and Windows; the React web console; the
-`@smarter.sh/ui-chat <https://github.com/smarter-sh/smarter-chat>`__ npm package, whose TypeScript
+`@smarter.sh/ui-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__ npm package, whose TypeScript
 types are generated from the chat contract; the
 `smarter-vscode-yaml <https://github.com/smarter-sh/smarter-vscode-yaml>`__ editor extension; and a
 typed `Python SDK <https://github.com/smarter-sh/smarter-python>`__, which keeps a copy of the

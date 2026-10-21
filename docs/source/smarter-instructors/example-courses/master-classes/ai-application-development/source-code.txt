@@ -21,7 +21,7 @@ Foundations
        :doc:`ADR 019 </adr/019-react>`.
      - `apps/prompt/views/detailviews/prompt_config_view.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/views/detailviews/prompt_config_view.py>`__,
        `lib/django/templatetags/smarter_react_templatetag_manager.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py>`__,
-       `smarter-chat <https://github.com/smarter-sh/smarter-chat/tree/main/src>`__,
+       `smarter.sh-chat: src/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat/src>`__,
        `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__,
        `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
    * - 2. Python for AI applications
@@ -35,10 +35,10 @@ Foundations
    * - 3. React for AI applications
      - Smarter Chat's main component, its API calls, its message helpers and its error
        boundary.
-     - `smarter-chat: src/components/SmarterChat/Component.tsx <https://github.com/smarter-sh/smarter-chat/blob/main/src/components/SmarterChat/Component.tsx>`__,
-       `src/lib/api.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/api.ts>`__,
-       `src/lib/messages.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/messages.ts>`__,
-       `src/components/ErrorBoundary/Component.tsx <https://github.com/smarter-sh/smarter-chat/blob/main/src/components/ErrorBoundary/Component.tsx>`__
+     - `smarter.sh-chat: src/components/SmarterChat/Component.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/components/SmarterChat/Component.tsx>`__,
+       `src/lib/api.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/lib/api.ts>`__,
+       `src/lib/messages.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/lib/messages.ts>`__,
+       `src/components/ErrorBoundary/Component.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/components/ErrorBoundary/Component.tsx>`__
 
 Talking to the LLM
 ~~~~~~~~~~~~~~~~~~
@@ -186,29 +186,31 @@ The Front End
      - `apps/prompt/progress.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/progress.py>`__,
        `apps/prompt/tests/test_progress.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/tests/test_progress.py>`__,
        `apps/proxy/tests/data/openai-stream.txt <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/proxy/tests/data/openai-stream.txt>`__,
-       `smarter-chat: src/lib/logStream.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/logStream.ts>`__
+       `smarter-serverlogs: src/lib/logStream.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-serverlogs/src/lib/logStream.ts>`__
    * - 14. Building a chat UI with chatscope
      - Smarter Chat is built from three open-source packages. Its main component composes
        chatscope's containers, message list, input and typing indicator. Its styles override
        chatscope's theme with CSS variables. Its message helpers escape the user's text and render
        the LLM's Markdown with ``marked`` and ``DOMPurify``, and its Console shows requests and
        responses with ``react-json-view``.
-       `Commit afb1b5e63 <https://github.com/smarter-sh/smarter-chat/commit/afb1b5e637e97e629b24b50cb98ec0adfb985528>`__
-       applied an LLMClient's colors to chatscope's components.
-     - `smarter-chat: package.json <https://github.com/smarter-sh/smarter-chat/blob/main/package.json>`__,
-       `src/components/SmarterChat/ <https://github.com/smarter-sh/smarter-chat/tree/main/src/components/SmarterChat>`__
+       `Commit afb1b5e63 <https://github.com/smarter-sh/smarter-chat/commit/afb1b5e637e97e629b24b50cb98ec0adfb985528>`__,
+       in the chat's archived repository of the time, applied an LLMClient's colors to
+       chatscope's components.
+     - `smarter.sh-chat: package.json <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/package.json>`__,
+       `src/components/SmarterChat/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat/src/components/SmarterChat>`__
        (``Component.tsx``, ``styles.css``),
-       `src/lib/styles.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/styles.ts>`__,
-       `src/lib/messages.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/messages.ts>`__,
-       `src/components/Console/Component.tsx <https://github.com/smarter-sh/smarter-chat/blob/main/src/components/Console/Component.tsx>`__
+       `src/lib/styles.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/lib/styles.ts>`__,
+       `src/lib/messages.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/lib/messages.ts>`__,
+       `smarter-workbench: src/components/Console/Component.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-workbench/src/components/Console/Component.tsx>`__
    * - 15. A single-page chat web app
-     - The contract's JSON Schema, copied into the front end's repository and compiled into
+     - The contract's JSON Schema, copied into the front end's package and compiled into
        TypeScript types, and the make target that ties them together.
-       `Commit cd61f2ee7 <https://github.com/smarter-sh/smarter-chat/commit/cd61f2ee783927b203ad5d08164189f1c4c895f8>`__
-       is the front end's half of commit 0630dcb55.
-     - `smarter-chat: contract/chat-contract.schema.json <https://github.com/smarter-sh/smarter-chat/blob/main/contract/chat-contract.schema.json>`__,
-       `scripts/contract-types.mjs <https://github.com/smarter-sh/smarter-chat/blob/main/scripts/contract-types.mjs>`__,
-       `src/contract.gen.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__;
+       `Commit cd61f2ee7 <https://github.com/smarter-sh/smarter-chat/commit/cd61f2ee783927b203ad5d08164189f1c4c895f8>`__,
+       in the chat's archived repository of the time, is the front end's half of commit
+       0630dcb55.
+     - `smarter.sh-chat: contract/chat-contract.schema.json <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/contract/chat-contract.schema.json>`__,
+       `scripts/contract-types.mjs <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/scripts/contract-types.mjs>`__,
+       `src/contract.gen.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__;
        `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__
        (``chat-contract``)
 
@@ -240,7 +242,7 @@ Production
      - `apps/provider/tests/test_openai_compatible_chat_provider_units.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/provider/tests/test_openai_compatible_chat_provider_units.py>`__,
        `apps/proxy/tests/base_classes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/proxy/tests/base_classes.py>`__,
        `apps/proxy/tests/data/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy/tests/data>`__,
-       `smarter-chat: src/mocks/handlers.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/mocks/handlers.ts>`__
+       `smarter.sh-chat: src/mocks/handlers.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/mocks/handlers.ts>`__
    * - 18. Shipping the whole stack
      - A multi-stage Dockerfile that ends as a non-root user, a Compose file with health checks,
        a Makefile that builds and runs it, and the Docker quickstart for running Smarter from

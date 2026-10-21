@@ -56,7 +56,9 @@ from any package, for example `packages/smarter-guardrail-list/`:
 - `tsconfig.app.json` → includes `../../test` and `../../storybook`, with the
   path `"@test/*": ["../../test/*"]`
 - `package.json` scripts: `storybook`, `build-storybook`, `test`, `test:watch`,
-  and `typecheck`
+  and `typecheck`, and `"private": true`. Only the packages published to npm,
+  `@smarter.sh/ui-chat` and `@smarter.sh/ui-widgets`, omit it (see "Published
+  packages" in `smarter/react/README.md`)
 - `src/stories.test.tsx` →
   `testStories(import.meta.glob("./**/*.stories.tsx", { eager: true }))`
 - `src/mocks/fixtures.ts` (a `sessionContext`, `makeObject()`, and owned and

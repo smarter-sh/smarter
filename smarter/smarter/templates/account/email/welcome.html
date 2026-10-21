@@ -1,6 +1,6 @@
-{% load static %}
+{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <!--begin::Head-->
 
 <head>
@@ -132,7 +132,7 @@
                       <!--begin:Text-->
                       <div
                         style="font-size: 14px; text-align:center; font-weight: 500; margin:0 60px 38px 60px; font-family:Arial,Helvetica,sans-serif">
-                        <p style="color:#181C32; font-size: 30px; font-weight:700; line-height:1.4; margin-bottom:6px">Welcome to {{ branding.smarter_product_name }}!</p>
+                        <p style="color:#181C32; font-size: 30px; font-weight:700; line-height:1.4; margin-bottom:6px">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Welcome to {{ product_name }}!{% endblocktranslate %}</p>
                         <p style="margin-bottom:2px; color:#3F4254; line-height:1.6">{{ branding.smarter_product_description }}</p>
                       </div>
                       <!--end:Text-->
@@ -143,84 +143,105 @@
                       <!--end:Media-->
                       <!--begin:Text-->
                       <div class="body-text">
-                        <p class="title-text">Howdy{% if first_name %} {{ first_name }}{% endif %},</p>
-                        <p style="color:#3F4254; line-height:1.6">I'm {{ branding.primary_contact }}, the technical point of contact
-                          for {{ branding.smarter_product_name }} platform, and I just created a new account for you.
-                          To get started, sign in with the button below. Your username is this email address.
+                        <p class="title-text">{% if first_name %}{% blocktranslate trimmed %}Howdy {{ first_name }},{% endblocktranslate %}{% else %}{% translate "Howdy," %}{% endif %}</p>
+                        <p style="color:#3F4254; line-height:1.6">
+                          {% blocktranslate with primary_contact=branding.primary_contact product_name=branding.smarter_product_name trimmed %}
+                            I'm {{ primary_contact }}, the technical point of contact for the {{ product_name }}
+                            platform, and I just created a new account for you. To get started, sign in with the
+                            button below. Your username is this email address.
+                          {% endblocktranslate %}
                           {% if send_password_email %}
-                            You should receive your password in a separate text-only email.
+                            {% translate "You should receive your password in a separate text-only email." %}
                           {% endif %}
-                          You can use the 'Forgot Password' link on the sign-in page to change your password at any time.
-                          If you have any questions, email me at <a
-                            href="mailto:{{ branding.support_email }}" style="font-weight:600">{{ branding.support_email }}</a>.</p>
+                          {% translate "You can use the 'Forgot Password' link on the sign-in page to change your password at any time." %}
+                          {% blocktranslate with support_email=branding.support_email trimmed %}
+                            If you have any questions, email me at
+                            <a href="mailto:{{ support_email }}" style="font-weight:600">{{ support_email }}</a>.
+                          {% endblocktranslate %}
+                        </p>
                       </div>
                       <!--end:Text-->
                       <!--begin:Action-->
                       <a href="{{ branding.login_url }}" target="_blank" rel="noopener"
-                        style="background-color:rgba(255, 87, 51, .75); border-radius:6px; display:inline-block; margin-bottom:30px; margin-left:60px; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif">Sign
-                        In</a>
+                        style="background-color:rgba(255, 87, 51, .75); border-radius:6px; display:inline-block; margin-bottom:30px; margin-left:60px; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif">{% translate "Sign In" %}</a>
                       <!--end:Action-->
                       <!--begin:Text-->
                       <div class="body-text">
-                        <p class="title-text">What's included:</p>
+                        <p class="title-text">{% translate "What's included:" %}</p>
                         <p style="color:#3F4254; line-height:1.6">
                           <ul>
                             <li>
-                              <strong>An account on {{ branding.smarter_product_name }}
-                              <a href="{{ branding.login_url }}" target="_blank" rel="noopener">platform</a></strong>
-                              for the duration of this course. Every prompt is a real, billable request to an LLM
-                              provider, so please experiment freely, but don't run automated load against it.
+                              {% blocktranslate with product_name=branding.smarter_product_name login_url=branding.login_url trimmed %}
+                                <strong>An account on {{ product_name }}
+                                <a href="{{ login_url }}" target="_blank" rel="noopener">platform</a></strong>
+                                for the duration of this course. Every prompt is a real, billable request to an LLM
+                                provider, so please experiment freely, but don't run automated load against it.
+                              {% endblocktranslate %}
                             </li>
                             <li>
-                              <strong>Your own AI resources.</strong> You can create, change and delete your own
-                              LLMClients, plugins, connections and secrets, and you are encouraged to experiment
-                              with them while you are attending this course.
+                              {% blocktranslate trimmed %}
+                                <strong>Your own AI resources.</strong> You can create, change and delete your own
+                                LLMClients, plugins, connections and secrets, and you are encouraged to experiment
+                                with them while you are attending this course.
+                              {% endblocktranslate %}
                             </li>
                             <li>
-                              <strong>Thousands of LLMs from nine providers:</strong> Anthropic, Cohere, Fireworks AI,
-                              Google AI (Gemini), Hugging Face, Meta AI (Llama), Mistral, OpenAI and Together AI, all
-                              through a single interface, so that you can compare models hands-on.
+                              {% blocktranslate trimmed %}
+                                <strong>Thousands of LLMs from nine providers:</strong> Anthropic, Cohere, Fireworks AI,
+                                Google AI (Gemini), Hugging Face, Meta AI (Llama), Mistral, OpenAI and Together AI, all
+                                through a single interface, so that you can compare models hands-on.
+                              {% endblocktranslate %}
                             </li>
                             <li>
-                              <strong><a href="https://docs.smarter.sh/en/latest/smarter-resources/smarter-llmtool.html" rel="noopener" target="_blank">Plugins</a>
-                              for LLM tool calling</strong> that connect an LLM to SQL databases, remote REST APIs,
-                              web search, image search, Agent Skills and static data. Your data stays where it is:
-                              the LLM only sees the query results and responses that it asks for.
-                              <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-extensions.html" rel="noopener" target="_blank">Extensions</a>,
-                              which the platform administrator installs, add tools written in Python.
+                              {% blocktranslate trimmed %}
+                                <strong><a href="https://docs.smarter.sh/en/latest/smarter-resources/smarter-llmtool.html" rel="noopener" target="_blank">Plugins</a>
+                                for LLM tool calling</strong> that connect an LLM to SQL databases, remote REST APIs,
+                                web search, image search, Agent Skills and static data. Your data stays where it is:
+                                the LLM only sees the query results and responses that it asks for.
+                                <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-extensions.html" rel="noopener" target="_blank">Extensions</a>,
+                                which the platform administrator installs, add tools written in Python.
+                              {% endblocktranslate %}
                             </li>
                             <li>
-                              <strong>A no-code approach to authoring AI resources.</strong> Every resource in {{ branding.smarter_product_name }}
-                              is a short
-                              <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-manifests.html" rel="noopener" target="_blank">YAML manifest</a>,
-                              so you can build and manage a working AI application without writing code.
+                              {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                                <strong>A no-code approach to authoring AI resources.</strong> Every resource in {{ product_name }}
+                                is a short
+                                <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-manifests.html" rel="noopener" target="_blank">YAML manifest</a>,
+                                so you can build and manage a working AI application without writing code.
+                              {% endblocktranslate %}
                             </li>
                             <li>
-                              <strong>A web Prompt Engineering Workbench</strong> for designing, testing and debugging
-                              the prompts of your AI applications interactively.
+                              {% blocktranslate trimmed %}
+                                <strong>A web Prompt Engineering Workbench</strong> for designing, testing and debugging
+                                the prompts of your AI applications interactively.
+                              {% endblocktranslate %}
                             </li>
                           </ul>
                         </p>
                         <div class="enterprise-ready-list">
-                          <p class="title-text">Open Source, Built for Production</p>
+                          <p class="title-text">{% translate "Open Source, Built for Production" %}</p>
                           <p>
-                            <strong>{{ branding.smarter_product_name }} is more than a teaching tool.</strong>
-                            It is free, open source software, licensed under the GNU AGPL v3, and it was built to run
-                            in production: on Kubernetes, with cost accounting, secrets management and per-account
-                            access control. Running at scale, security and cost management may be out of scope for
-                            this course, but you will face them once you complete it, and the source code and
-                            documentation are there for you to explore, during the course and after.
+                            {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                              <strong>{{ product_name }} is more than a teaching tool.</strong>
+                              It is free, open source software, licensed under the GNU AGPL v3, and it was built to run
+                              in production: on Kubernetes, with cost accounting, secrets management and per-account
+                              access control. Running at scale, security and cost management may be out of scope for
+                              this course, but you will face them once you complete it, and the source code and
+                              documentation are there for you to explore, during the course and after.
+                            {% endblocktranslate %}
                           </p>
                           <p>
-                            Some links to help you get started
-                            on your journey to mastering {{ branding.smarter_product_name }}:
+                            {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                              Some links to help you get started
+                              on your journey to mastering {{ product_name }}:
+                            {% endblocktranslate %}
                             <ul>
-                              <li><strong>Online documentation</strong> - <a href="https://docs.smarter.sh/" rel="noopener" target="_blank">https://docs.smarter.sh/</a></li>
-                              <li><strong>Cost accounting</strong> of every LLM request, by account, user and chat session <a href="https://docs.smarter.sh/en/latest/smarter-platform/cost-accounting.html" rel="noopener" target="_blank">[learn more]</a></li>
-                              <li><strong>Runs on Kubernetes</strong>, on-premise or in the cloud <a href="https://docs.smarter.sh/en/latest/smarter-framework/technologies/kubernetes.html" rel="noopener" target="_blank">[learn more]</a></li>
-                              <li><strong>Developer tools</strong>: a command-line interface, a REST API, and SDKs for Python, Node.js and Go <a href="https://docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html" rel="noopener" target="_blank">[learn more]</a></li>
-                              <li><strong>Source code</strong> on GitHub, where contributions are welcome <a href="https://github.com/smarter-sh/" rel="noopener" target="_blank">[learn more]</a></li>
-                              <li><strong>Deployment guides</strong> for <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/production-deployment.html" rel="noopener" target="_blank">production</a>, a <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/quick-start.html" rel="noopener" target="_blank">Quick Start</a> for evaluation, and <a href="https://docs.smarter.sh/en/latest/smarter-framework/guides/developer-setup.html" rel="noopener" target="_blank">running from source</a> for developers.</li>
+                              <li>{% blocktranslate trimmed %}<strong>Online documentation</strong> - <a href="https://docs.smarter.sh/" rel="noopener" target="_blank">https://docs.smarter.sh/</a>{% endblocktranslate %}</li>
+                              <li>{% blocktranslate trimmed %}<strong>Cost accounting</strong> of every LLM request, by account, user and chat session <a href="https://docs.smarter.sh/en/latest/smarter-platform/cost-accounting.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                              <li>{% blocktranslate trimmed %}<strong>Runs on Kubernetes</strong>, on-premise or in the cloud <a href="https://docs.smarter.sh/en/latest/smarter-framework/technologies/kubernetes.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                              <li>{% blocktranslate trimmed %}<strong>Developer tools</strong>: a command-line interface, a REST API, and SDKs for Python, Node.js and Go <a href="https://docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                              <li>{% blocktranslate trimmed %}<strong>Source code</strong> on GitHub, where contributions are welcome <a href="https://github.com/smarter-sh/" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                              <li>{% blocktranslate trimmed %}<strong>Deployment guides</strong> for <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/production-deployment.html" rel="noopener" target="_blank">production</a>, a <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/quick-start.html" rel="noopener" target="_blank">Quick Start</a> for evaluation, and <a href="https://docs.smarter.sh/en/latest/smarter-framework/guides/developer-setup.html" rel="noopener" target="_blank">running from source</a> for developers.{% endblocktranslate %}</li>
                             </ul>
                           </p>
                         </div>
@@ -230,7 +251,7 @@
                       <div class="body-text">
                         <video playsinline controls width="100%" style="object-fit: cover;" preload="auto" poster="https://cdn.smarter.sh/videos/about-poster.png">
                           <source src="https://cdn.smarter.sh/videos/about.mp4" type="video/mp4">
-                          Sorry, your browser doesn't support embedded videos.
+                          {% translate "Sorry, your browser doesn't support embedded videos." %}
                         </video>
                       </div>
                       <!--end:Text-->
@@ -240,7 +261,7 @@
                 </tr>
                 <tr style="display: flex; justify-content: center; margin:0 60px 35px 60px">
                   <td align="start" valign="start" style="padding-bottom: 10px;">
-                    <p style="color:#181C32; font-size: 18px; font-weight: 600; margin-bottom:13px">Getting Started</p>
+                    <p style="color:#181C32; font-size: 18px; font-weight: 600; margin-bottom:13px">{% translate "Getting Started" %}</p>
                     <!--begin::Wrapper-->
                     <div style="background: #F9F9F9; border-radius: 12px; padding:35px 30px">
                       <!--begin::Item-->
@@ -265,14 +286,15 @@
                           <div>
                             <!--begin::Title-->
                             <a href="{{ branding.learn_url }}" target="_blank" rel="noopener"
-                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Quick
-                              Start Tutorial</a>
+                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Quick Start Tutorial" %}</a>
                             <!--end::Title-->
                             <!--begin::Desc-->
                             <p
                               style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              This page will give you an introduction to the 80% of {{ branding.smarter_product_name }} concepts that you will use
-                              on a daily basis.</p>
+                              {% blocktranslate with product_name=branding.smarter_product_name percent="80%" trimmed %}
+                                This page will give you an introduction to the {{ percent }} of {{ product_name }} concepts that you will use
+                                on a daily basis.
+                              {% endblocktranslate %}</p>
                             <!--end::Desc-->
                           </div>
                           <!--end::Content-->
@@ -304,14 +326,15 @@
                           <div>
                             <!--begin::Title-->
                             <a href="{{ branding.workbench_exmample_url}}" target="_blank" rel="noopener"
-                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Example
-                              LLMClients</a>
+                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Example LLMClients" %}</a>
                             <!--end::Title-->
                             <!--begin::Desc-->
                             <p
                               style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              Try the example LLMClients in your account, such as the Stackademy course catalog
-                              assistants, which answer questions from a SQL database and from a REST API.</p>
+                              {% blocktranslate trimmed %}
+                                Try the example LLMClients in your account, such as the Stackademy course catalog
+                                assistants, which answer questions from a SQL database and from a REST API.
+                              {% endblocktranslate %}</p>
                             <!--end::Desc-->
                           </div>
                           <!--end::Content-->
@@ -346,13 +369,15 @@
                           <div>
                             <!--begin::Title-->
                             <a href="{{ branding.smarter_project_docs_url }}" target="_blank" rel="noopener"
-                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Documentation</a>
+                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Documentation" %}</a>
                             <!--end::Title-->
                             <!--begin::Desc-->
                             <p
                               style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              Learn more about {{ branding.smarter_product_name }} manifests, plugins, extensions, the command-line interface, and
-                              the API.</p>
+                              {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                                Learn more about {{ product_name }} manifests, plugins, extensions, the command-line interface, and
+                                the API.
+                              {% endblocktranslate %}</p>
                             <!--end::Desc-->
                           </div>
                           <!--end::Content-->
@@ -368,8 +393,8 @@
                   <td align="center" valign="center"
                     style="font-size: 13px; text-align:center; padding: 0 10px 10px 10px; font-weight: 500; color: #A1A5B7; font-family:Arial,Helvetica,sans-serif">
                     <p style="color:#181C32; font-size: 16px; font-weight: 600; margin-bottom:9px">{{ branding.primary_contact }}</p>
-                    <p style="margin-bottom:2px">Technical point of contact for {{ branding.smarter_product_name }} platform.</p>
-                    <p>Email me at <a href="mailto:{{ branding.support_email }}" style="font-weight: 600">{{ branding.support_email }}</a>, or visit <a href="{{ branding.contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">my website</a>.</p>
+                    <p style="margin-bottom:2px">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Technical point of contact for the {{ product_name }} platform.{% endblocktranslate %}</p>
+                    <p>{% blocktranslate with support_email=branding.support_email contact_url=branding.contact_url trimmed %}Email me at <a href="mailto:{{ support_email }}" style="font-weight: 600">{{ support_email }}</a>, or visit <a href="{{ contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">my website</a>.{% endblocktranslate %}</p>
                   </td>
                 </tr>
                 <tr>
@@ -385,7 +410,7 @@
                 <tr>
                   <td align="center" valign="center"
                     style="font-size: 13px; padding:0 15px; text-align:center; font-weight: 500; color: #A1A5B7;font-family:Arial,Helvetica,sans-serif">
-                    <p>{{ branding.smarter_product_name }} is free, open source software, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener" target="_blank">GNU AGPL v3</a>.</p>
+                    <p>{% blocktranslate with product_name=branding.smarter_product_name trimmed %}{{ product_name }} is free, open source software, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener" target="_blank">GNU AGPL v3</a>.{% endblocktranslate %}</p>
                   </td>
                 </tr>
               </tbody>

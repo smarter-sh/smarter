@@ -101,7 +101,7 @@ The Clients
      - React apps that call the same API with the user's session, and a chat component published
        to npm as ``@smarter.sh/ui-chat``.
      - `smarter/react/packages/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__,
-       `smarter-chat <https://github.com/smarter-sh/smarter-chat>`__
+       `smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__
    * - The Python SDK
      - A typed client, published to PyPI as ``smarter-api``. It keeps a copy of the platform's
        OpenAPI document, chat and journal contracts and SAM schemas, pinned to a platform release

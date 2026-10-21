@@ -1,6 +1,6 @@
 {
   "name": "@smarter/common",
-  "private": false,
+  "private": true,
   "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.js",

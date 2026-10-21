@@ -36,8 +36,9 @@ The server is mounted under ``/api/v1/mcp/`` of the platform's own domain:
        ``repository`` argument.
 
 The repositories are ``smarter``, ``smarter-cli``, ``smarter-python``, ``smarter-nodejs``,
-``smarter-golang``, ``smarter-vscode-yaml``, ``smarter-infrastructure``, ``smarter-chat`` and
-``smarter-deploy``, as declared in :mod:`smarter.apps.mcpserver.repositories`.
+``smarter-golang``, ``smarter-vscode-yaml``, ``smarter-infrastructure`` and ``smarter-deploy``, as
+declared in :mod:`smarter.apps.mcpserver.repositories`. ``smarter`` includes Smarter Chat, the
+``@smarter.sh/ui-chat`` npm package.
 
 The server requires no authentication. It is read-only, and serves public repositories. It is
 stateless: it answers every POST with ``application/json``, issues no ``Mcp-Session-Id``, and

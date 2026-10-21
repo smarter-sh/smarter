@@ -20,7 +20,9 @@ Functionality
 - Ensures there is a platform admin account in the system, fully populated.
 - Creates or updates User and UserProfile for the superuser.
 - Creates a default AccountContact if absent.
-- Creates and displays a new API key (auth token) for the superuser if one does not exist.
+- Creates a new API key (auth token) for the superuser if one does not exist, and emails its value
+  to the superuser's email address. The value is never printed or logged, and can't be recovered,
+  so if the email can't be sent, create another key with ``manage.py create_api_key``.
 - Most account and contact attributes are populated from configuration settings.
 
 Usage Example
@@ -30,8 +32,10 @@ Usage Example
 
 import secrets
 import string
+from urllib.parse import urljoin
 
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
@@ -52,6 +56,36 @@ class Command(SmarterCommand):
         parser.add_argument("-u", "--username", type=str, help="The username for the new superuser")
         parser.add_argument("-e", "--email", type=str, help="The email address for the new superuser")
         parser.add_argument("-p", "--password", type=str, help="The password for the new superuser")
+
+    def email_api_key(self, user: User, auth_token: SmarterAuthToken, token_key: str) -> bool:
+        """
+        Email a new api key's value to its owner.
+
+        The value is shown only in this email: it is never printed or logged, and Smarter keeps only
+        its hash. The platform's admin gets no blind copy, because the email carries a secret.
+
+        :param user: the api key's owner, the recipient.
+        :param auth_token: the new api key.
+        :param token_key: the api key's value.
+        :returns: True if the email was sent.
+        """
+        body = (
+            "An API key has been created for your Smarter admin user. It is shown only in this email, and "
+            "can't be recovered, so store it in a password manager or a secret store, and delete this email.\n"
+            "\n"
+            f"Url: {urljoin(smarter_settings.environment_url, 'login')}\n"
+            f"Username: {user.username}\n"
+            f"API key name: {auth_token.name}\n"
+            f"API key id: {auth_token.key_id}\n"
+            f"API key: {token_key}\n"
+        )
+        return infrastructure.email.send_email(
+            subject="Your Smarter admin API key",
+            to=user.email,
+            body=body,
+            html=False,
+            bcc_admin=False,
+        )
 
     def handle(self, *args, **options):
         """Create the superuser account."""
@@ -132,9 +166,17 @@ class Command(SmarterCommand):
         # ensure that the Smarter admin user has at least one auth token (api key)
         # not cached: a cached result from before this command created a key would still be empty.
         if not SmarterAuthToken.objects.filter(user=user).exists():
-            _, token_key = SmarterAuthToken.objects.create(
+            auth_token, token_key = SmarterAuthToken.objects.create(
                 user_profile=user_profile, name="smarter_admin_key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
-            self.handle_completed_success(msg=f"created API key: {token_key}")
+            if self.email_api_key(user=user, auth_token=auth_token, token_key=token_key):
+                self.handle_completed_success(msg=f"Created API key {auth_token.name}, and emailed it to {user.email}.")
+            else:
+                self.stderr.write(
+                    self.style.WARNING(
+                        f"Created API key {auth_token.name}, but could not email it to {user.email}. Its value can't "
+                        f"be recovered. Once email works, run: manage.py create_api_key --username {user.username}"
+                    )
+                )
             return
         self.handle_completed_success()

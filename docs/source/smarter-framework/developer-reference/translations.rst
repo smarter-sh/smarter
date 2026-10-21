@@ -46,6 +46,21 @@ The language menu, in the user menu of the console's navbar (the ``@smarter/dash
 React app), lists each language in its own name, and posts the choice to Django's ``set_language`` view at ``/i18n/setlang/``. It is shown only when
 ``settings.LANGUAGES`` has more than one language.
 
+Emails are often sent outside a request, for example from a management command, so they are written in
+the recipient's preferred language instead, ``UserProfile.language``. It is English by default. A
+console sign-up, with a password or through Google, GitHub or LinkedIn, stores the language of the
+sign-up request, which ``LocaleMiddleware`` chose as it does for any page, so a user whose browser asks
+for French is welcomed in French. ``UserProfile.save()`` adds a new user to the account's contacts, and
+``AccountContact.send_welcome_email(language=...)`` renders the welcome email
+(``templates/account/email/welcome.html``) and its subject inside ``translation.override(language)``.
+Without a language, it uses ``AccountContact.preferred_language()``: the preference of the account's
+user who has the contact's email address, or English for a contact who isn't a user. The
+``create_user`` command's ``--language`` option, e.g. ``--language=es``, sets the new user's
+preference, and its password email is written in it too. The ``add_account_contact`` and
+``send_welcome_email`` commands take ``--language`` to override the preference. The local-only preview at
+``/dashboard/account/email/welcome/<first_name>/`` renders the email in the request's language, or in
+the language of its ``?language=`` parameter.
+
 The Message Catalogs
 --------------------
 

@@ -1,5 +1,6 @@
 {
   "name": "@smarter/llmhost-compute-list",
+  "private": true,
   "description": "A React component library for displaying a list of LLMHostComputes, the kinds of node that LLMHosts run on, on the Smarter web console.",
   "version": "0.2.0",
   "type": "module",

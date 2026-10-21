@@ -1,0 +1,125 @@
+/*
+ * The embed script's own styles, in each chat's shadow root, beside SmarterChat's. See EmbedApp.tsx.
+ *
+ * :host is the <smarter-chat> element. "all: initial" stops the website's inherited styles, e.g. its font, color and
+ * line height, from reaching the chat. CSS custom properties still inherit, and the parts (::part(launcher),
+ * ::part(panel), ::part(chat)) can be styled from the website, deliberately.
+ */
+:host {
+  all: initial;
+  display: block;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #212529;
+}
+
+:host([hidden]) {
+  display: none;
+}
+
+.smarter-chat-embed-inline {
+  box-sizing: border-box;
+  max-width: 100%;
+  background: #fff;
+}
+
+.smarter-chat-embed-launcher {
+  position: fixed;
+  bottom: 20px;
+}
+
+.smarter-chat-embed-bottom-right {
+  right: 20px;
+}
+
+.smarter-chat-embed-bottom-left {
+  left: 20px;
+}
+
+.smarter-chat-embed-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease-in-out;
+}
+
+.smarter-chat-embed-bottom-left .smarter-chat-embed-button {
+  margin-right: auto;
+}
+
+.smarter-chat-embed-bottom-right .smarter-chat-embed-button {
+  margin-left: auto;
+}
+
+.smarter-chat-embed-button:hover {
+  transform: scale(1.06);
+}
+
+.smarter-chat-embed-button:focus-visible {
+  outline: 3px solid #1a73e8;
+  outline-offset: 3px;
+}
+
+.smarter-chat-embed-panel {
+  box-sizing: border-box;
+  width: var(--smarter-chat-embed-width, 400px);
+  max-width: calc(100vw - 40px);
+  height: var(--smarter-chat-embed-height, 600px);
+  max-height: calc(100vh - 116px);
+  margin-bottom: 16px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.smarter-chat-embed-panel[hidden] {
+  display: none;
+}
+
+/* on a phone, the panel fills the screen above the button. */
+@media (max-width: 480px) {
+  .smarter-chat-embed-launcher {
+    bottom: 12px;
+  }
+  .smarter-chat-embed-bottom-right {
+    right: 12px;
+  }
+  .smarter-chat-embed-bottom-left {
+    left: 12px;
+  }
+  .smarter-chat-embed-panel {
+    position: fixed;
+    inset: 0 0 80px 0;
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smarter-chat-embed-button {
+    transition: none;
+  }
+}

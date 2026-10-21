@@ -4,7 +4,7 @@ import sys
 import traceback
 from typing import Optional
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from smarter.lib import logging
 
@@ -108,6 +108,32 @@ class SmarterCommand(BaseCommand):
             logger.error("%s", tb)
         logger.error("-" * 80)
         if err:
+            sys.exit(1)
+
+    def run_from_argv(self, argv):
+        """
+        Run the command from the command line, and report an unexpected error without a stack trace.
+
+        Django already prints a :class:`~django.core.management.base.CommandError` as one line, and
+        exits with status 1. Any other exception would print a stack trace, which is no way to tell
+        an operator what went wrong. This prints the exception's type and message instead, logs the
+        stack trace at DEBUG, and exits with status 1. ``--traceback`` restores Django's behavior,
+        for debugging. Only the command line is affected: ``call_command()`` still raises.
+
+        :param argv: the command line, e.g. ``["manage.py", "create_user", "--username", "jdoe"]``.
+        :raises SystemExit: with status 1, after an unexpected error.
+        """
+        try:
+            super().run_from_argv(argv)
+        except (CommandError, SystemExit, KeyboardInterrupt):
+            raise
+        # pylint: disable=broad-except
+        except Exception as e:
+            if "--traceback" in argv:
+                raise
+            logger.debug("%s.run_from_argv() %s", self.__module__, traceback.format_exc())
+            self.stderr.write(f"{type(e).__name__}: {e}")
+            self.stderr.write("Run the command again with --traceback to see the stack trace.")
             sys.exit(1)
 
     def create_parser(self, prog_name, subcommand, **kwargs):
