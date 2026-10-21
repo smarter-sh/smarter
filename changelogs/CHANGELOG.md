@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.4-alpha.1...v0.36.4-alpha.2) (2026-10-21)
+
+### Bug Fixes
+
+* **react:** add the Did you know? fact of the day to ui-widgets ([b6e2aa4](https://github.com/smarter-sh/smarter/commit/b6e2aa4f6ed95cb418f43cf056a6d1ebe50d7ea9))
+
 ## [0.36.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.3...v0.36.4-alpha.1) (2026-10-21)
 
 ### Bug Fixes
