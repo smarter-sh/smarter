@@ -16,6 +16,80 @@ to validate, deploy, and manage those resources. Inspired by this success, the a
 the Smarter API Manifest (SAM) specification to bring similar benefits to the AI development space.
 
 
-.. literalinclude:: ../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
-   :language: yaml
+.. code-block:: yaml
    :caption: Example Smarter Manifest
+
+   apiVersion: smarter.sh/v1
+   kind: LLMClient
+   metadata:
+     name: stackademy_sql
+     description: Stackademy University course catalogue inquiries using the Stackademy SQL plugin.
+     version: 1.0.0
+     tags:
+       - stackademy
+       - sql
+       - llmclient
+     annotations:
+       - smarter.sh/llm-client/stackademy-sql/creator: QA Team
+       - smarter.sh/llm-client/stackademy-sql/purpose: llmclient for Stackademy course catalogue inquiries
+       - smarter.sh/llm-client/stackademy-sql/release-date: 2024-06-15
+       - smarter.sh/llm-client/stackademy-sql/backward-compatibility: true
+       - smarter.sh/llm-client/stackademy-sql/note: |
+           Uses SQL plugin to answer course catalogue questions.
+           Very fast and accurate when the database is well-structured.
+           Leverages cache for improved performance.
+   spec:
+     config:
+       prompt:
+         deployed: false
+         provider: openai
+         defaultModel: gpt-6-luna
+         defaultSystemRole: >
+           You are a helpful assistant. When given the opportunity to utilize
+           function calling, you should always do so. This will allow you to
+           provide the best possible responses to the user. DO NOT GUESS. IF
+             YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.
+         defaultTemperature: 1.0
+         defaultMaxTokens: 1024
+         appName: Stackademy SQL
+         appAssistant: Stanley
+         appWelcomeMessage: Welcome to Stackademy! How can I help you today?
+         appExamplePrompts:
+           - "Do you offer any courses on AI?"
+           - "My budget is $1,000. What courses can I take?"
+           - "I want to study programming. What do you suggest?"
+         appPlaceholder: "Ask me anything about Stackademy courses..."
+         appInfoUrl: https://stackademy.edu/online-courses
+       styles:  # Stackademy's colors
+         # appLogoUrl: https://cdn.smarter.sh/images/llmclients/stackademy/logo.png  # coming soon: upload, then uncomment
+         # appBackgroundImageUrl: https://cdn.smarter.sh/images/llmclients/stackademy/background.png  # coming soon: upload, then uncomment
+         # assistantAvatarUrl: https://cdn.smarter.sh/images/llmclients/stackademy/assistant.png  # coming soon: upload, then uncomment
+         googleFont: Nunito
+         fontSize: 15px
+         borderRadius: 16px
+         conversationHeader:
+           backgroundColor: '#14213d'
+           color: '#ffffff'
+           infoColor: '#fca311'
+         messageList:
+           backgroundColor: rgba(255, 255, 255, 0.85)
+           color: '#14213d'
+         incomingMessage:
+           backgroundColor: '#e5e5e5'
+           color: '#14213d'
+           linkColor: '#0b57d0'
+         outgoingMessage:
+           backgroundColor: '#fca311'
+           color: '#14213d'
+         messageInput:
+           backgroundColor: '#ffffff'
+           editorBackgroundColor: '#f1f1f1'
+           placeholderColor: '#6c757d'
+         buttons:
+           color: '#fca311'
+         typingIndicator:
+           color: '#fca311'
+     plugins:
+       - stackademy_sql
+
+From `llm-clients/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/llm-clients/stackademy-sql.yaml>`__ in the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.

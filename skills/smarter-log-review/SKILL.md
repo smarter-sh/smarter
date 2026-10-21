@@ -48,8 +48,8 @@ inside, so read its stdout summary at the end of the job, e.g.:
 - `Skipped <vendor>: <VENDOR>_API_KEY is not set.` and
   `skipping MCPClient <name> because Secret <secret> does not exist.` are expected when optional
   secrets aren't configured.
-- `load_from_github` cloning a repository and finishing with no applied resources is a silent no-op;
-  check the repository layout against `--repo_version`.
+- `load_from_github` must end with `Applied the N manifests of https://github.com/smarter-sh/stackademy`.
+  It fails, listing them, when any manifest fails, or when the repository holds no manifest.
 - `verify_stackademy` must end with `LLMClient stackademy_sql works` and `... stackademy_api works`.
 
 ## Step 3: classify every WARNING
@@ -79,7 +79,7 @@ Check each candidate against the code; record why it is or isn't a leak.
   they share one token.
 - `"api_key": "****abcd"` in `chat_response` dumps is masked.
 - Connection strings print as `mysql://user:******@host` and `https://host (Auth: ******)`.
-- The stackademy example secrets are public test credentials whose value equals their name. A log
+- The Stackademy example secrets, from https://github.com/smarter-sh/stackademy, are public test credentials whose value equals their name. A log
   redactor that masks secret values therefore masks names too (`********_proxy_password`); that's the
   redactor, not Smarter.
 

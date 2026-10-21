@@ -4,7 +4,8 @@ from unittest.mock import ANY, patch
 
 from django.core.management.base import CommandError
 
-from smarter.common.const import SmarterEnvironments
+from smarter.apps.llmclient.const import STACKADEMY_REPOSITORY_URL
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 
 from .base import CommandTestBase
 
@@ -21,19 +22,23 @@ class TestInitializePlatform(CommandTestBase):
         self.assertIn("add_example_custom_domains", names)
         self.assertIn("index_smarter_project", names)
         self.assertEqual(call.call_args_list[names.index("index_smarter_project")].kwargs, {"queue": True})
-        # the examples, in the order of their dependencies, then the Stackademy LLMClients' verification.
+        # the examples, then the Stackademy project, from GitHub, then its LLMClients' verification.
         examples = [
-            "add_example_secrets",
-            "add_example_connections",
             "add_example_tools",
             "add_example_llmclients",
+            "load_from_github",
             "verify_stackademy",
         ]
         self.assertEqual([name for name in names if name in examples], examples)
-        for name in examples[:-1]:
+        for name in examples[:2]:
             self.assertEqual(call.call_args_list[names.index(name)].kwargs, {"username": "admin"})
+        self.assertEqual(
+            call.call_args_list[names.index("load_from_github")].kwargs,
+            {"url": STACKADEMY_REPOSITORY_URL, "account_number": SMARTER_ACCOUNT_NUMBER, "username": "admin"},
+        )
         for dependency in ("initialize_providers", "add_example_extensions", "add_example_mcpclients"):
             self.assertLess(names.index(dependency), names.index("add_example_llmclients"))
+        self.assertLess(names.index("initialize_providers"), names.index("load_from_github"))
         self.assertNotIn("deploy_example_llmclients", names)
         self.assertIn("verify_dns_configuration", names)
         self.assertEqual(names[-1], "sync_infrastructure_inventory")

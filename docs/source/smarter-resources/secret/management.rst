@@ -10,8 +10,3 @@ Management Commands
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. automodule:: smarter.apps.secret.management.commands.add_example_secrets
-    :members:
-    :undoc-members:
-    :show-inheritance:

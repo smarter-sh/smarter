@@ -16,9 +16,35 @@ addressable through one declarative interface. Because SAM files are versioned, 
 like any other infrastructure-as-code, and because they're plain, human-readable YAML, they can be
 understood and applied by non-developers using the web console.
 
-.. literalinclude:: ../../smarter/smarter/apps/secret/data/stackademy/secret-smarter-test-db.yaml
-  :language: yaml
-  :caption: Example Manifest
+.. code-block:: yaml
+   :caption: Example Manifest
+
+   apiVersion: smarter.sh/v1
+   kind: Secret
+   metadata:
+     description: |
+       An example secret manifest. This is a real credential used for authenticating to
+       the Smarter Remote SQL test database. This is a public-access test database
+       used for development and testing purposes only.  Do not use this credential
+       for production purposes.
+       See the annotations below for connection details.
+     name: smarter_test_user
+     version: 1.1.0
+     tags:
+       - example
+       - test
+       - stackademy
+     annotations:
+       - smarter.sh/test-db/host: localhost
+       - smarter.sh/test-db/port: "3306"
+       - smarter.sh/test-db/db: smarter_test_db
+       - smarter.sh/test-db/user: smarter_test_user
+       - smarter.sh/test-db/access: anyone can access this test database
+   spec:
+     config:
+       value: smarter_test_user
+
+From `secrets/smarter-test-db.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/smarter-test-db.yaml>`__ in the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.
 
 Smarter manifest files can be processed by the :doc:`Smarter CLI <smarter-framework/smarter-cli>` as well as by
 drag-and-drop on the web console, both of which interact seamlessly and securely
