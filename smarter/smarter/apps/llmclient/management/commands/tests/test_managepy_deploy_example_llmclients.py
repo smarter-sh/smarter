@@ -47,13 +47,10 @@ class TestDeployExampleLLMClients(TestAccountMixin):
         self.name = f"test_deploy_example_{self.hash_suffix}".lower()
         self.path = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.path)
-        self.stackademy_path = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, self.stackademy_path)
         self.write_manifest(self.name)
-        for name, path in (("EXAMPLE_LLMCLIENTS_PATH", self.path), ("STACKADEMY_PATH", self.stackademy_path)):
-            patcher = patch(f"{MODULE}.{name}", path)
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = patch(f"{MODULE}.EXAMPLE_LLMCLIENTS_PATH", self.path)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         for target in ("deploy_default_api", "undeploy_default_api", "delete_default_api"):
             patcher = patch(f"{RECEIVERS}.{target}")
             setattr(self, target, patcher.start())
@@ -64,15 +61,15 @@ class TestDeployExampleLLMClients(TestAccountMixin):
         # deleted while delete_default_api is patched, so that no task is queued.
         self.addCleanup(lambda: LLMClient.objects.filter(name__startswith="test_deploy_example_").delete())
 
-    def write_manifest(self, name: str, extensions: tuple[str, ...] = (), path: str = "") -> None:
-        """Write an example LLMClient manifest, named ``name``, into ``path``, by default the patched examples folder."""
+    def write_manifest(self, name: str, extensions: tuple[str, ...] = ()) -> None:
+        """Write an example LLMClient manifest, named ``name``, into the patched examples folder."""
         manifest = {
             "apiVersion": "smarter.sh/v1",
             "kind": "LLMClient",
             "metadata": {"name": name, "description": "a test LLMClient", "version": "1.0.0"},
             "spec": {"config": {"prompt": {"deployed": False}}, "extensions": list(extensions)},
         }
-        with open(os.path.join(path or self.path, f"{name}.yaml"), "w", encoding="utf-8") as f:
+        with open(os.path.join(self.path, f"{name}.yaml"), "w", encoding="utf-8") as f:
             yaml.safe_dump(manifest, f)
 
     def run_command(self) -> str:
@@ -91,15 +88,15 @@ class TestDeployExampleLLMClients(TestAccountMixin):
         self.deploy_default_api.delay.assert_called_once()
         self.assertIn(f"Deploying LLMClient {self.name}", output)
 
-    def test_deploys_the_stackademy_llmclients(self):
-        """Test that the Stackademy LLMClients, in their own folder, are deployed too."""
-        self.llmclient()
-        stackademy = LLMClient.objects.create(name=f"{self.name}_stackademy", user_profile=self.user_profile)
-        self.write_manifest(f"{self.name}_stackademy", path=self.stackademy_path)
-        output = self.run_command()
-        stackademy.refresh_from_db()
-        self.assertTrue(stackademy.deployed)
-        self.assertIn(f"Deploying LLMClient {self.name}_stackademy", output)
+    def test_deploy_manifest(self):
+        """Test that deploy_manifest deploys the LLMClient that a manifest names, as load_from_github --deploy does."""
+        llmclient = self.llmclient()
+        command = Command(stdout=StringIO(), stderr=StringIO())
+        command.user_profile = self.user_profile
+        self.assertTrue(command.deploy_manifest({"kind": "LLMClient", "metadata": {"name": self.name}}))
+        llmclient.refresh_from_db()
+        self.assertTrue(llmclient.deployed)
+        self.assertFalse(command.deploy_manifest({"kind": "LLMClient", "metadata": {"name": f"{self.name}_none"}}))
 
     def test_deployed_llmclient_is_left_as_it_is(self):
         """Test that a deployed LLMClient whose domain is verified queues neither an undeploy nor a deploy."""

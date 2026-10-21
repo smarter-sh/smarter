@@ -5,6 +5,7 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.core.management.base import CommandError
 
+from smarter.apps.llmclient.const import STACKADEMY_REPOSITORY_URL
 from smarter.lib.typing import SmarterDictType
 
 from .base import CommandTestBase
@@ -40,17 +41,34 @@ class TestInitializeAccount(CommandTestBase):
         user = User.objects.get(pk=self.non_admin_user.pk)
         self.assertTrue(user.is_superuser)
         self.assertEqual(self.names()[0], "create_account")
-        self.assertIn("load_from_github", self.names())
-        # the account's own examples, in the order of their dependencies, and then their deployment.
-        examples = [
-            "add_example_secrets",
-            "add_example_connections",
-            "add_example_tools",
-            "add_example_llmclients",
-            "deploy_example_llmclients",
-        ]
+        # the account's own examples, then its own Stackademy project, deployed, then the examples' deployment.
+        examples = ["add_example_tools", "add_example_llmclients", "load_from_github", "deploy_example_llmclients"]
         self.assertEqual([name for name in self.names() if name in examples], examples)
+        (load,) = (c for c in self.call.call_args_list if c.args[0] == "load_from_github")
+        self.assertEqual(
+            load.kwargs,
+            {
+                "url": STACKADEMY_REPOSITORY_URL,
+                "account_number": self.account.account_number,
+                "username": self.non_admin_user.username,
+                "exclude_kind": ["Budget"],
+                "deploy": True,
+            },
+        )
         self.assertNotIn("verify_stackademy", self.names())
+
+    def test_stackademy_failure_is_logged(self):
+        """Test that a failure to load the Stackademy project doesn't stop the account's initialization."""
+
+        def call(name, **kwargs):
+            if name == "load_from_github":
+                raise CommandError("no such repository")
+
+        self.call.side_effect = call
+        with patch(f"{MODULE}.logger") as logger:
+            self.run_command("initialize_account", **self.options())
+        logger.error.assert_called_once()
+        self.assertIn("deploy_example_llmclients", self.names())
 
     def test_new_user(self):
         self.run_command("initialize_account", **self.options(username=self.unique("newuser"), email="bad email"))

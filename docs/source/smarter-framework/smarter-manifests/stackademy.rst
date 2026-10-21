@@ -1,0 +1,89 @@
+The Stackademy Example Project
+==============================
+
+Stackademy is a fictional online code academy, and the example project that much of this
+documentation uses. Its two course advisors, the LLMClients ``stackademy_sql`` and
+``stackademy_api``, answer students' questions about Stackademy's catalogue of computer science
+courses: what they cover, what they cost, and which courses each one requires first.
+
+No AI model can answer these questions on its own: Stackademy is fictional, so its catalogue was never in
+any model's training data, as your own organization's data isn't. Asked anyway, a model either admits
+that it doesn't know, or invents a plausible course at a plausible price. The course advisors look the
+answers up instead, with tool calling: the model asks for a tool, a :doc:`SqlPlugin
+</smarter-resources/llmtool/plugin/sql>` that queries Stackademy's database, or an :doc:`ApiPlugin
+</smarter-resources/llmtool/plugin/api>` that calls its web API, with values that it chooses from the
+student's question, and answers from the courses that the tool returns. Each tool is a manifest, not
+code: Smarter describes it to the model, runs it, and keeps its credentials secret.
+
+The project is a small but complete AI solution, built from ten resources of seven kinds, which
+depend on each other. Its manifests are not part of the Smarter platform. They live in their own
+GitHub repository, `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__, to show how
+a prompt engineer can manage a project of many AI resources with git and GitHub: each change is a
+commit, reviewed in a pull request, and the repository's history records who changed what, and why.
+
+The Repository
+--------------
+
+Each folder holds the manifests of one family of resources, in the order that they depend on each
+other.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Folder
+     - Resources
+   * - ``secrets/``
+     - Three :doc:`Secrets </smarter-resources/smarter-secret>`: the passwords of the Stackademy test
+       database and its proxy, and of the Stackademy course catalogue api.
+   * - ``connections/sql/``
+     - The :doc:`SqlConnection </smarter-resources/smarter-connection>` ``smarter_test_db``, to the
+       Stackademy test database.
+   * - ``connections/api/``
+     - The ApiConnection ``smarter_test_api``, to the course catalogue api of the platform that
+       applies it. It is a :doc:`manifest template <manifest-templates>`, ``*.yaml.tpl``.
+   * - ``plugins/sql/``
+     - The :doc:`SqlPlugin </smarter-resources/smarter-llmtool>` ``stackademy_sql``, which queries the
+       course catalogue with SQL.
+   * - ``plugins/api/``
+     - The ApiPlugin ``stackademy_api``, which queries the same catalogue through a REST api.
+   * - ``llm-clients/``
+     - The :doc:`LLMClients </smarter-resources/smarter-llmclient>` ``stackademy_sql`` and
+       ``stackademy_api``, each with its plugin, and Stackademy's colors.
+   * - ``budgets/``
+     - The :doc:`Budget </smarter-resources/smarter-budget>` ``stackademy_project``, which limits
+       what ``stackademy_sql`` may spend.
+
+Its pre-commit hooks check every manifest against the JSON Schema of its kind, which the Smarter
+platform publishes, before each commit, and a GitHub Actions workflow runs them on every pull request.
+
+What the Platform Provides
+--------------------------
+
+The data that the course advisors read stays in the platform, so that the project works on every
+Smarter platform without an external service:
+
+- the ``smarter_test_db`` database, whose ``courses`` table is the course catalogue, and
+- the course catalogue api, ``/api/v1/demos/stackademy/course-catalogue/``, which accepts the
+  value of the ``smarter_test_api`` Secret of the Smarter account as its password.
+
+How a Platform Loads It
+-----------------------
+
+``manage.py load_from_github`` clones a GitHub repository of manifests and applies each of them, in
+the order of their kinds' dependencies: Secrets first, then Connections, plugins, LLMClients, and
+Budgets last. It fills in manifest templates with the platform's own scheme and domain, and an
+LLMClient that is already deployed stays deployed.
+
+- ``manage.py initialize_platform`` loads the Stackademy repository for the Smarter admin, then
+  ``manage.py verify_stackademy`` sends each course advisor a real prompt, and fails unless its
+  plugin returned course catalogue data.
+- ``manage.py initialize_account`` loads it for each account's admin, without the Budget, which only
+  a superuser may apply, and deploys the account's course advisors.
+
+.. code-block:: console
+
+   python manage.py load_from_github --url https://github.com/smarter-sh/stackademy --account_number 3141-5926-5359
+
+See :doc:`/smarter-resources/llmclient/commands/load-from-github` and
+:doc:`/smarter-resources/llmclient/commands/verify-stackademy`.

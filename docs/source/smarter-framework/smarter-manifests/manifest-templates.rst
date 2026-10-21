@@ -19,8 +19,10 @@ whose placeholders are filled in from ``smarter_settings`` when it is applied.
       connection:
         baseUrl: ${environment_platform_scheme}://${environment_platform_domain}
 
-``manage.py add_example_mcpclients`` and ``manage.py add_example_connections`` fill in their templates
-with :func:`smarter.lib.manifest.template.render_manifest_template`.
+``manage.py add_example_mcpclients`` fills in its templates, and ``manage.py load_from_github`` those of
+the repository that it loads, e.g. the Stackademy ApiConnection of the
+:doc:`Stackademy example project <stackademy>`, with
+:func:`smarter.lib.manifest.template.render_manifest_template`.
 
 .. automodule:: smarter.lib.manifest.template
    :members:

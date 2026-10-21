@@ -3,33 +3,21 @@ Test the verify_stackademy management command, :mod:`smarter.apps.llmclient.mana
 
 The chat api that the command prompts is patched, so no LLM is called. ``SmarterCommand.handle_completed_failure()``
 calls ``sys.exit(1)`` when it is given an exception, so a failure is asserted as ``SystemExit``.
-The layout of the Stackademy manifests, which several apps' ``add_example_<kinds>`` commands apply,
-is tested here too.
+The Stackademy manifests are in their own repository, https://github.com/smarter-sh/stackademy, whose
+pre-commit hooks validate each one against its kind's JSON Schema.
 """
 
-import glob
 import io
-import os
 from contextlib import redirect_stdout
 from http import HTTPStatus
 from unittest import mock
 
-import yaml
 from django.core.management import CommandError, call_command
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.api.v1.demos.const import STACKADEMY_API_CONNECTION_NAME
-from smarter.apps.api.v1.demos.urls import ApiV1DemoUrls
 from smarter.apps.llmclient.management.commands import verify_stackademy
 from smarter.apps.prompt.contract.models import PromptChatApiMessage
-from smarter.common.const import PROJECT_ROOT
-from smarter.common.utils import get_readonly_yaml_file
-from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
-from smarter.lib.manifest.template import (
-    manifest_template_values,
-    render_manifest_template,
-)
 from smarter.lib.typing import SmarterDictType
 
 MODULE = "smarter.apps.llmclient.management.commands.verify_stackademy"
@@ -37,62 +25,6 @@ UNKNOWN_ACCOUNT_NUMBER = "9999-9999-9999"
 UNKNOWN_LLMCLIENT_NAME = "test_verify_stackademy_no_such_llmclient"
 TOOL_CALL = {"role": "smarter", "content": "openai called this tool: a_plugin()"}
 ANSWER = {"role": "assistant", "content": "Yes, we offer CS210, Artificial Intelligence."}
-APPS = os.path.join(PROJECT_ROOT, "apps")
-
-
-class TestStackademyManifests(TestAccountMixin):
-    """Test that each Stackademy manifest is in the data/stackademy/ folder of the app that implements its kind."""
-
-    KINDS = {
-        "Secret": "secret",
-        "Budget": "account",
-        "SqlConnection": "connection",
-        "ApiConnection": "connection",
-        "SqlPlugin": "llmtool",
-        "ApiPlugin": "llmtool",
-        "LLMClient": "llmclient",
-    }
-
-    def manifests(self) -> dict[str, list[str]]:
-        """The kinds of the manifests in every app's data/stackademy/ folder."""
-        retval: dict[str, list[str]] = {}
-        for filespec in glob.glob(os.path.join(APPS, "*", "data", "stackademy", "*")):
-            with open(filespec, encoding="utf-8") as f:
-                kind = next(line.split(":", 1)[1].strip() for line in f if line.startswith("kind:"))
-            retval.setdefault(kind, []).append(filespec)
-        return retval
-
-    def test_each_manifest_is_in_its_kinds_app(self):
-        manifests = self.manifests()
-        self.assertEqual(set(manifests), set(self.KINDS))
-        for kind, filespecs in manifests.items():
-            for filespec in filespecs:
-                with self.subTest(filespec=filespec):
-                    self.assertTrue(filespec.startswith(os.path.join(APPS, self.KINDS[kind], "data", "stackademy")))
-
-    def test_api_connection(self):
-        """Test that the ApiConnection queries this platform's course catalogue, with its own Secret."""
-        (filespec,) = self.manifests()["ApiConnection"]
-        with open(filespec, encoding="utf-8") as f:
-            connection = yaml.safe_load(render_manifest_template(f.read()))
-        values = manifest_template_values()
-        spec = connection["spec"]["connection"]
-        self.assertEqual(connection["metadata"]["name"], STACKADEMY_API_CONNECTION_NAME)
-        self.assertEqual(
-            spec["baseUrl"], f"{values['environment_platform_scheme']}://{values['environment_platform_domain']}"
-        )
-        self.assertEqual(spec["authMethod"], "token")
-        self.assertEqual(spec["apiKey"], "smarter_test_api")
-        self.assertIn(
-            "smarter_test_api", [get_readonly_yaml_file(f)["metadata"]["name"] for f in self.manifests()["Secret"]]
-        )
-        plugin = get_readonly_yaml_file(
-            os.path.join(APPS, "llmtool", "data", "stackademy", "stackademy-plugin-api.yaml")
-        )
-        self.assertEqual(
-            plugin["spec"]["apiData"]["endpoint"],
-            reverse(ApiV1DemoUrls.namespace + ApiV1DemoUrls.STACKADEMY_COURSE_CATALOGUE),
-        )
 
 
 class TestVerifyStackademy(TestAccountMixin):
