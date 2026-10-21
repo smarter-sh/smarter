@@ -1,5 +1,9 @@
 """Test the add_account_contact and delete_account_contact management commands."""
 
+from unittest.mock import patch
+
+from django.core.management.base import CommandError
+
 from smarter.apps.account.models import AccountContact
 from smarter.common.exceptions import SmarterValueError
 
@@ -47,3 +51,21 @@ class TestAccountContactCommands(CommandTestBase):
             with self.subTest(command=command):
                 with self.assertRaises(SmarterValueError):
                     self.run_command(command, email="a@example.com")
+
+    def test_language(self):
+        """Test that a new contact is welcomed in the given language, and an existing one isn't welcomed again."""
+        email = f"{self.unique()}@example.com"
+        self.addCleanup(AccountContact.objects.filter(account=self.account, email=email).delete)
+        with patch.object(AccountContact, "send_welcome_email") as send:
+            self.run_command(
+                "add_account_contact", account_number=self.account.account_number, email=email, language="fr"
+            )
+            send.assert_called_once_with(language="fr")
+            self.run_command(
+                "add_account_contact", account_number=self.account.account_number, email=email, language="fr"
+            )
+            send.assert_called_once()
+            with self.assertRaises(CommandError):
+                self.run_command(
+                    "add_account_contact", "--language=xx", account_number=self.account.account_number, email=email
+                )
