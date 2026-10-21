@@ -207,19 +207,6 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         """Test initialize_waffle command."""
         call_command("initialize_waffle")
 
-    def test_load_from_github_v1(self):
-        """Test load_from_github command."""
-
-        call_command(
-            "load_from_github",
-            "--account_number",
-            f"{self.account.account_number}",
-            "--url",
-            "https://github.com/smarter-sh/smarter-demo",
-            "--username",
-            self.admin_user.get_username(),
-        )
-
     def test_load_from_github_v2(self):
         """Test load_from_github command."""
 
