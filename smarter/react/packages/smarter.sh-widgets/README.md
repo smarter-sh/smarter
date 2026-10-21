@@ -8,6 +8,7 @@ so that the two look the same.
 | ----------------- | --------------------------------------------------------------------------------- |
 | `Cli`             | The Smarter command-line interface, as a terminal session                         |
 | `Contribute`      | Ways to help the project, its repository's activity badges and contributing guide |
+| `DidYouKnow`      | The fact of the day: trivia about The Smarter Project, as the console's title bar |
 | `Extensions`      | Smarter Extensions: the official ones, a manifest that uses one, the registry     |
 | `Instructors`     | The Instructor Guide and the Free Course Designs                                  |
 | `Integrations`    | The Smarter Chat integrations: WordPress, Drupal, Shopify, Docusaurus, ...        |
@@ -75,6 +76,7 @@ Outside a web console, pass the urls of a platform, and set the cards' widths to
 | -------------- | ------------ | ------------------------------------------------- | ------------------------------------------------ |
 | `Sdk`          | `openapiUrl` | `/docs/openapi/`                                  | The API reference button's url                   |
 | `McpServer`    | `serverUrl`  | the page's domain, `/api/v1/mcp/smarter-project/` | The MCP server's url, in the Claude Code command |
+| `DidYouKnow`   | `date`       | now                                               | The moment whose day (UTC) picks the fact        |
 | `Cli`          | `className`  | `col-xl-4`                                        | The card's grid column classes                   |
 | `Instructors`  | `className`  | `col-xl-6`                                        | The card's grid column classes                   |
 | `Integrations` | `className`  | `col-xl-4`                                        | The card's grid column classes                   |
