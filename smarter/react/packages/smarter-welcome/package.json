@@ -1,5 +1,6 @@
 {
   "name": "@smarter/welcome",
+  "private": true,
   "description": "The welcome dialog and tour that the Smarter web console shows to new users.",
   "version": "0.1.0",
   "type": "module",

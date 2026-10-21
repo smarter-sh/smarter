@@ -1,5 +1,6 @@
 {
   "name": "@smarter/infrastructure-resource-list",
+  "private": true,
   "description": "A React component library for displaying the ledger of the cloud resources that the Smarter platform has created, on the Smarter web console.",
   "version": "0.1.0",
   "type": "module",

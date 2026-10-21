@@ -1,5 +1,6 @@
 {
   "name": "@smarter/dashboard-user-menu",
+  "private": true,
   "description": "The user menu at the top right of every Smarter web console page.",
   "version": "0.1.0",
   "type": "module",
