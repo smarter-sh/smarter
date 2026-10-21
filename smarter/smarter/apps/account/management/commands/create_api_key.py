@@ -27,7 +27,16 @@ Usage Example
     python manage.py create_api_key --account_number=1234-5678-9012 --username=myuser --description="integration key"
 """
 
-from smarter.apps.account.models import Account, User, UserProfile
+from typing import Optional
+
+from django.core.management.base import CommandError
+
+from smarter.apps.account.management.lookups import (
+    get_account,
+    get_user,
+    get_user_profile,
+)
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
@@ -51,45 +60,31 @@ class Command(SmarterCommand):
         parser.add_argument("--description", type=str, help="Optional brief text description for the api key")
 
     def handle(self, *args, **options):
-        """Create the superuser account."""
+        """Create the api key."""
         self.handle_begin()
 
-        account: Account | None = None
-        user: User | None = None
-        user_profile: UserProfile | None = None
         account_number = options["account_number"]
         username = options["username"]
         description = options["description"]
 
         if not account_number and not username:
-            self.handle_completed_failure(msg="You must provide an account number or a username")
-            return
+            raise CommandError("Provide an --account_number, a --username, or both.")
 
-        if account_number:
-            account = Account.objects.get(account_number=account_number)
-            user = get_cached_admin_user_for_account(account=account)
+        account: Optional[Account] = get_account(account_number=account_number) if account_number else None
         if username:
-            user = User.objects.get(username=username)
-            user_profile = (
-                UserProfile.objects.get(user=user, account=account)
-                if account
-                else UserProfile.objects.filter(user=user).first()
-            )
-            if not user_profile:
-                self.handle_completed_failure(msg=f"User {username} does not have a user profile")
-                return
+            user = get_user(username)
+            if account:
+                user_profile = get_user_profile(f"username {username}", account=account, user=user)
+            else:
+                user_profile = UserProfile.objects.filter(user=user).first()
+                if not user_profile:
+                    raise CommandError(f"The user {username} doesn't belong to an account.")
             account = user_profile.account
-        if not user:
-            user = (
-                User.objects.get(username=username)
-                if username
-                else get_cached_admin_user_for_account(account=account) if account else None
-            )
-        user_profile = UserProfile.objects.get(user=user, account=account)
-
-        if not user or not account or not user_profile:
-            self.stdout.write(self.style.ERROR("Could not find user or account"))
-            return
+        else:
+            user = get_cached_admin_user_for_account(account=account)
+            if not user:
+                raise CommandError(f"Account {account_number} has no admin user. Add --username to choose the owner.")
+            user_profile = get_user_profile(f"username {user.username}", account=account, user=user)
 
         auth_token, token_key = SmarterAuthToken.objects.create(
             user_profile=user_profile,

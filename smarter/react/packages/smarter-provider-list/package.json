@@ -1,5 +1,6 @@
 {
   "name": "@smarter/provider-list",
+  "private": true,
   "description": "A React component library for displaying a list of Providers on the Smarter web console.",
   "version": "0.2.0",
   "type": "module",

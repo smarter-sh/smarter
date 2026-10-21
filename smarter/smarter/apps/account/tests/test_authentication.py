@@ -593,6 +593,23 @@ class TestAccountRegisterView(TestAccountMixin):
         if hasattr(response, "url"):
             self.assertEqual(response.url, "/welcome/")  # type: ignore
 
+    def test_post_register_stores_the_browser_language(self):
+        """A console sign-up stores the browser's language as the user's preference, and is welcomed in it."""
+        # pylint: disable=import-outside-toplevel
+        from django.test import Client
+
+        from smarter.apps.account.models import AccountContact, UserProfile
+
+        self.addCleanup(AccountContact.objects.filter(email=self.test_create_username).delete)
+        data = {"email": self.test_create_username, "password": "testpass123"}
+        with patch("smarter.apps.account.models.account_contact.infrastructure") as infrastructure:
+            response = Client().post("/register/", data, HTTP_ACCEPT_LANGUAGE="fr-CA,fr;q=0.9,en;q=0.5")
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        user_profile = UserProfile.objects.get(user__username=self.test_create_username)
+        self.assertEqual(user_profile.language, "fr")
+        infrastructure.email.send_email.assert_called_once()
+        self.assertIn('<html lang="fr">', infrastructure.email.send_email.call_args.kwargs["body"])
+
     def test_post_register_view_invalid_form(self):
         """POST invalid registration data should re-render the form with errors."""
         data = {"email": "", "password": ""}  # All fields missing/invalid

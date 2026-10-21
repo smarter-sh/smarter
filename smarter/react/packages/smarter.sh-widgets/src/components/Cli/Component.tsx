@@ -1,0 +1,106 @@
+/**
+ * Cli dashboard widget.
+ *
+ * This component renders a dashboard call-to-action card for the Smarter
+ * command-line interface, styled as a terminal window that shows a typical
+ * session (install, configure, apply, deploy, list), followed by links to
+ * download the CLI and open its documentation.
+ *
+ * :param className: The card's grid column classes, so that the page can set its width.
+ * :type className: str
+ * :returns: A JSX fragment containing the CLI promotion widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <Cli />
+ *     <Cli className="col-12" />
+ */
+import "./styles.css";
+import { gettext, interpolateNodes } from "@smarter/common";
+
+const SESSION = [
+  { command: "brew install smarter", comment: gettext("or apt, choco, docker") },
+  { command: "smarter configure" },
+  { command: "smarter apply -f llmclient.yaml" },
+  { command: "smarter deploy llmclient customer_support" },
+  { command: "smarter get llmclients" },
+];
+
+export interface CliProps {
+  /** The card's grid column classes, so that the page can set its width. */
+  className?: string;
+}
+
+function Cli({ className = "col-xl-4" }: CliProps) {
+  return (
+    <>
+      <section id="cli" aria-label={gettext("CLI")} className={`${className} mb-5 mb-xl-10`}>
+        {/* begin::Engage widget 4 */}
+        <div className="card border-transparent h-100 cli-card" data-bs-theme="light">
+          {/* begin::Body */}
+          <div className="card-body d-flex flex-column ps-xl-15 h-100">
+            {/* begin::Title */}
+            <div className="fs-2x fw-bold text-white mb-2">
+              {/* Translators: a headline. %(span)s is its highlighted last words, translated separately. */}
+              {interpolateNodes(gettext("Smarter %(span)s"), {
+                span: (
+                  <span className="position-relative d-inline-block">
+                    {/* Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end. */}
+                    {interpolateNodes(gettext("CLI%(span)s"), {
+                      span: (
+                        <span className="position-absolute opacity-50 bottom-0 start-0 border-4 border-success border-bottom w-100"></span>
+                      ),
+                    })}
+                  </span>
+                ),
+              })}
+            </div>
+            <p className="text-gray-400 fs-6 mb-7">{gettext("Powerful tools for managing your AI resources.")}</p>
+            {/* end::Title */}
+            {/* begin::Terminal */}
+            <div className="cli-terminal" aria-label={gettext("Example CLI session")}>
+              <div className="cli-terminal-bar">
+                <span className="cli-dot cli-dot-red"></span>
+                <span className="cli-dot cli-dot-yellow"></span>
+                <span className="cli-dot cli-dot-green"></span>
+              </div>
+              <pre className="cli-terminal-body">
+                {SESSION.map((line) => (
+                  <div key={line.command}>
+                    <span className="cli-prompt">$ </span>
+                    {line.command}
+                    {line.comment && <span className="cli-comment"> # {line.comment}</span>}
+                  </div>
+                ))}
+                <div>
+                  <span className="cli-prompt">$ </span>
+                  <span className="cli-cursor"></span>
+                </div>
+              </pre>
+            </div>
+            {/* end::Terminal */}
+            {/* begin::Action */}
+            <div className="mt-auto pt-7">
+              <a href="https://smarter.sh/cli/" target="_blank" className="btn btn-sm btn-success fw-semibold me-2">
+                {gettext("Download")}
+              </a>
+              <a
+                href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-cli.html"
+                target="_blank"
+                className="btn btn-sm btn-light fw-semibold"
+              >
+                {gettext("Documentation")}
+              </a>
+            </div>
+            {/* end::Action */}
+          </div>
+          {/* end::Body */}
+        </div>
+        {/* end::Engage widget 4 */}
+      </section>
+    </>
+  );
+}
+
+export default Cli;

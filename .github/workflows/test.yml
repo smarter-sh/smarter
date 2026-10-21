@@ -84,15 +84,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # Smarter Chat is managed in its own repository. See the react-smarter-chat target in the Makefile.
-      - name: Clone Smarter Chat
-        working-directory: .
-        run: make react-smarter-chat
-
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: 25
+          node-version: 24
           cache: npm
           cache-dependency-path: smarter/react/package-lock.json
 
@@ -109,6 +104,10 @@ jobs:
         run: |
           npm run build:deps
           npm run typecheck
+
+      # The npm package that uiWidgetsRelease.yml publishes. build:deps built it.
+      - name: Check @smarter.sh/ui-widgets
+        run: npm run check:dist --workspace=@smarter.sh/ui-widgets
 
       - name: Unit tests (Vitest), with coverage
         run: npm run coverage
@@ -156,7 +155,7 @@ jobs:
         id: node
         uses: actions/setup-node@v6
         with:
-          node-version: 25
+          node-version: 24
 
       #------------------------------------------------------------------------
       # The mariadb Python package has no Linux wheels on PyPI, so pip builds it

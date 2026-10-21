@@ -28,7 +28,6 @@ class TestProjectRepositories(SmarterTestBase):
             "smarter-golang",
             "smarter-vscode-yaml",
             "smarter-infrastructure",
-            "smarter-chat",
             "smarter-deploy",
         ):
             with self.subTest(name=name):

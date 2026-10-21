@@ -1,5 +1,6 @@
 {
   "name": "@smarter/didyouknow",
+  "private": true,
   "description": "Did you know? trivia about The Smarter Project: a library of facts and an unstyled component, which the welcome dialog uses, and the note below the web console's title.",
   "version": "0.1.0",
   "type": "module",

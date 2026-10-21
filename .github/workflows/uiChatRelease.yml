@@ -1,0 +1,158 @@
+---
+#------------------------------------------------------------------------------
+# Publish @smarter.sh/ui-chat (smarter/react/packages/smarter.sh-chat) to npm,
+# when semantic-release publishes a GitHub release (pushMain.yml), or by hand
+# for such a release's tag.
+#
+# - The package's version is the platform's: the release's tag, without its
+#   v, as for @smarter.sh/ui-widgets (uiWidgetsRelease.yml). It is set here,
+#   before the build, because the embed script reports the version that it
+#   was built with (window.SmarterChat.version), and not committed.
+# - A release from main is published with the latest dist-tag, and one from
+#   another branch, such as next, with the next dist-tag. A prerelease
+#   (0.36.0-alpha.1, 0.36.0-beta.2) is published with its channel's dist-tag,
+#   alpha or beta, so that `npm install @smarter.sh/ui-chat` and the embed
+#   script's jsDelivr ranges (@0, @0.36) never load a prerelease.
+# - Checks out the release's tag, runs the package's unit tests, builds the
+#   library and the embed script, checks the package (npm run check:dist),
+#   then publishes that same dist/.
+# - After a latest release, asks jsDelivr to refresh the ranges that the
+#   embed script's users load, so that they see it within minutes rather than
+#   hours.
+#
+# Publishing uses npm's trusted publishing (OIDC): no npm token is stored in
+# the repository, and every version gets a provenance statement. Configure it
+# on npmjs.com: @smarter.sh/ui-chat → Settings → Trusted publisher → GitHub
+# Actions, repository smarter-sh/smarter, workflow uiChatRelease.yml,
+# environment npm. The package was published from smarter-sh/smarter-chat,
+# now archived, until it moved into this repository.
+#
+# pushMain.yml's semantic-release step uses the PAT secret, not GITHUB_TOKEN,
+# so the release that it creates triggers this workflow.
+#------------------------------------------------------------------------------
+name: Release @smarter.sh/ui-chat
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The release's tag, e.g. v0.36.0 or v0.36.0-alpha.1"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  # npm trusted publishing and provenance.
+  id-token: write
+
+concurrency:
+  group: npm-publish-ui-chat
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Checkout the release's tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TAG }}
+          # The whole history, to check whether the tag is on main.
+          fetch-depth: 0
+          persist-credentials: false
+
+      # main's releases are 0.36.0, and alpha's and beta's are
+      # 0.36.0-alpha.1 and 0.36.0-beta.2. A release that isn't on main, such as
+      # next's, gets the next dist-tag. Anything else isn't published.
+      - name: Version and dist-tag
+        id: version
+        shell: bash
+        run: |
+          version="${TAG#v}"
+          if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            if git merge-base --is-ancestor "refs/tags/$TAG" origin/main; then
+              dist_tag=latest
+            else
+              dist_tag=next
+            fi
+          elif [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
+            dist_tag="${BASH_REMATCH[1]}"
+          else
+            echo "::error::$TAG is not a release (v1.2.3) or an alpha or beta prerelease (v1.2.3-alpha.4)"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
+          echo "Publishing $version with the $dist_tag dist-tag"
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: smarter/react/package-lock.json
+
+      - name: npm ci
+        working-directory: smarter/react
+        run: npm ci --include=dev
+
+      - name: Unit tests
+        working-directory: smarter/react
+        run: npx vitest run --project smarter.sh-chat
+
+      # Before the build: the embed script includes the version. npm pkg set
+      # only edits package.json. npm version would also update the workspace.
+      - name: Set the package's version
+        working-directory: smarter/react/packages/smarter.sh-chat
+        run: npm pkg set version="${{ steps.version.outputs.version }}"
+
+      - name: Build and check
+        working-directory: smarter/react
+        env:
+          NODE_ENV: production
+        run: |
+          npm run build:lib --workspace=@smarter.sh/ui-chat
+          npm run build:embed --workspace=@smarter.sh/ui-chat
+          npm run check:dist --workspace=@smarter.sh/ui-chat
+
+      # Trusted publishing needs npm 11.5.1 or later.
+      - name: Update npm
+        run: npm install -g npm@^11.5.1 && npm --version
+
+      # --ignore-scripts: prepublishOnly would build dist/ again. Publish the
+      # dist/ that was just checked instead.
+      - name: Publish to npm
+        working-directory: smarter/react/packages/smarter.sh-chat
+        run: npm publish --ignore-scripts --access public --provenance --tag "${{ steps.version.outputs.dist_tag }}"
+
+      # jsDelivr's ranges only follow releases, never prereleases.
+      - name: Refresh jsDelivr
+        if: steps.version.outputs.dist_tag == 'latest'
+        continue-on-error: true
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          major="${version%%.*}"
+          minor="${version%.*}"
+          for range in "$major" "$minor"; do
+            for file in embed.js smarter-chat-library.es.js ui-chat.css; do
+              curl -fsS -o /dev/null "https://purge.jsdelivr.net/npm/@smarter.sh/ui-chat@$range/dist/$file" && echo "purged @$range/dist/$file"
+            done
+          done
+
+      - name: Summary
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          {
+            echo "### Published @smarter.sh/ui-chat@$version"
+            echo ""
+            echo "- npm: https://www.npmjs.com/package/@smarter.sh/ui-chat/v/$version (dist-tag ${{ steps.version.outputs.dist_tag }})"
+            echo "- embed script: https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@$version/dist/embed.js"
+          } >> "$GITHUB_STEP_SUMMARY"
