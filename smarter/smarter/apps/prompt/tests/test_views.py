@@ -805,6 +805,44 @@ class TestPromptConfigViewForDeployedHosts(TestAccountMixin):
         data = json.loads(response.content)["data"]
         self.assertNotIn("user_profile", data["chatbot"])
 
+    def test_malformed_session_key_cookie_starts_a_new_session(self):
+        """
+        Test that a malformed session_key cookie is ignored, not a server error.
+
+        The browser sends
+        cookies of the platform's domain, e.g. the web console's, to every deployed LLMClient's host.
+        """
+        response = self.post(HTTP_COOKIE="session_key=not-a-session-key")
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        session_key = json.loads(response.content)["data"]["session_key"]
+        self.assertRegex(session_key, r"^[0-9a-f]{64}$")
+        self.assertTrue(Prompt.objects.filter(session_key=session_key, llmclient=self.llmclient).exists())
+
+    def test_session_key_of_another_llmclient_starts_a_new_session(self):
+        """Test that a key of another LLMClient's session starts a new session, rather than continuing that chat."""
+        other = LLMClient.objects.create(name=f"test_other_config_{self.hash_suffix}", user_profile=self.user_profile)
+        self.addCleanup(LLMClient.objects.filter(pk=other.pk).delete)
+        other_key = secrets.token_hex(32)
+        other_prompt = Prompt.objects.create(
+            session_key=other_key, llmclient=other, user_profile=self.user_profile, ip_address="127.0.0.1"
+        )
+        self.addCleanup(Prompt.objects.filter(pk=other_prompt.pk).delete)
+
+        response = self.post(HTTP_COOKIE=f"session_key={other_key}")
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        session_key = json.loads(response.content)["data"]["session_key"]
+        self.assertNotEqual(session_key, other_key)
+        self.assertEqual(Prompt.objects.get(session_key=session_key).llmclient, self.llmclient)
+        # the other LLMClient's session is left as it was.
+        other_prompt.refresh_from_db()
+        self.assertEqual(other_prompt.llmclient, other)
+
+    def test_session_key_of_the_same_llmclient_continues_its_session(self):
+        """Test that the LLMClient's own session key continues its session."""
+        first = json.loads(self.post().content)["data"]["session_key"]
+        second = json.loads(self.post(HTTP_COOKIE=f"session_key={first}").content)["data"]["session_key"]
+        self.assertEqual(second, first)
+
     def test_prompt_url_is_on_the_same_host(self):
         """Test that the configuration sends the page's prompts to the host that served it."""
         data = json.loads(self.post().content)["data"]

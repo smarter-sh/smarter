@@ -609,6 +609,9 @@ It never includes a stack trace: errors are logged with theirs, and the response
    * - ``errorClass``
      - Status
      - When
+   * - ``PromptChatApiErrorBadRequest``
+     - 400
+     - The prompt's body is empty, or isn't a JSON object.
    * - ``PromptChatApiErrorNotFound``
      - 404
      - The LLMClient doesn't exist, the user can't read it, it isn't deployed (to an anonymous client,
