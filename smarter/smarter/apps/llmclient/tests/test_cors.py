@@ -100,3 +100,22 @@ class TestLLMClientCors(TestAccountMixin):
 
         response = client.options(url, HTTP_ORIGIN="https://evil.example.com", **preflight)
         self.assertIsNone(response.headers.get("access-control-allow-origin"))
+
+    def test_an_error_response_has_cors_headers(self):
+        """
+        Test that an error that a middleware returns, before the view, still has its CORS headers.
+
+        An invalid api key is rejected by SmarterTokenAuthenticationMiddleware with a 401. Without CORS
+        headers on it, the browser would report a CORS error in place of the 401.
+        """
+        client = Client()
+        url = f"/api/v1/llm-clients/{self.llmclient.hashed_id}/prompt/"
+        response = client.post(
+            url,
+            data={"messages": []},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+            HTTP_AUTHORIZATION="Token " + "0" * 64,
+        )
+        self.assertGreaterEqual(response.status_code, 400, response.content[:300])
+        self.assertEqual(response.headers.get("access-control-allow-origin"), ORIGIN)
