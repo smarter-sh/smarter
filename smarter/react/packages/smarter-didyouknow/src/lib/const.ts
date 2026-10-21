@@ -44,3 +44,8 @@ export const BLOG_URLS = {
 export const NPM_URLS = {
   chat: "https://www.npmjs.com/package/@smarter.sh/ui-chat",
 };
+
+/** Pages of smarter.sh, the project's web site. */
+export const SITE_URLS = {
+  stackademyCaseStudy: "https://smarter.sh/case-studies/stackademy",
+};
