@@ -136,6 +136,26 @@ LLM_SEARCH_PARAMS = ("country", "search_lang", "safesearch", "spellcheck")
 """The search parameters, besides query and count, that the LLM may set if the plugin's llmSearchParams is true."""
 REJECTED_CONTENT_TYPE_PREFIXES = ("text/", "application/json", "application/xml", "application/xhtml")
 """Content-Types of responses that are not images, e.g. the html page of a hotlink protected image."""
+VALIDATION_TIMEOUT = 3.0
+"""The most seconds to wait for each image url's HEAD request.
+
+The plugin's ``timeout`` is for the Brave api. An image host that doesn't answer in a few seconds
+would also keep the chat's reader waiting, and a slow host would hold up its whole batch.
+"""
+VALIDATION_HEADERS = {
+    "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5",
+    "User-Agent": "Mozilla/5.0 (compatible; Smarter/1.0; +https://smarter.sh)",
+}
+"""The headers of an image url's HEAD request: a browser's, as near as honestly possible.
+
+Many image hosts refuse requests that don't look like a browser's image request, which the
+chat's reader would make, and which would succeed.
+"""
+PROBABLY_AVAILABLE_STATUSES = (405, 429)
+"""HTTP statuses that refuse the server's HEAD request, but not a browser's GET.
+
+405: the host doesn't allow HEAD. 429: the host rate limits the platform's ip address, not the reader's.
+"""
 
 _random = secrets.SystemRandom()
 
@@ -276,17 +296,30 @@ def image_content_type(url: str, timeout: float) -> Optional[str]:
     """
     Return the Content-Type of an image url, if a HEAD request to it responds with HTTP 200 and not with a web page.
 
+    A url whose host refuses the HEAD request with a status in :data:`PROBABLY_AVAILABLE_STATUSES`
+    is probably available to a browser, and returns an empty Content-Type.
+
     This runs in worker threads, so it neither logs nor touches the database: the waffle
     switched logger reads its switch from the database, which would open a connection per thread.
 
     :param url: The https url of an image.
-    :param timeout: Seconds to wait for each request.
-    :return: The Content-Type, which is empty if the server did not send one, or None if the url is not available.
+    :param timeout: Seconds to wait for each request, at most :data:`VALIDATION_TIMEOUT`.
+    :return: The Content-Type, which is empty if the server did not send one or refused the HEAD
+        request, or None if the url is not available.
     """
     try:
-        response = fetch(url, method="HEAD", timeout=timeout)
+        response = fetch(
+            url,
+            method="HEAD",
+            headers=VALIDATION_HEADERS,
+            timeout=min(timeout, VALIDATION_TIMEOUT),
+            accept_status=(200, *PROBABLY_AVAILABLE_STATUSES),
+        )
     except SafeHttpError:
         return None
+    if response.status_code != 200:
+        # probably available, but the response, e.g. a rate limit's error page, says nothing of the image.
+        return ""
     content_type = response.content_type
     if content_type.startswith(REJECTED_CONTENT_TYPE_PREFIXES):
         return None

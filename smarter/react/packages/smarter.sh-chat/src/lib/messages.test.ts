@@ -12,6 +12,7 @@ import {
   examplePrompts,
   messageFactory,
   messageHtml,
+  replaceBrokenImage,
   sanitizeInput,
   toggleMetadataMessages,
 } from "./messages";
@@ -35,7 +36,8 @@ describe("convertMarkdownLinksToHTML", () => {
 });
 
 describe("convertMarkdownLinksToHTML, with images", () => {
-  const img = (src: string, alt: string) => `<img class="smarter-chat-image" src="${src}" alt="${alt}" loading="lazy">`;
+  const img = (src: string, alt: string) =>
+    `<img class="smarter-chat-image" src="${src}" alt="${alt}" loading="lazy" referrerpolicy="no-referrer">`;
   const link = (href: string, content: string) =>
     `<a href="${href}" target="_blank" rel="noopener noreferrer">${content}</a>`;
 
@@ -116,10 +118,13 @@ describe("convertMarkdownToHTML", () => {
       `visit ${link("https://example.com", "https://example.com")}`,
     );
     expect(convertMarkdownToHTML("[![logo](/static/logo.png)](https://smarter.sh)")).toBe(
-      link("https://smarter.sh", '<img class="smarter-chat-image" src="/static/logo.png" alt="logo" loading="lazy">'),
+      link(
+        "https://smarter.sh",
+        '<img class="smarter-chat-image" src="/static/logo.png" alt="logo" loading="lazy" referrerpolicy="no-referrer">',
+      ),
     );
     expect(convertMarkdownToHTML("![dot](data:image/png;base64,iVBORw0KGgo=)")).toBe(
-      '<img class="smarter-chat-image" src="data:image/png;base64,iVBORw0KGgo=" alt="dot" loading="lazy">',
+      '<img class="smarter-chat-image" src="data:image/png;base64,iVBORw0KGgo=" alt="dot" loading="lazy" referrerpolicy="no-referrer">',
     );
   });
 
@@ -206,5 +211,38 @@ describe("toggleMetadataMessages", () => {
 describe("sanitizeInput", () => {
   it("removes html tags", () => {
     expect(sanitizeInput("<span>hello</span> world")).toBe("hello world");
+  });
+});
+
+describe("replaceBrokenImage", () => {
+  const toElement = (html: string) => {
+    const element = document.createElement("div");
+    element.innerHTML = html;
+    return element;
+  };
+
+  it("replaces a message's image with its description, and keeps its link", () => {
+    const message = toElement(convertMarkdownToHTML("![a foggy Golden Gate](https://images.example.com/fog.jpg)"));
+    const image = message.querySelector("img")!;
+    expect(image).toHaveAttribute("referrerpolicy", "no-referrer");
+    expect(replaceBrokenImage(image)).toBe(true);
+    expect(message.querySelector("img")).toBeNull();
+    const link = message.querySelector("a")!;
+    expect(link).toHaveAttribute("href", "https://images.example.com/fog.jpg");
+    expect(link).toHaveTextContent("a foggy Golden Gate");
+  });
+
+  it("describes an image without alt text as an image", () => {
+    const message = toElement(convertMarkdownToHTML("![](https://images.example.com/fog.jpg)"));
+    replaceBrokenImage(message.querySelector("img"));
+    expect(message.querySelector(".smarter-chat-image-unavailable")).toHaveTextContent("Image");
+  });
+
+  it("leaves other images and elements alone", () => {
+    const message = toElement('<img class="cs-avatar" src="/avatar.png" alt="avatar"><p>text</p>');
+    expect(replaceBrokenImage(message.querySelector("img"))).toBe(false);
+    expect(replaceBrokenImage(message.querySelector("p"))).toBe(false);
+    expect(replaceBrokenImage(null)).toBe(false);
+    expect(message.querySelector("img")).not.toBeNull();
   });
 });
