@@ -1,4 +1,4 @@
-"""Deploy the example and Stackademy LLMClients of an account, which ``manage.py add_example_llmclients`` applies."""
+"""Deploy the example LLMClients of an account, which ``manage.py add_example_llmclients`` applies."""
 
 import glob
 import os
@@ -11,7 +11,7 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     smarter_cached_objects,
 )
-from smarter.apps.llmclient.const import EXAMPLE_LLMCLIENTS_PATH, STACKADEMY_PATH
+from smarter.apps.llmclient.const import EXAMPLE_LLMCLIENTS_PATH
 from smarter.apps.llmclient.management.commands.add_example_llmclients import (
     Command as AddExampleLLMClientsCommand,
 )
@@ -20,6 +20,7 @@ from smarter.apps.llmclient.tasks import deploy_default_api
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=E1101
@@ -27,10 +28,10 @@ class Command(SmarterCommand):
     """
     Deploy the example LLMClients of a Smarter account.
 
-    The example LLMClients are those in smarter/apps/llmclient/data/llm-clients and
-    smarter/apps/llmclient/data/stackademy, which ``manage.py add_example_llmclients`` applies for
-    the account's admin. This command creates
-    nothing: it deploys each of them that is not deployed yet, as a Celery task, which creates its
+    The example LLMClients are those in smarter/apps/llmclient/data/llm-clients, which
+    ``manage.py add_example_llmclients`` applies for the account's admin. The Stackademy LLMClients
+    are deployed by ``manage.py load_from_github --deploy``, which reuses :meth:`deploy_manifest`.
+    This command creates nothing: it deploys each of them that is not deployed yet, as a Celery task, which creates its
     DNS record. The deployed LLMClients are accessible at URLs of the form
     ``[llmclient-name].[account-number].api.example.com/llm-client/``.
 
@@ -45,8 +46,7 @@ class Command(SmarterCommand):
     """
 
     help = (
-        "Deploy the example LLMClients of an account, in smarter/apps/llmclient/data/llm-clients and "
-        "smarter/apps/llmclient/data/stackademy. "
+        "Deploy the example LLMClients of an account, in smarter/apps/llmclient/data/llm-clients. "
         "Run add_example_llmclients first: this command creates nothing."
     )
 
@@ -75,7 +75,16 @@ class Command(SmarterCommand):
         :returns: False if the LLMClient does not exist, or failed to deploy.
         :rtype: bool
         """
-        manifest = SAMLoader(file_path=filespec).json_data or {}
+        return self.deploy_manifest(SAMLoader(file_path=filespec).json_data or {})
+
+    def deploy_manifest(self, manifest: SmarterDictType) -> bool:
+        """
+        Deploy the LLMClient of :attr:`user_profile` that a manifest names, if it is not deployed.
+
+        :param manifest: The LLMClient's manifest.
+        :returns: False if the LLMClient does not exist, or failed to deploy.
+        :rtype: bool
+        """
         name = manifest.get("metadata", {}).get("name")
         try:
             llmclient = LLMClient.objects.get(user_profile=self.user_profile, name=name)
@@ -128,11 +137,7 @@ class Command(SmarterCommand):
         self.user_profile = UserProfile.get_cached_object(user=admin, account=account)  # type: ignore[arg-type]
         self.stdout.write(self.style.NOTICE(f"Deploying the example LLMClients of account {account_number}."))
 
-        filespecs = [
-            filespec
-            for path in (EXAMPLE_LLMCLIENTS_PATH, STACKADEMY_PATH)
-            for filespec in sorted(glob.glob(os.path.join(path, "*.yaml")))
-        ]
+        filespecs = sorted(glob.glob(os.path.join(EXAMPLE_LLMCLIENTS_PATH, "*.yaml")))
         failed = [os.path.basename(filespec) for filespec in filespecs if not self.deploy_llmclient(filespec)]
         if failed:
             msg = f"{len(failed)} example LLMClients failed to deploy: {', '.join(failed)}"

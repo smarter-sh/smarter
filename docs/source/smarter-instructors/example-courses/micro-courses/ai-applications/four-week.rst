@@ -102,7 +102,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Structured data.** Two safe patterns, both shipped with Smarter: a :doc:`SQL Plugin
        </smarter-resources/llmtool/plugin/sql>` runs a fixed, parameterized query that the model can
        only fill in (`stackademy_sql
-       <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__),
+       <https://github.com/smarter-sh/stackademy/blob/main/plugins/sql/stackademy-sql.yaml>`__),
        and a SkillPlugin teaches the model a schema so that it writes SQL for a person to review
        (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
        with a read-only database user, its password in a :doc:`Secret

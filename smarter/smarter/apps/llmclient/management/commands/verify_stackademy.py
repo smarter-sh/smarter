@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}")
 
 STACKADEMY_LLMCLIENTS = ("stackademy_sql", "stackademy_api")
-"""The Stackademy LLMClients, which ``manage.py add_example_llmclients`` applies."""
+"""The Stackademy LLMClients, in :data:`~smarter.apps.llmclient.const.STACKADEMY_REPOSITORY_URL`."""
 
 VERIFICATION_PROMPT = "Do you offer any courses on AI?"
 """The prompt that each Stackademy LLMClient must answer with its plugin's course catalogue data."""
@@ -41,9 +41,10 @@ class Command(SmarterCommand):
     prompt, through the chat api, and fails unless the LLM called the LLMClient's plugin, the
     plugin returned course catalogue data, and the LLM answered. It creates nothing.
 
-    The Stackademy resources are example resources of several apps, which these commands apply,
-    in this order: ``add_example_secrets``, ``add_example_connections``, ``add_example_tools`` and
-    ``add_example_llmclients``.
+    The Stackademy resources are the manifests of the Stackademy project,
+    https://github.com/smarter-sh/stackademy, which ``manage.py load_from_github`` applies:
+    ``manage.py initialize_platform`` loads it for the Smarter admin, then runs this command.
+    The platform provides what they query: the Stackademy test database, and the course catalogue.
 
     - ``stackademy_sql``: its SqlPlugin queries the Stackademy test database, with a SqlConnection.
     - ``stackademy_api``: its ApiPlugin queries this platform's Stackademy course catalogue,
@@ -52,7 +53,7 @@ class Command(SmarterCommand):
 
     help = (
         "Verify that the Stackademy LLMClients work, with a real, billable prompt to each one. "
-        "Run add_example_llmclients first."
+        "Load https://github.com/smarter-sh/stackademy with load_from_github first."
     )
 
     def add_arguments(self, parser):

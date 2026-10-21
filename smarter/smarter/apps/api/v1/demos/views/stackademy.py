@@ -1,7 +1,7 @@
 """
 The Stackademy course catalogue, ``/api/v1/demos/stackademy/course-catalogue/``.
 
-Stackademy University is fictional. Its course catalogue is the remote api that the
+Stackademy, https://github.com/smarter-sh/stackademy, is a fictional online code academy. Its course catalogue is the remote api that the
 Stackademy ApiPlugin queries, so that the Stackademy LLMClients work on every platform
 without an external service.
 """
@@ -43,7 +43,7 @@ def stackademy_password() -> Optional[str]:
     :returns: The Secret's value, or ``None`` if the connection or its ``apiKey`` does not exist.
     :rtype: Optional[str]
     """
-    # not cached: a lookup before add_example_connections creates the connection must not be remembered.
+    # not cached: a lookup before load_from_github creates the connection must not be remembered.
     connection = (
         ApiConnection.objects.filter(
             name=STACKADEMY_API_CONNECTION_NAME, user_profile__account=smarter_cached_objects.smarter_account
@@ -54,9 +54,10 @@ def stackademy_password() -> Optional[str]:
     if not connection or not connection.api_key:
         logger.error(
             "%s.stackademy_password() the Smarter account has no ApiConnection %s with an apiKey. "
-            "Run manage.py add_example_secrets and add_example_connections.",
+            "Run manage.py load_from_github --url https://github.com/smarter-sh/stackademy --account_number %s.",
             logger_prefix,
             STACKADEMY_API_CONNECTION_NAME,
+            smarter_cached_objects.smarter_account.account_number,
         )
         return None
     return connection.api_key.get_secret(update_last_accessed=False)
