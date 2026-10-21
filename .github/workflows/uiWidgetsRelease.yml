@@ -1,6 +1,6 @@
 ---
 #------------------------------------------------------------------------------
-# Publish @smarter.sh/ui-widgets (smarter/react/packages/smarter-widgets) to
+# Publish @smarter.sh/ui-widgets (smarter/react/packages/smarter.sh-widgets) to
 # npm, when semantic-release publishes a GitHub release (pushMain.yml), or by
 # hand for such a release's tag.
 #
@@ -91,7 +91,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: 25
+          node-version: 24
           cache: npm
           cache-dependency-path: smarter/react/package-lock.json
 
@@ -106,7 +106,7 @@ jobs:
 
       - name: Unit tests
         working-directory: smarter/react
-        run: npx vitest run --project smarter-widgets
+        run: npx vitest run --project smarter.sh-widgets
 
       - name: Build and check
         working-directory: smarter/react
@@ -119,7 +119,7 @@ jobs:
       # npm pkg set only edits package.json. npm version would also update the
       # workspace, where the dashboard depends on the committed version.
       - name: Set the package's version
-        working-directory: smarter/react/packages/smarter-widgets
+        working-directory: smarter/react/packages/smarter.sh-widgets
         run: npm pkg set version="${{ steps.version.outputs.version }}"
 
       # Trusted publishing needs npm 11.5.1 or later.
@@ -128,7 +128,7 @@ jobs:
 
       # --ignore-scripts: publish the dist/ that was just checked.
       - name: Publish to npm
-        working-directory: smarter/react/packages/smarter-widgets
+        working-directory: smarter/react/packages/smarter.sh-widgets
         run: npm publish --ignore-scripts --access public --provenance --tag "${{ steps.version.outputs.dist_tag }}"
 
       - name: Summary

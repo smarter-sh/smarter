@@ -21,7 +21,7 @@ include .env
 
 # Smarter Chat, the React app of the LLMClient prompt workbench, is a package of the React
 # workspace, published to npm as @smarter.sh/ui-chat.
-SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
+SMARTER_CHAT_DIR := smarter/react/packages/smarter.sh-chat
 
 
 .PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \

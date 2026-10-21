@@ -120,7 +120,7 @@ gettext("Rename: Rename this authtoken resource");
 gettext("Delete: You can't delete this authtoken, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this authtoken resource");
-// Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+// Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Budgets");
 // Translators: used in react/packages/smarter-budget-list/src/App.tsx
 gettext("A Budget is a set of spending limits, in USD or in tokens, per hour, day, week or month, and in total. It is enforced on each of the resources it is attached to: users, accounts, LLMClients, Providers, Proxies, LLMHost computes, plugins and more. When a resource's spending reaches a limit, its requests are refused with the budget's message, for example in the chat window, until the billing period renews. Superusers manage budgets with Budget manifests.");
@@ -294,7 +294,7 @@ gettext("Delete: Delete this connection resource");
 gettext("Your Custom Domains");
 // Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
 gettext("Shared Custom Domains");
-// Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+// Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Custom Domains");
 // Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
 gettext("A Custom Domain serves an LLMClient from your own branded domain name, rather than from the platform's default domain. Like any other Smarter resource, a Custom Domain is defined and managed through a standard SAM manifest, and can be shared with your account. Deploying it registers the domain in an AWS Route53 hosted zone, and it is verified once you have added its NS records to your root domain's DNS settings. An LLMClient uses it with its spec.customDomain.");
@@ -422,7 +422,7 @@ gettext("Dashboard");
 gettext("Download Npm");
 // Translators: used in react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx
 gettext("React Chat component on NPM");
-// Translators: used in react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-widgets/src/components/Cli/Component.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
 gettext("Download");
 // Translators: used in react/packages/smarter-dashboard/src/components/GettingStarted/Component.tsx
 gettext("Getting Started");
@@ -442,7 +442,7 @@ gettext("Secrets");
 gettext("VectorStores");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx
 gettext("LLMHosts");
-// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter-widgets/src/components/Extensions/Component.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Extensions");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, react/packages/smarter-dashboard-user-menu/src/lib/api.ts, react/packages/smarter-welcome/src/App.tsx
 gettext("Request failed: %(status)s");
@@ -458,7 +458,7 @@ gettext("You have");
 gettext("%(my_resources_pending_deployments)s pending");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
 gettext("LLM Clients");
-// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-widgets/src/components/McpServer/Component.tsx
+// Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
 gettext("Tools");
 // Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 gettext("MCPClients");
@@ -771,7 +771,7 @@ gettext("This extension has no documentation.");
 gettext("Extensions are Python packages that add tools to the LLMs of this platform. Install them from the signed Smarter Extension registry, or upload an archive, then configure and enable them. An extension's code runs with full access to the platform: install only extensions whose publisher you trust.");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx
 gettext("Installed");
-// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-widgets/src/components/Extensions/Component.tsx
+// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
 gettext("Browse the registry");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 gettext("Extension archive");
@@ -845,7 +845,7 @@ gettext("By %(publisher)s");
 gettext("homepage");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 gettext("Install this version");
-// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
+// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 gettext("Install");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
 gettext("Overview");
@@ -2406,7 +2406,7 @@ gettext("Support email");
 gettext("Default");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 gettext("Featured");
-// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx, react/packages/smarter-widgets/src/components/Extensions/Component.tsx
+// Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
 gettext("Official");
 // Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx
 gettext("Flagged");
@@ -2603,7 +2603,7 @@ gettext("Delete: Delete this provider resource");
 gettext("Your Proxies");
 // Translators: used in react/packages/smarter-proxy-list/src/App.tsx
 gettext("Shared Proxies");
-// Translators: used in react/packages/smarter-proxy-list/src/App.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+// Translators: used in react/packages/smarter-proxy-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Proxies");
 // Translators: used in react/packages/smarter-proxy-list/src/App.tsx
 gettext("A Proxy gives passthrough access to an LLM provider's API, e.g. OpenAI's or Anthropic's, with an API key that Smarter keeps as a Secret. Use the provider's own SDK, with the Proxy's URL as its base URL and a Smarter API key in place of the provider's: requests and responses pass through unchanged, the provider's API key is never exposed, and token usage is charged to your account.");
@@ -3186,279 +3186,6 @@ gettext("Deploying an LLMClient gives it its own host name, with a TLS certifica
 gettext("Where to start");
 // Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
 gettext("A few good first stops on your journey:");
-// Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-gettext("or apt, choco, docker");
-// Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-gettext("CLI");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-gettext("Smarter %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-gettext("CLI%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-gettext("Powerful tools for managing your AI resources.");
-// Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-gettext("Example CLI session");
-// Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx, react/packages/smarter-widgets/src/components/McpServer/Component.tsx, react/packages/smarter-widgets/src/components/Sdk/Component.tsx, react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Documentation");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Fix a bug");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Improve the docs");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Write a test");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Build an extension");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Latest Release");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("GitHub Stars");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("GitHub Forks");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Contribute");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Contribute to %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Smarter%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Start small, learn by doing, and help improve Smarter while you discover how real Python projects work.");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Ways to help");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Contributing guide");
-// Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-gettext("Open issues");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Current weather and a 24-hour forecast for any location.");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Evaluates math expressions exactly, so that LLMs don't guess.");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Date arithmetic: differences, adding and subtracting days.");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Install, signature-checked");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Enable, then list it in a manifest");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("New in 0.27");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Add tools with %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Extensions%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Python packages that give your LLMs new tools, installed from the signed Smarter Extension registry without a redeploy.");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("How extensions work");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Build one →");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("Official extensions");
-// Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-gettext("An LLMClient manifest that uses an extension");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("course designs");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("micro courses");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("master classes");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("license fees");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Prompt Engineering");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Building AI Applications");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Agentic Development");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Django Master Class");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("The Economics of AI");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("AI Governance");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("API Design");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Backend Development");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("AI Application Development Master Class");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Extension Development");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Front End Development");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Full Stack Development");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Infrastructure as Code");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Open Source Participation");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Secure Software");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Self-Hosting Open Models");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Software Architecture");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Software Quality");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Documentation with Sphinx");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("classroom bootcamp");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("online course");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Instructors");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Free for instructors");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Teach AI with a %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("real platform%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Ready-to-teach course designs, from prompt engineering for non-programmers to Kubernetes for platform engineers, with schedules, graded assignments, rubrics and capstone projects.");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Free courses");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Every micro course, three ways");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Browse the free courses");
-// Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-gettext("Instructor Guide");
-// Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-gettext("Integrations");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-gettext("Put your chatbot %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-gettext("everywhere%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-gettext("Add Smarter Chat to the sites your users already visit, with one setting.");
-// Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-gettext("Embedding guide");
-// Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-gettext("Integrations source code");
-// Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx, react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-gettext("GitHub");
-// Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-gettext("MCP Server");
-// Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-gettext("Smarter MCP Server");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-gettext("Ask your %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-gettext("AI assistant%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-gettext("This platform answers questions about itself from its own code and docs, for any MCP client.");
-// Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-gettext("Add this platform's MCP server to Claude Code");
-// Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-gettext("SDK");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-gettext("Build with the %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-gettext("SDKs%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-gettext("Typed access to your Smarter resources, in the language you already use.");
-// Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-gettext("API reference");
-// Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-gettext("SDK source code");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Your laptop");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Quick Start with Docker Compose");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Your cluster");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("The official Helm chart");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Your AWS cloud");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("The official Terraform modules");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Self Host");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Self-host Smarter");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Run it %(span)s");
-// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("anywhere%(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("The same open source platform, from your laptop to production. No license fees, no seat counts.");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Installation Guide");
-// Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-gettext("Open source · AGPL-3.0");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Validation as you type");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Quick fixes for misspelled keys");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Completion and hover help");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Apply and deploy from the editor");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("VS Code Extension");
-// Translators: a headline. %(span)s is its highlighted last words, translated separately.
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Get the %(span)s");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Write Smarter manifests with the same validation that %(code)s uses, before you apply them.");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Features");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Installs");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("Example manifest with a validation problem");
-// Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("secret.yaml");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Install signed, third-party LLM tools from the Smarter Extension registry");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Answers about The Smarter Project, from its own code and docs, for any MCP client");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("An OpenAPI document and JSON Schemas for the Smarter api, served by every platform");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Themable Chat");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Brand your LLMClient's chat with your own logo, colors, fonts and avatar");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Let LLMs find and show images from the web");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Infrastructure Manager");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Manage and monitor your cloud infrastructure from the web console");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Serve LLMClients from your own branded domain, managed with a SAM manifest");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Manifest Editor");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Edit, validate, save, clone and delete manifests in the web console");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Enforce spending limits on any resource, with budget vs actual charts");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Run open-weight LLMs on your own Kubernetes cluster");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("What's New");
-// Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-gettext("Recently added Smarter features");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
 gettext("Hide the Console");
 // Translators: used in react/packages/smarter-workbench/src/App.tsx
@@ -3566,6 +3293,279 @@ gettext("Now try it yourself");
 gettext("Ask the LLMClient a question, then look at the Console's Tool Calls and Server Logs tabs to see what happened. The Help menu has links to the documentation, and takes you on this tour again at any time.");
 // Translators: used in react/packages/smarter-workbench/src/lib/layout.ts
 gettext("Resize the chat and the Console");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+gettext("or apt, choco, docker");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+gettext("CLI");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+gettext("Smarter %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+gettext("CLI%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+gettext("Powerful tools for managing your AI resources.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+gettext("Example CLI session");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Documentation");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Fix a bug");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Improve the docs");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Write a test");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Build an extension");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Latest Release");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("GitHub Stars");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("GitHub Forks");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Contribute");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Contribute to %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Smarter%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Start small, learn by doing, and help improve Smarter while you discover how real Python projects work.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Ways to help");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Contributing guide");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+gettext("Open issues");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Current weather and a 24-hour forecast for any location.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Evaluates math expressions exactly, so that LLMs don't guess.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Date arithmetic: differences, adding and subtracting days.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Install, signature-checked");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Enable, then list it in a manifest");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("New in 0.27");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Add tools with %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Extensions%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Python packages that give your LLMs new tools, installed from the signed Smarter Extension registry without a redeploy.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("How extensions work");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Build one →");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("Official extensions");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+gettext("An LLMClient manifest that uses an extension");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("course designs");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("micro courses");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("master classes");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("license fees");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Prompt Engineering");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Building AI Applications");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Agentic Development");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Django Master Class");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("The Economics of AI");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("AI Governance");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("API Design");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Backend Development");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("AI Application Development Master Class");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Extension Development");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Front End Development");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Full Stack Development");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Infrastructure as Code");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Open Source Participation");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Secure Software");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Self-Hosting Open Models");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Software Architecture");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Software Quality");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Documentation with Sphinx");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("classroom bootcamp");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("online course");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Instructors");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Free for instructors");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Teach AI with a %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("real platform%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Ready-to-teach course designs, from prompt engineering for non-programmers to Kubernetes for platform engineers, with schedules, graded assignments, rubrics and capstone projects.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Free courses");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Every micro course, three ways");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Browse the free courses");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+gettext("Instructor Guide");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+gettext("Integrations");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+gettext("Put your chatbot %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+gettext("everywhere%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+gettext("Add Smarter Chat to the sites your users already visit, with one setting.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+gettext("Embedding guide");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+gettext("Integrations source code");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+gettext("GitHub");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+gettext("MCP Server");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+gettext("Smarter MCP Server");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+gettext("Ask your %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+gettext("AI assistant%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+gettext("This platform answers questions about itself from its own code and docs, for any MCP client.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+gettext("Add this platform's MCP server to Claude Code");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+gettext("SDK");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+gettext("Build with the %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+gettext("SDKs%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+gettext("Typed access to your Smarter resources, in the language you already use.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+gettext("API reference");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+gettext("SDK source code");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Your laptop");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Quick Start with Docker Compose");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Your cluster");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("The official Helm chart");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Your AWS cloud");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("The official Terraform modules");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Self Host");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Self-host Smarter");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Run it %(span)s");
+// Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("anywhere%(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("The same open source platform, from your laptop to production. No license fees, no seat counts.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Installation Guide");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+gettext("Open source · AGPL-3.0");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Validation as you type");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Quick fixes for misspelled keys");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Completion and hover help");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Apply and deploy from the editor");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("VS Code Extension");
+// Translators: a headline. %(span)s is its highlighted last words, translated separately.
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Get the %(span)s");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Write Smarter manifests with the same validation that %(code)s uses, before you apply them.");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Features");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Installs");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("Example manifest with a validation problem");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("secret.yaml");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Install signed, third-party LLM tools from the Smarter Extension registry");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Answers about The Smarter Project, from its own code and docs, for any MCP client");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("An OpenAPI document and JSON Schemas for the Smarter api, served by every platform");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Themable Chat");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Brand your LLMClient's chat with your own logo, colors, fonts and avatar");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Let LLMs find and show images from the web");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Infrastructure Manager");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Manage and monitor your cloud infrastructure from the web console");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Serve LLMClients from your own branded domain, managed with a SAM manifest");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Manifest Editor");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Edit, validate, save, clone and delete manifests in the web console");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Enforce spending limits on any resource, with budget vs actual charts");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Run open-weight LLMs on your own Kubernetes cluster");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("What's New");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Recently added Smarter features");
 // Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/sign-in.js
 gettext("The password is required");
 // Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js

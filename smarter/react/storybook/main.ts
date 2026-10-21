@@ -26,7 +26,7 @@ const WORKSPACE = path.resolve(HERE, "..");
 const COMMON_SRC = path.join(WORKSPACE, "packages", "smarter-common", "src", "index.tsx");
 const DIDYOUKNOW_SRC = path.join(WORKSPACE, "packages", "smarter-didyouknow", "src", "index.tsx");
 const ONBOARDING_SRC = path.join(WORKSPACE, "packages", "smarter-onboarding", "src", "index.tsx");
-const WIDGETS_SRC = path.join(WORKSPACE, "packages", "smarter-widgets", "src", "index.tsx");
+const WIDGETS_SRC = path.join(WORKSPACE, "packages", "smarter.sh-widgets", "src", "index.tsx");
 
 /** The package build plugins that must not run in Storybook. See each package's vite.config.ts. */
 const BUILD_ONLY_PLUGINS = new Set(["post-build", "add-custom-manifest-data"]);

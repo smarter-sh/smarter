@@ -4,8 +4,7 @@ The Prompt Engineer's Workbench of the Smarter web console, at
 `/workbench/llm-clients/<hashed_id>/prompt/`: the chat with an LLMClient, and the developer Console beside it.
 
 - **The chat** is `SmarterChat`, from the `@smarter.sh/ui-chat` npm package
-  ([smarter-sh/smarter-chat](https://github.com/smarter-sh/smarter-chat), which `make react-install` clones into
-  `packages/smarter-chat`). The workbench imports its built library, `dist/`, as any React application does, and
+  (`packages/smarter.sh-chat` in this workspace). The workbench imports its built library, `dist/`, as any React application does, and
   follows it with its `verbose`, `reloadKey`, `headerActions`, `onConfig`, `onNewChat` and `onModeChange` props.
 - **The Console** has six tabs, in the order of a prompt engineer's work: Manifest (the `@smarter/manifest-editor`
   component), Architecture (the `@smarter/llmclient-architecture` component: the tree of the SAM resources that the

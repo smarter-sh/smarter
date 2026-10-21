@@ -182,6 +182,9 @@ reference implementations.
 | Adding or changing a SAM resource (manifest, broker, kind)       | `smarter-sam-resource`                 |
 | A web console list page, or any Django-hosted React app          | `smarter-django-react`                 |
 | React stories, tests, ESLint, Prettier                           | `smarter-react-testing`                |
+| Smarter Chat (`@smarter.sh/ui-chat`), the chat UI of LLMClients  | `smarter-chat-development`             |
+| Smarter Chat's tests, stories, coverage and `check:dist`         | `smarter-chat-testing`                 |
+| Smarter Chat's embed script, its options and the integrations    | `smarter-chat-embed`                   |
 | Python unit tests and coverage                                   | `smarter-python-testing`               |
 | Syncing code into the Docker containers, running anything there  | `smarter-docker-environment`           |
 | Code that calls Kubernetes, AWS, Route53, ACM, or Celery         | `smarter-infrastructure-safety`        |
