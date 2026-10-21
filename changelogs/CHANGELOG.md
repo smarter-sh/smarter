@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.3...v0.36.0-alpha.4) (2026-10-21)
+
+### Bug Fixes
+
+* **mcpserver:** stop indexing the archived smarter-chat repository ([2790aad](https://github.com/smarter-sh/smarter/commit/2790aad26fb55e32cc58b61aa14b93c7d3494cbc))
+
+### Refactoring
+
+* **react:** rename the npm packages' folders to smarter.sh-* ([1889899](https://github.com/smarter-sh/smarter/commit/1889899da885511db3f3a43fe25f219b6bafb21e))
+
 ## [0.36.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.2...v0.36.0-alpha.3) (2026-10-21)
 
 ### Bug Fixes
