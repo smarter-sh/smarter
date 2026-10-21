@@ -79,7 +79,8 @@ def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request:
     else:
         url = "missing request object"
 
-    logger.info(
+    # DEBUG, not INFO: the session's string form includes its session_key.
+    logger.debug(
         "%s by %s %s - %s", formatted_text(f"{prefix}.prompt_session_invoked"), get_sender_name(sender), instance, url
     )
 

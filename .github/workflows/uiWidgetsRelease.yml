@@ -100,10 +100,13 @@ jobs:
         working-directory: smarter/react
         run: npm ci --include=dev
 
-      # The library bundles @smarter/common's gettext(), from its build.
-      - name: Build @smarter/common
+      # The library bundles @smarter/common's gettext() and @smarter/didyouknow's
+      # facts, from their builds.
+      - name: Build @smarter/common and @smarter/didyouknow
         working-directory: smarter/react
-        run: npm run build --workspace=@smarter/common
+        run: |
+          npm run build --workspace=@smarter/common
+          npm run build:lib --workspace=@smarter/didyouknow
 
       - name: Unit tests
         working-directory: smarter/react
