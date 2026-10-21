@@ -6,3 +6,5 @@ broked
 assertIn
 iif
 afterall
+# Spanish for 'manifest', in Smarter Chat's tests that assert its Spanish messages.
+manifiesto

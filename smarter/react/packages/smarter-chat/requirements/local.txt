@@ -1,0 +1,5 @@
+# Code linters, formatters, and scanners, for pre-commit. The same versions as
+# https://github.com/smarter-sh/smarter's smarter/requirements/local.txt.
+# ------------
+pre-commit==4.6.2
+codespell==2.4.3

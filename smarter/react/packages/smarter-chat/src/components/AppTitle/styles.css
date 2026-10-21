@@ -1,0 +1,14 @@
+.smarter-chat-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.smarter-chat-title-icon {
+  width: 1em;
+  height: 1em;
+}
+
+.smarter-chat-title-sandbox {
+  color: brown;
+}

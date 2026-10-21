@@ -1,0 +1,21 @@
+/* math in markdown messages, typeset by KaTeX, whose own css is katex.min.css. See math.ts. */
+
+/* a display equation: centered on a line of its own, and scrolling sideways, as code blocks do,
+   rather than overflowing its chat bubble when it is wider. */
+div.cs-message__html-content .katex-display {
+  max-width: 100%;
+  margin: 0.4em 0 0.6em;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2em 0;
+}
+
+div.cs-message__html-content .katex-display:last-child {
+  margin-bottom: 0;
+}
+
+/* LaTeX that KaTeX could not typeset, e.g. while a response is still streaming, is its source. */
+div.cs-message__html-content .katex-error {
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
