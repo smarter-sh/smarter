@@ -225,8 +225,5 @@ class Command(SmarterCommand):
             logger.error("Failed to sync the infrastructure inventory: %s", e)
 
         if fatal:
-            self.handle_completed_failure(
-                err=CommandError(f"initialize_platform completed, but these steps failed: {', '.join(fatal)}")
-            )
-            return
+            raise CommandError(f"initialize_platform completed, but these steps failed: {', '.join(fatal)}")
         self.handle_completed_success()

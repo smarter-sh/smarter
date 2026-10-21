@@ -4,7 +4,7 @@
  * resources that every platform has: the built-in Guardrails, the sample plugins, the example MCPClients and the
  * official Extensions, which `manage.py initialize_platform` adds.
  */
-import { PLUGIN_KINDS } from "./kinds";
+import { PLUGIN_KINDS } from "@smarter.sh/ui-widgets";
 import type { SAMDependencyTreeNode } from "./types";
 
 /** The kinds that give an LLMClient tools: its plugins, Extensions and MCPClients. */

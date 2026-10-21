@@ -90,7 +90,7 @@ Copy the closest existing list package, then rename it everywhere.
 
 1. `cp -R smarter/react/packages/smarter-guardrail-list smarter/react/packages/smarter-<kind>-list`
    (without `node_modules`, `dist`, `CHANGELOG.md`, or `.DS_Store`).
-2. Rename it in `package.json` (`name` and `description`),
+2. Rename it in `package.json` (`name` and `description`; keep `"private": true`),
    `index.html`, `main.tsx` (the root id, the API URL attribute, and its error
    messages), `lib/const.tsx`, and `README.md`.
 3. Replace the `Types.tsx` object type, and the table columns and card fields,
@@ -124,9 +124,10 @@ package's `src/`, so a package whose source another package imports follows thes
   use are exported as a subpath, e.g. `"./mocks"` in `smarter-llmclient-deployment`.
 - **A component that was a page takes callbacks** in place of whatever it did to its page or a
   framing page, e.g. the manifest editor's `onSaved` and `onDeleted`.
-- **Smarter Chat is the exception.** It is its own repository, with `@/` imports, so the workbench
-  imports its built library (`packages/smarter-chat/dist/`), as npm users do. `npm run build:deps`
-  builds it and `@smarter/common`; `make react-test`, `make react-lint` and CI run it first.
+- **Smarter Chat is the exception.** It is a published npm library (`@smarter.sh/ui-chat`), with
+  `@/` imports, so the workbench imports its built library (`packages/smarter.sh-chat/dist/`), as
+  npm users do. `npm run build:deps` builds it and `@smarter/common`; `make react-test`,
+  `make react-lint` and CI run it first.
 
 Don't frame a console page in an iframe to reuse it: export its component instead.
 

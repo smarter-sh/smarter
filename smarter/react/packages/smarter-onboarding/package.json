@@ -1,5 +1,6 @@
 {
   "name": "@smarter/onboarding",
+  "private": true,
   "description": "The web console's onboarding hints: a sparkling spotlight on one element with a short note, and a guided tour anchored to a page's elements, and the api that records which hints a user has seen.",
   "version": "0.1.0",
   "type": "module",

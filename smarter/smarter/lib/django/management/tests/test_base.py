@@ -1,6 +1,9 @@
 """Test :class:`smarter.lib.django.management.base.SmarterCommand`."""
 
+from io import StringIO
 from unittest.mock import patch
+
+from django.core.management.base import CommandError, OutputWrapper
 
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -44,3 +47,29 @@ class TestSmarterCommand(SmarterTestBase):
     def test_handle(self):
         with self.assertRaises(NotImplementedError):
             self.command.handle()
+
+    def test_run_from_argv_reports_an_unexpected_error_without_a_stack_trace(self):
+        """Test that an unexpected error prints one line, and exits with status 1."""
+        err = StringIO()
+        self.command.stderr = OutputWrapper(err)
+        with patch.object(SmarterCommand, "handle", side_effect=ValueError("bad value")):
+            with self.assertRaises(SystemExit) as context:
+                self.command.run_from_argv(["manage.py", "a_command"])
+        self.assertEqual(context.exception.code, 1)
+        self.assertIn("ValueError: bad value", err.getvalue())
+        self.assertNotIn("Traceback", err.getvalue())
+
+    def test_run_from_argv_with_traceback_raises(self):
+        with patch.object(SmarterCommand, "handle", side_effect=ValueError("bad value")):
+            with self.assertRaises(ValueError):
+                self.command.run_from_argv(["manage.py", "a_command", "--traceback"])
+
+    def test_run_from_argv_leaves_command_errors_to_django(self):
+        """Test that a CommandError is still Django's to print, as one line with status 1."""
+        err = StringIO()
+        self.command.stderr = OutputWrapper(err)
+        with patch.object(SmarterCommand, "handle", side_effect=CommandError("no such thing")):
+            with self.assertRaises(SystemExit) as context:
+                self.command.run_from_argv(["manage.py", "a_command"])
+        self.assertEqual(context.exception.code, 1)
+        self.assertIn("CommandError: no such thing", err.getvalue())

@@ -1,5 +1,6 @@
 {
   "name": "@smarter/drop-zone",
+  "private": true,
   "description": "React-based manifest drop-zone for the Smarter web console.",
   "version": "0.2.0",
   "type": "module",

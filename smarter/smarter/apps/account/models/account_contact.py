@@ -38,8 +38,10 @@ Example
 from typing import Optional
 
 # django stuff
+from django.conf import settings
 from django.db import models
 from django.template.loader import render_to_string
+from django.utils import translation
 
 # our stuff
 from smarter.apps.infrastructure.services import infrastructure
@@ -51,6 +53,18 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .account import Account, welcome_email_context
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
+
+
+def welcome_email_languages() -> list[str]:
+    """
+    Return the language codes in which the welcome email can be sent.
+
+    These are the codes of ``settings.LANGUAGES``, e.g. ``en``, ``es``, ``fr`` and ``pt-br``.
+    The ``--language`` option of the management commands that send the welcome email offers them.
+
+    :returns: The language codes, in the order of ``settings.LANGUAGES``.
+    """
+    return [code for code, _ in settings.LANGUAGES]
 
 
 class AccountContact(TimestampedModel):
@@ -154,17 +168,35 @@ class AccountContact(TimestampedModel):
             subject=subject, to=self.email, body=body, html=html, from_email=from_email, quiet=self.is_test
         )
 
-    def send_welcome_email(self) -> None:
+    def preferred_language(self) -> str:
+        """
+        Return the language in which this contact is sent emails.
+
+        This is the :attr:`UserProfile.language <smarter.apps.account.models.UserProfile.language>` of the
+        account's user who has the contact's email address, or ``settings.LANGUAGE_CODE`` (English) for a
+        contact who isn't a user of the account.
+
+        :returns: A language code of ``settings.LANGUAGES``, e.g. ``en`` or ``es``.
+        """
+        language = self.account.user_profiles.filter(user__email=self.email).values_list("language", flat=True).first()
+        return language or settings.LANGUAGE_CODE
+
+    def send_welcome_email(self, language: Optional[str] = None) -> None:
         """
         Send a personalized welcome email to this account contact.
 
-        This method renders the welcome email template with the contact's first name and sends it as HTML.
+        This method renders the welcome email template with the contact's first name, in the
+        given language, and sends it as HTML.
 
+        :param language: String or None. A language code of ``settings.LANGUAGES``, e.g. ``es`` or
+            ``pt-br``. Defaults to :meth:`preferred_language`.
         :returns: None
+        :raises SmarterValueError: If the language is not one of ``settings.LANGUAGES``.
 
         .. note::
 
-            The welcome email uses the template at ``account/email/welcome.html``.
+            The welcome email uses the template at ``account/email/welcome.html``, and its
+            translations in the ``django`` message catalogs.
 
         .. tip::
 
@@ -173,16 +205,24 @@ class AccountContact(TimestampedModel):
         **Example usage**::
 
             contact.send_welcome_email()
+            contact.send_welcome_email(language="es")
         """
-        context = welcome_email_context(first_name=self.first_name)
-        html_template = render_to_string("account/email/welcome.html", context)
+        language = language or self.preferred_language()
+        if language not in welcome_email_languages():
+            raise SmarterValueError(
+                f"Unknown language {language}. Choose one of {', '.join(welcome_email_languages())}."
+            )
+        with translation.override(language):
+            context = welcome_email_context(first_name=self.first_name)
+            html_template = render_to_string("account/email/welcome.html", context)
+            subject = translation.gettext("Welcome to Smarter!")
         logger.debug(
-            "%s.send_welcome_email() Sending welcome email to %s",
+            "%s.send_welcome_email() Sending the %s welcome email to %s",
             logging.formatted_text(__name__ + ".AccountContact.send_welcome_email()"),
+            language,
             self.email,
         )
 
-        subject = "Welcome to Smarter!"
         body = html_template
         self.send_email(subject=subject, body=body, html=True)
 
@@ -302,7 +342,7 @@ class AccountContact(TimestampedModel):
                 account,
             )
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, language: Optional[str] = None, **kwargs):
         """
         Save the AccountContact instance, enforcing primary contact uniqueness and sending a welcome email if needed.
 
@@ -310,6 +350,8 @@ class AccountContact(TimestampedModel):
         been welcomed, a welcome email is sent and the `welcomed` flag is updated.
 
         :param args: Positional arguments passed to the parent save method.
+        :param language: String or None. The language of the welcome email, if one is sent. Defaults to
+            :meth:`preferred_language`. See :meth:`send_welcome_email`.
         :param kwargs: Keyword arguments passed to the parent save method.
 
         .. attention::
@@ -339,7 +381,7 @@ class AccountContact(TimestampedModel):
 
         super().save(*args, **kwargs)
         if not self.welcomed:
-            self.send_welcome_email()
+            self.send_welcome_email(language=language)
             self.welcomed = True
             self.save()
 
