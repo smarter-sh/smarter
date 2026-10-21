@@ -37,10 +37,11 @@
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/smarter-sh/smarter-chat.git"
+    "url": "git+https://github.com/smarter-sh/smarter.git",
+    "directory": "smarter/react/packages/smarter-chat"
   },
   "bugs": {
-    "url": "https://github.com/smarter-sh/smarter-chat/issues"
+    "url": "https://github.com/smarter-sh/smarter/issues"
   },
   "contributors": [
     "Lawrence McDaniel <lpm0073@gmail.com> (https://lawrencemcdaniel.com/)"
