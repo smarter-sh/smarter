@@ -4,7 +4,6 @@
 import os
 
 from smarter.apps.api.utils import apply_manifest
-from smarter.apps.secret.const import DATA_PATH as SECRET_DATA_PATH
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -13,8 +12,10 @@ from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 logger = logging.getLogger(__name__)
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+"""This test package's data folder, which holds the Secret manifests of the Stackademy test database."""
 MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD = os.path.abspath(
-    os.path.join(SECRET_DATA_PATH, "stackademy", "secret-smarter-test-db.yaml")
+    os.path.join(TEST_DATA_PATH, "secret-smarter-test-db.yaml")
 )
 """
 Path to the Secret manifest file 'secret-smarter-test-db.yaml' which.
@@ -23,7 +24,7 @@ contains the actual password value for the remote test database.
 """
 
 MANIFEST_PATH_SECRET_PROXY_PASSWORD = os.path.abspath(
-    os.path.join(SECRET_DATA_PATH, "stackademy", "secret-smarter-test-db-proxy-password.yaml")
+    os.path.join(TEST_DATA_PATH, "secret-smarter-test-db-proxy-password.yaml")
 )
 """
 Path to the Secret manifest file 'secret-smarter-test-db-proxy-password.yaml' which.

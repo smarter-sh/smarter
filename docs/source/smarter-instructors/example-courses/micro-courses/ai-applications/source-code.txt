@@ -33,10 +33,11 @@ Applications to Take Apart
      - `llmclient-data-analyst.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-data-analyst.yaml>`__,
        `skill-sql-analyst.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/skill-sql-analyst.yaml>`__
    * - Stackademy
-     - A fictional university's course catalog, served two ways: by a SQL Plugin over a database,
-       and by an API Plugin over a REST API, each with its own LLMClient.
-     - `llmtool/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/stackademy>`__,
-       `llmclient/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/stackademy>`__
+     - A fictional online code academy's course catalog, served two ways: by a SQL Plugin over a
+       database, and by an API Plugin over a REST API, each with its own LLMClient. Its manifests are
+       a project of their own, managed with git and GitHub.
+       :doc:`/smarter-framework/smarter-manifests/stackademy`.
+     - `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__
 
 Knowledge and Data
 ~~~~~~~~~~~~~~~~~~
@@ -66,13 +67,13 @@ Knowledge and Data
      - A SQL Plugin runs a fixed query written by a person. The model can only supply its
        parameters, with types, descriptions and allowed values, so it never writes SQL that
        runs. :doc:`/smarter-resources/llmtool/plugin/sql`.
-     - `stackademy-plugin-sql.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__,
+     - `stackademy/plugins/sql/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/plugins/sql/stackademy-sql.yaml>`__,
        `llmtool/plugin/sql.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/sql.py>`__
    * - Connections and credentials
      - A Connection names the database or API, and its password is the name of a Secret, so
        neither the model nor the plugin's author ever sees it.
        :doc:`/smarter-resources/smarter-connection`.
-     - `connection/data/stackademy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/connection/data/stackademy>`__
+     - `stackademy/connections/ <https://github.com/smarter-sh/stackademy/tree/main/connections>`__
 
 Action and Orchestration
 ~~~~~~~~~~~~~~~~~~~~~~~~

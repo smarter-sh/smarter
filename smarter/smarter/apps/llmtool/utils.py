@@ -40,10 +40,9 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
 
     .. note::
 
-        - None of the examples needs a Secret or a Connection. The Stackademy Secrets and Connections,
-          whose names are fixed, are applied by ``manage.py add_example_secrets`` and
-          ``add_example_connections``, which run before ``manage.py add_example_tools`` calls this
-          function, in every deployment job.
+        - None of the examples needs a Secret or a Connection. The Stackademy plugins, which do, are
+          applied with their Secrets and Connections by ``manage.py load_from_github``, from
+          https://github.com/smarter-sh/stackademy.
         - This function is called during deployment jobs.
 
     .. important::

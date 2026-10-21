@@ -8,25 +8,15 @@ A Plugin that uses a remote REST API server to retrieve its return data.
     1. Smarter Secret: The authentication credential for the remote API connection.
     2. Smarter API Connection: The complete connection configuration to the remote REST API server (base url, authentication method, api key, timeout, proxy, etc.).
     3. Smarter API Plugin: The plugin that defines the API endpoint, HTTP method, headers, body and parameters to send to the remote REST API server.
-    4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the API Plugin:
+    4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the API Plugin.
 
-.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+The Stackademy example project's API Plugin is built from these four resources. Their manifests are in
+the `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__ repository:
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/secret/data/stackademy/secret-smarter-test-api.yaml
-    :language: yaml
-    :caption: 1.) Example Smarter Secret Manifest
-
-.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/stackademy/smarter-test-api.yaml.tpl
-    :language: yaml
-    :caption: 2.) Example Smarter API Connection Manifest
-
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-api.yaml
-    :language: yaml
-    :caption: 3.) Example Stackademy API Plugin Manifest
-
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-api.yaml
-    :language: yaml
-    :caption: 4.) Example Stackademy LLMClient Manifest
+- `secrets/smarter-test-api.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/smarter-test-api.yaml>`__
+- `connections/api/smarter-test-api.yaml.tpl <https://github.com/smarter-sh/stackademy/blob/main/connections/api/smarter-test-api.yaml.tpl>`__
+- `plugins/api/stackademy-api.yaml <https://github.com/smarter-sh/stackademy/blob/main/plugins/api/stackademy-api.yaml>`__
+- `llm-clients/stackademy-api.yaml <https://github.com/smarter-sh/stackademy/blob/main/llm-clients/stackademy-api.yaml>`__
 """
 
 import re
