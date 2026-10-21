@@ -84,6 +84,15 @@ def should_log(level):
 
 
 OPENAI_TOOL_CHOICE = "auto"
+
+MAX_TOOL_ROUNDS = 4
+"""
+The most requests of one prompt that offer the LLM its tools.
+
+An LLM often needs more than one round of tool calls, e.g. a forecast, and then an image search
+with the forecast's place, or one calculation after another. After this many requests with tools,
+the LLM is sent the tool results without tools, so that it answers.
+"""
 REASONING_EFFORT_NONE = "none"
 
 TOOLS_REQUIRE_NO_REASONING_MODELS: set[str] = {"gpt-6-luna"}
@@ -542,7 +551,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         logger.debug("%s.handle_response() iteration: %s", self.formatted_class_name, self.iteration)
 
-        response = self.second_response if self.iteration == 2 else self.first_response
+        response = self.second_response if self.iteration >= 2 else self.first_response
         if not response:
             raise SmarterValueError(
                 f"{self.formatted_class_name}.handle_response(): response is required for iteration {self.iteration}, but was not set."
@@ -569,7 +578,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                     f"{self.formatted_class_name}.handle_response(): first_response is required for iteration 1, but was not set."
                 )
             self.first_iteration[_InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
-        if self.iteration == 2:
+        if self.iteration >= 2:
             if not self.second_response:
                 raise SmarterIlligalInvocationError(
                     f"{self.formatted_class_name}.handle_response(): second_response is required for iteration 2, but was not set."
@@ -1152,7 +1161,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def create_first_completion(self, completions_kwargs: SmarterDictType) -> ChatCompletion:
         """
-        Send the first request, which is the only one that offers the LLM tools.
+        Send a request that offers the LLM its tools: the first, and the later rounds of tool calls.
 
         Some reasoning models reject function tools on v1/chat/completions unless reasoning_effort
         is 'none'. Requests with tools set reasoning_effort to 'none' for the models in
@@ -1383,37 +1392,65 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 )
                 self.iteration = 2
                 self.serialized_tool_calls = []
+                tool_rounds = 1
 
-                for tool_call in tool_calls:
-                    self.process_tool_call(tool_call)
+                while True:
+                    for tool_call in tool_calls or []:
+                        self.process_tool_call(tool_call)
 
-                self.prep_second_request()
+                    self.prep_second_request()
 
-                if not isinstance(self.model, str):
-                    raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}: model must be a string, got {type(self.model)}"
-                    )
-                if not isinstance(self.openai_messages, list):
-                    raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}: openai_messages must be a list, got {type(self.openai_messages)}"
-                    )
-                if not isinstance(self.temperature, (float, int)):
-                    raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}: temperature must be a float or int, got {type(self.temperature)}"
-                    )
-                if not isinstance(self.max_completion_tokens, int):
-                    raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}: max_completion_tokens must be an int, got {type(self.max_completion_tokens)}"
-                    )
-                self.second_response = openai.chat.completions.create(
-                    model=self.model,
-                    messages=self.openai_messages,  # type: ignore[call-arg]
-                    temperature=self.temperature,
-                    max_completion_tokens=self.max_completion_tokens,
-                )
-                self.second_response = self.handle_output_guardrails(self.second_response)
-                self.append_openai_response(self.second_response)
-                self.handle_response()
+                    if not isinstance(self.model, str):
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}: model must be a string, got {type(self.model)}"
+                        )
+                    if not isinstance(self.openai_messages, list):
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}: openai_messages must be a list, got {type(self.openai_messages)}"
+                        )
+                    if not isinstance(self.temperature, (float, int)):
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}: temperature must be a float or int, got {type(self.temperature)}"
+                        )
+                    if not isinstance(self.max_completion_tokens, int):
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}: max_completion_tokens must be an int, got {type(self.max_completion_tokens)}"
+                        )
+                    # the LLM may call more tools, e.g. an image search with the place that a
+                    # forecast named, until MAX_TOOL_ROUNDS requests have offered them.
+                    offer_tools = bool(self.tools) and tool_rounds < MAX_TOOL_ROUNDS
+                    completions_kwargs = {
+                        _InternalKeys.MODEL_KEY: self.model,
+                        _InternalKeys.MESSAGES_KEY: self.openai_messages,
+                        _InternalKeys.TEMPERATURE_KEY: self.temperature,
+                        _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
+                    }
+                    if offer_tools:
+                        completions_kwargs[_InternalKeys.TOOLS_KEY] = self.tools
+                        completions_kwargs[_InternalKeys.TOOL_CHOICE] = OPENAI_TOOL_CHOICE
+                        self.second_response = self.create_first_completion(completions_kwargs)
+                    else:
+                        self.second_response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+                    message = self.second_response.choices[0].message if self.second_response.choices else None
+                    if offer_tools and message is not None and message.tool_calls:
+                        # another round: charge and record this response, then answer its tool calls.
+                        self.handle_response()
+                        self.append_openai_response(self.second_response)
+                        tool_calls = message.tool_calls
+                        tool_rounds += 1
+                        self.iteration += 1
+                        logger.debug(
+                            "%s %s - %s more tool calls in round %s",
+                            self.formatted_class_name,
+                            formatted_text("handler()"),
+                            len(tool_calls),
+                            tool_rounds,
+                        )
+                        continue
+                    self.second_response = self.handle_output_guardrails(self.second_response)
+                    self.append_openai_response(self.second_response)
+                    self.handle_response()
+                    break
 
         # an input guardrail blocked the user's message, so the LLM is not called
         except GuardrailBlockedError as blocked:

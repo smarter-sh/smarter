@@ -6,8 +6,9 @@
 #
 # - The package's version is the platform's: the release's tag, without its
 #   v. It is set here, as helmChartRelease.yml sets the Helm chart's, and not
-#   committed: in the workspace, the package stays at the version that the
-#   web console's dashboard depends on.
+#   committed: in the workspace, the package's version is the platform's
+#   placeholder, 9999.9999.9999.dev9999, as in pyproject.toml, which the
+#   web console's apps accept with their dependency, *.
 # - A release from main is published with the latest dist-tag, and one from
 #   another branch, such as next, with the next dist-tag. A prerelease
 #   (0.36.0-alpha.1, 0.36.0-beta.2) is published with its channel's dist-tag,
@@ -117,7 +118,8 @@ jobs:
           npm run check:dist --workspace=@smarter.sh/ui-widgets
 
       # npm pkg set only edits package.json. npm version would also update the
-      # workspace, where the dashboard depends on the committed version.
+      # workspace. The committed version is the platform's placeholder,
+      # 9999.9999.9999.dev9999, which the apps' dependency, *, accepts.
       - name: Set the package's version
         working-directory: smarter/react/packages/smarter.sh-widgets
         run: npm pkg set version="${{ steps.version.outputs.version }}"

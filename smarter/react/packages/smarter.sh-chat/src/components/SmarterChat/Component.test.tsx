@@ -346,6 +346,16 @@ describe("SmarterChat", () => {
     expect(screen.getByRole("link", { name: "the catalogue" })).toHaveAttribute("href", "https://stackademy.edu");
   });
 
+  it("replaces a markdown image that fails to load with its description", async () => {
+    server.use(http.post(CONFIG_URL, () => HttpResponse.json({ data: configWithImages })));
+    render(<SmarterChat {...props} />);
+    const catalogue = await screen.findByRole("img", { name: "the catalogue" });
+    fireEvent.error(catalogue);
+    expect(screen.queryByRole("img", { name: "the catalogue" })).not.toBeInTheDocument();
+    // the link to the image's page stays, with the image's description.
+    expect(screen.getByRole("link", { name: "the catalogue" })).toHaveAttribute("href", "https://stackademy.edu");
+  });
+
   it("applies the LLMClient's styles: its colors, font, logo and avatars", async () => {
     server.use(http.post(CONFIG_URL, () => HttpResponse.json({ data: configWithStyles })));
     render(<SmarterChat {...props} />);

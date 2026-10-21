@@ -135,14 +135,21 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
     def test_post_guards_raise(self):
         for overrides in (
             {"chat_helper": MagicMock(prompt=None)},
-            {"data": None},
-            {"data": "not a dict"},
             {"user": MagicMock()},
             {"user_profile": MagicMock()},
         ):
             with self.subTest(overrides=list(overrides)):
                 with self.assertRaises(SmarterLLMClientException):
                     self.post(**overrides)
+
+    def test_post_without_a_json_body_is_a_bad_request(self):
+        """Test that an empty or non-JSON body is the client's mistake, a 400, and not a server error."""
+        for data in (None, {}, "", "not a dict"):
+            with self.subTest(data=data):
+                response = self.post(data=data)
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                error = json.loads(response.content)["error"]
+                self.assertEqual(error["errorClass"], "PromptChatApiErrorBadRequest")
 
     def test_chat_helper_requires_a_session_or_llmclient(self):
         view = self.view(session_key=None, llmclient=None, smarter_request=None, name=None, user_profile=None)

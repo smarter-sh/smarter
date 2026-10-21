@@ -107,6 +107,11 @@ Tool calling is a multi-step conversation between your application and a model v
 4. Make a second request to the model with the tool output
 5. Receive a final response from the model (or more tool calls)
 
+Smarter repeats steps 2 to 4 while the model asks for more tools, because one answer often needs
+more than one round of calls, e.g. a forecast, then an image search for the place that the forecast
+names. Up to four requests of a prompt offer the model its tools. After the fourth, Smarter sends
+the tool output without tools, so that the model answers. Each request is charged.
+
 .. figure:: https://cdn.smarter.sh/images/function-calling-diagram-steps.png
    :alt: OpenAI API Documentation - Function Calling Diagram Steps
    :width: 100%

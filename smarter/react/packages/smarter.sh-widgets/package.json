@@ -1,7 +1,7 @@
 {
   "name": "@smarter.sh/ui-widgets",
   "description": "Smarter web console dashboard widgets, for the web console and smarter.sh. They are styled for the Keen Bootstrap theme, which the page provides.",
-  "version": "0.1.0",
+  "version": "9999.9999.9999.dev9999",
   "homepage": "https://smarter.sh",
   "type": "module",
   "main": "./dist/ui-widgets.es.js",
