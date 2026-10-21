@@ -28,6 +28,7 @@ from smarter.apps.provider.services.text_completion.lib.internal_keys import (
     _InternalKeys,
 )
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (
+    MAX_TOOL_ROUNDS,
     OpenAISmarterClient,
 )
 
@@ -137,6 +138,55 @@ class TestExtensionPromptIntegration(ExtensionTestMixin):
             m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) for m in provider.messages if m.get("role") == "smarter"
         ]
         self.assertTrue(any("tools of these extensions: echo" in str(m) for m in smarter_messages))
+
+    @staticmethod
+    def echo_call(n: int) -> ChatCompletionMessageToolCall:
+        """Return the LLM's call to the echo extension's tool."""
+        return ChatCompletionMessageToolCall(
+            id=f"call_{n}", type="function", function=Function(name="ext_echo_echo", arguments=f'{{"text": "word{n}"}}')
+        )
+
+    def test_more_than_one_round_of_tool_calls(self):
+        """The LLM is offered its tools again after a round of tool calls, e.g. a forecast and then an image search."""
+        extension = self.enable_echo()
+        LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
+        provider = self.provider()
+        responses = [
+            completion(tool_calls=[self.echo_call(1)]),
+            completion(tool_calls=[self.echo_call(2)]),
+            completion("done"),
+        ]
+        with mock.patch(CREATE_PATCH, side_effect=responses) as create:
+            provider.handler(self.user_profile, self.prompt, self.data("Echo twice."))
+        self.assertEqual(create.call_count, 3)
+        # the second request offers the tools again, and answers the first call.
+        second = create.call_args_list[1].kwargs
+        self.assertIn("tools", second)
+        tool_ids = [
+            m.get("tool_call_id") for m in create.call_args_list[2].kwargs["messages"] if m.get("role") == "tool"
+        ]
+        self.assertEqual(tool_ids, ["call_1", "call_2"])
+        self.assertEqual(len(provider.serialized_tool_calls), 2)  # type: ignore[arg-type]
+        self.assertEqual(provider.second_response.choices[0].message.content, "done")  # type: ignore[union-attr]
+        # every response is charged.
+        charges = [
+            m for m in provider.messages if "prompt charges" in str(m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY))
+        ]
+        self.assertEqual(len(charges), 3)
+
+    def test_tool_rounds_are_limited(self):
+        """After MAX_TOOL_ROUNDS requests with tools, the LLM is sent the results without tools, so that it answers."""
+        extension = self.enable_echo()
+        LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
+        provider = self.provider()
+        responses = [completion(tool_calls=[self.echo_call(n)]) for n in range(MAX_TOOL_ROUNDS)] + [completion("done")]
+        with mock.patch(CREATE_PATCH, side_effect=responses) as create:
+            provider.handler(self.user_profile, self.prompt, self.data("Echo forever."))
+        self.assertEqual(create.call_count, MAX_TOOL_ROUNDS + 1)
+        for call in create.call_args_list[:MAX_TOOL_ROUNDS]:
+            self.assertIn("tools", call.kwargs)
+        self.assertNotIn("tools", create.call_args_list[-1].kwargs)
+        self.assertEqual(provider.second_response.choices[0].message.content, "done")  # type: ignore[union-attr]
 
     def test_disabled_extension_is_reported(self):
         """A disabled extension's tools are not offered, and the user is told why."""

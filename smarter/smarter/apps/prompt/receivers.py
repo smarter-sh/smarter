@@ -315,7 +315,7 @@ def handle_chat_response_failure(
             prompt if prompt else None,
             formatted_json(first_iteration) if first_iteration else None,
         )
-    if iteration == 2 and second_iteration:
+    if iteration >= 2 and second_iteration:
         logger.error(
             "%s %s for prompt: %s, second_iteration: %s",
             formatted_text(f"{prefix}.chat_response_failure"),
