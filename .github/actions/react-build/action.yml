@@ -32,7 +32,7 @@ inputs:
     description: "The version of Node to build with"
     required: false
     type: string
-    default: "25"
+    default: "24"
 outputs:
   cache-hit:
     description: "'true' if the build was restored from cache"
