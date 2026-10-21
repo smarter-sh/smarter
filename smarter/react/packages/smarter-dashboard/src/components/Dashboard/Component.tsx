@@ -41,22 +41,24 @@ import "@/components/Dashboard/styles.css";
 import MyResources from "@/components/MyResources/Component";
 import ServiceHealth from "@/components/ServiceHealth/Component";
 import QuickActions from "@/components/QuickActions/Component";
-import Instructors from "@/components/Instructors/Component";
-import VSCodeExtension from "@/components/VSCodeExtension/Component";
-import Extensions from "@/components/Extensions/Component";
-import McpServer from "@/components/McpServer/Component";
-import WhatsNew from "@/components/WhatsNew/Component";
 import GettingStarted from "@/components/GettingStarted/Component";
 import RecentActivity from "@/components/RecentActivity/Component";
 import BudgetAlerts from "@/components/BudgetAlerts/Component";
-import Sdk from "@/components/Sdk/Component";
-import Integrations from "@/components/Integrations/Component";
-import Cli from "@/components/Cli/Component";
-import SelfHost from "@/components/SelfHost/Component";
-import Contribute from "@/components/Contribute/Component";
 import UserCharges from "@/components/TokenUsage";
 import BudgetVsActual from "@/components/BudgetVsActual";
 import { gettext } from "@smarter/common";
+import {
+  Cli,
+  Contribute,
+  Extensions,
+  Instructors,
+  Integrations,
+  McpServer,
+  Sdk,
+  SelfHost,
+  VSCodeExtension,
+  WhatsNew,
+} from "@smarter.sh/ui-widgets";
 
 function Dashboard({ appContext }: { appContext: AppContextInterface }) {
   return (
