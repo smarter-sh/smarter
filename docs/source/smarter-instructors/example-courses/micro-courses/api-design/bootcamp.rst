@@ -9,7 +9,7 @@ apply, describe and delete every resource from a YAML manifest, resource-style e
 console, API keys of which only a hash is stored, one error format for every failure, and Swagger
 and ReDoc pages generated from the code. Its clients are real and public: the Go `smarter-cli
 <https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
-<https://github.com/smarter-sh/smarter-chat>`__ npm package, whose types are generated from the chat
+<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__ npm package, whose types are generated from the chat
 API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
 tests every request it sends against a pinned copy of the API's OpenAPI document. Students call the API by hand, write a client, review the API
 against a style guide, and design an improvement that does not break existing clients. See

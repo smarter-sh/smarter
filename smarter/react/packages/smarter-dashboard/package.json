@@ -1,5 +1,6 @@
 {
   "name": "@smarter/dashboard",
+  "private": true,
   "description": "React-based dashboard for the Smarter web console.",
   "version": "0.3.0",
   "type": "module",
@@ -16,6 +17,7 @@
   },
   "dependencies": {
     "@smarter/common": "^0.2.0",
+    "@smarter.sh/ui-widgets": "^0.1.0",
     "@monaco-editor/react": "^4.7.0",
     "process": "^0.11.10",
     "react": "^19.3.0",

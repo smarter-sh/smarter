@@ -1,5 +1,6 @@
 {
   "name": "@smarter/llmclient-list",
+  "private": true,
   "description": "A React component library for displaying a list of LLMClients on the Smarter web console.",
   "version": "0.4.0",
   "type": "module",

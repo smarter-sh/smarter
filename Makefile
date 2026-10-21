@@ -19,13 +19,9 @@ ifeq ("$(wildcard .env)","")
 endif
 include .env
 
-# Smarter Chat, the React app of the LLMClient prompt workbench, is managed in its own
-# repository, and is also published to npm as @smarter.sh/ui-chat. react-smarter-chat
-# clones it into the React workspace, which then builds, tests and lints it with the
-# other apps. Override the branch with: make react-install SMARTER_CHAT_BRANCH=alpha
-SMARTER_CHAT_REPO ?= https://github.com/smarter-sh/smarter-chat.git
-SMARTER_CHAT_BRANCH ?= main
-SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
+# Smarter Chat, the React app of the LLMClient prompt workbench, is a package of the React
+# workspace, published to npm as @smarter.sh/ui-chat.
+SMARTER_CHAT_DIR := smarter/react/packages/smarter.sh-chat
 
 
 .PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
@@ -33,7 +29,7 @@ SMARTER_CHAT_DIR := smarter/react/packages/smarter-chat
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
-	react-smarter-chat react-install react-build react-build-ci react-test react-lint react-storybook \
+	react-install react-build react-build-ci react-test react-lint react-storybook \
 	helm-update \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
@@ -342,20 +338,7 @@ python-requirements:
 # ---------------------------------------------------------
 # React
 # ---------------------------------------------------------
-# Clone Smarter Chat into the React workspace, unless it is already there. An existing
-# clone is never changed, so that work in progress in it is safe. Its pre-commit and
-# commit-msg hooks are installed when pre-commit is available (the venv is active).
-react-smarter-chat:
-	@if [ -d "$(SMARTER_CHAT_DIR)/.git" ]; then \
-		echo "$(SMARTER_CHAT_DIR) exists, on branch $$(git -C $(SMARTER_CHAT_DIR) rev-parse --abbrev-ref HEAD)"; \
-	else \
-		git clone --branch $(SMARTER_CHAT_BRANCH) $(SMARTER_CHAT_REPO) $(SMARTER_CHAT_DIR); \
-	fi
-	@if command -v pre-commit >/dev/null 2>&1 && [ ! -f "$(SMARTER_CHAT_DIR)/.git/hooks/commit-msg" ]; then \
-		cd $(SMARTER_CHAT_DIR) && pre-commit install; \
-	fi
-
-react-install: react-smarter-chat
+react-install:
 	cd smarter/react && npm install --include=dev
 
 react-update:
@@ -369,7 +352,7 @@ react-build:
 	make collectstatic
 	make build
 
-react-build-ci: react-smarter-chat
+react-build-ci:
 	cd smarter/react && \
 	NODE_ENV=production npm ci --include=dev && \
 	NODE_ENV=production npm run build
@@ -393,10 +376,10 @@ react-storybook:
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
 # (smarter.apps.prompt.contract.models), in the smarter-app container, and copy the schema into
 # Smarter Chat, which generates its TypeScript types from it. Run it after changing the
-# models, and commit both repositories' changes.
+# models, and commit the changes.
 CHAT_CONTRACT_SCHEMA := smarter/apps/prompt/contract/chat-contract.schema.json
 CHAT_CONTRACT_EXAMPLE := smarter/apps/prompt/contract/chat-contract.example.json
-chat-contract: react-smarter-chat
+chat-contract:
 	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_schema"
 	docker cp smarter-app:/home/smarter_user/smarter/$(CHAT_CONTRACT_SCHEMA) smarter/$(CHAT_CONTRACT_SCHEMA)
 	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_example"
@@ -537,7 +520,6 @@ help:
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
 	@echo 'python-requirements    - Compile and update Python dependency files'
 	@echo '<************************** React **************************>'
-	@echo 'react-smarter-chat     - Clone Smarter Chat into the React workspace (SMARTER_CHAT_BRANCH=main)'
 	@echo 'react-install          - Install npm dependencies for React frontend apps'
 	@echo 'react-build            - Build all React frontend apps and collect static files'
 	@echo 'react-build-ci         - Build all React frontend apps using CI settings'

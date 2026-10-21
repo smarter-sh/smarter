@@ -1,0 +1,13 @@
+# Generated files, which Prettier does not format.
+**/dist/
+**/build/
+**/storybook-static/
+**/coverage/
+**/node_modules/
+package-lock.json
+**/CHANGELOG.md
+.storybook/public/mockServiceWorker.js
+**/*.tgz
+src/contract.gen.ts
+contract/chat-contract.schema.json
+src/catalogs.gen.ts

@@ -1,7 +1,11 @@
 """Test the add_account_contact and delete_account_contact management commands."""
 
+import re
+from unittest.mock import patch
+
+from django.core.management.base import CommandError
+
 from smarter.apps.account.models import AccountContact
-from smarter.common.exceptions import SmarterValueError
 
 from .base import CommandTestBase
 
@@ -34,16 +38,45 @@ class TestAccountContactCommands(CommandTestBase):
 
     def test_errors(self):
         """Test an unknown account, an unknown contact, and no account."""
-        with self.assertRaises(SystemExit):
-            self.run_command("add_account_contact", account_number="0000-0000-0000", email="a@example.com")
-        with self.assertRaises(SystemExit):
-            self.run_command("add_account_contact", company_name="not a company", email="a@example.com")
-        self.run_command("delete_account_contact", account_number="0000-0000-0000", email="a@example.com")
-        self.run_command("delete_account_contact", company_name="not a company", email="a@example.com")
-        self.run_command(
-            "delete_account_contact", account_number=self.account.account_number, email="nobody@example.com"
-        )
         for command in ("add_account_contact", "delete_account_contact"):
-            with self.subTest(command=command):
-                with self.assertRaises(SmarterValueError):
-                    self.run_command(command, email="a@example.com")
+            for options, message in (
+                (
+                    {"account_number": "0000-0000-0000", "email": "a@example.com"},
+                    "There is no account with the account number 0000-0000-0000.",
+                ),
+                (
+                    {"company_name": "not a company", "email": "a@example.com"},
+                    "There is no account with the company name not a company.",
+                ),
+                ({"email": "a@example.com"}, "Provide an --account_number or a --company_name."),
+                ({"account_number": self.account.account_number}, "Provide an --email, or the --username of a user."),
+                (
+                    {"account_number": self.account.account_number, "username": "no_such_user"},
+                    "There is no user with the username no_such_user.",
+                ),
+            ):
+                with self.subTest(command=command, options=options):
+                    with self.assertRaisesRegex(CommandError, re.escape(message)):
+                        self.run_command(command, **options)
+        with self.assertRaisesRegex(CommandError, "nobody@example.com is not a contact of account"):
+            self.run_command(
+                "delete_account_contact", account_number=self.account.account_number, email="nobody@example.com"
+            )
+
+    def test_language(self):
+        """Test that a new contact is welcomed in the given language, and an existing one isn't welcomed again."""
+        email = f"{self.unique()}@example.com"
+        self.addCleanup(AccountContact.objects.filter(account=self.account, email=email).delete)
+        with patch.object(AccountContact, "send_welcome_email") as send:
+            self.run_command(
+                "add_account_contact", account_number=self.account.account_number, email=email, language="fr"
+            )
+            send.assert_called_once_with(language="fr")
+            self.run_command(
+                "add_account_contact", account_number=self.account.account_number, email=email, language="fr"
+            )
+            send.assert_called_once()
+            with self.assertRaises(CommandError):
+                self.run_command(
+                    "add_account_contact", "--language=xx", account_number=self.account.account_number, email=email
+                )

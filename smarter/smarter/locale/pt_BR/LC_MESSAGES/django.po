@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 16:14+0000\n"
+"POT-Creation-Date: 2026-10-21 10:13+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -15,6 +15,34 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: smarter/apps/account/management/commands/create_user.py
+msgid "Your Smarter user account has been created"
+msgstr "Sua conta de usuário do Smarter foi criada"
+
+#: smarter/apps/account/management/commands/create_user.py
+#, python-format
+msgid ""
+"Your Smarter user account has been created. Do not share your account "
+"credentials with anyone.\n"
+"\n"
+"Url: %(login_url)s\n"
+"Username: %(username)s\n"
+"Email: %(email)s\n"
+"Password: %(password)s\n"
+msgstr ""
+"Sua conta de usuário do Smarter foi criada. Não compartilhe suas credenciais "
+"com ninguém.\n"
+"\n"
+"Url: %(login_url)s\n"
+"Nome de usuário: %(username)s\n"
+"E-mail: %(email)s\n"
+"Senha: %(password)s\n"
+
+#: smarter/apps/account/models/account_contact.py
+#: smarter/templates/account/welcome.html
+msgid "Welcome to Smarter!"
+msgstr "Boas-vindas ao Smarter!"
 
 #: smarter/apps/account/views/authentication/account_views.py
 msgid "User not found. Please log in to activate your account."
@@ -358,6 +386,7 @@ msgid "Cancel"
 msgstr "Cancelar"
 
 #: smarter/templates/account/authentication/sign-in.html
+#: smarter/templates/account/email/welcome.html
 msgid "Sign In"
 msgstr "Entrar"
 
@@ -1327,9 +1356,314 @@ msgstr "Último"
 msgid "Last Login"
 msgstr "Último login"
 
-#: smarter/templates/account/welcome.html
-msgid "Welcome to Smarter!"
-msgstr "Boas-vindas ao Smarter!"
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid "Welcome to %(product_name)s!"
+msgstr "Boas-vindas ao %(product_name)s!"
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid "Howdy %(first_name)s,"
+msgstr "Olá, %(first_name)s,"
+
+#: smarter/templates/account/email/welcome.html
+msgid "Howdy,"
+msgstr "Olá,"
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"I'm %(primary_contact)s, the technical point of contact for the "
+"%(product_name)s platform, and I just created a new account for you. To get "
+"started, sign in with the button below. Your username is this email address."
+msgstr ""
+"Sou %(primary_contact)s, o contato técnico da plataforma %(product_name)s, e "
+"acabei de criar uma conta para você. Para começar, entre com o botão abaixo. "
+"Seu nome de usuário é este endereço de e-mail."
+
+#: smarter/templates/account/email/welcome.html
+msgid "You should receive your password in a separate text-only email."
+msgstr "Você deve receber sua senha em outro e-mail, só de texto."
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"You can use the 'Forgot Password' link on the sign-in page to change your "
+"password at any time."
+msgstr ""
+"Você pode usar o link \"Esqueceu a senha?\" da página de login para mudar "
+"sua senha quando quiser."
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"If you have any questions, email me at <a href=\"mailto:%(support_email)s\" "
+"style=\"font-weight:600\">%(support_email)s</a>."
+msgstr ""
+"Se tiver alguma dúvida, me escreva em <a href=\"mailto:%(support_email)s\" "
+"style=\"font-weight:600\">%(support_email)s</a>."
+
+#: smarter/templates/account/email/welcome.html
+msgid "What's included:"
+msgstr "O que está incluído:"
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"<strong>An account on %(product_name)s <a href=\"%(login_url)s\" "
+"target=\"_blank\" rel=\"noopener\">platform</a></strong> for the duration of "
+"this course. Every prompt is a real, billable request to an LLM provider, so "
+"please experiment freely, but don't run automated load against it."
+msgstr ""
+"<strong>Uma conta na <a href=\"%(login_url)s\" target=\"_blank\" "
+"rel=\"noopener\">plataforma</a> %(product_name)s</strong> durante este "
+"curso. Cada prompt é uma solicitação real, cobrada, a um provedor de LLM, "
+"então experimente à vontade, mas não envie carga automatizada para ela."
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Your own AI resources.</strong> You can create, change and delete "
+"your own LLMClients, plugins, connections and secrets, and you are "
+"encouraged to experiment with them while you are attending this course."
+msgstr ""
+"<strong>Seus próprios recursos de IA.</strong> Você pode criar, alterar e "
+"excluir seus próprios LLMClients, plugins, conexões e segredos, e é "
+"incentivado a experimentar com eles enquanto participa deste curso."
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Thousands of LLMs from nine providers:</strong> Anthropic, Cohere, "
+"Fireworks AI, Google AI (Gemini), Hugging Face, Meta AI (Llama), Mistral, "
+"OpenAI and Together AI, all through a single interface, so that you can "
+"compare models hands-on."
+msgstr ""
+"<strong>Milhares de LLMs de nove provedores:</strong> Anthropic, Cohere, "
+"Fireworks AI, Google AI (Gemini), Hugging Face, Meta AI (Llama), Mistral, "
+"OpenAI e Together AI, todos por uma única interface, para que você possa "
+"comparar modelos na prática."
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong><a href=\"https://docs.smarter.sh/en/latest/smarter-resources/"
+"smarter-llmtool.html\" rel=\"noopener\" target=\"_blank\">Plugins</a> for "
+"LLM tool calling</strong> that connect an LLM to SQL databases, remote REST "
+"APIs, web search, image search, Agent Skills and static data. Your data "
+"stays where it is: the LLM only sees the query results and responses that it "
+"asks for. <a href=\"https://docs.smarter.sh/en/latest/smarter-framework/"
+"smarter-extensions.html\" rel=\"noopener\" target=\"_blank\">Extensions</a>, "
+"which the platform administrator installs, add tools written in Python."
+msgstr ""
+"<strong><a href=\"https://docs.smarter.sh/en/latest/smarter-resources/"
+"smarter-llmtool.html\" rel=\"noopener\" target=\"_blank\">Plugins</a> para "
+"chamada de ferramentas por LLMs</strong>, que conectam um LLM a bancos de "
+"dados SQL, APIs REST remotas, busca na web, busca de imagens, Agent Skills e "
+"dados estáticos. Seus dados ficam onde estão: o LLM só vê os resultados das "
+"consultas e as respostas que ele pede. As <a href=\"https://docs.smarter.sh/"
+"en/latest/smarter-framework/smarter-extensions.html\" rel=\"noopener\" "
+"target=\"_blank\">extensões</a>, que o administrador da plataforma instala, "
+"adicionam ferramentas escritas em Python."
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"<strong>A no-code approach to authoring AI resources.</strong> Every "
+"resource in %(product_name)s is a short <a href=\"https://docs.smarter.sh/en/"
+"latest/smarter-framework/smarter-manifests.html\" rel=\"noopener\" "
+"target=\"_blank\">YAML manifest</a>, so you can build and manage a working "
+"AI application without writing code."
+msgstr ""
+"<strong>Uma abordagem sem código para criar recursos de IA.</strong> Cada "
+"recurso do %(product_name)s é um breve <a href=\"https://docs.smarter.sh/en/"
+"latest/smarter-framework/smarter-manifests.html\" rel=\"noopener\" "
+"target=\"_blank\">manifesto YAML</a>, então você pode criar e gerenciar uma "
+"aplicação de IA funcional sem escrever código."
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>A web Prompt Engineering Workbench</strong> for designing, testing "
+"and debugging the prompts of your AI applications interactively."
+msgstr ""
+"<strong>Um Prompt Engineering Workbench web</strong> para projetar, testar e "
+"depurar de forma interativa os prompts das suas aplicações de IA."
+
+#: smarter/templates/account/email/welcome.html
+msgid "Open Source, Built for Production"
+msgstr "Código aberto, feito para produção"
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"<strong>%(product_name)s is more than a teaching tool.</strong> It is free, "
+"open source software, licensed under the GNU AGPL v3, and it was built to "
+"run in production: on Kubernetes, with cost accounting, secrets management "
+"and per-account access control. Running at scale, security and cost "
+"management may be out of scope for this course, but you will face them once "
+"you complete it, and the source code and documentation are there for you to "
+"explore, during the course and after."
+msgstr ""
+"<strong>O %(product_name)s é mais do que uma ferramenta de ensino.</strong> "
+"É software livre e de código aberto, licenciado sob a GNU AGPL v3, e foi "
+"feito para rodar em produção: no Kubernetes, com contabilidade de custos, "
+"gerenciamento de segredos e controle de acesso por conta. Rodar em escala, "
+"segurança e gerenciamento de custos podem estar fora do escopo deste curso, "
+"mas você vai lidar com eles quando concluí-lo, e o código-fonte e a "
+"documentação estão aí para você explorar, durante o curso e depois."
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"Some links to help you get started on your journey to mastering "
+"%(product_name)s:"
+msgstr ""
+"Alguns links para ajudar você a começar sua jornada para dominar o "
+"%(product_name)s:"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Online documentation</strong> - <a href=\"https://docs.smarter.sh/\" "
+"rel=\"noopener\" target=\"_blank\">https://docs.smarter.sh/</a>"
+msgstr ""
+"<strong>Documentação online</strong> - <a href=\"https://docs.smarter.sh/\" "
+"rel=\"noopener\" target=\"_blank\">https://docs.smarter.sh/</a>"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Cost accounting</strong> of every LLM request, by account, user and "
+"chat session <a href=\"https://docs.smarter.sh/en/latest/smarter-platform/"
+"cost-accounting.html\" rel=\"noopener\" target=\"_blank\">[learn more]</a>"
+msgstr ""
+"<strong>Contabilidade de custos</strong> de cada solicitação a um LLM, por "
+"conta, usuário e sessão de chat <a href=\"https://docs.smarter.sh/en/latest/"
+"smarter-platform/cost-accounting.html\" rel=\"noopener\" "
+"target=\"_blank\">[saiba mais]</a>"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Runs on Kubernetes</strong>, on-premise or in the cloud <a "
+"href=\"https://docs.smarter.sh/en/latest/smarter-framework/technologies/"
+"kubernetes.html\" rel=\"noopener\" target=\"_blank\">[learn more]</a>"
+msgstr ""
+"<strong>Roda no Kubernetes</strong>, on-premise ou na nuvem <a "
+"href=\"https://docs.smarter.sh/en/latest/smarter-framework/technologies/"
+"kubernetes.html\" rel=\"noopener\" target=\"_blank\">[saiba mais]</a>"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Developer tools</strong>: a command-line interface, a REST API, and "
+"SDKs for Python, Node.js and Go <a href=\"https://docs.smarter.sh/en/latest/"
+"smarter-framework/apis-and-sdks.html\" rel=\"noopener\" "
+"target=\"_blank\">[learn more]</a>"
+msgstr ""
+"<strong>Ferramentas para desenvolvedores</strong>: uma interface de linha de "
+"comando, uma API REST e SDKs para Python, Node.js e Go <a href=\"https://"
+"docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html\" "
+"rel=\"noopener\" target=\"_blank\">[saiba mais]</a>"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Source code</strong> on GitHub, where contributions are welcome <a "
+"href=\"https://github.com/smarter-sh/\" rel=\"noopener\" "
+"target=\"_blank\">[learn more]</a>"
+msgstr ""
+"<strong>Código-fonte</strong> no GitHub, onde contribuições são bem-vindas "
+"<a href=\"https://github.com/smarter-sh/\" rel=\"noopener\" "
+"target=\"_blank\">[saiba mais]</a>"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"<strong>Deployment guides</strong> for <a href=\"https://docs.smarter.sh/en/"
+"latest/smarter-platform/installation/production-deployment.html\" "
+"rel=\"noopener\" target=\"_blank\">production</a>, a <a href=\"https://"
+"docs.smarter.sh/en/latest/smarter-platform/installation/quick-start.html\" "
+"rel=\"noopener\" target=\"_blank\">Quick Start</a> for evaluation, and <a "
+"href=\"https://docs.smarter.sh/en/latest/smarter-framework/guides/developer-"
+"setup.html\" rel=\"noopener\" target=\"_blank\">running from source</a> for "
+"developers."
+msgstr ""
+"<strong>Guias de implantação</strong> para <a href=\"https://docs.smarter.sh/"
+"en/latest/smarter-platform/installation/production-deployment.html\" "
+"rel=\"noopener\" target=\"_blank\">produção</a>, um <a href=\"https://"
+"docs.smarter.sh/en/latest/smarter-platform/installation/quick-start.html\" "
+"rel=\"noopener\" target=\"_blank\">Quick Start</a> para avaliação e <a "
+"href=\"https://docs.smarter.sh/en/latest/smarter-framework/guides/developer-"
+"setup.html\" rel=\"noopener\" target=\"_blank\">execução a partir do código-"
+"fonte</a> para desenvolvedores."
+
+#: smarter/templates/account/email/welcome.html
+msgid "Sorry, your browser doesn't support embedded videos."
+msgstr "Desculpe, seu navegador não suporta vídeos incorporados."
+
+#: smarter/templates/account/email/welcome.html
+msgid "Getting Started"
+msgstr "Primeiros passos"
+
+#: smarter/templates/account/email/welcome.html
+msgid "Quick Start Tutorial"
+msgstr "Tutorial de Quick Start"
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"This page will give you an introduction to the %(percent)s of "
+"%(product_name)s concepts that you will use on a daily basis."
+msgstr ""
+"Esta página apresenta os %(percent)s dos conceitos do %(product_name)s que "
+"você vai usar no dia a dia."
+
+#: smarter/templates/account/email/welcome.html
+msgid "Example LLMClients"
+msgstr "LLMClients de exemplo"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
+"Try the example LLMClients in your account, such as the Stackademy course "
+"catalog assistants, which answer questions from a SQL database and from a "
+"REST API."
+msgstr ""
+"Experimente os LLMClients de exemplo na sua conta, como os assistentes do "
+"catálogo de cursos da Stackademy, que respondem perguntas a partir de um "
+"banco de dados SQL e de uma API REST."
+
+#: smarter/templates/account/email/welcome.html smarter/templates/cms/base.html
+#: smarter/templates/dashboard/sidebar.html
+#: smarter/templates/docs/json-schemas.html
+msgid "Documentation"
+msgstr "Documentação"
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"Learn more about %(product_name)s manifests, plugins, extensions, the "
+"command-line interface, and the API."
+msgstr ""
+"Saiba mais sobre os manifestos, plugins e extensões do %(product_name)s, a "
+"interface de linha de comando e a API."
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid "Technical point of contact for the %(product_name)s platform."
+msgstr "Contato técnico da plataforma %(product_name)s."
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"Email me at <a href=\"mailto:%(support_email)s\" style=\"font-weight: "
+"600\">%(support_email)s</a>, or visit <a href=\"%(contact_url)s\" "
+"rel=\"noopener\" target=\"_blank\" style=\"font-weight: 600\">my website</a>."
+msgstr ""
+"Me escreva em <a href=\"mailto:%(support_email)s\" style=\"font-weight: "
+"600\">%(support_email)s</a>, ou visite <a href=\"%(contact_url)s\" "
+"rel=\"noopener\" target=\"_blank\" style=\"font-weight: 600\">meu site</a>."
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"%(product_name)s is free, open source software, licensed under the <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
+msgstr ""
+"O %(product_name)s é software livre e de código aberto, licenciado sob a <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
 
 #: smarter/templates/account/welcome.html
 msgid ""
@@ -1349,11 +1683,6 @@ msgstr "Admin do site Django"
 #: smarter/templates/admin/base_site.html
 msgid "Django administration"
 msgstr "Administração do Django"
-
-#: smarter/templates/cms/base.html smarter/templates/dashboard/sidebar.html
-#: smarter/templates/docs/json-schemas.html
-msgid "Documentation"
-msgstr "Documentação"
 
 #: smarter/templates/cms/base/footer.html
 msgid "The Smarter Project"

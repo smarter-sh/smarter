@@ -30,10 +30,10 @@ Usage Example
     python manage.py delete_account_contact --company_name="<name>" --username=<username>
 """
 
-from typing import Optional
+from django.core.management.base import CommandError
 
-from smarter.apps.account.models import Account, AccountContact, UserProfile
-from smarter.common.exceptions import SmarterValueError
+from smarter.apps.account.management.lookups import get_account, get_user
+from smarter.apps.account.models import AccountContact
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -49,7 +49,7 @@ class Command(SmarterCommand):
         parser.add_argument("--username", type=str, help="The username for the new superuser")
 
     def handle(self, *args, **options):
-        """Create the superuser account."""
+        """Remove the contact from the account."""
         self.handle_begin()
 
         account_number = options["account_number"]
@@ -57,37 +57,15 @@ class Command(SmarterCommand):
         username = options["username"]
         email = options["email"]
 
-        account: Optional[Account] = None
-
-        if options["account_number"]:
-            try:
-                account = Account.objects.get(account_number=account_number)
-            except Account.DoesNotExist:
-                self.handle_completed_failure(msg=f"Account {account_number} not found.")
-                return
-        elif options["company_name"]:
-            try:
-                account = Account.objects.get(company_name=company_name)
-            except Account.DoesNotExist:
-                self.handle_completed_failure(msg=f"Account {company_name} not found.")
-                return
-        else:
-            raise SmarterValueError("You must provide either an account number or a company name.")
-
+        account = get_account(account_number=account_number, company_name=company_name)
         if username:
-            user_profile = UserProfile.objects.get(user__username=username)
-            email = user_profile.cached_user.email
+            email = get_user(username).email
+        if not email:
+            raise CommandError("Provide an --email, or the --username of a user.")
 
-        try:
-            account_contact = AccountContact.objects.get(
-                account=account,
-                email=email,
-            )
-        except AccountContact.DoesNotExist:
-            self.handle_completed_failure(
-                msg=f"Account Contact {email} not found for account {account.account_number} {account.company_name}."
-            )
-            return
+        account_contact = AccountContact.objects.filter(account=account, email=email).first()
+        if not account_contact:
+            raise CommandError(f"{email} is not a contact of account {account.account_number} {account.company_name}.")
 
         account_contact.delete()
         self.handle_completed_success(

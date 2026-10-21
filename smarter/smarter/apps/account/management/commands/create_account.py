@@ -26,6 +26,8 @@ Usage Example
     python manage.py create_account --company_name="<name>"
 """
 
+from django.core.management.base import CommandError
+
 from smarter.apps.account.models import Account
 from smarter.common.utils import to_snake_case
 from smarter.lib.django.management.base import SmarterCommand
@@ -48,16 +50,22 @@ class Command(SmarterCommand):
         company_name = options["company_name"]
 
         if account_number:
-            account, created = Account.objects.get_or_create(account_number=account_number)
-            account.company_name = company_name
+            account = Account.objects.filter(account_number=account_number).first()
+            created = account is None
             if created:
-                account.name = to_snake_case(company_name)
-                account.description = f"Account for {company_name}"
+                if not company_name:
+                    raise CommandError(f"Provide a --company_name for the new account {account_number}.")
+                account = Account(
+                    account_number=account_number,
+                    name=to_snake_case(company_name),
+                    description=f"Account for {company_name}",
+                )
+            if company_name:
+                account.company_name = company_name
             account.save()
         else:
             if not company_name:
-                self.handle_completed_failure(msg="company_name must be provided when creating an account.")
-                return
+                raise CommandError("Provide a --company_name, and optionally an --account_number.")
             account, created = Account.objects.get_or_create(company_name=company_name)
         if created:
             Account.get_cached_object(invalidate=True, pk=account.pk)  # prime the cache

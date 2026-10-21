@@ -6,6 +6,7 @@ The new user's password email is never sent: the infrastructure email service is
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.management.base import CommandError
 
 from smarter.apps.account.models import AccountContact, UserProfile
 
@@ -64,7 +65,45 @@ class TestCreateUser(CommandTestBase):
         self.assertTrue(User.objects.filter(username=self.username).exists())
 
     def test_unknown_account_and_invalid_email(self):
-        self.create(account_number="0000-0000-0000")
+        """Test that each is refused with a message, and that nothing is saved."""
+        with self.assertRaisesRegex(CommandError, "Account with account number 0000-0000-0000 does not exist"):
+            self.create(account_number="0000-0000-0000")
         self.assertFalse(User.objects.filter(username=self.username).exists())
-        self.create(email="not an email")
+        with self.assertRaisesRegex(CommandError, "Invalid email address: not an email"):
+            self.create(email="not an email")
+        self.assertFalse(User.objects.filter(username=self.username).exists())
         self.assertFalse(UserProfile.objects.filter(user__username=self.username).exists())
+
+    def test_language(self):
+        """Test that the language is the user's preference, and the new account contact is welcomed in it."""
+        with patch.object(AccountContact, "send_welcome_email") as send:
+            self.create(language="es")
+        send.assert_called_once_with(language="es")
+        self.assertTrue(AccountContact.objects.get(account=self.account, email=self.email).welcomed)
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "es")
+
+    def test_default_language_and_update(self):
+        """Test that a new user prefers English, and that --language changes an existing user's preference."""
+        self.create()
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "en")
+        self.create(language="fr")
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "fr")
+        # without --language, the preference is kept.
+        self.create()
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "fr")
+
+    def test_password_email_language(self):
+        """Test that the password email is written in the given language, and in English by default."""
+        with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
+            self.create(language="es", password="pässword")
+        kwargs = self.infrastructure.email.send_email.call_args.kwargs
+        self.assertEqual(kwargs["subject"], "Se creó tu cuenta de usuario de Smarter")
+        self.assertIn("Contraseña: pässword", kwargs["body"])
+        self.assertIn(f"Nombre de usuario: {self.username}", kwargs["body"])
+
+    def test_password_email_english(self):
+        with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
+            self.create(password="secret")
+        kwargs = self.infrastructure.email.send_email.call_args.kwargs
+        self.assertEqual(kwargs["subject"], "Your Smarter user account has been created")
+        self.assertIn("Password: secret\n", kwargs["body"])

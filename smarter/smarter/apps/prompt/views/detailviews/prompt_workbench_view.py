@@ -214,7 +214,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
     - **ReactJS UI Bootstrapping:**
       The workbench renders the chat, Smarter Chat (the ``@smarter.sh/ui-chat`` npm package,
-      https://github.com/smarter-sh/smarter-chat, cloned into smarter/react/packages/smarter-chat), and the
+      smarter/react/packages/smarter.sh-chat in this repository), and the
       developer Console beside it, whose Manifest and Deployment tabs fetch their data from
       :class:`LLMClientManifestEditorView` and :class:`LLMClientDeploymentView` when they are first opened.
 
