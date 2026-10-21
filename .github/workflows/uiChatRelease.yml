@@ -1,6 +1,6 @@
 ---
 #------------------------------------------------------------------------------
-# Publish @smarter.sh/ui-chat (smarter/react/packages/smarter-chat) to npm,
+# Publish @smarter.sh/ui-chat (smarter/react/packages/smarter.sh-chat) to npm,
 # when semantic-release publishes a GitHub release (pushMain.yml), or by hand
 # for such a release's tag.
 #
@@ -94,7 +94,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: 25
+          node-version: 24
           cache: npm
           cache-dependency-path: smarter/react/package-lock.json
 
@@ -104,12 +104,12 @@ jobs:
 
       - name: Unit tests
         working-directory: smarter/react
-        run: npx vitest run --project smarter-chat
+        run: npx vitest run --project smarter.sh-chat
 
       # Before the build: the embed script includes the version. npm pkg set
       # only edits package.json. npm version would also update the workspace.
       - name: Set the package's version
-        working-directory: smarter/react/packages/smarter-chat
+        working-directory: smarter/react/packages/smarter.sh-chat
         run: npm pkg set version="${{ steps.version.outputs.version }}"
 
       - name: Build and check
@@ -128,7 +128,7 @@ jobs:
       # --ignore-scripts: prepublishOnly would build dist/ again. Publish the
       # dist/ that was just checked instead.
       - name: Publish to npm
-        working-directory: smarter/react/packages/smarter-chat
+        working-directory: smarter/react/packages/smarter.sh-chat
         run: npm publish --ignore-scripts --access public --provenance --tag "${{ steps.version.outputs.dist_tag }}"
 
       # jsDelivr's ranges only follow releases, never prereleases.

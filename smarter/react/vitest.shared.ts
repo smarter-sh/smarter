@@ -31,7 +31,7 @@ export function smarterVitestProject(packageDir: string) {
         "@smarter/common": path.join(WORKSPACE, "packages", "smarter-common", "src", "index.tsx"),
         "@smarter/didyouknow": path.join(WORKSPACE, "packages", "smarter-didyouknow", "src", "index.tsx"),
         "@smarter/onboarding": path.join(WORKSPACE, "packages", "smarter-onboarding", "src", "index.tsx"),
-        "@smarter.sh/ui-widgets": path.join(WORKSPACE, "packages", "smarter-widgets", "src", "index.tsx"),
+        "@smarter.sh/ui-widgets": path.join(WORKSPACE, "packages", "smarter.sh-widgets", "src", "index.tsx"),
         "@test": path.join(WORKSPACE, "test"),
         "@": path.join(packageDir, "src"),
       },

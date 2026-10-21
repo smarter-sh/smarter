@@ -65,14 +65,14 @@ Current app packages include:
 
 ### Published packages
 
-Two packages are published to npm, under the `@smarter.sh` scope. Every other package is part of the web
-console only: its name is `@smarter/<app-name>`, and its `package.json` sets `"private": true`, so that npm
-refuses to publish it.
+Two packages are published to npm, under the `@smarter.sh` scope, and their folders are named
+`smarter.sh-<name>` to match. Every other package is part of the web console only: its name is
+`@smarter/<app-name>`, and its `package.json` sets `"private": true`, so that npm refuses to publish it.
 
-| Package                                                                        | Folder                     | Published by                                                                                                                |
-| ------------------------------------------------------------------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| [@smarter.sh/ui-chat](https://www.npmjs.com/package/@smarter.sh/ui-chat)       | `packages/smarter-chat`    | its own repository, [smarter-chat](https://github.com/smarter-sh/smarter-chat), which `make react-smarter-chat` clones here |
-| [@smarter.sh/ui-widgets](https://www.npmjs.com/package/@smarter.sh/ui-widgets) | `packages/smarter-widgets` | `.github/workflows/uiWidgetsRelease.yml`, with each Smarter release                                                         |
+| Package                                                                        | Folder                        | Published by                                                        |
+| ------------------------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------- |
+| [@smarter.sh/ui-chat](https://www.npmjs.com/package/@smarter.sh/ui-chat)       | `packages/smarter.sh-chat`    | `.github/workflows/uiChatRelease.yml`, with each Smarter release    |
+| [@smarter.sh/ui-widgets](https://www.npmjs.com/package/@smarter.sh/ui-widgets) | `packages/smarter.sh-widgets` | `.github/workflows/uiWidgetsRelease.yml`, with each Smarter release |
 
 A published package has no `"private"` field, and sets `"publishConfig": { "access": "public" }`.
 

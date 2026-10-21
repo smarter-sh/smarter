@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 11:52+0000\n"
+"POT-Creation-Date: 2026-10-21 12:49+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -268,7 +268,7 @@ msgstr ""
 msgid "Delete: Delete this authtoken resource"
 msgstr "Eliminar: elimina este recurso AuthToken"
 
-#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Budgets"
 msgstr "Presupuestos"
 
@@ -658,7 +658,7 @@ msgstr "Tus dominios personalizados"
 msgid "Shared Custom Domains"
 msgstr "Dominios personalizados compartidos"
 
-#. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+#. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Custom Domains"
 msgstr "Dominios personalizados"
 
@@ -964,7 +964,7 @@ msgstr "Descargar de npm"
 msgid "React Chat component on NPM"
 msgstr "Componente de chat de React en NPM"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter-widgets/src/components/Cli/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
 msgid "Download"
 msgstr "Descargar"
 
@@ -1004,7 +1004,7 @@ msgstr "VectorStores"
 msgid "LLMHosts"
 msgstr "LLMHosts"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter-widgets/src/components/Extensions/Component.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Extensions"
 msgstr "Extensiones"
 
@@ -1036,7 +1036,7 @@ msgstr "%(my_resources_pending_deployments)s pendientes"
 msgid "LLM Clients"
 msgstr "Clientes LLM"
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-widgets/src/components/McpServer/Component.tsx
+#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
 msgid "Tools"
 msgstr "Herramientas"
 
@@ -1865,7 +1865,7 @@ msgstr ""
 msgid "Installed"
 msgstr "Instaladas"
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-widgets/src/components/Extensions/Component.tsx
+#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
 msgid "Browse the registry"
 msgstr "Explorar el registro"
 
@@ -2016,7 +2016,7 @@ msgstr "página principal"
 msgid "Install this version"
 msgstr "Instalar esta versión"
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
+#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 msgid "Install"
 msgstr "Instalar"
 
@@ -5994,7 +5994,7 @@ msgstr "Predeterminado"
 msgid "Featured"
 msgstr "Destacado"
 
-#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx, react/packages/smarter-widgets/src/components/Extensions/Component.tsx
+#. Translators: used in react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderFlags.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
 msgid "Official"
 msgstr "Oficial"
 
@@ -6407,7 +6407,7 @@ msgstr "Tus proxies"
 msgid "Shared Proxies"
 msgstr "Proxies compartidos"
 
-#. Translators: used in react/packages/smarter-proxy-list/src/App.tsx, react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
+#. Translators: used in react/packages/smarter-proxy-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Proxies"
 msgstr "Proxies"
 
@@ -7831,592 +7831,6 @@ msgstr "Por dónde empezar"
 msgid "A few good first stops on your journey:"
 msgstr "Algunas buenas primeras paradas en tu recorrido:"
 
-#. Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-msgid "or apt, choco, docker"
-msgstr "o apt, choco, docker"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-msgid "CLI"
-msgstr "CLI"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-msgid "Smarter %(span)s"
-msgstr "Smarter %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-msgid "CLI%(span)s"
-msgstr "CLI%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-msgid "Powerful tools for managing your AI resources."
-msgstr "Herramientas poderosas para administrar tus recursos de IA."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx
-msgid "Example CLI session"
-msgstr "Ejemplo de sesión de la CLI"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Cli/Component.tsx, react/packages/smarter-widgets/src/components/McpServer/Component.tsx, react/packages/smarter-widgets/src/components/Sdk/Component.tsx, react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Documentation"
-msgstr "Documentación"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Fix a bug"
-msgstr "Corrige un error"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Improve the docs"
-msgstr "Mejora la documentación"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Write a test"
-msgstr "Escribe una prueba"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Build an extension"
-msgstr "Crea una extensión"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Latest Release"
-msgstr "Última versión"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "GitHub Stars"
-msgstr "Estrellas en GitHub"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "GitHub Forks"
-msgstr "Forks en GitHub"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Contribute"
-msgstr "Contribuir"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Contribute to %(span)s"
-msgstr "Contribuye a %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Smarter%(span)s"
-msgstr "Smarter%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid ""
-"Start small, learn by doing, and help improve Smarter while you discover how "
-"real Python projects work."
-msgstr ""
-"Empieza de a poco, aprende haciendo y ayuda a mejorar Smarter mientras "
-"descubres cómo funcionan los proyectos reales de Python."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Ways to help"
-msgstr "Formas de ayudar"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Contributing guide"
-msgstr "Guía para contribuir"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Contribute/Component.tsx
-msgid "Open issues"
-msgstr "Issues abiertos"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Current weather and a 24-hour forecast for any location."
-msgstr "Clima actual y pronóstico de 24 horas para cualquier ubicación."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Evaluates math expressions exactly, so that LLMs don't guess."
-msgstr ""
-"Evalúa expresiones matemáticas con exactitud, para que los LLM no adivinen."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Date arithmetic: differences, adding and subtracting days."
-msgstr "Aritmética de fechas: diferencias, sumar y restar días."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Install, signature-checked"
-msgstr "Instala, con firma verificada"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Enable, then list it in a manifest"
-msgstr "Habilítala y luego inclúyela en un manifiesto"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "New in 0.27"
-msgstr "Novedad en 0.27"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Add tools with %(span)s"
-msgstr "Agrega herramientas con %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Extensions%(span)s"
-msgstr "Extensiones%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid ""
-"Python packages that give your LLMs new tools, installed from the signed "
-"Smarter Extension registry without a redeploy."
-msgstr ""
-"Paquetes de Python que dan a tus LLM nuevas herramientas, instalados desde "
-"el registro firmado de Smarter Extensions sin volver a implementar."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "How extensions work"
-msgstr "Cómo funcionan las extensiones"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Build one →"
-msgstr "Crea una →"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "Official extensions"
-msgstr "Extensiones oficiales"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Extensions/Component.tsx
-msgid "An LLMClient manifest that uses an extension"
-msgstr "Un manifiesto LLMClient que usa una extensión"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "course designs"
-msgstr "diseños de cursos"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "micro courses"
-msgstr "microcursos"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "master classes"
-msgstr "clases magistrales"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "license fees"
-msgstr "costos de licencia"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Prompt Engineering"
-msgstr "Ingeniería de prompts"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Building AI Applications"
-msgstr "Creación de aplicaciones de IA"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Agentic Development"
-msgstr "Desarrollo agéntico"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Django Master Class"
-msgstr "Clase magistral de Django"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "The Economics of AI"
-msgstr "La economía de la IA"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "AI Governance"
-msgstr "Gobernanza de la IA"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "API Design"
-msgstr "Diseño de API"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Backend Development"
-msgstr "Desarrollo backend"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "AI Application Development Master Class"
-msgstr "Clase magistral de desarrollo de aplicaciones de IA"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Extension Development"
-msgstr "Desarrollo de extensiones"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Front End Development"
-msgstr "Desarrollo frontend"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Full Stack Development"
-msgstr "Desarrollo full stack"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Infrastructure as Code"
-msgstr "Infraestructura como código"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Open Source Participation"
-msgstr "Participación en código abierto"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Secure Software"
-msgstr "Software seguro"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Self-Hosting Open Models"
-msgstr "Autoalojamiento de modelos abiertos"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Software Architecture"
-msgstr "Arquitectura de software"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Software Quality"
-msgstr "Calidad de software"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Documentation with Sphinx"
-msgstr "Documentación con Sphinx"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "classroom bootcamp"
-msgstr "bootcamp presencial"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "online course"
-msgstr "curso en línea"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Instructors"
-msgstr "Instructores"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Free for instructors"
-msgstr "Gratis para instructores"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Teach AI with a %(span)s"
-msgstr "Enseña IA con una %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "real platform%(span)s"
-msgstr "plataforma real%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid ""
-"Ready-to-teach course designs, from prompt engineering for non-programmers "
-"to Kubernetes for platform engineers, with schedules, graded assignments, "
-"rubrics and capstone projects."
-msgstr ""
-"Diseños de cursos listos para enseñar, desde ingeniería de prompts para "
-"quienes no programan hasta Kubernetes para ingenieros de plataforma, con "
-"calendarios, tareas calificadas, rúbricas y proyectos finales."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Free courses"
-msgstr "Cursos gratuitos"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Every micro course, three ways"
-msgstr "Cada microcurso, de tres formas"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Browse the free courses"
-msgstr "Explora los cursos gratuitos"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Instructors/Component.tsx
-msgid "Instructor Guide"
-msgstr "Guía para instructores"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-msgid "Integrations"
-msgstr "Integraciones"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-msgid "Put your chatbot %(span)s"
-msgstr "Lleva tu chatbot a %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-msgid "everywhere%(span)s"
-msgstr "todas partes%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-msgid ""
-"Add Smarter Chat to the sites your users already visit, with one setting."
-msgstr ""
-"Agrega Smarter Chat a los sitios que tus usuarios ya visitan, con una sola "
-"configuración."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-msgid "Embedding guide"
-msgstr "Guía de inserción"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx
-msgid "Integrations source code"
-msgstr "Código fuente de las integraciones"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Integrations/Component.tsx, react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-msgid "GitHub"
-msgstr "GitHub"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-msgid "MCP Server"
-msgstr "Servidor MCP"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-msgid "Smarter MCP Server"
-msgstr "Servidor MCP de Smarter"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-msgid "Ask your %(span)s"
-msgstr "Pregúntale a tu %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-msgid "AI assistant%(span)s"
-msgstr "asistente de IA%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-msgid ""
-"This platform answers questions about itself from its own code and docs, for "
-"any MCP client."
-msgstr ""
-"Esta plataforma responde preguntas sobre sí misma a partir de su propio "
-"código y documentación, para cualquier cliente MCP."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/McpServer/Component.tsx
-msgid "Add this platform's MCP server to Claude Code"
-msgstr "Agrega el servidor MCP de esta plataforma a Claude Code"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-msgid "SDK"
-msgstr "SDK"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-msgid "Build with the %(span)s"
-msgstr "Desarrolla con los %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-msgid "SDKs%(span)s"
-msgstr "SDK%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-msgid ""
-"Typed access to your Smarter resources, in the language you already use."
-msgstr "Acceso tipado a tus recursos de Smarter, en el lenguaje que ya usas."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-msgid "API reference"
-msgstr "Referencia de la API"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/Sdk/Component.tsx
-msgid "SDK source code"
-msgstr "Código fuente del SDK"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Your laptop"
-msgstr "Tu laptop"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Quick Start with Docker Compose"
-msgstr "Inicio rápido con Docker Compose"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Your cluster"
-msgstr "Tu clúster"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "The official Helm chart"
-msgstr "El chart oficial de Helm"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Your AWS cloud"
-msgstr "Tu nube de AWS"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "The official Terraform modules"
-msgstr "Los módulos oficiales de Terraform"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Self Host"
-msgstr "Autoalojamiento"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Self-host Smarter"
-msgstr "Aloja Smarter tú mismo"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Run it %(span)s"
-msgstr "Ejecútalo en %(span)s"
-
-#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "anywhere%(span)s"
-msgstr "cualquier lugar%(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid ""
-"The same open source platform, from your laptop to production. No license "
-"fees, no seat counts."
-msgstr ""
-"La misma plataforma de código abierto, desde tu laptop hasta producción. Sin "
-"costos de licencia ni límites de usuarios."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Installation Guide"
-msgstr "Guía de instalación"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/SelfHost/Component.tsx
-msgid "Open source · AGPL-3.0"
-msgstr "Código abierto · AGPL-3.0"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Validation as you type"
-msgstr "Validación mientras escribes"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Quick fixes for misspelled keys"
-msgstr "Correcciones rápidas para claves mal escritas"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Completion and hover help"
-msgstr "Autocompletado y ayuda al pasar el cursor"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Apply and deploy from the editor"
-msgstr "Aplica e implementa desde el editor"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "VS Code Extension"
-msgstr "Extensión de VS Code"
-
-#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Get the %(span)s"
-msgstr "Obtén la %(span)s"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid ""
-"Write Smarter manifests with the same validation that %(code)s uses, before "
-"you apply them."
-msgstr ""
-"Escribe manifiestos de Smarter con la misma validación que usa %(code)s, "
-"antes de aplicarlos."
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Features"
-msgstr "Funciones"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Installs"
-msgstr "Instalaciones"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Example manifest with a validation problem"
-msgstr "Ejemplo de manifiesto con un problema de validación"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "secret.yaml"
-msgstr "secret.yaml"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Install signed, third-party LLM tools from the Smarter Extension registry"
-msgstr ""
-"Instala herramientas LLM de terceros, firmadas, desde el registro de Smarter "
-"Extensions"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Answers about The Smarter Project, from its own code and docs, for any MCP "
-"client"
-msgstr ""
-"Respuestas sobre The Smarter Project, a partir de su propio código y "
-"documentación, para cualquier cliente MCP"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"An OpenAPI document and JSON Schemas for the Smarter api, served by every "
-"platform"
-msgstr ""
-"Un documento OpenAPI y esquemas JSON para la API de Smarter, que sirve cada "
-"plataforma"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Themable Chat"
-msgstr "Chat personalizable"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Brand your LLMClient's chat with your own logo, colors, fonts and avatar"
-msgstr ""
-"Personaliza el chat de tu LLMClient con tu propio logotipo, colores, fuentes "
-"y avatar"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Let LLMs find and show images from the web"
-msgstr "Permite que los LLM busquen y muestren imágenes de la web"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Infrastructure Manager"
-msgstr "Administrador de infraestructura"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Manage and monitor your cloud infrastructure from the web console"
-msgstr ""
-"Administra y monitorea tu infraestructura en la nube desde la consola web"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Serve LLMClients from your own branded domain, managed with a SAM manifest"
-msgstr ""
-"Sirve LLMClients desde tu propio dominio de marca, administrado con un "
-"manifiesto SAM"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Manifest Editor"
-msgstr "Editor de manifiestos"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Edit, validate, save, clone and delete manifests in the web console"
-msgstr "Edita, valida, guarda, clona y elimina manifiestos en la consola web"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Enforce spending limits on any resource, with budget vs actual charts"
-msgstr ""
-"Aplica límites de gasto a cualquier recurso, con gráficos de presupuesto vs. "
-"real"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Run open-weight LLMs on your own Kubernetes cluster"
-msgstr "Ejecuta LLM de pesos abiertos en tu propio clúster de Kubernetes"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets"
-msgstr ""
-"Reenvía solicitudes a las API de proveedores de LLM, con las claves "
-"guardadas como Smarter Secrets"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone"
-msgstr ""
-"Administra bases de datos vectoriales para RAG: Qdrant autoalojado, Qdrant "
-"Cloud y Pinecone"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "What's New"
-msgstr "Novedades"
-
-#. Translators: used in react/packages/smarter-widgets/src/components/WhatsNew/Component.tsx
-msgid "Recently added Smarter features"
-msgstr "Funciones de Smarter agregadas recientemente"
-
 #. Translators: used in react/packages/smarter-workbench/src/App.tsx
 msgid "Hide the Console"
 msgstr "Ocultar la consola"
@@ -8707,6 +8121,592 @@ msgstr ""
 #. Translators: used in react/packages/smarter-workbench/src/lib/layout.ts
 msgid "Resize the chat and the Console"
 msgstr "Cambiar el tamaño del chat y de la consola"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+msgid "or apt, choco, docker"
+msgstr "o apt, choco, docker"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+msgid "CLI"
+msgstr "CLI"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+msgid "Smarter %(span)s"
+msgstr "Smarter %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+msgid "CLI%(span)s"
+msgstr "CLI%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+msgid "Powerful tools for managing your AI resources."
+msgstr "Herramientas poderosas para administrar tus recursos de IA."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx
+msgid "Example CLI session"
+msgstr "Ejemplo de sesión de la CLI"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Documentation"
+msgstr "Documentación"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Fix a bug"
+msgstr "Corrige un error"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Improve the docs"
+msgstr "Mejora la documentación"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Write a test"
+msgstr "Escribe una prueba"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Build an extension"
+msgstr "Crea una extensión"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Latest Release"
+msgstr "Última versión"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "GitHub Stars"
+msgstr "Estrellas en GitHub"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "GitHub Forks"
+msgstr "Forks en GitHub"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Contribute"
+msgstr "Contribuir"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Contribute to %(span)s"
+msgstr "Contribuye a %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Smarter%(span)s"
+msgstr "Smarter%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid ""
+"Start small, learn by doing, and help improve Smarter while you discover how "
+"real Python projects work."
+msgstr ""
+"Empieza de a poco, aprende haciendo y ayuda a mejorar Smarter mientras "
+"descubres cómo funcionan los proyectos reales de Python."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Ways to help"
+msgstr "Formas de ayudar"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Contributing guide"
+msgstr "Guía para contribuir"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Contribute/Component.tsx
+msgid "Open issues"
+msgstr "Issues abiertos"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Current weather and a 24-hour forecast for any location."
+msgstr "Clima actual y pronóstico de 24 horas para cualquier ubicación."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Evaluates math expressions exactly, so that LLMs don't guess."
+msgstr ""
+"Evalúa expresiones matemáticas con exactitud, para que los LLM no adivinen."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Date arithmetic: differences, adding and subtracting days."
+msgstr "Aritmética de fechas: diferencias, sumar y restar días."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Install, signature-checked"
+msgstr "Instala, con firma verificada"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Enable, then list it in a manifest"
+msgstr "Habilítala y luego inclúyela en un manifiesto"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "New in 0.27"
+msgstr "Novedad en 0.27"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Add tools with %(span)s"
+msgstr "Agrega herramientas con %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Extensions%(span)s"
+msgstr "Extensiones%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid ""
+"Python packages that give your LLMs new tools, installed from the signed "
+"Smarter Extension registry without a redeploy."
+msgstr ""
+"Paquetes de Python que dan a tus LLM nuevas herramientas, instalados desde "
+"el registro firmado de Smarter Extensions sin volver a implementar."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "How extensions work"
+msgstr "Cómo funcionan las extensiones"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Build one →"
+msgstr "Crea una →"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "Official extensions"
+msgstr "Extensiones oficiales"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx
+msgid "An LLMClient manifest that uses an extension"
+msgstr "Un manifiesto LLMClient que usa una extensión"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "course designs"
+msgstr "diseños de cursos"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "micro courses"
+msgstr "microcursos"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "master classes"
+msgstr "clases magistrales"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "license fees"
+msgstr "costos de licencia"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Prompt Engineering"
+msgstr "Ingeniería de prompts"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Building AI Applications"
+msgstr "Creación de aplicaciones de IA"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Agentic Development"
+msgstr "Desarrollo agéntico"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Django Master Class"
+msgstr "Clase magistral de Django"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "The Economics of AI"
+msgstr "La economía de la IA"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "AI Governance"
+msgstr "Gobernanza de la IA"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "API Design"
+msgstr "Diseño de API"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Backend Development"
+msgstr "Desarrollo backend"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "AI Application Development Master Class"
+msgstr "Clase magistral de desarrollo de aplicaciones de IA"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Extension Development"
+msgstr "Desarrollo de extensiones"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Front End Development"
+msgstr "Desarrollo frontend"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Full Stack Development"
+msgstr "Desarrollo full stack"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Infrastructure as Code"
+msgstr "Infraestructura como código"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Open Source Participation"
+msgstr "Participación en código abierto"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Secure Software"
+msgstr "Software seguro"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Self-Hosting Open Models"
+msgstr "Autoalojamiento de modelos abiertos"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Software Architecture"
+msgstr "Arquitectura de software"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Software Quality"
+msgstr "Calidad de software"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Documentation with Sphinx"
+msgstr "Documentación con Sphinx"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "classroom bootcamp"
+msgstr "bootcamp presencial"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "online course"
+msgstr "curso en línea"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Instructors"
+msgstr "Instructores"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Free for instructors"
+msgstr "Gratis para instructores"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Teach AI with a %(span)s"
+msgstr "Enseña IA con una %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "real platform%(span)s"
+msgstr "plataforma real%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid ""
+"Ready-to-teach course designs, from prompt engineering for non-programmers "
+"to Kubernetes for platform engineers, with schedules, graded assignments, "
+"rubrics and capstone projects."
+msgstr ""
+"Diseños de cursos listos para enseñar, desde ingeniería de prompts para "
+"quienes no programan hasta Kubernetes para ingenieros de plataforma, con "
+"calendarios, tareas calificadas, rúbricas y proyectos finales."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Free courses"
+msgstr "Cursos gratuitos"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Every micro course, three ways"
+msgstr "Cada microcurso, de tres formas"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Browse the free courses"
+msgstr "Explora los cursos gratuitos"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
+msgid "Instructor Guide"
+msgstr "Guía para instructores"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+msgid "Integrations"
+msgstr "Integraciones"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+msgid "Put your chatbot %(span)s"
+msgstr "Lleva tu chatbot a %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+msgid "everywhere%(span)s"
+msgstr "todas partes%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+msgid ""
+"Add Smarter Chat to the sites your users already visit, with one setting."
+msgstr ""
+"Agrega Smarter Chat a los sitios que tus usuarios ya visitan, con una sola "
+"configuración."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+msgid "Embedding guide"
+msgstr "Guía de inserción"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+msgid "Integrations source code"
+msgstr "Código fuente de las integraciones"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+msgid "MCP Server"
+msgstr "Servidor MCP"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+msgid "Smarter MCP Server"
+msgstr "Servidor MCP de Smarter"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+msgid "Ask your %(span)s"
+msgstr "Pregúntale a tu %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+msgid "AI assistant%(span)s"
+msgstr "asistente de IA%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+msgid ""
+"This platform answers questions about itself from its own code and docs, for "
+"any MCP client."
+msgstr ""
+"Esta plataforma responde preguntas sobre sí misma a partir de su propio "
+"código y documentación, para cualquier cliente MCP."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+msgid "Add this platform's MCP server to Claude Code"
+msgstr "Agrega el servidor MCP de esta plataforma a Claude Code"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+msgid "SDK"
+msgstr "SDK"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+msgid "Build with the %(span)s"
+msgstr "Desarrolla con los %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+msgid "SDKs%(span)s"
+msgstr "SDK%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+msgid ""
+"Typed access to your Smarter resources, in the language you already use."
+msgstr "Acceso tipado a tus recursos de Smarter, en el lenguaje que ya usas."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+msgid "API reference"
+msgstr "Referencia de la API"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
+msgid "SDK source code"
+msgstr "Código fuente del SDK"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Your laptop"
+msgstr "Tu laptop"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Quick Start with Docker Compose"
+msgstr "Inicio rápido con Docker Compose"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Your cluster"
+msgstr "Tu clúster"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "The official Helm chart"
+msgstr "El chart oficial de Helm"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Your AWS cloud"
+msgstr "Tu nube de AWS"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "The official Terraform modules"
+msgstr "Los módulos oficiales de Terraform"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Self Host"
+msgstr "Autoalojamiento"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Self-host Smarter"
+msgstr "Aloja Smarter tú mismo"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Run it %(span)s"
+msgstr "Ejecútalo en %(span)s"
+
+#. Translators: the highlighted words of a headline. %(span)s is their decorative underline, and stays at the end.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "anywhere%(span)s"
+msgstr "cualquier lugar%(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid ""
+"The same open source platform, from your laptop to production. No license "
+"fees, no seat counts."
+msgstr ""
+"La misma plataforma de código abierto, desde tu laptop hasta producción. Sin "
+"costos de licencia ni límites de usuarios."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Installation Guide"
+msgstr "Guía de instalación"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/SelfHost/Component.tsx
+msgid "Open source · AGPL-3.0"
+msgstr "Código abierto · AGPL-3.0"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Validation as you type"
+msgstr "Validación mientras escribes"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Quick fixes for misspelled keys"
+msgstr "Correcciones rápidas para claves mal escritas"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Completion and hover help"
+msgstr "Autocompletado y ayuda al pasar el cursor"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Apply and deploy from the editor"
+msgstr "Aplica e implementa desde el editor"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "VS Code Extension"
+msgstr "Extensión de VS Code"
+
+#. Translators: a headline. %(span)s is its highlighted last words, translated separately.
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Get the %(span)s"
+msgstr "Obtén la %(span)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid ""
+"Write Smarter manifests with the same validation that %(code)s uses, before "
+"you apply them."
+msgstr ""
+"Escribe manifiestos de Smarter con la misma validación que usa %(code)s, "
+"antes de aplicarlos."
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Features"
+msgstr "Funciones"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Installs"
+msgstr "Instalaciones"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Example manifest with a validation problem"
+msgstr "Ejemplo de manifiesto con un problema de validación"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "secret.yaml"
+msgstr "secret.yaml"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"Install signed, third-party LLM tools from the Smarter Extension registry"
+msgstr ""
+"Instala herramientas LLM de terceros, firmadas, desde el registro de Smarter "
+"Extensions"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"Answers about The Smarter Project, from its own code and docs, for any MCP "
+"client"
+msgstr ""
+"Respuestas sobre The Smarter Project, a partir de su propio código y "
+"documentación, para cualquier cliente MCP"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"An OpenAPI document and JSON Schemas for the Smarter api, served by every "
+"platform"
+msgstr ""
+"Un documento OpenAPI y esquemas JSON para la API de Smarter, que sirve cada "
+"plataforma"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Themable Chat"
+msgstr "Chat personalizable"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"Brand your LLMClient's chat with your own logo, colors, fonts and avatar"
+msgstr ""
+"Personaliza el chat de tu LLMClient con tu propio logotipo, colores, fuentes "
+"y avatar"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Let LLMs find and show images from the web"
+msgstr "Permite que los LLM busquen y muestren imágenes de la web"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Infrastructure Manager"
+msgstr "Administrador de infraestructura"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Manage and monitor your cloud infrastructure from the web console"
+msgstr ""
+"Administra y monitorea tu infraestructura en la nube desde la consola web"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"Serve LLMClients from your own branded domain, managed with a SAM manifest"
+msgstr ""
+"Sirve LLMClients desde tu propio dominio de marca, administrado con un "
+"manifiesto SAM"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Manifest Editor"
+msgstr "Editor de manifiestos"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Edit, validate, save, clone and delete manifests in the web console"
+msgstr "Edita, valida, guarda, clona y elimina manifiestos en la consola web"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Enforce spending limits on any resource, with budget vs actual charts"
+msgstr ""
+"Aplica límites de gasto a cualquier recurso, con gráficos de presupuesto vs. "
+"real"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Run open-weight LLMs on your own Kubernetes cluster"
+msgstr "Ejecuta LLM de pesos abiertos en tu propio clúster de Kubernetes"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets"
+msgstr ""
+"Reenvía solicitudes a las API de proveedores de LLM, con las claves "
+"guardadas como Smarter Secrets"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone"
+msgstr ""
+"Administra bases de datos vectoriales para RAG: Qdrant autoalojado, Qdrant "
+"Cloud y Pinecone"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "What's New"
+msgstr "Novedades"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Recently added Smarter features"
+msgstr "Funciones de Smarter agregadas recientemente"
 
 #. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/sign-in.js
 msgid "The password is required"
