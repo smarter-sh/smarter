@@ -56,6 +56,8 @@ from smarter.apps.llmtool.models import (
     PluginMeta,
 )
 from smarter.apps.llmtool.plugin.image_search import (
+    VALIDATION_HEADERS,
+    VALIDATION_TIMEOUT,
     ImageResult,
     ImageSearchPlugin,
     SmarterImageSearchPluginError,
@@ -63,6 +65,7 @@ from smarter.apps.llmtool.plugin.image_search import (
     describe_brave_error,
     file_type_of_content_type,
     file_type_of_url,
+    image_content_type,
     is_https_url,
     parse_brave_images,
     shuffled,
@@ -474,6 +477,25 @@ class TestImageSearchPlugin(PluginTestBase):
             self.assertNotIn(f"https://images.example.com/{url}", heads)
         self.assertIn(MISSING, heads)
         self.assertIn(HOTLINK, heads)
+
+    def test_image_content_type(self):
+        """Test that a HEAD request that a host refuses only for the server still counts as available."""
+        host = FakeWebHost()
+        host.add(CAT, b"", 200, {"Content-Type": "image/png"})
+        host.add(DOG, b"<html>slow down</html>", 429, {"Content-Type": "text/html"})
+        host.add(PHOTO, b"", 405, {})
+        host.add(HOTLINK, b"<html>no hotlinking</html>", 403, {"Content-Type": "text/html"})
+        with mock_web_host(host) as fake:
+            self.assertEqual(image_content_type(CAT, timeout=30), "image/png")
+            self.assertEqual(image_content_type(DOG, timeout=30), "")
+            self.assertEqual(image_content_type(PHOTO, timeout=30), "")
+            self.assertIsNone(image_content_type(HOTLINK, timeout=30))
+            self.assertIsNone(image_content_type(MISSING, timeout=30))
+        for call in fake.calls:
+            self.assertEqual(call["method"], "HEAD")
+            self.assertLessEqual(call["timeout"], VALIDATION_TIMEOUT)
+            self.assertEqual(call["headers"]["Accept"], VALIDATION_HEADERS["Accept"])
+            self.assertTrue(call["headers"]["User-Agent"].startswith("Mozilla/5.0"))
 
     def test_search_json_arguments_and_count(self):
         """Test a tool call whose arguments are a JSON string, with a smaller count."""
