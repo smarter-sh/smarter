@@ -18,6 +18,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.validators import SmarterValidator
 
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
 logger = getLogger(__name__)
@@ -1214,6 +1215,36 @@ class TestSmarterRequestMixin(TestAccountMixin):
         mixin = SmarterRequestMixin(request)
 
         self.assertEqual(mixin.find_session_key(), session_key)
+
+    def test_find_session_key_ignores_a_malformed_cookie(self):
+        """A malformed session_key cookie, e.g. one that another application set on a parent domain, starts a new session."""
+        self.client.cookies[SMARTER_CHAT_SESSION_KEY_NAME] = "not-a-session-key"
+        request = self.client.get("/dashboard/").wsgi_request
+        mixin = SmarterRequestMixin(request)
+
+        self.assertIsNone(mixin.find_session_key())
+        self.assertTrue(SmarterValidator.is_valid_session_key(mixin.session_key))
+        self.assertNotEqual(mixin.session_key, "not-a-session-key")
+
+    def test_find_session_key_skips_a_malformed_url_key(self):
+        """A malformed key in the url doesn't hide a well formed one in the cookie."""
+        session_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        self.client.cookies[SMARTER_CHAT_SESSION_KEY_NAME] = session_key
+        request = self.client.get("/dashboard/", query_params={SMARTER_CHAT_SESSION_KEY_NAME: "deadbeef"}).wsgi_request
+        mixin = SmarterRequestMixin(request)
+
+        self.assertEqual(mixin.find_session_key(), session_key)
+
+    def test_accepted_session_key(self):
+        """Accepted_session_key() strips a key, and returns None for a missing or malformed one."""
+        session_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        mixin = SmarterRequestMixin(self.client.get("/dashboard/").wsgi_request)
+
+        self.assertEqual(mixin.accepted_session_key(f" {session_key}/ ", "url"), session_key)
+        self.assertIsNone(mixin.accepted_session_key(None, "cookie"))
+        self.assertIsNone(mixin.accepted_session_key("   ", "cookie"))
+        self.assertIsNone(mixin.accepted_session_key(12345, "request body"))  # type: ignore[arg-type]
+        self.assertIsNone(mixin.accepted_session_key("deadbeef", "get() parameters"))
 
     def test_to_json_not_ready(self):
         """To_json returns a dict regardless of whether its ready."""
