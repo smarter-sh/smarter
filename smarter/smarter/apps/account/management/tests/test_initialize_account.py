@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.management.base import CommandError
 
 from smarter.lib.typing import SmarterDictType
 
@@ -67,7 +68,8 @@ class TestInitializeAccount(CommandTestBase):
         ):
             with self.subTest(overrides=overrides):
                 self.call.reset_mock()
-                self.run_command("initialize_account", **self.options(**overrides))
+                with self.assertRaises(CommandError):
+                    self.run_command("initialize_account", **self.options(**overrides))
                 self.call.assert_not_called()
 
     def test_initialize_account_without_password(self):

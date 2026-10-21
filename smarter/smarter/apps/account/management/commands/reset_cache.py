@@ -16,6 +16,7 @@ which can be helpful during development, troubleshooting, or after certain opera
 """
 
 from django.core.cache import cache
+from django.core.management.base import CommandError
 
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -32,7 +33,6 @@ class Command(SmarterCommand):
             cache.clear()  # Clear the cache
         # pylint: disable=broad-except
         except Exception as e:
-            self.handle_completed_failure(msg=f"reset_cache command failed with error: {e}")
-            return
+            raise CommandError(f"Could not clear the cache: {e}") from e
 
         self.handle_completed_success(msg="reset_cache command completed successfully.")

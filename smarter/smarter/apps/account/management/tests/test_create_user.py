@@ -6,6 +6,7 @@ The new user's password email is never sent: the infrastructure email service is
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.management.base import CommandError
 
 from smarter.apps.account.models import AccountContact, UserProfile
 
@@ -64,9 +65,13 @@ class TestCreateUser(CommandTestBase):
         self.assertTrue(User.objects.filter(username=self.username).exists())
 
     def test_unknown_account_and_invalid_email(self):
-        self.create(account_number="0000-0000-0000")
+        """Test that each is refused with a message, and that nothing is saved."""
+        with self.assertRaisesRegex(CommandError, "Account with account number 0000-0000-0000 does not exist"):
+            self.create(account_number="0000-0000-0000")
         self.assertFalse(User.objects.filter(username=self.username).exists())
-        self.create(email="not an email")
+        with self.assertRaisesRegex(CommandError, "Invalid email address: not an email"):
+            self.create(email="not an email")
+        self.assertFalse(User.objects.filter(username=self.username).exists())
         self.assertFalse(UserProfile.objects.filter(user__username=self.username).exists())
 
     def test_language(self):
