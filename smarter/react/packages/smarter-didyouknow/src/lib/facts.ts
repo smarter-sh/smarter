@@ -7,7 +7,7 @@
  */
 import { gettext } from "@smarter/common";
 
-import { BLOG_URLS, DOCS_URLS, GITHUB_URLS, NPM_URLS } from "./const";
+import { BLOG_URLS, DOCS_URLS, GITHUB_URLS, NPM_URLS, SITE_URLS } from "./const";
 
 /** A piece of trivia, and an optional link to the resource that it mentions. */
 export interface DidYouKnowFact {
@@ -119,6 +119,12 @@ export function didYouKnowFacts(): DidYouKnowFact[] {
         "Smarter has a Free Course Catalog of ready-to-teach courses, from prompt engineering for non-programmers to Kubernetes for platform engineers.",
       ),
       link: { label: gettext("Read the Instructor Guide"), url: DOCS_URLS.instructors },
+    },
+    {
+      text: gettext(
+        "Every Smarter account starts with two course advisors, stackademy_sql and stackademy_api, that answer from a private database and a web API with no code. A case study on smarter.sh teaches how they work.",
+      ),
+      link: { label: gettext("Read the case study"), url: SITE_URLS.stackademyCaseStudy },
     },
     {
       text: gettext(
