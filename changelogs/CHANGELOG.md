@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.2...v0.36.3-alpha.1) (2026-10-21)
+
+### Bug Fixes
+
+* **prompt:** compare a receiver's iteration only when it is an int ([48f6561](https://github.com/smarter-sh/smarter/commit/48f65617ff6f94e2560edc0c2bce1e75edaa41bf))
+
 ## [0.36.2](https://github.com/smarter-sh/smarter/compare/v0.36.1...v0.36.2) (2026-10-21)
 
 ### Bug Fixes
