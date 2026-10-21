@@ -5,7 +5,8 @@
  */
 import { gettext } from "@smarter/common";
 
-import { DOCS } from "./const";
+/** The documentation that the cards link to. */
+export const DOCS = "https://docs.smarter.sh/en/latest";
 
 /** A Bootstrap color of the web console's theme, for a kind's icon and the accent of its card. */
 export type Tone = "primary" | "info" | "success" | "warning" | "danger" | "dark" | "secondary";

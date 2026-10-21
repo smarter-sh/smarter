@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { leafTree, lockedTree, stackademyTree } from "@/mocks/fixtures";
-import { branchIds, childId, countResources, depth, ROOT_ID } from "@/lib/tree";
+import { leafTree, lockedTree, stackademyTree } from "@/mocks/resourceTree";
+import { branchIds, childId, countResources, depth, ROOT_ID } from "@/components/ResourceTree/tree";
 
 describe("tree", () => {
   it("counts a resource that appears twice once", () => {

@@ -5,11 +5,11 @@
  */
 import { gettext, interpolate } from "@smarter/common";
 
-import { kindInfo } from "../lib/kinds";
-import type { SAMDependencyTreeNode } from "../lib/types";
+import { kindInfo } from "./kinds";
+import type { ResourceTreeNode } from "./types";
 
 interface ResourceCardProps {
-  node: SAMDependencyTreeNode;
+  node: ResourceTreeNode;
   /** The LLMClient itself, at the root of the tree, whose card stands out. */
   isRoot?: boolean;
 }

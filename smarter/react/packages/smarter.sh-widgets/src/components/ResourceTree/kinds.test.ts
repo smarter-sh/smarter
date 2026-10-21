@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DOCS } from "@/lib/const";
-import { kindInfo } from "@/lib/kinds";
+import { DOCS, kindInfo } from "@/components/ResourceTree/kinds";
 
 describe("kindInfo", () => {
   it("presents the plugins alike", () => {

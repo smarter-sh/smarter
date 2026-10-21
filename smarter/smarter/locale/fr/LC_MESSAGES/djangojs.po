@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 12:49+0000\n"
+"POT-Creation-Date: 2026-10-21 14:26+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -51,7 +51,7 @@ msgstr "ID"
 msgid "Manifest URL"
 msgstr "URL du manifeste"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx, react/packages/smarter.sh-widgets/src/components/ResourceTree/ResourceCard.tsx
 msgid "Owner"
 msgstr "Propriétaire"
 
@@ -3055,108 +3055,6 @@ msgstr "Copié"
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ManifestSnippet.tsx, react/packages/smarter-llmclient-deployment/src/components/CopyButton.tsx
 msgid "Copy"
 msgstr "Copier"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
-msgid "About %(kind)s, in the documentation"
-msgstr "À propos de %(kind)s, dans la documentation"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
-msgid "You can't read this resource"
-msgstr "Vous ne pouvez pas lire cette ressource"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceCard.tsx
-msgid "Open the manifest of %(name)s in a new tab"
-msgstr "Ouvrir le manifeste de %(name)s dans un nouvel onglet"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
-msgid "Hide what %(name)s uses"
-msgstr "Masquer ce qu'utilise %(name)s"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
-msgid "Show what %(name)s uses"
-msgstr "Afficher ce qu'utilise %(name)s"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
-msgid "%(count)s more"
-msgid_plural "%(count)s more"
-msgstr[0] "%(count)s de plus"
-msgstr[1] "%(count)s de plus"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/ResourceTree.tsx
-msgid "The resources that this LLMClient is built from"
-msgstr "Les ressources dont ce LLMClient est construit"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "A tool that the LLM can call"
-msgstr "Un outil que le LLM peut appeler"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "A chat with an LLM, its tools, and its rules"
-msgstr "Un chat avec un LLM, ses outils et ses règles"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "The LLM provider whose models it prompts"
-msgstr "Le fournisseur de LLM dont il interroge les modèles"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "The tools of a remote MCP server"
-msgstr "Les outils d'un serveur MCP distant"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Tools installed from an extension package"
-msgstr "Des outils installés depuis un paquet d'extension"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Screens prompts and responses"
-msgstr "Filtre les prompts et les réponses"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "How a plugin reaches a remote api"
-msgstr "Comment un plugin atteint une api distante"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "How a plugin reaches a database"
-msgstr "Comment un plugin atteint une base de données"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "An encrypted credential"
-msgstr "Un identifiant chiffré"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "The api key that its url requires"
-msgstr "La clé d'api que son url exige"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "The domain that it is served from"
-msgstr "Le domaine depuis lequel il est servi"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Compute that hosts an LLM"
-msgstr "Du calcul qui héberge un LLM"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Coordinates several LLMClients"
-msgstr "Coordonne plusieurs LLMClients"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Forwards requests to an LLM provider"
-msgstr "Transmet les requêtes à un fournisseur de LLM"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Documents, indexed for search"
-msgstr "Des documents, indexés pour la recherche"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Searches a vector store"
-msgstr "Cherche dans un magasin de vecteurs"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "Limits what it may spend"
-msgstr "Limite ce qu'il peut dépenser"
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/lib/kinds.ts
-msgid "A SAM resource"
-msgstr "Une ressource SAM"
 
 #. Translators: used in react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx
 msgid "No api key is attached: the url is public."
@@ -8572,6 +8470,108 @@ msgstr ""
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
 msgid "Add this platform's MCP server to Claude Code"
 msgstr "Ajoutez le serveur MCP de cette plateforme à Claude Code"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/Component.tsx
+msgid "Hide what %(name)s uses"
+msgstr "Masquer ce qu'utilise %(name)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/Component.tsx
+msgid "Show what %(name)s uses"
+msgstr "Afficher ce qu'utilise %(name)s"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/Component.tsx
+msgid "%(count)s more"
+msgid_plural "%(count)s more"
+msgstr[0] "%(count)s de plus"
+msgstr[1] "%(count)s de plus"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/Component.tsx
+msgid "The resources that this LLMClient is built from"
+msgstr "Les ressources dont ce LLMClient est construit"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "A tool that the LLM can call"
+msgstr "Un outil que le LLM peut appeler"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "A chat with an LLM, its tools, and its rules"
+msgstr "Un chat avec un LLM, ses outils et ses règles"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "The LLM provider whose models it prompts"
+msgstr "Le fournisseur de LLM dont il interroge les modèles"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "The tools of a remote MCP server"
+msgstr "Les outils d'un serveur MCP distant"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Tools installed from an extension package"
+msgstr "Des outils installés depuis un paquet d'extension"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Screens prompts and responses"
+msgstr "Filtre les prompts et les réponses"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "How a plugin reaches a remote api"
+msgstr "Comment un plugin atteint une api distante"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "How a plugin reaches a database"
+msgstr "Comment un plugin atteint une base de données"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "An encrypted credential"
+msgstr "Un identifiant chiffré"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "The api key that its url requires"
+msgstr "La clé d'api que son url exige"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "The domain that it is served from"
+msgstr "Le domaine depuis lequel il est servi"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Compute that hosts an LLM"
+msgstr "Du calcul qui héberge un LLM"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Coordinates several LLMClients"
+msgstr "Coordonne plusieurs LLMClients"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Forwards requests to an LLM provider"
+msgstr "Transmet les requêtes à un fournisseur de LLM"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Documents, indexed for search"
+msgstr "Des documents, indexés pour la recherche"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Searches a vector store"
+msgstr "Cherche dans un magasin de vecteurs"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "Limits what it may spend"
+msgstr "Limite ce qu'il peut dépenser"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/kinds.ts
+msgid "A SAM resource"
+msgstr "Une ressource SAM"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/ResourceCard.tsx
+msgid "About %(kind)s, in the documentation"
+msgstr "À propos de %(kind)s, dans la documentation"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/ResourceCard.tsx
+msgid "You can't read this resource"
+msgstr "Vous ne pouvez pas lire cette ressource"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/ResourceTree/ResourceCard.tsx
+msgid "Open the manifest of %(name)s in a new tab"
+msgstr "Ouvrir le manifeste de %(name)s dans un nouvel onglet"
 
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx
 msgid "SDK"
