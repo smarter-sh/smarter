@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.2...v0.36.0-alpha.3) (2026-10-21)
+
+### Bug Fixes
+
+* **react:** point [@smarter](https://github.com/smarter).sh/ui-chat's repository at smarter ([82a4865](https://github.com/smarter-sh/smarter/commit/82a4865742d7a9122f1456f58e266e67bf0aac15))
+
 ## [0.36.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.1...v0.36.0-alpha.2) (2026-10-21)
 
 ### Bug Fixes
