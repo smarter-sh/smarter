@@ -54,17 +54,24 @@ Research first, outline second. The code decides what the course can teach.
 - Search the other public repositories, cloned next to this one
   (`../<repo>`; clone any that are missing):
 
-  | Repository                | What's there                                                    |
-  | ------------------------- | --------------------------------------------------------------- |
-  | `smarter-infrastructure`  | Terraform for AWS: EKS, networking, DNS, the production cluster |
-  | `smarter-chat`            | The React chat component, published to npm, with its contract   |
-  | `smarter-cli`             | The Go command-line interface, packaged for each OS             |
-  | `smarter-python`          | The Python API client library on PyPI                           |
-  | `smarter-deploy`          | The Docker quickstart for running the platform                  |
-  | `smarter-helm`            | The published Helm chart (the source is `smarter/helm/charts/`) |
-  | `smarter-vscode-yaml`     | The VS Code extension for manifest files                        |
-  | `examples`                | Example manifests                                               |
-  | `web-integration-example` | Embedding the chat component in a web page                      |
+  | Repository               | What's there                                                    |
+  | ------------------------ | --------------------------------------------------------------- |
+  | `smarter-infrastructure` | Terraform for AWS: EKS, networking, DNS, the production cluster |
+  | `smarter-cli`            | The Go command-line interface, packaged for each OS             |
+  | `smarter-python`         | The Python API client library on PyPI                           |
+  | `smarter-deploy`         | The Docker quickstart for running the platform                  |
+  | `smarter-helm`           | The published Helm chart (the source is `smarter/helm/charts/`) |
+  | `smarter-vscode-yaml`    | The VS Code extension for manifest files                        |
+  | `examples`               | Example manifests                                               |
+  | `smarter.sh`             | The project's website (see below)                               |
+
+  `smarter.sh` is not an example project, but its landing page runs four
+  live integrations: built-in LLMClients chatting through Smarter Chat's
+  embed script. It is the real-world example of embedding the chat in a web
+  page (`src/common/chatbots.js`, `src/components/site/SmarterChatEmbed.jsx`).
+  Smarter Chat itself, the React component, is in this repository, in
+  `smarter/react/packages/smarter.sh-chat`. The `smarter-chat` and
+  `web-integration-example` repositories are archived: don't link them.
 
   **`account-manager` is private. Never link it or describe its contents.**
   Check visibility with `gh repo list smarter-sh --json name,visibility`
