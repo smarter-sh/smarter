@@ -97,7 +97,7 @@ Safety, Cost and Evidence
    * - The workbench Console
      - Beside the chat, the Console shows the LLMClient's configuration, every request sent to
        the model, every tool call, which plugins were selected, and the server's logs.
-     - `smarter-chat: src/components/Console/ <https://github.com/smarter-sh/smarter-chat/tree/main/src/components/Console>`__
+     - `smarter-workbench: src/components/Console/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-workbench/src/components/Console>`__
    * - Tokens and cost
      - Every request is recorded as a charge, with its tokens, provider and model, and priced
        per model. :doc:`/smarter-platform/cost-accounting`.

@@ -1,0 +1,14 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import WhatsNew from "@/components/WhatsNew/Component";
+
+/** Notable features of recent Smarter releases. */
+const meta = {
+  title: "Widgets/WhatsNew",
+  component: WhatsNew,
+} satisfies Meta<typeof WhatsNew>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

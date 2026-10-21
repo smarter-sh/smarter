@@ -8,7 +8,7 @@ shared code in ``@smarter/common``, built on React 19, TypeScript and Vite, and 
 Bootstrap theme. Storybook, Vitest, Testing Library, Mock Service Worker, ESLint and Prettier are
 already set up, with about 150 test files and every story run as a test. Each app is hosted by a
 Django template, and the chat interface, `@smarter.sh/ui-chat
-<https://github.com/smarter-sh/smarter-chat>`__, is published to npm with TypeScript types generated
+<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, is published to npm with TypeScript types generated
 from the server's Pydantic contract. There are twelve 30-minute recorded lectures and a 90-minute
 live session each week. Week 1 covers React and TypeScript, week 2 components and styling, week 3
 data and testing, and week 4 build, integration and the chat interface. See :doc:`../course-formats`
@@ -117,7 +117,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        (:doc:`/smarter-framework/developer-reference/react-integration`).
    * - 4
      - Lecture 12
-     - **The chat interface.** A tour of ``smarter-chat``: Server-Sent Events for a prompt's
+     - **The chat interface.** A tour of ``smarter.sh-chat``: Server-Sent Events for a prompt's
        progress, Markdown with math and diagrams, branding from ``spec.config.styles``, the API
        contract and its generated types, and embedding with `@smarter.sh/ui-chat
        <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__.

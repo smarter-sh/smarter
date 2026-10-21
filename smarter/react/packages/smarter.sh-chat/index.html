@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smarter Chat</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <!--
+    only used for development via 'npm run dev': the chat, in sandbox mode, as the web
+    console's Prompt Engineer's Workbench shows it, without the workbench's Console, which
+    is the platform's @smarter/workbench app. Log in to the web console at
+    http://localhost:9357 first, so that the session and CSRF cookies exist, and replace
+    the llmclient api url with one of yours.
+    -->
+    <div
+      id="smarter-chat-root"
+      style="height: 88vh"
+      smarter-llmclient-api-url="http://localhost:9357/workbench/llm-clients/rMTAwMDAwMQx/"
+      smarter-toggle-metadata="true"
+      smarter-csrf-cookie-name="csrftoken"
+      smarter-session-cookie-name="session_key"
+      smarter-django-session-cookie-name="sessionid"
+      smarter-cookie-domain="localhost"
+      react-debug-mode="true"
+      smarter-request-id="local-development"
+    ></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

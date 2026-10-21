@@ -113,7 +113,7 @@ describe("the React apps' messages", () => {
   it("come from every package's sources except Smarter Chat's, tests, stories and mocks, and static/js", () => {
     expect(files.some((f) => f.includes("/packages/smarter-secret-list/src/App.tsx"))).toBe(true);
     expect(files.some((f) => f.endsWith("/smarter/static/js/account/authentication/sign-in.js"))).toBe(true);
-    expect(files.some((f) => f.includes("/packages/smarter-chat/"))).toBe(false);
+    expect(files.some((f) => f.includes("/packages/smarter.sh-chat/"))).toBe(false);
     expect(files.some((f) => /\.(test|stories)\.tsx?$|\/mocks\/|\.d\.ts$/.test(f))).toBe(false);
   });
 

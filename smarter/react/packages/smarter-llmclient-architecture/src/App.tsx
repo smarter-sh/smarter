@@ -6,12 +6,11 @@
  */
 import { useState } from "react";
 import { gettext, interpolate, ngettext } from "@smarter/common";
+import { branchIds, countResources, depth, ResourceTree, type NodeId } from "@smarter.sh/ui-widgets";
 
 import GettingStarted from "./components/GettingStarted";
 import Introduction from "./components/Introduction";
-import ResourceTree from "./components/ResourceTree";
 import { DOCS_URLS } from "./lib/const";
-import { branchIds, countResources, depth, type NodeId } from "./lib/tree";
 import type { LLMClientArchitecture } from "./lib/types";
 import "./styles.css";
 

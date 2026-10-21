@@ -12,7 +12,7 @@ so a misspelled key is an error that says why, not a silent no-op.
 
 Students see the result straight away in the prompt engineering
 :doc:`workbench </smarter-framework/smarter-chat>`, whose `Console
-<https://github.com/smarter-sh/smarter-chat/tree/main/src/components/Console>`__
+<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-workbench/src/components/Console>`__
 shows, beside the chat, the configuration, every request sent to the model, every tool call,
 which plugins were selected, and the server's logs. The same prompt can be tried against several
 providers and models by changing two lines, and Smarter records the tokens and the

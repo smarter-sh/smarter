@@ -1,5 +1,6 @@
 {
   "name": "@smarter/budget-list",
+  "private": true,
   "description": "A React component library for displaying a list of Budgets, and their budget versus actual spending, on the Smarter web console.",
   "version": "0.2.0",
   "type": "module",
