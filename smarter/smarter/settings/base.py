@@ -775,6 +775,13 @@ MIDDLEWARE = [
     #
     "django_hosts.middleware.HostsRequestMiddleware",
     #
+    # handles cors, for the platform and for deployed llmclients. It is near the top so that every
+    # response, including the errors that later middleware returns, e.g. a 401 for an invalid api
+    # key or a 500, gets its CORS headers. Otherwise the browser reports a CORS error in place of
+    # the real one. Its llmclient lookup doesn't need request.user.
+    # -------------------------------
+    "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
+    #
     # this replaces corsheaders.middleware.CorsMiddleware"
     "django.contrib.sessions.middleware.SessionMiddleware",
     #
@@ -809,10 +816,6 @@ MIDDLEWARE = [
     # authentication middleware so that it can get the user info for logging context.
     # -------------------------------
     "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
-    #
-    # handles cors for deployed llmclients.
-    # -------------------------------
-    "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
     #
     # custom middleware that returns 400 responses for requests for common
     # sensitive files like .env, private key files, etc.
