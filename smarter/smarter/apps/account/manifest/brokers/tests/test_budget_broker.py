@@ -197,9 +197,9 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
                 SAMBudgetSpecResource(**fields)
 
     def test_example_manifests(self):
-        """Test that every example Budget manifest, the examples' and Stackademy's, is valid, with a unique name."""
+        """Test that every example Budget manifest is valid, with a unique name."""
         filespecs = example_budget_filespecs()
-        self.assertGreaterEqual(len(filespecs), 7)
+        self.assertGreaterEqual(len(filespecs), 6)
         names = []
         for filespec in filespecs:
             with self.subTest(filespec=os.path.basename(filespec)):

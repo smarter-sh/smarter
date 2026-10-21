@@ -38,7 +38,7 @@ Defending an AI Application
    * - Least privilege for tools
      - A SQL Plugin runs only a fixed, parameterized query, and an MCP client offers only the
        tools on its allow list, such as the read-only tools of GitHub's server.
-     - `stackademy-plugin-sql.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__,
+     - `stackademy/plugins/sql/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/plugins/sql/stackademy-sql.yaml>`__,
        `mcpclients/github.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/github.yaml>`__
 
 Secrets and Outbound Requests

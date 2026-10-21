@@ -77,8 +77,8 @@ spec:
                 run python manage.py migrate
                 run python manage.py convert_database_charset
                 python manage.py initialize_platform --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" || { echo "FAILED: manage.py initialize_platform"; status=1; }
-                run python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/smarter-demo
-                run python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
+                # initialize_platform applied the Stackademy project, https://github.com/smarter-sh/stackademy. Deploy its LLMClients.
+                run python manage.py load_from_github --account_number 3141-5926-5359 --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --url https://github.com/smarter-sh/stackademy --deploy
                 run python manage.py deploy_example_llmclients --account_number 3141-5926-5359
                 echo $status > /tmp/job-init.status
               } 2>&1 | tee /tmp/job-init.log
