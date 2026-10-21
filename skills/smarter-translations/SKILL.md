@@ -97,9 +97,23 @@ gitignored and the Dockerfile compiles it.
    catalog with `curl -b django_language=es localhost:9357/jsi18n/`.
 6. `test_lists_every_language_in_its_own_name` already covers a second language in the menu.
 
+## Emails sent outside a request
+
+No request chooses an email's language, so emails use the recipient's `UserProfile.language`
+(default `settings.LANGUAGE_CODE`; its `choices` are `settings.LANGUAGES`, so adding a language
+needs an `AlterField` migration of `account.UserProfile.language`). Console sign-ups store
+`active_language()` (`smarter.apps.account.models`), the request's language as LocaleMiddleware chose
+it: `receivers.user_logged_in_receiver` (password sign-up) and `pipeline.create_user` (oauth).
+`AccountContact.send_welcome_email(language=None)` renders `templates/account/email/welcome.html` and
+its subject inside `translation.override(language)`, defaulting to `AccountContact.preferred_language()`
+(the matching user's preference), and raises `SmarterValueError` for an unknown code.
+`AccountContact.save(language=...)` passes it to a new contact's email. `create_user --language` sets
+the preference and translates its plain-text password email with `gettext`; `add_account_contact` and
+`send_welcome_email` take `--language` as an override. Copy this for another email.
+
 ## Known gaps
 
-- `templates/account/email/welcome.html` (sent outside a request), the Keen demo bodies of
+- The Keen demo bodies of
   `account/dashboard/activity.html`, `statements.html` and `logs.html`, unused templates, and the
   Django admin (which Django translates) are not marked.
 - Smarter Chat (`packages/smarter-chat`) is its own repository, with its own gettext catalogs in the same

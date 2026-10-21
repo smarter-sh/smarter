@@ -68,3 +68,37 @@ class TestCreateUser(CommandTestBase):
         self.assertFalse(User.objects.filter(username=self.username).exists())
         self.create(email="not an email")
         self.assertFalse(UserProfile.objects.filter(user__username=self.username).exists())
+
+    def test_language(self):
+        """Test that the language is the user's preference, and the new account contact is welcomed in it."""
+        with patch.object(AccountContact, "send_welcome_email") as send:
+            self.create(language="es")
+        send.assert_called_once_with(language="es")
+        self.assertTrue(AccountContact.objects.get(account=self.account, email=self.email).welcomed)
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "es")
+
+    def test_default_language_and_update(self):
+        """Test that a new user prefers English, and that --language changes an existing user's preference."""
+        self.create()
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "en")
+        self.create(language="fr")
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "fr")
+        # without --language, the preference is kept.
+        self.create()
+        self.assertEqual(UserProfile.objects.get(user__username=self.username).language, "fr")
+
+    def test_password_email_language(self):
+        """Test that the password email is written in the given language, and in English by default."""
+        with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
+            self.create(language="es", password="pässword")
+        kwargs = self.infrastructure.email.send_email.call_args.kwargs
+        self.assertEqual(kwargs["subject"], "Se creó tu cuenta de usuario de Smarter")
+        self.assertIn("Contraseña: pässword", kwargs["body"])
+        self.assertIn(f"Nombre de usuario: {self.username}", kwargs["body"])
+
+    def test_password_email_english(self):
+        with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
+            self.create(password="secret")
+        kwargs = self.infrastructure.email.send_email.call_args.kwargs
+        self.assertEqual(kwargs["subject"], "Your Smarter user account has been created")
+        self.assertIn("Password: secret\n", kwargs["body"])
