@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.35.4-alpha.2...v0.36.0-alpha.1) (2026-10-21)
+
+### Features
+
+* **react:** add [@smarter](https://github.com/smarter).sh/ui-widgets, the dashboard's widgets on npm ([59cbfb2](https://github.com/smarter-sh/smarter/commit/59cbfb28977283167bff29cfd1f2e625b8da3a9b))
+
 ## [0.35.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.35.4-alpha.1...v0.35.4-alpha.2) (2026-10-21)
 
 ### Bug Fixes
