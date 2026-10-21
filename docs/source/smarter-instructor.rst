@@ -198,7 +198,10 @@ and try a few of the built-in LLMClients in the workbench: ``simple``, ``calcula
 ``weather``, ``research_analyst``, ``data_analyst`` and ``customer_support`` show a progression
 from a bare model to a completely styled, governed application with plugins, MCP servers and guardrails. Their
 manifests, in ``smarter/smarter/apps/llmclient/data/llm-clients/``, make good starting points for
-your own examples.
+your own examples. The course advisors ``stackademy_sql`` and ``stackademy_api`` come from the
+:doc:`Stackademy example project <smarter-framework/smarter-manifests/stackademy>`, a GitHub
+repository of its own, which shows students how to manage a project of many AI resources with git
+and GitHub.
 
 
 Setting Up a Class

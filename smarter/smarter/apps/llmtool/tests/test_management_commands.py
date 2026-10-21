@@ -14,7 +14,6 @@ is given an exception, so a command's failures are asserted as ``SystemExit``.
 """
 
 import io
-import os
 from contextlib import redirect_stdout
 from unittest import mock
 
@@ -263,30 +262,22 @@ class TestPluginManagementCommands(PluginAppTestBase):
     # add_example_tools
     # -------------------------------------------------------------------------
     def test_add_example_tools(self):
-        """Test that add_example_tools creates the sample plugins, and applies the Stackademy plugins."""
+        """Test that add_example_tools creates the sample plugins, and nothing else."""
         with (
             mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins") as add_example_plugins,
-            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.Command.apply_all", return_value=[]) as apply_all,
+            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.Command.apply_all") as apply_all,
         ):
             self.call("add_example_tools", username=self.username, verbose=True)
         add_example_plugins.assert_called_once()
         self.assertEqual(add_example_plugins.call_args.kwargs["user_profile"], self.user_profile)
         self.assertTrue(add_example_plugins.call_args.kwargs["verbose"])
-        filespecs, user_profile = apply_all.call_args.args
-        self.assertEqual(user_profile, self.user_profile)
-        self.assertEqual(
-            sorted(os.path.basename(f) for f in filespecs), ["stackademy-plugin-api.yaml", "stackademy-plugin-sql.yaml"]
-        )
+        apply_all.assert_not_called()
 
     def test_add_example_tools_reports_failures(self):
-        """Test that add_example_tools reports, but doesn't fail on, the examples that fail."""
-        with (
-            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins", return_value=False),
-            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.Command.apply_all", return_value=["a.yaml: boom"]),
-        ):
+        """Test that add_example_tools reports, but doesn't fail on, the sample plugins that fail."""
+        with mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins", return_value=False):
             output = self.call("add_example_tools", username=self.username)
         self.assertIn("sample-plugins", output)
-        self.assertIn("a.yaml: boom", output)
 
     def test_add_example_tools_failure(self):
         """Test that add_example_tools fails when the examples cannot be added."""

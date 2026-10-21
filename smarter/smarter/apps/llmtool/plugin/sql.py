@@ -8,25 +8,15 @@ A PLugin that uses a remote SQL database server to retrieve its return data.
     1. Smarter Secret: The authentication credential for the remote SQL database connection.
     2. Smarter SQL Connection: The complete connection configuration to the remote SQL database server (host, port, secret, ssh key, username, etc.).
     3. Smarter SQL Plugin: The plugin that defines the SQL query and it's parameters to run against the remote SQL database server.
-    4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
+    4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the SQL Plugin.
 
-.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+The Stackademy example project's SQL Plugin is built from these four resources. Their manifests are in
+the `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__ repository:
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/secret/data/stackademy/secret-smarter-test-db.yaml
-    :language: yaml
-    :caption: 1.) Example Smarter Secret Manifest
-
-.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/stackademy/smarter-test-db.yaml
-    :language: yaml
-    :caption: 2.) Example Smarter SQL Connection Manifest
-
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml
-    :language: yaml
-    :caption: 3.) Example Stackademy SQL Plugin Manifest
-
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/stackademy/stackademy-llmclient-sql.yaml
-    :language: yaml
-    :caption: 4.) Example Stackademy LLMClient Manifest
+- `secrets/smarter-test-db.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/smarter-test-db.yaml>`__
+- `connections/sql/smarter-test-db.yaml <https://github.com/smarter-sh/stackademy/blob/main/connections/sql/smarter-test-db.yaml>`__
+- `plugins/sql/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/plugins/sql/stackademy-sql.yaml>`__
+- `llm-clients/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/llm-clients/stackademy-sql.yaml>`__
 """
 
 import re
