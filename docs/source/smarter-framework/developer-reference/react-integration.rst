@@ -639,12 +639,14 @@ Operational Considerations
     Django pages must be built only after the frontend asset pipeline has completed.
     This ensures that all compiled React bundles and ``manifest.json`` metadata are available
     inside the container image at runtime.
-* Externally Managed Packages
+* Published Packages
     :doc:`Smarter Chat <../smarter-chat>`, the React app of the LLMClient
-    prompt engineering workbench, is managed in its own repository and published to npm.
-    ``make react-install`` clones it into ``smarter/react/packages/smarter-chat``, and
-    the GitHub Actions workflows do the same before they build or test, after which it is
-    built, tested and served like every other package in the workspace.
+    prompt engineering workbench, is also published to npm, as ``@smarter.sh/ui-chat``,
+    and so is ``@smarter.sh/ui-widgets``. Both are ordinary packages of the workspace
+    (``smarter/react/packages/smarter.sh-chat`` and ``smarter/react/packages/smarter.sh-widgets``),
+    built, tested and served like every other, and GitHub Actions publishes them with each
+    Smarter release, under the platform's version (``uiChatRelease.yml`` and
+    ``uiWidgetsRelease.yml``).
 * Convenience Tooling
     Smarter provides helper commands such as `make react-build` and `make react-build-ci`
     to simplify common frontend integration workflows and to keep Django’s

@@ -29,8 +29,8 @@ seams between them are where students learn the most:
   exported as a `JSON Schema
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/chat-contract.schema.json>`__
   and turned into the `TypeScript types
-  <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__ of the
-  `smarter-chat <https://github.com/smarter-sh/smarter-chat>`__ component, so the two sides cannot
+  <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__ of the
+  `smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__ component, so the two sides cannot
   drift apart without a failing test.
 - **Real failure modes.** A missing build manifest renders an empty page with no console error,
   and ``make build`` without ``make react-build`` reuses stale static files. Students learn to

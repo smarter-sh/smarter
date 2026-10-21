@@ -11,40 +11,51 @@ see :doc:`Django-React Integration <../developer-reference/react-integration>`.
 Where the Code Lives
 --------------------
 
-Smarter Chat is managed in its own repository,
-`smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__, where it is versioned and
-published to npm. Inside the Smarter repository, ``make react-install`` clones it into the React
-workspace, as ``smarter/react/packages/smarter-chat``, which Smarter's ``.gitignore`` excludes:
+Smarter Chat lives in the Smarter repository, as ``smarter/react/packages/smarter.sh-chat``, one of the
+packages of the React npm workspace in ``smarter/react``. ``make react-install`` installs its
+dependencies with everyone else's:
 
 .. code-block:: console
 
-  make react-install                           # clones smarter-chat's main branch, if it isn't there yet
-  make react-install SMARTER_CHAT_BRANCH=alpha # or another branch
+  make react-install
 
-From then on it is a workspace package like any other, with the same TypeScript, Vite, Vitest,
-Storybook, ESLint and Prettier configuration as the other React apps. Two things are different:
+It is a workspace package like any other, with the same TypeScript, Vite, Vitest, Storybook, ESLint
+and Prettier configuration as the other React apps, and you change it in the same branch and commit
+as the Django code that it talks to. A change to the chat api, for example, is one commit: the
+backend's models, the contract's schema and the TypeScript types that ``make chat-contract``
+regenerates in the package (see `Using a new field of the configuration`_). One thing is different:
+**it is a library, not a page.** Its name is ``@smarter.sh/ui-chat``, its npm package name, rather
+than the ``@smarter/<name>`` of the console's apps, and its build is its ``dist/``. The web console's
+workbench, ``@smarter/workbench``, imports it from there, as any React application does, so the
+workspace builds it before the workbench (``npm run build:deps``). See
+:doc:`How the Web Console Hosts It <web-console-hosting>`.
 
-- **It is its own git repository.** Commit, branch and push from inside
-  ``smarter/react/packages/smarter-chat``. Nothing you do there shows up in Smarter's ``git status``.
-  ``make react-install`` never changes an existing clone, so work in progress in it is safe.
-- **It is a library, not a page.** Its name is ``@smarter.sh/ui-chat``, its npm package name, rather
-  than the ``@smarter/<name>`` of the console's apps, and its build is its ``dist/``. The web
-  console's workbench, ``@smarter/workbench``, imports it from there, as any React application does,
-  so the workspace builds it before the workbench (``npm run build:deps``). See
-  :doc:`How the Web Console Hosts It <web-console-hosting>`.
+Its npm scripts run from the package's folder, or from ``smarter/react`` with
+``-w @smarter.sh/ui-chat``:
 
-The GitHub Actions workflows of the Smarter repository clone Smarter Chat before the React build
-(``.github/actions/react-build``, whose ``smarter-chat-branch`` input defaults to ``main``), so a
-change merged into that branch ships with Smarter's next image build. The cache key of the React
-build includes the clone's commit.
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
 
-You can also work on it alone, without Smarter:
+   * - Script
+     - What it does
+   * - ``npm run dev``
+     - Vite's dev server, with ``index.html``: the chat alone (see `Running It`_).
+   * - ``npm run storybook``
+     - Storybook, at http://localhost:6006.
+   * - ``npm run build``, ``build:lib``, ``build:embed``
+     - The package's builds (see `Builds`_), and ``npm run check:dist`` checks their output.
+   * - ``npm test``, ``npm run coverage``
+     - The unit tests, and a coverage report in ``coverage/``.
+   * - ``npm run lint``, ``npm run typecheck``
+     - ESLint, and the TypeScript compiler.
+   * - ``npm run contract:types``
+     - Generates ``src/contract.gen.ts`` from the contract's JSON Schema.
+   * - ``npm run i18n``
+     - Extracts, merges and compiles the translation catalogs.
 
-.. code-block:: console
-
-  git clone https://github.com/smarter-sh/smarter-chat.git
-  cd smarter-chat
-  make init
+Smarter Chat's history up to version 0.16.2, when it had a repository of its own, is in the
+archived `smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__ repository.
 
 
 Running It
@@ -59,17 +70,17 @@ console; otherwise they use Bootstrap, which the web console's theme is built on
 
 .. code-block:: console
 
-  make react-storybook APP=smarter-chat   # from the Smarter repository, or
-  make serve                              # from smarter/react/packages/smarter-chat
+  make react-storybook APP=smarter.sh-chat   # from the repository's root, or
+  npm run storybook                       # from smarter/react/packages/smarter.sh-chat
 
-**Vite's dev server, against your local Smarter.** ``make run``, in the package, serves
+**Vite's dev server, against your local Smarter.** ``npm run dev``, in the package, serves
 ``index.html`` with hot module replacement, and proxies ``/api``, ``/workbench`` and ``/static``
 requests to the Django dev server at http://localhost:9357. Log in to the web console first, so that
 the session and CSRF cookies exist, and set ``smarter-llmclient-api-url`` in ``index.html``'s root
 element to the workbench url of one of your LLMClients, for example
 ``http://localhost:9357/workbench/llm-clients/<hashed_id>/``.
 
-**The web console itself.** ``make react-build``, in the Smarter repository, builds Smarter Chat's
+**The web console itself.** ``make react-build``, from the repository's root, builds Smarter Chat's
 library, then every React app, the workbench among them, into Django's static files, collects them,
 and builds the Docker image. Then restart
 ``smarter-app``, and open an LLMClient's workbench. Use ``make react-build``, not ``make build``,
@@ -265,11 +276,12 @@ Smarter Chat's tests use `Vitest <https://vitest.dev/>`__ and React Testing Libr
 
 .. code-block:: console
 
-  make test        # in smarter/react/packages/smarter-chat
-  make coverage    # with a coverage report in coverage/
-  make lint        # ESLint, TypeScript and Prettier
-  make react-test  # from the Smarter repository: every React app, as CI does
-  make react-lint
+  npm test                                # in smarter/react/packages/smarter.sh-chat
+  npm run coverage                        # with a coverage report in coverage/
+  npm run lint && npm run typecheck       # ESLint and TypeScript
+  npx vitest run --project smarter.sh-chat   # in smarter/react: only Smarter Chat's tests
+  make react-test                         # from the repository's root: every React app, as CI does
+  make react-lint                         # formatting, lint and types of every React app
 
 - **One test module per source module**, beside it: ``api.test.ts`` for ``api.ts``,
   ``Component.test.tsx`` for ``Component.tsx``.
@@ -288,7 +300,7 @@ Smarter Chat's tests use `Vitest <https://vitest.dev/>`__ and React Testing Libr
 - **jsdom can't lay out Mermaid's svg**, so tests mock ``mermaid`` with ``src/mocks/mermaid.ts``.
   Storybook's ``WithDiagram`` story uses the real Mermaid.
 
-See the ``smarter-react-testing`` skill in the Smarter repository for the workspace's shared test
+See the ``smarter-react-testing`` skill in the repository's ``skills/`` folder for the workspace's shared test
 configuration and its pitfalls.
 
 
@@ -301,8 +313,8 @@ Adding a prop
 1. Add it to ``SmarterChatProps`` in ``src/types.ts``, optional, with a doc comment.
 2. Give it a default in ``SmarterChat``'s parameter list. The default must suit the npm package's
    users.
-3. If the web console's workbench sets it, pass it in the workbench's ``App.tsx``, in the Smarter
-   repository, once the release that has it is in the workspace's clone (see
+3. If the web console's workbench sets it, pass it in the workbench's ``App.tsx``
+   (``smarter/react/packages/smarter-workbench``), in the same change (see
    :doc:`How the Web Console Hosts It <web-console-hosting>`).
 4. Add it to the props table of the README, and of :doc:`Embedding Smarter Chat <embedding>`.
 5. Test it, and add a story if it changes what the chat looks like.
@@ -319,12 +331,12 @@ string literal, with named ``%(name)s`` placeholders. Translate when the text is
 a module-level constant, because ``SmarterChat`` activates its language as it renders.
 
 1. Mark the text, e.g. ``gettext("Start a new chat")``.
-2. ``npm run i18n`` (``make i18n``). ``scripts/i18n.mjs`` extracts the messages with the TypeScript
+2. ``npm run i18n``, in the package. ``scripts/i18n.mjs`` extracts the messages with the TypeScript
    compiler into ``locale/smarter-chat.pot``, merges them into
    ``locale/<language>/LC_MESSAGES/smarter-chat.po``, keeping their translations, and compiles the
    ``.po`` files into ``src/catalogs.gen.ts``, which the builds bundle.
-3. Translate the new ``msgstr`` entries in the Spanish and French ``.po`` files, with the web
-   console's terms, and check them with ``msgfmt --check -o /dev/null <file>.po``.
+3. Translate the new ``msgstr`` entries in every language's ``.po`` file (Spanish, French and
+   Brazilian Portuguese), with the web console's terms, and check them with ``msgfmt --check -o /dev/null <file>.po``.
 4. ``npm run i18n`` again. ``src/catalogs.test.ts`` fails when a catalog is out of date, or a message
    isn't translated, or its placeholders differ from the English text's.
 
@@ -339,8 +351,9 @@ the backend generates from its Pydantic models (see :doc:`The Chat API Contract 
    example ``PromptChatApiLLMClient`` for ``llmclient.*``), optional unless every supported Smarter
    release sends it. If the public configuration must include it, add it to
    ``PUBLIC_LLMCLIENT_FIELDS`` too.
-2. Run ``make chat-contract``, in the Smarter repository. It regenerates
-   ``contract/chat-contract.schema.json`` and ``src/contract.gen.ts`` here.
+2. Run ``make chat-contract``, from the repository's root. It regenerates the backend's schema, and
+   the package's ``contract/chat-contract.schema.json`` and ``src/contract.gen.ts``. Commit them
+   together with the model.
 3. Add the field to ``makeConfig()`` in ``src/mocks/fixtures.ts``. ``src/contract.test.ts`` checks
    the fixtures against the schema, and that ``src/contract.gen.ts`` is up to date.
 4. Read it, with a fallback for platforms that don't send it yet, and for version 1 of the contract,
@@ -357,8 +370,7 @@ specially, switch on ``event.type`` in ``SmarterChat``'s ``onProgress``, and add
 Adding a Console tab
 ~~~~~~~~~~~~~~~~~~~~
 
-The Console is the workbench's, in the Smarter repository (``smarter/react/packages/smarter-workbench``),
-not Smarter Chat's. Add the tab's id to ``MenuItems`` in ``Console/enums.ts``, its label to ``tabs()``
+The Console is the workbench's (``smarter/react/packages/smarter-workbench``), not Smarter Chat's. Add the tab's id to ``MenuItems`` in ``Console/enums.ts``, its label to ``tabs()``
 in ``Console/Component.tsx``, and its data to ``consoleData()`` in ``Console/data.ts``, which reads it
 from the configuration that ``onConfig`` passes. A tab that fetches its own data, as the Manifest and
 Deployment tabs do, uses ``useTabData()``.
@@ -375,16 +387,25 @@ story.
 Releases
 --------
 
-Commit messages follow `Conventional Commits <https://www.conventionalcommits.org/>`__, and
-`semantic-release <https://semantic-release.gitbook.io/>`__ versions the package from them on each
-push to ``alpha`` (prereleases) and ``main``. ``feat`` is a minor release, ``fix`` and ``perf`` are
-patches, and a ``BREAKING CHANGE:`` footer is a major release. After a release on ``main``, publish
-it to npm with ``make release``. The package's ``.github/CONTRIBUTING.md`` has the details.
+``@smarter.sh/ui-chat`` is released with the Smarter platform, and has its version. Commit messages
+follow `Conventional Commits <https://www.conventionalcommits.org/>`__, and
+`semantic-release <https://semantic-release.gitbook.io/>`__ versions the platform from them on each
+push to ``alpha`` and ``beta`` (prereleases) and ``main``: ``feat`` is a minor release, ``fix`` and
+``perf`` are patches, and a ``BREAKING CHANGE:`` footer is a major release. Each GitHub release that
+semantic-release publishes starts ``.github/workflows/uiChatRelease.yml``, which checks out the
+release's tag, sets the package's version from it (``v0.36.0-alpha.3`` publishes
+``0.36.0-alpha.3``), runs the package's tests, builds it, checks the build with
+``npm run check:dist``, and publishes it to npm with trusted publishing and a provenance statement.
+A release from ``main`` gets the npm dist-tag ``latest``, and a prerelease gets its channel's,
+``alpha`` or ``beta``, so ``npm install @smarter.sh/ui-chat`` and the embed script's jsDelivr ranges,
+such as ``@0``, only ever load ``latest`` releases; the workflow asks jsDelivr to refresh those
+ranges after each one. ``@smarter.sh/ui-widgets`` is published the same way, by
+``uiWidgetsRelease.yml``.
 
 Keep two audiences in mind when you change behavior that depends on the backend:
 
-- **The web console** always runs the Smarter Chat that was cloned when its image was built, so it
-  and the backend change together.
+- **The web console** always runs the Smarter Chat that was built into its image, from the same
+  commit as the backend, so the two change together.
 - **Pages that embed the npm package** run whichever version they installed, against whichever
   Smarter platform they call. A new version of the chat must keep working with the platform
   releases that are in use, and the platform must keep working with the chat versions that are in

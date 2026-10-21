@@ -1,6 +1,6 @@
 ---
 name: smarter-project-repositories
-description: Use when a task reaches beyond this repository into another smarter-sh repository - the smarter-cli (Go), the Python, Node.js or Go SDKs (smarter-python, smarter-nodejs, smarter-golang), smarter-vscode-yaml, smarter-chat, smarter-deploy or smarter-infrastructure - e.g. to check what a change to a SAM model, an example manifest, the OpenAPI document, or the chat or journal contract breaks downstream, to see how a client calls a route, or to answer a question about one of those repositories. Covers reading their local checkouts next to this one, checking that a checkout is current, each repository's copy of the platform's contracts (make contracts), and the Smarter Project MCP server as a fallback.
+description: Use when a task reaches beyond this repository into another smarter-sh repository - the smarter-cli (Go), the Python, Node.js or Go SDKs (smarter-python, smarter-nodejs, smarter-golang), smarter-vscode-yaml, smarter-deploy or smarter-infrastructure - e.g. to check what a change to a SAM model, an example manifest, the OpenAPI document, or the chat or journal contract breaks downstream, to see how a client calls a route, or to answer a question about one of those repositories. Covers reading their local checkouts next to this one, checking that a checkout is current, each repository's copy of the platform's contracts (make contracts), and the Smarter Project MCP server as a fallback.
 ---
 
 # The Other Smarter Project Repositories
@@ -24,13 +24,10 @@ consume it, and most of them pin a copy of its contracts. Their list is
    yourself: the never-run-git-writes rule applies to every repository, not
    only this one.
 
-   **smarter-chat is the exception.** Its only checkout is the clone that
-   `make react-install` makes inside this repository's React workspace,
-   `smarter/react/packages/smarter-chat`. Read it, change it and test it
-   there, never in a `../smarter-chat`. It is still its own git repository:
-   run its git commands, and write its commits, with
-   `git -C smarter/react/packages/smarter-chat`, and never commit its files
-   from this repository.
+   Smarter Chat (`@smarter.sh/ui-chat`) is not one of them. It is a package
+   of this repository's React workspace, `smarter/react/packages/smarter.sh-chat`,
+   and is read, changed and committed here. The archived
+   `smarter-sh/smarter-chat` repository holds only its history up to 0.16.2.
 
 3. **The Smarter Project MCP server**, only when a checkout is missing or
    hopelessly stale, or to search the published docs by relevance:
@@ -60,10 +57,10 @@ requests against the copy:
 | `smarter-cli`         | openapi.json, the authority on its commands' routes and kinds  | `testdata/contracts/`                      |
 | `smarter-vscode-yaml` | SAM schemas and examples, openapi.json                         | `contract/`, `contract/sam/`               |
 
-smarter-chat is the exception: this repository pushes to it. `make chat-contract`
-here copies the chat contract's JSON Schema into the workspace clone's
-`contract/` (`SMARTER_CHAT_DIR`, `smarter/react/packages/smarter-chat`), and
-regenerates its types.
+Smarter Chat needs no copy step of its own: `make chat-contract` regenerates the
+chat contract's JSON Schema in the backend and in its package,
+`smarter/react/packages/smarter.sh-chat/contract/`, together with the package's
+TypeScript types, all in this repository's tree.
 
 The source files are listed in each `sync-contracts.sh`. They're generated here
 by `make api-contract` and `make chat-contract` (see `smarter-api-contract`).
@@ -76,5 +73,5 @@ unless the user asks: it changes that repository's working tree, and its tests
 belong to that repository's own workflow.
 
 The SDKs' Sphinx pages live in this repository, at
-`docs/source/smarter-framework/smarter-<python|nodejs|golang|chat>*`, and some
+`docs/source/smarter-framework/smarter-<python|nodejs|golang>*`, and some
 SDKs generate their api reference into them.
