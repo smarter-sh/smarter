@@ -42,4 +42,9 @@ describe("Extensions", () => {
       expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
     }
   });
+
+  it("stays light in the web console's dark mode, like the other light widgets", () => {
+    render(<Extensions />);
+    expect(screen.getByRole("region", { name: "Extensions" })).toHaveAttribute("data-bs-theme", "light");
+  });
 });
