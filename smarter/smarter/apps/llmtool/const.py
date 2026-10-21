@@ -7,8 +7,6 @@ namespace = "llmtool"
 presentation_app_name = "LLMTool"
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = HERE
-STACKADEMY_PATH = os.path.join(HERE, "data", "stackademy")
-"""The Stackademy SqlPlugin and ApiPlugin manifests, which ``manage.py add_example_tools`` applies."""
 
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE

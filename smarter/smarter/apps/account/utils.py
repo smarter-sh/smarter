@@ -694,22 +694,21 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
 BUILTIN_BUDGETS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "example-manifests", "budgets")
 """The Budget example manifests that :func:`add_example_budgets` creates."""
 
-STACKADEMY_BUDGETS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "stackademy")
-"""The Stackademy Budget manifests, which :func:`add_example_budgets` also creates."""
 
 BUILTIN_BUDGET_ANNOTATION = "smarter.sh/budget/builtin"
 
 
 def example_budget_filespecs() -> list[str]:
     """
-    Return the built-in Budget manifests: the examples, then Stackademy's.
+    Return the built-in Budget manifests.
 
-    :returns: The manifests' paths, in ``data/example-manifests/budgets/`` and ``data/stackademy/``.
+    The Stackademy project's Budget is not among them: ``manage.py load_from_github`` applies it,
+    attached to its resources, from https://github.com/smarter-sh/stackademy.
+
+    :returns: The manifests' paths, in ``data/example-manifests/budgets/``.
     :rtype: list[str]
     """
-    return sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml"))) + sorted(
-        glob.glob(os.path.join(STACKADEMY_BUDGETS_PATH, "*.yaml"))
-    )
+    return sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml")))
 
 
 def add_example_budgets(verbose: bool = False) -> list[Budget]:

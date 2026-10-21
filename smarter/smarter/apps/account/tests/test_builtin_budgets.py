@@ -17,7 +17,6 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import (
     BUILTIN_BUDGET_ANNOTATION,
     BUILTIN_BUDGETS_PATH,
-    STACKADEMY_BUDGETS_PATH,
     add_example_budgets,
     example_budget_filespecs,
 )
@@ -40,29 +39,21 @@ class TestBuiltinBudgets(TestAccountMixin):
             with open(os.path.join(self.path, os.path.basename(filespec)), "w", encoding="utf-8") as f:
                 f.write(text.replace(f"\n  name: {name}\n", f"\n  name: {test_name}\n", 1))
         self.addCleanup(Budget.objects.filter(name__in=self.names).delete)
-        # the copies are all in one folder, and the Stackademy folder is empty.
-        empty = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, empty)
-        for name, path in (("BUILTIN_BUDGETS_PATH", self.path), ("STACKADEMY_BUDGETS_PATH", empty)):
-            patcher = mock.patch.object(utils, name, path)
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = mock.patch.object(utils, "BUILTIN_BUDGETS_PATH", self.path)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_example_budget_filespecs(self):
-        """Test that the built-in budgets are the examples and the Stackademy budget."""
-        with (
-            mock.patch.object(utils, "BUILTIN_BUDGETS_PATH", BUILTIN_BUDGETS_PATH),
-            mock.patch.object(utils, "STACKADEMY_BUDGETS_PATH", STACKADEMY_BUDGETS_PATH),
-        ):
+        """Test that the built-in budgets are the examples, and not the Stackademy project's budget."""
+        with mock.patch.object(utils, "BUILTIN_BUDGETS_PATH", BUILTIN_BUDGETS_PATH):
             filespecs = example_budget_filespecs()
-        self.assertEqual(filespecs[-1], os.path.join(STACKADEMY_BUDGETS_PATH, "stackademy-project.yaml"))
-        self.assertEqual(filespecs[:-1], sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml"))))
+        self.assertEqual(filespecs, sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml"))))
 
     def test_creates_detached_budgets(self):
         """Test that a budget is created for each example manifest, detached, and annotated as built-in."""
         created = add_example_budgets()
         self.assertEqual(sorted(b.name for b in created), sorted(self.names))
-        self.assertGreaterEqual(len(created), 7)
+        self.assertGreaterEqual(len(created), 6)
         for budget in created:
             self.assertFalse(budget.constraints.exists(), f"{budget.name} must be detached")  # type: ignore[attr-defined]
             self.assertIn({BUILTIN_BUDGET_ANNOTATION: "true"}, budget.annotations)

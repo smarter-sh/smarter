@@ -17,7 +17,8 @@ import yaml
 from django.core.management import call_command
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.llmclient.const import EXAMPLE_LLMCLIENTS_PATH, STACKADEMY_PATH
+from smarter.apps.llmclient.const import EXAMPLE_LLMCLIENTS_PATH
+from smarter.apps.llmclient.management.commands.add_example_llmclients import Command
 from smarter.apps.llmclient.models import LLMClient
 from smarter.common.utils import get_readonly_yaml_file
 
@@ -34,12 +35,9 @@ class TestAddExampleLLMClients(TestAccountMixin):
         self.name = f"test_add_example_{self.hash_suffix}".lower()
         self.path = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.path)
-        self.empty = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, self.empty)
-        for name, path in (("EXAMPLE_LLMCLIENTS_PATH", self.path), ("STACKADEMY_PATH", self.empty)):
-            patcher = patch(f"{MODULE}.{name}", path)
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = patch(f"{MODULE}.EXAMPLE_LLMCLIENTS_PATH", self.path)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         for target in ("deploy_default_api", "undeploy_default_api", "delete_default_api"):
             patcher = patch(f"{RECEIVERS}.{target}")
             setattr(self, target, patcher.start())
@@ -97,20 +95,22 @@ class TestAddExampleLLMClients(TestAccountMixin):
         self.assertFalse(LLMClient.objects.filter(name=f"{self.name}_bad").exists())
         self.assertTrue(LLMClient.objects.filter(name=f"{self.name}_good").exists())
 
-    def test_applies_the_examples_and_stackademy(self):
-        """Test that the example LLMClients and the Stackademy LLMClients are applied, in that order."""
+    def test_applies_the_examples(self):
+        """Test that the example LLMClients are applied, in the order of their files."""
         with (
             patch(f"{MODULE}.EXAMPLE_LLMCLIENTS_PATH", EXAMPLE_LLMCLIENTS_PATH),
-            patch(f"{MODULE}.STACKADEMY_PATH", STACKADEMY_PATH),
             patch(f"{MODULE}.Command.missing_extensions", return_value=[]),
             patch(f"{MODULE}.Command.apply", return_value=None) as apply,
         ):
             self.run_command()
         filespecs = [call.args[0] for call in apply.call_args_list]
         examples = sorted(glob.glob(os.path.join(EXAMPLE_LLMCLIENTS_PATH, "*.yaml")))
-        stackademy = sorted(glob.glob(os.path.join(STACKADEMY_PATH, "*.yaml")))
-        self.assertEqual(filespecs, examples + stackademy)
-        self.assertEqual(
-            [os.path.basename(f) for f in stackademy],
-            ["stackademy-llmclient-api.yaml", "stackademy-llmclient-sql.yaml"],
-        )
+        self.assertEqual(filespecs, examples)
+        self.assertFalse([f for f in filespecs if "stackademy" in f])
+
+    def test_keep_deployed_copies_the_manifest(self):
+        """Test that keep_deployed sets deployed on a copy, and leaves the manifest as it was."""
+        manifest = {"metadata": {"name": self.name}}
+        kept = Command.keep_deployed(manifest, self.user_profile)
+        self.assertEqual(kept["spec"]["config"]["prompt"]["deployed"], False)
+        self.assertEqual(manifest, {"metadata": {"name": self.name}})

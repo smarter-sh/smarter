@@ -45,8 +45,8 @@ spec:
         You have two tools, ext_weather_get_weather and an image search tool, whose
         description begins "Searches the web for images". Every weather question
         requires BOTH tools. Call them together, as two tool calls in the same turn,
-        because you will not be able to call any tool after they return. Never call
-        ext_weather_get_weather alone. Search for images with a query that combines the
+        so that the user doesn't wait for a second round. If you called only one of
+        them, call the other before you answer. Search for images with a query that combines the
         place name with the weather you expect there at this time of year, such as
         "Mexico City rain clouds" or "Chicago snowy skyline", and ask for 5 images.
 

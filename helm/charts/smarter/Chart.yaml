@@ -22,7 +22,7 @@ sources:
 maintainers:
   - name: Lawrence McDaniel
     email: lpm0073@gmail.com
-    website: https://lawrencemcdaniel.com
+    url: https://lawrencemcdaniel.com
 dependencies:
   - name: grafana
     version: 12.1.8
