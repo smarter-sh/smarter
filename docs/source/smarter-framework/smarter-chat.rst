@@ -26,8 +26,9 @@ Smarter Chat has two lives:
   chat backend: as a React component, or as an embed script, one ``<script>`` tag that needs no
   build.
 
-Both are the same code, from the same repository,
-`smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__.
+Both are the same code, the package in the Smarter repository's React workspace,
+`smarter/react/packages/smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__,
+which is released to npm with each Smarter release, under the platform's version.
 
 
 Where to Start
@@ -45,7 +46,7 @@ Where to Start
      - :doc:`Styling Your LLMClient's Chat <../smarter-resources/llmclient/styles>`
    * - Adding a Smarter chatbot to your own website or application
      - :doc:`Embedding Smarter Chat <smarter-chat/embedding>`, then the
-       `README <https://github.com/smarter-sh/smarter-chat#readme>`__ for a quick reference
+       `README <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/README.md>`__ for a quick reference
    * - Adding it to a WordPress, Drupal, Shopify or documentation site, or with Google Tag Manager
      - The plugin's page: :doc:`WordPress <smarter-wordpress>`, :doc:`Drupal <smarter-drupal>`,
        :doc:`Shopify <smarter-shopify>`, :doc:`Google Tag Manager <smarter-gtm>`,
@@ -75,6 +76,6 @@ See Also
 --------
 
 - https://www.npmjs.com/package/@smarter.sh/ui-chat
-- https://github.com/smarter-sh/smarter-chat
+- https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat
 - :doc:`Smarter LLMClient <../smarter-resources/smarter-llmclient>`
 - :doc:`Smarter Prompt <../smarter-resources/smarter-prompt>`

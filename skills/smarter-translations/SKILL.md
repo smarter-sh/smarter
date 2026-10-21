@@ -116,7 +116,7 @@ the preference and translates its plain-text password email with `gettext`; `add
 - The Keen demo bodies of
   `account/dashboard/activity.html`, `statements.html` and `logs.html`, unused templates, and the
   Django admin (which Django translates) are not marked.
-- Smarter Chat (`packages/smarter-chat`) is its own repository, with its own gettext catalogs in the same
+- Smarter Chat (`packages/smarter.sh-chat`), a published npm library, has its own gettext catalogs in the same
   languages (`locale/`, `npm run i18n`, its `doc/adr/018-translations.md`). Its messages aren't extracted here.
   A language added here must be added there too (`LANGUAGES` in its `scripts/i18n.mjs`).
 

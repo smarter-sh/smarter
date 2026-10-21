@@ -145,7 +145,7 @@ Builds and Static Files
 -----------------------
 
 ``npm run build``, in the React workspace, builds Smarter Chat's library first, into
-``packages/smarter-chat/dist/``, and then the workbench, which imports it, into
+``packages/smarter.sh-chat/dist/``, and then the workbench, which imports it, into
 ``smarter/smarter/static/react/@smarter/workbench/``, with a ``manifest.json`` that has a ``_custom``
 entry of the build's time, version and environment. ``collectstatic`` copies it into
 ``staticfiles``, from which it is served. In development, use ``make react-build``, and restart

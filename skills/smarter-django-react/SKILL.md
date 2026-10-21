@@ -124,9 +124,10 @@ package's `src/`, so a package whose source another package imports follows thes
   use are exported as a subpath, e.g. `"./mocks"` in `smarter-llmclient-deployment`.
 - **A component that was a page takes callbacks** in place of whatever it did to its page or a
   framing page, e.g. the manifest editor's `onSaved` and `onDeleted`.
-- **Smarter Chat is the exception.** It is its own repository, with `@/` imports, so the workbench
-  imports its built library (`packages/smarter-chat/dist/`), as npm users do. `npm run build:deps`
-  builds it and `@smarter/common`; `make react-test`, `make react-lint` and CI run it first.
+- **Smarter Chat is the exception.** It is a published npm library (`@smarter.sh/ui-chat`), with
+  `@/` imports, so the workbench imports its built library (`packages/smarter.sh-chat/dist/`), as
+  npm users do. `npm run build:deps` builds it and `@smarter/common`; `make react-test`,
+  `make react-lint` and CI run it first.
 
 Don't frame a console page in an iframe to reuse it: export its component instead.
 

@@ -1,8 +1,7 @@
 Every lecture, lab and assignment in this course rests on the files below. The web console's
 apps are in `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, under
-``smarter/react/``, and the chat interface is in its own repository,
-`github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__, which
-``make react-install`` clones into the workspace. Every reference is to the ``main`` branch, so
+``smarter/react/``, the chat interface among them, as the package
+`smarter/react/packages/smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__. Every reference is to the ``main`` branch, so
 that students can open each one during class.
 
 The Workspace
@@ -92,19 +91,19 @@ Build, Integration and the Chat
    * - The chat component
      - Built on the chatscope UI kit, with Markdown, KaTeX math and Mermaid diagrams, a Console
        panel, and Server-Sent Events for a prompt's progress and the server's log.
-     - `smarter-chat: src/components/ <https://github.com/smarter-sh/smarter-chat/tree/main/src/components>`__,
-       `src/lib/api.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/api.ts>`__,
-       `src/lib/logStream.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/logStream.ts>`__
+     - `smarter.sh-chat: src/components/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat/src/components>`__,
+       `src/lib/api.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/lib/api.ts>`__,
+       `smarter-serverlogs: src/lib/logStream.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-serverlogs/src/lib/logStream.ts>`__
    * - Types from the server
      - The chat API's TypeScript types are generated from a JSON Schema that Django exports from
        Pydantic models, so the two sides cannot drift silently.
        :doc:`/smarter-framework/smarter-chat/api-contract`.
-     - `contract/chat-contract.schema.json <https://github.com/smarter-sh/smarter-chat/blob/main/contract/chat-contract.schema.json>`__,
-       `src/contract.gen.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__
+     - `contract/chat-contract.schema.json <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/contract/chat-contract.schema.json>`__,
+       `src/contract.gen.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__
    * - Branding from a manifest
      - An LLMClient's ``spec.config.styles`` becomes CSS custom properties in the chat.
        :doc:`/smarter-resources/llmclient/styles`.
-     - `src/lib/styles.ts <https://github.com/smarter-sh/smarter-chat/blob/main/src/lib/styles.ts>`__
+     - `src/lib/styles.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/lib/styles.ts>`__
    * - Embedding
      - The chat is published to npm as ``@smarter.sh/ui-chat``, for any page that wants to embed
        a deployed LLMClient. :doc:`/smarter-framework/smarter-chat/embedding`.
