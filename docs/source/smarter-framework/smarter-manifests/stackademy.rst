@@ -21,6 +21,13 @@ GitHub repository, `smarter-sh/stackademy <https://github.com/smarter-sh/stackad
 a prompt engineer can manage a project of many AI resources with git and GitHub: each change is a
 commit, reviewed in a pull request, and the repository's history records who changed what, and why.
 
+The case study `Stackademy Online Coding Academy <https://smarter.sh/case-studies/stackademy>`__, on
+smarter.sh, teaches the project as a lesson: why a model can't answer from private data, how one tool
+call works from question to answer, how to read a manifest, and how a team governs the project with
+git. Readers chat with both course advisors live, and open each manifest of the repository in an
+editor that checks it as they change it, against the same JSON Schemas that the repository's checks
+use. Its learning objectives, labs and discussion questions are ready to use in a class.
+
 The Repository
 --------------
 
