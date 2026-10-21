@@ -58,13 +58,15 @@ Most of Smarter is developed using Python's Django web framework with the follow
 
 ## ReactJS chat application
 
-The chat app in the dashboard sandbox is an independently managed NPM React component, located here [smarter-sh/smarter-chat](https://github.com/smarter-sh/smarter-chat).
+The chat app in the dashboard sandbox is Smarter Chat, an NPM React component, [@smarter.sh/ui-chat](https://www.npmjs.com/package/@smarter.sh/ui-chat). Its source is in this repository, in [smarter/react/packages/smarter.sh-chat](../../smarter/react/packages/smarter.sh-chat). It used to be managed in its own repository, smarter-sh/smarter-chat, which is now archived.
 
 This React component is built substantially with [Vite.js](https://github.com/smarter-sh/smarter), [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react), and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
 
 ### Django Integration
 
-Be aware that there are many considerations for getting React to work inside a Django project. You are strongly recommended to review this simple 2-step integration methodology that is used in the Smarter web console, [smarter-sh/web-integration-example](https://github.com/smarter-sh/web-integration-example)
+Be aware that there are many considerations for getting React to work inside a Django project. The web console's React apps, and how Django hosts them, are described in [React integration](https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration.html).
+
+For a working example of Smarter Chat embedded in an ordinary web page, outside Django, see [smarter-sh/smarter.sh](https://github.com/smarter-sh/smarter.sh), the source of the project's website. It is not an example project, but its landing page runs four live integrations: four of the platform's built-in LLMClients (weather, math, smarter_sdk_guide and smarter_developer), each chatting live through Smarter Chat's embed script. Start with [src/common/chatbots.js](https://github.com/smarter-sh/smarter.sh/blob/main/src/common/chatbots.js), which lists the deployed LLMClients and loads the embed script from jsDelivr, and [src/components/site/SmarterChatEmbed.jsx](https://github.com/smarter-sh/smarter.sh/blob/main/src/components/site/SmarterChatEmbed.jsx), which renders each one as a `<smarter-chat>` element, with its own session cookie, after checking that the LLMClient answers. Each LLMClient's manifest allows `https://smarter.sh` in `spec.config.prompt.allowedOrigins`. The previous example, smarter-sh/web-integration-example, is archived. See also [Embedding Smarter Chat](https://docs.smarter.sh/en/latest/smarter-framework/smarter-chat/embedding.html).
 
 ### Webapp design features
 
