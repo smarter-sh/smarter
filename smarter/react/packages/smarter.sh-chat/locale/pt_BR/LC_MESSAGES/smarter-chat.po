@@ -214,5 +214,9 @@ msgid "Diagram"
 msgstr "Diagrama"
 
 #: src/lib/messages.ts
+msgid "Image"
+msgstr "Imagem"
+
+#: src/lib/messages.ts
 msgid "Some example prompts to get you started:"
 msgstr "Alguns prompts de exemplo para você começar:"

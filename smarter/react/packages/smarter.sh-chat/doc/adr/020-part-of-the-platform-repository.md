@@ -34,8 +34,8 @@ private `@smarter/*` console apps. `smarter-sh/smarter-chat` is archived; it kee
 - **Releases.** The platform's `.github/workflows/uiChatRelease.yml` publishes the package with each platform
   release, which semantic-release makes from the platform's conventional commits. The package's version is the
   platform's (0.36.0 and later), set from the release's tag before the build, so that the embed script reports it
-  (`window.SmarterChat.version`). It isn't committed: the workspace's copy stays at 0.16.2, which the workbench's
-  dependency, `*`, accepts.
+  (`window.SmarterChat.version`). It isn't committed: the workspace's copy is the platform's placeholder,
+  `9999.9999.9999.dev9999`, which the workbench's dependency, `*`, accepts.
 - **Dist-tags.** A release from `main` is published with `latest`, one from another branch, such as `next`, with
   `next`, and the `alpha` and `beta` prereleases with `alpha` and `beta`. jsDelivr's ranges (`@0`, `@0.36`) follow
   only `latest`, and are refreshed after each one, as before (ADR-007). Publishing still uses npm's trusted publishing,

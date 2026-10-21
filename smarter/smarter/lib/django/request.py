@@ -2147,6 +2147,41 @@ class SmarterRequestMixin(AccountMixin):
         )
         return session_key
 
+    def accepted_session_key(self, session_key: Optional[str], source: str) -> Optional[str]:
+        """
+        Return a session key that the request carries, if it is well formed.
+
+        The key comes from the client: the url, the request body, a cookie or a get() parameter.
+        A malformed key, e.g. a cookie of the same name that another application set on a parent
+        domain, is ignored rather than raised, so that the request starts a new session instead
+        of failing.
+
+        :param session_key: The raw value that the request carries, or None.
+        :type session_key: Optional[str]
+        :param source: Where the value came from, for the log, e.g. ``"cookie"``.
+        :type source: str
+        :returns: The session key, stripped of whitespace and of a trailing slash, or None if
+            the value is missing or malformed.
+        :rtype: Optional[str]
+        """
+        session_key = session_key.strip().rstrip("/") if isinstance(session_key, str) else None
+        if not session_key:
+            return None
+        if not SmarterValidator.is_valid_session_key(session_key):
+            logger.warning(
+                "%s.accepted_session_key() - ignoring a malformed session key from the %s of the request.",
+                self.srm_formatted_class_name,
+                source,
+            )
+            return None
+        verbose_logger.debug(
+            "%s.accepted_session_key() - initialized from the %s of the request: %s",
+            self.srm_formatted_class_name,
+            source,
+            session_key,
+        )
+        return session_key
+
     def find_session_key(self) -> Optional[str]:
         """
         Returns the unique prompt session key value for this request.
@@ -2193,56 +2228,27 @@ class SmarterRequestMixin(AccountMixin):
             )
 
         # this is our expected case. we look for the session key in the parsed url.
-        session_key = session_key_from_url(self.url) if self.url else None
+        session_key = self.accepted_session_key(session_key_from_url(self.url) if self.url else None, "url")
         if session_key:
-            session_key = session_key.rstrip("/")
-            SmarterValidator.validate_session_key(session_key)
-
-            verbose_logger.debug(
-                "%s.find_session_key() - initialized from url: %s",
-                self.srm_formatted_class_name,
-                session_key,
-            )
             return session_key
 
         # next, we look for it in the request body data.
         if isinstance(self.data, dict):
-            session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            session_key = session_key.strip() if isinstance(session_key, str) else None
+            session_key = self.accepted_session_key(self.data.get(SMARTER_CHAT_SESSION_KEY_NAME), "request body")
             if session_key:
-                session_key = session_key.rstrip("/")
-                SmarterValidator.validate_session_key(session_key)
-                verbose_logger.debug(
-                    "%s.find_session_key() - initialized from request body: %s",
-                    self.srm_formatted_class_name,
-                    session_key,
-                )
                 return session_key
 
         # next, we look for it in the cookie data.
-        session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
-        session_key = session_key.strip() if isinstance(session_key, str) else None
+        session_key = self.accepted_session_key(self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME), "cookie")
         if session_key:
-            session_key = session_key.rstrip("/")
-            SmarterValidator.validate_session_key(session_key)
-            verbose_logger.debug(
-                "%s.find_session_key() - initialized from cookie data of the request object: %s",
-                self.srm_formatted_class_name,
-                session_key,
-            )
             return session_key
 
         # finally, we look for it in the GET parameters.
-        session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) if self.smarter_request else None
-        session_key = session_key.strip() if isinstance(session_key, str) else None
+        session_key = self.accepted_session_key(
+            self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) if self.smarter_request else None,
+            "get() parameters",
+        )
         if session_key:
-            session_key = session_key.rstrip("/")
-            SmarterValidator.validate_session_key(session_key)
-            verbose_logger.debug(
-                "%s.find_session_key() - initialized from the get() parameters of the request object: %s",
-                self.srm_formatted_class_name,
-                session_key,
-            )
             return session_key
 
         verbose_logger.debug(

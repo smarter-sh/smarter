@@ -43,9 +43,34 @@ function anchor(href: string, content: string): string {
   return `<a href="${href}" target="_blank" rel="noopener noreferrer">${content}</a>`;
 }
 
-/** An image, sized to fit its chat bubble by the "smarter-chat-image" css class. See styles.css. */
+const IMAGE_CLASS = "smarter-chat-image";
+
+/**
+ * An image, sized to fit its chat bubble by the "smarter-chat-image" css class. See styles.css.
+ *
+ * It is requested without a Referer: many image hosts refuse, or answer with a blank placeholder, an
+ * image that another site's page requests. See replaceBrokenImage() for an image that fails anyway.
+ */
 function image(src: string, alt: string): string {
-  return `<img class="smarter-chat-image" src="${src}" alt="${alt}" loading="lazy">`;
+  return `<img class="${IMAGE_CLASS}" src="${src}" alt="${alt}" loading="lazy" referrerpolicy="no-referrer">`;
+}
+
+/**
+ * Replace a message's image that failed to load with its description, so that the message shows
+ * neither a broken image nor an empty gap. A linked image's link, to the image, is kept.
+ *
+ * Messages are html strings, so SmarterChat calls this from its error listener. See Component.tsx.
+ *
+ * @param target The element that failed to load.
+ * @returns Whether it was a message's image, and was replaced.
+ */
+export function replaceBrokenImage(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLImageElement) || !target.classList.contains(IMAGE_CLASS)) return false;
+  const description = document.createElement("span");
+  description.className = "smarter-chat-image-unavailable";
+  description.textContent = target.alt.trim() || gettext("Image");
+  target.replaceWith(description);
+  return true;
 }
 
 /**
@@ -108,7 +133,10 @@ markdown.use({
  * (annotation-xml, which may contain html, is still removed.)
  */
 function sanitize(html: string): string {
-  return DOMPurify.sanitize(html, { ADD_TAGS: ["semantics", "annotation"], ADD_ATTR: ["target", "encoding"] });
+  return DOMPurify.sanitize(html, {
+    ADD_TAGS: ["semantics", "annotation"],
+    ADD_ATTR: ["target", "encoding", "referrerpolicy"],
+  });
 }
 
 /**
