@@ -11,12 +11,12 @@ describe("didYouKnowFacts", () => {
     expect(new Set(facts.map((fact) => fact.text)).size).toBe(facts.length);
   });
 
-  it("links each fact that has a link to GitHub, the docs, the blog or npm, with a label", () => {
+  it("links each fact that has a link to GitHub, the docs, the blog, the web site or npm, with a label", () => {
     const links = didYouKnowFacts().flatMap((fact) => (fact.link ? [fact.link] : []));
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) {
       expect(link.url).toMatch(
-        /^https:\/\/(github\.com\/smarter-sh(\/|$)|docs\.smarter\.sh\/|blog\.smarter\.sh\/|www\.npmjs\.com\/)/,
+        /^https:\/\/(github\.com\/smarter-sh(\/|$)|docs\.smarter\.sh\/|blog\.smarter\.sh\/|smarter\.sh\/|www\.npmjs\.com\/)/,
       );
       expect(link.label).not.toBe("");
     }

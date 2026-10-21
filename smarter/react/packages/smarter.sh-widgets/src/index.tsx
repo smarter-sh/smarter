@@ -8,6 +8,8 @@
 export { default as Cli } from "./components/Cli/Component";
 export type { CliProps } from "./components/Cli/Component";
 export { default as Contribute } from "./components/Contribute/Component";
+export { default as DidYouKnow } from "./components/DidYouKnow/Component";
+export type { DidYouKnowProps } from "./components/DidYouKnow/Component";
 export { default as Extensions } from "./components/Extensions/Component";
 export { default as Instructors } from "./components/Instructors/Component";
 export type { InstructorsProps } from "./components/Instructors/Component";

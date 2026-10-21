@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 14:26+0000\n"
+"POT-Creation-Date: 2026-10-21 20:57+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -1575,6 +1575,21 @@ msgstr ""
 "Smarter propose un catalogue de cours gratuits prêts à enseigner, de "
 "l'ingénierie de prompts pour les non-programmeurs à Kubernetes pour les "
 "ingénieurs plateforme."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Every Smarter account starts with two course advisors, stackademy_sql and "
+"stackademy_api, that answer from a private database and a web API with no "
+"code. A case study on smarter.sh teaches how they work."
+msgstr ""
+"Chaque compte Smarter commence avec deux conseillers pédagogiques, "
+"stackademy_sql et stackademy_api, qui répondent à partir d'une base de "
+"données privée et d'une API web, sans code. Une étude de cas sur smarter.sh "
+"explique leur fonctionnement."
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the case study"
+msgstr "Lire l'étude de cas"
 
 #. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
 msgid ""

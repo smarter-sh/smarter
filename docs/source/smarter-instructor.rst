@@ -201,7 +201,9 @@ manifests, in ``smarter/smarter/apps/llmclient/data/llm-clients/``, make good st
 your own examples. The course advisors ``stackademy_sql`` and ``stackademy_api`` come from the
 :doc:`Stackademy example project <smarter-framework/smarter-manifests/stackademy>`, a GitHub
 repository of its own, which shows students how to manage a project of many AI resources with git
-and GitHub.
+and GitHub. The `Stackademy case study <https://smarter.sh/case-studies/stackademy>`__ on smarter.sh
+teaches that project, with both advisors live on the page and every manifest open in an editor that
+validates it as students change it.
 
 
 Setting Up a Class
@@ -339,6 +341,11 @@ The courses in the :doc:`Free Course Catalog <smarter-instructors/example-course
 with plans for classroom bootcamps and online courses of two to six weeks. Other formats work
 well too:
 
+- **A single class on tool calling.** Assign the `Stackademy case study
+  <https://smarter.sh/case-studies/stackademy>`__ as reading, about 45 minutes with its two labs, and
+  spend the class on its discussion questions: what a tool should return, what an enum of allowed
+  values prevents and costs, and why a change made in the web console should still go through a pull
+  request. Nothing needs to be installed.
 - **A half-day workshop.** Run a shared instance. Students log in, chat with the built-in
   LLMClients, copy one manifest, change its system prompt and model, add a plugin and a guardrail,
   and apply it. No installation is needed beyond the ``smarter`` CLI, or none at all if students

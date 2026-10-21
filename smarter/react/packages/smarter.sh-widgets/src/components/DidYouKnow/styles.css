@@ -1,0 +1,45 @@
+/*
+ * The Did you know? card: one row, the title and its lightbulb, then the fact and its link, which
+ * wrap below it on a narrow page. Colors come from the Keen theme's variables, which
+ * [data-bs-theme=dark] redefines.
+ */
+.didyouknow-card {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: baseline;
+  padding: 1.25rem 1.75rem;
+  color: var(--bs-gray-700);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.didyouknow-title {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--bs-gray-900);
+  font-weight: 700;
+}
+
+.didyouknow-icon {
+  align-self: center;
+  color: var(--bs-warning);
+}
+
+.didyouknow-text {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+.didyouknow-link {
+  flex-shrink: 0;
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+
+.didyouknow-link:hover,
+.didyouknow-link:focus-visible {
+  text-decoration: underline;
+}

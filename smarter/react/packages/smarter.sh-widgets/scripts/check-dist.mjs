@@ -3,7 +3,8 @@
  * The react job in .github/workflows/test.yml and .github/workflows/uiWidgetsRelease.yml run it.
  *
  * - every file that package.json's exports and fields name exists,
- * - the library imports only React and its own stylesheet, so @smarter/common, which is not on npm, is bundled,
+ * - the library imports only React and its own stylesheet, so @smarter/common and @smarter/didyouknow, which are not
+ *   on npm, are bundled,
  * - the library uses React's production JSX runtime, whatever NODE_ENV the build ran with,
  * - dist/ has none of the Keen theme's files: its stylesheet and images stay with the pages that serve them,
  * - the library is within its size budget,
@@ -70,7 +71,7 @@ if (source) {
     const names = Object.keys(widgets)
       .filter((name) => /^[A-Z]/.test(name) && typeof widgets[name] === "function")
       .sort();
-    check(names.length >= 12, `the library exports its widgets (${names.join(", ")})`);
+    check(names.length >= 13, `the library exports its widgets (${names.join(", ")})`);
     const tree = {
       kind: "LLMClient",
       icon: "artificial-intelligence",
@@ -83,10 +84,10 @@ if (source) {
     };
     const props = { ResourceTree: { tree }, ResourceCard: { node: tree, isRoot: true } };
     for (const name of names) {
-      // every widget is a card in a labelled <section>, <div> (VSCodeExtension), <article> (ResourceCard) or <ul>
-      // (ResourceTree). React puts its image preload <link>s first.
+      // every widget is a card in a labelled <section>, <div> (VSCodeExtension), <article> (ResourceCard), <aside>
+      // (DidYouKnow) or <ul> (ResourceTree). React puts its image preload <link>s first.
       const html = renderToStaticMarkup(createElement(widgets[name], props[name] ?? {}));
-      check(/<(section|div|article|ul) [^>]*aria-label="[^"]+"/.test(html), `${name} renders its labelled card`);
+      check(/<(section|div|article|aside|ul) [^>]*aria-label="[^"]+"/.test(html), `${name} renders its labelled card`);
     }
     check(
       typeof widgets.countResources === "function" && widgets.countResources(tree) === 1,
