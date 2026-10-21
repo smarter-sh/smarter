@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.1...v0.36.0-alpha.2) (2026-10-21)
+
+### Bug Fixes
+
+* **react:** track smarter-chat's .storybook folder, which tests import ([6564c27](https://github.com/smarter-sh/smarter/commit/6564c271cb971f93033e4d5cd4d588a419abc2c8))
+
+### Refactoring
+
+* **react:** move smarter-chat into this repository ([6ba24f8](https://github.com/smarter-sh/smarter/commit/6ba24f860f19de140224fc3e4fa52249b87b2ccc))
+
 ## [0.36.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.35.4-alpha.2...v0.36.0-alpha.1) (2026-10-21)
 
 ### Features
