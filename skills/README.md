@@ -33,6 +33,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-api-contract`                 | A SAM model, an example manifest or a cli route changes, or the contract is stale. |
 | `smarter-docstrings`                   | You're writing Python docstrings, which Sphinx publishes.                          |
 | `smarter-logging`                      | You're writing or changing a logger call.                                          |
+| `smarter-log-review`                   | You're reviewing or triaging a Smarter log.                                        |
 | `smarter-url-names`                    | You're adding a url pattern, or code that reverses one.                            |
 | `smarter-python-typing`                | You're writing type annotations, especially with `Any`.                            |
 | `smarter-sphinx-docs`                  | You're editing `docs/source`.                                                      |

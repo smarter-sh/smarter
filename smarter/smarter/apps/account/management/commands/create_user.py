@@ -49,6 +49,7 @@ import string
 from urllib.parse import urljoin
 
 from django.conf import settings
+from django.core.management.base import CommandError
 from django.db import transaction
 from django.utils import translation
 from django.utils.translation import gettext as _
@@ -125,8 +126,10 @@ class Command(SmarterCommand):
         :param str language: The user's preferred language, one of ``settings.LANGUAGES``, e.g. ``es``,
             in which the password and welcome emails are written. Defaults to None: English for a new
             user, and an existing user's preference is kept.
-        :returns: True if the user was created or updated successfully, False otherwise.
+        :returns: True if the user was created or updated successfully.
         :rtype: bool
+        :raises CommandError: if the account doesn't exist, the email address is invalid, or the user,
+            its profile or its account contact can't be saved. The transaction is rolled back.
         """
         account: Account
         user: User
@@ -135,15 +138,13 @@ class Command(SmarterCommand):
         try:
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
-            self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
-            return False
+            raise CommandError(f"Account with account number {account_number} does not exist.")
 
         try:
             user, created = User.objects.get_or_create(username=username)
         # pylint: disable=broad-except
         except Exception as e:
-            self.handle_completed_failure(msg=f"Error creating user {username}: {str(e)}")
-            return False
+            raise CommandError(f"Error creating user {username}: {str(e)}")
 
         if not created:
             self.stdout.write(self.style.NOTICE(f"User {username} already exists, updating the existing user."))
@@ -153,8 +154,7 @@ class Command(SmarterCommand):
             user.is_staff = False
 
         if not SmarterValidator.is_valid_email(email):
-            self.handle_completed_failure(msg=f"Invalid email address: {email}")
-            return False
+            raise CommandError(f"Invalid email address: {email}")
 
         user.email = email
         user.first_name = first_name
@@ -173,8 +173,7 @@ class Command(SmarterCommand):
             user.save()
         # pylint: disable=broad-except
         except Exception as e:
-            self.handle_completed_failure(msg=f"Error saving user {username}: {str(e)}")
-            return False
+            raise CommandError(f"Error saving user {username}: {str(e)}")
 
         self.handle_completed_success(msg=f"User {username} {email} has been created.")
 
@@ -204,8 +203,11 @@ class Command(SmarterCommand):
                 )
             # pylint: disable=broad-except
             except Exception as e:
-                self.handle_completed_failure(
-                    msg=f"Error sending password email to user {username} at {email}: {str(e)}. The user account has been created, but the user may not have received an email with their password."
+                self.stderr.write(
+                    self.style.WARNING(
+                        f"Could not send the password email to user {username} at {email}: {e}. "
+                        "The user account has been created, but the user may not have received their password."
+                    )
                 )
         else:
             self.stdout.write(
@@ -225,8 +227,7 @@ class Command(SmarterCommand):
                 user_profile.save()
         # pylint: disable=broad-except
         except Exception as e:
-            self.handle_completed_failure(msg=f"Error creating user profile for user {username}: {str(e)}")
-            return False
+            raise CommandError(f"Error creating user profile for user {username}: {str(e)}")
 
         if created:
             self.handle_completed_success(
@@ -249,12 +250,10 @@ class Command(SmarterCommand):
                 )
             # pylint: disable=broad-except
             except Exception as e:
-                self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
-                return False
+                raise CommandError(f"Error creating account contact for user {username}: {str(e)}")
         # pylint: disable=broad-except
         except Exception as e:
-            self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
-            return False
+            raise CommandError(f"Error creating account contact for user {username}: {str(e)}")
 
         self.handle_completed_success(msg="create_user command completed successfully.")
         return True
@@ -306,4 +305,4 @@ class Command(SmarterCommand):
             )
 
         if not retval:
-            self.handle_completed_failure(msg="create_user command failed.")
+            raise CommandError(f"Could not create the user {username}.")
