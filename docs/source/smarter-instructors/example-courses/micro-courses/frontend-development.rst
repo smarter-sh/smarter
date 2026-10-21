@@ -27,12 +27,12 @@ having to understand all of them:
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py>`__
   that reads Vite's build manifest. See :doc:`full-stack-development`.
 - **A published component.** The chat interface,
-  `smarter-chat <https://github.com/smarter-sh/smarter-chat>`__, is built on the chatscope UI kit,
+  `smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, is built on the chatscope UI kit,
   renders Markdown with math and Mermaid diagrams, shows a prompt's progress through Server-Sent
   Events, applies an LLMClient's :doc:`styles </smarter-resources/llmclient/styles>` as CSS custom
   properties, and is published to npm as
   `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__, with TypeScript
-  types `generated <https://github.com/smarter-sh/smarter-chat/blob/main/src/contract.gen.ts>`__
+  types `generated <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__
   from the server's Pydantic contract.
 
 The console is styled with the Keen Bootstrap theme, by an explicit decision
@@ -51,7 +51,7 @@ from Server-Sent Events to embedding it in a page of one's own.
 
 - `smarter/react/packages/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__:
   the ``smarter-*-list`` apps, ``smarter-common`` and ``smarter-dashboard``.
-- The `smarter-chat <https://github.com/smarter-sh/smarter-chat>`__ repository, the chat interface.
+- `smarter/react/packages/smarter.sh-chat/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, the chat interface.
 - `smarter/react/README.md <https://github.com/smarter-sh/smarter/blob/main/smarter/react/README.md>`__
   and the `smarter-react-testing
   <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-react-testing/SKILL.md>`__ skill,

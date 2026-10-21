@@ -73,6 +73,7 @@ export default defineConfig([
       "packages/smarter-common/src/**/*.{ts,tsx}",
       "packages/smarter-didyouknow/src/**/*.{ts,tsx}",
       "packages/smarter-onboarding/src/**/*.{ts,tsx}",
+      "packages/smarter.sh-widgets/src/**/*.{ts,tsx}",
     ],
     rules: {
       "react-refresh/only-export-components": "off",

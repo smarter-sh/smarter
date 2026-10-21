@@ -4,12 +4,6 @@
 
 smarter/smarter/static/react/
 
-# Smarter Chat, the React app of the LLMClient prompt workbench, is managed
-# in its own repository, https://github.com/smarter-sh/smarter-chat.
-# `make react-install` clones it into the React workspace.
-# -------------------------------------
-smarter/react/packages/smarter-chat/
-
 # -------------------------------------
 # Helm chart artifacts. charts are compressed
 # binary files that do not belong in GitHub.
@@ -64,6 +58,7 @@ staticfiles
 **/.coverage.*
 # React test coverage reports (make react-test), and Storybook builds
 smarter/react/coverage/
+smarter/react/packages/*/coverage/
 **/storybook-static/
 htmlcov
 

@@ -1,5 +1,6 @@
 {
   "name": "@smarter/serverlogs",
+  "private": true,
   "description": "The Smarter web console's server log viewer: the user's server logs, as they stream in, with their ANSI colors, collapsible JSON, a filter and keyboard shortcuts. The Server Logs tab of the Prompt Engineer's Workbench and of the Prompt Passthrough.",
   "version": "0.1.0",
   "type": "module",

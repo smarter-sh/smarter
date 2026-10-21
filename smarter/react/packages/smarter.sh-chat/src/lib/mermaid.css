@@ -1,0 +1,43 @@
+/* mermaid diagrams in markdown messages, displayed in their code block, below its header. See
+   mermaid.ts. */
+
+/* the diagram, on a light background, as mermaid's neutral theme expects. A diagram that is wider
+   than its chat bubble scrolls sideways, as code does. */
+div.cs-message__html-content .smarter-chat-mermaid-diagram {
+  padding: 1em;
+  overflow-x: auto;
+  background-color: #ffffff;
+  text-align: center;
+}
+
+div.cs-message__html-content .smarter-chat-mermaid-diagram[hidden] {
+  display: none;
+}
+
+div.cs-message__html-content .smarter-chat-mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* the button that shows the diagram's code, or the diagram, beside the copy button. */
+div.cs-message__html-content .smarter-chat-mermaid-toggle {
+  margin-left: auto;
+  padding: 0.2em 0.6em;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background-color: #21262d;
+  color: #c9d1d9;
+  font: inherit;
+  cursor: pointer;
+}
+
+div.cs-message__html-content .smarter-chat-mermaid-toggle:hover,
+div.cs-message__html-content .smarter-chat-mermaid-toggle:focus-visible {
+  border-color: #8b949e;
+  background-color: #30363d;
+  outline: none;
+}
+
+div.cs-message__html-content .smarter-chat-mermaid pre[hidden] {
+  display: none;
+}

@@ -173,8 +173,8 @@ that integrate to other enterprise resources like REST API's and Sql databases.
 And it gives prompt engineering teams an intuitive workbench approach to
 designing, prototyping, testing, deploying and managing powerful AI resources
 for common corporate use cases including agentic workflows, customer facing chat
-solutions, and more. It includes a separately managed
-[React-based chat UI](https://github.com/smarter-sh/smarter-chat) that is
+solutions, and more. It includes a
+[React-based chat UI](https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat), published to npm as `@smarter.sh/ui-chat`, that is
 compatible with a wide variety of front end ecosystems including NPM, Wordpress,
 Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and
 SAP. There is a

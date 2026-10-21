@@ -24,6 +24,9 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-sam-resource`                 | You're adding or changing a resource kind (manifest, broker, model).               |
 | `smarter-django-react`                 | You're building a React app that Django hosts, e.g. a console list page.           |
 | `smarter-react-testing`                | You're writing Storybook stories, Vitest tests, or fixing ESLint/Prettier.         |
+| `smarter-chat-development`             | You're changing Smarter Chat (`@smarter.sh/ui-chat`). Start here for the chat.     |
+| `smarter-chat-testing`                 | You're writing or running Smarter Chat's tests or stories, or `check:dist`.        |
+| `smarter-chat-embed`                   | You're changing Smarter Chat's embed script, its options or its build.             |
 | `smarter-python-testing`               | You're writing or running Django unit tests, or raising coverage.                  |
 | `smarter-docker-environment`           | Code must run in the containers (tests, migrations, `manage.py`).                  |
 | `smarter-infrastructure-safety`        | Code touches Kubernetes, AWS, Route53, ACM, LLM providers, or Celery tasks.        |
@@ -33,6 +36,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-api-contract`                 | A SAM model, an example manifest or a cli route changes, or the contract is stale. |
 | `smarter-docstrings`                   | You're writing Python docstrings, which Sphinx publishes.                          |
 | `smarter-logging`                      | You're writing or changing a logger call.                                          |
+| `smarter-log-review`                   | You're reviewing or triaging a Smarter log.                                        |
 | `smarter-url-names`                    | You're adding a url pattern, or code that reverses one.                            |
 | `smarter-python-typing`                | You're writing type annotations, especially with `Any`.                            |
 | `smarter-sphinx-docs`                  | You're editing `docs/source`.                                                      |

@@ -1,5 +1,6 @@
 {
   "name": "@smarter/vectorsearch-list",
+  "private": true,
   "description": "A React component library for displaying a list of Vectorsearch on the Smarter web console.",
   "version": "0.2.0",
   "type": "module",

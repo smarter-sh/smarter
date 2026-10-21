@@ -11,7 +11,6 @@ manage.py Commands
    commands/create_smarter_admin
    commands/create_user
    commands/delete_account_contact
-   commands/dump_django_settings
    commands/get_accounts
    commands/initialize_account
    commands/initialize_platform

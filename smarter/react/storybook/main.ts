@@ -7,8 +7,8 @@
  * - Stories are the package's src/**\/*.stories.tsx files, and its src/**\/*.mdx docs.
  * - @storybook/addon-docs generates a docs page for each component, from its stories and types.
  * - @storybook/addon-a11y checks each story for accessibility violations.
- * - @smarter/common, @smarter/didyouknow and @smarter/onboarding resolve to their TypeScript source, so
- *   that stories never depend on a stale build.
+ * - @smarter/common, @smarter/didyouknow, @smarter/onboarding and @smarter.sh/ui-widgets resolve to their
+ *   TypeScript source, so that stories never depend on a stale build.
  * - MSW's service worker is served from storybook/public, for the stories' mocked API requests.
  * - The Smarter web console's stylesheets are loaded from the Django dev server, as in
  *   each package's index.html, so that components look as they do in the web console.
@@ -26,6 +26,7 @@ const WORKSPACE = path.resolve(HERE, "..");
 const COMMON_SRC = path.join(WORKSPACE, "packages", "smarter-common", "src", "index.tsx");
 const DIDYOUKNOW_SRC = path.join(WORKSPACE, "packages", "smarter-didyouknow", "src", "index.tsx");
 const ONBOARDING_SRC = path.join(WORKSPACE, "packages", "smarter-onboarding", "src", "index.tsx");
+const WIDGETS_SRC = path.join(WORKSPACE, "packages", "smarter.sh-widgets", "src", "index.tsx");
 
 /** The package build plugins that must not run in Storybook. See each package's vite.config.ts. */
 const BUILD_ONLY_PLUGINS = new Set(["post-build", "add-custom-manifest-data"]);
@@ -55,6 +56,7 @@ export function smarterStorybookConfig(storybookDir: string): StorybookConfig {
           "@smarter/common": COMMON_SRC,
           "@smarter/didyouknow": DIDYOUKNOW_SRC,
           "@smarter/onboarding": ONBOARDING_SRC,
+          "@smarter.sh/ui-widgets": WIDGETS_SRC,
           "@": path.join(packageDir, "src"),
         },
       },
