@@ -3,6 +3,7 @@ import logging
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from smarter.apps.llmclient.const import STACKADEMY_REPOSITORY_URL
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib.django.management.base import SmarterCommand
@@ -45,9 +46,8 @@ class Command(SmarterCommand):
         5. Add plugin examples.
         6. Deploy example llmclients.
         7. Initialize providers, and the built-in Proxies of their APIs.
-        8. Create StackAcademy SQL and API llmclients.
-        9. Apply manifests and update secrets for database connections.
-        10. Sync the ledger of infrastructure resources with the Kubernetes cluster.
+        8. Load the Stackademy project from GitHub, and verify its LLMClients.
+        9. Sync the ledger of infrastructure resources with the Kubernetes cluster.
         """
         self.handle_begin()
 
@@ -177,21 +177,7 @@ class Command(SmarterCommand):
         except (Exception, SystemExit) as e:
             logger.error("Failed to apply the example vectorstores: %s", e)
 
-        # The examples of the Stackademy fictional university, which belong to several apps, depend on
-        # each other in this order: Secrets, Connections, tools (plugins), LLMClients.
         try:
-            call_command("add_example_secrets", username=username)
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to apply the example Secrets: %s", e)
-
-        try:
-            # after add_example_secrets: the Stackademy Connections name its Secrets.
-            call_command("add_example_connections", username=username)
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to apply the example Connections: %s", e)
-
-        try:
-            # after add_example_connections: the Stackademy plugins name its Connections.
             call_command("add_example_tools", username=username)
         except (Exception, SystemExit) as e:
             logger.error("Failed to apply the example tools: %s", e)
@@ -205,7 +191,22 @@ class Command(SmarterCommand):
             logger.error("Failed to apply the example LLMClients: %s", e)
 
         try:
-            # after add_example_llmclients. It prompts the Stackademy LLMClients, and exits when they don't work.
+            # The Stackademy project: the Secrets, Connections, plugins, LLMClients and Budget of a fictional
+            # code academy, in their own repository, which load_from_github applies in the order of their
+            # dependencies. After initialize_providers: its plugins and LLMClients use the openai Provider.
+            # Applied, not deployed. Its ApiConnection's Secret is also the password of this platform's
+            # Stackademy course catalogue, /api/v1/demos/stackademy/course-catalogue/.
+            call_command(
+                "load_from_github",
+                url=STACKADEMY_REPOSITORY_URL,
+                account_number=SMARTER_ACCOUNT_NUMBER,
+                username=username,
+            )
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to load the Stackademy project from %s: %s", STACKADEMY_REPOSITORY_URL, e)
+
+        try:
+            # after load_from_github. It prompts the Stackademy LLMClients, and exits when they don't work.
             call_command("verify_stackademy", account_number=SMARTER_ACCOUNT_NUMBER)
         except (Exception, SystemExit) as e:
             logger.error("The Stackademy LLMClients don't work: %s", e)

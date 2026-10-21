@@ -1,5 +1,5 @@
 """
-Add the example Budgets: one for each Budget manifest, in data/example-manifests/budgets/ and data/stackademy/.
+Add the example Budgets: one for each Budget manifest, in data/example-manifests/budgets/.
 
 They are created detached, so they enforce nothing until a superuser attaches them to resources.
 A budget that already exists, by name, is left as it is.
@@ -15,7 +15,7 @@ from smarter.lib.django.management.examples import SmarterExamplesCommand
 class Command(SmarterExamplesCommand):
     """Django manage.py add_example_budgets command."""
 
-    help = "Create the example Budgets, detached, in smarter/apps/account/data/example-manifests/budgets and data/stackademy."
+    help = "Create the example Budgets, detached, in smarter/apps/account/data/example-manifests/budgets."
     family = "Budget"
     requires_owner = False
 

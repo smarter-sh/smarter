@@ -47,24 +47,34 @@ class Command(SmarterCommand):
 
 Resources that ship with the platform are **example resources**, declared as **YAML
 manifests**, not Python fixtures. Every command that creates them is named
-`add_example_<kinds>`, never `builtin`: `add_example_secrets`, `add_example_connections`,
-`add_example_tools` (all the plugin kinds), `add_example_llmclients`,
+`add_example_<kinds>`, never `builtin`: `add_example_tools` (all the plugin kinds),
+`add_example_llmclients`,
 `add_example_custom_domains`, `add_example_guardrails`, `add_example_budgets`, ... Each
 belongs to the app that implements the kind. A command that creates nothing is named for
-what it does: `deploy_example_llmclients` only deploys the example and Stackademy LLMClients that
-`add_example_llmclients` applied, and `verify_stackademy` only prompts them.
+what it does: `deploy_example_llmclients` only deploys the example LLMClients that
+`add_example_llmclients` applied, and `verify_stackademy` only prompts the Stackademy LLMClients.
+
+A multi-resource example project lives in its own GitHub repository instead, and
+`load_from_github` applies it. The reference is the Stackademy project,
+[smarter-sh/stackademy](https://github.com/smarter-sh/stackademy) (`STACKADEMY_REPOSITORY_URL` in
+`apps/llmclient/const.py`): the Secrets, Connections, plugins, LLMClients and Budget of a
+fictional code academy, one folder per kind, with pre-commit hooks that validate each manifest
+against its kind's published JSON Schema. `load_from_github` clones it, skips hidden files and
+non-manifests, fills in `*.yaml.tpl` templates, and applies the manifests in
+`KIND_APPLY_ORDER`, its order of kind dependencies, not in folder order. Give a new SAM kind its
+place in `KIND_APPLY_ORDER`: a test fails until you do. It keeps an LLMClient's `deployed`,
+`--deploy` deploys the LLMClients, and `--exclude_kind Budget` skips the platform-wide Budget
+when an account loads its own copy. Don't put Stackademy manifests back in an app's `data/`
+folder: change them in that repository.
 
 1. Put the manifests in `smarter/smarter/apps/<app>/data/<kinds>/*.yaml`, with
-   the path in the app's `const.py` (for example `CUSTOM_DOMAINS_PATH`). The
-   Stackademy fictional university's manifests are in each app's
-   `data/stackademy/` (Secrets in secret, Connections in connection, plugins in
-   llmtool, LLMClients in llmclient, the Budget in account).
+   the path in the app's `const.py` (for example `CUSTOM_DOMAINS_PATH`).
 2. Subclass `SmarterExamplesCommand` (`smarter/smarter/lib/django/management/examples.py`),
    set `family`, and implement `add_examples(user_profile)` with `apply_all(filespecs,
 user_profile)`. It resolves `--username` (default: the Smarter admin), applies
    each file in a transaction with `apply_manifest`, through the real broker, fills
    in `*.yaml.tpl` templates, and returns the failures. Reference:
-   `smarter/smarter/apps/connection/management/commands/add_example_connections.py`.
+   `smarter/smarter/apps/llmhost/management/commands/add_example_llmhost.py`.
 3. One bad file doesn't stop the rest. Collect the failures, report them as a
    warning at the end, and keep going.
 4. If the kind has an asynchronous lifecycle (verification, deployment), the
