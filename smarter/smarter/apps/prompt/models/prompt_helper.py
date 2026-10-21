@@ -382,6 +382,20 @@ class PromptHelper(SmarterRequestMixin):
             except Prompt.DoesNotExist:
                 pass
 
+        if prompt and self.llmclient and prompt.llmclient_id != self.llmclient.id:  # type: ignore[attr-defined]
+            # A session belongs to one llmclient. A key of another llmclient's session, e.g. a
+            # session_key cookie that the browser sends to every host of the platform's domain,
+            # starts a new session rather than continuing the other llmclient's chat.
+            logger.warning(
+                "%s.get_cached_chat() - session_key %s belongs to llmclient %s, not %s. Starting a new session.",
+                self.formatted_class_name,
+                self.session_key,
+                prompt.llmclient_id,  # type: ignore[attr-defined]
+                self.llmclient.id,  # type: ignore[attr-defined]
+            )
+            prompt = None
+            self._session_key = self.generate_session_key()
+
         if not prompt:
             if not self.llmclient:
                 raise SmarterValueError(
