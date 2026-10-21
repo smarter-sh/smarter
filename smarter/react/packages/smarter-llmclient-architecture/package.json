@@ -1,5 +1,6 @@
 {
   "name": "@smarter/llmclient-architecture",
+  "private": true,
   "description": "An LLMClient's architecture: the tree of the SAM resources that it is built from, as cards that open each resource's manifest. The Architecture tab of the Smarter web console's Prompt Engineer's Workbench.",
   "version": "0.1.0",
   "type": "module",

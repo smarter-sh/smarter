@@ -1,5 +1,6 @@
 {
   "name": "@smarter/workbench",
+  "private": true,
   "description": "The Prompt Engineer's Workbench of the Smarter web console: the chat with an LLMClient, from the @smarter.sh/ui-chat npm package, and the developer Console beside it.",
   "version": "0.1.0",
   "type": "module",

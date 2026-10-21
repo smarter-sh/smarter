@@ -1,5 +1,6 @@
 {
   "name": "@smarter/custom-domain-list",
+  "private": true,
   "description": "A React component library for displaying a list of Custom Domains on the Smarter web console.",
   "version": "0.1.0",
   "type": "module",

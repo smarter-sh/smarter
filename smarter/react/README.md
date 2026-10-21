@@ -63,6 +63,19 @@ Current app packages include:
 - `smarter-vectorstore-list`
 - `smarter-workbench`
 
+### Published packages
+
+Two packages are published to npm, under the `@smarter.sh` scope. Every other package is part of the web
+console only: its name is `@smarter/<app-name>`, and its `package.json` sets `"private": true`, so that npm
+refuses to publish it.
+
+| Package                                                                        | Folder                     | Published by                                                                                                                |
+| ------------------------------------------------------------------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| [@smarter.sh/ui-chat](https://www.npmjs.com/package/@smarter.sh/ui-chat)       | `packages/smarter-chat`    | its own repository, [smarter-chat](https://github.com/smarter-sh/smarter-chat), which `make react-smarter-chat` clones here |
+| [@smarter.sh/ui-widgets](https://www.npmjs.com/package/@smarter.sh/ui-widgets) | `packages/smarter-widgets` | `.github/workflows/uiWidgetsRelease.yml`, with each Smarter release                                                         |
+
+A published package has no `"private"` field, and sets `"publishConfig": { "access": "public" }`.
+
 ## Workspace Build Orchestration
 
 The workspace root uses npm workspaces and a build script that enforces build order:
@@ -103,7 +116,7 @@ run the following steps in order:
 
 A typical app package:
 
-- Name format: `@smarter/<app-name>`
+- Name format: `@smarter/<app-name>`, with `"private": true` (see [Published packages](#published-packages))
 - Build stack: TypeScript + Vite
 - Common dependency: `@smarter/common`
 - Local commands usually include:
@@ -182,7 +195,8 @@ The React counterparts of the repository's Python tooling:
 
 ## Adding an App
 
-A new package gets the shared configuration by copying these files from an existing app, unchanged:
+A new package is private: its `package.json` sets `"private": true`. A new package gets the shared
+configuration by copying these files from an existing app, unchanged:
 `.storybook/main.ts`, `.storybook/preview.ts`, `vitest.config.ts`, `eslint.config.js`, and the
 `typecheck`, `test`, `test:watch`, `storybook` and `build-storybook` scripts of its `package.json`. Its
 `tsconfig.app.json` includes `../../test` and `../../storybook`, and maps `@test/*` to `../../test/*`.

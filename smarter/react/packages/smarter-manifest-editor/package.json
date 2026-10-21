@@ -1,5 +1,6 @@
 {
   "name": "@smarter/manifest-editor",
+  "private": true,
   "description": "A React app for viewing and editing Smarter manifests in the Smarter web console.",
   "version": "0.1.0",
   "type": "module",
