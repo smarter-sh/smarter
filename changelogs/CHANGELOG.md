@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.3...v0.36.4-alpha.1) (2026-10-21)
+
+### Bug Fixes
+
+* **request:** log anonymous not-ready and session lines at debug ([baafe51](https://github.com/smarter-sh/smarter/commit/baafe5111d4f8d8847be57acf761a9493b7e99ee))
+
 ## [0.36.3](https://github.com/smarter-sh/smarter/compare/v0.36.2...v0.36.3) (2026-10-21)
 
 ### Bug Fixes

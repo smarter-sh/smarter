@@ -12,6 +12,7 @@
  * React is a peer dependency, left to the page's bundler. @smarter/common, which is not published
  * to npm, is bundled: the widgets call only its gettext() and interpolateNodes(), which read the
  * page's Django JavaScript catalog when there is one, and fall back to English when there isn't.
+ * @smarter/didyouknow, also not on npm, is bundled too: the DidYouKnow widget's facts.
  *
  * Library mode inlines the images that the widgets import, so the package has no asset files.
  * The Keen theme's own images, such as the Sdk widget's illustration, stay at their /static/assets/
