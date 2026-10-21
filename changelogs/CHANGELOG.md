@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.2](https://github.com/smarter-sh/smarter/compare/v0.36.1...v0.36.2) (2026-10-21)
+
+### Bug Fixes
+
+* **llmtool:** keep image urls that only refuse the server's check ([2603dc7](https://github.com/smarter-sh/smarter/commit/2603dc736b91814e4e3aaeb57866f166c4260889))
+* **prompt:** harden chat sessions, prompt errors and CORS headers ([8105d9e](https://github.com/smarter-sh/smarter/commit/8105d9e002cf6e0f88f73ac48d0b24a3b3384da7))
+* **provider:** let the llm call tools in more than one round ([003fcfe](https://github.com/smarter-sh/smarter/commit/003fcfe2b287e01d2a0ab9f9cd848220de3d1f1f))
+* **react:** load chat images without a referer, and describe failures ([04079af](https://github.com/smarter-sh/smarter/commit/04079af05c2fbdb329ae17ef2c7b283511b573b2))
+
 ## [0.36.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.1...v0.36.2-alpha.1) (2026-10-21)
 
 ### Bug Fixes
