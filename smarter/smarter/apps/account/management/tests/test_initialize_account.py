@@ -41,6 +41,9 @@ class TestInitializeAccount(CommandTestBase):
         self.assertTrue(user.is_superuser)
         self.assertEqual(self.names()[0], "create_account")
         self.assertIn("load_from_github", self.names())
+        # the examples repository, and no other.
+        urls = [c.kwargs.get("url") for c in self.call.call_args_list if c.args[0] == "load_from_github"]
+        self.assertEqual(urls, ["https://github.com/smarter-sh/examples"])
         # the account's own examples, in the order of their dependencies, and then their deployment.
         examples = [
             "add_example_secrets",

@@ -129,9 +129,6 @@ class Command(SmarterCommand):
         # 3. Apply example manifests from GitHub.
 
         call_command(
-            "load_from_github", account_number=account_number, url="https://github.com/smarter-sh/smarter-demo"
-        )
-        call_command(
             "load_from_github",
             account_number=account_number,
             url="https://github.com/smarter-sh/examples",
