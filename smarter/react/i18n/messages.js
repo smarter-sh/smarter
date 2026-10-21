@@ -678,6 +678,10 @@ gettext("Read the Instructor Guide");
 // Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
 gettext("Smarter has a Free Course Catalog of ready-to-teach courses, from prompt engineering for non-programmers to Kubernetes for platform engineers.");
 // Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Every Smarter account starts with two course advisors, stackademy_sql and stackademy_api, that answer from a private database and a web API with no code. A case study on smarter.sh teaches how they work.");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+gettext("Read the case study");
+// Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
 gettext("The chat in the Prompt Engineer's Workbench is its own open source npm package, @smarter.sh/ui-chat, which you can embed in any website.");
 // Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
 gettext("See it on npm");

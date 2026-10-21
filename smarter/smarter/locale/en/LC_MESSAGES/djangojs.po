@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 14:26+0000\n"
+"POT-Creation-Date: 2026-10-21 20:57+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -1454,6 +1454,17 @@ msgstr ""
 msgid ""
 "Smarter has a Free Course Catalog of ready-to-teach courses, from prompt "
 "engineering for non-programmers to Kubernetes for platform engineers."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid ""
+"Every Smarter account starts with two course advisors, stackademy_sql and "
+"stackademy_api, that answer from a private database and a web API with no "
+"code. A case study on smarter.sh teaches how they work."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
+msgid "Read the case study"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
