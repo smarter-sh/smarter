@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.35.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.35.3...v0.35.4-alpha.1) (2026-10-21)
+
+### Bug Fixes
+
+* **account:** translate account emails into the user's language ([1179b96](https://github.com/smarter-sh/smarter/commit/1179b96d141e4744c68ac336fe39dd44f37a0e18))
+
 ## [0.35.3](https://github.com/smarter-sh/smarter/compare/v0.35.2...v0.35.3) (2026-10-20)
 
 ### Bug Fixes
