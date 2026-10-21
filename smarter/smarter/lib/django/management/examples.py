@@ -2,8 +2,9 @@
 Base class of the ``add_example_<kinds>`` management commands.
 
 Each Django app that implements SAM resources has a command that creates the example
-resources of its kinds, from the manifests in its ``data/`` folder, e.g. ``add_example_secrets``,
-``add_example_connections``, ``add_example_tools`` and ``add_example_llmclients``.
+resources of its kinds, from the manifests in its ``data/`` folder, e.g. ``add_example_guardrails``,
+``add_example_tools`` and ``add_example_llmclients``. ``manage.py load_from_github`` is one too: it applies
+the manifests of a GitHub repository, e.g. the Stackademy project.
 ``manage.py initialize_platform`` runs them for the Smarter admin, in the order of their
 dependencies, and ``manage.py initialize_account`` runs those whose examples every account
 gets its own copy of for the account's admin.

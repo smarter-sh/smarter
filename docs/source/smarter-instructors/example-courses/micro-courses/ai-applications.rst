@@ -24,9 +24,9 @@ with an output guardrail; `twenty-five ready-made MCP clients
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
 for services such as GitHub, Notion, Linear and Stripe; twenty `sample plugins
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__;
-and `Stackademy
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/stackademy>`__, a
-fictional university whose course catalog is served both from a database and from a REST API.
+and `Stackademy <https://github.com/smarter-sh/stackademy>`__, a fictional online code academy whose
+course catalog is served both from a database and from a REST API, and whose manifests are a git
+repository of their own.
 
 Smarter also makes the design decisions behind safe AI applications visible, where students can
 see them and argue about them:
@@ -35,7 +35,7 @@ see them and argue about them:
   :doc:`selects a plugin </smarter-resources/llmtool/nlp>` when the prompt matches its search
   terms, and only then does the model decide whether to call it.
 - A SQL Plugin runs a fixed, `parameterized query
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/stackademy/stackademy-plugin-sql.yaml>`__
+  <https://github.com/smarter-sh/stackademy/blob/main/plugins/sql/stackademy-sql.yaml>`__
   that the model can only fill in, so the model never writes SQL that runs. The ``data_analyst``
   LLMClient shows the other pattern: a skill that teaches the model a schema, so that it writes SQL
   for a person to review.

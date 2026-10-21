@@ -1,299 +1,330 @@
-"""This module is used to deploy a collection of customer API's from a GitHub repository containing plugin YAML files organized in directories by customer API name."""
+"""
+Apply every Smarter manifest in a GitHub repository, in the order of their dependencies.
+
+The Stackademy project, https://github.com/smarter-sh/stackademy, is the reference: the
+Secrets, Connections, plugins, LLMClients and Budget of a fictional code academy, which
+``manage.py initialize_platform`` and ``manage.py initialize_account`` load with this command.
+"""
 
 import os
-import re
+import shutil
 import subprocess
-import sys
+import tempfile
+from dataclasses import dataclass
 from typing import Optional
 
+import yaml
+from django.core.management.base import CommandError
+
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.utils import (
-    get_cached_admin_user_for_account,
+from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.llmclient.management.commands.add_example_llmclients import (
+    Command as AddExampleLLMClientsCommand,
 )
-from smarter.apps.api.utils import apply_manifest
-from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
-from smarter.apps.llmtool.manifest.controller import SAM_MAP, PluginController
-from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import smarter_settings
+from smarter.apps.llmclient.management.commands.deploy_example_llmclients import (
+    Command as DeployExampleLLMClientsCommand,
+)
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib import logging
-from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib import json, logging
+from smarter.lib.django.management.examples import SmarterExamplesCommand
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.template import TEMPLATE_EXTENSION, render_manifest_template
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(f"{__name__}")
+logger_prefix = logging.formatted_text(__name__)
+
+MANIFEST_EXTENSIONS = (".yaml", ".yml", TEMPLATE_EXTENSION)
+"""The extensions of the files that may hold a manifest.
+
+Other files, e.g. a README, are ignored.
+"""
+
+KIND_APPLY_ORDER: tuple[str, ...] = (
+    SAMKinds.ACCOUNT.value,
+    SAMKinds.USER.value,
+    SAMKinds.AUTH_TOKEN.value,
+    SAMKinds.SECRET.value,
+    SAMKinds.PROVIDER.value,
+    SAMKinds.PROXY.value,
+    SAMKinds.LLM_HOST_COMPUTE.value,
+    SAMKinds.LLM_HOST.value,
+    SAMKinds.SQL_CONNECTION.value,
+    SAMKinds.API_CONNECTION.value,
+    SAMKinds.GUARDRAIL.value,
+    SAMKinds.VECTORSTORE.value,
+    SAMKinds.VECTORSEARCH.value,
+    SAMKinds.MCP_CLIENT.value,
+    SAMKinds.STATIC_PLUGIN.value,
+    SAMKinds.SQL_PLUGIN.value,
+    SAMKinds.API_PLUGIN.value,
+    SAMKinds.SKILL_PLUGIN.value,
+    SAMKinds.WEBSEARCH_PLUGIN.value,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value,
+    SAMKinds.CUSTOM_DOMAIN.value,
+    SAMKinds.LLM_CLIENT.value,
+    SAMKinds.PROMPT.value,
+    SAMKinds.ORCHESTRATOR.value,
+    SAMKinds.BUDGET.value,
+)
+"""
+The order in which the kinds are applied: each kind after the kinds that its manifests may name.
+
+A Secret comes before the Providers, Proxies and Connections that name it, a Connection before the
+plugins that use it, the plugins, MCPClients, Guardrails, Vectorstores and CustomDomains before the
+LLMClients that list them, an LLMClient before the Orchestrators that attach it, and a Budget last,
+after the resources of its ``spec.resources``. A kind that is not listed is applied last.
+"""
 
 
-# pylint: disable=E1101,too-many-instance-attributes
-class Command(SmarterCommand):
+@dataclass(frozen=True)
+class RepositoryManifest:
+    """A manifest of the repository: its file, relative to the repository's root, and its content."""
+
+    path: str
+    """The file, relative to the repository's root, e.g. ``plugins/sql/stackademy-sql.yaml``."""
+    filespec: str
+    """The file's absolute path in the clone."""
+    kind: str
+    """The manifest's kind, e.g. ``SqlPlugin``."""
+    name: str
+    """The manifest's ``metadata.name``."""
+    manifest: SmarterDictType
+    """The manifest, with a template's placeholders filled in."""
+
+    @property
+    def rank(self) -> int:
+        """The position of the manifest's kind in :data:`KIND_APPLY_ORDER`."""
+        return KIND_APPLY_ORDER.index(self.kind) if self.kind in KIND_APPLY_ORDER else len(KIND_APPLY_ORDER)
+
+
+# pylint: disable=E1101
+class Command(SmarterExamplesCommand):
     """
-    Deploy customer APIs and plugins from a GitHub repository containing YAML manifest files.
+    Django manage.py load_from_github command.
 
-    This management command automates the deployment of llmclients and plugins for Smarter accounts
-    by processing a public GitHub repository. The repository should contain YAML manifest files
-    organized either by directories representing customer APIs (subdomains) or by separate
-    'plugins' and 'llmclients' folders, depending on the selected repo version.
+    Clones a public GitHub repository and applies each Smarter manifest in it, as a user, through
+    the same brokers as the ``apply`` api. The repository's folders are only for people: the
+    manifests are applied in the order of their kinds' dependencies, :data:`KIND_APPLY_ORDER`, so
+    that a Connection exists before the plugin that uses it, a plugin before the LLMClient that
+    lists it, and so on. Within a kind, they are applied in the order of their paths.
 
-    The command supports two repository layouts:
+    - A manifest is a ``*.yaml``, ``*.yml`` or ``*.yaml.tpl`` file whose ``apiVersion`` is a Smarter
+      api version. Other files, and hidden files and folders, e.g. ``.github/`` and
+      ``.pre-commit-config.yaml``, are ignored.
+    - A manifest template, ``*.yaml.tpl``, is filled in with this platform's scheme and domain, as
+      the ``add_example_<kinds>`` commands do, e.g. the Stackademy ApiConnection, whose ``baseUrl``
+      is the platform that applies it.
+    - An LLMClient that exists keeps its ``deployed`` value, and an LLMClient that needs an extension
+      that is not installed is skipped, as ``manage.py add_example_llmclients`` does.
+    - ``--deploy`` deploys each LLMClient that is not deployed, as ``manage.py deploy_example_llmclients``
+      does.
+    - ``--exclude_kind`` skips the manifests of a kind, e.g. a Budget, which only a superuser may
+      apply, and which applies to the platform rather than to one account.
+    - One manifest that fails doesn't stop the rest. The command fails at the end, with the list of
+      the manifests that failed, and also when the repository holds no manifest at all.
 
-    - **Version 1:** Each folder in the repository represents a customer API (subdomain), and contains
-      YAML plugin manifests. The command creates an llmclient for each folder and attaches plugins
-      found within.
-
-    - **Version 2:** The repository contains 'plugins' and 'llmclients' directories. All plugin manifests
-      are processed first (to satisfy dependencies), followed by llmclient manifests.
-
-    The deployment process includes:
-
-    - Cloning the specified GitHub repository to a local directory.
-    - Iterating through manifest files and applying them to the Smarter platform.
-    - Creating llmclients and associating plugins as defined by the manifests.
-    - Deploying llmclients asynchronously using Celery tasks.
-    - Outputting progress, error, and completion messages to the console.
-
-    Administrators can specify the target account by account number and optionally a username.
-    The command ensures that all required account, user, and profile objects are available before
-    processing manifests. It validates URLs, manages local repository cleanup, and handles errors
-    encountered during manifest application or plugin loading.
-
-    This command is useful for bulk provisioning, migration, or onboarding scenarios where multiple
-    llmclients and plugins need to be deployed from a structured repository. It streamlines the process
-    of setting up complex environments and ensures consistent deployment across accounts.
+    The owner is ``--username``, or the admin of the account ``--account_number``. Applying is
+    idempotent: a resource that exists is updated.
     """
+
+    help = (
+        "Apply every Smarter manifest in a public GitHub repository, in the order of their dependencies, "
+        "e.g. https://github.com/smarter-sh/stackademy."
+    )
+    family = "manifest"
 
     _url: Optional[str] = None
-    user: User
-    account: Account
-    user_profile: UserProfile
-
-    def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
-        super().__init__(stdout, stderr, no_color, force_color)
-        self._url = None
+    user_profile: Optional[UserProfile] = None
 
     @property
     def url(self) -> str:
+        """The repository's url."""
         if not self._url:
             raise SmarterValueError("URL is required.")
         return self._url
 
     @url.setter
-    def url(self, value):
+    def url(self, value: str) -> None:
         SmarterValidator.validate_url(value)
         self._url = value
 
-    @property
-    def local_path(self):
-        return os.path.join(smarter_settings.data_directory, self.get_url_filename(self.url))
-
-    def get_url_filename(self, url) -> str:
-        """
-        Get the filename from a URL.
-
-        example: https://github.com/smarter-sh/smarter_demo/blob/main/hr/shrm_fmla.yaml
-        returns "shrm_fmla.yaml"
-        """
-        return url.split("/")[-1]
-
-    def clone_repo(self):
-        """Synchronously clone a GitHub repository to the local file system."""
-        self.delete_repo()
-        result = subprocess.call(["git", "clone", self.url, self.local_path])
-        if result != 0:
-            raise subprocess.CalledProcessError(
-                returncode=result, cmd=f"git clone {self.url} {self.local_path}", output="Failed to clone repository"
-            )
-        else:
-            logger.debug("%s: Cloned %s to %s", logger_prefix, self.url, self.local_path)
-
-    def delete_repo(self):
-        """Delete a cloned GitHub repository from the local file system."""
-        if os.path.exists(self.local_path):
-            result = subprocess.call(["rm", "-rf", self.local_path])
-            if result != 0:
-                raise subprocess.CalledProcessError(
-                    returncode=result, cmd=f"rm -rf {self.local_path}", output="Failed to delete repository"
-                )
-            else:
-                logger.debug("%s: Deleted %s", logger_prefix, self.local_path)
-
-    def load_plugin(self, filespec: str):
-        """Load a plugin from a file on the local file system."""
-        if not self.user_profile:
-            raise SmarterValueError("User profile is required.")
-
-        loader = SAMLoader(
-            api_version=SmarterApiVersions.V1,
-            file_path=filespec,
-        )
-
-        if not loader.ready:
-            logger.error("%s: manage.py create_plugin. SAMLoader is not ready.", logger_prefix)
-            sys.exit(1)
-        plugin_class = SAM_MAP[loader.manifest_kind]
-        manifest = plugin_class(**loader.pydantic_model_dump())
-        logger.debug(
-            "%s: Creating %s %s for account %s...",
-            logger_prefix,
-            plugin_class.__name__,
-            manifest.metadata.name,
-            self.user_profile,
-        )
-        controller = PluginController(user_profile=self.user_profile, manifest=manifest)  # type: ignore
-        plugin = controller.obj
-        return plugin
-
-    def process_repo_v2(self):
-        """
-        Process a GitHub repository containing yaml manifest files.
-
-        Folders are optional and can be used to organize the manifest files, but otherwise
-        do not contain any special meaning.
-        """
-
-        def process_directory(directory) -> None:
-            directory_path = os.path.join(root, directory)
-            for _, _, files in os.walk(directory_path):
-                for file in files:
-                    if file.endswith(".yaml") or file.endswith(".yml"):
-                        filespec = os.path.join(directory_path, file)
-                        apply_manifest(filespec=filespec, username=self.user.username, verbose=True)
-
-        if not self.user_profile:
-            raise SmarterValueError("User profile is required.")
-        self.clone_repo()
-
-        # pylint: disable=too-many-nested-blocks
-        for root, directory_names, _ in os.walk(self.local_path):
-            if "plugins" in directory_names:
-                # we need to process plugins first as these can be dependencies for llmclients
-                logger.debug("%s: Processing plugins for account %s...", logger_prefix, self.account.account_number)
-                process_directory(directory="plugins")
-            if "llmclients" in directory_names:
-                logger.debug("%s: Processing llmclients for account %s...", logger_prefix, self.account.account_number)
-                process_directory(directory="llmclients")
-
-    def process_repo_v1(self):
-        """Process a GitHub repository containing yaml plugin files organized into folders, where each folder name is the subdomain for a customer API."""
-
-        def is_demo_folder(directory) -> bool:
-            """Returns true if the folder contains yaml or yml files."""
-            VALID_HOST_PATTERN = r"(?!-)[A-Z\d-]{1,63}(?<!-)$"
-
-            folder_name = os.path.basename(directory_path)
-            if not re.fullmatch(VALID_HOST_PATTERN, folder_name, re.IGNORECASE):
-                logger.debug("%s: Skipping folder: %s", logger_prefix, folder_name)
-                return False
-
-            for _, _, files in os.walk(directory):
-                for file in files:
-
-                    if isinstance(file, str) and file.endswith(".yaml") or file.endswith(".yml"):
-                        return True
-            return False
-
-        if not self.user_profile:
-            raise SmarterValueError("User profile is required.")
-        self.clone_repo()
-
-        # pylint: disable=too-many-nested-blocks
-        for root, directory_names, _ in os.walk(self.local_path):
-            for directory in [d for d in directory_names if not d.startswith(".")]:
-                # yaml plugins are separated by directories
-                # representing different kinds of demo plugins
-                # (e.g. "hr", "sales-support", "government", "university-admissions", etc.)
-                # and each directory contains a collection of yaml files.
-                #
-                # We're not currently doing anything with the directory names,
-                # but we could use them to create a customer api of the same name.
-                directory_path = os.path.join(root, directory)
-                api_name = os.path.basename(directory_path)
-                if is_demo_folder(directory=directory_path):
-                    logger.debug("%s: Processing API: %s", logger_prefix, api_name)
-                    llmclient, _ = LLMClient.objects.get_or_create(name=api_name, user_profile=self.user_profile)
-                    for _, _, files in os.walk(directory_path):
-                        for file in files:
-                            if file.endswith(".yaml") or file.endswith(".yml"):
-                                try:
-                                    filespec = os.path.join(directory_path, file)
-                                    filename = os.path.basename(filespec)
-                                    logger.debug("%s: Loading plugin: %s", logger_prefix, filespec)
-                                    plugin = self.load_plugin(filespec=filespec)
-                                    if not plugin:
-                                        logger.error(
-                                            "%s: Error loading plugin: %s for user_profile %s",
-                                            logger_prefix,
-                                            filename,
-                                            self.user_profile,
-                                        )
-                                        continue
-                                    LLMClientPlugin.objects.get_or_create(
-                                        llmclient=llmclient, plugin_meta=plugin.plugin_meta
-                                    )
-                                except Exception as e:
-                                    logger.error(
-                                        "%s: Error loading plugin: %s for user_profile %s: %s",
-                                        logger_prefix,
-                                        filename,
-                                        self.user_profile,
-                                        e,
-                                    )
-                                    raise e
-
-                    llmclient.deployed = True
-                    llmclient.save(asynchronous=True)
-
     def add_arguments(self, parser):
-        """Add arguments to the command."""
-        parser.add_argument("-u", "--url", type=str, help="A url for a public GitHub repository.")
+        """Add the arguments."""
+        parser.add_argument("-u", "--url", type=str, help="The url of a public GitHub repository.")
         parser.add_argument(
             "-a",
             "--account_number",
             type=str,
-            nargs="?",
             default=None,
-            help="Account number that will own the new plugin.",
+            help="The account whose admin will own the resources, unless --username is given.",
         )
-        parser.add_argument("--username", type=str, nargs="?", default=None, help="A user associated with the account.")
+        parser.add_argument("--username", type=str, default=None, help="The user who will own the resources.")
         parser.add_argument(
-            "--repo_version", type=str, nargs="?", default="1", help="The version of the Github repo reader."
+            "--deploy", action="store_true", help="Deploy each of the repository's LLMClients that is not deployed."
         )
+        parser.add_argument(
+            "--exclude_kind",
+            action="append",
+            default=[],
+            choices=sorted(SAMKinds.all()),
+            help="Skip the manifests of this kind. May be given more than once.",
+        )
+        parser.add_argument("--verbose", action="store_true", help="Print the output of each apply.")
+
+    def clone_repo(self, local_path: str) -> None:
+        """
+        Clone the repository's default branch, without its history.
+
+        :param local_path: The folder to clone into.
+        :raises subprocess.CalledProcessError: If git fails.
+        """
+        result = subprocess.call(["git", "clone", "--depth", "1", "--quiet", self.url, local_path])
+        if result != 0:
+            raise subprocess.CalledProcessError(returncode=result, cmd=f"git clone {self.url} {local_path}")
+        logger.debug("%s.clone_repo() cloned %s to %s", logger_prefix, self.url, local_path)
+
+    def find_manifests(self, local_path: str) -> list[RepositoryManifest]:
+        """
+        Return the repository's manifests, in the order in which to apply them.
+
+        :param local_path: The repository's clone.
+        :returns: The manifests, sorted by :data:`KIND_APPLY_ORDER`, then by path.
+        :rtype: list[RepositoryManifest]
+        """
+        retval: list[RepositoryManifest] = []
+        for root, directories, files in os.walk(local_path):
+            directories[:] = sorted(d for d in directories if not d.startswith("."))
+            for file in sorted(files):
+                if file.startswith(".") or not file.endswith(MANIFEST_EXTENSIONS):
+                    continue
+                filespec = os.path.join(root, file)
+                path = os.path.relpath(filespec, local_path)
+                with open(filespec, encoding="utf-8") as f:
+                    text = f.read()
+                if file.endswith(TEMPLATE_EXTENSION):
+                    text = render_manifest_template(text)
+                manifest = yaml.safe_load(text)
+                if (
+                    not isinstance(manifest, dict)
+                    or not str(manifest.get("apiVersion", "")).startswith("smarter.sh/")
+                    or not manifest.get("kind")
+                ):
+                    self.stdout.write(self.style.WARNING(f"Skipped {path}: it is not a Smarter manifest."))
+                    continue
+                name = str((manifest.get("metadata") or {}).get("name", ""))
+                retval.append(
+                    RepositoryManifest(
+                        path=path, filespec=filespec, kind=str(manifest["kind"]), name=name, manifest=manifest
+                    )
+                )
+        return sorted(retval, key=lambda m: (m.rank, m.path))
+
+    def apply_manifests(
+        self, manifests: list[RepositoryManifest], user_profile: UserProfile, deploy: bool = False
+    ) -> list[str]:
+        """
+        Apply the manifests, in order, and deploy the LLMClients if ``deploy``.
+
+        :param manifests: The manifests, from :meth:`find_manifests`.
+        :param user_profile: The owner of the resources.
+        :param deploy: Deploy each LLMClient that is not deployed.
+        :returns: A description of each manifest that failed to apply or deploy.
+        :rtype: list[str]
+        """
+        failed: list[str] = []
+        deployer: Optional[DeployExampleLLMClientsCommand] = None
+        if deploy:
+            deployer = DeployExampleLLMClientsCommand(stdout=self.stdout, stderr=self.stderr)
+            deployer.user_profile = user_profile
+        for item in manifests:
+            manifest = item.manifest
+            if item.kind == SAMKinds.LLM_CLIENT.value:
+                missing = AddExampleLLMClientsCommand.missing_extensions(
+                    manifest.get("spec", {}).get("extensions") or []
+                )
+                if missing:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Skipped {item.path}: it needs extensions that are not installed: {', '.join(missing)}."
+                        )
+                    )
+                    continue
+                manifest = AddExampleLLMClientsCommand.keep_deployed(manifest, user_profile)
+            error = self.apply(item.filespec, user_profile, manifest=json.dumps(manifest))
+            if error:
+                failed.append(f"{item.path}: {error}")
+                continue
+            self.stdout.write(f"Applied {item.kind} {item.name}, from {item.path}.")
+            if deployer and item.kind == SAMKinds.LLM_CLIENT.value and not deployer.deploy_manifest(manifest):
+                failed.append(f"{item.path}: LLMClient {item.name} failed to deploy.")
+        return failed
+
+    def get_user_profile(self, account_number: Optional[str], username: Optional[str]) -> UserProfile:
+        """
+        Return the owner of the resources: ``username``, or else the admin of the account ``account_number``.
+
+        It is the user profile that ``manage.py apply_manifest`` applies the manifests as.
+
+        :param account_number: The account whose admin owns the resources, if no ``username``.
+        :param username: The user who owns the resources.
+        :returns: The owner.
+        :rtype: UserProfile
+        :raises SmarterValueError: If neither is given, or the account or user does not exist.
+        """
+        if username:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist as e:
+                raise SmarterValueError(f"User {username} does not exist.") from e
+        elif account_number:
+            try:
+                account = Account.get_cached_object(invalidate=False, account_number=account_number)
+            except Account.DoesNotExist as e:
+                raise SmarterValueError(f"Account {account_number} does not exist.") from e
+            user = get_cached_admin_user_for_account(account=account)  # type: ignore[arg-type]
+        else:
+            raise SmarterValueError("username and/or account_number is required.")
+        return UserProfile.get_cached_object(user=user)  # type: ignore[arg-type,return-value]
 
     def handle(self, *args, **options):
+        """Clone the repository, apply its manifests, and delete the clone."""
         self.handle_begin()
-
-        self.url = options["url"]
-        account_number = options["account_number"]
-        username = options["username"]
-        repo_version = int(options["repo_version"])
-
-        logger.debug("%s: Deploying plugins from %s for account %s.", logger_prefix, self.url, account_number)
-
-        if not account_number and not username:
-            self.handle_completed_failure(msg="username and/or account_number is required.")
-            raise SmarterValueError("username and/or account_number is required.")
-
-        if account_number:
-            self.account = Account.get_cached_object(invalidate=False, account_number=account_number)  # type: ignore[assignment]
-
-        if username:
-            self.user = User.objects.get(username=username)
-        else:
-            self.user = get_cached_admin_user_for_account(account=self.account)
-
-        if self.user is not None:
-            self.user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-
+        self.verbose = bool(options.get("verbose"))
+        excluded: list[str] = options.get("exclude_kind") or []
         try:
-            if repo_version == 2:
-                # iterate repo and apply manifests
-                self.process_repo_v2()
-            else:
-                # iterate repo, assume that folders refer to llmclients, and load plugins
-                self.process_repo_v1()
+            self.url = options.get("url")  # type: ignore[assignment]
+            self.user_profile = self.get_user_profile(options.get("account_number"), options.get("username"))
+        except SmarterValueError as e:
+            self.handle_completed_failure(msg=str(e))
+            raise
+        logger.debug(
+            "%s.handle() applying the manifests of %s as %s.", logger_prefix, self.url, self.user_profile.user.username
+        )
+
+        local_path = tempfile.mkdtemp(prefix="load_from_github-")
+        try:
+            self.clone_repo(local_path)
+            manifests = self.find_manifests(local_path)
+            for item in [m for m in manifests if m.kind in excluded]:
+                self.stdout.write(f"Skipped {item.path}: {item.kind} is excluded.")
+            manifests = [m for m in manifests if m.kind not in excluded]
+            failed = self.apply_manifests(manifests, self.user_profile, deploy=bool(options.get("deploy")))
         # pylint: disable=broad-except
         except Exception as e:
-            self.handle_completed_failure(e)
-            return
+            self.handle_completed_failure(msg=f"Failed to load {self.url}: {e}")
+            raise CommandError(f"Failed to load {self.url}: {e}") from e
+        finally:
+            shutil.rmtree(local_path, ignore_errors=True)
 
+        if not manifests:
+            msg = f"{self.url} holds no Smarter manifest."
+            self.handle_completed_failure(msg=msg)
+            raise CommandError(msg)
+        if failed:
+            msg = f"{len(failed)} of the {len(manifests)} manifests of {self.url} failed:\n" + "\n".join(failed)
+            self.handle_completed_failure(msg=msg)
+            raise CommandError(msg)
+        self.stdout.write(self.style.SUCCESS(f"Applied the {len(manifests)} manifests of {self.url}."))
         self.handle_completed_success()

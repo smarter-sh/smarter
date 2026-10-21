@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.3-alpha.1...v0.36.3-alpha.2) (2026-10-21)
+
+### Bug Fixes
+
+* **helm:** use the maintainer key that helm recognizes ([199bd6c](https://github.com/smarter-sh/smarter/commit/199bd6c2aa8312832a34f8ee2c8c4d8450263208))
+
+### Refactoring
+
+* **llmclient:** load stackademy from its own github repository ([1d3d05d](https://github.com/smarter-sh/smarter/commit/1d3d05d64975f701a6506a760af16c161479b56a))
+
+## [0.36.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.2...v0.36.3-alpha.1) (2026-10-21)
+
+### Bug Fixes
+
+* **prompt:** compare a receiver's iteration only when it is an int ([48f6561](https://github.com/smarter-sh/smarter/commit/48f65617ff6f94e2560edc0c2bce1e75edaa41bf))
+
 ## [0.36.2](https://github.com/smarter-sh/smarter/compare/v0.36.1...v0.36.2) (2026-10-21)
 
 ### Bug Fixes
