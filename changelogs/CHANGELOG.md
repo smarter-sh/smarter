@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.0](https://github.com/smarter-sh/smarter/compare/v0.35.3...v0.36.0) (2026-10-21)
+
+### Features
+
+* **react:** add [@smarter](https://github.com/smarter).sh/ui-widgets, the dashboard's widgets on npm ([59cbfb2](https://github.com/smarter-sh/smarter/commit/59cbfb28977283167bff29cfd1f2e625b8da3a9b))
+
+### Bug Fixes
+
+* **account:** report management command errors without stack traces ([7d0c55e](https://github.com/smarter-sh/smarter/commit/7d0c55e71cfa499c6b713f4cfcd562f89e95bcdb))
+* **account:** translate account emails into the user's language ([1179b96](https://github.com/smarter-sh/smarter/commit/1179b96d141e4744c68ac336fe39dd44f37a0e18))
+* **chat:** paste plain text into the message input ([56f0c00](https://github.com/smarter-sh/smarter/commit/56f0c00756f40ce0175e726db6fec9cd9aca99f4))
+* **mcpserver:** stop indexing the archived smarter-chat repository ([2790aad](https://github.com/smarter-sh/smarter/commit/2790aad26fb55e32cc58b61aa14b93c7d3494cbc))
+* **react:** keep the Extensions widget light in dark mode ([37cd619](https://github.com/smarter-sh/smarter/commit/37cd6194dba8488534f480d2de7188706db996d5))
+* **react:** point [@smarter](https://github.com/smarter).sh/ui-chat's repository at smarter ([82a4865](https://github.com/smarter-sh/smarter/commit/82a4865742d7a9122f1456f58e266e67bf0aac15))
+* **react:** track smarter-chat's .storybook folder, which tests import ([6564c27](https://github.com/smarter-sh/smarter/commit/6564c271cb971f93033e4d5cd4d588a419abc2c8))
+
+### Refactoring
+
+* **react:** move ResourceTree into [@smarter](https://github.com/smarter).sh/ui-widgets ([5234456](https://github.com/smarter-sh/smarter/commit/52344569bcda351d95def2ec6fa2a9a7768f0733))
+* **react:** move smarter-chat into this repository ([6ba24f8](https://github.com/smarter-sh/smarter/commit/6ba24f860f19de140224fc3e4fa52249b87b2ccc))
+* **react:** rename the npm packages' folders to smarter.sh-* ([1889899](https://github.com/smarter-sh/smarter/commit/1889899da885511db3f3a43fe25f219b6bafb21e))
+
 ## [0.36.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.36.0-alpha.4...v0.36.0-alpha.5) (2026-10-21)
 
 ### Bug Fixes
