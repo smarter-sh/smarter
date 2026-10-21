@@ -17,6 +17,7 @@ from .models import (
     ResourceLock,
     User,
     UserProfile,
+    active_language,
     evaluate_resource_constraints,
 )
 from .models.budget import get_resource_lock_message
@@ -124,14 +125,16 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
     Signal receiver for user login.
 
     - verify that a UserProfile record exists for the user.
-      if not, create one with the default account.
+      if not, create one with the default account, and the request's language, which the
+      web console chose from the language cookie or the browser's Accept-Language header.
+      This is how a console sign-up gets its UserProfile.
     """
     logger.info("%s User logged in: %s", logging.formatted_text(f"{module_prefix}.user_logged_in()"), user)
     try:
         UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
         account = get_cached_default_account()
-        UserProfile.objects.create(name=user.username, user=user, account=account)
+        UserProfile.objects.create(name=user.username, user=user, account=account, language=active_language())
         logger.info("Created UserProfile for user: %s with default account: %s", user, account)
     except UserProfile.MultipleObjectsReturned:
         # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
