@@ -45,6 +45,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { DEFAULT_COOKIE_EXPIRATION, loggerPrefix, projectName, projectVersion } from "@/const";
 import { fetchConfig, fetchPrompt, type PromptProgressEvent } from "@/lib/api";
 import { copyCodeBlock } from "@/lib/code";
+import { pastePlainText } from "@/lib/paste";
 import { activateLanguage, gettext, interpolate, ngettext, pgettext } from "@/lib/i18n";
 import { renderMermaidDiagrams, toggleMermaidDiagram } from "@/lib/mermaid";
 import { cookieMetaFactory, setCookie } from "@/lib/cookie";
@@ -484,6 +485,8 @@ function SmarterChat({
                     attachButton={!!llmclient?.app_file_attachment}
                     disabled={!isReady}
                     fancyScroll={false}
+                    // text copied from a chat bubble, e.g. an example prompt, pastes without the bubble's styles.
+                    onPaste={pastePlainText}
                   />
                 </ChatContainer>
               </MainContainer>
