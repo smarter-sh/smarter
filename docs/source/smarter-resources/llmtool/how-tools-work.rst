@@ -11,6 +11,12 @@ we'll look at a real-world example for getting real-time weather forecasts. Weat
 LLM's definitely do not know anything about weather, beyond any historical weather data on which they
 might have been trained.
 
+For the same idea applied to an organization's own private data, see the `Stackademy case study
+<https://smarter.sh/case-studies/stackademy>`__ on smarter.sh. It follows one tool call from a
+student's question, through the model and a private course database, back to the answer, and lets
+you compare two course advisors live: one whose tool is a :doc:`SqlPlugin <plugin/sql>`, and one
+whose tool is an :doc:`ApiPlugin <plugin/api>`.
+
 .. dropdown:: Tools - functionality we give the model
 
     A function or tool refers in the abstract to a piece of functionality that we tell the model it has access to.
