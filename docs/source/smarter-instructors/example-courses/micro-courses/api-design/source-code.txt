@@ -73,13 +73,13 @@ The Server
        OpenAI, Anthropic or Gemini SDK and change only the base URL and the key.
        :doc:`/smarter-resources/smarter-proxy`.
      - `apps/proxy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy>`__,
-       `proxy/data/proxy/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/proxy/data/proxy>`__
+       `example-manifests/proxies/ <https://github.com/smarter-sh/example-manifests/tree/main/proxies>`__
    * - Limits on abuse
      - Smarter does not configure DRF throttling. Spending and token use are limited by Budgets,
        and middleware blocks clients that probe for missing pages or sensitive files. Students
        can judge whether that is enough.
      - `lib/django/middleware/excessive_404.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/excessive_404.py>`__,
-       `user-hourly-token-throttle.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/user-hourly-token-throttle.yaml>`__
+       `user-hourly-token-throttle.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/user-hourly-token-throttle.yaml>`__
 
 The Clients
 ~~~~~~~~~~~

@@ -47,8 +47,9 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "..", "data", "sample-plugins"))
 TEST_DATA_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "..", "plugin", "tests", "data"))
+# copies of a few of the example manifests in https://github.com/smarter-sh/example-manifests
+EXAMPLE_MANIFESTS_PATH = os.path.join(TEST_DATA_PATH, "example-manifests")
 
 SEARCH = {"provider": "brave", "apiKey": "brave_search_api_key"}
 
@@ -305,29 +306,29 @@ class TestWebsearchPluginManifest(SmarterTestBase):
             manifest = SAMWebsearchPlugin(**get_readonly_yaml_file(os.path.join(TEST_DATA_PATH, filename)))
             self.assertEqual(manifest.kind, MANIFEST_KIND, filename)
 
-    def test_sample_manifests(self):
-        """Test that every sample WebsearchPlugin manifest is valid."""
-        paths = sorted(glob.glob(os.path.join(SAMPLE_PLUGINS_PATH, "websearch-*.yaml")))
-        self.assertGreaterEqual(len(paths), 6)
+    def test_example_manifests(self):
+        """Test that the copies of the example WebsearchPlugin manifests are valid."""
+        paths = sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "websearch-*.yaml")))
+        self.assertEqual(len(paths), 4)
         for path in paths:
             manifest = SAMWebsearchPlugin(**get_readonly_yaml_file(path))
             self.assertEqual(manifest.kind, MANIFEST_KIND, path)
             self.assertEqual(manifest.metadata.pluginClass, "websearch", path)
 
-    def test_sample_manifests_showcase_features(self):
-        """Test that the samples illustrate each feature of the WebsearchPlugin."""
+    def test_example_manifests_showcase_features(self):
+        """Test each feature of the WebsearchPlugin, in the example manifests."""
         data = [
             SAMWebsearchPlugin(**get_readonly_yaml_file(path)).spec.websearchData
-            for path in glob.glob(os.path.join(SAMPLE_PLUGINS_PATH, "websearch-*.yaml"))
+            for path in glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "websearch-*.yaml"))
         ]
         providers = {item.search.provider for item in data if item.search}
         self.assertEqual(providers, {"brave", "tavily"})
-        self.assertTrue(any(item.fetch and not item.search for item in data), "a fetch-only sample")
-        self.assertTrue(any(item.search and not item.fetch for item in data), "a search-only sample")
-        self.assertTrue(any(item.allowedDomains for item in data), "an allow list sample")
-        self.assertTrue(any(item.blockedDomains for item in data), "a block list sample")
-        self.assertTrue(any(item.search and item.search.freshness for item in data), "a freshness sample")
-        self.assertTrue(any(item.search and item.search.country for item in data), "a localized sample")
+        self.assertTrue(any(item.fetch and not item.search for item in data), "a fetch-only example")
+        self.assertTrue(any(item.search and not item.fetch for item in data), "a search-only example")
+        self.assertTrue(any(item.allowedDomains for item in data), "an allow list example")
+        self.assertTrue(any(item.blockedDomains for item in data), "a block list example")
+        self.assertTrue(any(item.search and item.search.freshness for item in data), "a freshness example")
+        self.assertTrue(any(item.search and item.search.country for item in data), "a localized example")
 
     def test_manifest_requires_websearch_data(self):
         """Test that spec.websearchData is required."""

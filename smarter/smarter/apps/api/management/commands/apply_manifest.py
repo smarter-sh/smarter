@@ -89,7 +89,7 @@ class Command(SmarterCommand):
             "--filespec",
             type=str,
             nargs="?",
-            help="relative path a Smarter manifest file (e.g. smarter/apps/connection/data/stackademy/smarter-test-db.yaml).",
+            help="relative path a Smarter manifest file (e.g. llm-clients/llmclient-example.yaml in a clone of https://github.com/smarter-sh/example-manifests).",
         )
         parser.add_argument(
             "--manifest",

@@ -3,10 +3,11 @@
 #
 # This file defines a ConfigMap containing the backup-to-s3.sh script for MariaDB backups.
 #
-# - Maintainer: <your team/contact>
+# - Maintainer: The Smarter Project, https://smarter.sh
 # - Purpose: Provides a shell script to back up the MariaDB database and upload it to S3.
-# - Usage: Mounted into backup Jobs or Pods; values are set in values.yaml.
-# - Notes: Update the script or S3 path as needed for your environment.
+# - Usage: Mounted into the backup Job (job-mysql-backup.yaml) and the Bastion.
+#   The S3 location is set in values.yaml, under databaseScheduledBackup, and
+#   the backup account in env.SMARTER_MYSQL_BACKUP_USERNAME and _PASSWORD.
 #
 # Note:
 # The app.kubernetes.io/application-group label is used to identify pods to Calico
@@ -36,26 +37,95 @@ data:
     #
     # This script performs a backup of the MariaDB database and uploads it to S3.
     #
-    # When it succeeds, it prints the backup file's name, size and S3 location, and
-    # also writes them to $BACKUP_SUMMARY_FILE, if that is set. The scheduled backup
-    # Job emails that summary, with this script's log attached.
+    # environment:
+    #   SMARTER_MYSQL_HOST, SMARTER_MYSQL_PORT, SMARTER_MYSQL_DATABASE
+    #   SMARTER_MYSQL_BACKUP_S3_URI    where to upload, e.g. s3://my-bucket/backups/sql.
+    #                                  Default: s3://$SMARTER_S3_BUCKET/backups/sql
+    #   SMARTER_MYSQL_BACKUP_USERNAME  the read-only account to dump with, by default
+    #   SMARTER_MYSQL_BACKUP_PASSWORD  smarter_backup. job-init.yaml creates it, with
+    #                                  SELECT, SHOW VIEW, TRIGGER, EVENT and SHOW CREATE
+    #                                  ROUTINE on the database. Without a password, the
+    #                                  script uses SMARTER_MYSQL_ROOT_USERNAME and
+    #                                  SMARTER_MYSQL_ROOT_PASSWORD.
+    #   BACKUP_SUMMARY_FILE            optional: where to write the summary below.
+    #
+    # The password is passed to mariadb-dump in a temporary option file, not on the
+    # command line, where every process in the pod could read it.
+    #
+    # Before uploading, the script checks that the dump ran to the end and that the
+    # archive is intact. After uploading, it checks that the object in S3 has the
+    # archive's size. When it succeeds, it prints the backup file's name, size and S3
+    # location, and also writes them to $BACKUP_SUMMARY_FILE, if that is set. The
+    # scheduled backup Job emails that summary, with this script's log attached.
     ################################################################################
-    set -e
+    set -euo pipefail
+
+    if [ -n "${SMARTER_MYSQL_BACKUP_S3_URI:-}" ]; then
+      BACKUP_S3_PREFIX="${SMARTER_MYSQL_BACKUP_S3_URI%/}"
+    elif [ -n "${SMARTER_S3_BUCKET:-}" ] && [ "${SMARTER_S3_BUCKET#SET-ME}" = "${SMARTER_S3_BUCKET}" ]; then
+      BACKUP_S3_PREFIX="s3://${SMARTER_S3_BUCKET}/backups/sql"
+    else
+      echo "FAILED: set databaseScheduledBackup.s3Uri (SMARTER_MYSQL_BACKUP_S3_URI) or SMARTER_S3_BUCKET to say where the backup goes."
+      exit 1
+    fi
+    case "${BACKUP_S3_PREFIX}" in
+      s3://?*) ;;
+      *) echo "FAILED: the backup location must be an s3:// URI, not ${BACKUP_S3_PREFIX}"; exit 1 ;;
+    esac
+
+    # the read-only backup account, which job-init.yaml creates, when its password is
+    # set. Otherwise the root account, which is all that a deployment without
+    # SMARTER_MYSQL_BACKUP_PASSWORD has.
+    if [ -n "${SMARTER_MYSQL_BACKUP_PASSWORD:-}" ] && [ "${SMARTER_MYSQL_BACKUP_PASSWORD#SET-ME}" = "${SMARTER_MYSQL_BACKUP_PASSWORD}" ]; then
+      BACKUP_USERNAME="${SMARTER_MYSQL_BACKUP_USERNAME:-smarter_backup}"
+      BACKUP_PASSWORD="${SMARTER_MYSQL_BACKUP_PASSWORD}"
+    else
+      echo "SMARTER_MYSQL_BACKUP_PASSWORD is not set, so the backup runs as the root account."
+      BACKUP_USERNAME="${SMARTER_MYSQL_ROOT_USERNAME}"
+      BACKUP_PASSWORD="${SMARTER_MYSQL_ROOT_PASSWORD}"
+    fi
 
     BACKUP_FILENAME="${SMARTER_MYSQL_DATABASE}-$(date +%Y%m%dT%H%M%S)"
     BACKUP_FILE="${BACKUP_FILENAME}.tar.gz"
-    BACKUP_URI="s3://ubc.smarter.sh/backups/sql/${BACKUP_FILE}"
+    BACKUP_URI="${BACKUP_S3_PREFIX}/${BACKUP_FILE}"
 
-    echo "Starting MariaDB backup for database: $SMARTER_MYSQL_DATABASE"
-    mariadb-dump -h "$SMARTER_MYSQL_HOST" -u "$SMARTER_MYSQL_ROOT_USERNAME" -p"$SMARTER_MYSQL_ROOT_PASSWORD" --databases  "$SMARTER_MYSQL_DATABASE" --add-drop-database --add-drop-table --routines --events --triggers --single-transaction --quick --lock-tables=false > ${BACKUP_FILENAME}.sql
+    # the connection settings, in an option file only this user can read. Inside
+    # double quotes, an option file treats backslash as an escape character.
+    OPTION_FILE="$(mktemp)"
+    trap 'rm -f "${OPTION_FILE}"' EXIT
+    chmod 600 "${OPTION_FILE}"
+    ESCAPED_PASSWORD="${BACKUP_PASSWORD//\\/\\\\}"
+    ESCAPED_PASSWORD="${ESCAPED_PASSWORD//\"/\\\"}"
+    cat > "${OPTION_FILE}" <<OPTIONS
+    [client]
+    host=${SMARTER_MYSQL_HOST}
+    port=${SMARTER_MYSQL_PORT:-3306}
+    user=${BACKUP_USERNAME}
+    password="${ESCAPED_PASSWORD}"
+    OPTIONS
+
+    echo "Starting MariaDB backup for database: ${SMARTER_MYSQL_DATABASE}, as ${BACKUP_USERNAME}"
+    mariadb-dump --defaults-extra-file="${OPTION_FILE}" --databases "${SMARTER_MYSQL_DATABASE}" \
+      --add-drop-database --add-drop-table --routines --events --triggers \
+      --single-transaction --quick --lock-tables=false --no-tablespaces > "${BACKUP_FILENAME}.sql"
     SQL_BYTES=$(stat -c %s "${BACKUP_FILENAME}.sql")
 
+    # mariadb-dump writes this line last, so a dump without it was cut short.
+    if [[ "$(tail -n 1 "${BACKUP_FILENAME}.sql")" != "-- Dump completed"* ]]; then
+      echo "FAILED: ${BACKUP_FILENAME}.sql does not end with '-- Dump completed', so the dump is incomplete."
+      exit 1
+    fi
+
     echo "Compressing backup file: ${BACKUP_FILENAME}.sql"
-    tar -czvf ${BACKUP_FILE} ${BACKUP_FILENAME}.sql
+    tar -czf "${BACKUP_FILE}" "${BACKUP_FILENAME}.sql"
+    if ! gzip -t "${BACKUP_FILE}"; then
+      echo "FAILED: ${BACKUP_FILE} is not a valid gzip archive."
+      exit 1
+    fi
     BACKUP_BYTES=$(stat -c %s "${BACKUP_FILE}")
 
-    echo "Uploading backup file to S3: ${BACKUP_FILE}"
-    aws s3 cp ${BACKUP_FILE} "${BACKUP_URI}"
+    echo "Uploading backup file to S3: ${BACKUP_URI}"
+    aws s3 cp --only-show-errors "${BACKUP_FILE}" "${BACKUP_URI}"
 
     # confirm that the upload is in S3, with the same size, before reporting success.
     echo "Verifying the upload: ${BACKUP_URI}"
@@ -64,8 +134,8 @@ data:
       echo "FAILED: ${BACKUP_URI} is ${S3_BYTES:-missing} bytes in S3, but ${BACKUP_BYTES} bytes were uploaded."
       exit 1
     fi
-    rm ${BACKUP_FILENAME}.sql
-    rm ${BACKUP_FILE}
+    rm "${BACKUP_FILENAME}.sql"
+    rm "${BACKUP_FILE}"
 
     SUMMARY=$(cat <<SUMMARY
     Backup file: ${BACKUP_FILE}
@@ -77,6 +147,6 @@ data:
     )
     echo "MariaDB backup completed and uploaded to S3:"
     echo "${SUMMARY}"
-    if [ -n "${BACKUP_SUMMARY_FILE}" ]; then
+    if [ -n "${BACKUP_SUMMARY_FILE:-}" ]; then
       echo "${SUMMARY}" > "${BACKUP_SUMMARY_FILE}"
     fi

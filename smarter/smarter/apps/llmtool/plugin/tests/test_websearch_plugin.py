@@ -79,11 +79,10 @@ from .base_classes import (
 )
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "data", "sample-plugins"))
-# the sample WebsearchPlugin smarter_project_websearch, which add_example_tools applies.
-SMARTER_PROJECT_WEBSEARCH_PATH = os.path.abspath(
-    os.path.join(HERE, "..", "..", "data", "sample-plugins", "websearch-smarter-project.yaml")
-)
+# copies of a few of the example manifests in https://github.com/smarter-sh/example-manifests
+EXAMPLE_MANIFESTS_PATH = os.path.join(HERE, "data", "example-manifests")
+# the example WebsearchPlugin smarter_project_websearch, which manage.py initialize_platform applies.
+SMARTER_PROJECT_WEBSEARCH_PATH = os.path.join(EXAMPLE_MANIFESTS_PATH, "websearch-smarter-project.yaml")
 BRAVE_URL = BraveSearchProvider.url
 TAVILY_URL = TavilySearchProvider.url
 
@@ -696,7 +695,7 @@ class TestWebsearchPlugin(PluginTestBase):
         self.brave_secret.refresh_from_db()  # type: ignore[union-attr]
 
     # =========================================================================
-    # example and sample manifests
+    # example manifests
     # =========================================================================
     def test_example_manifest(self):
         """Test that the example manifest is valid, and creates a working plugin."""
@@ -710,12 +709,12 @@ class TestWebsearchPlugin(PluginTestBase):
         plugin = WebsearchPlugin(manifest=SAMWebsearchPlugin(**example), user_profile=self.user_profile)  # type: ignore[arg-type]
         self.assertEqual(plugin.plugin_data.operations, ["search", "fetch"])  # type: ignore[union-attr]
 
-    def test_sample_manifests_create_working_plugins(self):
-        """Test that every sample WebsearchPlugin manifest creates a working plugin."""
+    def test_example_manifests_create_working_plugins(self):
+        """Test that the copies of the example WebsearchPlugin manifests create working plugins."""
         self.new_secret("brave_search_api_key")
         self.new_secret("tavily_api_key")
-        paths = sorted(glob.glob(os.path.join(SAMPLE_PLUGINS_PATH, "websearch-*.yaml")))
-        self.assertGreaterEqual(len(paths), 6)
+        paths = sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "websearch-*.yaml")))
+        self.assertEqual(len(paths), 4)
         for i, path in enumerate(paths):
             manifest = copy.deepcopy(get_readonly_yaml_file(path))
             name = f"websearch_sample_{i}"
@@ -730,7 +729,7 @@ class TestWebsearchPlugin(PluginTestBase):
             self.assertNotIn("error", retval, path)
 
     def test_smarter_project_websearch(self):
-        """Test that the sample WebsearchPlugin smarter_project_websearch searches for The Smarter Project, with Tavily."""
+        """Test that the example WebsearchPlugin smarter_project_websearch searches for The Smarter Project, with Tavily."""
         self.new_secret("tavily_api_key")
         manifest = copy.deepcopy(get_readonly_yaml_file(SMARTER_PROJECT_WEBSEARCH_PATH))
         name = "websearch_smarter_project"

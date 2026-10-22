@@ -3,8 +3,9 @@ Model discovery: find models to host, size their pods, and draft their manifests
 
 Catalogs are pluggable, so that discovery is not tied to one model hub:
 
-- :class:`BuiltinCatalog`: the example manifests in ``data/llmhost``, of the most popular
-  open-weight models. Offline, and ready to apply.
+- :class:`BuiltinCatalog`: the example LLMHosts of the most popular open-weight models, which
+  ``manage.py initialize_platform`` applies for the Smarter admin from
+  https://github.com/smarter-sh/example-manifests. Offline, and ready to apply.
 - :class:`HuggingFaceCatalog`: the Hugging Face Hub, through its public REST API.
 
 A new hub is a new :class:`ModelCatalog`, registered in :data:`CATALOGS`.
@@ -12,9 +13,7 @@ A new hub is a new :class:`ModelCatalog`, registered in :data:`CATALOGS`.
 by :func:`estimate_vram_gb` and :func:`recommend_resources`.
 """
 
-import glob
 import math
-import os
 import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
@@ -22,16 +21,16 @@ from typing import Any, Iterable, Optional, Union
 from urllib.parse import quote
 
 import requests
+from django.db.models import QuerySet
 
-from smarter.apps.llmhost.const import BUILTIN_MANIFESTS_PATH
 from smarter.apps.llmhost.manifest.enum import (
     SAMLLMHostEngine,
     SAMLLMHostModelSource,
     SAMLLMHostQuantization,
     SAMLLMHostTask,
 )
-from smarter.apps.llmhost.models import LLMHostCompute
-from smarter.common.utils import get_readonly_yaml_file
+from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.typing import SmarterDictType
 
@@ -102,21 +101,43 @@ class ModelCatalog(ABC):
 
 
 class BuiltinCatalog(ModelCatalog):
-    """The example LLMHost manifests that ship with Smarter."""
+    """
+    The example LLMHosts: those that the Smarter admin owns, which every account may use.
+
+    ``manage.py initialize_platform`` applies them from the ``llmhosts/`` folder of
+    https://github.com/smarter-sh/example-manifests. Each one's manifest is rebuilt from the row:
+    its metadata, and the spec that it was applied with, which is ready to apply again.
+    """
 
     name = "builtin"
 
-    def __init__(self, path: str = BUILTIN_MANIFESTS_PATH):
-        self.path = path
+    @staticmethod
+    def llmhosts() -> QuerySet:
+        """The Smarter admin's LLMHosts."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.utils import smarter_cached_objects
+
+        return LLMHost.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile)
+
+    @staticmethod
+    def to_manifest(llmhost: LLMHost) -> SmarterDictType:
+        """An LLMHost's manifest, without its status."""
+        return {
+            "apiVersion": SmarterApiVersions.V1,
+            "kind": SmarterJournalThings.LLMHOST.value,
+            "metadata": {
+                "name": llmhost.name,
+                "description": llmhost.description,
+                "version": llmhost.version,
+                "tags": llmhost.tags_list,
+                "annotations": llmhost.annotations if isinstance(llmhost.annotations, list) else [],
+            },
+            "spec": llmhost.spec,
+        }
 
     def manifests(self) -> list[SmarterDictType]:
-        """The built-in manifests, sorted by file name."""
-        retval = []
-        for filespec in sorted(glob.glob(os.path.join(self.path, "*.yaml"))):
-            manifest = get_readonly_yaml_file(filespec)
-            if isinstance(manifest, dict) and manifest.get("kind") == SmarterJournalThings.LLMHOST.value:
-                retval.append(manifest)
-        return retval
+        """The example LLMHosts' manifests, sorted by name."""
+        return [self.to_manifest(llmhost) for llmhost in self.llmhosts().order_by("name") if llmhost.spec]
 
     @staticmethod
     def to_info(manifest: SmarterDictType) -> ModelInfo:

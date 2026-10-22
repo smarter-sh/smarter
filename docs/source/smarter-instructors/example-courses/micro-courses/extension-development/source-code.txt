@@ -40,7 +40,7 @@ Tools and Extensibility
      - An LLMClient lists Extensions by slug in ``spec.extensions``. The built-in weather
        LLMClient's system prompt names the tool exactly as the LLM sees it,
        ``ext_weather_get_weather``, and a test keeps prompts and manifests from drifting apart.
-     - `llmclient-weather.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-weather.yaml>`__
+     - `llmclient-weather.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-weather.yaml>`__
 
 The Official Extensions
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -138,7 +138,7 @@ Writing an Extension
    * - Management commands
      - ``validate_extension`` prints each tool's definition exactly as the LLM will see it;
        ``package_extension``, ``test_extension``, ``install_extension``,
-       ``uninstall_extension`` and ``add_example_extensions`` cover the rest of a developer's
+       ``uninstall_extension`` and ``install_official_extensions`` cover the rest of a developer's
        loop.
      - `management/commands/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/management/commands>`__
 
@@ -196,7 +196,7 @@ Installing, Loading and Publishing
      - Eight signals, from ``extension_installed`` to ``extension_tool_failed``, feed Smarter's
        logs, progress messages and history. The ``log_extension`` waffle switch turns on the
        framework's logging.
-     - `apps/llmtool/signals.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/signals.py>`__
+     - `apps/llmtool/signals/extension.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/signals/extension.py>`__
 
 Extensions in the History
 ~~~~~~~~~~~~~~~~~~~~~~~~~

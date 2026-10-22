@@ -13,10 +13,10 @@ import glob
 import os
 from urllib.parse import urlparse
 
+import yaml
 from pydantic import ValidationError
 
 from smarter.apps.llmtool.plugin.safe_http import is_loopback_host
-from smarter.apps.mcpclient.const import DATA_PATH
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     DEFAULT_API_KEY_HEADER,
     DEFAULT_CACHE_TTL,
@@ -28,14 +28,18 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.model import SAMMCPClient
 from smarter.apps.mcpclient.manifest.models.mcpclient.spec import (
     SAMMCPClientSpecConfig,
 )
-from smarter.apps.mcpclient.utils import MCPClientExamples
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.template import manifest_template_values
+from smarter.lib.manifest.template import (
+    TEMPLATE_EXTENSION,
+    manifest_template_values,
+    render_manifest_template,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from .base_classes import get_test_data
+from .base_classes import DATA_PATH, get_test_data
 
-EXAMPLES_PATH = os.path.join(DATA_PATH, "mcpclients")
+# copies of a few of the example manifests in https://github.com/smarter-sh/example-manifests
+EXAMPLE_MANIFESTS_PATH = os.path.join(DATA_PATH, "example-manifests")
 URL = "https://mcp.example.com/mcp"
 
 
@@ -51,20 +55,26 @@ class TestMCPClientManifest(SmarterTestBase):
         with self.assertRaises((SAMValidationError, ValidationError, ValueError)):
             self.config(**fields)
 
+    def example_manifests(self) -> dict[str, str]:
+        """Return the copies of the example manifests, by filename, with the templates filled in."""
+        examples = {}
+        for filespec in sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "*.yaml*"))):
+            with open(filespec, encoding="utf-8") as file:
+                text = file.read()
+            filename = os.path.basename(filespec)
+            examples[filename] = render_manifest_template(text) if filename.endswith(TEMPLATE_EXTENSION) else text
+        return examples
+
     def test_example_manifests(self):
-        """Test that every example manifest and manifest template in data/mcpclients is valid."""
-        examples = MCPClientExamples()
-        self.assertEqual(
-            examples.count(),
-            len(
-                glob.glob(os.path.join(EXAMPLES_PATH, "*.yaml")) + glob.glob(os.path.join(EXAMPLES_PATH, "*.yaml.tpl"))
-            ),
-        )
-        self.assertGreaterEqual(examples.count(), 28)
+        """Test that the copies of the example manifests and manifest templates are valid."""
+        examples = self.example_manifests()
+        self.assertEqual(len(examples), 6)
         names = []
-        for example in examples:
-            with self.subTest(filename=example.filename):
-                manifest = SAMMCPClient(**example.to_json())
+        transports = set()
+        auth_types = set()
+        for filename, text in examples.items():
+            with self.subTest(filename=filename):
+                manifest = SAMMCPClient(**yaml.safe_load(text))
                 config = manifest.spec.config
                 self.assertIn(config.transport, ("http", "sse"))
                 hostname = urlparse(config.endpointUrl).hostname
@@ -75,24 +85,33 @@ class TestMCPClientManifest(SmarterTestBase):
                 if config.authType != "none":
                     self.assertTrue(config.credentials)
                 names.append(manifest.metadata.name)
+                transports.add(config.transport)
+                auth_types.add(config.authType)
         self.assertEqual(len(names), len(set(names)))
+        self.assertEqual(transports, {"http", "sse"})
+        self.assertEqual(auth_types, {"none", "api_key", "bearer_token", "oauth2"})
 
     def test_example_manifest_templates(self):
         """The smarter_project_* templates are filled in with this platform's scheme and domain."""
         values = manifest_template_values()
-        templates = [example for example in MCPClientExamples() if example.is_template]
-        self.assertEqual(len(templates), 10)
-        for example in templates:
-            with self.subTest(filename=example.filename):
-                self.assertTrue(example.name.startswith("smarter_project"))
-                endpoint_url = example.to_json()["spec"]["config"]["endpointUrl"]
+        templates = {
+            filename: text
+            for filename, text in self.example_manifests().items()
+            if filename.endswith(TEMPLATE_EXTENSION)
+        }
+        self.assertEqual(len(templates), 2)
+        for filename, text in templates.items():
+            with self.subTest(filename=filename):
+                self.assertNotIn("$", text)
+                data = yaml.safe_load(text)
+                self.assertTrue(data["metadata"]["name"].startswith("smarter_project"))
+                endpoint_url = data["spec"]["config"]["endpointUrl"]
                 self.assertTrue(
                     endpoint_url.startswith(
                         f"{values['environment_platform_scheme']}://{values['environment_platform_domain']}"
                         "/api/v1/mcp/smarter-project/"
                     )
                 )
-                self.assertNotIn("$", example.to_yaml())
 
     def test_test_manifest(self):
         """Test the test manifest."""
