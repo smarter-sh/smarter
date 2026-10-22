@@ -1,11 +1,11 @@
 """Test the Proxy manifest's Pydantic models, :mod:`smarter.apps.proxy.manifest.models.proxy`."""
 
+import glob
 import os
 import unittest
 
 from pydantic import ValidationError
 
-from smarter.apps.proxy.builtins import builtin_manifest_files
 from smarter.apps.proxy.manifest.models.proxy.const import MANIFEST_KIND
 from smarter.apps.proxy.manifest.models.proxy.metadata import SAMProxyMetadata
 from smarter.apps.proxy.manifest.models.proxy.model import SAMProxy
@@ -128,7 +128,7 @@ class TestSAMProxySpec(unittest.TestCase):
 
 
 class TestSAMProxy(unittest.TestCase):
-    """Test the Proxy manifest, and the built-in manifests."""
+    """Test the Proxy manifest, and the example manifests."""
 
     def test_test_manifest(self):
         loader = SAMLoader(file_path=get_data_path("proxy.yaml"))
@@ -142,10 +142,15 @@ class TestSAMProxy(unittest.TestCase):
         self.assertEqual(MANIFEST_KIND, "Proxy")
         self.assertIsNone(model.status)
 
-    def test_builtin_manifests(self):
-        """Test that every built-in manifest is valid, restricts its paths, and names a Secret."""
-        files = builtin_manifest_files()
-        self.assertGreaterEqual(len(files), 9)
+    def test_example_manifests(self):
+        """
+        Test that the example Proxy manifests are valid, restrict their paths, and name a Secret.
+
+        ./data/proxies holds a representative copy of those in the proxies/ folder of
+        https://github.com/smarter-sh/example-manifests, whose pre-commit validates every one.
+        """
+        files = sorted(glob.glob(get_data_path(os.path.join("proxies", "*.yaml"))))
+        self.assertGreaterEqual(len(files), 4)
         names = set()
         for filename in files:
             with self.subTest(manifest=os.path.basename(filename)):
@@ -153,10 +158,10 @@ class TestSAMProxy(unittest.TestCase):
                 self.assertEqual(loader.manifest_kind, MANIFEST_KIND)
                 metadata = SAMProxyMetadata(**loader.manifest_metadata)
                 model = SAMProxySpec(**loader.manifest_spec)
-                self.assertTrue(model.allowedPaths, "a built-in Proxy must restrict its paths.")
+                self.assertTrue(model.allowedPaths, "an example Proxy must restrict its paths.")
                 self.assertTrue(model.apiKey)
                 self.assertTrue(model.baseUrl and model.baseUrl.startswith("https://"))
                 self.assertIn({"smarter.sh/proxy/builtin": "true"}, metadata.annotations)
                 names.add(metadata.name)
-        self.assertEqual(len(names), len(files), "built-in Proxy names must be unique.")
+        self.assertEqual(len(names), len(files), "example Proxy names must be unique.")
         self.assertTrue({"openai", "anthropic", "googleai", "mistral"} <= names)

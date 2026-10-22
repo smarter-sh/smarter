@@ -97,26 +97,9 @@
     ],
     "plugins": [
       "everlasting_gobstopper",
-      "example_configuration",
-      "bw_image_search",
-      "diagram_image_search",
-      "safe_image_search",
-      "svg_image_search",
-      "image_search",
-      "anthropic_internal_comms",
-      "anthropic_mcp_builder",
-      "anthropic_pdf",
-      "brand_voice_support_replies",
-      "code_review",
-      "meeting_notes",
-      "sql_analyst",
-      "python_docs_assistant",
-      "local_search_fr",
-      "market_research",
-      "news_monitor",
       "research_assistant",
-      "smarter_project_websearch",
-      "url_reader"
+      "code_review",
+      "image_search"
     ]
   }
 }

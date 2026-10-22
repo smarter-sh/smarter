@@ -41,7 +41,6 @@ from smarter.apps.llmclient.models import (
 )
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.llmtool.signals import broker_ready
-from smarter.apps.llmtool.utils import get_plugin_examples_by_name
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.common.conf import settings_defaults
 from smarter.common.exceptions import SmarterValueError
@@ -803,7 +802,7 @@ class SAMLLMClientBroker(AbstractBroker):
 
         spec = SAMLLMClientSpec(
             config=config,
-            plugins=get_plugin_examples_by_name(),
+            plugins=["everlasting_gobstopper", "research_assistant", "code_review", "image_search"],
             extensions=["calculator", "date-calculator", "weather"],
             guardrails=["pii_redaction_input", "prompt_injection_keyword_input", "moderation_output"],
             mcpClients=["deepwiki"],

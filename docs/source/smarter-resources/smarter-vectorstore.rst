@@ -41,19 +41,23 @@ Example Manifests
 
 A self-hosted Qdrant database. The embeddings ``model`` must produce vectors of ``index.dimension``:
 
-.. literalinclude:: ../../../smarter/smarter/apps/vectorstore/data/vectorstores/qdrant-self-hosted.yaml
+.. literalinclude:: /_example-manifests/vectorstores/qdrant-self-hosted.yaml
    :language: yaml
    :caption: qdrant-self-hosted.yaml
 
+From `vectorstores/qdrant-self-hosted.yaml <https://github.com/smarter-sh/example-manifests/blob/main/vectorstores/qdrant-self-hosted.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+
 A Pinecone database. Its API key is in the ApiConnection named by ``connection``:
 
-.. literalinclude:: ../../../smarter/smarter/apps/vectorstore/data/vectorstores/pinecone.yaml
+.. literalinclude:: /_example-manifests/vectorstores/pinecone.yaml
    :language: yaml
    :caption: pinecone.yaml
 
+From `vectorstores/pinecone.yaml <https://github.com/smarter-sh/example-manifests/blob/main/vectorstores/pinecone.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+
 More examples, of a larger self-hosted database with deletion protection, and of Qdrant Cloud,
-are in ``smarter/apps/vectorstore/data/vectorstores/``. ``manage.py initialize_platform`` applies
-them for the Smarter admin, so that every account may use them. They are applied, not deployed,
+are in the ``vectorstores/`` folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`. ``manage.py initialize_platform``
+applies them for the Smarter admin, so that every account may use them. They are applied, not deployed,
 so that no database is created, nor paid for, until someone deploys one.
 
 Lifecycle
@@ -195,7 +199,6 @@ Technical Reference
 
    smarter-vectorstore/api
    smarter-vectorstore/backends
-   smarter-vectorstore/builtins
    smarter-vectorstore/caching
    smarter-vectorstore/commands
    smarter-vectorstore/documents

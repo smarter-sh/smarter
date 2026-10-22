@@ -197,8 +197,9 @@ fresh installation. Before you plan a lesson, open the :doc:`web console <smarte
 and try a few of the built-in LLMClients in the workbench: ``simple``, ``calculator``,
 ``weather``, ``research_analyst``, ``data_analyst`` and ``customer_support`` show a progression
 from a bare model to a completely styled, governed application with plugins, MCP servers and guardrails. Their
-manifests, in ``smarter/smarter/apps/llmclient/data/llm-clients/``, make good starting points for
-your own examples. The course advisors ``stackademy_sql`` and ``stackademy_api`` come from the
+manifests, in the ``llm-clients/`` folder of the :doc:`example manifests repository
+<smarter-framework/smarter-manifests/example-manifests>`, make good starting points for your own
+examples. The course advisors ``stackademy_sql`` and ``stackademy_api`` come from the
 :doc:`Stackademy example project <smarter-framework/smarter-manifests/stackademy>`, a GitHub
 repository of its own, which shows students how to manage a project of many AI resources with git
 and GitHub. The `Stackademy case study <https://smarter.sh/case-studies/stackademy>`__ on smarter.sh
@@ -301,9 +302,11 @@ baseline cost further.
   provider. When a student reaches a limit, their chat answers with your message instead of calling
   the model, until the limit renews. Smarter ships with an example for exactly this case:
 
-  .. literalinclude:: ../../smarter/smarter/apps/account/data/example-manifests/budgets/student-monthly-allowance.yaml
+  .. literalinclude:: /_example-manifests/budgets/student-monthly-allowance.yaml
      :language: yaml
      :caption: A per-student monthly allowance
+
+  From `budgets/student-monthly-allowance.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/student-monthly-allowance.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 - **Cost accounting.** Every token is charged to the user, LLMClient and account that used it, and
   the dashboard's Budget vs Actual chart shows where the money goes. See

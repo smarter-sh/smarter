@@ -1,6 +1,5 @@
 """Tests for manage.py create_plugin."""
 
-import io
 from logging import getLogger
 from typing import Optional
 
@@ -105,11 +104,6 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
             "--name",
             f"{self.plugin_name}",
         )
-
-    def test_add_example_tools(self):
-        """Test adding the example tools."""
-
-        call_command("add_example_tools", "--username", f"{self.admin_user.get_username()}", stdout=io.StringIO())
 
     def test_get_plugins(self):
 

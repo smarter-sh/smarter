@@ -25,19 +25,31 @@ A Plugin that provides an Agent Skill to the LLM, per the SKILL.md standard.
     3. The LLM invokes the tool again, with a ``resource`` path, to read a bundled file only
        when the instructions call for it.
 
-.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+.. sphinx note: /_example-manifests/ is the clone of smarter-sh/example-manifests that docs/source/conf.py makes.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/sample-plugins/skill-code-review.yaml
+.. literalinclude:: /_example-manifests/plugins/skill/skill-code-review.yaml
     :language: yaml
     :caption: 1.) Example Skill Plugin Manifest, containing a SKILL.md verbatim
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/sample-plugins/skill-anthropic-pdf.yaml
+From `plugins/skill/skill-code-review.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/plugins/skill/skill-code-review.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+
+.. literalinclude:: /_example-manifests/plugins/skill/skill-anthropic-pdf.yaml
     :language: yaml
     :caption: 2.) Example Skill Plugin Manifest, referring to a skill on GitHub
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/llm-clients/llmclient-example.yaml
+From `plugins/skill/skill-anthropic-pdf.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/plugins/skill/skill-anthropic-pdf.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+
+.. literalinclude:: /_example-manifests/llm-clients/llmclient-example.yaml
     :language: yaml
     :caption: 3.) Example LLMClient Manifest
+
+From `llm-clients/llmclient-example.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-example.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. seealso::
 
@@ -471,7 +483,7 @@ class SkillPlugin(PluginBase):
 
         - :class:`SAMSkillPlugin`
         - :class:`SkillData`
-        - ``smarter/apps/llmtool/data/sample-plugins/skill-*.yaml`` for more examples.
+        - ``plugins/skill/`` in https://github.com/smarter-sh/example-manifests for more examples.
         """
         metadata = SAMPluginCommonMetadata(
             name="meeting_notes",

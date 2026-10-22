@@ -5,9 +5,9 @@ An eight-hour classroom bootcamp on serving open models, such as Llama, Qwen, Ge
 gpt-oss, with Smarter's :doc:`LLMHost </smarter-resources/smarter-llmhost>`, which runs them on
 Kubernetes with vLLM, SGLang, TGI, llama.cpp or Ollama and adds the GPU or CPU nodes they need.
 Smarter ships with `twenty-four ready-to-apply model manifests
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__ and
+<https://github.com/smarter-sh/example-manifests/tree/main/llmhosts>`__ and
 `seven compute profiles
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__
 priced per hour, supports seven `inference engines
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/engines.py>`__,
 renders each model's Kubernetes resources with a `pure function

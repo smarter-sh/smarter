@@ -311,13 +311,14 @@ Built-in Proxies
 
 ``manage.py initialize_platform`` applies a built-in Proxy for each built-in Provider whose API
 key is configured, e.g. with the ``OPENAI_API_KEY`` environment variable. The Smarter admin owns
-them, so every account may use them. A Proxy whose Provider or API key does not exist is skipped.
-To apply them again, e.g. after adding an API key:
+them, so every account may use them. A Proxy whose Provider or API key does not exist fails to
+apply, and is reported without stopping the others. To apply them again, e.g. after adding an API
+key:
 
 .. code-block:: console
 
    python manage.py initialize_providers
-   python manage.py add_example_proxies
+   python manage.py load_from_github --url https://github.com/smarter-sh/example-manifests --include_kind Proxy
 
 .. list-table::
    :header-rows: 1
@@ -354,7 +355,7 @@ To apply them again, e.g. after adding an API key:
      - Llama API, or OpenAI with ``.../compat/v1/``
      - v1/chat/completions, v1/moderations, v1/models, compat/v1/chat/completions
 
-Their manifests are in ``smarter/apps/proxy/data/proxy/``, and are shown in
+Their manifests are in the ``proxies/`` folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`, and are shown in
 :doc:`proxy/manifest/example-manifests`.
 
 Technical Reference
@@ -368,7 +369,6 @@ Technical Reference
    proxy/caching
    proxy/const
    proxy/exceptions
-   proxy/management
    proxy/manifest
    proxy/models
    proxy/serializers
