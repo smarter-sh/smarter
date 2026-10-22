@@ -179,14 +179,45 @@ global:
 # -----------------------------------------------------------------------------
 app:
   replicaCount: 2
+  # The number of uvicorn worker processes in each app pod (uvicorn --workers). Each worker
+  # is a separate Python process that loads all of Django, about 420 MB at rest, so
+  # resources.requests.memory below must grow with this number.
+  workers: 4
+  # The most concurrent connections and tasks that each uvicorn worker accepts
+  # (uvicorn --limit-concurrency). Above it, uvicorn answers 503 at once instead of
+  # accepting the request. Without a limit, every request gets its own thread for
+  # Django's synchronous code, so under load a pod accepts work until it runs out
+  # of memory and is killed, dropping every request in flight. With a limit, an
+  # overloaded pod sheds the excess, its CPU and memory stay bounded, and the
+  # HorizontalPodAutoscaler adds pods. Leave it empty to disable the limit.
+  limitConcurrency: 100
+  # Seconds that the web server waits for the platform database to answer a read or
+  # a write (env SMARTER_DATABASE_READ_TIMEOUT, PyMySQL's read_timeout and
+  # write_timeout). A query that the database never answers would otherwise hold
+  # the request's thread forever. Rendered only into the app Deployment, never
+  # into app.env or the global env map: app.env also reaches the init job, the
+  # backup job and the bastion, and the workers, beat and the init job run
+  # migrations, management commands and tasks that can legitimately take longer
+  # than a web request. Leave it empty for no timeout.
+  databaseReadTimeout: 60
   resources:
     requests:
       cpu: "500m"
-      memory: "1Gi"
+      # About 420 MB for each of the 4 uvicorn workers (app.workers), plus headroom for
+      # the threads and buffers of requests in flight. The scheduler only places a pod
+      # on a node with this much memory free, and the HorizontalPodAutoscaler measures
+      # memory utilization against it.
+      memory: "2Gi"
     limits:
       cpu: "2"
       memory: "4Gi"
   extraVolumeMounts: []
+  # A PodDisruptionBudget that keeps voluntary disruptions (node drains, cluster
+  # upgrades, Karpenter or cluster-autoscaler consolidation) from evicting more than
+  # maxUnavailable app pods at a time. See templates/pdb-app.yaml.
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
 
 names:
   mysqlName: mysql
@@ -242,11 +273,21 @@ deployment:
 # -----------------------------------------------------------------------------
 # Horizontal Pod Autoscaler Configuration
 # ----------------------------------------------------------------------------
+# minReplicas, targetMemoryUtilizationPercentage and behavior apply to the app's
+# HorizontalPodAutoscaler (templates/hpa-app.yaml); maxReplicas and
+# targetCPUUtilizationPercentage apply to it and to the Celery worker's
+# (templates/hpa-worker.yaml).
 hpa:
   minReplicas: 3
   maxReplicas: 25
   targetCPUUtilizationPercentage: 75
-  targetMemoryUtilizationPercentage: 80
+  # Measured against app.resources.requests.memory. The 4 uvicorn workers of an idle
+  # pod already use about 78% of their 2Gi request, and Python rarely returns memory
+  # to the operating system, so a lower target would keep the app scaled out after
+  # the load is gone. Leave it empty to scale on CPU only.
+  targetMemoryUtilizationPercentage: 90
+  # Rendered as the autoscaling/v2 spec.behavior of the app's HorizontalPodAutoscaler.
+  # Scale up by up to 100% a minute; scale down only after 5 minutes of lower load.
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 60

@@ -20,6 +20,7 @@ For more information about Django, see the `official Django documentation <https
    :maxdepth: 1
    :caption: Technical References
 
+   django/healthz
    django/hosts
    django/http
    django/manage
