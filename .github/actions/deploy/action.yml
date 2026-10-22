@@ -298,6 +298,27 @@ runs:
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
+    # Stop before touching the cluster if the image hasn't been built. Without
+    # this, helm upgrade succeeds and the pods sit in ImagePullBackOff, e.g.
+    # when Deploy is dispatched on main before semantic-release has tagged the
+    # release (git describe then finds the merged alpha tag), or before Build
+    # has pushed the new version.
+    - name: Verify Docker image exists in ECR
+      id: verify-docker-image
+      shell: bash
+      run: |-
+        if ! aws ecr describe-images \
+            --region "${{ inputs.aws-region }}" \
+            --repository-name "$AWS_ECR_REPO" \
+            --image-ids imageTag="$IMAGE_TAG" > /dev/null; then
+          echo "::error::Image $AWS_ECR_REPO:$IMAGE_TAG is not in ECR. Run the Build workflow for this release first, or wait for semantic-release to tag the release and dispatch Deploy again (a re-run reuses the old commit)."
+          exit 1
+        fi
+        echo "Found $AWS_ECR_REPO:$IMAGE_TAG in ECR."
+      env:
+        AWS_ECR_REPO: ${{ env.NAMESPACE }}
+        IMAGE_TAG: ${{ inputs.dockerhub-tag }}
+
     # extract the mysql configuration from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
     #
