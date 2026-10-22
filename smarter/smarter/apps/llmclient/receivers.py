@@ -4,7 +4,7 @@
 from typing import Optional
 
 from django.db import transaction
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
 from smarter.apps.llmtool.models import PluginMeta
@@ -19,10 +19,12 @@ from .models import (
     LLMClientCustomDomain,
     LLMClientCustomDomainDNS,
     LLMClientExtensions,
+    LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
     invalidate_cached_llmclient_by_hosts,
 )
+from .models.utils import invalidate_cached_llmclient_tool_counts
 from .serializers import LLMClientSerializer
 from .signals import (
     broker_ready,
@@ -97,11 +99,10 @@ def llmclient_saved(sender, instance: LLMClient, created: bool, **kwargs):
     prefix = logging.formatted_text(f"{module_prefix}.llmclient_saved()")
     # its hosts may have changed, e.g. when it is renamed.
     invalidate_cached_llmclient_by_hosts(instance)
-    data = logging.formatted_json(LLMClientSerializer(instance).data)
-    if created:
-        logger.info("%s - created %s, %s", prefix, instance.url, data)
-    else:
-        logger.info("%s - updated %s, %s", prefix, instance.url, data)
+    logger.info("%s - %s %s", prefix, "created" if created else "updated", instance.url)
+    # the serialized LLMClient, with its tools, costs several queries, so only when it will be logged.
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%s - %s", prefix, logging.formatted_json(LLMClientSerializer(instance).data))
 
 
 @receiver(pre_delete, sender=LLMClient)
@@ -120,6 +121,24 @@ def llmclient_deleted(sender, instance: LLMClient, **kwargs):
         "api_url": llmclient.default_url,
     }
     transaction.on_commit(lambda: delete_default_api.delay(**kwargs))
+
+
+def llmclient_tools_changed(sender, instance, **kwargs):
+    """
+    Invalidate an LLMClient's cached tool counts when one of its plugins, extensions or MCPClients is added or removed.
+
+    See :func:`smarter.apps.llmclient.models.utils.get_cached_llmclient_tool_counts`.
+    """
+    invalidate_cached_llmclient_tool_counts(getattr(instance, "llmclient_id", None))
+
+
+for _tool_link in (LLMClientPlugin, LLMClientExtensions, LLMClientMCPClients):
+    post_save.connect(
+        llmclient_tools_changed, sender=_tool_link, dispatch_uid=f"{module_prefix}.{_tool_link.__name__}.post_save"
+    )
+    post_delete.connect(
+        llmclient_tools_changed, sender=_tool_link, dispatch_uid=f"{module_prefix}.{_tool_link.__name__}.post_delete"
+    )
 
 
 @receiver(pre_delete, sender=LLMClientPlugin)

@@ -61,10 +61,12 @@ Examples
   # Example values.yaml
   app:
     replicaCount: 2
+    workers: 4             # uvicorn worker processes per pod, about 420 MB each
+    limitConcurrency: 100  # per worker; uvicorn answers 503 above it
     resources:
       requests:
         cpu: "500m"
-        memory: "1Gi"
+        memory: "2Gi"
       limits:
         cpu: "2"
         memory: "4Gi"

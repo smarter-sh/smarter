@@ -653,13 +653,29 @@ See:
     - smarter_settings.debug_mode
 """
 
+CACHE_SOCKET_CONNECT_TIMEOUT = 2
+"""Seconds to wait to connect to Redis, the cache and session store, before the request fails."""
+
+CACHE_SOCKET_TIMEOUT = 5
+"""
+Seconds to wait for Redis to answer a command before it fails.
+
+Without it, redis-py waits forever, so a Redis that stalls would hold every request's thread, since
+every request reads its session from the cache.
+"""
+
+CACHE_OPTIONS = {
+    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    "SOCKET_CONNECT_TIMEOUT": CACHE_SOCKET_CONNECT_TIMEOUT,
+    "SOCKET_TIMEOUT": CACHE_SOCKET_TIMEOUT,
+}
+"""The OPTIONS of the Redis cache in every environment."""
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://:smarter@smarter-redis:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+        "OPTIONS": CACHE_OPTIONS,
     }
 }
 
@@ -940,6 +956,23 @@ WSGI_APPLICATION = "smarter.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+DATABASE_CONNECT_TIMEOUT = 5
+"""Seconds to wait to connect to the platform's database before the request fails."""
+
+DATABASE_OPTIONS: dict[str, str | int] = {
+    "charset": "utf8mb4",
+    "connect_timeout": DATABASE_CONNECT_TIMEOUT,
+}
+"""
+The OPTIONS of the platform's database in every environment.
+
+A query times out only when ``smarter_settings.database_read_timeout`` is set, which the Helm chart
+does for the web server's pods. Migrations and other management commands can legitimately run longer.
+"""
+if smarter_settings.database_read_timeout:
+    DATABASE_OPTIONS["read_timeout"] = smarter_settings.database_read_timeout
+    DATABASE_OPTIONS["write_timeout"] = smarter_settings.database_read_timeout
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -948,7 +981,7 @@ DATABASES = {
         "PASSWORD": "smarter",
         "HOST": "smarter-mariadb",  # Or an IP Address that your DB is hosted on
         "PORT": "3306",
-        "OPTIONS": {"charset": "utf8mb4"},
+        "OPTIONS": DATABASE_OPTIONS,
     }
 }
 """

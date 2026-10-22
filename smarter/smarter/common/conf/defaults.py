@@ -241,6 +241,7 @@ class SettingsDefaults:
     # repository's scripts, e.g. to the Stackademy script that creates its course database and its users.
     MYSQL_ROOT_USERNAME: str = get_env("MYSQL_ROOT_USERNAME", "root")
     MYSQL_ROOT_PASSWORD: Optional[SecretStr] = optional_secret_env("MYSQL_ROOT_PASSWORD")
+    DATABASE_READ_TIMEOUT: int = int(get_env("DATABASE_READ_TIMEOUT", 0))  # 0: no timeout
 
     # the user and password that the Stackademy course database's script creates, scripts/smarter_test_db.sql
     # in https://github.com/smarter-sh/stackademy.

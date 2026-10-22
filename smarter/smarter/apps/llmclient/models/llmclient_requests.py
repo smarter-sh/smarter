@@ -68,7 +68,8 @@ class LLMClientRequests(TimestampedModel):
         null=True,
         encoder=json.SmarterJSONEncoder,
     )
-    session_key = models.CharField(max_length=255, blank=True, null=True)
+    # indexed: a chat session's requests are read by its key, e.g. by the cli's configuration api.
+    session_key = models.CharField(max_length=255, blank=True, null=True, db_index=True)
     is_aggregation = models.BooleanField(default=False, blank=True, null=True)
 
 
