@@ -19,6 +19,14 @@
 # - After a latest release, asks jsDelivr to refresh the ranges that the
 #   embed script's users load, so that they see it within minutes rather than
 #   hours.
+# - Publishes only a release that changes the package. Every platform release
+#   triggers this workflow, and most change only the platform. The changes job
+#   finds the version that npm has on the release's dist-tag and compares that
+#   version's tag with this one in the package's folder.
+#   If nothing there changed, the publish job is skipped, and npm keeps the
+#   earlier version. A manual run with force publishes regardless. A version
+#   that has no tag in this repository, or a dist-tag that npm doesn't have
+#   yet, is published.
 #
 # Publishing uses npm's trusted publishing (OIDC): no npm token is stored in
 # the repository, and every version gets a provenance statement. Configure it
@@ -41,6 +49,11 @@ on:
         description: "The release's tag, e.g. v0.36.0 or v0.36.0-alpha.1"
         required: true
         type: string
+      force:
+        description: "Publish even if the package didn't change since the last publish"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -52,18 +65,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  # Whether this release changes the package, and the version and dist-tag to
+  # publish it with.
+  changes:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment: npm
+    timeout-minutes: 5
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      dist_tag: ${{ steps.version.outputs.dist_tag }}
+      publish: ${{ steps.changes.outputs.publish }}
     steps:
       - name: Checkout the release's tag
         uses: actions/checkout@v6
         with:
           ref: ${{ env.TAG }}
-          # The whole history, to check whether the tag is on main.
+          # The whole history and every tag: to check whether the tag is on
+          # main, and to compare it with the last published version's tag.
           fetch-depth: 0
           persist-credentials: false
 
@@ -89,7 +108,60 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
-          echo "Publishing $version with the $dist_tag dist-tag"
+          echo "Version $version, dist-tag $dist_tag"
+
+      # git diff compares the two tags' trees, so it works across branches,
+      # e.g. from 0.36.7-alpha.1 to 0.36.8-alpha.1 after a merge from main.
+      - name: Changes since the last publish
+        id: changes
+        shell: bash
+        env:
+          DIST_TAG: ${{ steps.version.outputs.dist_tag }}
+          FORCE: ${{ inputs.force || false }}
+        run: |
+          paths=(smarter/react/packages/smarter.sh-chat)
+          published="$(npm view @smarter.sh/ui-chat "dist-tags.$DIST_TAG" 2>/dev/null || true)"
+          if [[ "$FORCE" == "true" ]]; then
+            publish=true
+            reason="the run was started with force"
+          elif [[ -z "$published" ]]; then
+            publish=true
+            reason="npm has no $DIST_TAG version"
+          elif ! git rev-parse -q --verify "refs/tags/v$published" >/dev/null; then
+            publish=true
+            reason="the $DIST_TAG version, $published, has no tag in this repository"
+          elif git diff --quiet "refs/tags/v$published" "refs/tags/$TAG" -- "${paths[@]}"; then
+            publish=false
+            reason="nothing changed since $published, the $DIST_TAG version"
+          else
+            publish=true
+            reason="changed since $published, the $DIST_TAG version"
+            git diff --stat "refs/tags/v$published" "refs/tags/$TAG" -- "${paths[@]}"
+          fi
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish: $reason"
+          if [[ "$publish" == "false" ]]; then
+            {
+              echo "### Skipped @smarter.sh/ui-chat@${TAG#v}"
+              echo ""
+              echo "Not published: $reason, in ${paths[*]}."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  publish:
+    needs: changes
+    if: needs.changes.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Checkout the release's tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TAG }}
+          persist-credentials: false
 
       - name: Install Node
         uses: actions/setup-node@v6
@@ -110,7 +182,7 @@ jobs:
       # only edits package.json. npm version would also update the workspace.
       - name: Set the package's version
         working-directory: smarter/react/packages/smarter.sh-chat
-        run: npm pkg set version="${{ steps.version.outputs.version }}"
+        run: npm pkg set version="${{ needs.changes.outputs.version }}"
 
       - name: Build and check
         working-directory: smarter/react
@@ -129,15 +201,15 @@ jobs:
       # dist/ that was just checked instead.
       - name: Publish to npm
         working-directory: smarter/react/packages/smarter.sh-chat
-        run: npm publish --ignore-scripts --access public --provenance --tag "${{ steps.version.outputs.dist_tag }}"
+        run: npm publish --ignore-scripts --access public --provenance --tag "${{ needs.changes.outputs.dist_tag }}"
 
       # jsDelivr's ranges only follow releases, never prereleases.
       - name: Refresh jsDelivr
-        if: steps.version.outputs.dist_tag == 'latest'
+        if: needs.changes.outputs.dist_tag == 'latest'
         continue-on-error: true
         shell: bash
         run: |
-          version="${{ steps.version.outputs.version }}"
+          version="${{ needs.changes.outputs.version }}"
           major="${version%%.*}"
           minor="${version%.*}"
           for range in "$major" "$minor"; do
@@ -149,10 +221,10 @@ jobs:
       - name: Summary
         shell: bash
         run: |
-          version="${{ steps.version.outputs.version }}"
+          version="${{ needs.changes.outputs.version }}"
           {
             echo "### Published @smarter.sh/ui-chat@$version"
             echo ""
-            echo "- npm: https://www.npmjs.com/package/@smarter.sh/ui-chat/v/$version (dist-tag ${{ steps.version.outputs.dist_tag }})"
+            echo "- npm: https://www.npmjs.com/package/@smarter.sh/ui-chat/v/$version (dist-tag ${{ needs.changes.outputs.dist_tag }})"
             echo "- embed script: https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@$version/dist/embed.js"
           } >> "$GITHUB_STEP_SUMMARY"

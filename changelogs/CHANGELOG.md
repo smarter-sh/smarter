@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.9](https://github.com/smarter-sh/smarter/compare/v0.36.8...v0.36.9) (2026-10-22)
+
+### Bug Fixes
+
+* **chat:** reply with a bubble of idle banter while a prompt runs ([aa3352f](https://github.com/smarter-sh/smarter/commit/aa3352f3e866d645f9db0928fc801aef7b803dd9))
+* **provider:** send MCP instructions once, and cap the chat history ([504f37a](https://github.com/smarter-sh/smarter/commit/504f37a7fb1bc3ec3cd15ec0db054ce9d26f0495))
+
 ## [0.36.8](https://github.com/smarter-sh/smarter/compare/v0.36.7...v0.36.8) (2026-10-22)
 
 ### Bug Fixes

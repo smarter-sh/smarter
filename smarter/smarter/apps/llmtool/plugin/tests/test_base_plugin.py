@@ -712,6 +712,13 @@ class TestPluginBase(PluginTestBase):
         self.assertTrue(content.endswith(plugin.plugin_prompt.system_role))  # type: ignore[union-attr]
         self.assertEqual(customized[1], messages[1])
 
+    def test_base_customize_prompt_is_added_once(self):
+        """Test that a system message that already has the plugin's system role is unchanged."""
+        plugin = self.load_sql_plugin()
+        messages = [{OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY, "content": "Base role."}]
+        once = plugin.customize_prompt(messages)
+        self.assertEqual(plugin.customize_prompt(once), once)
+
     def test_base_customize_prompt_does_not_mutate_input(self):
         """Test that customize_prompt does not modify the messages it receives."""
         messages = [{OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY, "content": "Base role."}]
