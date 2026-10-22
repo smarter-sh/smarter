@@ -167,7 +167,7 @@ class SAMBudgetBroker(AbstractBroker):
             return self._ready
         if self.manifest is not None or self.account is not None:
             self._ready = True
-            broker_ready.send(sender=self.__class__, broker=self)
+            self.send_broker_ready(broker_ready)
         return self._ready
 
     @property

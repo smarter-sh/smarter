@@ -24,6 +24,7 @@ import inflect
 from django.core import serializers
 from django.core.handlers.asgi import ASGIRequest
 from django.db import IntegrityError, models
+from django.dispatch import Signal
 from django.http import HttpRequest, QueryDict
 from pydantic import ValidationError
 from requests import PreparedRequest
@@ -46,6 +47,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
+from smarter.lib.django.models.utils import assign_changed_fields, tags_changed
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
@@ -59,7 +61,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.keys import unknown_keys
 from smarter.lib.manifest.loader import SAMLoader
@@ -230,6 +232,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _kind: Optional[str] = None
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
+    _broker_ready_sent: bool = False
 
     deployable: ClassVar[bool] = False
     """
@@ -384,7 +387,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: str
         """
         user_profile = self.user_profile or "Anonymous"
-        name = self._name or "Unknown"
+        name = self.known_name or "Unknown"
 
         return f"{self.__class__.__name__}[id={id(self)}](name={name}, user_profile={user_profile})"
 
@@ -1143,7 +1146,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                     )
                     return None
                 except ModelClass.DoesNotExist:
-                    logger.warning(
+                    # expected: a manifest that is applied for the first time has no ORM instance yet.
+                    logger.debug(
                         "%s.orm_meta_instance_setter() - %s does not exist for %s owned by %s",
                         self.abstract_broker_logger_prefix,
                         ModelClass.__name__,
@@ -1308,7 +1312,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                     )
                     return None
                 except ModelClass.DoesNotExist:
-                    logger.warning(
+                    # expected: a manifest that is applied for the first time has no ORM instance yet.
+                    logger.debug(
                         "%s.orm_instance() - %s does not exist for %s owned by %s",
                         self.abstract_broker_logger_prefix,
                         ModelClass.__name__,
@@ -1489,6 +1494,75 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 "%s.manifest() setter - manifest is not set after attempt to set it. validated and created flags set to False.",
                 self.abstract_broker_logger_prefix,
             )
+
+    @property
+    def known_name(self) -> Optional[str]:
+        """
+        The broker's name, as far as it is known without building its manifest.
+
+        Readiness messages are logged while a broker initializes, after its loader has read the
+        manifest's name but before :attr:`name` is set. This keeps them from reporting no name.
+
+        :returns: The name, from the broker, its manifest or its loader, or None.
+        :rtype: Optional[str]
+        """
+        if self._name:
+            return self._name
+        if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
+            return self._manifest.metadata.name
+        if self._loader and self._loader.manifest_metadata:
+            return self._loader.manifest_metadata.get(SAMMetadataKeys.NAME.value)
+        return None
+
+    def send_broker_ready(self, signal: Signal) -> None:
+        """
+        Send a ``broker_ready`` signal, once per broker.
+
+        Brokers send it from their ``ready`` property, which is read many times while a manifest
+        is applied. Each send was logged, so one apply logged that its broker was ready four to six
+        times.
+
+        :param signal: The app's ``broker_ready`` signal.
+        :type signal: Signal
+        :returns: None
+        """
+        if self._broker_ready_sent:
+            return
+        self._broker_ready_sent = True
+        signal.send(sender=self.__class__, broker=self)
+
+    @staticmethod
+    def assign_changed_fields(instance: models.Model, data: SmarterDictType) -> list[str]:
+        """
+        Set the fields of an ORM instance whose values differ from the manifest's.
+
+        A broker's ``apply()`` saves the instance only when this returns a field. See
+        :func:`smarter.lib.django.models.utils.assign_changed_fields`.
+
+        :param instance: The ORM instance.
+        :type instance: models.Model
+        :param data: The fields from the manifest, from ``manifest_to_django_orm()``.
+        :type data: SmarterDictType
+        :returns: The names of the fields that were set, because their values changed.
+        :rtype: list[str]
+        """
+        return assign_changed_fields(instance, data)
+
+    @staticmethod
+    def tags_changed(instance: models.Model, tags: list[str]) -> bool:
+        """
+        Whether the tags of an ORM instance differ from the manifest's.
+
+        See :func:`smarter.lib.django.models.utils.tags_changed`.
+
+        :param instance: The ORM instance, which has a ``tags`` TaggableManager.
+        :type instance: models.Model
+        :param tags: The manifest's tags.
+        :type tags: list[str]
+        :returns: True if the instance is new, or its tags differ.
+        :rtype: bool
+        """
+        return tags_changed(instance, tags)
 
     ###########################################################################
     # Abstract Methods
@@ -2651,7 +2725,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return
         state = {
             "ready": self.ready,
-            "name": self._name,
+            "name": self.known_name,
             "manifest": bool(self._manifest),
             "loader": bool(self._loader),
             "orm_instance": bool(self.orm_instance),

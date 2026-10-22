@@ -321,7 +321,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             self.kind,
         )
         if retval:
-            broker_ready.send(sender=self.__class__, broker=self)
+            self.send_broker_ready(broker_ready)
         return retval
 
     @property

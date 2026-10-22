@@ -42,6 +42,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = logging.formatted_text(__name__)
 
 module_prefix = "smarter.apps.provider.utils."
 
@@ -180,27 +181,37 @@ def get_google_service_account_bearer_token() -> str | None:
             name=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME, user_profile=smarter_cached_objects.smarter_admin_user_profile
         )
     except Secret.DoesNotExist:
-        logger.error("initialize_googleai: Google service account secret not found.")
+        logger.error(
+            "%s.get_google_service_account_bearer_token() google service account secret not found.", logger_prefix
+        )
         return
 
     try:
         svc_account = secret.get_secret()
         if not svc_account:
-            logger.error("initialize_googleai: Google service account secret is empty.")
+            logger.error(
+                "%s.get_google_service_account_bearer_token() google service account secret is empty.", logger_prefix
+            )
             return
         svc_account_dict = json.loads(svc_account)
 
         credentials = service_account.Credentials.from_service_account_info(svc_account_dict, scopes=SCOPES)
         auth_req = google.auth.transport.requests.Request()
     except json.JSONDecodeError as e:
-        logger.error("initialize_googleai: Error decoding Google service account JSON: %s", e)
+        logger.error(
+            "%s.get_google_service_account_bearer_token() error decoding Google service account JSON: %s",
+            logger_prefix,
+            e,
+        )
         return
     except GoogleAuthError as e:
-        logger.error("initialize_googleai: Error loading Google credentials: %s", e)
+        logger.error(
+            "%s.get_google_service_account_bearer_token() error loading Google credentials: %s", logger_prefix, e
+        )
         return
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error("initialize_googleai: Unexpected error: %s", e)
+        logger.error("%s.get_google_service_account_bearer_token() unexpected error: %s", logger_prefix, e)
         return
     credentials.refresh(auth_req)
     bearer_token = credentials.token

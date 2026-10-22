@@ -49,13 +49,13 @@ def handle_api_connection_saved(sender, instance, created, **kwargs):
     if created:
         logger.info(
             "%s - %s",
-            formatted_text(prefix + "post_save() ApiConnection() created"),
+            prefix + "post_save() ApiConnection() created",
             formatted_json(model_to_dict(instance)),
         )
     else:
         logger.info(
             "%s - %s",
-            formatted_text(prefix + "post_save() ApiConnection() updated"),
+            prefix + "post_save() ApiConnection() updated",
             formatted_json(model_to_dict(instance)),
         )
 
@@ -68,14 +68,14 @@ def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwar
     if created:
         logger.info(
             "%s - %s %s",
-            formatted_text(prefix + "post_save() SqlConnection() created"),
+            prefix + "post_save() SqlConnection() created",
             user_profile,
             formatted_json(model_to_dict(instance)),
         )
     else:
         logger.info(
             "%s - %s %s",
-            formatted_text(prefix + "post_save() SqlConnection() updated"),
+            prefix + "post_save() SqlConnection() updated",
             user_profile,
             formatted_json(model_to_dict(instance)),
         )
@@ -95,7 +95,7 @@ def handle_sql_connection_attempted(sender, connection: SqlConnection, **kwargs)
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "sql_connection_attempted()"),
+        prefix + "sql_connection_attempted()",
         connection.get_connection_string(),
     )
 
@@ -106,7 +106,7 @@ def handle_sql_connection_success(sender, connection: SqlConnection, **kwargs):
 
     logger.info(
         "%s - %s is %s",
-        formatted_text(prefix + "sql_connection_success()"),
+        prefix + "sql_connection_success()",
         connection.get_connection_string(),
         SmarterReadyState.READY,
     )
@@ -118,7 +118,7 @@ def handle_sql_connection_validated(sender, connection: SqlConnection, **kwargs)
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "sql_connection_validated()"),
+        prefix + "sql_connection_validated()",
         connection.get_connection_string(),
     )
 
@@ -134,7 +134,7 @@ def handle_sql_connection_failed(sender, connection: SqlConnection, error: str, 
 
     logger.error(
         "%s - %s is %s - error: %s",
-        formatted_text(prefix + "sql_connection_failed()"),
+        prefix + "sql_connection_failed()",
         connection.get_connection_string(),
         SmarterReadyState.NOT_READY,
         error,
@@ -147,7 +147,7 @@ def handle_sql_connection_query_attempted(sender, connection: SqlConnection, sql
 
     logger.info(
         "%s - %s - sql: %s - limit: %s",
-        formatted_text(prefix + "sql_connection_query_attempted()"),
+        prefix + "sql_connection_query_attempted()",
         connection.get_connection_string(),
         sql,
         limit,
@@ -160,7 +160,7 @@ def handle_sql_connection_query_success(sender, connection: SqlConnection, sql: 
 
     logger.info(
         "%s - %s - sql: %s - limit: %s",
-        formatted_text(prefix + "sql_connection_query_success()"),
+        prefix + "sql_connection_query_success()",
         connection.get_connection_string(),
         sql,
         limit,
@@ -178,7 +178,7 @@ def handle_sql_connection_query_failed(sender, connection: SqlConnection, sql: s
 
     logger.error(
         "%s - %s - sql: %s - limit: %s - error: %s",
-        formatted_text(prefix + "sql_connection_query_failed()"),
+        prefix + "sql_connection_query_failed()",
         connection.get_connection_string(),
         sql,
         limit,
@@ -192,7 +192,7 @@ def handle_api_connection_attempted(sender, connection: ApiConnection, **kwargs)
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "api_connection_attempted()"),
+        prefix + "api_connection_attempted()",
         connection.get_connection_string(),
     )
 
@@ -203,7 +203,7 @@ def handle_api_connection_success(sender, connection: ApiConnection, **kwargs):
 
     logger.info(
         "%s - %s is %s",
-        formatted_text(prefix + "api_connection_success()"),
+        prefix + "api_connection_success()",
         connection.get_connection_string(),
         SmarterReadyState.READY,
     )
@@ -215,7 +215,7 @@ def handle_api_connection_failed(sender, connection: ApiConnection, error: Optio
 
     logger.info(
         "%s - %s is %s",
-        formatted_text(prefix + "api_connection_failed()"),
+        prefix + "api_connection_failed()",
         connection.get_connection_string(),
         SmarterReadyState.NOT_READY,
     )
@@ -227,7 +227,7 @@ def handle_api_connection_query_attempted(sender, connection: ApiConnection, **k
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "api_connection_query_attempted()"),
+        prefix + "api_connection_query_attempted()",
         connection.get_connection_string(),
     )
 
@@ -240,7 +240,7 @@ def handle_api_connection_query_success(
 
     logger.info(
         "%s - %s - response: %s",
-        formatted_text(prefix + "api_connection_query_success()"),
+        prefix + "api_connection_query_success()",
         connection.get_connection_string(),
         formatted_json(response.json()) if response else None,
     )
@@ -254,7 +254,7 @@ def handle_api_connection_query_failed(
 
     logger.info(
         "%s - %s - response: %s - error: %s",
-        formatted_text(prefix + "api_connection_query_failed()"),
+        prefix + "api_connection_query_failed()",
         connection.get_connection_string(),
         formatted_json(response.json()) if response else None,
         error,
@@ -273,7 +273,7 @@ def handle_api_connection_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for ApiConnection."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "ApiConnection().pre_delete()"),
+        prefix + "ApiConnection().pre_delete()",
         instance,
     )
 
@@ -283,6 +283,6 @@ def handle_sql_connection_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for SqlConnection."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "SqlConnection().pre_delete()"),
+        prefix + "SqlConnection().pre_delete()",
         instance,
     )
