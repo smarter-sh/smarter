@@ -93,6 +93,10 @@ class SettingsDefaults:
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost", "testserver"])
 
+    # the platform's superuser, which manage.py initialize_platform creates.
+    ADMIN_USERNAME: str = get_env("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD: Optional[SecretStr] = optional_secret_env("ADMIN_PASSWORD")
+
     API_DESCRIPTION: str = get_env(
         "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
     )

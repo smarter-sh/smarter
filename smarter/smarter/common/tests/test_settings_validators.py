@@ -183,6 +183,25 @@ class TestSettingsMethods(SmarterTestBase):
             self.assertEqual(settings.smtp_from_email, f"no-reply@{settings.platform_subdomain}.{settings.root_domain}")
             self.assertIsNone(smarter_settings.model_copy(update={"aws_region": None}).smtp_host)
 
+    def test_admin_credentials(self):
+        """Test that the admin username falls back to its default, and the password is None when missing, or a placeholder."""
+        module = "smarter.common.conf.settings"
+        with patch(f"{module}.settings_defaults") as defaults:
+            defaults.ADMIN_USERNAME = "admin"
+            defaults.ADMIN_PASSWORD = None
+            for value in (None, ""):
+                with self.subTest(value=value):
+                    self.assertEqual(call(Settings.validate_admin_username, value, {}), "admin")
+                    self.assertIsNone(call(Settings.validate_admin_password, value, {}))
+            self.assertEqual(call(Settings.validate_admin_username, "platform-admin", {}), "platform-admin")
+            self.assertIsNone(call(Settings.validate_admin_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
+            self.assertEqual(call(Settings.validate_admin_password, SecretStr("pw"), {}).get_secret_value(), "pw")
+            with self.assertRaises(SmarterConfigurationError):
+                call(Settings.validate_admin_password, "not a SecretStr", {})
+            defaults.ADMIN_USERNAME = ""
+            with self.assertRaises(SmarterConfigurationError):
+                call(Settings.validate_admin_username, None, {})
+
     def test_optional_values_are_none_when_missing(self):
         """Test that the optional cluster name and SMTP credentials are None when missing, or a placeholder."""
         module = "smarter.common.conf.settings"

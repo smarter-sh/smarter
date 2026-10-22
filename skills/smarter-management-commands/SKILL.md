@@ -103,6 +103,15 @@ Catch `SystemExit` too: `handle_completed_failure(err)` exits. `initialize_accou
 the examples that each account gets its own copy of (secrets, connections, tools,
 LLMClients) for the account's admin, then `deploy_example_llmclients`.
 
+`initialize_platform` is the one procedure that creates and deploys the platform's example
+resources, Stackademy included. The Helm init job (`job-init.yaml`) and `make docker-init` run
+it alone, with no example step of their own beside it: add a new example step to
+`initialize_platform`, never to the job or the Makefile. It deploys the example and Stackademy
+LLMClients everywhere except the local environment, because a deploy creates a real DNS record
+and Kubernetes ingress. It reads the admin credentials from `smarter_settings.admin_username`
+and `admin_password` (`SMARTER_ADMIN_USERNAME`, `SMARTER_ADMIN_PASSWORD`), so the init job
+passes no password on its command line and can run it through `run()`.
+
 Place it after the things it depends on. For example, providers come before the
 resources that use them. Comment anything surprising, such as example data that
 is expected to fail verification locally.
