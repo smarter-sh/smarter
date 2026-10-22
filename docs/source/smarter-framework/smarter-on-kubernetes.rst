@@ -77,13 +77,24 @@ email links to its CDN URL. The email is sent only when SMTP is configured (see
 none.
 
 A CronJob, ``smarter-mysql-backup``, backs up the database every night (``databaseScheduledBackup``),
-with ``mysqldump``, and uploads the compressed dump to S3. It emails its result the same way, to
-``databaseScheduledBackup.notifyEmail`` or to ``SMARTER_EMAIL_ADMIN``, with the backup's log
-attached. After a successful backup, the email names the backup file, its size, and its location in
-S3, which the backup confirms by comparing the uploaded object's size with the file's. The backup runs
-on a plain Debian image, as an init container, so the email is sent by a second container, from the
-Smarter image, which passes that summary to ``email_job_log --summary``. A failed backup is retried
-in a new pod, up to twice, and each attempt sends its own email.
+with ``mariadb-dump``, and uploads the compressed dump to ``databaseScheduledBackup.s3Uri``, by
+default ``s3://<SMARTER_S3_BUCKET>/backups/sql``. Point ``s3Uri`` at a private bucket when the
+platform's bucket serves public files. The dump runs as the database's root account unless
+``databaseScheduledBackup.username`` and ``password`` name a read-only account, which needs
+``SELECT, SHOW VIEW, TRIGGER, EVENT, SHOW CREATE ROUTINE`` on the platform's database
+(``SHOW CREATE ROUTINE`` exists in MariaDB 11.3 and later). The password reaches ``mariadb-dump`` in a
+temporary option file, not on its command line. Before uploading, the backup checks that the dump ran
+to the end and that the archive is intact, and after uploading, that the object in S3 has the
+archive's size.
+
+The backup emails its result the same way, to ``databaseScheduledBackup.notifyEmail`` or to
+``SMARTER_EMAIL_ADMIN``, with the backup's log attached. After a successful backup, the email names
+the backup file, its size, and its location in S3. The backup runs on a plain Debian image, as an init
+container, which installs only the MariaDB client and a pinned AWS CLI
+(``databaseScheduledBackup.awsCliVersion``), whose download it verifies against the AWS CLI team's
+PGP signature. The email is sent by a second container, from the Smarter image, which passes that
+summary to ``email_job_log --summary``. A failed backup is retried in a new pod, up to twice, and
+each attempt sends its own email.
 
 
 Docker and Kubernetes Compared

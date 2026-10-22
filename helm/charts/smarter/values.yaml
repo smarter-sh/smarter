@@ -272,6 +272,10 @@ databaseScheduledBackup:
   enabled: true
   schedule: "0 2 * * *" # Every day at 2am UTC
   notifyEmail: ""        # the Job emails the backup's result and log here. Empty: smarter_settings.email_admin
+  s3Uri: ""              # where backups are uploaded, e.g. s3://my-private-bucket/backups/sql. Empty: s3://<env.SMARTER_S3_BUCKET>/backups/sql
+  username: ""           # a read-only database account to dump with. Empty: env.SMARTER_MYSQL_ROOT_USERNAME
+  password: ""           # its password. Empty: env.SMARTER_MYSQL_ROOT_PASSWORD
+  awsCliVersion: ""      # the AWS CLI release to install. Empty: the version pinned in configmap-debian-setup.yaml
 
 externalDatabase:
   host: ""        # Will use .Values.env.SMARTER_MYSQL_HOST if empty

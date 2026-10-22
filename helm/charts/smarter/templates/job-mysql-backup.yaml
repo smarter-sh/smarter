@@ -4,7 +4,12 @@
 # This file defines a Kubernetes CronJob that runs a backup script
 # to back up the MariaDB database. The backup script is stored in a
 # ConfigMap and mounted into the Job. The backup runs on a Debian image,
-# installs necessary tools, and executes the backup script.
+# installs only the tools it needs (install.sh --backup: the MariaDB client and a
+# pinned, signature-verified AWS CLI), and executes the backup script.
+#
+# databaseScheduledBackup in values.yaml sets the S3 location (s3Uri, by default
+# s3://$SMARTER_S3_BUCKET/backups/sql), the database account to dump with
+# (username and password, by default the root account), and awsCliVersion.
 #
 # When the backup completes, the Job emails the result, with the backup's log
 # attached, in the same way that job-init.yaml does: with manage.py email_job_log,
@@ -90,7 +95,7 @@ spec:
                       ls -l /home/setup || true
                       ls -l /home/backup || true
 
-                      /home/setup/install.sh && /home/backup/backup-to-s3.sh
+                      /home/setup/install.sh --backup && /home/backup/backup-to-s3.sh
                       status=$?
                       if [ $status -eq 0 ]; then
                         echo "Backup completed successfully!"
@@ -131,6 +136,24 @@ spec:
                 {{- end }}
                 - name: BACKUP_SUMMARY_FILE
                   value: /job/backup-summary.txt
+                {{- with .Values.databaseScheduledBackup }}
+                {{- if .s3Uri }}
+                - name: SMARTER_MYSQL_BACKUP_S3_URI
+                  value: {{ .s3Uri | quote }}
+                {{- end }}
+                {{- if .username }}
+                - name: SMARTER_MYSQL_BACKUP_USERNAME
+                  value: {{ .username | quote }}
+                {{- end }}
+                {{- if .password }}
+                - name: SMARTER_MYSQL_BACKUP_PASSWORD
+                  value: {{ .password | quote }}
+                {{- end }}
+                {{- if .awsCliVersion }}
+                - name: AWS_CLI_VERSION
+                  value: {{ .awsCliVersion | quote }}
+                {{- end }}
+                {{- end }}
 
           containers:
             - name: email-backup-log
