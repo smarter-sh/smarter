@@ -371,6 +371,10 @@ class SqlConnection(ConnectionBase):
         This property constructs and returns a dictionary of options for the database connection,
         including SSL/TLS settings and authentication method if applicable.
 
+        - :attr:`timeout`, in the driver's own options: for MySQL, ``connect_timeout``,
+          ``read_timeout`` and ``write_timeout``, and for PostgreSQL, ``connect_timeout`` and a
+          ``statement_timeout``. Without them, PyMySQL waits forever for a query's reply, and a
+          slow query holds the request's thread for as long as it runs. Other engines get none.
         - If SSL is enabled (``use_ssl`` is True), the returned dictionary includes the keys ``ca``, ``cert``, and ``key`` for SSL configuration.
         - If the authentication method is LDAP user/password, the dictionary includes an ``authentication`` key set to ``LDAP``.
 
@@ -382,9 +386,15 @@ class SqlConnection(ConnectionBase):
         .. code-block:: python
 
             options = sql_connection.db_options
-            # returns: {'ssl': {'ca': '...', 'cert': '...', 'key': '...'}, 'authentication': 'LDAP'}
+            # returns: {'connect_timeout': 30, 'read_timeout': 30, 'write_timeout': 30,
+            #           'ssl': {'ca': '...', 'cert': '...', 'key': '...'}, 'authentication': 'LDAP'}
         """
-        retval = {}
+        retval: SmarterDictType = {}
+        timeout = self.timeout or self.DBMS_DEFAULT_TIMEOUT
+        if self.db_engine == DbEngines.MYSQL.value:
+            retval.update({"connect_timeout": timeout, "read_timeout": timeout, "write_timeout": timeout})
+        elif self.db_engine == DbEngines.POSTGRES.value:
+            retval.update({"connect_timeout": timeout, "options": f"-c statement_timeout={timeout * 1000}"})
         if self.use_ssl:
             retval["ssl"] = {
                 "ca": self.ssl_ca,

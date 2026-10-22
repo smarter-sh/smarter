@@ -4,9 +4,11 @@
 # This file defines the HPA resource for the main Smarter app deployment.
 #
 # - Maintainer: <your team/contact>
-# - Purpose: Automatically scales the app deployment based on CPU utilization.
+# - Purpose: Automatically scales the app deployment based on CPU utilization and,
+#   when hpa.targetMemoryUtilizationPercentage is set, memory utilization.
 # - Usage: Managed via Helm; values are set in values.yaml.
-# - Notes: Adjust minReplicas, maxReplicas, and target utilization as needed.
+# - Notes: Adjust minReplicas, maxReplicas, target utilization and behavior as needed.
+#   Memory utilization is measured against app.resources.requests.memory.
 #
 # Important: labels are referenced by other resources, in this repo as well as
 # external repos including https://github.com/smarter-sh/smarter-infrastructure.
@@ -45,3 +47,15 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ .Values.hpa.targetCPUUtilizationPercentage | default 75 }}
+    {{- if .Values.hpa.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.targetMemoryUtilizationPercentage }}
+    {{- end }}
+  {{- with .Values.hpa.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}

@@ -115,6 +115,28 @@ class TestSmarterViews(TestAccountMixin):
         self.assertIn(b"throttled", response.content)
         self.assertIn("Cookie", response["Vary"])
 
+    def test_throttle_counts_a_request_once(self):
+        """Test that a subclass that checks the throttle before dispatch() doesn't count the request twice."""
+
+        class EarlyThrottledView(OkOptionallyAuthenticatedApiView):
+            def dispatch(self, request, *args, **kwargs):
+                throttled = self.throttle(request)
+                if throttled is not None:
+                    return throttled
+                return super().dispatch(request, *args, **kwargs)
+
+        request = self.factory.post("/api/v1/llmclient/", HTTP_HOST="localhost:9357")
+        SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
+        request.user = AnonymousUser()
+        with patch(f"{MODULE}.throttle_wait", return_value=None) as wait:
+            self.assertEqual(EarlyThrottledView.as_view()(request).content, b"api ok")
+        wait.assert_called_once()
+        with patch(f"{MODULE}.throttle_wait", return_value=3) as wait:
+            response = EarlyThrottledView.as_view()(request)
+        wait.assert_called_once()
+        self.assertEqual((response.status_code, response["Retry-After"]), (HTTPStatus.TOO_MANY_REQUESTS, "3"))
+        self.assertIn("Cookie", response["Vary"])
+
 
 class TestSmarterCachePageByUser(TestAccountMixin):
     """Test that smarter_cache_page_by_user() caches a page for each user, and can be invalidated."""

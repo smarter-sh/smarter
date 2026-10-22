@@ -42,8 +42,12 @@ differs.
      - Kubernetes (Helm chart)
    * - Web application and REST API
      - ``smarter-app``: one container, uvicorn with auto-reload, on port 9357.
-     - Deployment ``smarter``: uvicorn with 2 workers per pod, on port 8000, behind the ClusterIP
-       Service ``smarter``. A HorizontalPodAutoscaler scales it on CPU (3 to 25 pods by default).
+     - Deployment ``smarter``: uvicorn with 4 workers per pod (``app.workers``), on port 8000,
+       behind the ClusterIP Service ``smarter``. Each worker accepts at most 100 concurrent
+       requests (``app.limitConcurrency``) and answers 503 above that, so an overloaded pod sheds
+       load instead of running out of memory. A HorizontalPodAutoscaler scales it on CPU and
+       memory (3 to 25 pods by default, ``hpa.*``), and a PodDisruptionBudget lets node drains
+       evict only one app pod at a time (``app.podDisruptionBudget``).
    * - Operational Celery worker
      - ``smarter-worker``, queue ``default_celery_task_queue``.
      - Deployment ``smarter-worker``, same queue, with its own HorizontalPodAutoscaler.
@@ -140,12 +144,26 @@ Docker and Kubernetes Compared
        verifies them. See :doc:`smarter-on-kubernetes/llmclient-deploy`.
    * - Scaling
      - One container per service.
-     - HorizontalPodAutoscalers for the app and the operational worker. Pods are stateless; all
-       state is in the database, Redis, and the cloud.
+     - HorizontalPodAutoscalers for the app and the operational worker; the app's also scales
+       on memory, measured against ``app.resources.requests.memory``, and follows
+       ``hpa.behavior``. Pods are stateless; all state is in the database, Redis, and the cloud.
    * - Health checks
      - None.
-     - Liveness, readiness and startup probes on ``/healthz/`` and ``/readiness/``, with
-       ``Host: localhost``, which the security middleware lets through.
+     - Startup and liveness probes on ``/healthz/``, which the ASGI application answers before
+       Django (:mod:`smarter.lib.django.healthz`), so they say whether the process is alive, and a
+       readiness probe on ``/readiness/``, which goes through Django and its middleware, so a pod
+       whose Redis or database stalls is taken out of the Service rather than restarted. The
+       startup probe checks every 2 seconds, so a pod takes traffic as soon as it has loaded,
+       typically within 15 seconds. The probes send ``Host: localhost``, which the security
+       middleware lets through. A terminating pod waits 5 seconds (``preStop``) for the Service to
+       stop sending it requests, then finishes its requests in progress.
+   * - Timeouts
+     - The same, except the database's.
+     - Connecting to the database times out after 5 seconds, and to Redis after 2. A Redis
+       command times out after 5 seconds. The web server's database queries time out after
+       ``app.databaseReadTimeout`` seconds (``SMARTER_DATABASE_READ_TIMEOUT``, 60 by default),
+       and the workers', the scheduler's and the init Job's never do, since migrations can run
+       long. A SqlConnection's ``timeout`` is its driver's connect and query timeout.
    * - Upgrades
      - Rebuild the image and restart the containers.
      - ``helm upgrade``: a rolling update with ``maxUnavailable: 0``, then the init Job.

@@ -113,7 +113,11 @@ posts.
 | Date line | the day you publish                                            | `October 17, 2026 · The Smarter Project` |
 
 Other articles use category 6 (Artificial Intelligence), 5 (How To) or 9
-(System Management). Run `categories` for the current list. Leave the
+(System Management). Run `categories` for the current list. The home page
+leaves out category 4 (a Code Snippets snippet, "Home page: hide
+Announcements", in wp-admin > Snippets). Announcements are listed in the Main
+Sidebar's "Announcements" widget instead. So put release announcements and other
+administrative posts in category 4, and never add 4 to an article. Leave the
 publication date to WordPress (now), and keep the Markdown source at
 `~/desktop/blog-<slug>.md`.
 
