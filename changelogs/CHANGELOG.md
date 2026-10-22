@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.36.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.7...v0.36.8-alpha.1) (2026-10-22)
+
+### Bug Fixes
+
+* **onboarding:** listen for the spotlight click before the note shows ([fcbd508](https://github.com/smarter-sh/smarter/commit/fcbd5085b87c515ca3dfdda147a08a24568f4b00))
+
 ## [0.36.7](https://github.com/smarter-sh/smarter/compare/v0.36.6...v0.36.7) (2026-10-22)
 
 ### Bug Fixes
