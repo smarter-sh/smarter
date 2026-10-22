@@ -15,7 +15,7 @@ HealthCheckFilter
     A logging filter that excludes log records related to health check URLs. It can be used in Django or
     standard Python logging configurations to automatically filter out health check requests from logs.
 AsyncioShieldedCancelFilter
-    A logging filter that excludes asyncio's ``CancelledError exception in shielded future`` error,
+    A logging filter that excludes asyncio's ``CancelledError`` errors from a shielded future,
     which a client that disconnects in the middle of a request causes under uvicorn.
 
 Examples
@@ -40,6 +40,8 @@ To use the health check filter in a Django logging configuration::
 Any log entries containing a health check URL substring (as defined in ``health_check_urls``)
 will be suppressed by this filter.
 """
+
+import asyncio
 
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
@@ -174,8 +176,16 @@ class AsyncioShieldedCancelFilter(logging.Filter):
         CancelledError exception in shielded future
         future: <Future finished exception=CancelledError()>
 
-    Nothing failed: nobody is waiting for the response anymore. This filter drops that record,
-    and only that record, from the ``asyncio`` logger. Every other asyncio error is still emitted.
+    Some Python builds report the same event differently: the shielded future's exception is never
+    retrieved, so it is logged when the future is garbage collected instead::
+
+        Future exception was never retrieved
+        future: <Future finished exception=CancelledError()>
+
+    Nothing failed: nobody is waiting for the response anymore. This filter drops those records,
+    and only those, from the ``asyncio`` logger: the shielded-future message, and the
+    never-retrieved message when its exception is a :class:`asyncio.CancelledError`. Every other
+    asyncio error is still emitted.
 
     Examples
     --------
@@ -200,6 +210,9 @@ class AsyncioShieldedCancelFilter(logging.Filter):
     message_prefix = "CancelledError exception in shielded future"
     """The beginning of the message that asyncio logs, see :func:`asyncio.shield`."""
 
+    never_retrieved_prefix = "Future exception was never retrieved"
+    """The beginning of the message that asyncio logs when a failed future is garbage collected."""
+
     def filter(self, record: logging.LogRecord) -> bool:
         """
         Determine whether a log record should be emitted.
@@ -212,7 +225,8 @@ class AsyncioShieldedCancelFilter(logging.Filter):
         Returns
         -------
         bool
-            False if the record is asyncio's shielded-future ``CancelledError`` and should be suppressed;
+            False if the record is asyncio's shielded-future or never-retrieved ``CancelledError``
+            and should be suppressed;
             True otherwise (the log record will be emitted).
 
         Examples
@@ -229,4 +243,8 @@ class AsyncioShieldedCancelFilter(logging.Filter):
             message = record.getMessage()
         except (TypeError, ValueError):
             return True
-        return not message.startswith(self.message_prefix)
+        if message.startswith(self.message_prefix):
+            return False
+        if message.startswith(self.never_retrieved_prefix) and record.exc_info:
+            return not isinstance(record.exc_info[1], asyncio.CancelledError)
+        return True
