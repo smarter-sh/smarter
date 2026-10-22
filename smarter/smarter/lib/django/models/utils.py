@@ -18,7 +18,9 @@ These utilities are intended to simplify common data manipulation tasks in Djang
 :license: MIT
 """
 
-from typing import Optional
+from typing import Iterable, Optional
+
+from django.db import models
 
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
@@ -147,3 +149,44 @@ def list_of_dicts_to_dict(data: list[SmarterDictType]) -> Optional[SmarterDictTy
             cleaned_key = dict_key_cleaner(d[key])
             retval[cleaned_key] = d[key]
     return retval
+
+
+def assign_changed_fields(instance: models.Model, data: SmarterDictType) -> list[str]:
+    """
+    Set the fields of an ORM instance whose values differ from the given ones.
+
+    A caller that applies a manifest saves the instance only when this returns a field. Every deploy
+    applies the built-in manifests again, and saving an unchanged row moves its ``updated_at``, sends
+    ``post_save`` to every receiver, and invalidates its caches. A value that compares unequal to the
+    stored one only because of its type, e.g. a float and a Decimal, counts as changed, so the instance
+    is saved, as it always was.
+
+    :param instance: The ORM instance.
+    :type instance: models.Model
+    :param data: The values, by field name, e.g. from a broker's ``manifest_to_django_orm()``.
+    :type data: SmarterDictType
+    :returns: The names of the fields that were set, because their values changed.
+    :rtype: list[str]
+    """
+    changed: list[str] = []
+    for key, value in data.items():
+        if getattr(instance, key, None) != value:
+            setattr(instance, key, value)
+            changed.append(key)
+    return changed
+
+
+def tags_changed(instance: models.Model, tags: Optional[Iterable[str]]) -> bool:
+    """
+    Whether the tags of an ORM instance differ from the given ones.
+
+    :param instance: The ORM instance, which has a ``tags`` TaggableManager.
+    :type instance: models.Model
+    :param tags: The tags, e.g. a manifest's ``metadata.tags``.
+    :type tags: Optional[Iterable[str]]
+    :returns: True if the instance is not saved yet, or its tags differ.
+    :rtype: bool
+    """
+    if instance.pk is None:
+        return True
+    return set(instance.tags.names()) != set(tags or [])  # type: ignore[attr-defined]

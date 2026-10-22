@@ -33,6 +33,7 @@ from .utils import (
     generate_fernet_encryption_key,
     hash_factory,
     is_async_context,
+    mask_email,
     mask_string,
 )
 from .version import get_semantic_version
@@ -54,6 +55,7 @@ __all__ = [
     "get_diagnostics",
     "get_readonly_csv_file",
     "get_readonly_yaml_file",
+    "mask_email",
     "mask_string",
     "rfc1034_compliant_str",
     "rfc1034_compliant_to_snake",

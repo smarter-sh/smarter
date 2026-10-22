@@ -417,7 +417,10 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             cached_value = lazy_cache.get(computed_cache_key, CACHE_MISS_SENTINEL)
             if cached_value is not CACHE_MISS_SENTINEL:
                 lazy_cache.delete(computed_cache_key)
-                logger.info(
+                # like cache hits, invalidations are logged only when cache logging is on: applying one
+                # manifest invalidates a dozen keys.
+                log = logger.info if (logging_enabled or lazy_cache.cache_logging) else logger.debug
+                log(
                     "%s - invalidated %s - %s",
                     logger_prefix_gray
                     + "."

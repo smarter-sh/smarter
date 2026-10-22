@@ -109,6 +109,36 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertTrue(provider.is_suspended)
         self.assertEqual(provider.description, "a test provider")
 
+    def test_unchanged_provider_is_not_saved_again(self):
+        """Test that initializing again, as each deploy does, saves neither an unchanged provider, nor its logo, nor its models."""
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()):
+            self.initialize()
+        provider = Provider.objects.get(name=self.name)
+        self.addCleanup(provider.logo.delete, save=False)
+        logo_name = provider.logo.name
+        updated_at = provider.updated_at
+        with (
+            patch.object(initialize_providers.requests, "get", return_value=models_response()),
+            patch.object(ProviderModel, "save", autospec=True) as save_model,
+        ):
+            self.initialize()
+        provider.refresh_from_db()
+        self.assertEqual(provider.updated_at, updated_at)
+        self.assertEqual(provider.logo.name, logo_name)
+        save_model.assert_not_called()
+
+    def test_has_logo(self):
+        """Test that has_logo() compares the stored logo's content, and is False without a readable logo."""
+        with patch.object(initialize_providers.requests, "get", return_value=models_response()):
+            self.initialize()
+        provider = Provider.objects.get(name=self.name)
+        self.addCleanup(provider.logo.delete, save=False)
+        self.assertTrue(Command.has_logo(provider, b"<svg/>"))
+        self.assertFalse(Command.has_logo(provider, b"<svg>other</svg>"))
+        with patch.object(type(provider.logo), "open", side_effect=FileNotFoundError("gone")):
+            self.assertFalse(Command.has_logo(provider, b"<svg/>"))
+        self.assertFalse(Command.has_logo(MagicMock(logo=None), b"<svg/>"))
+
     def test_models_keep_is_active_when_initialized_again(self):
         """Test that new models are created active, and that initializing again, as each deploy does, leaves an existing model's is_active, which its verification set, as it was."""
         with patch.object(initialize_providers.requests, "get", return_value=models_response()):

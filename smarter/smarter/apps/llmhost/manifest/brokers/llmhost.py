@@ -168,7 +168,7 @@ class SAMLLMHostBroker(AbstractBroker):
             return False
         if self.manifest is not None or self.account is not None:
             self._ready = True
-            broker_ready.send(sender=self.__class__, broker=self)
+            self.send_broker_ready(broker_ready)
         return self._ready
 
     @property
@@ -394,18 +394,22 @@ class SAMLLMHostBroker(AbstractBroker):
             llmhost = self.llmhost
             if llmhost is None:
                 llmhost = LLMHost(**data)
+                changed = True
             else:
-                for key, value in data.items():
-                    setattr(llmhost, key, value)
+                changed = bool(self.assign_changed_fields(llmhost, data))
+            changed = changed or self.tags_changed(llmhost, tags)
             try:
-                llmhost.save()
-                llmhost.tags.set(tags)
+                # an unchanged llmhost is not saved again: see assign_changed_fields().
+                if changed:
+                    llmhost.save()
+                    llmhost.tags.set(tags)
             except Exception as e:
                 raise SAMLLMHostBrokerError(
                     f"Failed to apply {self.kind} {self.manifest.metadata.name}: {e}", thing=self.kind, command=command
                 ) from e
         self._llmhost = llmhost
-        self.cache_invalidations()
+        if changed:
+            self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

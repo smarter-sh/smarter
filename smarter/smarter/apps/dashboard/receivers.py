@@ -4,11 +4,10 @@
 from django.dispatch import receiver
 
 from smarter.apps.account.signals import cache_invalidate
-from smarter.common.helpers.console_helpers import formatted_text_blue
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-module_prefix = "dashboard.receivers"
+logger_prefix = logging.formatted_text(__name__)
 
 
 @receiver(cache_invalidate)
@@ -17,10 +16,10 @@ def cache_invalidation_receiver(sender, *args, **kwargs):
     from smarter.apps.dashboard.context_processors import cache_invalidations
 
     user_profile = kwargs.get("user_profile")
-    logger.info(
-        "%s received cache_invalidate signal for %s with kwargs: %s",
-        formatted_text_blue(f"{module_prefix}.cache_invalidation_receiver()"),
-        user_profile,
-        kwargs,
+    logger.debug(
+        "%s.cache_invalidation_receiver() received cache_invalidate from %s for user profile %s",
+        logger_prefix,
+        getattr(sender, "__name__", sender),
+        user_profile.id if user_profile else None,
     )
     cache_invalidations(user_profile=user_profile)
