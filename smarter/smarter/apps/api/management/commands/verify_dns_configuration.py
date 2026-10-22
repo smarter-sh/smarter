@@ -197,7 +197,9 @@ class Command(SmarterCommand):
                 self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified A record for {child_domain}."))
             else:
                 points_at_load_balancer = False
-                logger.warning(
+                # by design, e.g. a host that a CDN serves. The command's output says so once; the
+                # targets, which are infrastructure host names, are only logged at DEBUG.
+                logger.debug(
                     "%s A record for %s points at %s, not at the A record of %s (%s). Leaving it unchanged.",
                     log_prefix,
                     child_domain,
@@ -206,7 +208,7 @@ class Command(SmarterCommand):
                     a_record.alias or a_record.values,
                 )
                 self.stdout.write(
-                    self.style.WARNING(
+                    self.style.NOTICE(
                         f"{log_prefix} the A record for {child_domain} does not point at the platform's load balancer. Left it unchanged."
                     )
                 )
@@ -501,7 +503,7 @@ class Command(SmarterCommand):
             )
         if self.unchanged_a_record_domains:
             self.stdout.write(
-                self.style.WARNING(
+                self.style.NOTICE(
                     f"{self.log_prefix} delegated, but A record left unchanged because it does not point at the platform's load balancer: {', '.join(self.unchanged_a_record_domains)}"
                 )
             )

@@ -22,6 +22,7 @@ from smarter.apps.account.signals import new_user_created
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.utils import mask_email
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel
@@ -866,8 +867,11 @@ class UserProfile(MetaDataModel):
         user_identifier = "NoUser"
         company_name = "NoAccount"
         try:
+            # the email is masked: a user profile's string form is written to logs.
             user_identifier = (
-                self.user.email if self.user and self.user.email else (self.user.username if self.user else "NoUser")
+                mask_email(self.user.email)
+                if self.user and self.user.email
+                else (self.user.username if self.user else "NoUser")
             )
             company_name = self.account.company_name if self.account else "NoAccount"
         except User.DoesNotExist:

@@ -1,7 +1,7 @@
 """Test AbstractBroker's kind, loader, manifest and name setters, its params from a PreparedRequest, and file_path initialization."""
 
 import os
-from unittest.mock import PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import requests
 from django.http import QueryDict
@@ -94,3 +94,25 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         broker = SAMGuardrailBroker(self.request, file_path=self.manifest_filespec)
         self.assertEqual(broker.name, self.loader.manifest_metadata["name"])
         self.assertEqual(broker.kind, "Guardrail")
+
+    def test_send_broker_ready_sends_once(self):
+        """A broker's ready property is read many times; its broker_ready signal is sent once."""
+        broker = self.broker
+        broker._broker_ready_sent = False
+        signal = MagicMock()
+        broker.send_broker_ready(signal)
+        broker.send_broker_ready(signal)
+        signal.send.assert_called_once_with(sender=broker.__class__, broker=broker)
+
+    def test_known_name(self):
+        """The name comes from the broker, else its manifest, else its loader, without building the manifest."""
+        broker = self.broker
+        name = broker.known_name
+        self.assertTrue(name)
+        self.assertIn(f"name={name}", str(broker))
+        broker._name = None
+        self.assertEqual(broker.known_name, name)
+        manifest = broker._manifest
+        broker._manifest = None
+        self.assertEqual(broker.known_name, name)
+        broker._manifest = manifest

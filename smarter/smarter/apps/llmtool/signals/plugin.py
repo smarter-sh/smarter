@@ -171,5 +171,6 @@ Arguments:
 
 Example::
 
-    broker_ready.send(sender=self.__class__, broker=self)
+    # a broker sends it once, from its ready property
+    self.send_broker_ready(broker_ready)
 """
