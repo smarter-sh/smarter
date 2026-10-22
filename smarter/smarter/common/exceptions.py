@@ -5,15 +5,23 @@ import re
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.formatted_text(__name__)
 
 
 class SmarterException(Exception):
-    """Exception raised for errors in the configuration."""
+    """
+    Base class of Smarter's exceptions.
+
+    Constructing an exception logs it at DEBUG only. Many are raised, then caught and handled as an
+    expected outcome, e.g. a manifest that names a Secret that doesn't exist, which ``load_from_github``
+    skips. The code that handles an exception logs it, at the level that the outcome deserves.
+    """
 
     def __init__(self, message: str = ""):
         self.message = message
-        msg = self.get_formatted_err_message + ": " + self.message
-        logger.error(msg)
+        logger.debug(
+            "%s.SmarterException.__init__() %s: %s", logger_prefix, self.get_formatted_err_message, self.message
+        )
         super().__init__(self.message)
 
     def __str__(self) -> str:

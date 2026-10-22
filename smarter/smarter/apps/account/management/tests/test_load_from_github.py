@@ -216,7 +216,8 @@ class TestLoadFromGithub(TestAccountMixin):
             output = self.run_command()
             self.assertEqual([os.path.basename(c.args[0]) for c in apply.call_args_list], ["attached.yaml"])
             self.assertIn(
-                "Skipped budgets/detached.yaml: Budget detached exists, and its manifest attaches it to nothing.",
+                "Kept Budget detached as it is (budgets/detached.yaml): applying its manifest, which attaches it to "
+                "nothing, would detach the resources attached to it since it was created.",
                 output,
             )
             budget.objects.filter.assert_called_once_with(name="detached")

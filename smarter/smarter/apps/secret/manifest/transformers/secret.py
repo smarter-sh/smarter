@@ -25,7 +25,7 @@ from smarter.apps.secret.models import Secret
 from smarter.apps.secret.signals import (
     secret_created,
     secret_deleted,
-    secret_inializing,
+    secret_initializing,
     secret_ready,
     secret_saved,
     secret_updated,
@@ -126,7 +126,7 @@ class SecretTransformer(SmarterHelperMixin):
         self._secret_serializer = None
         self._user_profile = user_profile
 
-        secret_inializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
+        secret_initializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
         self._user_profile = user_profile
         if not self._user_profile:
             raise SmarterSecretTransformerError("User profile is not set.")

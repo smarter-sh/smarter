@@ -10,6 +10,7 @@ Test SAMGuardrailBroker.
 """
 
 import os
+from unittest.mock import patch
 
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.guardrail.manifest.models.guardrail.model import SAMGuardrail
@@ -106,6 +107,29 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
         self.broker_for("guardrail.yaml").apply(self.request, **self.kwargs)
         self.assertEqual(Guardrail.objects.filter(user_profile=self.user_profile, name=GUARDRAIL_NAME).count(), 1)
         self.assertEqual(self.guardrail().pk, pk)
+
+    def test_apply_unchanged_does_not_save(self):
+        """Applying an unchanged manifest again leaves the row, its updated_at and its caches alone."""
+        self.broker.apply(self.request, **self.kwargs)
+        updated_at = self.guardrail().updated_at
+        broker = self.broker_for("guardrail.yaml")
+        with (
+            patch.object(Guardrail, "save", autospec=True) as save,
+            patch.object(SAMGuardrailBroker, "cache_invalidations") as cache_invalidations,
+        ):
+            response = broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        save.assert_not_called()
+        cache_invalidations.assert_not_called()
+        self.assertEqual(self.guardrail().updated_at, updated_at)
+
+    def test_apply_changed_saves(self):
+        """A changed field is saved."""
+        self.broker.apply(self.request, **self.kwargs)
+        broker = self.broker_for("guardrail.yaml")
+        broker.manifest.spec.config.priority = 99  # type: ignore[union-attr]
+        broker.apply(self.request, **self.kwargs)
+        self.assertEqual(self.guardrail().priority, 99)
 
     def test_describe(self):
         """Test that describe() round trips the manifest, and reports the status."""

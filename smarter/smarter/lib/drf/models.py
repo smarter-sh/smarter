@@ -26,6 +26,7 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 
 logger = getLogger(__name__)
+logger_prefix = formatted_text(__name__)
 
 ###############################################################################
 # API Key Management
@@ -69,14 +70,16 @@ class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
             is_active=is_active,
             **kwargs,
         )
+        auth_token.save()
+        # never log token_key: it is the first characters of the token itself.
         logger.info(
-            "%s Creating API Key for user %s with token %s and expiry %s",
-            formatted_text("lib.drf.models.SmarterAuthTokenManager.create()"),
+            "%s.SmarterAuthTokenManager.create() created API key %s (%s) for user %s, expiring %s",
+            logger_prefix,
+            auth_token.name,
+            auth_token.key_id,
             user,
-            token_key,
             expiry,
         )
-        auth_token.save()
         return auth_token, token
 
 
