@@ -419,12 +419,24 @@ LLMClients: read them, prompt them, stream a prompt's progress, and hold a multi
 
    LLMClients: ``/api/v1/llm-clients/``, and the manifest api's ``LLMClient`` kind.
 
-   .. py:method:: config(id: 'SmarterIdType', *, session_key: 'str | None' = None) -> 'PromptChatApiConfig'
+   .. py:method:: config(id: 'SmarterIdType', *, session_key: 'str | None' = None, verbose: 'bool' = False) -> 'PromptChatApiConfig'
 
       An LLMClient's chat configuration, and a chat session.
 
+      By default the configuration has what a chat needs: the LLMClient, the session's key and chat
+      history, a short ``meta_data``, and the counts of the LLMClient's plugins and extensions, whose
+      lists are empty. ``verbose=True`` asks for the complete configuration, which adds those lists,
+      the session's tool calls (``history.prompt_tool_call_history``) and the complete ``meta_data``.
+
+      .. code-block:: python
+
+          config = client.llm_clients.config(llmclient.id, verbose=True)
+          print([plugin.plugin_meta.name for plugin in config.plugins.plugins])
+
       :param id: The LLMClient's id or hashed id.
       :param session_key: An existing session's key, to resume it with its history, or None for a new session.
+      :param verbose: True for the complete configuration, with the lists of the LLMClient's plugins
+          and extensions, and the session's tool calls. A deployed LLMClient's own host ignores it.
       :returns: The configuration, whose ``session_key`` identifies the session.
 
 
@@ -474,12 +486,12 @@ LLMClients: read them, prompt them, stream a prompt's progress, and hold a multi
       :returns: The plugins.
 
 
-   .. py:method:: functions(id: 'SmarterIdType') -> 'list[LLMClientFunction]'
+   .. py:method:: extensions(id: 'SmarterIdType') -> 'list[LLMClientExtension]'
 
-      An LLMClient's built-in functions, e.g. ``calculator``.
+      The extensions whose tools an LLMClient offers the LLM, e.g. ``calculator``.
 
       :param id: The LLMClient's integer id.
-      :returns: The functions.
+      :returns: The extensions.
 
 
    .. py:method:: api_keys(id: 'SmarterIdType') -> 'list[LLMClientApiKey]'

@@ -202,6 +202,18 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: number
 
+   .. js:attribute:: filter
+
+      The named filter that narrows the list, e.g. ``pending``, or an empty string for none.
+
+      :type: string
+
+   .. js:attribute:: filters
+
+      The named filters that the list offers.
+
+      :type: string[]
+
    .. js:attribute:: numPages
 
       :type: number
@@ -306,7 +318,7 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
 .. js:class:: PromptChatApiConfig
 
-   An LLMClient's chat configuration: the LLMClient, the chat session's key and history, and its plugins and functions.
+   An LLMClient's chat configuration: the LLMClient, the chat session's key and history, and its plugins and extensions.
 
    A new session's configuration has an empty history. Pass its ``session_key`` to the prompt api to
    continue the session.
@@ -323,7 +335,7 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: boolean
 
-   .. js:attribute:: functions
+   .. js:attribute:: extensions
 
       :type: object | null | undefined
 
@@ -451,6 +463,20 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: object | null | undefined
 
+.. js:class:: PromptChatApiExtensionList
+
+   The LLMClient's extensions. The list itself is returned only in the complete configuration, with ``verbose``.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: extensions
+
+      :type: object[]
+
+   .. js:attribute:: meta_data
+
+      :type: object
+
 .. js:class:: PromptChatApiFilePart
 
    A file part of a message's content.
@@ -499,23 +525,12 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: string
 
-.. js:class:: PromptChatApiFunctionList
-
-   The LLMClient's built-in functions.
-
-   A Zod schema, and the type of the same name that it validates.
-
-   .. js:attribute:: functions
-
-      :type: object[]
-
-   .. js:attribute:: meta_data
-
-      :type: object
-
 .. js:class:: PromptChatApiHistory
 
    The chat session's history.
+
+   ``prompt_tool_call_history`` is in the complete configuration, with ``verbose``. The other histories
+   are returned only to the cli.
 
    A Zod schema, and the type of the same name that it validates.
 
@@ -538,6 +553,8 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
       :type: object[] | null | undefined
 
    .. js:attribute:: prompt_tool_call_history
+
+      The session's tool calls, with ``verbose``.
 
       :type: object[] | null | undefined
 
@@ -607,11 +624,11 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
 .. js:class:: PromptChatApiListMetaData
 
-   The counts of a list of the LLMClient's plugins or functions.
+   The counts of a list of the LLMClient's plugins or extensions.
 
    A Zod schema, and the type of the same name that it validates.
 
-   .. js:attribute:: functions_returned
+   .. js:attribute:: extensions_returned
 
       :type: number | null | undefined
 
@@ -619,7 +636,7 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: number | null | undefined
 
-   .. js:attribute:: total_functions
+   .. js:attribute:: total_extensions
 
       :type: number | null | undefined
 
@@ -691,6 +708,12 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: object | null | undefined
 
+   .. js:attribute:: total_tools
+
+      The number of the LLMClient's extensions, plugins and MCPClients.
+
+      :type: number | null | undefined
+
    .. js:attribute:: url_llmclient
 
       The url of the LLMClient's prompt api.
@@ -701,15 +724,27 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: string | null | undefined
 
-.. js:class:: PromptChatApiLLMClientFunction
+.. js:class:: PromptChatApiLLMClientExtension
 
-   A built-in function of the LLMClient.
+   An extension of the LLMClient, whose tools it offers the LLM.
 
    A Zod schema, and the type of the same name that it validates.
 
    .. js:attribute:: created_at
 
       :type: string | null | undefined
+
+   .. js:attribute:: enabled
+
+      Whether the Extension is enabled, so that its tools are offered.
+
+      :type: boolean
+
+   .. js:attribute:: extension
+
+      The Extension's id.
+
+      :type: number
 
    .. js:attribute:: id
 
@@ -721,11 +756,17 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
    .. js:attribute:: name
 
-      get_current_weather, date_calculator or calculator.
+      The Extension's slug, e.g. ``weather``.
+
+      :type: string
+
+   .. js:attribute:: updated_at
 
       :type: string | null | undefined
 
-   .. js:attribute:: updated_at
+   .. js:attribute:: version
+
+      The Extension's installed version, e.g. ``1.0.0``.
 
       :type: string | null | undefined
 
@@ -833,7 +874,21 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
    The LLMClient's state.
 
+   The complete configuration, with ``verbose``, adds the rest of the platform's description of the LLMClient.
+
    A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: is_authentication_required
+
+      True if the LLMClient requires a Smarter api key, or a logged-in user.
+
+      :type: boolean | null | undefined
+
+   .. js:attribute:: is_custom_domain
+
+      True if the request's host is a custom domain.
+
+      :type: boolean | null | undefined
 
    .. js:attribute:: is_deployed
 
@@ -867,7 +922,7 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
 .. js:class:: PromptChatApiPluginList
 
-   The LLMClient's plugins.
+   The LLMClient's plugins. The list itself is returned only in the complete configuration, with ``verbose``.
 
    A Zod schema, and the type of the same name that it validates.
 
