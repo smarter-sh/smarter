@@ -31,9 +31,10 @@ import ipaddress
 import socket
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterator, Mapping, Optional
+from typing import Any, AsyncIterator, Callable, Iterator, Mapping, Optional
 
 import httpx
+from asgiref.sync import sync_to_async
 from django.db import models
 from django.http import HttpResponse, StreamingHttpResponse
 from django.http.response import HttpResponseBase
@@ -510,7 +511,8 @@ class ProxyForwarder:
         headers_out = returned_response_headers(self.proxy, upstream.headers)
         if upstream.headers.get("content-type", "").startswith("text/event-stream"):
             response: HttpResponseBase = StreamingHttpResponse(
-                self._stream(client, upstream, method, path, started), status=upstream.status_code
+                stream_asynchronously(self._stream(client, upstream, method, path, started)),
+                status=upstream.status_code,
             )
         else:
             try:
@@ -593,6 +595,38 @@ class ProxyForwarder:
         )
 
 
+_END_OF_STREAM = object()
+"""The value that :func:`stream_asynchronously` reads when a stream has no more chunks."""
+
+
+async def stream_asynchronously(chunks: Iterator[bytes]) -> AsyncIterator[bytes]:
+    """
+    Serve a synchronous stream, e.g. a provider's event stream read with httpx, as the ASGI server reads it.
+
+    Django serves a :class:`~django.http.StreamingHttpResponse` whose content is a synchronous iterator by
+    reading the whole iterator first, which is no stream at all: the client waited for the provider's whole
+    response, and a thread was held for as long as it lasted. Each chunk is read here in the request's own
+    thread, the one where its view ran, and passed on as soon as it arrives. When the stream ends, or the
+    client disconnects, the iterator is closed, which runs its ``finally`` block, e.g.
+    :meth:`ProxyForwarder._stream`'s charges, in the same thread.
+
+    :param chunks: The synchronous stream.
+    :returns: The same chunks, as an asynchronous iterator.
+    :rtype: AsyncIterator[bytes]
+    """
+    read = sync_to_async(next, thread_sensitive=True)
+    try:
+        while True:
+            chunk = await read(chunks, _END_OF_STREAM)
+            if chunk is _END_OF_STREAM:
+                break
+            yield chunk  # type: ignore[misc]
+    finally:
+        close = getattr(chunks, "close", None)
+        if close is not None:
+            await sync_to_async(close, thread_sensitive=True)()
+
+
 __all__ = [
     "ProxyForwarder",
     "SSEUsageReader",
@@ -610,4 +644,5 @@ __all__ = [
     "record_charges",
     "resolve_proxy",
     "returned_response_headers",
+    "stream_asynchronously",
 ]

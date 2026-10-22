@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.6](https://github.com/smarter-sh/smarter/compare/v0.36.5...v0.36.6) (2026-10-22)
+
+### Bug Fixes
+
+* **platform:** harden app pods against hangs, slow starts and load ([2820456](https://github.com/smarter-sh/smarter/commit/282045652adc34fa30c80e23455f587000ba28de))
+* **platform:** repair tests and contract left by the manifests move ([2c4c5ab](https://github.com/smarter-sh/smarter/commit/2c4c5ab12acda85b3c958e4efe41e6cfce07e3c5))
+
+## [0.36.6-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.6-alpha.1...v0.36.6-alpha.2) (2026-10-22)
+
+### Bug Fixes
+
+* **platform:** harden app pods against hangs, slow starts and load ([2820456](https://github.com/smarter-sh/smarter/commit/282045652adc34fa30c80e23455f587000ba28de))
+
+## [0.36.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.5...v0.36.6-alpha.1) (2026-10-22)
+
+### Bug Fixes
+
+* **platform:** repair tests and contract left by the manifests move ([2c4c5ab](https://github.com/smarter-sh/smarter/commit/2c4c5ab12acda85b3c958e4efe41e6cfce07e3c5))
+
 ## [0.36.5](https://github.com/smarter-sh/smarter/compare/v0.36.4...v0.36.5) (2026-10-22)
 
 ### Bug Fixes
