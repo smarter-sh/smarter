@@ -45,4 +45,4 @@ class PluginCacheTtl(IntEnum):
 
 
 OFFICIAL_EXTENSIONS = ("calculator", "date-calculator", "weather")
-"""The slugs of the official Smarter Extensions, which ``manage.py add_example_extensions`` installs from the registry."""
+"""The slugs of the official Smarter Extensions, which ``manage.py install_official_extensions`` installs from the registry."""

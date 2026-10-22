@@ -1,0 +1,43 @@
+---
+# BAAI bge-m3: 1024-dimensional embeddings in over 100 languages, for inputs of up to 8192 tokens.
+# Revision 'main' tracks the repository: pin a commit SHA for reproducible deployments.
+# Resources are what one replica's pod requests of a node of its compute.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: bge_m3
+  description: BAAI bge-m3, a multilingual embedding model, served by Text Embeddings Inference on one NVIDIA L4.
+  version: 1.0.0
+  tags:
+  - embedding
+  - baai
+  - tei
+  - multilingual
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/BAAI/bge-m3
+spec:
+  model:
+    source: huggingface
+    repository: BAAI/bge-m3
+    revision: main
+    task: embedding
+    license: mit
+    architecture: xlm-roberta
+    parameterCount: 567754752
+    contextWindow: 8192
+    embeddingDimensions: 1024
+    quantization: fp32
+    capabilities:
+      streaming: false
+  engine:
+    name: tei
+    maxConcurrentRequests: 512
+  compute: gpu_l4_1x
+  resources:
+    gpuCount: 1
+    vramRequiredGb: 3
+    cpu: '4'
+    memory: 8Gi
+  storage:
+    size: 10Gi

@@ -1,0 +1,39 @@
+---
+# Passthrough access to the Google Gemini API, with the platform's API key.
+# Use the Google Gen AI SDK, with this Proxy's URL as its base URL and a Smarter API key as its
+# api_key, which the SDK sends in the x-goog-api-key header:
+#
+#   client = genai.Client(
+#       api_key="<Smarter API key>",
+#       http_options={"base_url": "https://<smarter>/api/v1/proxy/googleai/"},
+#   )
+#
+# The SDK adds the API version, e.g. v1beta/, to its paths, so the Proxy's baseUrl does not
+# include it. Only the models endpoints, e.g. models/gemini-2.5-flash:generateContent, are allowed.
+apiVersion: smarter.sh/v1
+kind: Proxy
+metadata:
+  name: googleai
+  description: Passthrough access to the Google Gemini API's native generateContent, embedContent and models endpoints.
+  version: 1.0.0
+  tags:
+    - google
+    - gemini
+    - builtin
+  annotations:
+    - smarter.sh/proxy/builtin: "true"
+    - smarter.sh/proxy/documentation: https://ai.google.dev/api
+spec:
+  provider: googleai
+  apiKey: gemini_api_key
+  baseUrl: https://generativelanguage.googleapis.com/
+  auth:
+    header: x-goog-api-key
+    scheme: ""
+  allowedPaths:
+    - v1beta/models
+    - v1beta/models/*
+    - v1/models
+    - v1/models/*
+  timeout: 300
+  isActive: true

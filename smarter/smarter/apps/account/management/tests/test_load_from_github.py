@@ -23,8 +23,10 @@ from smarter.apps.account.management.commands.load_from_github import (
 from smarter.apps.account.repository_scripts import SCRIPTS_CONFIG, SCRIPTS_FOLDER
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
 from smarter.lib.manifest.template import manifest_template_values
 
 MODULE = "smarter.apps.account.management.commands.load_from_github"
@@ -171,6 +173,60 @@ class TestLoadFromGithub(TestAccountMixin):
         self.assertEqual([os.path.basename(call.args[0]) for call in apply.call_args_list], ["s.yaml"])
         self.assertIn("Skipped budgets/b.yaml: Budget is excluded.", output)
 
+    def test_included_kinds_only(self):
+        """Test that --include_kind applies only the manifests of those kinds, in dependency order."""
+        self.use_repo(
+            self.repo(
+                {
+                    "secrets/s.yaml": manifest("Secret", "s"),
+                    "plugins/static/p.yaml": manifest("Plugin", "p"),
+                    "llm-clients/c.yaml": manifest("LLMClient", "c"),
+                }
+            )
+        )
+        with (
+            patch.object(Command, "missing_extensions", return_value=[]),
+            patch.object(Command, "keep_deployed", side_effect=lambda m, u: m),
+            patch.object(Command, "apply", return_value=None) as apply,
+        ):
+            output = self.run_command(include_kind=["LLMClient", "Plugin"], verbose=True)
+        self.assertEqual([os.path.basename(call.args[0]) for call in apply.call_args_list], ["p.yaml", "c.yaml"])
+        self.assertIn("Skipped secrets/s.yaml: Secret is not included.", output)
+        self.assertIn("Applied the 2 manifests", output)
+
+    def test_no_manifest_of_the_included_kinds_fails(self):
+        self.use_repo(self.repo({"secrets/s.yaml": manifest("Secret", "s")}))
+        with self.assertRaisesRegex(CommandError, "holds no Smarter manifest of the kinds LLMClient"):
+            self.run_command(include_kind=["LLMClient"])
+
+    def test_existing_detached_budget_is_left_as_it_is(self):
+        """Test that a Budget that lists no resources is applied only if it doesn't exist, and one that lists resources always is."""
+        self.use_repo(
+            self.repo(
+                {
+                    "budgets/detached.yaml": manifest("Budget", "detached", "  config: {}\n  resources: []\n"),
+                    "budgets/attached.yaml": manifest(
+                        "Budget", "attached", "  config: {}\n  resources:\n    - kind: Provider\n      name: openai\n"
+                    ),
+                }
+            )
+        )
+        with patch(f"{MODULE}.Budget") as budget, patch.object(Command, "apply", return_value=None) as apply:
+            budget.objects.filter.return_value.exists.return_value = True
+            output = self.run_command()
+            self.assertEqual([os.path.basename(c.args[0]) for c in apply.call_args_list], ["attached.yaml"])
+            self.assertIn(
+                "Skipped budgets/detached.yaml: Budget detached exists, and its manifest attaches it to nothing.",
+                output,
+            )
+            budget.objects.filter.assert_called_once_with(name="detached")
+            apply.reset_mock()
+            budget.objects.filter.return_value.exists.return_value = False
+            self.run_command()
+        self.assertEqual(
+            sorted(os.path.basename(c.args[0]) for c in apply.call_args_list), ["attached.yaml", "detached.yaml"]
+        )
+
     def test_failures_are_reported_after_the_others_are_applied(self):
         self.use_repo(self.repo({"a.yaml": manifest("Secret", "a"), "b.yaml": manifest("Secret", "b")}))
         with patch.object(Command, "apply", side_effect=["a.yaml: ValueError: boom", None]) as apply:
@@ -188,23 +244,23 @@ class TestLoadFromGithub(TestAccountMixin):
         self.use_repo(self.repo({"llm-clients/c.yaml": manifest("LLMClient", "c")}))
         kept = {"kind": "LLMClient", "metadata": {"name": "c"}, "spec": {"config": {"prompt": {"deployed": True}}}}
         with (
-            patch(f"{MODULE}.AddExampleLLMClientsCommand.missing_extensions", return_value=[]),
-            patch(f"{MODULE}.AddExampleLLMClientsCommand.keep_deployed", return_value=kept) as keep_deployed,
-            patch(f"{MODULE}.DeployExampleLLMClientsCommand.deploy_manifest", return_value=True) as deploy_manifest,
+            patch.object(Command, "missing_extensions", return_value=[]),
+            patch.object(Command, "keep_deployed", return_value=kept) as keep_deployed,
+            patch.object(Command, "deploy_llmclient", return_value=True) as deploy_llmclient,
             patch.object(Command, "apply", return_value=None) as apply,
         ):
             self.run_command()
-            deploy_manifest.assert_not_called()
+            deploy_llmclient.assert_not_called()
             self.run_command(deploy=True)
         self.assertEqual(keep_deployed.call_args.args[1], self.user_profile)
         self.assertIn('"deployed": true', apply.call_args.kwargs["manifest"])
-        deploy_manifest.assert_called_once_with(kept)
+        deploy_llmclient.assert_called_once_with("c", self.user_profile)
 
     def test_llmclient_that_fails_to_deploy_is_a_failure(self):
         self.use_repo(self.repo({"llm-clients/c.yaml": manifest("LLMClient", "c")}))
         with (
-            patch(f"{MODULE}.AddExampleLLMClientsCommand.missing_extensions", return_value=[]),
-            patch(f"{MODULE}.DeployExampleLLMClientsCommand.deploy_manifest", return_value=False),
+            patch.object(Command, "missing_extensions", return_value=[]),
+            patch.object(Command, "deploy_llmclient", return_value=False),
             patch.object(Command, "apply", return_value=None),
         ):
             with self.assertRaisesRegex(CommandError, "LLMClient c failed to deploy"):
@@ -213,7 +269,7 @@ class TestLoadFromGithub(TestAccountMixin):
     def test_llmclient_that_needs_a_missing_extension_is_skipped(self):
         self.use_repo(self.repo({"llm-clients/c.yaml": manifest("LLMClient", "c")}))
         with (
-            patch(f"{MODULE}.AddExampleLLMClientsCommand.missing_extensions", return_value=["weather"]),
+            patch.object(Command, "missing_extensions", return_value=["weather"]),
             patch.object(Command, "apply", return_value=None) as apply,
         ):
             output = self.run_command()
@@ -354,3 +410,162 @@ class TestLoadFromGithub(TestAccountMixin):
             with self.subTest(account_number=account_number, username=username):
                 with self.assertRaises(SmarterValueError):
                     command.get_user_profile(account_number, username)
+
+
+class TestLoadFromGithubApply(TestAccountMixin):
+    """Test apply(): one manifest, from its file, a template, or a given manifest, in a transaction."""
+
+    def setUp(self):
+        super().setUp()
+        self.secret_name = f"test_lfg_apply_{self.hash_suffix}".lower()
+        self.addCleanup(Secret.objects.filter(name=self.secret_name).delete)
+        self.folder = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.folder, ignore_errors=True)
+        self.command = Command(stdout=StringIO(), stderr=StringIO())
+
+    def write(self, filename: str, content: str) -> str:
+        filespec = os.path.join(self.folder, filename)
+        with open(filespec, "w", encoding="utf-8") as f:
+            f.write(content)
+        return filespec
+
+    def test_applies_a_file(self):
+        filespec = self.write("s.yaml", manifest("Secret", self.secret_name, "  config:\n    value: x\n"))
+        self.command.verbose = True
+        self.assertIsNone(self.command.apply(filespec, self.user_profile))
+        self.assertTrue(Secret.objects.filter(name=self.secret_name, user_profile=self.user_profile).exists())
+        self.assertIn(f"Applied {filespec}.", self.command.stdout.getvalue())
+
+    def test_fills_in_a_template(self):
+        filespec = self.write(
+            "s.yaml.tpl",
+            manifest("Secret", self.secret_name, "  config:\n    value: ${environment_platform_domain}\n"),
+        )
+        with patch(f"{MODULE}.call_command") as call:
+            self.assertIsNone(self.command.apply(filespec, self.user_profile))
+        self.assertIn(manifest_template_values()["environment_platform_domain"], call.call_args.kwargs["manifest"])
+        self.assertNotIn("filespec", call.call_args.kwargs)
+
+    def test_missing_reference_fails_or_is_skipped(self):
+        """Test that a manifest that names a resource that doesn't exist fails, or with --skip_missing_references is skipped."""
+        filespec = self.write("m.yaml", manifest("MCPClient", self.secret_name))
+        missing = SAMBrokerErrorNotFound(message="Secret nope not found.", thing="MCPClient")
+        with patch(f"{MODULE}.call_command", side_effect=missing):
+            self.assertRegex(self.command.apply(filespec, self.user_profile), "^m.yaml: SAMBrokerErrorNotFound: ")
+            self.assertEqual(self.command.skipped, set())
+            self.command.skip_missing_references = True
+            self.assertIsNone(self.command.apply(filespec, self.user_profile))
+        self.assertEqual(self.command.skipped, {filespec})
+        self.assertIn(
+            "Skipped m.yaml: it names a resource that this platform doesn't have. Secret nope not found.",
+            self.command.stdout.getvalue(),
+        )
+
+    def test_skipped_manifests_are_counted(self):
+        """Test that the command reports a skipped manifest, neither as applied nor as failed."""
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        os.makedirs(os.path.join(root, "secrets"))
+        with open(os.path.join(root, "secrets", "s.yaml"), "w", encoding="utf-8") as f:
+            f.write(manifest("Secret", self.secret_name))
+
+        def fake_apply(command, filespec, user_profile, manifest=None):
+            command.skipped.add(filespec)
+
+        out = StringIO()
+        with (
+            patch.object(Command, "clone_repo", side_effect=lambda p: shutil.copytree(root, p, dirs_exist_ok=True)),
+            patch.object(Command, "apply", autospec=True, side_effect=fake_apply),
+        ):
+            call_command(
+                "load_from_github", url=URL, username=self.admin_user.username, skip_missing_references=True, stdout=out
+            )
+        self.assertNotIn("Applied Secret", out.getvalue())
+        self.assertIn("Applied the 0 manifests of", out.getvalue())
+        self.assertIn("and skipped 1 that name a resource that doesn't exist.", out.getvalue())
+
+    def test_failure_is_returned(self):
+        filespec = self.write("bad.yaml", manifest("Secret", self.secret_name))
+        with patch(f"{MODULE}.call_command", side_effect=SystemExit(1)):
+            self.assertEqual(self.command.apply(filespec, self.user_profile), "bad.yaml: SystemExit: 1")
+
+
+class TestLoadFromGithubLLMClients(TestAccountMixin):
+    """Test the LLMClient helpers: keep_deployed(), missing_extensions() and deploy_llmclient().
+
+    The deploy tasks are patched.
+    """
+
+    RECEIVERS = "smarter.apps.llmclient.receivers"
+
+    def setUp(self):
+        super().setUp()
+        self.name = f"test_lfg_llmclient_{self.hash_suffix}".lower()
+        for target in ("deploy_default_api", "undeploy_default_api", "delete_default_api"):
+            patcher = patch(f"{self.RECEIVERS}.{target}")
+            setattr(self, target, patcher.start())
+            self.addCleanup(patcher.stop)
+        patcher = patch(f"{MODULE}.deploy_default_api")
+        self.redeploy_default_api = patcher.start()
+        self.addCleanup(patcher.stop)
+        # deleted while delete_default_api is patched, so that no task is queued.
+        self.addCleanup(lambda: LLMClient.objects.filter(name__startswith="test_lfg_llmclient_").delete())
+        self.command = Command(stdout=StringIO(), stderr=StringIO())
+
+    def llmclient(self, **fields) -> LLMClient:
+        return LLMClient.objects.create(name=self.name, user_profile=self.user_profile, **fields)
+
+    def test_keep_deployed_copies_the_manifest(self):
+        """Test that keep_deployed sets deployed on a copy, from the LLMClient that exists."""
+        original = {"kind": "LLMClient", "metadata": {"name": self.name}}
+        self.assertFalse(Command.keep_deployed(original, self.user_profile)["spec"]["config"]["prompt"]["deployed"])
+        self.assertNotIn("spec", original)
+        self.llmclient(deployed=True)
+        self.assertTrue(Command.keep_deployed(original, self.user_profile)["spec"]["config"]["prompt"]["deployed"])
+
+    def test_missing_extensions(self):
+        missing = f"no-such-extension-{self.hash_suffix}"
+        self.assertEqual(Command.missing_extensions([missing]), [missing])
+        self.assertEqual(Command.missing_extensions([]), [])
+
+    def test_deploys_an_llmclient_that_is_not_deployed(self):
+        llmclient = self.llmclient()
+        self.assertTrue(self.command.deploy_llmclient(self.name, self.user_profile))
+        llmclient.refresh_from_db()
+        self.assertTrue(llmclient.deployed)
+        self.deploy_default_api.delay.assert_called_once()
+        self.assertIn(f"Deploying LLMClient {self.name}", self.command.stdout.getvalue())
+
+    def test_deployed_llmclient_is_left_as_it_is(self):
+        """Test that a deployed LLMClient whose domain is verified queues neither an undeploy nor a deploy."""
+        self.llmclient(deployed=True, dns_verification_status=LLMClient.DnsVerificationStatusChoices.VERIFIED)
+        self.deploy_default_api.reset_mock()
+        self.assertTrue(self.command.deploy_llmclient(self.name, self.user_profile))
+        self.deploy_default_api.delay.assert_not_called()
+        self.undeploy_default_api.delay.assert_not_called()
+        self.redeploy_default_api.delay.assert_not_called()
+        self.assertIn(f"LLMClient {self.name} is deployed.", self.command.stdout.getvalue())
+
+    def test_deployed_llmclient_with_unverified_domain_is_redeployed(self):
+        """Test that a deployed LLMClient whose domain is not verified, or failed to verify, is deployed again."""
+        llmclient = self.llmclient(deployed=True)
+        for status in (*Command.UNVERIFIED_DNS_STATUSES, LLMClient.DnsVerificationStatusChoices.VERIFYING):
+            with self.subTest(status=status):
+                self.redeploy_default_api.reset_mock()
+                LLMClient.objects.filter(id=llmclient.id).update(dns_verification_status=status)
+                self.assertTrue(self.command.deploy_llmclient(self.name, self.user_profile))
+                if status == LLMClient.DnsVerificationStatusChoices.VERIFYING:
+                    # a domain that is being verified is left to the task that is verifying it.
+                    self.redeploy_default_api.delay.assert_not_called()
+                else:
+                    self.redeploy_default_api.delay.assert_called_once_with(llmclient_id=llmclient.id)
+
+    def test_missing_llmclient_fails(self):
+        self.assertFalse(self.command.deploy_llmclient(f"{self.name}_none", self.user_profile))
+        self.assertIn("does not exist", self.command.stderr.getvalue())
+
+    def test_deploy_failure_fails(self):
+        self.llmclient()
+        with patch.object(LLMClient, "save", side_effect=RuntimeError("boom")):
+            self.assertFalse(self.command.deploy_llmclient(self.name, self.user_profile))
+        self.assertIn("Failed to deploy LLMClient", self.command.stderr.getvalue())

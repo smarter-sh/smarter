@@ -1,0 +1,40 @@
+---
+# An example of the url model source: an init container downloads one file to the model
+# volume, and the engine loads it from there. Any http(s) URL works, e.g. an internal artifact store.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: llama_3_2_1b_instruct_gguf_url
+  description: Meta Llama 3.2 1B Instruct, 4-bit GGUF, downloaded from a URL and served by llama.cpp on CPU.
+  version: 1.0.0
+  tags:
+  - llama
+  - meta
+  - llama-cpp
+  - gguf
+  - cpu
+  - url
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF
+spec:
+  model:
+    source: url
+    repository: https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf
+    servedName: llama-3.2-1b-instruct
+    license: llama3.2
+    architecture: llama
+    parameterCount: 1235814400
+    contextWindow: 131072
+    quantization: gguf
+  engine:
+    name: llama_cpp
+    contextLength: 8192
+  compute: cpu_small
+  resources:
+    gpuCount: 0
+    cpu: '3'
+    memory: 4Gi
+    shmSize: 1Gi
+  storage:
+    size: 5Gi

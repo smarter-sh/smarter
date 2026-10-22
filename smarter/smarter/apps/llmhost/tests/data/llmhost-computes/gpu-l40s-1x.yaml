@@ -1,0 +1,29 @@
+---
+# One NVIDIA L40S (48 GB), for models up to about 20B, or 8B models with long contexts.
+# The price is the AWS us-east-1 on-demand price of one node.
+apiVersion: smarter.sh/v1
+kind: LLMHostCompute
+metadata:
+  name: gpu_l40s_1x
+  description: One NVIDIA L40S with 48 GB, 8 vCPUs and 64 GiB.
+  version: 1.0.0
+  tags:
+  - gpu
+  - l40s
+  annotations:
+  - smarter.sh/llmhostcompute/builtin: 'true'
+spec:
+  node:
+    instanceType: g6e.2xlarge
+    cpu: 8
+    memoryGb: 64
+    gpu:
+      type: L40S
+      count: 1
+      memoryGb: 48
+    diskSizeGb: 150
+  nodeGroup:
+    maxNodes: 2
+  cost:
+    perHour: 2.24208
+    currency: USD

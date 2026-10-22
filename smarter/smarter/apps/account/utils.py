@@ -673,11 +673,11 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     .. code-block:: python
 
         from smarter.apps.account.models import UserProfile
-        from smarter.apps.llmtool.utils import valid_plugin_owners_for_user
+        from smarter.apps.account.utils import valid_resource_owners_for_user
 
         user_profile = UserProfile.objects.get(user__username="exampleuser")
-        owners = valid_plugin_owners_for_user(user_profile)
-        print("Valid plugin owners:", [owner.user.username for owner in owners])
+        owners = valid_resource_owners_for_user(user_profile)
+        print("Valid resource owners:", [owner.user.username for owner in owners])
     """
     logger.debug("%s.valid_resource_owners_for_user() called with user_profile: %s", HERE, user_profile)
 
@@ -691,76 +691,7 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     return [user_profile, account_admin, smarter_cached_objects.smarter_admin_user_profile]
 
 
-BUILTIN_BUDGETS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "example-manifests", "budgets")
-"""The Budget example manifests that :func:`add_example_budgets` creates."""
-
-
-BUILTIN_BUDGET_ANNOTATION = "smarter.sh/budget/builtin"
-
-
-def example_budget_filespecs() -> list[str]:
-    """
-    Return the built-in Budget manifests.
-
-    The Stackademy project's Budget is not among them: ``manage.py load_from_github`` applies it,
-    attached to its resources, from https://github.com/smarter-sh/stackademy.
-
-    :returns: The manifests' paths, in ``data/example-manifests/budgets/``.
-    :rtype: list[str]
-    """
-    return sorted(glob.glob(os.path.join(BUILTIN_BUDGETS_PATH, "*.yaml")))
-
-
-def add_example_budgets(verbose: bool = False) -> list[Budget]:
-    """
-    Create a Budget for each built-in Budget manifest, from :func:`example_budget_filespecs`.
-
-    ``manage.py initialize_platform`` calls it, so that the platform starts with a catalogue of
-    budgets that superusers can attach to resources.
-
-    - A built-in budget is created detached: the manifest's ``spec.resources`` is ignored, so it
-      enforces nothing until a superuser attaches it, with ``Budget.attach()``, the admin console,
-      or a Budget manifest that lists its resources.
-    - A budget that already exists, by name, is left as it is, so that running it again does not
-      undo a superuser's changes to it, nor its attachments.
-
-    :param verbose: Log each budget that is created or skipped.
-    :returns: The budgets that were created.
-    """
-    # pylint: disable=import-outside-toplevel
-    from smarter.apps.account.manifest.brokers.budget import CONFIG_FIELDS
-    from smarter.apps.account.manifest.models.budget.model import SAMBudget
-    from smarter.common.utils import get_readonly_yaml_file
-
-    retval = []
-    for filespec in example_budget_filespecs():
-        manifest = SAMBudget(**get_readonly_yaml_file(filespec))
-        name = manifest.metadata.name
-        if Budget.objects.filter(name=name).exists():
-            if verbose:
-                logger.info("%s.add_example_budgets() Budget %s already exists. Skipped.", HERE, name)
-            continue
-        config = manifest.spec.config
-        fields = {orm_field: getattr(config, manifest_field) for manifest_field, orm_field in CONFIG_FIELDS.items()}
-        fields["message"] = fields["message"] or ""
-        annotations = [*(manifest.metadata.annotations or []), {BUILTIN_BUDGET_ANNOTATION: "true"}]
-        budget = Budget.objects.create(
-            name=name,
-            description=manifest.metadata.description,
-            version=manifest.metadata.version,
-            annotations=annotations,
-            **fields,
-        )
-        budget.tags.set(manifest.metadata.tags or [])
-        retval.append(budget)
-        if verbose:
-            logger.info("%s.add_example_budgets() Created Budget %s from %s.", HERE, name, os.path.basename(filespec))
-    return retval
-
-
 __all__ = [
-    "add_example_budgets",
-    "example_budget_filespecs",
     "get_cached_default_account",
     "get_cached_account_for_user",
     "get_cached_user_for_user_id",

@@ -13,7 +13,6 @@ import os
 
 from pydantic import ValidationError
 
-from smarter.apps.guardrail.const import DATA_PATH
 from smarter.apps.guardrail.manifest.enum import (
     SAMGuardrailAction,
     SAMGuardrailStrategy,
@@ -26,9 +25,10 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from .base_classes import get_test_data
+from .base_classes import DATA_PATH, get_test_data
 
-BUILTINS_PATH = os.path.join(DATA_PATH, "guardrails")
+# copies of a few of the example manifests in https://github.com/smarter-sh/example-manifests
+EXAMPLE_MANIFESTS_PATH = os.path.join(DATA_PATH, "example-manifests")
 INVALID = (SAMValidationError, ValidationError, ValueError)
 
 
@@ -45,10 +45,10 @@ class TestGuardrailManifest(SmarterTestBase):
         with self.assertRaises(INVALID):
             self.config(**fields)
 
-    def test_builtin_manifests(self):
-        """Test that every built-in guardrail manifest is valid, and that their names are unique."""
-        filespecs = sorted(glob.glob(os.path.join(BUILTINS_PATH, "*.yaml")))
-        self.assertGreaterEqual(len(filespecs), 18)
+    def test_example_manifests(self):
+        """Test that the copies of the example guardrail manifests are valid, and that their names are unique."""
+        filespecs = sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "*.yaml")))
+        self.assertEqual(len(filespecs), 6)
         names = []
         strategies = set()
         actions = set()
@@ -59,7 +59,7 @@ class TestGuardrailManifest(SmarterTestBase):
                 strategies.add(manifest.spec.config.strategy)
                 actions.add(manifest.spec.config.action)
         self.assertEqual(len(names), len(set(names)))
-        # the built-ins demonstrate every strategy, and every action but log
+        # the examples demonstrate every strategy, and every action but log
         self.assertEqual(strategies, set(SAMGuardrailStrategy.all()))
         self.assertEqual(actions, set(SAMGuardrailAction.all()) - {"log"})
 

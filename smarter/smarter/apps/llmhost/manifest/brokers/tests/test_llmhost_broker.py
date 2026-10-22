@@ -23,7 +23,10 @@ from smarter.apps.llmhost.services.nodegroups import (
     get_nodegroups,
 )
 from smarter.apps.llmhost.services.renderer import resource_name
-from smarter.apps.llmhost.tests.base_classes import ensure_builtin_computes
+from smarter.apps.llmhost.tests.base_classes import (
+    delete_builtin_fixtures,
+    ensure_builtin_computes,
+)
 from smarter.apps.secret.models import Secret
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
@@ -54,7 +57,7 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
         configure_nodegroups(lambda: cls.nodegroups)
         # a safety net: tests must never create real node groups.
         assert isinstance(get_nodegroups(), InMemoryNodeGroupBackend)
-        ensure_builtin_computes()
+        cls.builtin_computes_created = ensure_builtin_computes()
         cls._dns_patcher = patch("smarter.apps.llmhost.tasks.dns_enabled", return_value=False)
         cls._dns_patcher.start()
 
@@ -66,6 +69,7 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
         LLMHostEvent.objects.filter(llmhost_name__startswith="test_broker").delete()
         LLMHost.objects.filter(user_profile__account=cls.account).delete()
         Secret.objects.filter(user_profile__account=cls.account, name__startswith="llmhost_").delete()
+        delete_builtin_fixtures([], cls.builtin_computes_created)
         super().tearDownClass()
 
     def setUp(self):

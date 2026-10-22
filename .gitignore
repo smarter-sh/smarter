@@ -18,6 +18,8 @@ helm/charts/smarter/Chart.lock
 # Sphinx documentation build artifacts.
 # -------------------------------------
 docs/build/
+# Shallow clone of smarter-sh/example-manifests, made by docs/source/conf.py.
+docs/source/_example-manifests/
 
 # Keen Bootstrap theme, raw source files.
 # These are VERY LARGE and absolutely do not

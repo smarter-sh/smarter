@@ -1,13 +1,21 @@
 """
 Apply every Smarter manifest in a GitHub repository, in the order of their dependencies.
 
-The Stackademy project, https://github.com/smarter-sh/stackademy, is the reference: the
-Secrets, Connections, plugins, LLMClients and Budget of a fictional code academy, which
-``manage.py initialize_platform`` and ``manage.py initialize_account`` load with this command. A
-repository may also hold scripts, in its ``scripts/`` folder, which run before or after its
+``manage.py initialize_platform`` and ``manage.py initialize_account`` load two repositories with
+this command:
+
+- `smarter-sh/example-manifests <https://github.com/smarter-sh/example-manifests>`__, the
+  community-supported collection of example manifests, one folder per kind: the platform's example
+  Guardrails, MCPClients, LLMHosts, Proxies, Vectorstores, plugins, LLMClients, Budgets and more.
+- `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__, the Secrets, Connections,
+  plugins, LLMClients and Budget of a fictional code academy.
+
+A repository may also hold scripts, in its ``scripts/`` folder, which run before or after its
 manifests are applied: see :mod:`smarter.apps.account.repository_scripts`.
 """
 
+import copy
+import io
 import os
 import shutil
 import subprocess
@@ -16,9 +24,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 import yaml
+from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.db import transaction
 
-from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.models import Account, Budget, User, UserProfile
 from smarter.apps.account.repository_scripts import (
     SCRIPT_STAGE_POST,
     SCRIPT_STAGE_PRE,
@@ -33,16 +43,14 @@ from smarter.apps.account.repository_scripts import (
 )
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.llmclient.management.commands.add_example_llmclients import (
-    Command as AddExampleLLMClientsCommand,
-)
-from smarter.apps.llmclient.management.commands.deploy_example_llmclients import (
-    Command as DeployExampleLLMClientsCommand,
-)
+from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.tasks import deploy_default_api
+from smarter.apps.llmtool.models import Extension
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.django.management.examples import SmarterExamplesCommand
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
 from smarter.lib.manifest.template import TEMPLATE_EXTENSION, render_manifest_template
 from smarter.lib.typing import SmarterDictType
 
@@ -78,7 +86,7 @@ class RepositoryManifest:
 
 
 # pylint: disable=E1101
-class Command(SmarterExamplesCommand):
+class Command(SmarterCommand):
     """
     Django manage.py load_from_github command.
 
@@ -91,19 +99,29 @@ class Command(SmarterExamplesCommand):
     - A manifest is a ``*.yaml``, ``*.yml`` or ``*.yaml.tpl`` file whose ``apiVersion`` is a Smarter
       api version. Other files, and hidden files and folders, e.g. ``.github/`` and
       ``.pre-commit-config.yaml``, are ignored.
-    - A manifest template, ``*.yaml.tpl``, is filled in with this platform's scheme and domain, as
-      the ``add_example_<kinds>`` commands do, e.g. the Stackademy ApiConnection, whose ``baseUrl``
-      is the platform that applies it.
+    - A manifest template, ``*.yaml.tpl``, is filled in with this platform's scheme and domain, e.g.
+      the Stackademy ApiConnection, whose ``baseUrl`` is the platform that applies it.
     - An LLMClient that exists keeps its ``deployed`` value, and an LLMClient that needs an extension
-      that is not installed is skipped, as ``manage.py add_example_llmclients`` does.
-    - ``--deploy`` deploys each LLMClient that is not deployed, as ``manage.py deploy_example_llmclients``
-      does.
+      that is not installed is skipped.
+    - A Budget whose manifest lists no ``spec.resources`` is created detached, once. If it exists, it
+      is left as it is: applying the manifest again would detach it from the resources that a
+      superuser has since attached it to, and undo their changes.
+    - ``--deploy`` deploys each LLMClient that is not deployed, and deploys again one whose domain was
+      never verified, or failed to verify.
     - The repository's top-level ``scripts/`` folder holds no manifests. ``--run_scripts`` runs the
       scripts that its ``scripts/scripts.yaml`` lists: the ``pre`` ones before any manifest is
       applied, and the ``post`` ones after every manifest is applied and the LLMClients deployed. Only
       ``manage.py initialize_platform`` passes it. See :mod:`smarter.apps.account.repository_scripts`.
-    - ``--exclude_kind`` skips the manifests of a kind, e.g. a Budget, which only a superuser may
-      apply, and which applies to the platform rather than to one account.
+    - ``--include_kind`` applies only the manifests of the kinds that it names, e.g. the plugins and
+      LLMClients of which each account gets its own copy. ``--exclude_kind`` skips the manifests of a
+      kind, e.g. a Budget, which only a superuser may apply, and which applies to the platform rather
+      than to one account.
+    - ``--skip_missing_references`` skips, with a warning, a manifest that names a resource that this
+      platform doesn't have, e.g. an MCPClient whose credentials Secret no operator has created: the
+      broker raises :class:`~smarter.lib.manifest.broker.SAMBrokerErrorNotFound`. It is applied by a
+      later load, once the resource exists. ``manage.py initialize_platform`` and ``manage.py
+      initialize_account`` pass it for the example manifests, some of which need a Secret of a
+      third-party service, and not for Stackademy, which brings its own Secrets.
     - One manifest or script that fails doesn't stop the rest. The command fails at the end, with the
       list of what failed, and also when the repository holds no manifest at all, or its
       ``scripts/scripts.yaml`` is not valid.
@@ -114,12 +132,25 @@ class Command(SmarterExamplesCommand):
 
     help = (
         "Apply every Smarter manifest in a public GitHub repository, in the order of their dependencies, "
-        "e.g. https://github.com/smarter-sh/stackademy."
+        "e.g. https://github.com/smarter-sh/example-manifests."
     )
-    family = "manifest"
+
+    UNVERIFIED_DNS_STATUSES = (
+        LLMClient.DnsVerificationStatusChoices.NOT_VERIFIED,
+        LLMClient.DnsVerificationStatusChoices.FAILED,
+    )
+    """The domain statuses of a deployed LLMClient that no deploy task is going to change."""
 
     _url: Optional[str] = None
     user_profile: Optional[UserProfile] = None
+    verbose: bool = False
+    skip_missing_references: bool = False
+    skipped: set[str]
+    """The manifests, by file, that :meth:`apply` skipped, because they name a resource that doesn't exist."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.skipped = set()
 
     @property
     def url(self) -> str:
@@ -156,11 +187,26 @@ class Command(SmarterExamplesCommand):
             ),
         )
         parser.add_argument(
+            "--include_kind",
+            action="append",
+            default=[],
+            choices=sorted(SAMKinds.all()),
+            help="Apply only the manifests of this kind. May be given more than once.",
+        )
+        parser.add_argument(
             "--exclude_kind",
             action="append",
             default=[],
             choices=sorted(SAMKinds.all()),
             help="Skip the manifests of this kind. May be given more than once.",
+        )
+        parser.add_argument(
+            "--skip_missing_references",
+            action="store_true",
+            help=(
+                "Skip, with a warning, a manifest that names a resource that this platform doesn't have, e.g. a "
+                "Secret that no one has created, rather than fail."
+            ),
         )
         parser.add_argument("--verbose", action="store_true", help="Print the output of each apply.")
 
@@ -247,6 +293,170 @@ class Command(SmarterExamplesCommand):
                 )
         return sorted(retval, key=lambda m: (m.rank, m.path))
 
+    def select_manifests(
+        self, manifests: list[RepositoryManifest], included: list[str], excluded: list[str]
+    ) -> list[RepositoryManifest]:
+        """
+        Return the manifests of the kinds to apply, and say which were skipped.
+
+        :param manifests: The manifests, from :meth:`find_manifests`.
+        :param included: Apply only these kinds, or every kind if it is empty.
+        :param excluded: Skip these kinds.
+        :returns: The manifests to apply, in the same order.
+        :rtype: list[RepositoryManifest]
+        """
+        retval: list[RepositoryManifest] = []
+        for item in manifests:
+            if included and item.kind not in included:
+                if self.verbose:
+                    self.stdout.write(f"Skipped {item.path}: {item.kind} is not included.")
+                continue
+            if item.kind in excluded:
+                self.stdout.write(f"Skipped {item.path}: {item.kind} is excluded.")
+                continue
+            retval.append(item)
+        return retval
+
+    def apply(self, filespec: str, user_profile: UserProfile, manifest: Optional[str] = None) -> Optional[str]:
+        """
+        Apply one manifest, and report, rather than raise, a failure.
+
+        The manifest is applied in a transaction, so that one that fails leaves nothing behind.
+
+        :param filespec: The manifest's path.
+        :param user_profile: The owner of the resource.
+        :param manifest: The manifest to apply instead of the file's, e.g. a template's, filled in.
+        A manifest that names a resource that doesn't exist is skipped, rather than failed, with
+        ``--skip_missing_references``: its file is added to :attr:`skipped`.
+
+        :returns: The error, or ``None`` if the manifest was applied or skipped.
+        :rtype: Optional[str]
+        """
+        if manifest is None and filespec.endswith(TEMPLATE_EXTENSION):
+            with open(filespec, encoding="utf-8") as f:
+                manifest = render_manifest_template(f.read())
+        output = io.StringIO()
+        options = {"manifest": manifest} if manifest else {"filespec": filespec}
+        try:
+            with transaction.atomic():
+                call_command(
+                    "apply_manifest", username=user_profile.user.username, stdout=output, stderr=output, **options
+                )
+        except SAMBrokerErrorNotFound as exc:
+            if not self.skip_missing_references:
+                logger.error("%s.apply() failed to apply %s: %s", logger_prefix, filespec, exc)
+                return f"{os.path.basename(filespec)}: {type(exc).__name__}: {exc}"
+            logger.info("%s.apply() skipped %s: %s", logger_prefix, filespec, exc)
+            self.skipped.add(filespec)
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Skipped {os.path.basename(filespec)}: it names a resource that this platform doesn't have. "
+                    f"{exc.message}"
+                )
+            )
+            return None
+        # SystemExit: SmarterCommand.handle_completed_failure() exits when it is given an exception.
+        # pylint: disable=broad-except
+        except (Exception, SystemExit) as exc:
+            logger.error("%s.apply() failed to apply %s: %s", logger_prefix, filespec, exc)
+            return f"{os.path.basename(filespec)}: {type(exc).__name__}: {exc}"
+        if self.verbose:
+            self.stdout.write(f"Applied {filespec}. {output.getvalue()}")
+        return None
+
+    @staticmethod
+    def keep_deployed(manifest: SmarterDictType, user_profile: UserProfile) -> SmarterDictType:
+        """
+        Return a copy of an LLMClient manifest whose ``deployed`` is that of the LLMClient that exists, if any.
+
+        A manifest is not deployed, so applying it as it is would undeploy an LLMClient that is
+        deployed, whose undeploy task destroys its A record, only for the next deploy to create it
+        again. Resolvers that query the domain in between cache the NXDOMAIN for minutes.
+
+        :param manifest: The LLMClient manifest.
+        :param user_profile: The owner of the LLMClient.
+        :returns: The manifest, with ``spec.config.prompt.deployed`` set.
+        :rtype: SmarterDictType
+        """
+        manifest = copy.deepcopy(manifest)
+        name = manifest.get("metadata", {}).get("name")
+        deployed = LLMClient.objects.filter(user_profile=user_profile, name=name, deployed=True).exists()
+        manifest.setdefault("spec", {}).setdefault("config", {}).setdefault("prompt", {})["deployed"] = deployed
+        return manifest
+
+    @staticmethod
+    def missing_extensions(slugs: list[str]) -> list[str]:
+        """
+        Return the slugs, of those that an LLMClient manifest lists, of the extensions that are not installed.
+
+        ``manage.py install_official_extensions`` installs them, from a registry that may not be
+        reachable.
+
+        :param slugs: The extensions that the manifest lists.
+        :returns: Those that are not installed.
+        :rtype: list[str]
+        """
+        installed = set(
+            Extension.objects.filter(slug__in=slugs, installed_version__isnull=False).values_list("slug", flat=True)
+        )
+        return [slug for slug in slugs if slug not in installed]
+
+    def is_existing_detached_budget(self, item: RepositoryManifest) -> bool:
+        """
+        Whether a manifest is of a Budget that exists, and lists no resources.
+
+        Such a Budget is left as it is: applying its manifest would detach it from the resources that a
+        superuser has attached it to since it was created.
+
+        :param item: The manifest.
+        :returns: True if it is to be skipped.
+        :rtype: bool
+        """
+        if item.kind != SAMKinds.BUDGET.value or (item.manifest.get("spec") or {}).get("resources"):
+            return False
+        return Budget.objects.filter(name=item.name).exists()
+
+    def deploy_llmclient(self, name: str, user_profile: UserProfile) -> bool:
+        """
+        Deploy the LLMClient of a user, if it is not deployed.
+
+        An LLMClient that is deployed is left as it is, unless its domain was never verified, or failed
+        to verify, e.g. because the DNS service wasn't ready. It is then deployed again, with
+        ``deploy_default_api``: otherwise nothing ever retries it, and it stays unreachable until
+        someone undeploys and redeploys it by hand.
+
+        :param name: The LLMClient's name.
+        :param user_profile: Its owner.
+        :returns: False if the LLMClient does not exist, or failed to deploy.
+        :rtype: bool
+        """
+        try:
+            llmclient = LLMClient.objects.get(user_profile=user_profile, name=name)
+        except LLMClient.DoesNotExist:
+            self.stderr.write(self.style.ERROR(f"LLMClient {name} does not exist."))
+            return False
+        try:
+            if not llmclient.deployed:
+                # LLMClient.save() queues the deploy task of an LLMClient that was not deployed.
+                llmclient.deployed = True
+                llmclient.save()
+                self.stdout.write(self.style.SUCCESS(f"Deploying LLMClient {name}."))
+            elif llmclient.dns_verification_status in self.UNVERIFIED_DNS_STATUSES:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"LLMClient {name} is deployed, but its domain is {llmclient.dns_verification_status}. "
+                        "Deploying it again."
+                    )
+                )
+                deploy_default_api.delay(llmclient_id=llmclient.id)
+            else:
+                self.stdout.write(f"LLMClient {name} is deployed.")
+            return True
+        # pylint: disable=W0718
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f"Failed to deploy LLMClient {name}: {e}"))
+            return False
+
     def apply_manifests(
         self, manifests: list[RepositoryManifest], user_profile: UserProfile, deploy: bool = False
     ) -> list[str]:
@@ -260,16 +470,15 @@ class Command(SmarterExamplesCommand):
         :rtype: list[str]
         """
         failed: list[str] = []
-        deployer: Optional[DeployExampleLLMClientsCommand] = None
-        if deploy:
-            deployer = DeployExampleLLMClientsCommand(stdout=self.stdout, stderr=self.stderr)
-            deployer.user_profile = user_profile
         for item in manifests:
             manifest = item.manifest
-            if item.kind == SAMKinds.LLM_CLIENT.value:
-                missing = AddExampleLLMClientsCommand.missing_extensions(
-                    manifest.get("spec", {}).get("extensions") or []
+            if self.is_existing_detached_budget(item):
+                self.stdout.write(
+                    f"Skipped {item.path}: Budget {item.name} exists, and its manifest attaches it to nothing."
                 )
+                continue
+            if item.kind == SAMKinds.LLM_CLIENT.value:
+                missing = self.missing_extensions(manifest.get("spec", {}).get("extensions") or [])
                 if missing:
                     self.stdout.write(
                         self.style.WARNING(
@@ -277,13 +486,15 @@ class Command(SmarterExamplesCommand):
                         )
                     )
                     continue
-                manifest = AddExampleLLMClientsCommand.keep_deployed(manifest, user_profile)
+                manifest = self.keep_deployed(manifest, user_profile)
             error = self.apply(item.filespec, user_profile, manifest=json.dumps(manifest))
             if error:
                 failed.append(f"{item.path}: {error}")
                 continue
+            if item.filespec in self.skipped:
+                continue
             self.stdout.write(f"Applied {item.kind} {item.name}, from {item.path}.")
-            if deployer and item.kind == SAMKinds.LLM_CLIENT.value and not deployer.deploy_manifest(manifest):
+            if deploy and item.kind == SAMKinds.LLM_CLIENT.value and not self.deploy_llmclient(item.name, user_profile):
                 failed.append(f"{item.path}: LLMClient {item.name} failed to deploy.")
         return failed
 
@@ -318,6 +529,8 @@ class Command(SmarterExamplesCommand):
         """Clone the repository, apply its manifests, and delete the clone."""
         self.handle_begin()
         self.verbose = bool(options.get("verbose"))
+        self.skip_missing_references = bool(options.get("skip_missing_references"))
+        included: list[str] = options.get("include_kind") or []
         excluded: list[str] = options.get("exclude_kind") or []
         try:
             self.url = options.get("url")  # type: ignore[assignment]
@@ -340,10 +553,7 @@ class Command(SmarterExamplesCommand):
                     f"Skipped the scripts of {SCRIPTS_FOLDER}/{SCRIPTS_CONFIG}: --run_scripts is not set."
                 )
             failed_scripts = self.run_scripts(local_path, scripts_config, SCRIPT_STAGE_PRE, self.user_profile)
-            manifests = self.find_manifests(local_path)
-            for item in [m for m in manifests if m.kind in excluded]:
-                self.stdout.write(f"Skipped {item.path}: {item.kind} is excluded.")
-            manifests = [m for m in manifests if m.kind not in excluded]
+            manifests = self.select_manifests(self.find_manifests(local_path), included, excluded)
             failed = self.apply_manifests(manifests, self.user_profile, deploy=bool(options.get("deploy")))
             failed_scripts += self.run_scripts(local_path, scripts_config, SCRIPT_STAGE_POST, self.user_profile)
         # pylint: disable=broad-except
@@ -354,7 +564,9 @@ class Command(SmarterExamplesCommand):
             shutil.rmtree(local_path, ignore_errors=True)
 
         if not manifests:
-            msg = f"{self.url} holds no Smarter manifest."
+            msg = f"{self.url} holds no Smarter manifest" + (
+                f" of the kinds {', '.join(included)}." if included else "."
+            )
             self.handle_completed_failure(msg=msg)
             raise CommandError(msg)
         problems: list[str] = []
@@ -368,5 +580,15 @@ class Command(SmarterExamplesCommand):
             msg = "\n".join(problems)
             self.handle_completed_failure(msg=msg)
             raise CommandError(msg)
-        self.stdout.write(self.style.SUCCESS(f"Applied the {len(manifests)} manifests of {self.url}."))
+        applied = len(manifests) - len(self.skipped)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Applied the {applied} manifests of {self.url}"
+                + (
+                    f", and skipped {len(self.skipped)} that name a resource that doesn't exist."
+                    if self.skipped
+                    else "."
+                )
+            )
+        )
         self.handle_completed_success()

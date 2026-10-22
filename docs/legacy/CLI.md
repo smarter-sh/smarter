@@ -28,7 +28,7 @@ The cli implements a set of verbs for working with Smarter resources
 
 The cli is designed to work with a manifest utf-8 text document, in yaml or json format, inspired by Kubernetes' kubectl, itself modeled on the [OpenAPI Specification v3.x](https://spec.openapis.org/oas/latest.html). The actual implementation of this specification is located [here](../smarter/smarter/apps/api/v0/cli/). The Smarter API can manage [escaped](https://en.wikipedia.org/wiki/Escape_character) representations of characters outside of the utf-8 standard.
 
-[Example manifest](../smarter/smarter/apps/llmtool/data/sample-plugins/example-configuration.yaml)
+[Example manifest](https://github.com/smarter-sh/example-manifests/blob/main/plugins/static/example-configuration.yaml)
 
 ### Kind
 

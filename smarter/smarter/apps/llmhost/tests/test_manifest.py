@@ -7,7 +7,6 @@ from decimal import Decimal
 
 from pydantic import ValidationError
 
-from smarter.apps.llmhost.const import BUILTIN_MANIFESTS_PATH
 from smarter.apps.llmhost.manifest.enum import (
     SAMLLMHostEngine,
     SAMLLMHostModelSource,
@@ -26,7 +25,7 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from .base_classes import get_test_data, merge
+from .base_classes import BUILTIN_LLMHOST_PATH, get_test_data, merge
 
 INVALID = (SAMValidationError, ValidationError, ValueError)
 MINIMAL = {"model": {"repository": "Qwen/Qwen3-8B"}, "engine": {"name": "vllm"}, "resources": {"gpuCount": 1}}
@@ -46,9 +45,14 @@ class TestLLMHostManifest(SmarterTestBase):
             self.spec(**overrides)
 
     def test_builtin_manifests(self):
-        """Test that every built-in manifest is valid, unique, and that together they cover the engines, sources and tasks."""
-        filespecs = sorted(glob.glob(os.path.join(BUILTIN_MANIFESTS_PATH, "*.yaml")))
-        self.assertGreaterEqual(len(filespecs), 20)
+        """
+        Test that the example manifests are valid, unique, and that together they cover the engines, sources and tasks.
+
+        ./data/llmhosts holds a representative copy of those in the llmhosts/ folder of
+        https://github.com/smarter-sh/example-manifests, whose pre-commit validates every one.
+        """
+        filespecs = sorted(glob.glob(os.path.join(BUILTIN_LLMHOST_PATH, "*.yaml")))
+        self.assertGreaterEqual(len(filespecs), 7)
         names, engines, sources, tasks = [], set(), set(), set()
         for filespec in filespecs:
             with self.subTest(filespec=os.path.basename(filespec)):

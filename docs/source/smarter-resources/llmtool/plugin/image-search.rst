@@ -27,14 +27,16 @@ Brave's results:
   allowed domains.
 
 Use them to tailor a plugin to one purpose, such as kid-friendly images from Wikimedia Commons,
-black and white photographs, technical diagrams or SVG images. The sample manifests in
-``smarter/apps/llmtool/data/sample-plugins/image-search-*.yaml`` do just that.
+black and white photographs, technical diagrams or SVG images. The sample manifests in the
+`plugins/image-search/ <https://github.com/smarter-sh/example-manifests/tree/main/plugins/image-search>`__
+folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`
+do just that.
 
 Alternatively, let the LLM decide. With ``llmSearchParams: true``, the LLM may set every
 search parameter in each tool call: ``count`` (up to 20), ``country``, ``search_lang``,
 ``safesearch`` and ``spellcheck``, and ``searchParams`` are only the defaults. Invalid values
 are ignored, in favor of the defaults. The sample ``image_search``
-(``smarter/apps/llmtool/data/sample-plugins/image-search.yaml``) does this, and its selector is
+(``plugins/image-search/image-search.yaml``) does this, and its selector is
 ``always``, so that its tool is offered with every prompt. It is the image search plugin of the
 example LLMClients.
 
