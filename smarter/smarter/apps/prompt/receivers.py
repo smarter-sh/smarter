@@ -123,7 +123,7 @@ def handle_chat_completion_request_sent(
     """Handle prompt completion request sent signal."""
 
     sender_name = get_sender_name(sender)
-    this_prefix = formatted_text(f"{prefix}.chat_request for iteration {iteration}")
+    this_prefix = f"{formatted_text(prefix)}.chat_request() iteration {iteration}"
 
     logger.info(
         "%s by %s for prompt %s",
@@ -157,7 +157,7 @@ def handle_chat_completion_response_received(
     This is the primary
     source data for the web console dashboard server logs.
     """
-    this_prefix = formatted_text(f"{prefix}.chat_response for iteration {iteration}")
+    this_prefix = f"{formatted_text(prefix)}.chat_response() iteration {iteration}"
     sender_name = get_sender_name(sender)
 
     logger.info(
@@ -179,7 +179,9 @@ def handle_chat_completion_response_received(
             response_data = response.model_dump()
         else:
             response_data = response
-        logger.info(
+        # DEBUG: the request and response hold the system prompt and the user's conversation. The
+        # dashboard's server logs stream DEBUG records, e.g. in Smarter Chat's Sandbox mode.
+        logger.debug(
             "%s from %s for prompt %s, \nrequest: %s, \nresponse: %s",
             this_prefix,
             sender_name,
@@ -200,13 +202,14 @@ def handle_chat_completion_plugin_called(
     """Handle prompt completion plugin call signal."""
 
     logger.info(
-        "%s by %s for prompt %s, \nplugin: %s, \ninput_text: %s",
+        "%s by %s for prompt %s, plugin: %s",
         formatted_text(f"{prefix}.chat_plugin_called"),
         get_sender_name(sender),
         prompt,
         plugin,
-        input_text,
     )
+    # DEBUG: the input text is the user's prompt.
+    logger.debug("%s input_text: %s", formatted_text(f"{prefix}.chat_plugin_called"), input_text)
 
 
 @receiver(chat_tool_called, dispatch_uid="chat_tool_called")
@@ -381,7 +384,8 @@ def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
 
     sender_name = sender.__name__
 
-    logger.info(
+    # DEBUG: the tool call's arguments come from the user's conversation.
+    logger.debug(
         "%s from %s: %s",
         formatted_text(f"{prefix}.llm_tool_requested"),
         sender_name,
@@ -394,7 +398,8 @@ def handle_llm_tool_responded(sender, tool_call: SmarterDictType, tool_response:
     """Handle a tool call response signal."""
     sender_name = sender.__name__
 
-    logger.info(
+    # DEBUG: the tool's response is data that the conversation asked for.
+    logger.debug(
         "%s from %s, tool_call: %s, tool_response: %s",
         formatted_text(f"{prefix}.llm_tool_responded"),
         sender_name,

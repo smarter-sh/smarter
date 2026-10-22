@@ -207,7 +207,7 @@ class SAMLLMClientBroker(AbstractBroker):
         )
         if retval:
             self._ready = True
-            broker_ready.send(sender=self.__class__, broker=self)
+            self.send_broker_ready(broker_ready)
         return self._ready
 
     @property
@@ -945,8 +945,7 @@ class SAMLLMClientBroker(AbstractBroker):
                             f"spec.config.prompt.{manifest_key} cannot be set by apply, because it is assigned when "
                             f"the {self.kind} is deployed. Remove it from the manifest, or set it to null."
                         )
-                for key, value in data.items():
-                    setattr(self.llmclient, key, value)
+                changed = bool(self.assign_changed_fields(self.llmclient, data))
                 if self.llmclient.user_profile != self.user_profile:
                     raise SAMLLMClientBrokerError(
                         f"User profile mismatch for {self.kind} {self.manifest.metadata.name}",
@@ -957,7 +956,10 @@ class SAMLLMClientBroker(AbstractBroker):
                 # which save() does not, so that an invalid manifest is a 400 rather than an
                 # invalid row, or a database error.
                 self.llmclient.full_clean(validate_unique=False)
-                self.llmclient.save()
+                # an unchanged llmclient is not saved again: see assign_changed_fields(). Its relations,
+                # below, are applied either way.
+                if changed:
+                    self.llmclient.save()
 
                 # Fix note: occasionally seeing AttributeError: \'list\' object has no attribute \'set\ in the logs,
                 # which is why this is wrapped in a try/except block.
@@ -971,7 +973,7 @@ class SAMLLMClientBroker(AbstractBroker):
                             self.user_profile,
                             tags,
                         )
-                    else:
+                    elif self.tags_changed(self.llmclient, tags):
                         self.llmclient.tags.set(tags)
                 # pylint: disable=broad-except
                 except Exception as e:

@@ -9,6 +9,7 @@ from smarter.common.utils.utils import (
     generate_fernet_encryption_key,
     hash_factory,
     is_async_context,
+    mask_email,
     mask_string,
 )
 from smarter.lib import logging
@@ -18,9 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestUtils(SmarterTestBase):
-    """
-    Test utility functions.
-    """
+    """Test utility functions."""
 
     def test_hash_factory_default_length(self):
         token = hash_factory()
@@ -72,6 +71,16 @@ class TestUtils(SmarterTestBase):
         self.assertGreaterEqual(len(key), 32)
         # Should be urlsafe base64
         base64.urlsafe_b64decode(key.encode())
+
+    def test_mask_email(self):
+        self.assertEqual(mask_email("jane.doe@example.com"), "j****@example.com")
+        self.assertEqual(mask_email("@example.com"), "****@example.com")
+        self.assertEqual(mask_email("jane"), "j****")
+        self.assertEqual(mask_email("jane@example.com", mask_char="#"), "j####@example.com")
+
+    def test_mask_email_empty(self):
+        self.assertEqual(mask_email(""), "")
+        self.assertEqual(mask_email(None), "")
 
     def test_mask_string_basic(self):
         string_length = 12

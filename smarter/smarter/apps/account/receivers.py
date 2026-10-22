@@ -129,13 +129,21 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
       web console chose from the language cookie or the browser's Accept-Language header.
       This is how a console sign-up gets its UserProfile.
     """
-    logger.info("%s User logged in: %s", logging.formatted_text(f"{module_prefix}.user_logged_in()"), user)
+    # SmarterTokenAuthenticationMiddleware logs the user in on every api request that carries a token,
+    # so those logins are logged at DEBUG. A sign-in to the web console is logged at INFO.
+    log = logger.debug if request is not None and request.META.get("HTTP_AUTHORIZATION") else logger.info
+    log("%s User logged in: %s", logging.formatted_text(f"{module_prefix}.user_logged_in()"), user)
     try:
         UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
         account = get_cached_default_account()
         UserProfile.objects.create(name=user.username, user=user, account=account, language=active_language())
-        logger.info("Created UserProfile for user: %s with default account: %s", user, account)
+        logger.info(
+            "%s created a UserProfile for user %s with the default account %s",
+            logging.formatted_text(f"{module_prefix}.user_logged_in()"),
+            user,
+            account,
+        )
     except UserProfile.MultipleObjectsReturned:
         # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
         pass
@@ -154,14 +162,17 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     # pylint: disable=C0415
     from smarter.apps.dashboard.context_processors import cache_invalidations
 
-    logger.info(
+    update_fields = kwargs.get("update_fields")
+    last_login_only = bool(update_fields) and set(update_fields) == {"last_login"}
+    # a save of last_login alone happens on every login, including every api request with a token.
+    log = logger.debug if last_login_only else logger.info
+    log(
         "%s User post_save: %s, created: %s",
         logging.formatted_text(f"{module_prefix}.user_post_save()"),
         instance,
         created,
     )
-    update_fields = kwargs.get("update_fields")
-    if update_fields and set(update_fields) == {"last_login"}:
+    if last_login_only:
         return
     get_cached_user_for_user_id(invalidate=True, user_id=instance.id)  # type: ignore[attr-defined]
     get_cached_user_for_username(invalidate=True, username=instance.username)
