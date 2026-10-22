@@ -46,6 +46,18 @@ holds only what applies to nearly every task.
    foreground call, even with a long timeout, blocks you until someone stops
    the containers, and looks to the user like you are stuck. Load
    `smarter-docker-environment` before your first container command.
+10. **Platform initialization lives in `manage.py initialize_platform`, and
+    nowhere else.** That covers example resources, Stackademy, seed data, test
+    databases and their users, and SQL scripts. Never add an initialization
+    step to the Helm chart (`job-init.yaml`, a ConfigMap, a values flag), the Makefile
+    (`docker-init`), docker-compose, a CI workflow or a deploy action, in this
+    repository (helm/) or in smarter-deploy. Those only bring up the
+    things Django needs to start (the app's own database and user), then call
+    `initialize_platform`. A step that needs data from another repository is
+    done by the command that handles that repository (e.g. `load_from_github`),
+    called from `initialize_platform`. When you find initialization logic
+    outside it, propose moving it in, never copying it. See
+    `smarter-management-commands`.
 
 ## Repository map
 

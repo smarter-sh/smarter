@@ -41,6 +41,7 @@ class TestInitializePlatform(CommandTestBase):
                 "account_number": SMARTER_ACCOUNT_NUMBER,
                 "username": "admin",
                 "deploy": False,
+                "run_scripts": True,
             },
         )
         for dependency in ("initialize_providers", "add_example_extensions", "add_example_mcpclients"):

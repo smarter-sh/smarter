@@ -55,14 +55,22 @@ what it does: `deploy_example_llmclients` only deploys the example LLMClients th
 `add_example_llmclients` applied, and `verify_stackademy` only prompts the Stackademy LLMClients.
 
 A multi-resource example project lives in its own GitHub repository instead, and
-`load_from_github` applies it. The reference is the Stackademy project,
+`load_from_github` applies it. Like `initialize_platform` and `initialize_account`, which call it,
+it is in the account app (`apps/account/management/commands/`), where all of the platform's
+initialization commands belong: put a new one there too, not in the app of a kind that it happens
+to create. The reference is the Stackademy project,
 [smarter-sh/stackademy](https://github.com/smarter-sh/stackademy) (`STACKADEMY_REPOSITORY_URL` in
 `apps/llmclient/const.py`): the Secrets, Connections, plugins, LLMClients and Budget of a
 fictional code academy, one folder per kind, with pre-commit hooks that validate each manifest
 against its kind's published JSON Schema. `load_from_github` clones it, skips hidden files and
 non-manifests, fills in `*.yaml.tpl` templates, and applies the manifests in
-`KIND_APPLY_ORDER`, its order of kind dependencies, not in folder order. Give a new SAM kind its
-place in `KIND_APPLY_ORDER`: a test fails until you do. It keeps an LLMClient's `deployed`,
+`SAMKinds.apply_order()` (`apps/api/v1/manifests/enum.py`), the order of kind dependencies, not in
+folder order. Give a new SAM kind its place there, with a line in its docstring that says which kinds
+its manifests name: a test in `test_enum.py` fails until you do. A repository's top-level
+`scripts/` folder holds no manifests: `--run_scripts`, which only `initialize_platform` passes,
+runs the scripts that its `scripts/scripts.yaml` lists, `pre` (before the manifests) or `post`
+(after), with a fixed environment (`apps/account/repository_scripts.py`). Keep that scheme
+generic: never teach `load_from_github` about one repository's script, folder or file names. It keeps an LLMClient's `deployed`,
 `--deploy` deploys the LLMClients, and `--exclude_kind Budget` skips the platform-wide Budget
 when an account loads its own copy. Don't put Stackademy manifests back in an app's `data/`
 folder: change them in that repository.
@@ -103,10 +111,31 @@ Catch `SystemExit` too: `handle_completed_failure(err)` exits. `initialize_accou
 the examples that each account gets its own copy of (secrets, connections, tools,
 LLMClients) for the account's admin, then `deploy_example_llmclients`.
 
-`initialize_platform` is the one procedure that creates and deploys the platform's example
-resources, Stackademy included. The Helm init job (`job-init.yaml`) and `make docker-init` run
-it alone, with no example step of their own beside it: add a new example step to
-`initialize_platform`, never to the job or the Makefile. It deploys the example and Stackademy
+### Initialization lives here, and nowhere else
+
+**Everything about initializing the platform is in `initialize_platform`, and nowhere else.**
+Agents have broken this rule repeatedly, so read it before any change that sets something up.
+
+- **What counts as initialization:** example resources, Stackademy, seed data, test databases and
+  their users, SQL scripts, anything that a new platform needs before it is ready to use.
+- **Where it must not go:** the Helm chart (`job-init.yaml`, a new ConfigMap, a volume, a values
+  flag), the Makefile (`docker-init`), docker-compose, a CI workflow, a deploy action, in this
+  repository (helm/) or in smarter-deploy. Don't suggest it there either, not even as
+  an option.
+- **What those may do:** bring up what Django needs to start (the app's own database and its
+  user), then run `initialize_platform`, and nothing more.
+- **Data from another repository:** the command that handles that repository fetches and
+  applies it, and `initialize_platform` calls that command. The Stackademy course database,
+  `smarter_test_db`, is the example: its SQL script and loader are in the stackademy
+  repository's `scripts/` folder, listed as a `pre` script in `scripts/scripts.yaml`, and
+  `load_from_github --run_scripts`, which `initialize_platform` calls, runs them. Never copy a script from another repository into a
+  ConfigMap or this repository.
+- **Initialization logic that you find outside `initialize_platform`:** propose moving it in. Never
+  extend it or duplicate it.
+
+`initialize_platform` creates and deploys the platform's example resources, Stackademy
+included. The Helm init job (`job-init.yaml`) and `make docker-init` run it alone, with no
+initialization step of their own beside it. It deploys the example and Stackademy
 LLMClients everywhere except the local environment, because a deploy creates a real DNS record
 and Kubernetes ingress. It reads the admin credentials from `smarter_settings.admin_username`
 and `admin_password` (`SMARTER_ADMIN_USERNAME`, `SMARTER_ADMIN_PASSWORD`), so the init job

@@ -58,6 +58,18 @@ inside the `smarter-app` container.
    types a value can have, annotate with them. Repeated constructions use the
    `Smarter...Type` aliases in `smarter.lib.typing` (e.g. `SmarterDictType`
    for `dict[str, Any]`). See `smarter-python-typing`.
+10. **Everything about initializing the platform is in `manage.py
+initialize_platform`, and nowhere else.** That covers example resources, Stackademy, seed
+    data, test databases and their users, and SQL scripts. Never put an initialization step
+    in the Helm chart (`job-init.yaml`, a ConfigMap, a values flag), the
+    Makefile (`docker-init`), docker-compose, a CI workflow or a deploy
+    action, in this repository (helm/) or in smarter-deploy, and never
+    suggest it. They only bring up what Django needs to start, then call
+    `initialize_platform`. Data from another repository is fetched and applied
+    by the command that handles that repository (`load_from_github`), which
+    `initialize_platform` calls. If you find initialization logic outside it,
+    propose moving it into `initialize_platform`. See
+    `smarter-management-commands`.
 
 ## When the user reports that something didn't happen
 

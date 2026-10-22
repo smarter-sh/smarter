@@ -3,7 +3,9 @@ Apply every Smarter manifest in a GitHub repository, in the order of their depen
 
 The Stackademy project, https://github.com/smarter-sh/stackademy, is the reference: the
 Secrets, Connections, plugins, LLMClients and Budget of a fictional code academy, which
-``manage.py initialize_platform`` and ``manage.py initialize_account`` load with this command.
+``manage.py initialize_platform`` and ``manage.py initialize_account`` load with this command. A
+repository may also hold scripts, in its ``scripts/`` folder, which run before or after its
+manifests are applied: see :mod:`smarter.apps.account.repository_scripts`.
 """
 
 import os
@@ -17,6 +19,18 @@ import yaml
 from django.core.management.base import CommandError
 
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.repository_scripts import (
+    SCRIPT_STAGE_POST,
+    SCRIPT_STAGE_PRE,
+    SCRIPTS_CONFIG,
+    SCRIPTS_FOLDER,
+    RepositoryScriptsConfig,
+    ScriptStage,
+    load_scripts_config,
+    run_script,
+    script_environment,
+    scripts_config_path,
+)
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.llmclient.management.commands.add_example_llmclients import (
@@ -41,42 +55,6 @@ MANIFEST_EXTENSIONS = (".yaml", ".yml", TEMPLATE_EXTENSION)
 Other files, e.g. a README, are ignored.
 """
 
-KIND_APPLY_ORDER: tuple[str, ...] = (
-    SAMKinds.ACCOUNT.value,
-    SAMKinds.USER.value,
-    SAMKinds.AUTH_TOKEN.value,
-    SAMKinds.SECRET.value,
-    SAMKinds.PROVIDER.value,
-    SAMKinds.PROXY.value,
-    SAMKinds.LLM_HOST_COMPUTE.value,
-    SAMKinds.LLM_HOST.value,
-    SAMKinds.SQL_CONNECTION.value,
-    SAMKinds.API_CONNECTION.value,
-    SAMKinds.GUARDRAIL.value,
-    SAMKinds.VECTORSTORE.value,
-    SAMKinds.VECTORSEARCH.value,
-    SAMKinds.MCP_CLIENT.value,
-    SAMKinds.STATIC_PLUGIN.value,
-    SAMKinds.SQL_PLUGIN.value,
-    SAMKinds.API_PLUGIN.value,
-    SAMKinds.SKILL_PLUGIN.value,
-    SAMKinds.WEBSEARCH_PLUGIN.value,
-    SAMKinds.IMAGE_SEARCH_PLUGIN.value,
-    SAMKinds.CUSTOM_DOMAIN.value,
-    SAMKinds.LLM_CLIENT.value,
-    SAMKinds.PROMPT.value,
-    SAMKinds.ORCHESTRATOR.value,
-    SAMKinds.BUDGET.value,
-)
-"""
-The order in which the kinds are applied: each kind after the kinds that its manifests may name.
-
-A Secret comes before the Providers, Proxies and Connections that name it, a Connection before the
-plugins that use it, the plugins, MCPClients, Guardrails, Vectorstores and CustomDomains before the
-LLMClients that list them, an LLMClient before the Orchestrators that attach it, and a Budget last,
-after the resources of its ``spec.resources``. A kind that is not listed is applied last.
-"""
-
 
 @dataclass(frozen=True)
 class RepositoryManifest:
@@ -95,8 +73,8 @@ class RepositoryManifest:
 
     @property
     def rank(self) -> int:
-        """The position of the manifest's kind in :data:`KIND_APPLY_ORDER`."""
-        return KIND_APPLY_ORDER.index(self.kind) if self.kind in KIND_APPLY_ORDER else len(KIND_APPLY_ORDER)
+        """The position of the manifest's kind in :meth:`SAMKinds.apply_order() <smarter.apps.api.v1.manifests.enum.SAMKinds.apply_order>`."""
+        return SAMKinds.apply_rank(self.kind)
 
 
 # pylint: disable=E1101
@@ -106,7 +84,7 @@ class Command(SmarterExamplesCommand):
 
     Clones a public GitHub repository and applies each Smarter manifest in it, as a user, through
     the same brokers as the ``apply`` api. The repository's folders are only for people: the
-    manifests are applied in the order of their kinds' dependencies, :data:`KIND_APPLY_ORDER`, so
+    manifests are applied in the order of their kinds' dependencies, :meth:`SAMKinds.apply_order`, so
     that a Connection exists before the plugin that uses it, a plugin before the LLMClient that
     lists it, and so on. Within a kind, they are applied in the order of their paths.
 
@@ -120,10 +98,15 @@ class Command(SmarterExamplesCommand):
       that is not installed is skipped, as ``manage.py add_example_llmclients`` does.
     - ``--deploy`` deploys each LLMClient that is not deployed, as ``manage.py deploy_example_llmclients``
       does.
+    - The repository's top-level ``scripts/`` folder holds no manifests. ``--run_scripts`` runs the
+      scripts that its ``scripts/scripts.yaml`` lists: the ``pre`` ones before any manifest is
+      applied, and the ``post`` ones after every manifest is applied and the LLMClients deployed. Only
+      ``manage.py initialize_platform`` passes it. See :mod:`smarter.apps.account.repository_scripts`.
     - ``--exclude_kind`` skips the manifests of a kind, e.g. a Budget, which only a superuser may
       apply, and which applies to the platform rather than to one account.
-    - One manifest that fails doesn't stop the rest. The command fails at the end, with the list of
-      the manifests that failed, and also when the repository holds no manifest at all.
+    - One manifest or script that fails doesn't stop the rest. The command fails at the end, with the
+      list of what failed, and also when the repository holds no manifest at all, or its
+      ``scripts/scripts.yaml`` is not valid.
 
     The owner is ``--username``, or the admin of the account ``--account_number``. Applying is
     idempotent: a resource that exists is updated.
@@ -165,6 +148,14 @@ class Command(SmarterExamplesCommand):
             "--deploy", action="store_true", help="Deploy each of the repository's LLMClients that is not deployed."
         )
         parser.add_argument(
+            "--run_scripts",
+            action="store_true",
+            help=(
+                f"Run the scripts that the repository's {SCRIPTS_FOLDER}/{SCRIPTS_CONFIG} lists, before and after "
+                "applying the manifests. They run as the database server's administrator."
+            ),
+        )
+        parser.add_argument(
             "--exclude_kind",
             action="append",
             default=[],
@@ -185,17 +176,52 @@ class Command(SmarterExamplesCommand):
             raise subprocess.CalledProcessError(returncode=result, cmd=f"git clone {self.url} {local_path}")
         logger.debug("%s.clone_repo() cloned %s to %s", logger_prefix, self.url, local_path)
 
+    def run_scripts(
+        self, local_path: str, config: Optional[RepositoryScriptsConfig], stage: ScriptStage, user_profile: UserProfile
+    ) -> list[str]:
+        """
+        Run the repository's scripts of one stage, in the order of its ``scripts/scripts.yaml``.
+
+        :param local_path: The repository's clone.
+        :param config: The repository's scripts configuration, or None if it has none.
+        :param stage: ``pre`` or ``post``.
+        :param user_profile: The owner of the resources, whose account and username the scripts receive.
+        :returns: A description of each script that failed.
+        :rtype: list[str]
+        """
+        if config is None:
+            return []
+        failed: list[str] = []
+        env = script_environment(
+            url=self.url,
+            local_path=local_path,
+            account_number=str(user_profile.account.account_number),
+            username=str(user_profile.user.username),
+        )
+        for script in config.for_stage(stage):
+            path = os.path.join(SCRIPTS_FOLDER, script.path)
+            try:
+                # run_script() logs each line that the script writes.
+                run_script(local_path, script, env)
+            except SmarterValueError as e:
+                failed.append(f"{path}: {e.message}")
+                continue
+            self.stdout.write(f"Ran the {stage} script {path}.")
+        return failed
+
     def find_manifests(self, local_path: str) -> list[RepositoryManifest]:
         """
         Return the repository's manifests, in the order in which to apply them.
 
         :param local_path: The repository's clone.
-        :returns: The manifests, sorted by :data:`KIND_APPLY_ORDER`, then by path.
+        :returns: The manifests, sorted by :meth:`SAMKinds.apply_order`, then by path.
         :rtype: list[RepositoryManifest]
         """
         retval: list[RepositoryManifest] = []
         for root, directories, files in os.walk(local_path):
-            directories[:] = sorted(d for d in directories if not d.startswith("."))
+            directories[:] = sorted(
+                d for d in directories if not d.startswith(".") and not (root == local_path and d == SCRIPTS_FOLDER)
+            )
             for file in sorted(files):
                 if file.startswith(".") or not file.endswith(MANIFEST_EXTENSIONS):
                     continue
@@ -306,11 +332,20 @@ class Command(SmarterExamplesCommand):
         local_path = tempfile.mkdtemp(prefix="load_from_github-")
         try:
             self.clone_repo(local_path)
+            scripts_config: Optional[RepositoryScriptsConfig] = None
+            if options.get("run_scripts"):
+                scripts_config = load_scripts_config(local_path)
+            elif os.path.isfile(scripts_config_path(local_path)):
+                self.stdout.write(
+                    f"Skipped the scripts of {SCRIPTS_FOLDER}/{SCRIPTS_CONFIG}: --run_scripts is not set."
+                )
+            failed_scripts = self.run_scripts(local_path, scripts_config, SCRIPT_STAGE_PRE, self.user_profile)
             manifests = self.find_manifests(local_path)
             for item in [m for m in manifests if m.kind in excluded]:
                 self.stdout.write(f"Skipped {item.path}: {item.kind} is excluded.")
             manifests = [m for m in manifests if m.kind not in excluded]
             failed = self.apply_manifests(manifests, self.user_profile, deploy=bool(options.get("deploy")))
+            failed_scripts += self.run_scripts(local_path, scripts_config, SCRIPT_STAGE_POST, self.user_profile)
         # pylint: disable=broad-except
         except Exception as e:
             self.handle_completed_failure(msg=f"Failed to load {self.url}: {e}")
@@ -322,8 +357,15 @@ class Command(SmarterExamplesCommand):
             msg = f"{self.url} holds no Smarter manifest."
             self.handle_completed_failure(msg=msg)
             raise CommandError(msg)
+        problems: list[str] = []
+        if failed_scripts:
+            problems.append(f"{len(failed_scripts)} of the scripts of {self.url} failed:\n" + "\n".join(failed_scripts))
         if failed:
-            msg = f"{len(failed)} of the {len(manifests)} manifests of {self.url} failed:\n" + "\n".join(failed)
+            problems.append(
+                f"{len(failed)} of the {len(manifests)} manifests of {self.url} failed:\n" + "\n".join(failed)
+            )
+        if problems:
+            msg = "\n".join(problems)
             self.handle_completed_failure(msg=msg)
             raise CommandError(msg)
         self.stdout.write(self.style.SUCCESS(f"Applied the {len(manifests)} manifests of {self.url}."))
