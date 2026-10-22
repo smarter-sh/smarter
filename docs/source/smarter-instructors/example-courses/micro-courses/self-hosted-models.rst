@@ -9,7 +9,7 @@ serves freely downloadable models on a Kubernetes cluster, adds and removes the 
 that they need, and puts them in the same applications as commercial ones:
 
 - **Models ready to serve.** Twenty-four built-in
-  `LLMHost manifests <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__
+  `LLMHost manifests <https://github.com/smarter-sh/example-manifests/tree/main/llmhosts>`__
   for Llama, Qwen, Gemma, Mistral, Phi, DeepSeek and gpt-oss models, GGUF models for CPU, and
   embedding models, each with its engine, resources, pinned revision and license, and
   `model discovery <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/discovery.py>`__
@@ -19,7 +19,7 @@ that they need, and puts them in the same applications as commercial ones:
   `engines.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/engines.py>`__,
   so a class can serve the same model two ways and compare them.
 - **GPUs on demand.** Seven `compute profiles
-  <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__,
+  <https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__,
   from small CPU nodes to eight H100s, become EKS `node groups
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/nodegroups.py>`__
   that start at zero nodes, grow when a model needs a node, and shrink by removing an idle one.
@@ -48,8 +48,9 @@ economics of utilization, idle time and break-even with commercial providers.
 
 **Look at.**
 
-- `llmhost/data/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data>`__,
-  the built-in models and compute profiles.
+- `example-manifests/llmhosts/ <https://github.com/smarter-sh/example-manifests/tree/main/llmhosts>`__
+  and `example-manifests/llmhost-computes/ <https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__,
+  the example models and compute profiles.
 - `llmhost/services/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/services>`__,
   the engines, renderer, node groups, discovery and observability.
 - `llmhost/manifest/models/llmhost/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/manifest/models/llmhost/spec.py>`__,

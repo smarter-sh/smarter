@@ -16,14 +16,14 @@ landscape of AI application architecture in a term, without first teaching a pro
 
 Students learn from complete, working applications, not diagrams. Every installation ships with
 `nineteen built-in LLMClients
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__
 to take apart, such as `research_analyst
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-research-analyst.yaml>`__,
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-research-analyst.yaml>`__,
 which searches the web through the Exa MCP server, reads pages and PDFs, and checks its citations
-with an output guardrail; `twenty-five ready-made MCP clients
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
-for services such as GitHub, Notion, Linear and Stripe; twenty `sample plugins
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__;
+with an output guardrail; `twenty-eight ready-made MCP clients
+<https://github.com/smarter-sh/example-manifests/tree/main/mcp-clients>`__
+for services such as GitHub, Notion, Linear and Stripe; twenty-one `sample plugins
+<https://github.com/smarter-sh/example-manifests/tree/main/plugins>`__;
 and `Stackademy <https://github.com/smarter-sh/stackademy>`__, a fictional online code academy whose
 course catalog is served both from a database and from a REST API, and whose manifests are a git
 repository of their own.
@@ -60,15 +60,15 @@ the journal and deployment.
 
 **Look at.**
 
-- `llmclient/data/llm-clients/
-  <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
+- `example-manifests/llm-clients/
+  <https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__,
   especially ``customer_support``, ``research_analyst`` and ``data_analyst``.
-- `mcpclient/data/mcpclients/
-  <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
-  and `llmtool/data/
-  <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data>`__.
-- `vectorstore/data/vectorstores/
-  <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__,
+- `example-manifests/mcp-clients/
+  <https://github.com/smarter-sh/example-manifests/tree/main/mcp-clients>`__
+  and `example-manifests/plugins/
+  <https://github.com/smarter-sh/example-manifests/tree/main/plugins>`__.
+- `example-manifests/vectorstores/
+  <https://github.com/smarter-sh/example-manifests/tree/main/vectorstores>`__,
   one manifest for each kind of vector database.
 
 Each course plan lists every manifest and file that it uses under *Smarter in the Source Code*.

@@ -6,7 +6,7 @@ case study. Students attack an AI application with prompt injection, defend it w
 controls, map its defenses to the OWASP Top 10 lists, and study how it handles secrets and outbound
 requests. Smarter assumes that a model will eventually try to do something it should not, and
 defends with deterministic controls rather than instructions: `guardrails
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__
 on both the prompt and the reply, a single `hardened function
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
 for every outbound request to a user-supplied URL, credentials kept in encrypted `Secrets

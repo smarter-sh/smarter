@@ -11,7 +11,9 @@ about GPU instance types.
 - :func:`cost_per_hour` is one replica's share of its node's price.
 - :class:`ComputeProvisioner` reconciles a compute's node group with its LLMHosts: it creates the
   node group, adds nodes when LLMHosts need them, and removes empty nodes that they no longer do.
-- :func:`add_example_computes` applies the built-in LLMHostCompute manifests, in ``data/compute``.
+- :func:`builtin_computes` are the LLMHostComputes of the Smarter admin, which every account may use:
+  those that ``manage.py initialize_platform`` applies from
+  https://github.com/smarter-sh/example-manifests.
 
 A node group has as many nodes as its LLMHosts' pods need, which is usually one per pod: an
 LLMHost runs on a node of its own unless its compute's node has room for several of its pods.
@@ -31,7 +33,6 @@ from django.utils import timezone
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.llmhost.const import (
-    BUILTIN_COMPUTE_PATH,
     DEFAULT_CPU,
     DEFAULT_MEMORY,
     LABEL_COMPUTE,
@@ -431,44 +432,9 @@ class ComputeProvisioner:
         self.nodegroups.delete(compute)
 
 
-def add_example_computes(user_profile: Optional[UserProfile] = None, path: str = BUILTIN_COMPUTE_PATH) -> bool:
-    """
-    Apply the built-in LLMHostCompute manifests, in ``data/compute``, for a user.
-
-    ``manage.py initialize_platform`` applies them for the Smarter admin user, so that every
-    account's LLMHosts may choose them. It does not create their node groups: an LLMHost's launch
-    does. A manifest that fails to apply is logged and skipped.
-
-    :param user_profile: The owner. Defaults to the Smarter admin.
-    :returns: True if every manifest was applied.
-    """
-    # pylint: disable=import-outside-toplevel
-    from django.core.management import call_command
-
-    from smarter.apps.account.utils import smarter_cached_objects
-
-    user_profile = user_profile or smarter_cached_objects.smarter_admin_user_profile
-    retval = True
-    for filename in sorted(glob.glob(os.path.join(path, "*.yaml"))):
-        output, error_output = io.StringIO(), io.StringIO()
-        try:
-            call_command(
-                "apply_manifest",
-                filespec=filename,
-                username=user_profile.user.username,
-                stdout=output,
-                stderr=error_output,
-            )
-        except Exception as e:  # pylint: disable=broad-except
-            logger.error("%s failed to apply LLMHostCompute manifest %s: %s", logger_prefix, filename, e)
-            retval = False
-    return retval
-
-
 __all__ = [
     "ComputeProvisioner",
     "ComputeState",
-    "add_example_computes",
     "PodRequests",
     "choose_compute",
     "cost_per_hour",

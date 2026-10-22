@@ -10,7 +10,6 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmtool.manifest.controller import (
     PLUGIN_MAP,
-    PluginController,
     PluginType,
 )
 from smarter.apps.llmtool.manifest.enum import (
@@ -27,8 +26,6 @@ from smarter.apps.llmtool.models import (
     PluginSelector,
 )
 from smarter.apps.llmtool.plugin.base import SmarterPluginError
-from smarter.apps.llmtool.plugin.tests.base_classes import mock_remote_skills
-from smarter.apps.llmtool.plugin.utils import PluginExamples
 from smarter.apps.llmtool.serializers import (
     PluginMetaSerializer,
     PluginPromptSerializer,
@@ -45,9 +42,7 @@ from smarter.apps.llmtool.signals import (
     plugin_updated,
 )
 from smarter.apps.llmtool.tests.test_setup import get_test_file_path
-from smarter.apps.llmtool.utils import add_example_plugins
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
-from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 
 # python stuff
@@ -353,34 +348,6 @@ class TestPluginBase(TestAccountMixin):
 
         with self.assertRaises(self.plugin_data.DoesNotExist):
             self.plugin_data.objects.get(plugin_id=plugin_id)
-
-    def test_add_sample_plugins(self):
-        """Test utility function to add sample plugins to a user account."""
-
-        # the WebsearchPlugin examples need their search provider's api key Secret.
-        for secret_name in ("brave_search_api_key", "tavily_api_key"):
-            if not Secret.objects.filter(user_profile=self.user_profile, name=secret_name).exists():
-                secret = Secret.objects.create(
-                    user_profile=self.user_profile,
-                    name=secret_name,
-                    description="placeholder web search api key for unit tests",
-                    encrypted_value=Secret.encrypt(value="not-a-real-api-key"),
-                )
-                self.addCleanup(secret.delete)
-
-        # add the sample plugins to the user account. the remote SkillPlugin examples
-        # are retrieved from the test skill, since unit tests must not depend on GitHub.
-        with mock_remote_skills():
-            add_example_plugins(user_profile=self.user_profile)
-
-        # verify that all of the sample plugins were added to the user account
-        plugins = PluginMeta.objects.filter(user_profile__account=self.account)
-        self.assertEqual(len(plugins), PluginExamples().count())
-
-        # verify that all of the sample plugins were correctdly created
-        # and are in a ready state.
-        for plugin in plugins:
-            self.assertTrue(PluginController(user_profile=self.user_profile, plugin_meta=plugin).ready)
 
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):

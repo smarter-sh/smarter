@@ -49,7 +49,7 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
     The cache_key is a combination of the class name, the prompt name and a client
     UID created from the machine mac address and its hostname.
 
-    See smarter/apps/workbench/data/chat_config.json for an example response to
+    See docs.smarter.sh's example chat configuration for an example response to
     this request.
     """
 

@@ -16,15 +16,23 @@ A Plugin that returns static data stored in the Plugin itself.
     manifest below, the LLM can request ``contact``, ``biographical``,
     ``salesPromotions`` or ``couponCodes``.
 
-.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+.. sphinx note: /_example-manifests/ is the clone of smarter-sh/example-manifests that docs/source/conf.py makes.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/sample-plugins/everlasting-gobstopper.yaml
+.. literalinclude:: /_example-manifests/plugins/static/everlasting-gobstopper.yaml
     :language: yaml
     :caption: 1.) Example Static Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/llm-clients/llmclient-example.yaml
+From `plugins/static/everlasting-gobstopper.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/plugins/static/everlasting-gobstopper.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+
+.. literalinclude:: /_example-manifests/llm-clients/llmclient-example.yaml
     :language: yaml
     :caption: 2.) Example LLMClient Manifest
+
+From `llm-clients/llmclient-example.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-example.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 """
 
 from datetime import datetime

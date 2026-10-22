@@ -320,9 +320,9 @@ def mock_remote_skills():
     """
     Replace the retrieval of every remote SkillPlugin skill with the test skill.
 
-    The sample SkillPlugin manifests refer to Anthropic's skills repository on GitHub,
+    The example SkillPlugin manifests refer to Anthropic's skills repository on GitHub,
     whose unauthenticated api is rate limited to 60 requests per hour per client IP.
-    Use this around :py:func:`smarter.apps.llmtool.utils.add_example_plugins`, since unit
+    Use this around anything that applies a remote SkillPlugin manifest, since unit
     tests must not depend on GitHub.
     """
     with mock_skill_host():

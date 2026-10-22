@@ -140,6 +140,8 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
      - (optional) API key for Pinecone vector database
    * - PINECONE_ENVIRONMENT
      - (optional) Pinecone environment name
+   * - SMARTER_MYSQL_BACKUP_PASSWORD
+     - (optional) Password of the read-only MariaDB account, ``smarter_backup``, that the nightly backup dumps the database with. Unset: the backup dumps as root
    * - SMARTER_MYSQL_TEST_DATABASE_PASSWORD
      - Password for MariaDB test database
    * - SMTP_PASSWORD

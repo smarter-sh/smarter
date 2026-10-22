@@ -1352,9 +1352,9 @@ class PluginBase(ABC, AccountMixin):
         """
         Create a plugin from either yaml or a dictionary.
 
-        :return: True if the plugin was created successfully, False otherwise.
+        :return: True if the plugin was created, or updated because it already exists.
         :rtype: bool
-        :raises SmarterPluginError: If the plugin manifest is not set.
+        :raises SmarterPluginError: If the plugin manifest, or the user profile that will own the plugin, is not set.
         """
         if not self._manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
@@ -1384,41 +1384,42 @@ class PluginBase(ABC, AccountMixin):
             )
             return self.update()
 
+        meta_data = self.plugin_meta_django_model
+        if not meta_data:
+            # plugin_meta_django_model is empty only without a user profile: the plugin would have no owner.
+            raise SmarterPluginError(f"Plugin {self.manifest.metadata.name} has no user profile to own it.")
+
         with transaction.atomic():
-            meta_data = self.plugin_meta_django_model
-            if meta_data:
-                plugin_meta = PluginMeta.objects.create(**meta_data)
-                tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
-                plugin_meta.tags.set(tags)
+            plugin_meta = PluginMeta.objects.create(**meta_data)
+            tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
+            plugin_meta.tags.set(tags)
 
-                logger.debug("%s.create() created PluginMeta: %s", self.formatted_pluginbase_class_name, plugin_meta)
+            logger.debug("%s.create() created PluginMeta: %s", self.formatted_pluginbase_class_name, plugin_meta)
 
-                selector = self.plugin_selector_django_model
-                prompt = self.plugin_prompt_django_model
-                plugin_data = self.plugin_data_django_model
+            selector = self.plugin_selector_django_model
+            prompt = self.plugin_prompt_django_model
+            plugin_data = self.plugin_data_django_model
 
-                if selector is not None:
-                    selector[PLUGIN_KEY] = plugin_meta
-                if prompt is not None:
-                    prompt[PLUGIN_KEY] = plugin_meta
-                if plugin_data is not None:
-                    plugin_data[PLUGIN_KEY] = plugin_meta
+            if selector is not None:
+                selector[PLUGIN_KEY] = plugin_meta
+            if prompt is not None:
+                prompt[PLUGIN_KEY] = plugin_meta
+            if plugin_data is not None:
+                plugin_data[PLUGIN_KEY] = plugin_meta
 
-                if selector is not None:
-                    plugin_selector = PluginSelector.objects.create(**selector)
-                    logger.debug(
-                        "%s.create() created PluginSelector: %s", self.formatted_pluginbase_class_name, plugin_selector
-                    )
-                if prompt is not None:
-                    plugin_prompt = PluginPrompt.objects.create(**prompt)
-                    logger.debug(
-                        "%s.create() created PluginPrompt: %s", self.formatted_pluginbase_class_name, plugin_prompt
-                    )
-                if plugin_data is not None:
-                    logger.debug(
-                        "%s.create() creating PluginData: %s", self.formatted_pluginbase_class_name, plugin_data
-                    )
-                    self.plugin_data_class.objects.create(**plugin_data)
+            if selector is not None:
+                plugin_selector = PluginSelector.objects.create(**selector)
+                logger.debug(
+                    "%s.create() created PluginSelector: %s", self.formatted_pluginbase_class_name, plugin_selector
+                )
+            if prompt is not None:
+                plugin_prompt = PluginPrompt.objects.create(**prompt)
+                logger.debug(
+                    "%s.create() created PluginPrompt: %s", self.formatted_pluginbase_class_name, plugin_prompt
+                )
+            if plugin_data is not None:
+                logger.debug("%s.create() creating PluginData: %s", self.formatted_pluginbase_class_name, plugin_data)
+                self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin=plugin_meta))
         self._persisted_manifest = self._manifest

@@ -64,13 +64,13 @@ unless they start with `docs/`.
 | Example manifest view | `apps/docs/views/manifest.py`: `DocsExampleManifestCustomDomainView`                           |
 | Routes                | `apps/docs/urls.py`: `json_schema_path(SAMKinds.CUSTOM_DOMAIN.value)` and `manifest_path(...)` |
 
-## 7. Built-in data
+## 7. Example manifests
 
-| Step           | File                                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------------------- |
-| Manifest       | `apps/llmclient/data/custom-domains/example-com.yaml`                                                   |
-| Loader command | `apps/llmclient/management/commands/add_example_custom_domains.py`                                      |
-| Platform setup | `apps/account/management/commands/initialize_platform.py`: `call_command("add_example_custom_domains")` |
+| Step           | File                                                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Manifest       | `custom-domains/example-com.yaml` in [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests) |
+| Apply order    | `apps/api/v1/manifests/enum.py`: `SAMKinds.apply_order()`                                                            |
+| Platform setup | `apps/account/management/commands/initialize_platform.py`: `call_command("load_from_github", url=...)`               |
 
 ## 8. Sphinx
 
@@ -86,5 +86,5 @@ unless they start with `docs/`.
 | Broker            | `apps/llmclient/manifest/brokers/tests/test_custom_domain_broker.py` plus `data/custom_domain.yaml` |
 | Views             | `apps/llmclient/tests/test_custom_domain_views.py`                                                  |
 | Verification task | `apps/llmclient/tests/test_verify_custom_domain.py`                                                 |
-| Built-in loader   | `apps/llmclient/tests/test_add_example_custom_domains.py`                                           |
+| Example loader    | `apps/account/management/tests/test_load_from_github.py`                                            |
 | React             | `smarter/react/packages/smarter-custom-domain-list/src/**/*.test.tsx` and stories                   |

@@ -90,8 +90,8 @@ from .base_classes import (
 )
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "data", "sample-plugins"))
-LLMCLIENTS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "..", "llmclient", "data", "llm-clients"))
+# copies of a few of the example manifests in https://github.com/smarter-sh/example-manifests
+EXAMPLE_MANIFESTS_PATH = os.path.join(HERE, "data", "example-manifests")
 WEATHER_IMAGE_SEARCH_DESCRIPTION = "Searches the web for images"
 """The opening words of the image_search tool's description, which the weather LLMClient's prompt quotes."""
 API_KEY_SECRET = "test_brave_image_search_api_key"
@@ -730,12 +730,12 @@ class TestImageSearchPlugin(PluginTestBase):
             self.assertIsNone(plugin.to_json())
 
     # =========================================================================
-    # samples
+    # example manifests
     # =========================================================================
-    def test_sample_manifests(self):
-        """Test that every sample ImageSearchPlugin manifest is valid, and can be applied."""
-        paths = sorted(glob.glob(os.path.join(SAMPLE_PLUGINS_PATH, "image-search*.yaml")))
-        self.assertEqual(len(paths), 5)
+    def test_example_manifests(self):
+        """Test that the copies of the example ImageSearchPlugin manifests are valid, and can be applied."""
+        paths = sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "image-search*.yaml")))
+        self.assertEqual(len(paths), 2)
         for path in paths:
             data = copy.deepcopy(get_readonly_yaml_file(path))
             data["metadata"]["name"] = f"{data['metadata']['name']}_{self.hash_suffix}"  # type: ignore[index]
@@ -753,13 +753,13 @@ class TestImageSearchPlugin(PluginTestBase):
         The LLM sees the plugin under a generated function name, not ``image_search``, so the
         prompt identifies the tool by the opening words of its description.
         """
-        weather = get_readonly_yaml_file(os.path.join(LLMCLIENTS_PATH, "llmclient-weather.yaml"))
+        weather = get_readonly_yaml_file(os.path.join(EXAMPLE_MANIFESTS_PATH, "llmclient-weather.yaml"))
         self.assertIn("weather", weather["spec"]["extensions"])
         self.assertIn("image_search", weather["spec"]["plugins"])
         system_role = weather["spec"]["config"]["prompt"]["defaultSystemRole"]
         self.assertIn(f'description begins "{WEATHER_IMAGE_SEARCH_DESCRIPTION}"', system_role)
 
-        data = copy.deepcopy(get_readonly_yaml_file(os.path.join(SAMPLE_PLUGINS_PATH, "image-search.yaml")))
+        data = copy.deepcopy(get_readonly_yaml_file(os.path.join(EXAMPLE_MANIFESTS_PATH, "image-search.yaml")))
         self.assertEqual(data["metadata"]["name"], "image_search")
         data["metadata"]["name"] = f"{data['metadata']['name']}_{self.hash_suffix}"  # type: ignore[index]
         plugin = ImageSearchPlugin(manifest=SAMImageSearchPlugin(**data), user_profile=self.user_profile)  # type: ignore[arg-type]

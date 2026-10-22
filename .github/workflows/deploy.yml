@@ -109,6 +109,7 @@ jobs:
           smarter-cache-expiration: ${{ env.SMARTER_CACHE_EXPIRATION }}
           smarter-enable-web-console-terminal: ${{ env.SMARTER_ENABLE_WEB_CONSOLE_TERMINAL }}
           smarter-logo: ${{ secrets.SMARTER_LOGO }}
+          smarter-mariadb-backup-password: ${{ secrets.SMARTER_MYSQL_BACKUP_PASSWORD }}
           smarter-mariadb-test_database_password: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD}}
           smarter-settings-output: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}
           social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}

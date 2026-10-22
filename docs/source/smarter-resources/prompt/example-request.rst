@@ -35,4 +35,6 @@ Usage
 Example JSON Object
 --------------------
 
-   .. literalinclude:: ../../../../smarter/smarter/apps/prompt/data/request.json
+.. literalinclude:: examples/request.json
+   :language: json
+   :caption: Example request body, sent by the chat UI to the Smarter API

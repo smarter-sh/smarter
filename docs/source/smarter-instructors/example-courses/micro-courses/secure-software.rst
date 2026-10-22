@@ -10,7 +10,7 @@ leakage, and server-side request forgery through tool calls. Every defense is in
 students can read, test and try to break:
 
 - **Guardrails on both sides of the model.** Built-in
-  `guardrails <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+  `guardrails <https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__
   catch prompt injection by keyword and by LLM judge, jailbreaks and code injection on the way in,
   and leaked secrets, personal data and script injection on the way out, with deterministic
   `detectors <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/detectors.py>`__

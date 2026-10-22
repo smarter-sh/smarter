@@ -69,6 +69,7 @@ from pygments.lexers.jsx import TsxLexer
 from pygments.token import Keyword, Operator, Punctuation, Text, Whitespace
 from sphinx.addnodes import pending_xref
 from sphinx.domains.python import PythonDomain
+from sphinx.util import logging as sphinx_logging
 from sphinxcontrib_django.docstrings import classes, field_utils
 
 # Import the guardrail services' Pydantic contracts before sphinx_autodoc_typehints resolves
@@ -112,6 +113,54 @@ except Exception:
     commit = None
 
 
+###############################################################################
+# Example manifests
+#
+# The example SAM manifests that the platform loads at initialization live in
+# their own community repository, smarter-sh/example-manifests, not in this
+# one. Pages show them with ``.. literalinclude:: /_example-manifests/<path>``,
+# so make a shallow clone of that repository into docs/source/_example-manifests/
+# (git-ignored, and excluded from the build's own sources). An existing clone
+# is updated when possible and otherwise used as it is. If the clone fails,
+# e.g. offline, log a warning and carry on: those includes then warn, but the
+# rest of the build is unaffected.
+###############################################################################
+EXAMPLE_MANIFESTS_REPOSITORY_URL = "https://github.com/smarter-sh/example-manifests"
+EXAMPLE_MANIFESTS_DIR = os.path.join(HERE, "_example-manifests")
+
+
+def clone_example_manifests():
+    """Make or update the shallow clone of smarter-sh/example-manifests that the docs include from."""
+    git_dir = os.path.join(EXAMPLE_MANIFESTS_DIR, ".git")
+    try:
+        if os.path.isdir(git_dir):
+            subprocess.run(["git", "-C", EXAMPLE_MANIFESTS_DIR, "pull", "--ff-only", "--quiet"], check=False)
+        elif not os.path.exists(EXAMPLE_MANIFESTS_DIR):
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "--depth",
+                    "1",
+                    "--quiet",
+                    EXAMPLE_MANIFESTS_REPOSITORY_URL,
+                    EXAMPLE_MANIFESTS_DIR,
+                ],
+                check=True,
+            )
+    # pylint: disable=broad-except
+    except Exception as e:
+        sphinx_logging.getLogger(__name__).warning(
+            "docs.conf.clone_example_manifests() could not clone %s into %s: %s",
+            EXAMPLE_MANIFESTS_REPOSITORY_URL,
+            EXAMPLE_MANIFESTS_DIR,
+            e,
+        )
+
+
+clone_example_manifests()
+
+
 last_updated = datetime.now().strftime("%B-%Y")
 html_extra_path = ["robots.txt", "llms.txt"]
 # custom context variables to be used in Sphinx templates, presumably in
@@ -149,7 +198,8 @@ templates_path = ["_templates"]
 # sphinx_autodoc_typehints cannot resolve some type hints that third party packages, e.g.
 # asgiref and pydantic, import only for type checking. These are harmless.
 suppress_warnings = ["sphinx_autodoc_typehints.guarded_import"]
-exclude_patterns = []
+# _example-manifests is the clone of smarter-sh/example-manifests (see above), read only by literalinclude.
+exclude_patterns = ["_example-manifests"]
 django_settings = "smarter.settings.prod"
 todo_include_todos = True
 intersphinx_mapping = {

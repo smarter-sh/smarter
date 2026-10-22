@@ -5,8 +5,6 @@ import os
 namespace = "proxy"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-BUILTIN_PROXY_PATH = os.path.join(HERE, "data", "proxy")
-"""The built-in Proxy manifests, which ``manage.py add_example_proxies`` applies."""
 
 DEFAULT_AUTH_HEADER = "Authorization"
 DEFAULT_AUTH_SCHEME = "Bearer"

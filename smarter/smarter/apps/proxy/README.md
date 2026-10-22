@@ -43,8 +43,9 @@ Key features:
 - `authentication.py`: callers' Smarter API keys, in any SDK's header
 - `api/v1/`: the passthrough endpoint, `/api/v1/proxy/<name>/<path>`
 - `views/`, `urls.py`: the web console's list and manifest pages, at `/proxy/`
-- `builtins.py`, `data/proxy/`: the built-in Proxy manifests, which
-  `manage.py add_example_proxies` applies
+
+The example Proxy manifests, one for each built-in Provider, are in the `proxies/` folder of
+https://github.com/smarter-sh/example-manifests, which `manage.py initialize_platform` applies.
 
 See the documentation: `docs/source/smarter-resources/smarter-proxy.rst`.
 
