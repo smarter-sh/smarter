@@ -474,7 +474,8 @@ class Command(SmarterCommand):
             manifest = item.manifest
             if self.is_existing_detached_budget(item):
                 self.stdout.write(
-                    f"Skipped {item.path}: Budget {item.name} exists, and its manifest attaches it to nothing."
+                    f"Kept Budget {item.name} as it is ({item.path}): applying its manifest, which attaches it to "
+                    "nothing, would detach the resources attached to it since it was created."
                 )
                 continue
             if item.kind == SAMKinds.LLM_CLIENT.value:
