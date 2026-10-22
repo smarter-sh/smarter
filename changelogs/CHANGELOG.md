@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.5-alpha.1...v0.36.5-alpha.2) (2026-10-22)
+
+### Bug Fixes
+
+* **platform:** consolidate the init job, back up as a read-only user ([0b8e937](https://github.com/smarter-sh/smarter/commit/0b8e937ff279ac27f3e131c6eb6856056a301071))
+
 ## [0.36.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.4...v0.36.5-alpha.1) (2026-10-22)
 
 ### Bug Fixes
