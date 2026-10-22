@@ -103,3 +103,46 @@ class TestMessageHelpers(TestCase):
         ):
             with self.subTest(messages=messages, default=default), self.assertRaises(SmarterValueError):
                 utils.ensure_system_role_present(messages, default)
+
+
+class TestCapMessageHistory(TestCase):
+    """Test that the oldest turns of a long thread are left out of the request."""
+
+    THREAD = [
+        {"role": "system", "content": "s" * 10},
+        {"role": "assistant", "content": "w" * 10},
+        {"role": "user", "content": "a" * 100},
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [{"id": "call_1", "type": "function", "function": {"name": "f", "arguments": "{}"}}],
+        },
+        {"role": "tool", "tool_call_id": "call_1", "content": "t" * 100},
+        {"role": "assistant", "content": "b" * 100},
+        {"role": "user", "content": "c" * 100},
+        {"role": "assistant", "content": "d" * 100},
+        {"role": "user", "content": "e" * 100},
+    ]
+
+    def test_message_characters(self):
+        self.assertEqual(utils.message_characters({"role": "user", "content": "abc"}), 3)
+        self.assertEqual(utils.message_characters({"role": "assistant", "content": None}), 0)
+        self.assertGreater(utils.message_characters(self.THREAD[3]), 0)
+        self.assertGreater(utils.message_characters({"role": "user", "content": [{"type": "text"}]}), 0)
+
+    def test_a_short_thread_is_unchanged(self):
+        self.assertIs(utils.cap_message_history(self.THREAD, 10_000), self.THREAD)
+
+    def test_the_oldest_whole_turns_are_left_out(self):
+        """The first turn, with its tool call and reply, is left out; the system message stays."""
+        capped = utils.cap_message_history(self.THREAD, 450)
+        self.assertEqual([m["content"][0] for m in capped], ["s", "c", "d", "e"])
+        self.assertEqual(len(self.THREAD), 9)
+
+    def test_the_system_prompt_and_latest_turn_are_always_kept(self):
+        capped = utils.cap_message_history(self.THREAD, 1)
+        self.assertEqual(capped, [self.THREAD[0], self.THREAD[-1]])
+
+    def test_a_single_turn_is_never_cut(self):
+        thread = [{"role": "system", "content": "s"}, {"role": "user", "content": "x" * 1000}]
+        self.assertIs(utils.cap_message_history(thread, 10), thread)
