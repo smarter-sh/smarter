@@ -297,7 +297,6 @@ WEB_CONSOLE = "A web console action, which clients replace with the cli api's ma
 
 UNDOCUMENTED_ROUTES: dict[str, str] = {
     "/plugins/{plugin_id}/clone/{new_name}": WEB_CONSOLE,
-    "/plugins/add-example-plugins/{user_id}/": WEB_CONSOLE,
     "/plugins/upload/": WEB_CONSOLE,
     "/proxy/{name}/": "A Proxy's passthrough, whose requests and responses are its provider's api, not Smarter's.",
     "/proxy/{name}/{path}": "A Proxy's passthrough, whose requests and responses are its provider's api, not Smarter's.",
