@@ -1254,6 +1254,9 @@ class PluginBase(ABC, AccountMixin):
         for i, message in enumerate(messages_copy):
             if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
                 system_role = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY, "")
+                if self.plugin_prompt.system_role in system_role:
+                    # the persisted thread keeps the system message that an earlier prompt customized.
+                    break
                 custom_prompt = {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
                     OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role
