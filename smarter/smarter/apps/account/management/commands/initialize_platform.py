@@ -19,7 +19,7 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--username",
             type=str,
-            help="The username for the superuser associated with this platform. If not provided, the default 'admin' will be used.",
+            help="The username of the platform's superuser. Default: smarter_settings.admin_username (SMARTER_ADMIN_USERNAME), or 'admin'.",
         )
         parser.add_argument(
             "--email",
@@ -29,7 +29,7 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--password",
             type=str,
-            help="The value to encrypt and persist. If not provided and you are running locally, the default 'smarter' will be used.",
+            help="The password of the superuser and the example users. Default: smarter_settings.admin_password (SMARTER_ADMIN_PASSWORD), or 'smarter' when running locally.",
         )
 
     # pylint: disable=broad-except
@@ -37,24 +37,27 @@ class Command(SmarterCommand):
         """
         Initialize the Smarter platform.
 
-        Creates the minimal resources necessary to start using Smarter.
+        Creates the minimal resources necessary to start using Smarter. This is the one place where
+        the platform's example resources are created and deployed: the Helm init job and
+        ``make docker-init`` run it, and nothing else.
 
-        1. Create an admin user with the provided username, email, and password.
-        2. Create example accounts and users.
-        3. Verify DNS configuration.
-        4. Load example projects from GitHub.
-        5. Add plugin examples.
-        6. Deploy example llmclients.
-        7. Initialize providers, and the built-in Proxies of their APIs.
-        8. Load the Stackademy project from GitHub, and verify its LLMClients.
-        9. Sync the ledger of infrastructure resources with the Kubernetes cluster.
+        1. Create the admin user and the example users. The username and password come from
+           ``--username`` and ``--password``, or from ``smarter_settings.admin_username`` and
+           ``admin_password``, so that the init job passes no password on its command line.
+        2. Initialize the Waffle switches, then add the example resources: Guardrails, CustomDomains,
+           Budgets, MCPClients, the Smarter project's index, LLMHosts, Providers and their built-in
+           Proxies, extensions, vector stores, tools and LLMClients.
+        3. Deploy the example LLMClients.
+        4. Load the Stackademy project from GitHub, deploy its LLMClients, and verify them.
+        5. Verify the DNS configuration, and sync the ledger of infrastructure resources with the
+           Kubernetes cluster.
+
+        Deploying an LLMClient creates its DNS record and Kubernetes ingress, so the LLMClients are
+        deployed everywhere except in the local environment, where they are only applied.
         """
         self.handle_begin()
 
-        username = options.get("username")
-        if not username:
-            username = "admin"
-            self.stdout.write(self.style.WARNING(f"No username provided, using the default value: {username}"))
+        username = options.get("username") or smarter_settings.admin_username
 
         email = options.get("email")
         if not email:
@@ -64,15 +67,17 @@ class Command(SmarterCommand):
             )
 
         password = options.get("password")
+        if not password and smarter_settings.admin_password:
+            password = smarter_settings.admin_password.get_secret_value()
         if not password:
-            if smarter_settings.environment == SmarterEnvironments.LOCAL:
-                password = "smarter"
-                self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {password}"))
-            else:
-                self.stdout.write(
-                    self.style.ERROR("An administrator password is required when not running in LOCAL environment.")
+            if smarter_settings.environment != SmarterEnvironments.LOCAL:
+                raise CommandError(
+                    "An administrator password is required outside the local environment: "
+                    "set SMARTER_ADMIN_PASSWORD, or pass --password."
                 )
-                return
+            password = "smarter"
+            self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {password}"))
+        deploy = smarter_settings.environment != SmarterEnvironments.LOCAL
 
         # create Smarter Account and admin User.
         # ---------------------------------------------------------------------
@@ -184,26 +189,35 @@ class Command(SmarterCommand):
 
         try:
             # last of the examples: the example LLMClients use the Providers, the official extensions,
-            # the MCPClients, the tools and the Guardrails. Applied, not deployed: deploy_example_llmclients
-            # deploys them.
+            # the MCPClients, the tools and the Guardrails.
             call_command("add_example_llmclients", username=username)
         except (Exception, SystemExit) as e:
             logger.error("Failed to apply the example LLMClients: %s", e)
+
+        if deploy:
+            try:
+                call_command("deploy_example_llmclients", account_number=SMARTER_ACCOUNT_NUMBER)
+            except (Exception, SystemExit) as e:
+                logger.error("Failed to deploy the example LLMClients: %s", e)
+                fatal.append("deploy_example_llmclients")
 
         try:
             # The Stackademy project: the Secrets, Connections, plugins, LLMClients and Budget of a fictional
             # code academy, in their own repository, which load_from_github applies in the order of their
             # dependencies. After initialize_providers: its plugins and LLMClients use the openai Provider.
-            # Applied, not deployed. Its ApiConnection's Secret is also the password of this platform's
-            # Stackademy course catalogue, /api/v1/demos/stackademy/course-catalogue/.
+            # Its LLMClients are deployed as they are applied, outside the local environment. Its
+            # ApiConnection's Secret is also the password of this platform's Stackademy course catalogue,
+            # /api/v1/demos/stackademy/course-catalogue/.
             call_command(
                 "load_from_github",
                 url=STACKADEMY_REPOSITORY_URL,
                 account_number=SMARTER_ACCOUNT_NUMBER,
                 username=username,
+                deploy=deploy,
             )
         except (Exception, SystemExit) as e:
             logger.error("Failed to load the Stackademy project from %s: %s", STACKADEMY_REPOSITORY_URL, e)
+            fatal.append("load_from_github")
 
         try:
             # after load_from_github. It prompts the Stackademy LLMClients, and exits when they don't work.

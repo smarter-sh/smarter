@@ -79,11 +79,16 @@ none.
 A CronJob, ``smarter-mysql-backup``, backs up the database every night (``databaseScheduledBackup``),
 with ``mariadb-dump``, and uploads the compressed dump to ``databaseScheduledBackup.s3Uri``, by
 default ``s3://<SMARTER_S3_BUCKET>/backups/sql``. Point ``s3Uri`` at a private bucket when the
-platform's bucket serves public files. The dump runs as the database's root account unless
-``databaseScheduledBackup.username`` and ``password`` name a read-only account, which needs
-``SELECT, SHOW VIEW, TRIGGER, EVENT, SHOW CREATE ROUTINE`` on the platform's database
-(``SHOW CREATE ROUTINE`` exists in MariaDB 11.3 and later). The password reaches ``mariadb-dump`` in a
-temporary option file, not on its command line. Before uploading, the backup checks that the dump ran
+platform's bucket serves public files. The dump runs as a read-only account,
+``SMARTER_MYSQL_BACKUP_USERNAME`` (``smarter_backup`` by default), which the init Job creates, or
+updates, whenever ``SMARTER_MYSQL_BACKUP_PASSWORD`` is set, with ``SELECT, SHOW VIEW, TRIGGER, EVENT,
+SHOW CREATE ROUTINE`` on the platform's database (``SHOW CREATE ROUTINE`` exists in MariaDB 11.3 and
+later; on an older server the account gets the rest). The deploy workflow reads that password from
+the GitHub secret ``SMARTER_MYSQL_BACKUP_PASSWORD``. Until it is set, the backup dumps as the root
+account. The backup's container receives only what it needs: the database's host, port and name, the
+backup account, the S3 location and the AWS credentials, and the root password only when there is no
+backup account. The password reaches ``mariadb-dump`` in a temporary option file, not on its command
+line. Before uploading, the backup checks that the dump ran
 to the end and that the archive is intact, and after uploading, that the object in S3 has the
 archive's size.
 

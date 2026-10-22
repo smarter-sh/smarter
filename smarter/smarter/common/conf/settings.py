@@ -260,6 +260,73 @@ class Settings(BaseSettings):
 
         return list(set(retval))
 
+    admin_username: str = Field(
+        settings_defaults.ADMIN_USERNAME,
+        description="The username of the platform's superuser, which manage.py initialize_platform creates.",
+        examples=["admin"],
+        title="Administrator Username",
+    )
+    """
+    The username of the platform's superuser.
+
+    ``manage.py initialize_platform`` creates this superuser, unless ``--username`` names
+    another. Set it with ``SMARTER_ADMIN_USERNAME``.
+
+    :type: str
+    :default: Value from ``settings_defaults.ADMIN_USERNAME``, ``admin`` if it is not set.
+    :raises SmarterConfigurationError: If the value is not a non-empty string.
+    """
+
+    @before_field_validator("admin_username")
+    def validate_admin_username(cls, v: Optional[str]) -> str:
+        """Validates the `admin_username` field.
+
+        Args:
+            v (Optional[str]): The administrator username to validate.
+        Returns:
+            str: The validated administrator username.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.ADMIN_USERNAME
+        if not isinstance(v, str) or not v:
+            raise SmarterConfigurationError(f"admin_username of type {type(v)} is not a non-empty string.")
+        return v
+
+    admin_password: Optional[SecretStr] = Field(
+        settings_defaults.ADMIN_PASSWORD,
+        description="The password of the platform's superuser, which manage.py initialize_platform creates.",
+        examples=["your-admin-password"],
+        title="Administrator Password",
+    )
+    """
+    The password of the platform's superuser.
+
+    ``manage.py initialize_platform`` gives the superuser and the example users this password,
+    unless ``--password`` gives another. Set it with ``SMARTER_ADMIN_PASSWORD``. Reading it from
+    the environment keeps it off the command line, and out of the init Job's log.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``settings_defaults.ADMIN_PASSWORD``, None if it is not set.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("admin_password")
+    def validate_admin_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `admin_password` field.
+
+        Args:
+            v (Optional[SecretStr]): The administrator password to validate.
+        Returns:
+            Optional[SecretStr]: The validated administrator password, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.ADMIN_PASSWORD
+        if is_missing_value(v):
+            return None
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"admin_password of type {type(v)} is not a SecretStr")
+        return v
+
     api_description: str = Field(
         settings_defaults.API_DESCRIPTION,
         description="The description of the API.",

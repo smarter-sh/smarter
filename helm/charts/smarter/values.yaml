@@ -104,6 +104,8 @@ env:
   SMARTER_MAILCHIMP_LIST_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_MARKETING_SITE_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_MISTRAL_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_MYSQL_BACKUP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml" # the read-only account for the nightly backup. Unset: the backup dumps as root
+  SMARTER_MYSQL_BACKUP_USERNAME: "smarter_backup"
   SMARTER_MYSQL_DATABASE: "smarter_platform_prod"
   SMARTER_MYSQL_HOST: "mysql"
   SMARTER_MYSQL_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -273,8 +275,6 @@ databaseScheduledBackup:
   schedule: "0 2 * * *" # Every day at 2am UTC
   notifyEmail: ""        # the Job emails the backup's result and log here. Empty: smarter_settings.email_admin
   s3Uri: ""              # where backups are uploaded, e.g. s3://my-private-bucket/backups/sql. Empty: s3://<env.SMARTER_S3_BUCKET>/backups/sql
-  username: ""           # a read-only database account to dump with. Empty: env.SMARTER_MYSQL_ROOT_USERNAME
-  password: ""           # its password. Empty: env.SMARTER_MYSQL_ROOT_PASSWORD
   awsCliVersion: ""      # the AWS CLI release to install. Empty: the version pinned in configmap-debian-setup.yaml
 
 externalDatabase:
@@ -340,8 +340,8 @@ mariadb:
     # Smarter stores emoji and other 4-byte characters (prompts, manifests,
     # chat history), which need utf8mb4. The Bitnami chart's default my.cnf sets
     # character-set-server=UTF8, which is the 3-byte utf8mb3. Command-line flags
-    # take precedence over my.cnf. The init Job also converts any existing
-    # utf8mb3 tables, with manage.py convert_database_charset.
+    # take precedence over my.cnf. The init Job also creates the database, or
+    # alters it, with utf8mb4 as its default.
     extraFlags: "--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"

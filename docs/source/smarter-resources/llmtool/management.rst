@@ -9,6 +9,5 @@ Django Management Commands
    management/create-plugin
    management/delete-plugin
    management/get-plugins
-   management/rename-plugin-app-label
    management/retrieve-plugin
    management/update-plugin

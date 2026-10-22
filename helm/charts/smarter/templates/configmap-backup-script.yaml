@@ -6,8 +6,8 @@
 # - Maintainer: The Smarter Project, https://smarter.sh
 # - Purpose: Provides a shell script to back up the MariaDB database and upload it to S3.
 # - Usage: Mounted into the backup Job (job-mysql-backup.yaml) and the Bastion.
-#   The S3 location and the database account are set in values.yaml, under
-#   databaseScheduledBackup.
+#   The S3 location is set in values.yaml, under databaseScheduledBackup, and
+#   the backup account in env.SMARTER_MYSQL_BACKUP_USERNAME and _PASSWORD.
 #
 # Note:
 # The app.kubernetes.io/application-group label is used to identify pods to Calico
@@ -41,11 +41,12 @@ data:
     #   SMARTER_MYSQL_HOST, SMARTER_MYSQL_PORT, SMARTER_MYSQL_DATABASE
     #   SMARTER_MYSQL_BACKUP_S3_URI    where to upload, e.g. s3://my-bucket/backups/sql.
     #                                  Default: s3://$SMARTER_S3_BUCKET/backups/sql
-    #   SMARTER_MYSQL_BACKUP_USERNAME  the database account to dump with.
-    #   SMARTER_MYSQL_BACKUP_PASSWORD  Default: SMARTER_MYSQL_ROOT_USERNAME and
-    #                                  SMARTER_MYSQL_ROOT_PASSWORD. A read-only account
-    #                                  needs SELECT, SHOW VIEW, TRIGGER, EVENT and
-    #                                  SHOW CREATE ROUTINE on the database.
+    #   SMARTER_MYSQL_BACKUP_USERNAME  the read-only account to dump with, by default
+    #   SMARTER_MYSQL_BACKUP_PASSWORD  smarter_backup. job-init.yaml creates it, with
+    #                                  SELECT, SHOW VIEW, TRIGGER, EVENT and SHOW CREATE
+    #                                  ROUTINE on the database. Without a password, the
+    #                                  script uses SMARTER_MYSQL_ROOT_USERNAME and
+    #                                  SMARTER_MYSQL_ROOT_PASSWORD.
     #   BACKUP_SUMMARY_FILE            optional: where to write the summary below.
     #
     # The password is passed to mariadb-dump in a temporary option file, not on the
@@ -72,8 +73,17 @@ data:
       *) echo "FAILED: the backup location must be an s3:// URI, not ${BACKUP_S3_PREFIX}"; exit 1 ;;
     esac
 
-    BACKUP_USERNAME="${SMARTER_MYSQL_BACKUP_USERNAME:-${SMARTER_MYSQL_ROOT_USERNAME}}"
-    BACKUP_PASSWORD="${SMARTER_MYSQL_BACKUP_PASSWORD:-${SMARTER_MYSQL_ROOT_PASSWORD}}"
+    # the read-only backup account, which job-init.yaml creates, when its password is
+    # set. Otherwise the root account, which is all that a deployment without
+    # SMARTER_MYSQL_BACKUP_PASSWORD has.
+    if [ -n "${SMARTER_MYSQL_BACKUP_PASSWORD:-}" ] && [ "${SMARTER_MYSQL_BACKUP_PASSWORD#SET-ME}" = "${SMARTER_MYSQL_BACKUP_PASSWORD}" ]; then
+      BACKUP_USERNAME="${SMARTER_MYSQL_BACKUP_USERNAME:-smarter_backup}"
+      BACKUP_PASSWORD="${SMARTER_MYSQL_BACKUP_PASSWORD}"
+    else
+      echo "SMARTER_MYSQL_BACKUP_PASSWORD is not set, so the backup runs as the root account."
+      BACKUP_USERNAME="${SMARTER_MYSQL_ROOT_USERNAME}"
+      BACKUP_PASSWORD="${SMARTER_MYSQL_ROOT_PASSWORD}"
+    fi
 
     BACKUP_FILENAME="${SMARTER_MYSQL_DATABASE}-$(date +%Y%m%dT%H%M%S)"
     BACKUP_FILE="${BACKUP_FILENAME}.tar.gz"

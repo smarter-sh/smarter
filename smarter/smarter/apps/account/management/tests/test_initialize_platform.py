@@ -3,6 +3,7 @@
 from unittest.mock import ANY, patch
 
 from django.core.management.base import CommandError
+from pydantic import SecretStr
 
 from smarter.apps.llmclient.const import STACKADEMY_REPOSITORY_URL
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
@@ -32,9 +33,15 @@ class TestInitializePlatform(CommandTestBase):
         self.assertEqual([name for name in names if name in examples], examples)
         for name in examples[:2]:
             self.assertEqual(call.call_args_list[names.index(name)].kwargs, {"username": "admin"})
+        # the tests run in the local environment, where nothing is deployed.
         self.assertEqual(
             call.call_args_list[names.index("load_from_github")].kwargs,
-            {"url": STACKADEMY_REPOSITORY_URL, "account_number": SMARTER_ACCOUNT_NUMBER, "username": "admin"},
+            {
+                "url": STACKADEMY_REPOSITORY_URL,
+                "account_number": SMARTER_ACCOUNT_NUMBER,
+                "username": "admin",
+                "deploy": False,
+            },
         )
         for dependency in ("initialize_providers", "add_example_extensions", "add_example_mcpclients"):
             self.assertLess(names.index(dependency), names.index("add_example_llmclients"))
@@ -83,13 +90,78 @@ class TestInitializePlatform(CommandTestBase):
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.LOCAL
             settings.root_domain = "example.com"
+            settings.admin_username = "admin"
+            settings.admin_password = None
             self.run_command("initialize_platform")
         self.assertEqual(
             call.call_args_list[0].kwargs, {"username": "admin", "password": "smarter", "email": "admin@example.com"}
         )
 
-    def test_password_required_outside_local(self):
+    def test_credentials_from_settings(self):
+        """Test that the admin credentials come from smarter_settings, so the init job passes none on its command line."""
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.PROD
+            settings.root_domain = "example.com"
+            settings.admin_username = "platform-admin"
+            settings.admin_password = SecretStr("from-env")
             self.run_command("initialize_platform")
+        self.assertEqual(
+            call.call_args_list[0].kwargs,
+            {"username": "platform-admin", "password": "from-env", "email": "platform-admin@example.com"},
+        )
+
+    def test_arguments_override_settings(self):
+        with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
+            settings.environment = SmarterEnvironments.PROD
+            settings.root_domain = "example.com"
+            settings.admin_username = "platform-admin"
+            settings.admin_password = SecretStr("from-env")
+            self.run_command("initialize_platform", username="cli-admin", password="cli-pw")
+        self.assertEqual(call.call_args_list[0].kwargs["username"], "cli-admin")
+        self.assertEqual(call.call_args_list[0].kwargs["password"], "cli-pw")
+
+    def test_password_required_outside_local(self):
+        """Test that a missing password outside the local environment fails, so the init job fails."""
+        with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
+            settings.environment = SmarterEnvironments.PROD
+            settings.admin_username = "admin"
+            settings.admin_password = None
+            with self.assertRaisesRegex(CommandError, "SMARTER_ADMIN_PASSWORD"):
+                self.run_command("initialize_platform")
         call.assert_not_called()
+
+    def test_deploys_outside_local(self):
+        """Test that outside the local environment the example and Stackademy LLMClients are deployed."""
+        with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
+            settings.environment = SmarterEnvironments.PROD
+            settings.root_domain = "example.com"
+            settings.admin_username = "admin"
+            settings.admin_password = SecretStr("pw")
+            self.run_command("initialize_platform")
+        names = [c.args[0] for c in call.call_args_list]
+        self.assertEqual(
+            call.call_args_list[names.index("deploy_example_llmclients")].kwargs,
+            {"account_number": SMARTER_ACCOUNT_NUMBER},
+        )
+        self.assertLess(names.index("add_example_llmclients"), names.index("deploy_example_llmclients"))
+        self.assertTrue(call.call_args_list[names.index("load_from_github")].kwargs["deploy"])
+        self.assertLess(names.index("load_from_github"), names.index("verify_stackademy"))
+
+    def test_deploy_failures_are_fatal(self):
+        """Test that a failed deploy, or a failed Stackademy load, fails initialize_platform once every step has run."""
+
+        def call(name, **kwargs):
+            if name in ("deploy_example_llmclients", "load_from_github"):
+                raise SystemExit(1)
+
+        with (
+            patch(f"{MODULE}.call_command", side_effect=call) as called,
+            patch(f"{MODULE}.smarter_settings") as settings,
+        ):
+            settings.environment = SmarterEnvironments.PROD
+            settings.root_domain = "example.com"
+            settings.admin_username = "admin"
+            settings.admin_password = SecretStr("pw")
+            with self.assertRaisesRegex(CommandError, "deploy_example_llmclients, load_from_github"):
+                self.run_command("initialize_platform")
+        self.assertEqual(called.call_args_list[-1].args[0], "sync_infrastructure_inventory")
