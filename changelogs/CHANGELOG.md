@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.10-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.9...v0.36.10-alpha.1) (2026-10-22)
+
+### Bug Fixes
+
+* **chat:** add silly nouns and scientific adjectives to the banter ([7fc78fd](https://github.com/smarter-sh/smarter/commit/7fc78fd9b74f8263ba0cf8f6eecff736641e05d6))
+
 ## [0.36.9](https://github.com/smarter-sh/smarter/compare/v0.36.8...v0.36.9) (2026-10-22)
 
 ### Bug Fixes
