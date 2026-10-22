@@ -67,7 +67,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    Smarter API LLMClient Manifest - Metadata class.
 
    .. py:attribute:: annotations
-      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', ascii_only=None)], uuid.UUID, bytes, list, dict[str, Any]]]]
+      :type: None | list[dict[str, str | int | float | bool | datetime.date | datetime.datetime | uuid.UUID | bytes | list | dict[str, Any]]]
 
       The manifest annotations.
 
@@ -214,7 +214,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
       Optional. The default system prompt to use for the llmclient. This defaults to the following value:
       You are a helpful llmclient. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time..
-      The system prompt is the first message in the conversation and is used to set the context for the llmclient. It is important to keep this prompt short, as it is included in the token count for each message. The maximum length of the system prompt is 2048 characters.
+      The system prompt is the first message in the conversation and is used to set the context for the llmclient. It is sent with every prompt, so its tokens count towards every turn's cost. The maximum length of the system prompt is 32768 characters.
 
 
    .. py:attribute:: defaultTemperature
@@ -415,7 +415,10 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
    Bases: :class:`smarter.models.sam.base.SAMModel`
 
-   ``spec.config.styles.buttons``: the send and attach buttons, and the header's buttons.
+   ``spec.config.styles.buttons``: the send and attach buttons, on the message input.
+
+   The header's buttons take the header's text color, ``conversationHeader.color``, so that
+   they contrast with the header, whose background is usually the opposite of the input's.
 
    chatscope's ``Button``, class ``.cs-button``.
 
@@ -424,7 +427,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
       LLMClient.styles.buttons.color[str].
 
-      Optional. The color of the buttons' icons. chatscope's $button-color. Example: '#6ea9d7'.
+      Optional. The color of the send and attach buttons' icons, on the message input. The header's buttons use conversationHeader.color, or this color if it is not set. chatscope's $button-color. Example: '#6ea9d7'.
 
 
 
@@ -458,7 +461,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
 
       LLMClient.styles.conversationHeader.color[str].
 
-      Optional. The color of the LLMClient's name. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.
+      Optional. The color of the LLMClient's name, and of the header's buttons: new chat, show or hide the Console, sandbox or production, and Docs. Choose a color that contrasts with backgroundColor. chatscope's $conversation-header-user-name-color. Example: '#ffffff'.
 
 
    .. py:attribute:: infoColor
@@ -834,12 +837,12 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
       The configuration for the LLMClient.
 
 
-   .. py:attribute:: functions
+   .. py:attribute:: extensions
       :type: list[str] | None
 
-      LLMClient.spec.functions[list].
+      LLMClient.spec.extensions[list].
 
-      Optional. The built-in Smarter Functions to add to the LLMClient. Example: ['get_current_weather']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.
+      Optional. The slugs of the Extensions whose tools the LLMClient offers the LLM. Example: ['weather', 'calculator']. Extensions are Python packages that a platform administrator installs; each must be installed, enabled and available to your account. See https://docs.smarter.sh/ for more information.
 
 
    .. py:attribute:: guardrails
