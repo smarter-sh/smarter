@@ -32,17 +32,17 @@ from ..tasks import create_plugin_selector_history
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-prefix = f"{__name__}."
+logger_prefix = formatted_text(__name__)
 
 
 @receiver(plugin_created, dispatch_uid="plugin_created")
 def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
     """Handle plugin created signal."""
 
-    logger.info(
-        "%s - %s - name: %s data: %s",
-        formatted_text(prefix + "plugin_created"),
-        plugin.user_profile,
+    logger.info("%s.plugin_created() %s for %s", logger_prefix, plugin.name, plugin.user_profile)
+    logger.debug(
+        "%s.plugin_created() %s data: %s",
+        logger_prefix,
         plugin.name,
         formatted_json(plugin.data) if plugin.data else None,
     )
@@ -52,17 +52,17 @@ def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
 def handle_plugin_cloned(sender, plugin: PluginBase, **kwargs):
     """Handle plugin cloned signal."""
 
-    logger.info("%s - %s data: %s", formatted_text(prefix + "plugin_cloned"), plugin.name, plugin.data)
+    logger.info("%s.plugin_cloned() %s data: %s", logger_prefix, plugin.name, plugin.data)
 
 
 @receiver(plugin_updated, dispatch_uid="plugin_updated")
 def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
     """Handle plugin updated signal."""
 
-    logger.info(
-        "%s - %s - name: %s data: %s",
-        formatted_text(prefix + "plugin_updated"),
-        plugin.user_profile,
+    logger.info("%s.plugin_updated() %s for %s", logger_prefix, plugin.name, plugin.user_profile)
+    logger.debug(
+        "%s.plugin_updated() %s data: %s",
+        logger_prefix,
         plugin.name,
         formatted_json(plugin.data) if plugin.data else None,
     )
@@ -72,8 +72,8 @@ def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
 def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     """Handle plugin deleting signal."""
     logger.info(
-        "%s %s is being deleted.",
-        formatted_text(prefix + "plugin_deleting"),
+        "%s.plugin_deleting() %s is being deleted.",
+        logger_prefix,
         plugin_meta.name,
     )
 
@@ -82,7 +82,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 def handle_plugin_deleted(sender, plugin: PluginBase, plugin_name: str, **kwargs):
     """Handle plugin deleted signal."""
 
-    logger.info("%s - %s", formatted_text(prefix + "plugin_deleted"), plugin_name)
+    logger.info("%s.plugin_deleted() %s", logger_prefix, plugin_name)
 
 
 @receiver(plugin_called, dispatch_uid="plugin_called")
@@ -91,7 +91,7 @@ def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
 
-    logger.info("%s - %s inquiry_type: %s", formatted_text(prefix + "plugin_called"), plugin.name, inquiry_type)
+    logger.info("%s.plugin_called() %s inquiry_type: %s", logger_prefix, plugin.name, inquiry_type)
 
 
 @receiver(plugin_responded, dispatch_uid="plugin_responded")
@@ -108,8 +108,8 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
         pass
 
     logger.info(
-        "%s - %s inquiry_type: %s inquiry_return: %s",
-        formatted_text(prefix + "plugin_responded"),
+        "%s.plugin_responded() %s inquiry_type: %s inquiry_return: %s",
+        logger_prefix,
         plugin.name,
         inquiry_type,
         formatted_json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
@@ -120,7 +120,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
 def handle_plugin_ready(sender, plugin: PluginBase, **kwargs):
     """Handle plugin ready signal."""
 
-    logger.info("%s - %s", formatted_text(prefix + "plugin_ready"), plugin.name)
+    logger.info("%s.plugin_ready() %s", logger_prefix, plugin.name)
 
 
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
@@ -136,16 +136,17 @@ def handle_plugin_selected(sender, *args, **kwargs):
 
     prompt = input_text if input_text else formatted_json(messages)
     logger.info(
-        "signal received for %s - %s search_term: %s prompt(s): %s",
-        formatted_text(prefix + "plugin_selected"),
+        "%s.plugin_selected() %s search_term: %s",
+        logger_prefix,
         plugin.name if plugin else "Unknown Plugin",
         search_term,
-        prompt,
     )
+    # DEBUG: the prompt is the user's conversation.
+    logger.debug("%s.plugin_selected() prompt(s): %s", logger_prefix, prompt)
     if plugin is None or plugin.id is None:
         logger.warning(
-            "%s received without a plugin id. Plugin selector history is not recorded.",
-            formatted_text(prefix + "plugin_selected"),
+            "%s.plugin_selected() received without a plugin id. Plugin selector history is not recorded.",
+            logger_prefix,
         )
         return
 
@@ -162,13 +163,14 @@ def handle_plugin_selected(sender, *args, **kwargs):
 def handle_search_term_matched(sender, prompt: str, search_term: str, method: str, matched_text=None, **kwargs):
     """Handle search term matched signal."""
     logger.info(
-        "signal received for %s - search_term: %s method: %s matched_text: %s prompt: %s",
-        formatted_text(prefix + "search_term_matched"),
+        "%s.search_term_matched() search_term: %s method: %s matched_text: %s",
+        logger_prefix,
         search_term,
         method,
         matched_text,
-        prompt,
     )
+    # DEBUG: the prompt is the user's conversation.
+    logger.debug("%s.search_term_matched() prompt: %s", logger_prefix, prompt)
 
 
 @receiver(broker_ready, dispatch_uid="broker_ready")

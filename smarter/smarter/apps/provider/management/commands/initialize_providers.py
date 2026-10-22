@@ -29,9 +29,11 @@ from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT
 from smarter.common.helpers.console_helpers import formatted_banner
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.models.utils import assign_changed_fields
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.formatted_text(__name__)
 
 HERE = Path(__file__).resolve().parent
 
@@ -214,12 +216,12 @@ class Command(SmarterCommand):
                     # a new model starts active, and its verification, which saving it queues, decides
                     # whether it stays so. An existing model keeps the is_active its last verification set.
                     defaults = {"description": f"{model_name} model for {provider.name}.", "is_default": is_default}
-                    ProviderModel.objects.update_or_create(
-                        provider=provider,
-                        name=model_name,
-                        defaults=defaults,
-                        create_defaults={**defaults, "is_active": True},
-                    )
+                    # an unchanged model is not saved again: there are hundreds, and every deploy runs this.
+                    provider_model = ProviderModel.objects.filter(provider=provider, name=model_name).first()
+                    if provider_model is None:
+                        ProviderModel.objects.create(provider=provider, name=model_name, **defaults, is_active=True)
+                    elif assign_changed_fields(provider_model, defaults):
+                        provider_model.save()
                     return True
                 # pylint: disable=broad-except
                 except Exception as e:
@@ -232,6 +234,12 @@ class Command(SmarterCommand):
                 self.stdout.write(f"{log_prefix} Fetching provider models from {url}")
                 response = requests.get(url, headers=headers, params=models_params, timeout=10)
             except requests.RequestException as e:
+                logger.error(
+                    "%s.initialize_generic_provider() failed to fetch the %s provider's models: %s",
+                    logger_prefix,
+                    name,
+                    e,
+                )
                 self.stdout.write(self.style.ERROR(f"{log_prefix} Failed to fetch provider models. Error: {e}"))
                 return
 
@@ -247,6 +255,16 @@ class Command(SmarterCommand):
                 # pylint: disable=broad-except
                 except Exception:
                     error_message = response.text
+                # an error, not only command output: the command still succeeds, so without a logged ERROR an
+                # expired key or a suspended account is easy to miss.
+                logger.error(
+                    "%s.initialize_generic_provider() failed to fetch the %s provider's models from %s: %s %s",
+                    logger_prefix,
+                    name,
+                    url,
+                    response.status_code,
+                    error_message,
+                )
                 self.stdout.write(
                     self.style.ERROR(
                         f"{log_prefix} Failed to fetch provider models. {url} Response {response.status_code}: {error_message}"
@@ -291,7 +309,7 @@ class Command(SmarterCommand):
             )
 
         self.echo_banner(name)
-        logger.info("initialize_%s", name)
+        logger.info("%s.initialize_generic_provider() initializing the %s provider", logger_prefix, name)
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR(f"initialize_{name}: User profile is not set."))
             return
@@ -299,16 +317,18 @@ class Command(SmarterCommand):
         COMMON_DEFAULTS = {
             "user_profile": self.user_profile,
             "contact_email": SMARTER_CONTACT_EMAIL,
-            "contact_email_verified": timezone.now(),
             "support_email": SMARTER_CUSTOMER_SUPPORT_EMAIL,
-            "support_email_verified": timezone.now(),
-            "tos_accepted_at": timezone.now(),
             "tos_accepted_by": self.user_profile.user,
         }
         # a new built-in provider starts verified and active. An existing one keeps the status that its
         # last verification, or an admin who deprecated, flagged or suspended it, set: every deploy runs
         # this command, and must not re-enable a provider that failed verification.
+        # when the emails were verified, and the terms accepted: when the provider was created. Setting
+        # them on every deploy changed every provider's row on every deploy.
         CREATE_DEFAULTS = {
+            "contact_email_verified": timezone.now(),
+            "support_email_verified": timezone.now(),
+            "tos_accepted_at": timezone.now(),
             "status": ProviderStatus.VERIFIED,
             "is_active": True,
             "is_verified": True,
@@ -344,11 +364,13 @@ class Command(SmarterCommand):
                 # the platform-wide default provider, e.g. for prompts that do not name one
                 "is_default": name == smarter_settings.llm_default_provider,
             }
-            provider, _ = Provider.objects.update_or_create(
-                name=name,
-                defaults=defaults,
-                create_defaults={**defaults, **CREATE_DEFAULTS},
-            )
+            # an unchanged provider is not saved again: every deploy runs this command, and each save
+            # sends post_save and invalidates the provider's caches.
+            provider = Provider.objects.filter(name=name).first()
+            if provider is None:
+                provider = Provider.objects.create(name=name, **defaults, **CREATE_DEFAULTS)
+            elif assign_changed_fields(provider, defaults):
+                provider.save()
         # pylint: disable=broad-except
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"initialize_{name}: Failed to create/update provider. Error: {e}"))
@@ -356,7 +378,9 @@ class Command(SmarterCommand):
 
         logo_path = HERE / "data" / "logos" / name / logo_filename
         with open(logo_path, "rb") as logo_file:
-            provider.logo.save(logo_filename, ContentFile(logo_file.read()), save=True)
+            logo = logo_file.read()
+        if not self.has_logo(provider, logo):
+            provider.logo.save(logo_filename, ContentFile(logo), save=True)
 
         if secret is None:
             # the models cannot be listed without a key, so only the default model is created.
@@ -648,6 +672,31 @@ class Command(SmarterCommand):
             logo_filename="together-logo.svg",
             provider_api_url="https://platform.together.ai/api-keys",
         )
+
+    @staticmethod
+    def has_logo(provider: Provider, logo: bytes) -> bool:
+        """
+        Whether a provider's stored logo is the given image.
+
+        Every deploy runs this command. Saving the logo again uploads it, and saves the provider.
+
+        :param provider: The provider.
+        :type provider: Provider
+        :param logo: The logo's bytes.
+        :type logo: bytes
+        :returns: True if the provider has a logo, and its content is ``logo``.
+        :rtype: bool
+        """
+        if not provider.logo:
+            return False
+        try:
+            with provider.logo.open("rb") as stored:
+                return stored.read() == logo
+        # pylint: disable=broad-except
+        except Exception as e:
+            # e.g. the file is missing from storage: it is saved again.
+            logger.debug("%s.has_logo() could not read the logo of %s: %s", logger_prefix, provider.name, e)
+            return False
 
     def missing_api_key(self, env_var: str, used_for: str, url: str):
         """

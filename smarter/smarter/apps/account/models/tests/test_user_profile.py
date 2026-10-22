@@ -145,6 +145,13 @@ class TestUserProfile(TestAccountMixin):
         self.assertIsInstance(str(self.user_profile), str)
         self.assertGreater(len(str(self.user_profile)), 0)
 
+    def test_str_masks_the_email(self):
+        """The string form is written to logs, so the user's email is masked, keeping its domain."""
+        email = self.user_profile.user.email
+        self.assertTrue(email)
+        self.assertNotIn(email, str(self.user_profile))
+        self.assertIn("@" + email.partition("@")[2], str(self.user_profile))
+
     def test_repr(self):
         """
         Test the `__repr__` method.
