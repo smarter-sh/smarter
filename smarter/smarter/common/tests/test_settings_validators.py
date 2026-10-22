@@ -120,6 +120,15 @@ class TestSettingsValidators(SmarterTestBase):
         # a field that is required has no default, but most do.
         self.assertLess(len(failures), len(field_validators()), failures)
 
+    def test_database_read_timeout(self):
+        """Test that the database read timeout parses seconds, defaults to no timeout, and rejects text."""
+        validator = Settings.parse_database_read_timeout
+        self.assertEqual(call(validator, "60", {}), 60)
+        self.assertEqual(call(validator, 30, {}), 30)
+        self.assertEqual(call(validator, "", {}), 0)
+        with self.assertRaises(SmarterConfigurationError):
+            call(validator, "a minute", {})
+
 
 class TestSettingsMethods(SmarterTestBase):
     """Test the Settings' methods and properties that the test_conf tests don't reach."""

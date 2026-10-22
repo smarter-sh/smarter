@@ -3270,6 +3270,50 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"mysql_root_password of type {type(v)} is not a SecretStr")
         return v
 
+    database_read_timeout: int = Field(
+        settings_defaults.DATABASE_READ_TIMEOUT,
+        ge=0,
+        description=(
+            "The seconds that a query of the platform's database may wait for the server's reply before it fails. "
+            "0 for no timeout."
+        ),
+        title="Database Read Timeout",
+    )
+    """
+    The seconds that a query of the platform's database may wait for the server's reply, and a write may.
+
+    wait to be sent, before it fails. 0, the default, is no timeout.
+
+    Without a timeout, a request whose query the database never answers holds its thread forever. The
+    Helm chart sets it for the web server's pods only: migrations and other management commands can
+    legitimately run longer, and keep the default. Connecting always times out after
+    :data:`smarter.settings.base.DATABASE_CONNECT_TIMEOUT` seconds.
+
+    Set it with ``SMARTER_DATABASE_READ_TIMEOUT``.
+
+    :type: int
+    :default: Value from ``settings_defaults.DATABASE_READ_TIMEOUT``, 0 if it is not set.
+    :raises SmarterConfigurationError: If the value is not a non-negative integer.
+    """
+
+    @before_field_validator("database_read_timeout")
+    def parse_database_read_timeout(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'database_read_timeout' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the database_read_timeout value to validate
+        Returns:
+            int: The validated database_read_timeout.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.DATABASE_READ_TIMEOUT
+        try:
+            return int(v)  # type: ignore[reportArgumentType]
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError(f"could not validate database_read_timeout: {v}") from e
+
     social_auth_google_oauth2_key: SecretStr = Field(
         settings_defaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
         description="The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.",

@@ -280,7 +280,13 @@ class LLMClient(MetaDataWithOwnershipModel):
     )
 
     def __str__(self) -> str:
-        return self.url if self.url else "undefined"
+        """
+        The LLMClient's name and id.
+
+        Not its :attr:`url`, which reads the account's admin user from the cache: log records format
+        LLMClients often, e.g. several times per request of Smarter Chat's configuration api.
+        """
+        return f"{self.name} ({self.pk})" if self.name else "undefined"
 
     @property
     def is_billable_resource(self) -> bool:

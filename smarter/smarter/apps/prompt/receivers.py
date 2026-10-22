@@ -97,7 +97,10 @@ def handle_chat_config_invoked_(
     url: Optional[str] = instance.url
 
     logger.info("%s by %s url=%s", formatted_text(f"{prefix}.prompt_config_invoked"), get_sender_name(sender), url)
-    logger.debug("%s data: %s", formatted_text(f"{prefix}.prompt_config_invoked"), formatted_json(data))
+    # formatted_json() of the whole configuration is costly, and it is evaluated before the call, so only
+    # when it will be logged.
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%s data: %s", formatted_text(f"{prefix}.prompt_config_invoked"), formatted_json(data))
 
 
 @receiver(prompt_started, dispatch_uid="prompt_started")
