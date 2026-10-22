@@ -9,9 +9,8 @@ It provides functionality to:
 
   1. Creating an Account object.
   2. Creating, updating, or validating an admin user for the Account.
-  3. Adding the example resources: plugins and LLMClients.
+  3. Loading the example plugins and LLMClients from GitHub, and deploying the LLMClients.
   4. Loading the Stackademy project from GitHub, and deploying its LLMClients.
-  5. Deploying the example LLMClients.
 
 It also supports initializing all existing accounts to update their shared AI resources.
 
@@ -35,7 +34,10 @@ from django.core.management.base import CommandError
 from smarter.apps.account.models import Account, User
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.llmclient.const import STACKADEMY_REPOSITORY_URL
+from smarter.apps.llmclient.const import (
+    EXAMPLE_MANIFESTS_REPOSITORY_URL,
+    STACKADEMY_REPOSITORY_URL,
+)
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
@@ -43,6 +45,17 @@ from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
+
+EXAMPLE_KINDS_PER_ACCOUNT = [
+    SAMKinds.STATIC_PLUGIN.value,
+    SAMKinds.SQL_PLUGIN.value,
+    SAMKinds.API_PLUGIN.value,
+    SAMKinds.SKILL_PLUGIN.value,
+    SAMKinds.WEBSEARCH_PLUGIN.value,
+    SAMKinds.IMAGE_SEARCH_PLUGIN.value,
+    SAMKinds.LLM_CLIENT.value,
+]
+"""The kinds of the example manifests of which each account gets its own copy: the plugins, and the LLMClients that use them."""
 
 
 class Command(SmarterCommand):
@@ -65,9 +78,8 @@ class Command(SmarterCommand):
 
         1. Create the Account.
         2. Create an admin user for the Account.
-        3. Add the example plugins and LLMClients.
+        3. Load the example plugins and LLMClients from GitHub, and deploy the LLMClients.
         4. Load the Stackademy project from GitHub, and deploy its LLMClients.
-        5. Deploy the example LLMClients.
 
         .. note::
 
@@ -126,12 +138,30 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=msg)
             return False
 
-        # 3. Add the account's own copies of the example resources: tools (plugins), then LLMClients.
-        # The platform-wide examples, e.g. the Guardrails and Proxies, belong to the Smarter admin, and
-        # every account may use them.
+        # 3. The account's own copies of the example plugins and LLMClients, deployed. The other examples,
+        # e.g. the Guardrails, MCPClients and Proxies, belong to the Smarter admin, which initialize_platform
+        # applies, and every account may use them.
 
-        for command in ("add_example_tools", "add_example_llmclients"):
-            call_command(command, username=username)
+        try:
+            call_command(
+                "load_from_github",
+                url=EXAMPLE_MANIFESTS_REPOSITORY_URL,
+                account_number=account_number,
+                username=username,
+                include_kind=EXAMPLE_KINDS_PER_ACCOUNT,
+                skip_missing_references=True,
+                deploy=True,
+            )
+        except (CommandError, SystemExit) as e:
+            # one example that fails, e.g. for a Secret that this platform has not set, must not prevent
+            # the rest of the account's initialization.
+            logger.error(
+                "%s.initialize_account() load_from_github %s failed for account %s: %s",
+                logger_prefix,
+                EXAMPLE_MANIFESTS_REPOSITORY_URL,
+                account_number,
+                e,
+            )
 
         # 4. The account's own copy of the Stackademy project, deployed. Without its Budget, which only a
         # superuser may apply, and which initialize_platform applies once, to the Smarter account's
@@ -154,20 +184,6 @@ class Command(SmarterCommand):
                 "%s.initialize_account() load_from_github %s failed for account %s: %s",
                 logger_prefix,
                 STACKADEMY_REPOSITORY_URL,
-                account_number,
-                e,
-            )
-
-        # 5. Deploy the account's example LLMClients.
-
-        try:
-            call_command("deploy_example_llmclients", account_number=account_number)
-        except CommandError as e:
-            # one example LLMClient that fails, e.g. for a Secret that this platform has not set,
-            # must not prevent the rest of the account's initialization.
-            logger.error(
-                "%s.initialize_account() deploy_example_llmclients failed for account %s: %s",
-                logger_prefix,
                 account_number,
                 e,
             )
@@ -238,9 +254,8 @@ class Command(SmarterCommand):
 
         1. Create the Account.
         2. Create an admin user for the Account.
-        3. Add the example plugins and LLMClients.
+        3. Load the example plugins and LLMClients from GitHub, and deploy the LLMClients.
         4. Load the Stackademy project from GitHub, and deploy its LLMClients.
-        5. Deploy the example LLMClients.
         """
         self.handle_begin()
 

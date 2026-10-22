@@ -7,7 +7,7 @@ control is a short YAML manifest that a policy, ethics, law or business student 
 and apply without writing any code:
 
 - **Guardrails that inspect every message.** Smarter ships with
-  `eighteen built-in guardrails <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+  `eighteen built-in guardrails <https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__,
   for personal data, secrets, prompt injection, jailbreaks, moderation, self-harm, off-topic
   requests, regulated advice, invented citations and privacy requests. Each one states its stage
   (the user's message, the model's reply, or both), its strategy (keywords, regular expressions,
@@ -19,7 +19,7 @@ and apply without writing any code:
 - **Budgets that stop spending.** A :doc:`Budget </smarter-resources/smarter-budget>` limits
   dollars or tokens per hour, day, week or month, for an account, a user, an application, a
   provider or a self-hosted model, and blocks or warns at the limit. The
-  `seven example budgets <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__
+  `six example budgets <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__
   include a monthly allowance for each student and a daily limit on one provider.
 - **Access that follows ownership.** Every resource belongs to an
   :doc:`account and a user </smarter-platform/account-management>`, and every query is
@@ -48,12 +48,12 @@ explainability; human oversight and incident response; and vendor and model risk
 
 **Look at.**
 
-- `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+- `example-manifests/guardrails/ <https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__,
   the built-in guardrails.
-- `account/data/example-manifests/budgets/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+- `example-manifests/budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__,
   the example budgets.
 - The `customer_support
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__
+  <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-customer-support.yaml>`__
   LLMClient, a governed application with four input guardrails.
 
 Each course plan lists every manifest and file that it uses under *Smarter in the Source Code*.

@@ -6,9 +6,9 @@ Students build, test and brand an AI assistant by editing a YAML manifest. Every
 is a Smarter :doc:`LLMClient </smarter-resources/smarter-llmclient>` manifest, the same YAML that
 runs in production, and they start from the nineteen built-in LLMClients that ship with every
 installation: the one-line `simple
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-simple.yaml>`__
 assistant, and `customer_support
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-customer-support.yaml>`__,
 a complete support agent with a persona, refusals, a skill, a tool and four guardrails. The prompt
 engineering :doc:`workbench </smarter-framework/smarter-chat>` shows every request sent to the
 model, every tool call and every plugin selected, beside the chat, so students see the effect of

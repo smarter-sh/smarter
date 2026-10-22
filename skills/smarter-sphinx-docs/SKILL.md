@@ -24,6 +24,10 @@ skills/smarter-sphinx-docs/scripts/check-docs.sh docs/source/smarter-resources/s
 
 - **Every `:doc:` target and toctree entry exists** as a `.rst` file, relative
   to the referring page (or absolute from `docs/source/` with a leading `/`).
+- **Every `literalinclude` and `include` target exists.** The script makes the
+  same shallow clone of smarter-sh/example-manifests into
+  `docs/source/_example-manifests/` that `conf.py` makes at build time, when
+  it's missing, so those includes resolve.
 - **Every autodoc target imports**, with Django set up, in the smarter-app
   container.
 
@@ -48,6 +52,7 @@ The user builds the docs themselves.
 | Framework internals (brokers, manifests, CLI, API)    | `docs/source/smarter-framework/`                                                                                    |
 | Architecture decisions                                | `docs/source/adr/`                                                                                                  |
 | Example manifests served as files                     | `docs/source/example-manifests/`                                                                                    |
+| A platform example manifest, shown on a page          | `.. literalinclude:: /_example-manifests/<folder>/<file>.yaml`, from the clone of smarter-sh/example-manifests      |
 
 ## Resource page structure
 
@@ -111,6 +116,14 @@ Pydantic Models
   first use, and link to the resource pages with `:doc:`.
 - Manifests in docs must be valid: the field names and casing the Pydantic
   models accept (`domainName`, not `domain_name`).
+- **Example manifests are not in this repository.** They live in
+  [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests)
+  (one folder per kind). Show one with
+  `.. literalinclude:: /_example-manifests/<folder>/<file>.yaml` (Sphinx's
+  source-root-absolute form, which also works in docstrings), followed by a
+  link to it: ``From `<folder>/<file>.yaml <https://github.com/smarter-sh/example-manifests/blob/main/<folder>/<file>.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.``
+  `conf.py` clones the repository into `docs/source/_example-manifests/`
+  (git-ignored). Never include from an app's `data/` folder: there is none.
 - Use `double backticks` for literals, field names, and commands, and
   `.. code-block:: console | yaml | python` for examples.
 - Keep the docs consistent with the code. When behavior changes, update the

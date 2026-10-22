@@ -19,17 +19,17 @@ Prompts and Settings
      - The ``simple`` LLMClient: a one-line system prompt, a small model, temperature 1.0 and a
        4,096-token limit. Every setting a prompt engineer changes sits under
        ``spec.config.prompt``.
-     - `llmclient-simple.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+     - `llmclient-simple.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-simple.yaml>`__
    * - A production-quality system prompt
      - The ``customer_support`` LLMClient: a persona (Sam), an audience, a narrow job, an output
        format, refusals, a skill for on-brand replies, a plugin that reads web pages, and four
        input guardrails.
-     - `llmclient-customer-support.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__
+     - `llmclient-customer-support.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-customer-support.yaml>`__
    * - Seventeen more examples
      - Built-in LLMClients for weather, mathematics, dates, data analysis, research, ticket
        triage, workplace writing, programming and others, each a worked example of a different
        prompting job.
-     - `llmclient/data/llm-clients/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__
+     - `example-manifests/llm-clients/ <https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__
    * - Every setting, defined
      - The Pydantic model that defines and validates ``provider``, ``defaultModel``,
        ``defaultSystemRole``, ``defaultTemperature``, ``defaultMaxTokens`` and the ``app...``
@@ -62,17 +62,17 @@ Knowledge and Tools
    * - Static knowledge
      - A Static Plugin returns fixed facts, here about a fictional Willy Wonka product, so the
        model quotes them instead of making them up.
-     - `everlasting-gobstopper.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/everlasting-gobstopper.yaml>`__
+     - `everlasting-gobstopper.yaml <https://github.com/smarter-sh/example-manifests/blob/main/plugins/static/everlasting-gobstopper.yaml>`__
    * - Skills as knowledge
      - SkillPlugins for brand voice, meeting notes, code review and SQL analysis, and three of
        Anthropic's published skills.
-     - `skill-brand-voice.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/skill-brand-voice.yaml>`__,
-       `sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__
+     - `skill-brand-voice.yaml <https://github.com/smarter-sh/example-manifests/blob/main/plugins/skill/skill-brand-voice.yaml>`__,
+       `example-manifests/plugins/ <https://github.com/smarter-sh/example-manifests/tree/main/plugins>`__
    * - Tools that act
      - Websearch Plugins for research, news, local search and reading a page, and an
        ImageSearchPlugin that lets the model show real pictures instead of inventing urls.
-     - `websearch-research-assistant.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/websearch-research-assistant.yaml>`__,
-       `image-search.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/data/sample-plugins/image-search.yaml>`__
+     - `websearch-research-assistant.yaml <https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-research-assistant.yaml>`__,
+       `image-search.yaml <https://github.com/smarter-sh/example-manifests/blob/main/plugins/image-search/image-search.yaml>`__
    * - Official extensions
      - A calculator, a date calculator and a weather tool, installable Smarter Extensions that any
        LLMClient can list under ``spec.extensions``.
@@ -92,8 +92,8 @@ Safety, Cost and Evidence
      - Eighteen built-in guardrails, each a short manifest. ``off_topic_input`` asks a small
        model whether a message is in scope, and ``pii_redaction_input`` removes personal data
        before the model sees it.
-     - `off-topic-input.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/off-topic-input.yaml>`__,
-       `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+     - `off-topic-input.yaml <https://github.com/smarter-sh/example-manifests/blob/main/guardrails/off-topic-input.yaml>`__,
+       `example-manifests/guardrails/ <https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__
    * - The workbench Console
      - Beside the chat, the Console shows the LLMClient's configuration, every request sent to
        the model, every tool call, which plugins were selected, and the server's logs.
@@ -110,4 +110,4 @@ Safety, Cost and Evidence
    * - A per-student allowance
      - A Budget that caps what each student can spend in a month.
        :doc:`/smarter-resources/smarter-budget`.
-     - `student-monthly-allowance.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/student-monthly-allowance.yaml>`__
+     - `student-monthly-allowance.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/student-monthly-allowance.yaml>`__

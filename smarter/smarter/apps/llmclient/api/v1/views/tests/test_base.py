@@ -2,14 +2,14 @@
 
 import os
 
+from django.core.management import call_command
 from django.http import HttpRequest
 from django.test import RequestFactory
 from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
-from smarter.apps.llmtool.plugin.tests.base_classes import mock_remote_skills
-from smarter.apps.llmtool.utils import add_example_plugins
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -18,6 +18,9 @@ from smarter.lib.manifest.loader import SAMLoader
 from ..base import LLMClientApiBaseViewSet
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+PLUGIN_MANIFESTS = ("everlasting-gobstopper.yaml", "example-configuration.yaml")
+"""The plugins that data/llm_client.yaml lists: copies of examples from https://github.com/smarter-sh/example-manifests."""
+PLUGIN_NAMES = ("everlasting_gobstopper", "example_configuration")
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
@@ -69,9 +72,11 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
             loader=cls.loader,
         )
 
-        # Add example plugins to the user profile
-        with mock_remote_skills():
-            add_example_plugins(user_profile=cls.user_profile)
+        # the plugins that the LLMClient's manifest lists.
+        for filename in PLUGIN_MANIFESTS:
+            call_command(
+                "apply_manifest", filespec=os.path.join(HERE, "data", filename), username=cls.admin_user.username
+            )
 
         cls.broker.apply(request=cls.request, kwargs=cls.kwargs)
 
@@ -84,6 +89,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         except Exception:
             pass
         finally:
+            PluginMeta.objects.filter(user_profile=cls.user_profile, name__in=PLUGIN_NAMES).delete()
             super().tearDownClass()
 
     def test_base_class_properties(self):

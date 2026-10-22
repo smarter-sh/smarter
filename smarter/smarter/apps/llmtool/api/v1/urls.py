@@ -6,7 +6,6 @@ from rest_framework.request import Request
 
 from .const import namespace
 from .views import (
-    AddPluginExamplesView,
     PluginCloneView,
     PluginListView,
     PluginUploadView,
@@ -36,11 +35,6 @@ urlpatterns = [
         "<int:plugin_id>/clone/<str:new_name>",
         PluginCloneView.as_view(),
         name="plugin_clone_view",
-    ),
-    path(
-        "add-example-plugins/<int:user_id>/",
-        AddPluginExamplesView.as_view(),
-        name="add_plugin_examples",
     ),
     path("upload/", PluginUploadView.as_view(), name="plugin_upload"),
 ]

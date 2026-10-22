@@ -61,9 +61,13 @@ in the repository.
 curl -s -X POST -H "Authorization: Token $KEY" http://localhost:9357/api/v1/cli/get/CustomDomain/
 curl -s -X POST -H "Authorization: Token $KEY" "http://localhost:9357/api/v1/cli/describe/CustomDomain/?name=example_com"
 curl -s -X POST -H "Authorization: Token $KEY" -H "Content-Type: application/x-yaml" \
-  --data-binary @smarter/smarter/apps/llmclient/data/custom-domains/example-com.yaml \
+  --data-binary @../example-manifests/custom-domains/example-com.yaml \
   http://localhost:9357/api/v1/cli/apply/
 ```
+
+`../example-manifests` is the local checkout of
+[smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests),
+next to this repository, where every example manifest lives (one folder per kind).
 
 Use `--data-binary` (not `-d`) for manifests, so the YAML's newlines survive.
 
