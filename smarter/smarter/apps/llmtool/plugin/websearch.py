@@ -37,15 +37,23 @@ A Plugin that gives the LLM access to the open web: searching it, and reading we
     - Web failures, e.g. a page that does not exist, are returned to the LLM as an ``error``,
       so that it can recover, rather than raised.
 
-.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+.. sphinx note: /_example-manifests/ is the clone of smarter-sh/example-manifests that docs/source/conf.py makes.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/sample-plugins/websearch-research-assistant.yaml
+.. literalinclude:: /_example-manifests/plugins/websearch/websearch-research-assistant.yaml
     :language: yaml
     :caption: 1.) Example Websearch Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/llm-clients/llmclient-example.yaml
+From `plugins/websearch/websearch-research-assistant.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-research-assistant.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+
+.. literalinclude:: /_example-manifests/llm-clients/llmclient-example.yaml
     :language: yaml
     :caption: 2.) Example LLMClient Manifest
+
+From `llm-clients/llmclient-example.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-example.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. note::
 
@@ -411,7 +419,7 @@ class WebsearchPlugin(PluginBase):
         See Also:
 
         - :class:`SAMWebsearchPlugin`
-        - ``smarter/apps/llmtool/data/sample-plugins/websearch-*.yaml`` for more examples.
+        - ``plugins/websearch/`` in https://github.com/smarter-sh/example-manifests for more examples.
         """
         metadata = SAMPluginCommonMetadata(
             name="research_assistant",

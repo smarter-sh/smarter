@@ -4,7 +4,15 @@
 # This file defines a Kubernetes CronJob that runs a backup script
 # to back up the MariaDB database. The backup script is stored in a
 # ConfigMap and mounted into the Job. The backup runs on a Debian image,
-# installs necessary tools, and executes the backup script.
+# installs only the tools it needs (install.sh --backup: the MariaDB client and a
+# pinned, signature-verified AWS CLI), and executes the backup script.
+#
+# databaseScheduledBackup in values.yaml sets the S3 location (s3Uri, by default
+# s3://$SMARTER_S3_BUCKET/backups/sql) and awsCliVersion. The backup dumps the
+# database as the read-only account SMARTER_MYSQL_BACKUP_USERNAME (smarter_backup),
+# which job-init.yaml creates when SMARTER_MYSQL_BACKUP_PASSWORD is set. Until it is
+# set, the backup dumps as the root account. The backup container receives only the
+# environment variables that the backup needs.
 #
 # When the backup completes, the Job emails the result, with the backup's log
 # attached, in the same way that job-init.yaml does: with manage.py email_job_log,
@@ -23,6 +31,8 @@
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 {{- if .Values.databaseScheduledBackup.enabled }}
+{{- $backupPassword := .Values.env.SMARTER_MYSQL_BACKUP_PASSWORD | default "" }}
+{{- $useBackupAccount := and $backupPassword (not (hasPrefix "SET-ME" $backupPassword)) }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -90,7 +100,7 @@ spec:
                       ls -l /home/setup || true
                       ls -l /home/backup || true
 
-                      /home/setup/install.sh && /home/backup/backup-to-s3.sh
+                      /home/setup/install.sh --backup && /home/backup/backup-to-s3.sh
                       status=$?
                       if [ $status -eq 0 ]; then
                         echo "Backup completed successfully!"
@@ -120,17 +130,47 @@ spec:
                 - name: job-log
                   mountPath: /job
 
+              # only what the backup needs: the database, the backup account, the S3 location
+              # and the AWS credentials, not the platform's other secrets. The root account is
+              # passed only when no backup account is configured (SMARTER_MYSQL_BACKUP_PASSWORD).
               env:
-                {{- range $key, $value := .Values.env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
+                - name: SMARTER_MYSQL_HOST
+                  value: {{ .Values.env.SMARTER_MYSQL_HOST | quote }}
+                - name: SMARTER_MYSQL_PORT
+                  value: {{ .Values.env.SMARTER_MYSQL_PORT | default "3306" | quote }}
+                - name: SMARTER_MYSQL_DATABASE
+                  value: {{ .Values.env.SMARTER_MYSQL_DATABASE | quote }}
+                {{- if $useBackupAccount }}
+                - name: SMARTER_MYSQL_BACKUP_USERNAME
+                  value: {{ .Values.env.SMARTER_MYSQL_BACKUP_USERNAME | default "smarter_backup" | quote }}
+                - name: SMARTER_MYSQL_BACKUP_PASSWORD
+                  value: {{ $backupPassword | quote }}
+                {{- else }}
+                - name: SMARTER_MYSQL_ROOT_USERNAME
+                  value: {{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME | quote }}
+                - name: SMARTER_MYSQL_ROOT_PASSWORD
+                  value: {{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD | quote }}
                 {{- end }}
-                {{- range $env := .Values.app.env }}
-                - name: {{ $env.name }}
-                  value: {{ $env.value | quote }}
-                {{- end }}
+                - name: SMARTER_S3_BUCKET
+                  value: {{ .Values.env.SMARTER_S3_BUCKET | default "" | quote }}
+                - name: AWS_ACCESS_KEY_ID
+                  value: {{ .Values.env.AWS_ACCESS_KEY_ID | quote }}
+                - name: AWS_SECRET_ACCESS_KEY
+                  value: {{ .Values.env.AWS_SECRET_ACCESS_KEY | quote }}
+                - name: AWS_REGION
+                  value: {{ .Values.env.AWS_REGION | quote }}
                 - name: BACKUP_SUMMARY_FILE
                   value: /job/backup-summary.txt
+                {{- with .Values.databaseScheduledBackup }}
+                {{- if .s3Uri }}
+                - name: SMARTER_MYSQL_BACKUP_S3_URI
+                  value: {{ .s3Uri | quote }}
+                {{- end }}
+                {{- if .awsCliVersion }}
+                - name: AWS_CLI_VERSION
+                  value: {{ .awsCliVersion | quote }}
+                {{- end }}
+                {{- end }}
 
           containers:
             - name: email-backup-log

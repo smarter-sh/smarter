@@ -36,6 +36,7 @@ Technical Reference
    account/const
    account/models
    account/receivers
+   account/repository_scripts
    account/resources
    account/sam
    account/serializers

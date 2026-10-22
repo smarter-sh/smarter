@@ -4,10 +4,13 @@
 # This file defines a ConfigMap containing the install.sh script for setting up
 # a Debian-based Bastion or Job server in the Smarter project.
 #
-# - Maintainer: <your team/contact>
+# - Maintainer: The Smarter Project, https://smarter.sh
 # - Purpose: Provides a shell script to install required packages and AWS CLI.
-# - Usage: Mounted into Bastion/Job Pods; values are set in values.yaml.
-# - Notes: Update the script as needed for your environment or package requirements.
+# - Usage: Mounted into Bastion/Job Pods. install.sh installs the Bastion's
+#   administration tools; install.sh --backup installs only what the MariaDB
+#   backup Job needs (job-mysql-backup.yaml).
+# - Notes: The AWS CLI version is pinned, and the download is verified against the
+#   AWS CLI team's PGP signature. Set AWS_CLI_VERSION to install another version.
 #
 # Note:
 # The app.kubernetes.io/application-group label is used to identify pods to Calico
@@ -40,21 +43,95 @@ data:
     # and will install the required packages and tools to enable basic administration
     # of the MariaDB database and AWS resources that are only accessible from within
     # the cluster.
+    #
+    # usage:
+    #   install.sh            the Bastion's administration tools
+    #   install.sh --backup   only what backup-to-s3.sh needs
+    #
+    # The output is kept short, because the backup Job emails it: package managers
+    # and unzip run quietly, and their errors still go to stderr.
     ################################################################################
-    set -e
+    set -euo pipefail
 
-    echo "Smarter Bastion/Job Server: Installing required packages: mariadb-client, curl, unzip, ca-certificates"
-    apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      curl unzip ca-certificates less mariadb-client vim \
-      git openssh-client iputils-ping net-tools dnsutils htop lsof tcpdump wget rsync jq nano zip tar sudo procps traceroute socat iproute2
+    # the AWS CLI release to install. Pinned, so that a new release can't change
+    # or break the backup without a chart change.
+    AWS_CLI_VERSION="${AWS_CLI_VERSION:-2.37.9}"
 
-    echo "Smarter Bastion/Job Server: Installing AWS CLI"
-    update-ca-certificates
-    curl -fL --retry 3 --retry-delay 2 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
-    unzip awscliv2.zip
-    ./aws/install
-    rm -rf aws awscliv2.zip
+    # the fingerprint of the AWS CLI team's PGP key, from
+    # https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+    AWS_CLI_KEY_FINGERPRINT="FB5DB77FD5C118B80511ADA8A6310ACC4672475C"
+
+    PACKAGES=(ca-certificates curl unzip gnupg mariadb-client)
+    if [ "${1:-}" != "--backup" ]; then
+      PACKAGES+=(less vim git openssh-client iputils-ping net-tools dnsutils htop lsof tcpdump
+        wget rsync jq nano zip tar sudo procps traceroute socat iproute2)
+    fi
+
+    echo "Smarter Bastion/Job Server: Installing packages: ${PACKAGES[*]}"
+    apt-get -qq update
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends "${PACKAGES[@]}" > /dev/null
     rm -rf /var/lib/apt/lists/*
 
+    echo "Smarter Bastion/Job Server: Installing AWS CLI ${AWS_CLI_VERSION}"
+    case "$(uname -m)" in
+      x86_64) AWS_CLI_ARCH="x86_64" ;;
+      aarch64 | arm64) AWS_CLI_ARCH="aarch64" ;;
+      *) echo "FAILED: the AWS CLI has no Linux build for $(uname -m)"; exit 1 ;;
+    esac
+    AWS_CLI_ZIP_URL="https://awscli.amazonaws.com/awscli-exe-linux-${AWS_CLI_ARCH}-${AWS_CLI_VERSION}.zip"
+
+    WORK_DIR="$(mktemp -d)"
+    trap 'rm -rf "${WORK_DIR}"' EXIT
+    curl -fsSL --retry 3 --retry-delay 2 "${AWS_CLI_ZIP_URL}" -o "${WORK_DIR}/awscliv2.zip"
+    curl -fsSL --retry 3 --retry-delay 2 "${AWS_CLI_ZIP_URL}.sig" -o "${WORK_DIR}/awscliv2.zip.sig"
+
+    # verify the download against the AWS CLI team's signature before running it.
+    export GNUPGHOME="${WORK_DIR}/gnupg"
+    mkdir -m 700 "${GNUPGHOME}"
+    cat > "${WORK_DIR}/aws-cli.asc" <<'AWS_CLI_PUBLIC_KEY'
+    -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+    mQINBF2Cr7UBEADJZHcgusOJl7ENSyumXh85z0TRV0xJorM2B/JL0kHOyigQluUG
+    ZMLhENaG0bYatdrKP+3H91lvK050pXwnO/R7fB/FSTouki4ciIx5OuLlnJZIxSzx
+    PqGl0mkxImLNbGWoi6Lto0LYxqHN2iQtzlwTVmq9733zd3XfcXrZ3+LblHAgEt5G
+    TfNxEKJ8soPLyWmwDH6HWCnjZ/aIQRBTIQ05uVeEoYxSh6wOai7ss/KveoSNBbYz
+    gbdzoqI2Y8cgH2nbfgp3DSasaLZEdCSsIsK1u05CinE7k2qZ7KgKAUIcT/cR/grk
+    C6VwsnDU0OUCideXcQ8WeHutqvgZH1JgKDbznoIzeQHJD238GEu+eKhRHcz8/jeG
+    94zkcgJOz3KbZGYMiTh277Fvj9zzvZsbMBCedV1BTg3TqgvdX4bdkhf5cH+7NtWO
+    lrFj6UwAsGukBTAOxC0l/dnSmZhJ7Z1KmEWilro/gOrjtOxqRQutlIqG22TaqoPG
+    fYVN+en3Zwbt97kcgZDwqbuykNt64oZWc4XKCa3mprEGC3IbJTBFqglXmZ7l9ywG
+    EEUJYOlb2XrSuPWml39beWdKM8kzr1OjnlOm6+lpTRCBfo0wa9F8YZRhHPAkwKkX
+    XDeOGpWRj4ohOx0d2GWkyV5xyN14p2tQOCdOODmz80yUTgRpPVQUtOEhXQARAQAB
+    tCFBV1MgQ0xJIFRlYW0gPGF3cy1jbGlAYW1hem9uLmNvbT6JAlQEEwEIAD4CGwMF
+    CwkIBwIGFQoJCAsCBBYCAwECHgECF4AWIQT7Xbd/1cEYuAURraimMQrMRnJHXAUC
+    akV0ygUJDqP4lQAKCRCmMQrMRnJHXFHjD/9eyZLYcKuQOlLvtqSDtUBiEZf6ZZjM
+    i3ygYH8rJNtuToUH+HvSpe819urJCquXhDrlK6N+aqW0hCLtNABJG/vsafIgvIYJ
+    hSGgpgtNnQyMV1jViRWqPjbouw8OkYKBThUfT1i2Y+wn58ifs6ODBCmTexWtXspA
+    Si+Gt49xDOW0APmbOPnI+a4HJW6tVEo6MWS0WjzpiBayR3d1A4pt4YrPfSdDgpLo
+    h2SLQqlRqvvVZJaWBjhkErNFpfsBA06sDcPEOb0G8LBUbR4WOcdvhe5LubJbZuxC
+    AG9kNPCVeQP1ixwjgjXKysaxeQ6rv0VzIQgRp6tLVLWhy6AKDNvLjFSsmXZ1Wl08
+    Y/RlOHXlzLuQMRE6sR1wOdRxc9TsrNWTGiBK65cvSWOy03JeBkQQ8pesqltiyxI9
+    U21kkgiXtTSKNGfKK8pO27D81YANhRqPK7iTp6kuFiY2WtOg90KTMNlIT+Ff85Y2
+    b1rHj6Z0SrCkJujhWk3IBPic/wJgz01LEc/OAdUPlby90RJZcIBhSlWhT7mXnXIO
+    c0HWlNQrns2s3CTyYwZSiSlYe9ApeLwhjDo8NhbFuCAy61l6O5UsR4AfZxx/rGKv
+    2wFb1/RN/P4gNe6vmxZAPjR0AQcwD3tc2McimOLr/22kmPz8IH3I0X7WoSFr0Biz
+    E91G7bb0hOb/cA==
+    =knv7
+    -----END PGP PUBLIC KEY BLOCK-----
+    AWS_CLI_PUBLIC_KEY
+    gpg --batch --quiet --import "${WORK_DIR}/aws-cli.asc" 2> /dev/null
+    if ! gpg --batch --with-colons --fingerprint | grep -q "^fpr:::::::::${AWS_CLI_KEY_FINGERPRINT}:"; then
+      echo "FAILED: the embedded AWS CLI public key does not have the fingerprint ${AWS_CLI_KEY_FINGERPRINT}"
+      exit 1
+    fi
+    if ! gpg --batch --quiet --verify "${WORK_DIR}/awscliv2.zip.sig" "${WORK_DIR}/awscliv2.zip" 2> /dev/null; then
+      echo "FAILED: ${AWS_CLI_ZIP_URL} does not match the AWS CLI team's signature"
+      exit 1
+    fi
+    unset GNUPGHOME
+
+    unzip -q "${WORK_DIR}/awscliv2.zip" -d "${WORK_DIR}"
+    "${WORK_DIR}/aws/install" --update > /dev/null
+
+    echo "Smarter Bastion/Job Server: Installed $(aws --version) and $(mariadb-dump --version)"
     echo "Smarter Bastion/Job Server: Setup script completed"

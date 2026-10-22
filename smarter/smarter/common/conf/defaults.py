@@ -93,6 +93,10 @@ class SettingsDefaults:
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost", "testserver"])
 
+    # the platform's superuser, which manage.py initialize_platform creates.
+    ADMIN_USERNAME: str = get_env("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD: Optional[SecretStr] = optional_secret_env("ADMIN_PASSWORD")
+
     API_DESCRIPTION: str = get_env(
         "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
     )
@@ -233,7 +237,13 @@ class SettingsDefaults:
 
     MARKETING_SITE_URL: HttpUrl = HttpUrl(get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}"))
 
-    # the user and password that scripts/smarter_test_db.sql creates in the local MariaDB.
+    # the database server's administrator, whom manage.py load_from_github --run_scripts passes to a
+    # repository's scripts, e.g. to the Stackademy script that creates its course database and its users.
+    MYSQL_ROOT_USERNAME: str = get_env("MYSQL_ROOT_USERNAME", "root")
+    MYSQL_ROOT_PASSWORD: Optional[SecretStr] = optional_secret_env("MYSQL_ROOT_PASSWORD")
+
+    # the user and password that the Stackademy course database's script creates, scripts/smarter_test_db.sql
+    # in https://github.com/smarter-sh/stackademy.
     MYSQL_TEST_DATABASE_SECRET_NAME = get_env("MYSQL_TEST_DATABASE_SECRET_NAME", "smarter_test_db")
     MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(
         get_env("MYSQL_TEST_DATABASE_PASSWORD", "smarter_test_user", is_secret=True)

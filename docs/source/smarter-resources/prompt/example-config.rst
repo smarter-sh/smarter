@@ -67,6 +67,6 @@ Json Object Keys
 Example JSON Object
 --------------------
 
-.. literalinclude:: ../../../../../smarter/smarter/smarter/apps/prompt/data/chat_config.json
+.. literalinclude:: examples/chat_config.json
    :language: json
    :caption: Example Chat Configuration JSON Object

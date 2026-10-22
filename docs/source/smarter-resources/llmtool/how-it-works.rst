@@ -30,8 +30,10 @@ the tool should be presented to the LLM.
 A static LLMTool Plugin manifest like this one is the simplest kind of LLMTool Plugin. We simply "load up"
 the structured data defined in the Plugin manifest, and make it available to the LLM
 
-.. literalinclude:: ../../../../smarter/smarter/apps/llmtool/data/sample-plugins/example-configuration.yaml
+.. literalinclude:: /_example-manifests/plugins/static/example-configuration.yaml
    :caption: Example LLMTool Plugin YAML Configuration
+
+From `plugins/static/example-configuration.yaml <https://github.com/smarter-sh/example-manifests/blob/main/plugins/static/example-configuration.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 
 **LLMTool Plugin Manifests**

@@ -21,6 +21,7 @@ from smarter.apps.llmhost.services.nodegroups import (
     get_nodegroups,
 )
 from smarter.apps.llmhost.tests.base_classes import (
+    delete_builtin_fixtures,
     ensure_builtin_computes,
     get_test_data,
 )
@@ -52,12 +53,13 @@ class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass):
         configure_nodegroups(lambda: cls.nodegroups)
         # a safety net: tests must never create real node groups.
         assert isinstance(get_nodegroups(), InMemoryNodeGroupBackend)
-        ensure_builtin_computes()
+        cls.builtin_computes_created = ensure_builtin_computes()
 
     @classmethod
     def tearDownClass(cls):
         LLMHost.objects.filter(user_profile__account=cls.account).delete()
         LLMHostCompute.objects.filter(user_profile__account=cls.account).delete()
+        delete_builtin_fixtures([], cls.builtin_computes_created)
         configure_cluster(None)
         configure_nodegroups(None)
         super().tearDownClass()

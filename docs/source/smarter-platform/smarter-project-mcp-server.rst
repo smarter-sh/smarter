@@ -137,9 +137,10 @@ The indexes are the ``RepositoryIndex`` and ``RepositoryFile`` rows of the Djang
 The Built-in MCPClients
 -----------------------
 
-The ``smarter_project`` and ``smarter_project_github*`` MCPClients that ``manage.py
-add_example_mcpclients`` applies read the MCP server of the platform that applies them. Their
-manifests, in ``smarter/apps/mcpclient/data/mcpclients``, are templates, ``*.yaml.tpl``, whose
+The ``smarter_project`` and ``smarter_project_github*`` MCPClients, which ``manage.py
+initialize_platform`` applies from the :doc:`example manifests repository
+</smarter-framework/smarter-manifests/example-manifests>`, read the MCP server of the platform that
+applies them. Their manifests, in its ``mcp-clients/`` folder, are templates, ``*.yaml.tpl``, whose
 ``endpointUrl`` is filled in when they are applied:
 
 .. code-block:: yaml
@@ -152,12 +153,14 @@ manifests, in ``smarter/apps/mcpclient/data/mcpclients``, are templates, ``*.yam
 ``localhost:9357``. An MCPClient may connect to a loopback host only in the local environment:
 see :func:`smarter.apps.mcpclient.connection.validate_endpoint_url`.
 
-.. literalinclude:: ../../../smarter/smarter/apps/mcpclient/data/mcpclients/smarter-project.yaml.tpl
+.. literalinclude:: /_example-manifests/mcp-clients/smarter-project.yaml.tpl
     :language: yaml
+
+From `mcp-clients/smarter-project.yaml.tpl <https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/smarter-project.yaml.tpl>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 The example LLMClients ``smarter_developer``, which helps developers understand and contribute to
 the platform, and ``smarter_sdk_guide``, which helps programmers call it from Python, Node.js, Go
-and the command line, are built on them, in ``smarter/apps/llmclient/data/llm-clients``.
+and the command line, are built on them, in its ``llm-clients/`` folder.
 
 .. note::
 
