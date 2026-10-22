@@ -37,6 +37,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = logging.formatted_text(__name__)
 
 
 def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[list, SmarterDictType]:
@@ -226,7 +227,8 @@ def ensure_system_role_present(
         raise SmarterValueError("Default system role must be a string")
 
     if not any(d[OpenAIMessageKeys.MESSAGE_ROLE_KEY] == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY for d in messages):
-        logger.warning("No system role found in messages list, adding default system role")
+        # expected for the first prompt of a session, whose messages have no system role yet.
+        logger.debug("%s.ensure_system_role_present() adding the default system role", logger_prefix)
         messages.insert(
             0,
             {

@@ -27,7 +27,7 @@ Example::
     new_charge_created.send(sender=self.__class__, charge=self)
 """
 
-secret_inializing = Signal()
+secret_initializing = Signal()
 """
 Signal sent when a secret is initializing.
 
@@ -37,7 +37,7 @@ Arguments:
 
 Example::
 
-    secret_inializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
+    secret_initializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
 """
 
 
@@ -140,7 +140,8 @@ Arguments:
 
 Example::
 
-    broker_ready.send(sender=self.__class__, broker=self)
+    # a broker sends it once, from its ready property
+    self.send_broker_ready(broker_ready)
 """
 
 cache_invalidate = Signal()

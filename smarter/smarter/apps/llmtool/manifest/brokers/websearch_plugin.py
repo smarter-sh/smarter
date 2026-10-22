@@ -516,7 +516,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 self._manifest,
                 self._plugin,
             )
-            broker_ready.send(sender=self.__class__, broker=self)
+            self.send_broker_ready(broker_ready)
             return True
         logger.debug(
             "%s.ready returning False because neither manifest nor plugin could be initialized",

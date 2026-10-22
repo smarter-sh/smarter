@@ -158,7 +158,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         )
         if retval:
             self._ready = True
-            broker_ready.send(sender=self.__class__, broker=self)
+            self.send_broker_ready(broker_ready)
         return self._ready
 
     @property
