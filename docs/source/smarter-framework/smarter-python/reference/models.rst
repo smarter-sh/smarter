@@ -628,9 +628,18 @@ Models of accounts, users, user profiles and account contacts, as ``/api/v1/acco
       :type: SmarterAccountRef
 
 
+   .. py:attribute:: profile_image
+      :type: Optional
+      :value: alias ``profileImage``
+
+      The url of the image that the user uploaded, which takes precedence over profile_image_url.
+
+
    .. py:attribute:: profile_image_url
       :type: Optional
       :value: alias ``profileImageUrl``
+
+      The url of the image that the oauth provider supplied.
 
 
    .. py:attribute:: is_test
@@ -701,7 +710,7 @@ Models of accounts, users, user profiles and account contacts, as ``/api/v1/acco
 
 .. py:module:: smarter.models.llmclient
 
-Models of LLMClients and their plugins, MCPClients, guardrails, built-in functions, api keys and custom domains.
+Models of LLMClients and their plugins, MCPClients, guardrails, extensions, api keys and custom domains.
 
 .. py:class:: LLMClientPluginRef
 
@@ -752,32 +761,32 @@ Models of LLMClients and their plugins, MCPClients, guardrails, built-in functio
 
    Bases: :class:`smarter.models.base.SmarterCamelModel`
 
-   Something that an LLMClient adds to a prompt: a built-in function, plugin, MCPClient or guardrail.
+   Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient or guardrail.
 
    .. py:attribute:: id
       :type: int
 
-      The id of the link row: the LLMClient's function, plugin, MCPClient or guardrail.
+      The id of the link row: the LLMClient's extension, plugin, MCPClient or guardrail.
 
 
    .. py:attribute:: name
       :type: str
 
-      The function's name, or the linked resource's.
+      The extension's slug, or the linked resource's name.
 
 
    .. py:attribute:: kind
       :type: str
 
-      Function, or the linked resource's manifest kind: Plugin, MCPClient or Guardrail.
+      Extension, or the linked resource's manifest kind: Plugin, MCPClient or Guardrail.
 
 
 
-.. py:class:: LLMClientFunction
+.. py:class:: LLMClientExtension
 
    Bases: :class:`smarter.models.base.SmarterCamelModel`
 
-   A built-in function of an LLMClient, e.g. ``calculator``.
+   An extension of an LLMClient, whose tools the LLMClient offers the LLM, e.g. ``calculator``.
 
    .. py:attribute:: id
       :type: int
@@ -785,6 +794,14 @@ Models of LLMClients and their plugins, MCPClients, guardrails, built-in functio
 
    .. py:attribute:: name
       :type: Optional
+
+      The extension's slug, e.g. weather.
+
+
+   .. py:attribute:: extension
+      :type: Optional
+
+      The Extension's id.
 
 
    .. py:attribute:: llmclient
@@ -922,7 +939,7 @@ Models of LLMClients and their plugins, MCPClients, guardrails, built-in functio
 
    Bases: :class:`smarter.models.base.SmarterResource`
 
-   An LLMClient: a deployable AI agent, built from an LLM provider and model, a system prompt, plugins and functions.
+   An LLMClient: a deployable AI agent, built from an LLM provider and model, a system prompt, plugins and extensions.
 
    Prompt it with :meth:`smarter.resources.llmclients.LLMClients.prompt`, or start a chat with
    :meth:`smarter.resources.llmclients.LLMClients.chat`.
@@ -1016,7 +1033,7 @@ Models of LLMClients and their plugins, MCPClients, guardrails, built-in functio
       Whether prompting the LLMClient requires an api key.
 
 
-   .. py:attribute:: functions
+   .. py:attribute:: extensions
       :type: list
 
 
@@ -1035,7 +1052,7 @@ Models of LLMClients and their plugins, MCPClients, guardrails, built-in functio
    .. py:attribute:: tools
       :type: list
 
-      Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails, in that order.
+      Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and guardrails, in that order.
 
 
    .. py:attribute:: api_keys
