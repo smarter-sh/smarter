@@ -53,6 +53,12 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 FUNCTION_NAME_PATTERN = re.compile(r"[^A-Za-z0-9_-]")
 MAX_FUNCTION_NAME_LENGTH = 64
+
+MCP_INSTRUCTIONS_PREFIX = 'Instructions from the "'
+"""How each MCP server's section of the system prompt begins.
+
+See :meth:`MCPToolkit.system_prompt`.
+"""
 """The maximum length of an OpenAI function name."""
 MAX_DESCRIPTION_LENGTH = 1024
 """The maximum length of a tool description offered to the LLM."""
@@ -194,7 +200,7 @@ class MCPToolkit:
         if not self.instructions:
             return None
         sections = [
-            f'Instructions from the "{name}" MCP server, whose tools are named mcp<n>_...:\n{instructions}'
+            f'{MCP_INSTRUCTIONS_PREFIX}{name}" MCP server, whose tools are named mcp<n>_...:\n{instructions}'
             for name, instructions in self.instructions.items()
         ]
         return "\n\n".join(sections)

@@ -35,7 +35,7 @@ from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import PluginMeta, PluginPrompt
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
-from smarter.apps.mcpclient.toolkit import MCPToolkit
+from smarter.apps.mcpclient.toolkit import MCP_INSTRUCTIONS_PREFIX, MCPToolkit
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.receivers import (
     llm_tool_presented,
@@ -56,6 +56,7 @@ from smarter.apps.provider.services.text_completion.lib.protocols import (
     SmarterChatCompletionResponseType,
 )
 from smarter.apps.provider.services.text_completion.utils import (
+    cap_message_history,
     http_response_factory,
     pair_tool_messages,
 )
@@ -92,6 +93,15 @@ The most requests of one prompt that offer the LLM its tools.
 An LLM often needs more than one round of tool calls, e.g. a forecast, and then an image search
 with the forecast's place, or one calculation after another. After this many requests with tools,
 the LLM is sent the tool results without tools, so that it answers.
+"""
+MAX_HISTORY_CHARACTERS = 100_000
+"""
+The most characters of a prompt's message history that are sent to the LLM, about 25,000 tokens.
+
+A chat's whole history is persisted, and without a limit every prompt would send all of it again,
+so that a long chat grows slower and more expensive with each prompt. The oldest turns are left out
+of the request first, never the system prompt or the current turn. See
+:func:`~smarter.apps.provider.services.text_completion.utils.cap_message_history`.
 """
 REASONING_EFFORT_NONE = "none"
 
@@ -270,6 +280,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 del message_copy[_InternalKeys.SMARTER_IS_NEW]
             retval.append(message_copy)
         retval = self.add_markdown_system_prompt(retval)
+        retval = cap_message_history(retval, MAX_HISTORY_CHARACTERS)
         # the thread may come from the client, which keeps the tool replies but not the
         # assistant's tool_calls, and OpenAI refuses a tool reply without its tool call.
         return pair_tool_messages(retval)
@@ -1028,9 +1039,14 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             for i, message in enumerate(self.messages):
                 if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
                     content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) or ""
+                    # the persisted thread keeps the system message that an earlier prompt
+                    # extended, so its instructions are replaced, never added again.
+                    content = content.split(MCP_INSTRUCTIONS_PREFIX, 1)[0].rstrip()
                     self.messages[i] = {
                         **message,
-                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{content}\n\n{instructions}",
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: (
+                            f"{content}\n\n{instructions}" if content else instructions
+                        ),
                     }
                     break
             else:
