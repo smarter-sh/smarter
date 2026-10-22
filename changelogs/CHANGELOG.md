@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.4...v0.36.5-alpha.1) (2026-10-22)
+
+### Bug Fixes
+
+* **helm:** harden the nightly database backup and its setup script ([c9982d0](https://github.com/smarter-sh/smarter/commit/c9982d0d31acd49a898691e16b273f89524f4037))
+
 ## [0.36.4](https://github.com/smarter-sh/smarter/compare/v0.36.3...v0.36.4) (2026-10-21)
 
 ### Bug Fixes
