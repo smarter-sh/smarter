@@ -20,9 +20,7 @@ CACHES = {
             "CACHES_LOCATION",
             default_redis_location,
         ),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+        "OPTIONS": CACHE_OPTIONS,
     }
 }
 
@@ -47,7 +45,7 @@ DATABASES = {
         "PASSWORD": os.getenv("SMARTER_MYSQL_PASSWORD"),
         "HOST": os.getenv("SMARTER_MYSQL_HOST"),
         "PORT": os.getenv("SMARTER_MYSQL_PORT", "3306"),  # default MySQL port
-        "OPTIONS": {"charset": "utf8mb4"},
+        "OPTIONS": DATABASE_OPTIONS,
     }
 }
 

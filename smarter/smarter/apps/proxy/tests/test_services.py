@@ -5,6 +5,7 @@ import socket
 from unittest.mock import MagicMock, patch
 
 import httpx
+from asgiref.sync import async_to_sync
 from django.http import StreamingHttpResponse
 from django.utils import timezone
 
@@ -35,6 +36,7 @@ from smarter.apps.proxy.services import (
     record_charges,
     resolve_proxy,
     returned_response_headers,
+    stream_asynchronously,
 )
 from smarter.apps.proxy.signals import proxy_request_completed, proxy_request_failed
 from smarter.apps.secret.models import Secret
@@ -48,6 +50,7 @@ from .base_classes import (
     get_test_data,
     get_test_text,
     json_response,
+    read_stream,
     sse_response,
 )
 
@@ -330,8 +333,29 @@ class TestProxyForwarder(ProxyTestBase):
         self.assertIsInstance(response, StreamingHttpResponse)
         self.assertEqual(response["Content-Type"], "text/event-stream")
         self.record_charges.assert_not_called()
-        self.assertEqual(b"".join(response.streaming_content), stream)  # type: ignore[arg-type]
+        self.assertTrue(response.is_async)
+        self.assertEqual(read_stream(response), stream)
         self.record_charges.assert_called_once_with(proxy, self.non_admin_user_profile, Usage(12, 3, 15))
+
+    def test_stream_closed_early(self):
+        """Test that a client that disconnects mid-stream closes the provider's stream, which charges its usage so far."""
+        closed = []
+
+        def chunks():
+            try:
+                yield b"data: 1\n\n"
+                yield b"data: 2\n\n"
+            finally:
+                closed.append(True)
+
+        async def read_one() -> bytes:
+            stream = stream_asynchronously(chunks())
+            chunk = await anext(stream)
+            await stream.aclose()
+            return chunk
+
+        self.assertEqual(async_to_sync(read_one)(), b"data: 1\n\n")
+        self.assertEqual(closed, [True])
 
     def test_auth_header(self):
         """Test an Anthropic-style API key header, and a fixed header."""

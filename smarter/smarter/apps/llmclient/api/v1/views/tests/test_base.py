@@ -2,13 +2,13 @@
 
 import os
 
-from django.core.management import call_command
 from django.http import HttpRequest
 from django.test import RequestFactory
 from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
+from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
@@ -72,11 +72,15 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
             loader=cls.loader,
         )
 
-        # the plugins that the LLMClient's manifest lists.
+        # the plugins that the LLMClient's manifest lists, created for the test's own user profile. Not with
+        # apply_manifest: the admin user is a superuser, so it would find and update another account's plugin
+        # of the same name, e.g. the Smarter admin's.
         for filename in PLUGIN_MANIFESTS:
-            call_command(
-                "apply_manifest", filespec=os.path.join(HERE, "data", filename), username=cls.admin_user.username
+            controller = PluginController(
+                user_profile=cls.user_profile, manifest=get_readonly_yaml_file(os.path.join(HERE, "data", filename))
             )
+            if controller.plugin is None:
+                raise RuntimeError(f"Failed to create the plugin of {filename}.")
 
         cls.broker.apply(request=cls.request, kwargs=cls.kwargs)
 

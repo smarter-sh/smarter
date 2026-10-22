@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test SAMBudgetBroker."""
 
+import glob
 import os
 from decimal import Decimal
 from unittest.mock import PropertyMock, patch
@@ -15,7 +16,6 @@ from smarter.apps.account.manifest.brokers.budget import (
 from smarter.apps.account.manifest.models.budget.model import SAMBudget
 from smarter.apps.account.manifest.models.budget.spec import SAMBudgetSpecResource
 from smarter.apps.account.models import Budget
-from smarter.apps.account.utils import example_budget_filespecs
 from smarter.apps.llmclient.models import LLMClient
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
@@ -34,6 +34,8 @@ from smarter.lib.typing import SmarterDictType
 logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+EXAMPLE_MANIFESTS_PATH = os.path.join(HERE, "data", "example-manifests")
+"""Copies of the budgets/ folder of https://github.com/smarter-sh/example-manifests."""
 
 
 class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
@@ -197,15 +199,15 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
                 SAMBudgetSpecResource(**fields)
 
     def test_example_manifests(self):
-        """Test that every example Budget manifest is valid, with a unique name."""
-        filespecs = example_budget_filespecs()
+        """Test that the example Budget manifests are valid, with unique names, and detached: they list no resources."""
+        filespecs = sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "*.yaml")))
         self.assertGreaterEqual(len(filespecs), 6)
         names = []
         for filespec in filespecs:
             with self.subTest(filespec=os.path.basename(filespec)):
                 manifest = SAMBudget(**get_readonly_yaml_file(filespec))
                 self.assertEqual(manifest.kind, "Budget")
-                self.assertTrue(manifest.spec.resources)
+                self.assertEqual(manifest.spec.resources, [])
                 names.append(manifest.metadata.name)
         self.assertEqual(len(names), len(set(names)))
 

@@ -18,6 +18,7 @@ from django.core.asgi import get_asgi_application
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.django.healthz import HealthzASGIMiddleware
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
@@ -32,11 +33,15 @@ from smarter import consumers  # noqa: E402  pylint: disable=wrong-import-positi
 websocket_application = AllowedHostsOriginValidator(AuthMiddlewareStack(URLRouter(consumers.urlpatterns)))
 
 
-application = ProtocolTypeRouter(
-    {
-        "http": static_asgi_app,
-        "websocket": websocket_application,
-    }
+# the liveness probe, /healthz/, is answered before Django, so that it says whether the process is
+# alive, not whether its middleware's Redis and database are. See smarter.lib.django.healthz.
+application = HealthzASGIMiddleware(
+    ProtocolTypeRouter(
+        {
+            "http": static_asgi_app,
+            "websocket": websocket_application,
+        }
+    )
 )
 
 logger = logging.getLogger(__name__)
