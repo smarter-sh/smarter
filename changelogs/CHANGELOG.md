@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.7](https://github.com/smarter-sh/smarter/compare/v0.36.6...v0.36.7) (2026-10-22)
+
+### Bug Fixes
+
+* **logging:** suppress never-retrieved CancelledError from shield ([5ddd273](https://github.com/smarter-sh/smarter/commit/5ddd273527ff5cbccb9e8176146d3713be1036d6))
+
+## [0.36.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.6...v0.36.7-alpha.1) (2026-10-22)
+
+### Bug Fixes
+
+* **logging:** suppress never-retrieved CancelledError from shield ([5ddd273](https://github.com/smarter-sh/smarter/commit/5ddd273527ff5cbccb9e8176146d3713be1036d6))
+
 ## [0.36.6](https://github.com/smarter-sh/smarter/compare/v0.36.5...v0.36.6) (2026-10-22)
 
 ### Bug Fixes

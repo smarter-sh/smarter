@@ -54,6 +54,20 @@ A new session's thread starts with the LLMClient's system prompt and welcome mes
 Smarter Chat starts one. Only the roles that LLM providers accept (``system``, ``user``,
 ``assistant`` and ``tool``) are sent. Smarter's own messages stay in the thread for you to read.
 
+A chat's configuration
+----------------------
+
+``config()`` returns the configuration that a chat starts from: the LLMClient, the session's key and
+chat history, the LLMClient's state in ``meta_data``, and the counts of its plugins and extensions.
+``{ verbose: true }`` adds the parts that the workbench's Console shows: the lists of plugins and extensions,
+the session's tool calls (``history.prompt_tool_call_history``) and the complete ``meta_data``. A
+deployed LLMClient's own host leaves them out either way.
+
+.. code-block:: typescript
+
+   const config = await client.llmClients.config(llmclient.id, { verbose: true });
+   console.log(config.plugins.plugins.map((plugin) => plugin.plugin_meta.name));
+
 Streaming a prompt's progress
 -----------------------------
 

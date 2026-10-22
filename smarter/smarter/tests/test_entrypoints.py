@@ -225,10 +225,11 @@ class TestApplicationEntryPoints(SmarterTestBase):
         super().tearDown()
 
     def test_asgi_application(self):
-        """Asgi routes http and websocket traffic."""
+        """Asgi answers the liveness probe, then routes http and websocket traffic."""
         module = fresh_import("smarter.asgi")
-        self.assertIn("http", module.application.application_mapping)
-        self.assertIn("websocket", module.application.application_mapping)
+        self.assertEqual(type(module.application).__name__, "HealthzASGIMiddleware")
+        self.assertIn("http", module.application.app.application_mapping)
+        self.assertIn("websocket", module.application.app.application_mapping)
         self.assertEqual(module.__all__, ["application"])
 
     def test_wsgi_application(self):
