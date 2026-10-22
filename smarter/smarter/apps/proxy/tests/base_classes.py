@@ -16,6 +16,8 @@ from typing import Any, Callable, Optional, Union
 from unittest.mock import MagicMock, patch
 
 import httpx
+from asgiref.sync import async_to_sync
+from django.http import StreamingHttpResponse
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
@@ -63,6 +65,17 @@ def json_response(data: Any, status: int = 200, headers: Optional[SmarterDictTyp
     return httpx.Response(
         status, content=json.dumps(data).encode(), headers={"content-type": "application/json", **(headers or {})}
     )
+
+
+def read_stream(response: StreamingHttpResponse) -> bytes:
+    """Read a streaming response's whole content, whether it is synchronous or asynchronous."""
+
+    async def read() -> bytes:
+        return b"".join([chunk async for chunk in response.streaming_content])  # type: ignore[union-attr]
+
+    if response.is_async:
+        return async_to_sync(read)()
+    return b"".join(response.streaming_content)  # type: ignore[arg-type]
 
 
 def sse_response(content: bytes, status: int = 200) -> httpx.Response:

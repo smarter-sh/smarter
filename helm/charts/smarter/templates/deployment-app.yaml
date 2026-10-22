@@ -7,6 +7,8 @@
 # - Purpose: Deploys the main application container with Helm templating.
 # - Usage: Managed via Helm; values are set in values.yaml.
 # - Notes: Update resource requests/limits and environment variables as needed.
+#   The uvicorn worker count and concurrency limit come from app.workers and
+#   app.limitConcurrency in values.yaml.
 #
 # Important: labels are referenced by other resources, in this repo as well as
 # external repos including https://github.com/smarter-sh/smarter-infrastructure.
@@ -58,7 +60,19 @@ spec:
       containers:
         - name: "{{ .Values.global.appName }}"
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
-          command: ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "{{ .Values.deployment.containerPort }}", "--workers=2", "--timeout-keep-alive=15", "--timeout-graceful-shutdown=30"]
+          command:
+            - "uvicorn"
+            - "smarter.asgi:application"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "{{ .Values.deployment.containerPort }}"
+            - "--workers={{ .Values.app.workers | default 2 }}"
+            {{- if .Values.app.limitConcurrency }}
+            - "--limit-concurrency={{ .Values.app.limitConcurrency }}"
+            {{- end }}
+            - "--timeout-keep-alive=15"
+            - "--timeout-graceful-shutdown=30"
           imagePullPolicy: '{{ .Values.global.image.pullPolicy | default "Always" }}'
           resources:
             {{- toYaml .Values.app.resources | nindent 12 }}
@@ -71,19 +85,35 @@ spec:
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
             {{- end }}
+            {{- /* Web server only: see app.databaseReadTimeout in values.yaml. */}}
+            {{- if .Values.app.databaseReadTimeout }}
+            - name: SMARTER_DATABASE_READ_TIMEOUT
+              value: {{ .Values.app.databaseReadTimeout | quote }}
+            {{- end }}
           volumeMounts:
             {{- toYaml .Values.app.extraVolumeMounts | nindent 12 }}
-          livenessProbe:
+          # The probes, tuned for a server that loads in about 10 seconds:
+          #
+          # - startupProbe: /healthz/ is answered in asgi.py, before Django (see
+          #   smarter.lib.django.healthz), as soon as a uvicorn worker has loaded the app. It is
+          #   checked every 2 seconds, so the pod starts as soon as it's up, with a budget of
+          #   5 + 2 x 90 seconds for a slow start. Liveness and readiness wait for it.
+          # - readinessProbe: /readiness/ goes through Django and its middleware, so the pod takes
+          #   traffic once it can serve it, and is taken out of the service, not restarted, while
+          #   it can't, e.g. while its Redis or database stalls.
+          # - livenessProbe: restarts a pod whose process is hung. /healthz/ needs no thread, query
+          #   or cache lookup, so a busy pod still answers it in milliseconds.
+          startupProbe:
             httpGet:
               path: /healthz/
               port: {{ .Values.deployment.containerPort }}
               httpHeaders:
               - name: Host
                 value: localhost
-            initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 90
             successThreshold: 1
           readinessProbe:
             httpGet:
@@ -92,23 +122,30 @@ spec:
               httpHeaders:
               - name: Host
                 value: localhost
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 0
+            periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
             successThreshold: 1
-          startupProbe:
+          livenessProbe:
             httpGet:
               path: /healthz/
               port: {{ .Values.deployment.containerPort }}
               httpHeaders:
               - name: Host
                 value: localhost
-            initialDelaySeconds: 30
+            initialDelaySeconds: 0
             periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 60
+            timeoutSeconds: 5
+            failureThreshold: 3
             successThreshold: 1
+          # the service stops sending new requests to a terminating pod a few seconds after it is
+          # told to stop. preStop waits for that, before uvicorn stops accepting connections, and
+          # terminationGracePeriodSeconds leaves room for uvicorn's 30 second graceful shutdown.
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
           ports:
             - containerPort: {{ .Values.deployment.containerPort }}
               protocol: TCP
@@ -116,6 +153,7 @@ spec:
           terminationMessagePolicy: File
       volumes:
         {{- toYaml .Values.app.extraVolumes | nindent 8 }}
+      terminationGracePeriodSeconds: 45
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Always

@@ -1,9 +1,10 @@
 """Utility functions for the LLMClient app, including caching and validation helpers."""
 
-from typing import Callable, Optional
+from typing import Callable, NamedTuple, Optional
 
 from django.http import HttpRequest
 
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import (
     formatted_text,
 )
@@ -12,7 +13,10 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
 from .llmclient import LLMClient
+from .llmclient_extension import LLMClientExtensions
 from .llmclient_helper import LLMClientHelper
+from .llmclient_mcpclient import LLMClientMCPClients
+from .llmclient_plugin import LLMClientPlugin
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 
@@ -123,7 +127,12 @@ def get_cached_llmclient_by_request(request: HttpRequest) -> Optional[LLMClient]
             llmclient_id = resolver(*args)
         except LLMClientNotResolvedError:
             return None
-        llmclient = LLMClient.objects.filter(pk=llmclient_id).first()
+        # its owner's profile, account and user too, which the chat session reads.
+        llmclient = (
+            LLMClient.objects.filter(pk=llmclient_id)
+            .select_related("user_profile__account", "user_profile__user")
+            .first()
+        )
         if llmclient is not None or attempt:
             return llmclient
         # the cached LLMClient was deleted: resolve again.
@@ -155,9 +164,64 @@ def invalidate_cached_llmclient_by_hosts(llmclient: LLMClient) -> None:
             resolver.invalidate(host, path, "")  # type: ignore[attr-defined]
 
 
+class LLMClientToolCounts(NamedTuple):
+    """The number of each kind of tool that an LLMClient offers the LLM."""
+
+    extensions: int
+    plugins: int
+    mcpclients: int
+
+    @property
+    def total(self) -> int:
+        """All of the LLMClient's tools."""
+        return self.extensions + self.plugins + self.mcpclients
+
+
+@cache_results(timeout=smarter_settings.llmclient_cache_expiration)
+def get_cached_llmclient_tool_counts(llmclient_id: int) -> LLMClientToolCounts:
+    """
+    Count an LLMClient's extensions, plugins and MCPClients, the tools that it offers the LLM.
+
+    Smarter Chat's configuration api reads these counts on every page load, for ``total_tools``,
+    ``plugins.meta_data.total_plugins`` and ``extensions.meta_data.total_extensions``. They are
+    counted, rather than loaded and serialized, and cached until a tool is added to or removed from
+    the LLMClient (see :func:`invalidate_cached_llmclient_tool_counts`). A tool with an empty name is
+    left out, as :meth:`smarter.apps.llmclient.serializers.LLMClientSerializer.get_tools` does.
+
+    .. code-block:: python
+
+        counts = get_cached_llmclient_tool_counts(llmclient.id)
+        print(counts.total)
+
+    :param llmclient_id: The LLMClient's id.
+    :type llmclient_id: int
+    :returns: The counts.
+    :rtype: LLMClientToolCounts
+    """
+    return LLMClientToolCounts(
+        extensions=LLMClientExtensions.objects.filter(llmclient_id=llmclient_id).exclude(extension__slug="").count(),
+        plugins=LLMClientPlugin.objects.filter(llmclient_id=llmclient_id).exclude(plugin_meta__name="").count(),
+        mcpclients=LLMClientMCPClients.objects.filter(llmclient_id=llmclient_id).exclude(mcpclient__name="").count(),
+    )
+
+
+def invalidate_cached_llmclient_tool_counts(llmclient_id: Optional[int]) -> None:
+    """
+    Invalidate an LLMClient's cached tool counts, after one of its tools was added or removed.
+
+    :param llmclient_id: The LLMClient's id, or None for a link row without one.
+    :type llmclient_id: Optional[int]
+    """
+    if llmclient_id is not None:
+        get_cached_llmclient_tool_counts.invalidate(llmclient_id)  # type: ignore[attr-defined]
+
+
 __all__ = [
     "LLMCLIENT_HOST_PATHS",
     "LLMClientNotResolvedError",
+    "LLMClientToolCounts",
     "get_cached_llmclient_by_request",
+    "get_cached_llmclient_tool_counts",
     "invalidate_cached_llmclient_by_hosts",
+    "invalidate_cached_llmclient_tool_counts",
 ]
