@@ -60,7 +60,6 @@ Research first, outline second. The code decides what the course can teach.
   | `smarter-cli`            | The Go command-line interface, packaged for each OS             |
   | `smarter-python`         | The Python API client library on PyPI                           |
   | `smarter-deploy`         | The Docker quickstart for running the platform                  |
-  | `smarter-helm`           | The published Helm chart (the source is `smarter/helm/charts/`) |
   | `smarter-vscode-yaml`    | The VS Code extension for manifest files                        |
   | `examples`               | Example manifests                                               |
   | `smarter.sh`             | The project's website (see below)                               |
