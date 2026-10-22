@@ -3,7 +3,10 @@ import logging
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from smarter.apps.llmclient.const import STACKADEMY_REPOSITORY_URL
+from smarter.apps.llmclient.const import (
+    EXAMPLE_MANIFESTS_REPOSITORY_URL,
+    STACKADEMY_REPOSITORY_URL,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib.django.management.base import SmarterCommand
@@ -44,10 +47,10 @@ class Command(SmarterCommand):
         1. Create the admin user and the example users. The username and password come from
            ``--username`` and ``--password``, or from ``smarter_settings.admin_username`` and
            ``admin_password``, so that the init job passes no password on its command line.
-        2. Initialize the Waffle switches, then add the example resources: Guardrails, CustomDomains,
-           Budgets, MCPClients, the Smarter project's index, LLMHosts, Providers and their built-in
-           Proxies, extensions, vector stores, tools and LLMClients.
-        3. Deploy the example LLMClients.
+        2. Initialize the Waffle switches, the Smarter project's index, the built-in Providers, the
+           official extensions and the vector store providers.
+        3. Load the example manifests from GitHub, https://github.com/smarter-sh/example-manifests,
+           and deploy their LLMClients.
         4. Load the Stackademy project from GitHub, deploy its LLMClients, and verify them.
         5. Verify the DNS configuration, and sync the ledger of infrastructure resources with the
            Kubernetes cluster.
@@ -114,43 +117,11 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize Waffle switches: %s", e)
 
         try:
-            call_command("add_example_guardrails")
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize Guardrails: %s", e)
-
-        try:
-            # applied, not deployed: an example CustomDomain, whose verification fails.
-            call_command("add_example_custom_domains")
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize CustomDomains: %s", e)
-
-        try:
-            call_command("add_example_budgets")  # Detached budgets, which superusers can attach to resources
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize Budgets: %s", e)
-
-        try:
-            call_command("add_example_mcpclients")
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize MCPClients: %s", e)
-
-        try:
             # queued for the Celery worker, which downloads the repositories from GitHub: the
-            # built-in smarter_project_* MCPClients read them through the platform's MCP server.
+            # smarter_project_* MCPClients of example-manifests read them through the platform's MCP server.
             call_command("index_smarter_project", queue=True)
         except (Exception, SystemExit) as e:
             logger.error("Failed to queue the indexing of The Smarter Project's repositories: %s", e)
-
-        try:
-            call_command("add_example_llmhost_compute")
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize LLMHostCompute: %s", e)
-
-        try:
-            # after LLMHostCompute: each built-in LLMHost's spec.compute must exist.
-            call_command("add_example_llmhost")
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize LLMHosts: %s", e)
 
         try:
             call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
@@ -159,18 +130,12 @@ class Command(SmarterCommand):
 
         try:
             # after initialize_providers, whose Secrets, e.g. google_maps_api_key, configure the extensions.
-            # Before add_example_llmclients, whose example LLMClients list the official extensions.
-            call_command("add_example_extensions")
+            # Before the example manifests, whose LLMClients list the official extensions.
+            call_command("install_official_extensions")
         except (Exception, SystemExit) as e:
             # fatal: the example LLMClients that use a missing official extension are skipped.
             logger.error("Failed to install the official extensions: %s", e)
-            fatal.append("add_example_extensions")
-
-        try:
-            # after initialize_providers: each built-in Proxy's Provider and API key Secret must exist.
-            call_command("add_example_proxies")
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize Proxies: %s", e)
+            fatal.append("install_official_extensions")
 
         try:
             call_command("initialize_vectorstore_providers")  # Initialize builtin vectorstore providers: pinecone
@@ -178,28 +143,29 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize vectorstore providers: %s", e)
 
         try:
-            call_command("add_example_vectorstores")  # Applied, not deployed: example vector databases
+            # The example manifests: the community-supported collection of every kind's examples, in their
+            # own repository, which load_from_github applies in the order of their dependencies. After
+            # initialize_providers, install_official_extensions and initialize_vectorstore_providers: its
+            # Proxies, Guardrails and LLMClients name the built-in Providers and their Secrets, its
+            # LLMClients the official extensions, and its Vectorstores the managed services' ApiConnections.
+            # The Smarter admin owns them, so every account may use them, and each account also gets its own
+            # copy of the plugins and LLMClients from initialize_account. Its LLMClients are deployed outside
+            # the local environment. Its CustomDomain, example.com, is applied, not verified. Its Budgets
+            # attach to nothing: each is created once, detached, and left as it is afterwards. A manifest
+            # that names a resource that this platform doesn't have, e.g. an MCPClient whose Secret of a
+            # third-party service no one has created, is skipped until it does. One that fails doesn't stop
+            # the others.
+            call_command(
+                "load_from_github",
+                url=EXAMPLE_MANIFESTS_REPOSITORY_URL,
+                account_number=SMARTER_ACCOUNT_NUMBER,
+                username=username,
+                deploy=deploy,
+                run_scripts=True,
+                skip_missing_references=True,
+            )
         except (Exception, SystemExit) as e:
-            logger.error("Failed to apply the example vectorstores: %s", e)
-
-        try:
-            call_command("add_example_tools", username=username)
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to apply the example tools: %s", e)
-
-        try:
-            # last of the examples: the example LLMClients use the Providers, the official extensions,
-            # the MCPClients, the tools and the Guardrails.
-            call_command("add_example_llmclients", username=username)
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to apply the example LLMClients: %s", e)
-
-        if deploy:
-            try:
-                call_command("deploy_example_llmclients", account_number=SMARTER_ACCOUNT_NUMBER)
-            except (Exception, SystemExit) as e:
-                logger.error("Failed to deploy the example LLMClients: %s", e)
-                fatal.append("deploy_example_llmclients")
+            logger.error("Failed to load the example manifests from %s: %s", EXAMPLE_MANIFESTS_REPOSITORY_URL, e)
 
         try:
             # The Stackademy project: the Secrets, Connections, plugins, LLMClients and Budget of a fictional

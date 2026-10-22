@@ -153,8 +153,8 @@ Security
 Example Manifests
 -----------------
 
-The Smarter repository includes example manifests for popular remote MCP servers, in
-``smarter/apps/mcpclient/data/mcpclients``.
+The ``mcp-clients/`` folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>` holds example
+manifests for popular remote MCP servers.
 
 .. list-table::
    :header-rows: 1
@@ -244,13 +244,17 @@ and reads The Smarter Project's documentation and source code. Their manifests a
 
 For example, DeepWiki's MCP server requires no authentication:
 
-.. literalinclude:: ../../../smarter/smarter/apps/mcpclient/data/mcpclients/deepwiki.yaml
+.. literalinclude:: /_example-manifests/mcp-clients/deepwiki.yaml
     :language: yaml
+
+From `mcp-clients/deepwiki.yaml <https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/deepwiki.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 and GitHub's requires a personal access token:
 
-.. literalinclude:: ../../../smarter/smarter/apps/mcpclient/data/mcpclients/github.yaml
+.. literalinclude:: /_example-manifests/mcp-clients/github.yaml
     :language: yaml
+
+From `mcp-clients/github.yaml <https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/github.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. note::
 

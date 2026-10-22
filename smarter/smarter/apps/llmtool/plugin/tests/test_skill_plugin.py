@@ -63,7 +63,8 @@ from .base_classes import (
 )
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "data", "sample-plugins"))
+# copies of a few of the example manifests in https://github.com/smarter-sh/example-manifests
+EXAMPLE_MANIFESTS_PATH = os.path.join(HERE, "data", "example-manifests")
 
 INLINE_RESOURCES = ["assets/logo.png", "references/forms.md", "references/policy.md", "scripts/fill_form.py"]
 REMOTE_RESOURCES = ["LICENSE.txt", "assets/logo.png", "forms.md", "reference.md", "scripts/fill_form.py"]
@@ -584,8 +585,9 @@ class TestSkillPlugin(PluginTestBase):
         """
         Test that re-applying a remote manifest, other than with the broker, uses the cached skill.
 
-        This is how add_example_plugins() applies the remote sample skills for every new user,
-        without downloading them from GitHub each time.
+        This is how a remote SkillPlugin is re-applied without the broker, e.g. by
+        :class:`smarter.apps.llmtool.manifest.controller.PluginController`, without
+        downloading its skill from GitHub each time.
         """
         name = "skill_update_remote_cached"
         plugin = self.new_skill_plugin(name, remote=True)
@@ -670,7 +672,7 @@ class TestSkillPlugin(PluginTestBase):
         self.assertFalse(PluginDataSkill.objects.filter(plugin_id=plugin_id).exists())
 
     # =========================================================================
-    # example and sample manifests
+    # example manifests
     # =========================================================================
     def test_example_manifest(self):
         """Test that the example manifest is valid, and creates a working plugin."""
@@ -684,15 +686,15 @@ class TestSkillPlugin(PluginTestBase):
         self.assertEqual(plugin.plugin_data.resource_paths, ["assets/template.md"])  # type: ignore[union-attr]
         self.assertIn("Meeting notes", plugin.tool_call_fetch_plugin_response({})["instructions"])  # type: ignore[index]
 
-    def test_sample_manifests_create_working_plugins(self):
+    def test_example_manifests_create_working_plugins(self):
         """
-        Test that every sample SkillPlugin manifest creates a working plugin.
+        Test that the copies of the example SkillPlugin manifests create working plugins.
 
-        Remote samples refer to Anthropic's skills repository. Their retrieval is replaced
+        Remote examples refer to Anthropic's skills repository. Their retrieval is replaced
         by the test skill, since unit tests must not depend on GitHub.
         """
-        paths = sorted(glob.glob(os.path.join(SAMPLE_PLUGINS_PATH, "skill-*.yaml")))
-        self.assertGreaterEqual(len(paths), 7)
+        paths = sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "skill-*.yaml")))
+        self.assertEqual(len(paths), 4)
         with mock_skill_host():
             test_skill = retrieve_skill(SKILL_REMOTE_URL)
         for i, path in enumerate(paths):

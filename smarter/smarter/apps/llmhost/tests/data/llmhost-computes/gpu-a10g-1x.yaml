@@ -1,0 +1,29 @@
+---
+# One NVIDIA A10G (24 GB), for models up to about 8B at 16 bits.
+# The price is the AWS us-east-1 on-demand price of one node.
+apiVersion: smarter.sh/v1
+kind: LLMHostCompute
+metadata:
+  name: gpu_a10g_1x
+  description: One NVIDIA A10G with 24 GB, 8 vCPUs and 32 GiB.
+  version: 1.0.0
+  tags:
+  - gpu
+  - a10g
+  annotations:
+  - smarter.sh/llmhostcompute/builtin: 'true'
+spec:
+  node:
+    instanceType: g5.2xlarge
+    cpu: 8
+    memoryGb: 32
+    gpu:
+      type: A10G
+      count: 1
+      memoryGb: 24
+    diskSizeGb: 100
+  nodeGroup:
+    maxNodes: 4
+  cost:
+    perHour: 1.212
+    currency: USD

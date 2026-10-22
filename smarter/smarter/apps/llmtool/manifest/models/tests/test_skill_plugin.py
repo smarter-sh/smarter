@@ -48,8 +48,9 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-SAMPLE_PLUGINS_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "..", "data", "sample-plugins"))
 TEST_DATA_PATH = os.path.abspath(os.path.join(HERE, "..", "..", "..", "plugin", "tests", "data"))
+# copies of a few of the example manifests in https://github.com/smarter-sh/example-manifests
+EXAMPLE_MANIFESTS_PATH = os.path.join(TEST_DATA_PATH, "example-manifests")
 
 MINIMAL_SKILL = """---
 name: minimal-skill
@@ -566,20 +567,20 @@ class TestSkillPluginManifest(SmarterTestBase):
             manifest = SAMSkillPlugin(**get_readonly_yaml_file(os.path.join(TEST_DATA_PATH, filename)))
             self.assertEqual(manifest.kind, MANIFEST_KIND, filename)
 
-    def test_sample_manifests(self):
-        """Test that every sample SkillPlugin manifest is valid."""
-        paths = sorted(glob.glob(os.path.join(SAMPLE_PLUGINS_PATH, "skill-*.yaml")))
-        self.assertGreaterEqual(len(paths), 7)
+    def test_example_manifests(self):
+        """Test that the copies of the example SkillPlugin manifests are valid."""
+        paths = sorted(glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "skill-*.yaml")))
+        self.assertEqual(len(paths), 4)
         for path in paths:
             manifest = SAMSkillPlugin(**get_readonly_yaml_file(path))
             self.assertEqual(manifest.kind, MANIFEST_KIND, path)
             self.assertEqual(manifest.metadata.pluginClass, "skill", path)
 
-    def test_sample_manifests_cover_verbatim_and_remote_skills(self):
-        """Test that the samples illustrate verbatim skills, bundled files, and each form of remote source url."""
+    def test_example_manifests_cover_verbatim_and_remote_skills(self):
+        """Test verbatim skills, bundled files, and each form of remote source url, in the example manifests."""
         skill_data = [
             SAMSkillPlugin(**get_readonly_yaml_file(path)).spec.skillData
-            for path in glob.glob(os.path.join(SAMPLE_PLUGINS_PATH, "skill-*.yaml"))
+            for path in glob.glob(os.path.join(EXAMPLE_MANIFESTS_PATH, "skill-*.yaml"))
         ]
         self.assertTrue(any(data.skill and data.resources for data in skill_data))
         urls = [data.source.url for data in skill_data if data.source]

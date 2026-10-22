@@ -17,20 +17,20 @@ Models and Compute
      - Ready-to-apply LLMHost manifests for Llama 3.1, 3.2 and 3.3, Qwen 2.5 and Qwen 3, Gemma 3,
        Mistral, Phi-4, DeepSeek R1 distills and gpt-oss, GGUF models for CPU, and embedding models
        such as BGE-M3 and nomic-embed-text, each with its engine, resources and license.
-     - `llmhost/data/llmhost/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__,
-       `qwen3-0.6b.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/data/llmhost/qwen3-0.6b.yaml>`__
+     - `example-manifests/llmhosts/ <https://github.com/smarter-sh/example-manifests/tree/main/llmhosts>`__,
+       `qwen3-0.6b.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llmhosts/qwen3-0.6b.yaml>`__
    * - Seven compute profiles
      - Node groups from small CPU nodes to one NVIDIA L4, A10G or L40S, four L40S, and eight
        H100s, each with its instance type, memory and price per hour.
-     - `llmhost/data/compute/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__
+     - `example-manifests/llmhost-computes/ <https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__
    * - The manifest, defined
      - Pydantic models for every section of an LLMHost: ``model`` (source, repository, pinned
        revision, quantization, capabilities), ``engine``, ``compute``, ``resources``, ``storage``,
        ``network``, ``scaling`` and ``healthCheck``.
      - `llmhost/manifest/models/llmhost/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/manifest/models/llmhost/spec.py>`__
    * - Finding a model
-     - Discovery from the built-in catalog or the Hugging Face Hub, which sizes the pods and
-       drafts a manifest.
+     - Discovery from the built-in catalog, the LLMHosts that the Smarter admin applied from
+       example-manifests, or the Hugging Face Hub, which sizes the pods and drafts a manifest.
      - `llmhost/services/discovery.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/services/discovery.py>`__
 
 Serving
@@ -80,7 +80,7 @@ Using and Paying for a Model
        LLMClient can then use it in place of a commercial model.
        :doc:`/smarter-resources/smarter-provider`.
      - `apps/provider/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/provider>`__,
-       `llmclient-simple.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+       `llmclient-simple.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-simple.yaml>`__
    * - Hourly charges
      - Celery Beat charges each compute profile's ready nodes every hour, at its price.
      - `workers/celerybeat.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__
@@ -89,4 +89,4 @@ Using and Paying for a Model
      - An example Budget that, once a compute profile's nodes have cost $500 in a month, launches
        no more LLMHosts on it. Nodes that are already running are not removed, so undeploying is
        still everyone's job.
-     - `llmhost-compute.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/llmhost-compute.yaml>`__
+     - `llmhost-compute.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/llmhost-compute.yaml>`__

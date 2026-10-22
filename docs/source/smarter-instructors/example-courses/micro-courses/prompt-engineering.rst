@@ -20,15 +20,15 @@ providers and models by changing two lines, and Smarter records the tokens and t
 guessed.
 
 Students start from real examples, not toy ones. Every installation ships with
-`nineteen built-in LLMClients <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
+`nineteen built-in LLMClients <https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__,
 from the one-line `simple
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-simple.yaml>`__
 assistant to `customer_support
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
-a complete support agent with a persona, refusals, a skill, a tool and four guardrails; twenty
-`sample plugins <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__;
+<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-customer-support.yaml>`__,
+a complete support agent with a persona, refusals, a skill, a tool and four guardrails; twenty-one
+`sample plugins <https://github.com/smarter-sh/example-manifests/tree/main/plugins>`__;
 and eighteen `built-in guardrails
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__.
+<https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__.
 Smarter also makes visible a point that most courses miss: a tool is used only after two
 decisions. Smarter :doc:`selects a plugin </smarter-resources/llmtool/nlp>` when the prompt matches
 one of its search terms, exactly, with a typo or as a synonym, and only then does the model decide,
@@ -46,11 +46,11 @@ Orchestrator; and designing, branding and deploying an assistant for a real audi
 
 **Look at.**
 
-- `llmclient/data/llm-clients/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
+- `example-manifests/llm-clients/ <https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__,
   the built-in LLMClients, especially ``simple``, ``customer_support`` and ``weather``.
-- `llmtool/data/sample-plugins/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/data/sample-plugins>`__,
+- `example-manifests/plugins/ <https://github.com/smarter-sh/example-manifests/tree/main/plugins>`__,
   the sample Static, Skill, Websearch and ImageSearch plugins.
-- `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+- `example-manifests/guardrails/ <https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__,
   the built-in guardrails, each a short manifest that a non-programmer can read.
 
 Each course plan lists every manifest and file that it uses under *Smarter in the Source Code*.

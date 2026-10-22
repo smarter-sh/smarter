@@ -1,0 +1,24 @@
+---
+# A general-purpose node for small models on CPU, e.g. embeddings and 1B GGUF models.
+# The price is the AWS us-east-1 on-demand price of one node.
+apiVersion: smarter.sh/v1
+kind: LLMHostCompute
+metadata:
+  name: cpu_small
+  description: 4 vCPUs and 16 GiB, for small models on CPU.
+  version: 1.0.0
+  tags:
+  - cpu
+  annotations:
+  - smarter.sh/llmhostcompute/builtin: 'true'
+spec:
+  node:
+    instanceType: m7i.xlarge
+    cpu: 4
+    memoryGb: 16
+    diskSizeGb: 50
+  nodeGroup:
+    maxNodes: 4
+  cost:
+    perHour: 0.2016
+    currency: USD

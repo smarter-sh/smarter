@@ -18,4 +18,4 @@ manage.py Commands
    commands/reset_cache
    commands/send_welcome_email
 
-See also :doc:`commands/add_example_budgets`.
+``load_from_github`` applies the platform's example resources, from the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.

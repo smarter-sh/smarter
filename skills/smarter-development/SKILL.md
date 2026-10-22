@@ -201,7 +201,7 @@ reference implementations.
 | Syncing code into the Docker containers, running anything there  | `smarter-docker-environment`           |
 | Code that calls Kubernetes, AWS, Route53, ACM, or Celery         | `smarter-infrastructure-safety`        |
 | Model changes and migrations                                     | `smarter-migrations`                   |
-| `manage.py` commands, built-in data, `initialize_platform`       | `smarter-management-commands`          |
+| `manage.py` commands, example manifests, `initialize_platform`   | `smarter-management-commands`          |
 | Probing the REST API by hand                                     | `smarter-api-testing`                  |
 | The SAM JSON Schemas, example manifests and cli OpenAPI document | `smarter-api-contract`                 |
 | Python docstrings                                                | `smarter-docstrings`                   |

@@ -21,7 +21,7 @@ Controls on Every Message
        ``pii_leak_output``), secrets, prompt injection and jailbreaks, moderation, self-harm,
        off-topic requests, regulated advice, invented citations, and privacy requests under GDPR
        and CCPA (``data_subject_request_input``).
-     - `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+     - `example-manifests/guardrails/ <https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__
    * - The vocabulary of a control
      - Every guardrail has a stage (input, output or both), a category, a strategy (regular
        expression, keyword list, built-in detectors, semantic similarity, a moderation model or
@@ -38,8 +38,8 @@ Controls on Every Message
      - The ``customer_support`` LLMClient: a support agent with guardrails for abuse, self-harm,
        prompt injection and jailbreaks. ``research_analyst`` adds output guardrails for invented
        citations and regulated advice.
-     - `llmclient-customer-support.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-customer-support.yaml>`__,
-       `llmclient-research-analyst.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-research-analyst.yaml>`__
+     - `llmclient-customer-support.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-customer-support.yaml>`__,
+       `llmclient-research-analyst.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-research-analyst.yaml>`__
 
 Money and Access
 ~~~~~~~~~~~~~~~~
@@ -55,14 +55,14 @@ Money and Access
      - A limit in dollars or tokens, per hour, day, week or month, with an absolute cap, a
        warning threshold, and an action (block or warn), attached to an account, a user, an
        application, a provider, a proxy or a self-hosted model.
-     - `budgets/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+     - `budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__,
        `account/manifest/models/budget/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/manifest/models/budget/spec.py>`__
-   * - Seven example policies
+   * - Six example policies
      - A monthly allowance for each student, an account-wide cap, a daily limit on a provider,
-       an hourly token throttle per user, a project budget, a warn-only budget on a proxy, and a
-       limit on self-hosted compute.
-     - `student-monthly-allowance.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/student-monthly-allowance.yaml>`__,
-       `account-monthly-cap.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/data/example-manifests/budgets/account-monthly-cap.yaml>`__
+       an hourly token throttle per user, a warn-only budget on a proxy, and a limit on
+       self-hosted compute. Each is detached, and shows how to attach it in a comment.
+     - `student-monthly-allowance.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/student-monthly-allowance.yaml>`__,
+       `account-monthly-cap.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/account-monthly-cap.yaml>`__
    * - Cost accounting
      - Every model call is a charge with its tokens and cost, attributed to the user, the
        application and the account. :doc:`/smarter-platform/cost-accounting`.

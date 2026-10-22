@@ -64,13 +64,16 @@ The implementation is
 
 **The sample WebsearchPlugin.** ``smarter_project_websearch`` uses Tavily to find current
 information about The Smarter Project on the web, from reputable sources. It is an example to
-copy, and no example LLMClient uses it. Its manifest is in the source tree:
-``smarter/smarter/apps/llmtool/data/sample-plugins/websearch-smarter-project.yaml``.
+copy, and no example LLMClient uses it. Its manifest is
+`plugins/websearch/websearch-smarter-project.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-smarter-project.yaml>`__,
+in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
-``manage.py add_example_tools`` applies the sample plugins. Applying ``smarter_project_websearch``
-fails if its Secret ``tavily_api_key`` does not exist. The other plugins are not affected: each
-manifest is applied in its own transaction, so a manifest that fails is rolled back entirely, and
-is reported, and the command goes on to the next one.
+``manage.py initialize_platform`` and ``manage.py initialize_account`` apply the sample plugins,
+with ``manage.py load_from_github``. Applying ``smarter_project_websearch`` fails if its Secret
+``tavily_api_key`` does not exist. The other plugins are not affected: each manifest is applied in
+its own transaction, so a manifest that fails is rolled back entirely, and is reported, and the
+command goes on to the next one.
 
 Setup
 -----
@@ -104,11 +107,12 @@ Setup
 
    .. code-block:: bash
 
-       python manage.py add_example_tools
+       python manage.py load_from_github --url https://github.com/smarter-sh/example-manifests --include_kind WebsearchPlugin
 
 Other WebsearchPlugins can use the same Secret, by setting ``apiKey: tavily_api_key``, or a
 Secret of their own: ``apiKey`` is the name of any Secret that the plugin's owner can read. See
-the sample manifests in ``smarter/smarter/apps/llmtool/data/sample-plugins/websearch-*.yaml``.
+the sample manifests in `plugins/websearch/
+<https://github.com/smarter-sh/example-manifests/tree/main/plugins/websearch>`__.
 
 The environment variable is listed in :doc:`Configuration <../../smarter-platform/configuration>`.
 
@@ -166,8 +170,8 @@ Troubleshooting
 
 ``Plugin smarter_project_websearch not found for account ...``
     An LLMClient that names the plugin was applied, but the plugin was not, almost always because
-    of the missing Secret above. Fix the Secret, run ``manage.py add_example_tools``, and apply
-    the LLMClient again.
+    of the missing Secret above. Fix the Secret, apply the plugin again, e.g. with ``manage.py
+    load_from_github --include_kind WebsearchPlugin``, and apply the LLMClient again.
 
 ``TAVILY_API_KEY is not set``, and ``SMARTER_TAVILY_API_KEY`` in the ``[API KEYS NOT SET]`` console error
     The init command found no key, or only a placeholder. Set the environment variable, or, in a

@@ -1,0 +1,29 @@
+---
+# One NVIDIA L4 (24 GB): the least expensive GPU node, for models up to about 8B at 16 bits.
+# The price is the AWS us-east-1 on-demand price of one node.
+apiVersion: smarter.sh/v1
+kind: LLMHostCompute
+metadata:
+  name: gpu_l4_1x
+  description: One NVIDIA L4 with 24 GB, 8 vCPUs and 32 GiB.
+  version: 1.0.0
+  tags:
+  - gpu
+  - l4
+  annotations:
+  - smarter.sh/llmhostcompute/builtin: 'true'
+spec:
+  node:
+    instanceType: g6.2xlarge
+    cpu: 8
+    memoryGb: 32
+    gpu:
+      type: L4
+      count: 1
+      memoryGb: 24
+    diskSizeGb: 100
+  nodeGroup:
+    maxNodes: 4
+  cost:
+    perHour: 0.9776
+    currency: USD

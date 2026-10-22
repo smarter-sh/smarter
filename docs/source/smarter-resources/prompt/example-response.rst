@@ -11,4 +11,6 @@ Example Prompt Response
 Example JSON Object
 --------------------
 
-.. literalinclude:: ../../../../smarter/smarter/apps/prompt/data/response.json
+.. literalinclude:: examples/response.json
+   :language: json
+   :caption: The response body that the Smarter API returns for the request above

@@ -30,11 +30,15 @@ A Plugin that searches for images with the Brave Image Search API, and returns a
       empty list, and logs a warning. When the api key is missing, the warning explains how
       to create it.
 
-.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+.. sphinx note: /_example-manifests/ is the clone of smarter-sh/example-manifests that docs/source/conf.py makes.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llmtool/data/sample-plugins/image-search-safe.yaml
+.. literalinclude:: /_example-manifests/plugins/image-search/image-search-safe.yaml
     :language: yaml
     :caption: Example ImageSearch Plugin Manifest
+
+From `plugins/image-search/image-search-safe.yaml
+<https://github.com/smarter-sh/example-manifests/blob/main/plugins/image-search/image-search-safe.yaml>`__ in the
+:doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. note::
 
@@ -578,7 +582,7 @@ class ImageSearchPlugin(PluginBase):
         See Also:
 
         - :class:`SAMImageSearchPlugin`
-        - ``smarter/apps/llmtool/data/sample-plugins/image-search-*.yaml`` for more examples.
+        - ``plugins/image-search/`` in https://github.com/smarter-sh/example-manifests for more examples.
         """
         metadata = SAMPluginCommonMetadata(
             name="safe_image_search",

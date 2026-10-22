@@ -1,0 +1,42 @@
+---
+# Meta Llama 3.2 3B from the Ollama library: an example of the ollama model source.
+# Ollama does not authenticate requests, so this LLMHost has no Ingress. Clients send the model
+# name 'llama3.2:3b'.
+apiVersion: smarter.sh/v1
+kind: LLMHost
+metadata:
+  name: llama3_2_3b_ollama_cpu
+  description: Meta Llama 3.2 3B, from the Ollama library, served by Ollama on CPU, inside the cluster.
+  version: 1.0.0
+  tags:
+  - llama
+  - meta
+  - ollama
+  - cpu
+  - chat
+  annotations:
+  - smarter.sh/llmhost/builtin: 'true'
+  - smarter.sh/llmhost/model-card: https://ollama.com/library/llama3.2
+spec:
+  model:
+    source: ollama
+    repository: llama3.2:3b
+    license: llama3.2
+    architecture: llama
+    parameterCount: 3212749824
+    contextWindow: 131072
+    quantization: gguf
+    capabilities:
+      functionCalling: true
+  engine:
+    name: ollama
+    contextLength: 8192
+    maxConcurrentRequests: 4
+  compute: cpu_medium
+  resources:
+    gpuCount: 0
+    cpu: '7'
+    memory: 8Gi
+    shmSize: 1Gi
+  storage:
+    size: 10Gi
