@@ -81,10 +81,11 @@ Compose and the Makefile
      - `sync-changed-files.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/scripts/sync-changed-files.sh>`__,
        `smarter-docker-environment/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/SKILL.md>`__
    * - First start
-     - ``make docker-init`` starts the services, waits for MariaDB, creates the database, loads
-       a sample database, migrates, and initializes the platform with its built-in resources.
+     - ``make docker-init`` starts the services, waits for MariaDB, creates the database, migrates,
+       and initializes the platform with its built-in resources, including a sample database.
      - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``docker-init``),
-       `scripts/smarter_test_db.sql <https://github.com/smarter-sh/smarter/blob/main/scripts/smarter_test_db.sql>`__
+       `scripts/smarter_test_db.sql <https://github.com/smarter-sh/stackademy/blob/main/scripts/smarter_test_db.sql>`__
+       in the Stackademy project
    * - Configuration
      - Every setting comes from the environment, through ``.env``, and is validated at start-up.
      - `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__,

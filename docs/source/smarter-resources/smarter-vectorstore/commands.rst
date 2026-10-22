@@ -1,11 +1,6 @@
 Management Commands
 ===================
 
-.. automodule:: smarter.apps.vectorstore.management.commands.add_example_vectorstores
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. automodule:: smarter.apps.vectorstore.management.commands.initialize_vectorstore_providers
     :members:
     :undoc-members:

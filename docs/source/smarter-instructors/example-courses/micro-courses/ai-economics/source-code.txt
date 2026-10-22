@@ -51,7 +51,7 @@ Comparing Models and Hosting
    * - Changing the model
      - An LLMClient's ``provider`` and ``defaultModel`` are two lines of its manifest, so the
        same tasks run on another provider's model with no other change.
-     - `llmclient-simple.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/data/llm-clients/llmclient-simple.yaml>`__
+     - `llmclient-simple.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-simple.yaml>`__
    * - Providers
      - Each LLM provider that Smarter can call is a Provider resource, and new providers that
        speak the OpenAI protocol are added with a manifest.
@@ -60,13 +60,13 @@ Comparing Models and Hosting
    * - The price of a GPU node
      - Seven built-in compute profiles, from small CPU nodes to eight H100s, each with its AWS
        on-demand price per hour, from which self-hosted models are charged hourly.
-     - `llmhost/data/compute/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__,
-       `gpu-l4-1x.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmhost/data/compute/gpu-l4-1x.yaml>`__
+     - `example-manifests/llmhost-computes/ <https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__,
+       `gpu-l4-1x.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llmhost-computes/gpu-l4-1x.yaml>`__
    * - Open models
      - Twenty-four built-in LLMHost manifests for Llama, Gemma, Qwen, Mistral, Phi, DeepSeek and
        gpt-oss models, and embedding models, to price against per-token APIs.
        :doc:`/smarter-resources/smarter-llmhost`.
-     - `llmhost/data/llmhost/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/llmhost>`__
+     - `example-manifests/llmhosts/ <https://github.com/smarter-sh/example-manifests/tree/main/llmhosts>`__
    * - Platform infrastructure
      - The cluster, nodes, load balancer, database and other AWS services that a shared Smarter
        instance needs, all declared in Terraform, so each fixed cost can be traced to a resource.
@@ -88,11 +88,11 @@ Controlling Spending
        user, an application, a provider, a proxy or a self-hosted compute profile, that block or
        warn. :doc:`/smarter-resources/smarter-budget`.
      - `account/manifest/models/budget/spec.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/manifest/models/budget/spec.py>`__
-   * - Seven budget policies
+   * - Six budget policies
      - A student allowance ($10 a month, $100 in total), an account-wide monthly cap, a provider
-       limited to $200 a day, a six-month project budget, a GPU budget of $500 a month, a
-       warn-only budget on a proxy, and a token throttle for each user.
-     - `account/data/example-manifests/budgets/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__
+       limited to $200 a day, a GPU budget of $500 a month, a warn-only budget on a proxy, and a
+       token throttle for each user. Each is detached, and shows how to attach it in a comment.
+     - `example-manifests/budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__
    * - Warnings and limits
      - A ``budget_warning`` signal at the warning threshold, once per period, and a
        ``budget_exceeded`` signal and a lock when a limit is reached.

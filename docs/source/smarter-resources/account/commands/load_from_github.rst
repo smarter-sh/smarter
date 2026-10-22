@@ -1,0 +1,7 @@
+load_from_github
+================
+
+.. automodule:: smarter.apps.account.management.commands.load_from_github
+   :members:
+   :undoc-members:
+   :show-inheritance:

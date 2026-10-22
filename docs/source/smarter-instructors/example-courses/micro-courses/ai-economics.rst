@@ -18,7 +18,7 @@ application, and weigh it against quality, on a platform that they can run thems
   of its manifest, so the same tasks run on models from different providers with no other change,
   and the comparison is fair.
 - **Self-hosting has a real price.** Smarter's
-  `seven built-in compute profiles <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__
+  `seven built-in compute profiles <https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__
   carry their AWS on-demand price per hour, from one NVIDIA L4 at about $0.98 to eight H100s at
   about $55, and :doc:`LLMHost </smarter-resources/smarter-llmhost>` charges each ready node by
   the hour, so per-token APIs and open models can be compared on the same records.
@@ -30,7 +30,7 @@ application, and weigh it against quality, on a platform that they can run thems
 - **Budgets enforce policy.** A :doc:`Budget </smarter-resources/smarter-budget>` turns a
   spending limit into an enforced control, in dollars or tokens, per hour, day, week or month, for
   a user, an application, an account, a provider or a GPU. The
-  `seven example budgets <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__
+  `six example budgets <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__
   include a $10 monthly allowance for each student and a $200 daily limit on one provider.
 
 **What the course covers.** The unit of AI cost: tokens, input and output prices, cached input and
@@ -44,9 +44,9 @@ and labor and productivity.
 
 **Look at.**
 
-- `account/data/example-manifests/budgets/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
-  seven budget policies, each a short manifest with a plain-English description.
-- `llmhost/data/compute/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__,
+- `example-manifests/budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__,
+  six budget policies, each a short manifest with a plain-English description.
+- `example-manifests/llmhost-computes/ <https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__,
   the GPU and CPU node profiles with their hourly prices.
 - The charges and budgets on the web console's dashboard, and the cost records of a class's own
   conversations.

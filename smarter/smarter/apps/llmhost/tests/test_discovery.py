@@ -4,6 +4,7 @@
 import requests
 
 from smarter.apps.llmhost.manifest.models.llmhost.model import SAMLLMHost
+from smarter.apps.llmhost.models import LLMHost
 from smarter.apps.llmhost.services.discovery import (
     CATALOGS,
     BuiltinCatalog,
@@ -16,22 +17,81 @@ from smarter.apps.llmhost.services.discovery import (
     recommend_resources,
 )
 from smarter.apps.llmhost.services.exceptions import LLMHostDiscoveryError
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from .base_classes import FakeSession, builtin_compute_models
+from .base_classes import (
+    BUILTIN_LLMHOST_PATH,
+    BuiltinFixturesMixin,
+    FakeSession,
+    builtin_compute_models,
+    builtin_manifests,
+    smarter_admin_user_profile,
+)
 
 
-class TestBuiltinCatalog(SmarterTestBase):
-    """Test the catalog of built-in manifests."""
+class TestBuiltinCatalog(BuiltinFixturesMixin):
+    """Test the catalog of the Smarter admin's example LLMHosts."""
 
     def setUp(self):
         super().setUp()
         self.catalog = BuiltinCatalog()
 
+    def fixture_names(self) -> list[str]:
+        return sorted(manifest["metadata"]["name"] for manifest in builtin_manifests(BUILTIN_LLMHOST_PATH))
+
+    def test_llmhosts(self):
+        """Test that the catalog's LLMHosts are the Smarter admin's, including the fixtures."""
+        llmhosts = BuiltinCatalog.llmhosts()
+        admin = smarter_admin_user_profile()
+        self.assertTrue(all(llmhost.user_profile_id == admin.pk for llmhost in llmhosts))
+        names = set(llmhosts.values_list("name", flat=True))
+        self.assertTrue(set(self.fixture_names()) <= names)
+
+    def test_to_manifest(self):
+        """Test that an LLMHost's manifest is its metadata, and its spec as it was applied."""
+        llmhost = BuiltinCatalog.llmhosts().get(name="bge_m3")
+        manifest = BuiltinCatalog.to_manifest(llmhost)
+        self.assertEqual(manifest["apiVersion"], SmarterApiVersions.V1)
+        self.assertEqual(manifest["kind"], "LLMHost")
+        self.assertEqual(set(manifest), {"apiVersion", "kind", "metadata", "spec"})
+        metadata = manifest["metadata"]
+        self.assertEqual(metadata["name"], "bge_m3")
+        self.assertEqual(metadata["description"], llmhost.description)
+        self.assertEqual(metadata["version"], llmhost.version)
+        self.assertEqual(sorted(metadata["tags"]), sorted(llmhost.tags_list))
+        self.assertIn({"smarter.sh/llmhost/builtin": "true"}, metadata["annotations"])
+        self.assertIs(manifest["spec"], llmhost.spec)
+        self.assertEqual(manifest["spec"]["model"]["repository"], "BAAI/bge-m3")
+        # the manifest is valid, and ready to apply again.
+        self.assertEqual(SAMLLMHost(**manifest).spec.engine.name, "tei")
+
+    def test_to_manifest_annotations(self):
+        """Test that annotations that are not a list are left out."""
+        llmhost = LLMHost(name="x", description="", version="1.0.0", annotations={"not": "a list"}, spec={})
+        llmhost.__dict__["tags_list"] = []  # an unsaved LLMHost has no tags to fetch.
+        self.assertEqual(BuiltinCatalog.to_manifest(llmhost)["metadata"]["annotations"], [])
+
+    def test_manifests(self):
+        """Test that the manifests include the fixtures, are sorted by name, and skip LLMHosts without a spec."""
+        admin = smarter_admin_user_profile()
+        no_spec = LLMHost.objects.create(name="aaa_test_builtin_catalog_no_spec", user_profile=admin, spec={})
+        self.addCleanup(LLMHost.objects.filter(pk=no_spec.pk).delete)
+        names = [manifest["metadata"]["name"] for manifest in self.catalog.manifests()]
+        # sorted by the database's collation, which may order "_" before digits, unlike Python.
+        expected = [
+            name
+            for name in BuiltinCatalog.llmhosts().order_by("name").values_list("name", flat=True)
+            if name != no_spec.name
+        ]
+        self.assertEqual(names, expected)
+        self.assertTrue(set(self.fixture_names()) <= set(names))
+        self.assertNotIn(no_spec.name, names)
+
     def test_search(self):
         """Test search by query and task."""
         everything = self.catalog.search(limit=100)
-        self.assertGreaterEqual(len(everything), 20)
+        self.assertGreaterEqual(len(everything), len(self.fixture_names()))
         self.assertTrue(all(info.catalog == "builtin" and info.manifest for info in everything))
         llamas = self.catalog.search(query="llama", limit=100)
         self.assertTrue(llamas)
@@ -42,7 +102,7 @@ class TestBuiltinCatalog(SmarterTestBase):
             )
         )
         embeddings = self.catalog.search(task="embedding", limit=100)
-        self.assertTrue(embeddings)
+        self.assertIn("BAAI/bge-m3", [info.repository for info in embeddings])
         self.assertTrue(all(info.task == "embedding" for info in embeddings))
         self.assertEqual(len(self.catalog.search(limit=3)), 3)
 
@@ -52,6 +112,9 @@ class TestBuiltinCatalog(SmarterTestBase):
         self.assertTrue(info.gated)
         self.assertEqual(info.parameter_count, 8030261248)
         self.assertEqual(self.catalog.get("qwen3_8b").repository, "Qwen/Qwen3-8B")
+        bge = self.catalog.get("bge_m3")
+        self.assertEqual((bge.task, bge.license, bge.quantization), ("embedding", "mit", "fp32"))
+        self.assertFalse(bge.gated)
         with self.assertRaises(LLMHostDiscoveryError):
             self.catalog.get("nobody/nothing")
 
@@ -156,7 +219,7 @@ class TestSizing(SmarterTestBase):
         self.assertEqual((tiny["compute"], tiny["gpuCount"], tiny["cpu"], tiny["memory"]), ("gpu_l4_1x", 1, "4", "8Gi"))
 
 
-class TestDraftManifest(SmarterTestBase):
+class TestDraftManifest(BuiltinFixturesMixin):
     """Test default_engine() and draft_manifest()."""
 
     def setUp(self):

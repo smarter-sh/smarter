@@ -6,10 +6,10 @@ write an AI policy, then enforce as much of it as they can with guardrails, budg
 controls, and audit the results in Smarter's journal. No programming is needed. In Smarter, every
 control is a short YAML manifest that a non-programmer can read and change: `eighteen built-in
 guardrails
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+<https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__,
 from personal data redaction to the escalation of GDPR and CCPA privacy requests to a person; `seven
 example budgets
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+<https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__,
 such as a monthly allowance for each student; and per-account ownership of every resource. Every
 intervention is recorded as a `guardrail event
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__,

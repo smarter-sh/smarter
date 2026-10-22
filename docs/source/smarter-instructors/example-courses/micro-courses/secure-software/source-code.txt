@@ -18,13 +18,13 @@ Defending an AI Application
      - Built-in guardrails for prompt injection by keyword and by LLM judge, semantic jailbreak
        detection, code injection, and redaction of personal data and secrets before the model
        sees them.
-     - `prompt-injection-llm-judge-input.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/prompt-injection-llm-judge-input.yaml>`__,
-       `guardrail/data/guardrails/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__
+     - `prompt-injection-llm-judge-input.yaml <https://github.com/smarter-sh/example-manifests/blob/main/guardrails/prompt-injection-llm-judge-input.yaml>`__,
+       `example-manifests/guardrails/ <https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__
    * - Guardrails on output
      - The model's reply is checked too, because the model is untrusted: leaked secrets and
        personal data, script injection, invented citations and regulated advice.
-     - `secrets-leak-output.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/secrets-leak-output.yaml>`__,
-       `script-injection-output.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/data/guardrails/script-injection-output.yaml>`__
+     - `secrets-leak-output.yaml <https://github.com/smarter-sh/example-manifests/blob/main/guardrails/secrets-leak-output.yaml>`__,
+       `script-injection-output.yaml <https://github.com/smarter-sh/example-manifests/blob/main/guardrails/script-injection-output.yaml>`__
    * - Detectors
      - Deterministic detectors for credit cards (with the Luhn check), US social security
        numbers, email addresses, phone numbers, IP addresses, IBANs, AWS access keys, private
@@ -39,7 +39,7 @@ Defending an AI Application
      - A SQL Plugin runs only a fixed, parameterized query, and an MCP client offers only the
        tools on its allow list, such as the read-only tools of GitHub's server.
      - `stackademy/plugins/sql/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/plugins/sql/stackademy-sql.yaml>`__,
-       `mcpclients/github.yaml <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/github.yaml>`__
+       `mcp-clients/github.yaml <https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/github.yaml>`__
 
 Secrets and Outbound Requests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

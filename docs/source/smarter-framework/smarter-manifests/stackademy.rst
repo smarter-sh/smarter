@@ -60,6 +60,10 @@ other.
    * - ``budgets/``
      - The :doc:`Budget </smarter-resources/smarter-budget>` ``stackademy_project``, which limits
        what ``stackademy_sql`` may spend.
+   * - ``scripts/``
+     - Not manifests: the scripts that a platform runs when it loads the repository, listed in
+       ``scripts.yaml``. ``create-course-database.sh`` runs ``smarter_test_db.sql``, which creates
+       the course database, its ``courses`` table and its read-only users.
 
 Its pre-commit hooks check every manifest against the JSON Schema of its kind, which the Smarter
 platform publishes, before each commit, and a GitHub Actions workflow runs them on every pull request.
@@ -67,10 +71,13 @@ platform publishes, before each commit, and a GitHub Actions workflow runs them 
 What the Platform Provides
 --------------------------
 
-The data that the course advisors read stays in the platform, so that the project works on every
+The data that the course advisors read is served by the platform, so that the project works on every
 Smarter platform without an external service:
 
-- the ``smarter_test_db`` database, whose ``courses`` table is the course catalogue, and
+- the ``smarter_test_db`` database, whose ``courses`` table is the course catalogue, in the
+  platform's own database server. The repository's ``scripts/create-course-database.sh`` creates
+  it, and ``manage.py initialize_platform`` runs that script, and
+
 - the course catalogue api, ``/api/v1/demos/stackademy/course-catalogue/``, which accepts the
   value of the ``smarter_test_api`` Secret of the Smarter account as its password.
 
@@ -78,19 +85,30 @@ How a Platform Loads It
 -----------------------
 
 ``manage.py load_from_github`` clones a GitHub repository of manifests and applies each of them, in
-the order of their kinds' dependencies: Secrets first, then Connections, plugins, LLMClients, and
-Budgets last. It fills in manifest templates with the platform's own scheme and domain, and an
+the order of their kinds' dependencies, :meth:`SAMKinds.apply_order()
+<smarter.apps.api.v1.manifests.enum.SAMKinds.apply_order>`: Secrets first, then Connections,
+plugins, LLMClients, and Budgets last. It fills in manifest templates with the platform's own scheme and domain, and an
 LLMClient that is already deployed stays deployed.
 
-- ``manage.py initialize_platform`` loads the Stackademy repository for the Smarter admin, then
+A repository may also hold scripts, for what a manifest can't describe, such as the course
+database. They are in its top-level ``scripts/`` folder, which holds no manifests, and its
+``scripts/scripts.yaml`` lists the scripts to run, each with a ``stage``: ``pre``, before the
+manifests are applied, or ``post``, after they are applied and the LLMClients deployed. A script
+receives the platform's database server and its administrator, the owner's account and username,
+and the repository, in its environment, and none of the platform's own credentials. See
+:mod:`smarter.apps.account.repository_scripts`.
+
+- ``manage.py initialize_platform`` loads the Stackademy repository for the Smarter admin, with
+  ``--run_scripts``, so that its ``pre`` script creates the course database, as
+  ``SMARTER_MYSQL_ROOT_USERNAME``, before its SqlConnection is applied. Then
   ``manage.py verify_stackademy`` sends each course advisor a real prompt, and fails unless its
   plugin returned course catalogue data.
 - ``manage.py initialize_account`` loads it for each account's admin, without the Budget, which only
-  a superuser may apply, and deploys the account's course advisors.
+  a superuser may apply, and without its scripts, and deploys the account's course advisors.
 
 .. code-block:: console
 
    python manage.py load_from_github --url https://github.com/smarter-sh/stackademy --account_number 3141-5926-5359
 
-See :doc:`/smarter-resources/llmclient/commands/load-from-github` and
+See :doc:`/smarter-resources/account/commands/load_from_github` and
 :doc:`/smarter-resources/llmclient/commands/verify-stackademy`.
