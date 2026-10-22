@@ -19,6 +19,7 @@ from smarter.apps.llmclient.models import (
     LLMClientPlugin,
     LLMClientRequests,
     get_cached_llmclient_by_request,
+    get_cached_llmclient_tool_counts,
 )
 from smarter.apps.llmclient.serializers import (
     LLMClientConfigSerializer,
@@ -384,7 +385,9 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
 
         # the plugins and extensions are counted. Their lists, which are constrained to a reasonable
         # number, since an llmclient may have hundreds of plugins, are diagnostic. See verbose.
-        llmclient_plugins_count = LLMClientPlugin.objects.filter(llmclient=self.llmclient).count()
+        # counted once, and cached until the LLMClient's tools change. See get_cached_llmclient_tool_counts().
+        tool_counts = get_cached_llmclient_tool_counts(self.llmclient.id)  # type: ignore[union-attr]
+        llmclient_plugins_count = tool_counts.plugins
         llmclient_plugins = (
             LLMClientPlugin.objects.filter(llmclient=self.llmclient)
             .select_related("plugin_meta")
@@ -394,7 +397,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             else []
         )
 
-        llmclient_extensions_count = LLMClientExtensions.objects.filter(llmclient=self.llmclient).count()
+        llmclient_extensions_count = tool_counts.extensions
         llmclient_extensions = (
             LLMClientExtensions.objects.filter(llmclient=self.llmclient)
             .select_related("extension", "extension__installed_version")
@@ -582,6 +585,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         # log context middleware restores it too, but this view also runs without it, e.g. in tests.
         scope = session_key_context.set(session_key_context.get())
         try:
+            # before any of the work, e.g. creating a chat session's row, which a throttled request
+            # must not do. super().dispatch() doesn't count the request again.
+            throttled = self.throttle(request)
+            if throttled is not None:
+                return throttled
             return self.dispatch_config(request, *args, **kwargs)
         finally:
             session_key_context.reset(scope)
