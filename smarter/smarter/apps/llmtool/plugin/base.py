@@ -11,7 +11,7 @@ from typing import Any, Optional, Type, Union
 
 # 3rd party stuff
 import yaml
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models.query import QuerySet
 from rest_framework import serializers
 
@@ -57,6 +57,7 @@ from smarter.common.exceptions import (
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
+from smarter.lib.django.models.utils import assign_changed_fields, tags_changed
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
@@ -1461,46 +1462,56 @@ class PluginBase(ABC, AccountMixin):
         plugin_prompt_django_model = self.plugin_prompt_django_model
         plugin_data_django_model = self.plugin_data_django_model
 
-        self.cache_invalidations()
+        # Every deploy applies the built-in plugins again. A record whose values are unchanged is not
+        # saved again, so that its updated_at, post_save receivers and caches are left alone. See
+        # assign_changed_fields().
+        changed = False
+
+        def apply_fields(instance: models.Model, fields: dict) -> None:
+            nonlocal changed
+            if assign_changed_fields(instance, fields):
+                instance.save()
+                changed = True
 
         with transaction.atomic():
             if isinstance(self.plugin_meta, PluginMeta):
                 read_only_attrs = ["id", "user_profile", "name", "created_at", "updated_at"]
-                for attr, value in plugin_meta_django_model.items():
-                    if attr not in read_only_attrs:
-                        setattr(self.plugin_meta, attr, value)
-                self.plugin_meta.save()
+                apply_fields(
+                    self.plugin_meta,
+                    {attr: value for attr, value in plugin_meta_django_model.items() if attr not in read_only_attrs},
+                )
                 # as in create(): tags are a TaggableManager, so they are set separately
                 if self.manifest:
                     tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
-                    self.plugin_meta.tags.set(tags)
+                    if tags_changed(self.plugin_meta, list(tags)):
+                        self.plugin_meta.tags.set(tags)
+                        changed = True
             else:
                 raise SmarterPluginError("PluginMeta is not set or is not a PluginMeta instance.")
 
             if isinstance(plugin_selector_django_model, dict) and isinstance(self.plugin_selector, PluginSelector):
-                for attr, value in plugin_selector_django_model.items():
-                    setattr(self.plugin_selector, attr, value)
-                self.plugin_selector.save()
+                apply_fields(self.plugin_selector, plugin_selector_django_model)
             else:
                 raise SmarterPluginError("PluginSelector is not set or is not a PluginSelector instance.")
 
             if isinstance(plugin_prompt_django_model, dict) and isinstance(self.plugin_prompt, PluginPrompt):
-                for attr, value in plugin_prompt_django_model.items():
-                    setattr(self.plugin_prompt, attr, value)
-                self.plugin_prompt.save()
+                apply_fields(self.plugin_prompt, plugin_prompt_django_model)
             else:
                 raise SmarterPluginError("PluginPrompt is not set or is not a PluginPrompt instance.")
 
             if isinstance(plugin_data_django_model, dict) and isinstance(self.plugin_data, self.plugin_data_class):
-                for attr, value in plugin_data_django_model.items():
-                    setattr(self.plugin_data, attr, value)
-                self.plugin_data.save()
+                apply_fields(self.plugin_data, plugin_data_django_model)
             else:
                 raise SmarterPluginError(
                     f"PluginData of type {type(self.plugin_data)} is not {self.plugin_data_class.__class__.__name__}."
                 )
 
-        transaction.on_commit(committed)
+        if changed:
+            self.cache_invalidations()
+            transaction.on_commit(committed)
+        else:
+            self.id = self.plugin_meta.id  # type: ignore[reportAttributeAccessIssue]
+            logger.debug("%s.update() plugin %s is unchanged.", self.formatted_pluginbase_class_name, self.name)
         self._persisted_manifest = self._manifest
 
         return True

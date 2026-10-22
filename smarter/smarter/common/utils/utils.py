@@ -28,7 +28,7 @@ import os
 import random
 import warnings
 from functools import lru_cache
-from typing import Union
+from typing import Optional, Union
 from warnings import deprecated
 
 from cryptography.fernet import Fernet
@@ -86,6 +86,36 @@ def hash_factory(length: int = 16) -> str:
         print(long_token)  # e.g., 'a3f9c1e2b4d5f6a7c8e9d0b1a2c3d4e5'
     """
     return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
+
+
+def mask_email(email: Optional[str], mask_char: str = "*") -> str:
+    """
+    Mask an email address for logs and other diagnostic output.
+
+    The first character of the local part and the whole domain are kept, so that a masked address
+    is still useful for telling accounts apart, while the person's name is not written to the logs.
+    A value without an ``@`` is masked except for its first character.
+
+    :param email: The email address.
+    :type email: Optional[str]
+    :param mask_char: The character that replaces the masked characters. Default is ``'*'``.
+    :type mask_char: str, optional
+    :returns: The masked address, e.g. ``j****@example.com``, or an empty string if ``email`` is empty.
+    :rtype: str
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import mask_email
+
+        mask_email("jane.doe@example.com")  # 'j****@example.com'
+    """
+    if not email:
+        return ""
+    local, at, domain = email.partition("@")
+    masked_local = (local[:1] + mask_char * 4) if local else mask_char * 4
+    return f"{masked_local}{at}{domain}"
 
 
 @deprecated("Use Pydantic's ``SecretStr`` or other secure alternatives for string masking.")

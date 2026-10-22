@@ -6,7 +6,6 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.apps.account.models import UserProfile
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -19,7 +18,7 @@ from .signals import (
     secret_accessed,
     secret_created,
     secret_deleted,
-    secret_inializing,
+    secret_initializing,
     secret_ready,
     secret_saved,
     secret_updated,
@@ -35,7 +34,17 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-module_prefix = f"{__name__}"
+logger_prefix = logging.formatted_text(__name__)
+
+
+def sender_name(sender) -> str:
+    """
+    The name of a signal's sender, which is a class, e.g. ``SecretTransformer``.
+
+    :param sender: The sender.
+    :returns: Its name.
+    """
+    return getattr(sender, "__name__", type(sender).__name__)
 
 
 def secret_log_dict(secret: Secret) -> SmarterDictType:
@@ -56,8 +65,8 @@ def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
     """Signal receiver for created/saved of Secret model."""
     secret_json = json.dumps(secret_log_dict(instance))
     logger.debug(
-        "%s Secret: %s, id: %s created: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_post_save()"),
+        "%s.secret_post_save() Secret: %s, id: %s created: %s, user_profile: %s",
+        logger_prefix,
         secret_json,
         instance.id,  # type: ignore
         created,
@@ -69,8 +78,8 @@ def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
 def secret_post_delete(sender: Secret, instance: Secret, **kwargs):
     """Signal receiver for deleted of Secret model."""
     logger.info(
-        "%s Secret: %s, id: %s",
-        formatted_text(f"{module_prefix}.secret_post_delete()"),
+        "%s.secret_post_delete() Secret: %s, id: %s",
+        logger_prefix,
         instance,
         instance.id,  # type: ignore
     )
@@ -80,9 +89,9 @@ def secret_post_delete(sender: Secret, instance: Secret, **kwargs):
 def secret_created_receiver(sender, secret: Secret, **kwargs):
     """Signal receiver for secret_created signal."""
     logger.info(
-        "%s.%s Secret: %s id: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_created()"),
-        type(sender),
+        "%s.secret_created() from %s Secret: %s id: %s, user_profile: %s",
+        logger_prefix,
+        sender_name(sender),
         str(secret),
         secret.id,  # type: ignore
         secret.user_profile,
@@ -93,9 +102,9 @@ def secret_created_receiver(sender, secret: Secret, **kwargs):
 def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
     """Signal receiver for secret_deleted signal."""
     logger.info(
-        "%s.%s Secret: %s, name: %s",
-        formatted_text(f"{module_prefix}.secret_deleted()"),
-        type(sender),
+        "%s.secret_deleted() from %s Secret: %s, name: %s",
+        logger_prefix,
+        sender_name(sender),
         secret_id,
         secret_name,
     )
@@ -105,9 +114,9 @@ def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
 def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
     """Signal receiver for secret_ready signal."""
     logger.info(
-        "%s.%s Secret: %s, id: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_ready()"),
-        type(sender),
+        "%s.secret_ready() from %s Secret: %s, id: %s, user_profile: %s",
+        logger_prefix,
+        sender_name(sender),
         str(secret),
         secret.id,
         secret.user_profile,
@@ -118,22 +127,22 @@ def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
 def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, **kwargs):
     """Signal receiver for secret_accessed signal."""
     logger.info(
-        "%s.%s Secret: %s, id: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_accessed()"),
-        type(sender),
+        "%s.secret_accessed() from %s Secret: %s, id: %s, user_profile: %s",
+        logger_prefix,
+        sender_name(sender),
         str(secret),
         secret.id,  # type: ignore
         user_profile,
     )
 
 
-@receiver(secret_inializing)
-def secret_inializing_receiver(sender, secret_name: str, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_inializing signal."""
+@receiver(secret_initializing)
+def secret_initializing_receiver(sender, secret_name: str, user_profile: UserProfile, **kwargs):
+    """Signal receiver for secret_initializing signal."""
     logger.info(
-        "%s.%s name: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_inializing()"),
-        type(sender),
+        "%s.secret_initializing() from %s name: %s, user_profile: %s",
+        logger_prefix,
+        sender_name(sender),
         secret_name,
         user_profile,
     )
@@ -149,15 +158,14 @@ def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserP
     tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
     logger.info(
-        "%s.%s Secret: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
-        formatted_text(f"{module_prefix}.secret_saved()"),
-        type(sender),
+        "%s.secret_saved() from %s Secret: %s, id: %s, user_profile: %s",
+        logger_prefix,
+        sender_name(sender),
         str(secret),
         secret.id,
         user_profile,
-        json_data,
-        tags,
     )
+    logger.debug("%s.secret_saved() dump: %s, tags: %s", logger_prefix, json_data, tags)
 
 
 @receiver(secret_updated)
@@ -170,12 +178,11 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
     tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
     logger.info(
-        "%s.%s secret_updated signal received. instance: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
-        formatted_text(f"{module_prefix}.secret_updated()"),
-        type(sender),
+        "%s.secret_updated() from %s Secret: %s, id: %s, user_profile: %s",
+        logger_prefix,
+        sender_name(sender),
         str(secret),
         secret.id,
         user_profile,
-        json_data,
-        tags,
     )
+    logger.debug("%s.secret_updated() dump: %s, tags: %s", logger_prefix, json_data, tags)

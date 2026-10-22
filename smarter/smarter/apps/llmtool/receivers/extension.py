@@ -21,21 +21,21 @@ from ..signals.extension import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-prefix = f"{__name__}."
+logger_prefix = formatted_text(__name__)
 
 
 @receiver(extension_installed, dispatch_uid="extension_installed")
 def handle_extension_installed(sender, extension, version, **kwargs):
     """Handle extension installed signal."""
-    logger.info("%s - %s version: %s", formatted_text(prefix + "extension_installed"), extension.slug, version.version)
+    logger.info("%s.extension_installed() %s version: %s", logger_prefix, extension.slug, version.version)
 
 
 @receiver(extension_upgraded, dispatch_uid="extension_upgraded")
 def handle_extension_upgraded(sender, extension, version, previous_version: str, **kwargs):
     """Handle extension upgraded signal."""
     logger.info(
-        "%s - %s version: %s previous_version: %s",
-        formatted_text(prefix + "extension_upgraded"),
+        "%s.extension_upgraded() %s version: %s previous_version: %s",
+        logger_prefix,
         extension.slug,
         version.version,
         previous_version,
@@ -45,27 +45,27 @@ def handle_extension_upgraded(sender, extension, version, previous_version: str,
 @receiver(extension_uninstalled, dispatch_uid="extension_uninstalled")
 def handle_extension_uninstalled(sender, slug: str, **kwargs):
     """Handle extension uninstalled signal."""
-    logger.info("%s - %s", formatted_text(prefix + "extension_uninstalled"), slug)
+    logger.info("%s.extension_uninstalled() %s", logger_prefix, slug)
 
 
 @receiver(extension_enabled, dispatch_uid="extension_enabled")
 def handle_extension_enabled(sender, extension, **kwargs):
     """Handle extension enabled signal."""
-    logger.info("%s - %s", formatted_text(prefix + "extension_enabled"), extension.slug)
+    logger.info("%s.extension_enabled() %s", logger_prefix, extension.slug)
 
 
 @receiver(extension_disabled, dispatch_uid="extension_disabled")
 def handle_extension_disabled(sender, extension, reason: str = "", **kwargs):
     """Handle extension disabled signal."""
-    logger.warning("%s - %s reason: %s", formatted_text(prefix + "extension_disabled"), extension.slug, reason)
+    logger.warning("%s.extension_disabled() %s reason: %s", logger_prefix, extension.slug, reason)
 
 
 @receiver(extension_tool_called, dispatch_uid="extension_tool_called")
 def handle_extension_tool_called(sender, slug: str, version: str, tool_name: str, arguments=None, **kwargs):
     """Handle extension tool called signal."""
     logger.info(
-        "%s - %s %s %s arguments: %s",
-        formatted_text(prefix + "extension_tool_called"),
+        "%s.extension_tool_called() %s %s %s arguments: %s",
+        logger_prefix,
         slug,
         version,
         tool_name,
@@ -77,8 +77,8 @@ def handle_extension_tool_called(sender, slug: str, version: str, tool_name: str
 def handle_extension_tool_responded(sender, slug: str, version: str, tool_name: str, characters: int = 0, **kwargs):
     """Handle extension tool responded signal."""
     logger.info(
-        "%s - %s %s %s characters: %s",
-        formatted_text(prefix + "extension_tool_responded"),
+        "%s.extension_tool_responded() %s %s %s characters: %s",
+        logger_prefix,
         slug,
         version,
         tool_name,
@@ -90,8 +90,8 @@ def handle_extension_tool_responded(sender, slug: str, version: str, tool_name: 
 def handle_extension_tool_failed(sender, slug: str, version: str, tool_name: str, error: str, **kwargs):
     """Handle extension tool failed signal."""
     logger.warning(
-        "%s - %s %s %s failed: %s",
-        formatted_text(prefix + "extension_tool_failed"),
+        "%s.extension_tool_failed() %s %s %s failed: %s",
+        logger_prefix,
         slug,
         version,
         tool_name,
@@ -105,8 +105,8 @@ def handle_extension_tool_completed(
 ):
     """Handle extension tool completed signal."""
     logger.info(
-        "%s - %s %s %s success: %s duration: %.3fs",
-        formatted_text(prefix + "extension_tool_completed"),
+        "%s.extension_tool_completed() %s %s %s success: %s duration: %.3fs",
+        logger_prefix,
         slug,
         version,
         tool_name,

@@ -65,9 +65,7 @@ class Command(SmarterCommand):
         email = options.get("email")
         if not email:
             email = f"{username}@{smarter_settings.root_domain}"
-            self.stdout.write(
-                self.style.WARNING(f"No email provided, assigning a default email for this Secret: {email}")
-            )
+            self.stdout.write(f"No email was given for the admin user {username}. Using {email}.")
 
         password = options.get("password")
         if not password and smarter_settings.admin_password:
