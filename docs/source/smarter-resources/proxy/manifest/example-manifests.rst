@@ -1,7 +1,10 @@
 Example Manifests
 =================
 
-The built-in Proxies' manifests, which ``manage.py initialize_platform`` applies. See
+The built-in Proxies' manifests. They live in the `proxies/ <https://github.com/smarter-sh/example-manifests/tree/main/proxies>`__
+folder of `smarter-sh/example-manifests <https://github.com/smarter-sh/example-manifests>`__, the
+community-supported :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`,
+which every Smarter platform loads when ``manage.py initialize_platform`` runs. See
 :doc:`../../smarter-proxy`.
 
 .. toctree::

@@ -57,7 +57,7 @@ class TestLLMClientHelper(TestAccountMixin):
         self.assertEqual(helper.llmclient_plugins_list_str, "")
         self.assertFalse(helper.is_custom_domain)
         self.assertIsNone(helper.llmclient_custom_domain)
-        self.assertIn(self.llmclient.hashed_id, str(helper))
+        self.assertEqual(str(helper), f"{self.llmclient.name} ({self.llmclient.pk})")
         self.assertIsInstance(helper.to_json(), dict)
         helper.api_host  # pylint: disable=pointless-statement
 

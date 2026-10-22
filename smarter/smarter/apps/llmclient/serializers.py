@@ -32,6 +32,7 @@ from .models import (
     LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
+    get_cached_llmclient_tool_counts,
 )
 
 
@@ -77,11 +78,14 @@ class LLMClientConfigSerializer(serializers.ModelSerializer):
         """
         The number of tools that the LLMClient adds to a prompt.
 
+        Counted, and cached until the LLMClient's tools change, rather than serialized: Smarter Chat's
+        configuration api reads it on every page load.
+
         :param obj: The LLMClient.
         :returns: The length of :meth:`LLMClientSerializer.get_tools`: its extensions, plugins and MCPClients.
         :rtype: int
         """
-        return len(LLMClientSerializer().get_tools(obj))
+        return get_cached_llmclient_tool_counts(obj.id).total  # type: ignore[arg-type]
 
 
 class LLMClientAPIKeySerializer(SmarterCamelCaseSerializer):

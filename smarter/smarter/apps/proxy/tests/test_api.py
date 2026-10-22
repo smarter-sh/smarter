@@ -10,7 +10,14 @@ from smarter.apps.proxy.api.v1.urls import ProxyApiV1ReverseViews as Names
 from smarter.apps.proxy.services import PROXY_RESPONSE_HEADER, Usage
 from smarter.lib import json
 
-from .base_classes import API_KEY, BASE_URL, ProxyTestBase, get_test_text, sse_response
+from .base_classes import (
+    API_KEY,
+    BASE_URL,
+    ProxyTestBase,
+    get_test_text,
+    read_stream,
+    sse_response,
+)
 
 CHAT = {"model": "gpt-6-luna", "messages": [{"role": "user", "content": "Hi"}]}
 
@@ -79,7 +86,7 @@ class TestProxyPassthroughApi(ProxyTestBase):
         self.fake.queue(sse_response(stream))
         response = self.post(HTTP_X_API_KEY=self.key, data={**CHAT, "stream": True})
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(b"".join(response.streaming_content), stream)  # type: ignore[attr-defined]
+        self.assertEqual(read_stream(response), stream)
         self.record_charges.assert_called_once_with(self.test_proxy, self.staff_user_profile, Usage(25, 15, 40))
 
     def test_unauthenticated(self):
