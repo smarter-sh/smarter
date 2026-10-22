@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.5](https://github.com/smarter-sh/smarter/compare/v0.36.4...v0.36.5) (2026-10-22)
+
+### Bug Fixes
+
+* **helm:** harden the nightly database backup and its setup script ([c9982d0](https://github.com/smarter-sh/smarter/commit/c9982d0d31acd49a898691e16b273f89524f4037))
+* **platform:** consolidate the init job, back up as a read-only user ([0b8e937](https://github.com/smarter-sh/smarter/commit/0b8e937ff279ac27f3e131c6eb6856056a301071))
+* **plugin:** fail clearly when a new plugin has no user profile ([3aca51e](https://github.com/smarter-sh/smarter/commit/3aca51ef2019a172b8ed29c344f653a676020535))
+
+### Refactoring
+
+* **account:** run stackademy's course database script at init ([febc361](https://github.com/smarter-sh/smarter/commit/febc361ca5e2c74a50a5c8f7a51e0ee65f458d11))
+* **platform:** load example manifests from their own repository ([3cd7165](https://github.com/smarter-sh/smarter/commit/3cd7165007e93fa421a2e565959dab375419cb07))
+
 ## [0.36.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.5-alpha.1...v0.36.5-alpha.2) (2026-10-22)
 
 ### Bug Fixes
