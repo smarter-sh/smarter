@@ -195,6 +195,13 @@ class SAMKinds(SmarterEnumAbstract):
         all_connections():
             Return the supported connection manifest kinds.
 
+        apply_order():
+            Return the order in which to apply manifests of several kinds,
+            each kind after the kinds that its manifests may name.
+
+        apply_rank(kind):
+            Return a kind's position in :meth:`apply_order`.
+
         all_slugs():
             Return all supported manifest kind URL slugs, including both
             singular and plural forms.
@@ -320,3 +327,117 @@ class SAMKinds(SmarterEnumAbstract):
     @classmethod
     def all_connections(cls):
         return [cls.API_CONNECTION, cls.SQL_CONNECTION]
+
+    @classmethod
+    def apply_order(cls) -> tuple[str, ...]:
+        """
+        Return the order in which to apply manifests of several kinds: each kind after the kinds that its manifests may name.
+
+        SAM resources refer to one another **by name**. A SqlPlugin's ``spec.connection`` is the name of a
+        SqlConnection, and a SqlConnection's ``password`` is the name of a Secret. A broker resolves each
+        name when it applies the manifest, so the resource that is named must already exist. A set of
+        manifests, e.g. a project such as `Stackademy <https://github.com/smarter-sh/stackademy>`__, can
+        only be applied in an order where every resource comes after the resources that it names. This
+        is that order, for every kind. It is part of the definition of SAM: a new kind needs a deliberate
+        place in it, and ``test_enum.py`` fails until it has one.
+
+        The order, kind by kind, and why:
+
+        #. **Account**. Every other resource belongs to an account, so the account comes first. It
+           names nothing.
+        #. **User**. A user is a member of an account, and owns the resources that it applies.
+        #. **AuthToken**. An api key's ``spec.username`` names its User. It comes before the LLMClients,
+           whose ``spec.apiKey`` may name one.
+        #. **Secret**. A Secret holds a password or an api key, and names nothing, but nearly everything
+           after it may name a Secret: Providers, Proxies, LLMHosts, Connections, MCPClients,
+           Vectorsearches and the search plugins. So it comes before all of them.
+        #. **Provider**. An LLM provider names the Secret that holds its api key. LLMClients,
+           Guardrails, Proxies and Vectorstores name a Provider, so it comes before them.
+        #. **Proxy**. ``spec.provider`` names a Provider, and ``spec.apiKey`` a Secret.
+        #. **LLMHostCompute**. A kind of node, and its node group. It names nothing, but an LLMHost's
+           ``spec.compute`` names one.
+        #. **LLMHost**. A self-hosted model. ``spec.compute`` names an LLMHostCompute, and its
+           ``tokenSecret`` and ``apiKeySecret`` name Secrets.
+        #. **SqlConnection**. ``password`` and ``proxyPassword`` name Secrets. SqlPlugins name it.
+        #. **ApiConnection**. ``apiKey`` and ``proxyPassword`` name Secrets. ApiPlugins name it.
+        #. **Guardrail**. ``spec.config.provider`` names the Provider that its semantic, moderation and
+           llm_judge strategies call. LLMClients name it in ``spec.guardrails``.
+        #. **Vectorstore**. ``spec.provider`` names the Provider of its embeddings, and its database may
+           name a Secret.
+        #. **Vectorsearch**. ``vectorstore_name`` names a Vectorstore, so it comes after them, and
+           ``auth_secret_name`` names a Secret.
+        #. **MCPClient**. ``credentials`` names a Secret. LLMClients name it in ``spec.mcpClients``.
+        #. **The plugins: StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin, WebsearchPlugin and
+           ImageSearchPlugin**. A SqlPlugin's ``spec.connection`` names a SqlConnection, an ApiPlugin's
+           an ApiConnection, and a WebsearchPlugin's and an ImageSearchPlugin's ``apiKey`` a Secret. A
+           StaticPlugin and a SkillPlugin name nothing. All of them come after the Connections and
+           before the LLMClients, whose ``spec.plugins`` names them.
+        #. **CustomDomain**. A domain that serves LLMClients. It names nothing, but an LLMClient's
+           ``customDomain`` names its domain, so it comes before them.
+        #. **LLMClient**. It names the most kinds: a Provider, and its Plugins, Guardrails, MCPClients,
+           CustomDomain and AuthToken. It comes after all of them.
+        #. **Prompt**. A chat session, whose ``spec.llmclient`` names the LLMClient that it talks to.
+        #. **Orchestrator**. Each of ``spec.config.harnesses`` names an LLMClient, by ``llmClientName``.
+        #. **Budget**. Last, because ``spec.resources`` can name nearly any kind of resource: Accounts,
+           Users, Connections, LLMClients, LLMHosts, LLMHostComputes, MCPClients, Orchestrators,
+           Providers, Proxies, Vectorsearches and every kind of plugin. Applied any earlier, a Budget
+           could name a resource that doesn't exist yet.
+
+        Kinds that name nothing in common (e.g. the plugins among themselves) may be applied in any
+        order. :meth:`apply_rank` gives each kind's position, and a kind that is not listed, i.e. not a
+        SAM kind, is applied last. ``manage.py load_from_github`` sorts a repository's manifests by it:
+
+        .. code-block:: python
+
+            sorted(manifests, key=lambda m: SAMKinds.apply_rank(m["kind"]))
+
+        :returns: The kinds' values, in the order in which to apply them.
+        :rtype: tuple[str, ...]
+        """
+        return (
+            cls.ACCOUNT.value,
+            cls.USER.value,
+            cls.AUTH_TOKEN.value,
+            cls.SECRET.value,
+            cls.PROVIDER.value,
+            cls.PROXY.value,
+            cls.LLM_HOST_COMPUTE.value,
+            cls.LLM_HOST.value,
+            cls.SQL_CONNECTION.value,
+            cls.API_CONNECTION.value,
+            cls.GUARDRAIL.value,
+            cls.VECTORSTORE.value,
+            cls.VECTORSEARCH.value,
+            cls.MCP_CLIENT.value,
+            cls.STATIC_PLUGIN.value,
+            cls.SQL_PLUGIN.value,
+            cls.API_PLUGIN.value,
+            cls.SKILL_PLUGIN.value,
+            cls.WEBSEARCH_PLUGIN.value,
+            cls.IMAGE_SEARCH_PLUGIN.value,
+            cls.CUSTOM_DOMAIN.value,
+            cls.LLM_CLIENT.value,
+            cls.PROMPT.value,
+            cls.ORCHESTRATOR.value,
+            cls.BUDGET.value,
+        )
+
+    @classmethod
+    def apply_rank(cls, kind: Union[str, "SAMKinds"]) -> int:
+        """
+        Return the position of a kind in :meth:`apply_order`.
+
+        .. code-block:: python
+
+            SAMKinds.apply_rank(SAMKinds.SECRET) < SAMKinds.apply_rank("SqlConnection")  # True
+            SAMKinds.apply_rank("NoSuchKind") == len(SAMKinds.apply_order())  # True: applied last
+
+        :param kind: The kind, as a member or its value, in any case.
+        :type kind: Union[str, SAMKinds]
+        :returns: The kind's position, or the length of :meth:`apply_order` for a kind that isn't a SAM kind,
+            so that it is applied last.
+        :rtype: int
+        """
+        value = (kind.value if isinstance(kind, SAMKinds) else str(kind)).lower()
+        order = [item.lower() for item in cls.apply_order()]
+        return order.index(value) if value in order else len(order)

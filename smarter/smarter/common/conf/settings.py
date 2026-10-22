@@ -3201,6 +3201,75 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
+    mysql_root_username: str = Field(
+        settings_defaults.MYSQL_ROOT_USERNAME,
+        description="The database server's administrator, whom manage.py load_from_github --run_scripts passes to a repository's scripts.",
+        examples=["root"],
+        title="MySQL Root Username",
+    )
+    """
+    The database server's administrator.
+
+    ``manage.py load_from_github --run_scripts`` passes it to a repository's scripts, in
+    ``SMARTER_DATABASE_ADMIN_USERNAME``, e.g. to the Stackademy script that creates its course database
+    and its users, so it needs a user that may.
+    Set it with ``SMARTER_MYSQL_ROOT_USERNAME``.
+
+    :type: str
+    :default: Value from ``settings_defaults.MYSQL_ROOT_USERNAME``, ``root`` if it is not set.
+    :raises SmarterConfigurationError: If the value is not a non-empty string.
+    """
+
+    @before_field_validator("mysql_root_username")
+    def validate_mysql_root_username(cls, v: Optional[str]) -> str:
+        """Validates the `mysql_root_username` field.
+
+        Args:
+            v (Optional[str]): The username to validate.
+        Returns:
+            str: The validated username.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.MYSQL_ROOT_USERNAME
+        if not isinstance(v, str) or not v:
+            raise SmarterConfigurationError(f"mysql_root_username of type {type(v)} is not a non-empty string.")
+        return v
+
+    mysql_root_password: Optional[SecretStr] = Field(
+        settings_defaults.MYSQL_ROOT_PASSWORD,
+        description="The password of the database server's administrator, mysql_root_username.",
+        examples=["your-root-password"],
+        title="MySQL Root Password",
+    )
+    """
+    The password of the database server's administrator, :attr:`mysql_root_username`.
+
+    Set it with ``SMARTER_MYSQL_ROOT_PASSWORD``. ``manage.py load_from_github --run_scripts`` passes it
+    to a repository's scripts in the ``MYSQL_PWD`` environment variable, where the MariaDB and MySQL
+    clients read it, which keeps it off the command line. Without it, the scripts don't receive it.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``settings_defaults.MYSQL_ROOT_PASSWORD``, None if it is not set.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("mysql_root_password")
+    def validate_mysql_root_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `mysql_root_password` field.
+
+        Args:
+            v (Optional[SecretStr]): The password to validate.
+        Returns:
+            Optional[SecretStr]: The validated password, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.MYSQL_ROOT_PASSWORD
+        if is_missing_value(v):
+            return None
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"mysql_root_password of type {type(v)} is not a SecretStr")
+        return v
+
     social_auth_google_oauth2_key: SecretStr = Field(
         settings_defaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
         description="The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.",

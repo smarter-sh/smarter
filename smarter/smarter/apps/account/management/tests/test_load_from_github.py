@@ -1,5 +1,5 @@
 """
-Test the load_from_github management command, :mod:`smarter.apps.llmclient.management.commands.load_from_github`.
+Test the load_from_github management command, :mod:`smarter.apps.account.management.commands.load_from_github`.
 
 The repository is a local temporary folder, which the patched ``clone_repo()`` copies, so nothing is fetched
 from GitHub. A failure that the command reports with ``handle_completed_failure(msg=...)`` doesn't exit: it
@@ -16,18 +16,18 @@ from unittest.mock import MagicMock, patch
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.llmclient.management.commands.load_from_github import (
-    KIND_APPLY_ORDER,
+from smarter.apps.account.management.commands.load_from_github import (
     Command,
     RepositoryManifest,
 )
+from smarter.apps.account.repository_scripts import SCRIPTS_CONFIG, SCRIPTS_FOLDER
+from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.manifest.template import manifest_template_values
 
-MODULE = "smarter.apps.llmclient.management.commands.load_from_github"
+MODULE = "smarter.apps.account.management.commands.load_from_github"
 URL = "https://github.com/smarter-sh/no-such-repo"
 
 
@@ -82,35 +82,13 @@ class TestLoadFromGithub(TestAccountMixin):
         return out.getvalue()
 
     # -------------------------------------------------------------------------
-    # the order of the kinds
+    # the order of the kinds: SAMKinds.apply_order(), tested in test_enum.py
     # -------------------------------------------------------------------------
-    def test_every_kind_has_a_place_in_the_order(self):
-        """Test that each SAM kind is in KIND_APPLY_ORDER, once, so that a new kind gets a deliberate place."""
-        self.assertEqual(sorted(KIND_APPLY_ORDER), sorted(SAMKinds.all()))
-
-    def test_dependencies_come_first(self):
-        """Test that each kind comes after the kinds that its manifests name."""
-        order = KIND_APPLY_ORDER.index
-        for dependency, dependent in (
-            ("Secret", "SqlConnection"),
-            ("Secret", "ApiConnection"),
-            ("Secret", "Provider"),
-            ("SqlConnection", "SqlPlugin"),
-            ("ApiConnection", "ApiPlugin"),
-            ("SqlPlugin", "LLMClient"),
-            ("ApiPlugin", "LLMClient"),
-            ("MCPClient", "LLMClient"),
-            ("Guardrail", "LLMClient"),
-            ("CustomDomain", "LLMClient"),
-            ("LLMClient", "Orchestrator"),
-            ("LLMClient", "Budget"),
-        ):
-            with self.subTest(dependency=dependency, dependent=dependent):
-                self.assertLess(order(dependency), order(dependent))
-
     def test_unknown_kind_is_last(self):
         item = RepositoryManifest(path="a.yaml", filespec="/a.yaml", kind="NoSuchKind", name="a", manifest={})
-        self.assertEqual(item.rank, len(KIND_APPLY_ORDER))
+        self.assertEqual(item.rank, len(SAMKinds.apply_order()))
+        secret = RepositoryManifest(path="s.yaml", filespec="/s.yaml", kind="Secret", name="s", manifest={})
+        self.assertEqual(secret.rank, SAMKinds.apply_rank(SAMKinds.SECRET))
 
     # -------------------------------------------------------------------------
     # finding the manifests
@@ -241,6 +219,97 @@ class TestLoadFromGithub(TestAccountMixin):
             output = self.run_command()
         apply.assert_not_called()
         self.assertIn("needs extensions that are not installed: weather", output)
+
+    # -------------------------------------------------------------------------
+    # the scripts. The scheme itself is tested in test_repository_scripts.py.
+    # -------------------------------------------------------------------------
+    def scripts_repo(self, config: str, scripts: dict[str, str]) -> str:
+        """
+        A local repository with one Secret manifest, and a scripts folder whose scripts are executable.
+
+        :param config: The content of scripts/scripts.yaml.
+        :param scripts: Each script's content, by its file name in the scripts folder.
+        :returns: The folder.
+        """
+        root = self.repo({f"{SCRIPTS_FOLDER}/{SCRIPTS_CONFIG}": config, "secrets/s.yaml": manifest("Secret", "s")})
+        for name, content in scripts.items():
+            filespec = os.path.join(root, SCRIPTS_FOLDER, name)
+            with open(filespec, "w", encoding="utf-8") as f:
+                f.write(content)
+            os.chmod(filespec, 0o755)  # nosec B103
+        return root
+
+    def test_scripts_folder_holds_no_manifests(self):
+        """Test that a manifest in the top-level scripts folder is not applied, but one in a nested scripts folder is."""
+        root = self.repo(
+            {
+                f"{SCRIPTS_FOLDER}/s.yaml": manifest("Secret", "in_scripts"),
+                "plugins/scripts/p.yaml": manifest("SqlPlugin", "nested"),
+            }
+        )
+        self.assertEqual([m.path for m in Command(stdout=StringIO()).find_manifests(root)], ["plugins/scripts/p.yaml"])
+
+    def test_scripts_run_before_and_after_the_manifests(self):
+        """Test that --run_scripts runs the pre scripts, then applies the manifests, then runs the post scripts."""
+        folder = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        log = os.path.join(folder, "log")
+        self.use_repo(
+            self.scripts_repo(
+                "scripts:\n  - {path: after.sh, stage: post}\n  - {path: before.sh, stage: pre, args: [one]}\n",
+                {
+                    "before.sh": f'#!/bin/sh\necho "pre $1 $SMARTER_USERNAME" >> {log}\necho made it\n',
+                    "after.sh": f"#!/bin/sh\necho post >> {log}\n",
+                },
+            )
+        )
+
+        def apply(*args, **kwargs):
+            with open(log, "a", encoding="utf-8") as f:
+                f.write("apply\n")
+
+        with patch.object(Command, "apply", side_effect=apply):
+            output = self.run_command(run_scripts=True)
+        with open(log, encoding="utf-8") as f:
+            self.assertEqual(f.read().splitlines(), [f"pre one {self.admin_user.username}", "apply", "post"])
+        self.assertNotIn("made it", output)  # run_script() logs it, rather than the command repeating it
+        self.assertIn(f"Ran the pre script {SCRIPTS_FOLDER}/before.sh.", output)
+        self.assertIn(f"Ran the post script {SCRIPTS_FOLDER}/after.sh.", output)
+
+    def test_scripts_are_opt_in(self):
+        """Test that without --run_scripts no script runs, and the command says so."""
+        self.use_repo(self.scripts_repo("scripts:\n  - {path: x.sh, stage: pre}\n", {"x.sh": "#!/bin/sh\nexit 1\n"}))
+        with patch(f"{MODULE}.run_script") as run_script, patch.object(Command, "apply", return_value=None):
+            output = self.run_command()
+        run_script.assert_not_called()
+        self.assertIn(f"Skipped the scripts of {SCRIPTS_FOLDER}/{SCRIPTS_CONFIG}: --run_scripts is not set.", output)
+
+    def test_a_failing_script_fails_the_command_after_the_rest(self):
+        """Test that a failing script doesn't stop the manifests or the other scripts, and fails the command at the end."""
+        self.use_repo(
+            self.scripts_repo(
+                "scripts:\n  - {path: bad.sh, stage: pre}\n  - {path: good.sh, stage: post}\n",
+                {"bad.sh": "#!/bin/sh\necho broken >&2\nexit 3\n", "good.sh": "#!/bin/sh\necho fine\n"},
+            )
+        )
+        out = StringIO()
+        with patch.object(Command, "apply", return_value=None) as apply:
+            with self.assertRaisesRegex(
+                CommandError,
+                f"1 of the scripts of {URL} failed:\n{SCRIPTS_FOLDER}/bad.sh: failed with exit code 3: broken",
+            ):
+                call_command(
+                    "load_from_github", url=URL, username=self.admin_user.username, run_scripts=True, stdout=out
+                )
+        apply.assert_called_once()
+        self.assertIn(f"Ran the post script {SCRIPTS_FOLDER}/good.sh.", out.getvalue())
+
+    def test_an_invalid_scripts_config_fails_before_anything_runs(self):
+        self.use_repo(self.scripts_repo("scripts:\n  - {path: x.sh, stage: sometime}\n", {"x.sh": "#!/bin/sh\n"}))
+        with patch.object(Command, "apply", return_value=None) as apply:
+            with self.assertRaisesRegex(CommandError, f"{SCRIPTS_FOLDER}/{SCRIPTS_CONFIG} is not valid"):
+                self.run_command(run_scripts=True)
+        apply.assert_not_called()
 
     # -------------------------------------------------------------------------
     # cloning

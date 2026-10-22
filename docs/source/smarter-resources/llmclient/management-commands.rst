@@ -11,7 +11,6 @@ Management Commands
    commands/deploy-llmclient
    commands/export-llmclient-deployment-schema
    commands/get-llmclients
-   commands/load-from-github
    commands/register-custom-domain
    commands/undeploy-llmclient
    commands/verify-custom-domain

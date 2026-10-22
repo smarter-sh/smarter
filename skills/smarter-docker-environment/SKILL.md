@@ -147,8 +147,9 @@ image on an isolated network:
    `--network-alias smarter-mariadb` and `--network-alias smarter-redis`. The
    hostnames are hard-coded in `settings/base.py`, so the aliases redirect
    everything.
-2. Load `scripts/smarter_test_db.sql`, and grant `smarter` all privileges, as
-   `docker-init` does.
+2. Grant `smarter` all privileges, as `docker-init` does, and pass
+   `SMARTER_MYSQL_ROOT_PASSWORD`: `initialize_platform` creates the Stackademy
+   course database as root.
 3. Run `smarter:latest` with `--env-file` (a copy of the template, plus a Fernet
    key), and a copy of the host's `smarter/smarter` mounted over
    `/home/smarter_user/smarter/smarter`. The image has an empty kubeconfig and no

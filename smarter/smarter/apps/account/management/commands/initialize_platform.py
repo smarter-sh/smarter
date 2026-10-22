@@ -207,13 +207,18 @@ class Command(SmarterCommand):
             # dependencies. After initialize_providers: its plugins and LLMClients use the openai Provider.
             # Its LLMClients are deployed as they are applied, outside the local environment. Its
             # ApiConnection's Secret is also the password of this platform's Stackademy course catalogue,
-            # /api/v1/demos/stackademy/course-catalogue/.
+            # /api/v1/demos/stackademy/course-catalogue/. run_scripts runs the scripts that the repository's
+            # scripts/scripts.yaml lists, before and after its manifests: Stackademy's pre script creates its
+            # course database, smarter_test_db, and its read-only users, which its SqlConnection connects to, as
+            # SMARTER_MYSQL_ROOT_USERNAME. Only here: initialize_account loads each account's copy of the
+            # manifests without running the scripts again.
             call_command(
                 "load_from_github",
                 url=STACKADEMY_REPOSITORY_URL,
                 account_number=SMARTER_ACCOUNT_NUMBER,
                 username=username,
                 deploy=deploy,
+                run_scripts=True,
             )
         except (Exception, SystemExit) as e:
             logger.error("Failed to load the Stackademy project from %s: %s", STACKADEMY_REPOSITORY_URL, e)

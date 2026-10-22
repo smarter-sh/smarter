@@ -14,6 +14,7 @@ manage.py Commands
    commands/get_accounts
    commands/initialize_account
    commands/initialize_platform
+   commands/load_from_github
    commands/reset_cache
    commands/send_welcome_email
 
