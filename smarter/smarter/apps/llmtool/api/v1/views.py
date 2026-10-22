@@ -24,7 +24,6 @@ from smarter.apps.llmtool.manifest.controller import (
 from smarter.apps.llmtool.models import PluginDataValueError, PluginMeta
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
-from smarter.apps.llmtool.utils import add_example_plugins
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
@@ -113,34 +112,6 @@ class PluginListView(ContractListMixin, SmarterAuthenticatedListAPIView):
     def get_queryset(self):
         plugins = PluginMeta.objects.with_ownership_permission_for(user=self.user_profile.user).order_by("-created_at")  # type: ignore
         return plugins
-
-
-class AddPluginExamplesView(SmarterAuthenticatedAPIView):
-    """Add example plugins to a user profile."""
-
-    def post(self, request: ASGIRequest, user_id=None):
-        @cache_results()
-        def cached_user_by_id(user_id: int) -> Optional[User]:
-            """Retrieve User by ID with caching."""
-            try:
-                return User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return None
-
-        try:
-            user = cached_user_by_id(user_id) if user_id else request.user
-            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            add_example_plugins(user_profile=user_profile)
-        except Exception as e:
-            return Response(
-                {"error": "Internal error", "exception": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return HttpResponseRedirect("/v1/plugins/")
 
 
 class PluginUploadView(SmarterAuthenticatedAPIView):

@@ -5,10 +5,10 @@ A two-week online course that turns AI governance from principles into practice.
 AI policy, then enforce as much of it as they can with guardrails, budgets and access controls, and
 audit the results. In Smarter, every control is a short YAML manifest that a non-programmer can read
 and change: `eighteen built-in guardrails
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/data/guardrails>`__,
+<https://github.com/smarter-sh/example-manifests/tree/main/guardrails>`__,
 from personal data redaction to the escalation of GDPR and CCPA privacy requests to a person; `seven
 example budgets
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__,
+<https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__,
 such as a monthly allowance for each student; and per-account ownership of every resource. Every
 intervention is recorded as a `guardrail event
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__,
@@ -79,8 +79,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        Prompt injection demonstrated.
    * - 1
      - Lecture 3 (30 min)
-     - **The guardrail toolbox.** Stages, strategies, modes and actions. A tour of the built-in
-       guardrails in ``smarter/smarter/apps/guardrail/data/guardrails/``.
+     - **The guardrail toolbox.** Stages, strategies, modes and actions. A tour of the example
+       guardrails in the ``guardrails/`` folder of
+       `smarter-sh/example-manifests <https://github.com/smarter-sh/example-manifests>`__.
    * - 1
      - Live session 1 (90 min)
      - Teams attack an assistant with a rule in its system prompt, then with a guardrail. Debrief

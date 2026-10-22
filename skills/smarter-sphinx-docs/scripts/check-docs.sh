@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Check Sphinx pages without building the docs (a full build takes ~20 minutes):
 #
-# 1. every toctree entry and :doc: target names an existing .rst file, and
-# 2. every .. automodule:: / .. autoclass:: / ... target imports, with Django set
+# 1. every toctree entry and :doc: target names an existing .rst file,
+# 2. every .. literalinclude:: / .. include:: target exists, and
+# 3. every .. automodule:: / .. autoclass:: / ... target imports, with Django set
 #    up, inside the smarter-app container (skipped when it is not running).
 #
 # usage, from the repository root:
@@ -50,6 +51,33 @@ for f in "${pages[@]}"; do
   ) | sed -E 's/\.rst$//')
 done
 [ "$status" -eq 0 ] && echo "ok"
+
+# Example manifests are included from /_example-manifests/, a shallow clone of
+# smarter-sh/example-manifests that docs/source/conf.py makes at build time.
+# Make the same clone here when it's missing, so those includes resolve.
+if [ ! -d "$SOURCE/_example-manifests" ]; then
+  git clone --depth 1 --quiet https://github.com/smarter-sh/example-manifests "$SOURCE/_example-manifests" ||
+    echo "warning: could not clone smarter-sh/example-manifests; its includes will be reported missing" >&2
+fi
+
+echo "== includes"
+include_status=0
+for f in "${pages[@]}"; do
+  d=$(dirname "$f")
+  while read -r p; do
+    [ -z "$p" ] && continue
+    case "$p" in
+      /*) t="$SOURCE${p}" ;;
+      *) t="$d/$p" ;;
+    esac
+    if [ ! -f "$t" ]; then
+      echo "MISSING  $f: $p (expected $t)"
+      include_status=1
+    fi
+  done < <(grep -oE '^[[:space:]]*\.\. (literalinclude|include)::[[:space:]]*[^[:space:]]+' "$f" | awk '{print $NF}')
+done
+[ "$include_status" -eq 0 ] && echo "ok"
+[ "$include_status" -ne 0 ] && status=1
 
 echo "== autodoc targets"
 targets=$(grep -ho '^\.\. auto\(module\|class\|function\|method\|attribute\|data\|pydantic_model\)::[[:space:]]*[^[:space:]]*' "${pages[@]}" |

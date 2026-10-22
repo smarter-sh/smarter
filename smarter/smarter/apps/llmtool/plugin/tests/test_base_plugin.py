@@ -580,6 +580,17 @@ class TestPluginBase(PluginTestBase):
         with self.assertRaises(SmarterPluginError):
             self.load_sql_plugin().create()
 
+    def test_base_create_without_user_profile_raises(self):
+        """Test that create requires a user profile to own the plugin, and creates nothing without one."""
+        count = PluginMeta.objects.count()
+        with (
+            mock.patch.object(SqlPlugin, "plugin_meta", new_callable=mock.PropertyMock, return_value=None),
+            mock.patch.object(SqlPlugin, "plugin_meta_django_model", new_callable=mock.PropertyMock, return_value=None),
+        ):
+            with self.assertRaisesRegex(SmarterPluginError, "has no user profile to own it"):
+                self.sql_plugin.create()
+        self.assertEqual(PluginMeta.objects.count(), count)
+
     def test_base_update_without_manifest_raises(self):
         """Test that update requires a manifest."""
         plugin = self.load_sql_plugin()

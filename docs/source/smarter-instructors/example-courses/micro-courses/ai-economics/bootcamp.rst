@@ -10,9 +10,9 @@ with its tokens and its cost in USD, against the user, the application and the a
 priced from a table of `prices per million tokens
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/llm_prices.py>`__.
 Self-hosted GPU nodes are charged by the hour from the `price of each compute profile
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmhost/data/compute>`__, and
+<https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__, and
 `Budget manifests
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/data/example-manifests/budgets>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__
 turn spending limits into enforced controls, so students measure real costs and test real policies
 rather than estimate them. See :doc:`../course-formats` for the standard bootcamp day, the grading
 scale and the course policies, and :doc:`../ai-economics` for an overview of the subject.
@@ -109,7 +109,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lecture 5: Controlling spending.** :doc:`Budgets </smarter-resources/smarter-budget>` on
        users, applications, accounts and providers; warnings and hard limits;
        :doc:`cost accounting </smarter-platform/cost-accounting>` and chargeback to departments.
-       The seven built-in budget examples, from a student allowance to
+       The six example budgets, from a student allowance to
        a GPU budget.
    * - 9
      - 45
