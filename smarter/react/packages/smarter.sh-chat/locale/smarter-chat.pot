@@ -175,6 +175,66 @@ msgstr ""
 msgid "Raise defaultMaxTokens in the LLMClient's manifest."
 msgstr ""
 
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Hang on while I %(verb)s your answer…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Give me a moment to %(verb)s the details…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Still working on it. I just need to %(verb)s a little more…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Almost there! Let me %(verb)s it one last time…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Hang in there, I'm about to %(verb)s something brilliant…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Please hold while I %(verb)s the bits and bobs…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "One sec, I have to %(verb)s the doohickey first…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Don't go anywhere, I'm still trying to %(verb)s your request…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "This is a big one. Time to %(verb)s harder…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Good answers take a while to %(verb)s. Thanks for your patience…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "I'll %(verb)s as fast as I can, promise…"
+msgstr ""
+
+#. Translators: %(verb)s is a made-up English nonsense verb, e.g. "flabberjabber", which is never translated.
+#: src/lib/banter.ts
+msgid "Still here! Just pausing to %(verb)s…"
+msgstr ""
+
 #: src/lib/code.ts
 msgid "Copy code"
 msgstr ""

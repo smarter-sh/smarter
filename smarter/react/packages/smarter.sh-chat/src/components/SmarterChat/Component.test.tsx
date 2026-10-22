@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,6 +30,7 @@ import {
   promptErrorHandlers,
 } from "@/mocks/handlers";
 import { server } from "@test/server";
+import { BANTER_DELAY_MS, BANTER_INTERVAL_MS } from "@/lib/banter";
 
 import SmarterChat from "@/components/SmarterChat/Component";
 import HeaderButton from "@/components/SmarterChat/HeaderButton";
@@ -295,6 +296,82 @@ describe("SmarterChat", () => {
     finish();
     expect(await screen.findByText("We offer CS210 Artificial Intelligence, for $700.00.")).toBeInTheDocument();
     expect(screen.queryByText("Calling tool stackademy_sql")).not.toBeInTheDocument();
+  });
+
+  it("replies with a chat bubble of idle banter, with a sparkle, while a prompt sends nothing", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    try {
+      server.use(
+        http.post(CONFIG_URL, () => HttpResponse.json({ data: config })),
+        http.post(PROMPT_URL, () => new Promise<Response>(() => {})),
+      );
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      render(<SmarterChat {...props} />);
+      await screen.findByText(WELCOME);
+      await send(user, "Any courses on AI?");
+      expect(await screen.findByText("Stanley is typing")).toBeInTheDocument();
+
+      await act(() => vi.advanceTimersByTimeAsync(BANTER_DELAY_MS));
+      const banter = await screen.findByText("Hang on while I flabberjabber your answer…");
+      // eslint-disable-next-line testing-library/no-node-access -- the bubble and its sparkle are styled by their css class.
+      expect(banter.closest("section.smarter-chat-banter-message.cs-message--incoming")).not.toBeNull();
+      // eslint-disable-next-line testing-library/no-node-access -- the sparkle is decorative, hidden from the a11y tree.
+      expect(banter.querySelector("svg.smarter-chat-banter-sparkle")).not.toBeNull();
+      // the typing indicator still reports the prompt's own state.
+      expect(screen.getByText("Stanley is typing")).toBeInTheDocument();
+
+      // a new line every BANTER_INTERVAL_MS, in the same bubble.
+      vi.mocked(Math.random).mockReturnValue(0.999999);
+      await act(() => vi.advanceTimersByTimeAsync(BANTER_INTERVAL_MS));
+      expect(await screen.findByText(/^Still here! Just pausing to /)).toBeInTheDocument();
+      expect(screen.queryByText("Hang on while I flabberjabber your answer…")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("replies with idle banter soon after a prompt is sent, whatever its progress, until it finishes", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    let finish: () => void = () => {};
+    try {
+      server.use(
+        http.post(CONFIG_URL, () => HttpResponse.json({ data: config })),
+        http.post(PROMPT_URL, () => {
+          const encoder = new TextEncoder();
+          const [progress, result] = promptEventStream().split(": keepalive\n\n");
+          const stream = new ReadableStream({
+            start(controller) {
+              controller.enqueue(encoder.encode(progress));
+              finish = () => {
+                controller.enqueue(encoder.encode(result));
+                controller.close();
+              };
+            },
+          });
+          return new HttpResponse(stream, { headers: { "Content-Type": "text/event-stream" } });
+        }),
+      );
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      render(<SmarterChat {...props} />);
+      await screen.findByText(WELCOME);
+      await send(user, "Any courses on AI?");
+      const last = progressEvents.at(-1)!.message;
+      expect(await screen.findByText(`Stanley: ${last}`)).toBeInTheDocument();
+
+      await act(() => vi.advanceTimersByTimeAsync(BANTER_DELAY_MS));
+      expect(await screen.findByText("Hang on while I flabberjabber your answer…")).toBeInTheDocument();
+      // the step is still reported in the typing indicator, not in the bubble.
+      expect(screen.getByText(`Stanley: ${last}`)).toBeInTheDocument();
+
+      // the response replaces the bubble.
+      finish();
+      expect(await screen.findByText("We offer CS210 Artificial Intelligence, for $700.00.")).toBeInTheDocument();
+      expect(screen.queryByText("Hang on while I flabberjabber your answer…")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("does not ask for the prompt's progress unless asked to", async () => {

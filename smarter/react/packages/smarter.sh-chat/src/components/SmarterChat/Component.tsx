@@ -8,7 +8,9 @@
  * displayed in the thread, as "smarter_error" messages.
  * While a prompt runs, its progress (e.g. its tool calls and MCP server requests) is displayed in
  * the thread, with a spinner beside its current step, and is replaced by the response's messages
- * when it finishes. Code blocks in messages
+ * when it finishes. BANTER_DELAY_MS after a prompt is sent, the assistant replies with a chat bubble of silly
+ * banter, with a twinkling sparkle, whose line changes every BANTER_INTERVAL_MS until the response replaces it.
+ * See lib/banter.ts. Code blocks in messages
  * are syntax highlighted, and have a copy button.
  *
  * With toggleMetadata, the header has a Sandbox / Production mode switch. In sandbox mode, the
@@ -44,6 +46,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 
 import { DEFAULT_COOKIE_EXPIRATION, loggerPrefix, projectName, projectVersion } from "@/const";
 import { fetchConfig, fetchPrompt, type PromptProgressEvent } from "@/lib/api";
+import { BANTER_DELAY_MS, BANTER_INTERVAL_MS, idleBanter } from "@/lib/banter";
 import { copyCodeBlock } from "@/lib/code";
 import { pastePlainText } from "@/lib/paste";
 import { activateLanguage, gettext, interpolate, ngettext, pgettext } from "@/lib/i18n";
@@ -62,7 +65,7 @@ import {
 import type { ChatConfig, ChatCookies, ChatMessage, ClientContext, SmarterChatProps } from "@/types";
 import AppTitle from "@/components/AppTitle";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { NewChatIcon, ProductionIcon, SandboxIcon } from "@/components/SmarterChat/icons";
+import { BanterSparkleIcon, NewChatIcon, ProductionIcon, SandboxIcon } from "@/components/SmarterChat/icons";
 import "@/components/SmarterChat/styles.css";
 
 /** The css class of a message, by its sender. */
@@ -111,6 +114,9 @@ function SmarterChat({
   const [showMetadata, setShowMetadata] = useState(toggleMetadata);
   const [isTyping, setIsTyping] = useState(false);
   const [progress, setProgress] = useState<PromptProgressEvent[]>([]);
+  // the assistant's bubble of idle banter, while a prompt runs. It's never part of the thread, nor sent to the api.
+  // See lib/banter.ts.
+  const [banter, setBanter] = useState<string | null>(null);
   // the urls of the styles' logo and avatars that failed to load, which are then not displayed.
   const [brokenImages, setBrokenImages] = useState<ReadonlySet<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -258,6 +264,21 @@ function SmarterChat({
     void startChat();
   };
 
+  // while a prompt runs, its first line of banter after BANTER_DELAY_MS, then a new one every BANTER_INTERVAL_MS,
+  // whatever its progress events. sendMessage() removes the bubble when the prompt finishes.
+  useEffect(() => {
+    if (!isTyping) return undefined;
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const delay = setTimeout(() => {
+      setBanter(idleBanter());
+      interval = setInterval(() => setBanter(idleBanter()), BANTER_INTERVAL_MS);
+    }, BANTER_DELAY_MS);
+    return () => {
+      clearTimeout(delay);
+      clearInterval(interval);
+    };
+  }, [isTyping]);
+
   /** Switches to sandbox mode (show) or production mode. The current mode's option does nothing. */
   const handleMode = (show: boolean) => {
     if (show === showMetadata) return;
@@ -301,6 +322,7 @@ function SmarterChat({
     } finally {
       setIsTyping(false);
       setProgress([]);
+      setBanter(null);
     }
   }
 
@@ -480,6 +502,25 @@ function SmarterChat({
                           }}
                         />
                       ))}
+                    {isTyping && banter && (
+                      <Message
+                        className="smarter-chat-banter-message"
+                        model={{
+                          type: "custom",
+                          sender: SenderRoleEnum.ASSISTANT,
+                          direction: "incoming",
+                          position: "single",
+                        }}
+                      >
+                        {assistantAvatarUrl ? <Avatar src={assistantAvatarUrl} name={assistant} /> : null}
+                        <Message.CustomContent>
+                          <span className="smarter-chat-banter" aria-live="polite">
+                            <BanterSparkleIcon />
+                            {banter}
+                          </span>
+                        </Message.CustomContent>
+                      </Message>
+                    )}
                   </MessageList>
                   <MessageInput
                     placeholder={llmclient?.app_placeholder ?? ""}
