@@ -75,10 +75,10 @@ logger.info(f"{self.formatted_class_name}.apply() updated {self.kind} {self.name
 | `error`   | Something failed and needs attention: a request, task or apply that did not do its job.            |
 
 - An expected answer is not an error. A validator asked "is this valid?" that
-  answers no must not log at ERROR (every `SmarterException` logs at ERROR when
-  it is constructed, so don't construct one just to return `False`).
+  answers no must not log at ERROR.
 - Log an exception once, where it is handled, not at every level it passes
-  through. Include the exception in the message (`"...: %s", e`), or use
+  through. Constructing a `SmarterException` logs it at DEBUG only, so the
+  handler is responsible for logging it at the level the outcome deserves. Include the exception in the message (`"...: %s", e`), or use
   `logger.exception()` inside an `except` when the traceback matters.
 
 ## Waffle-switched loggers

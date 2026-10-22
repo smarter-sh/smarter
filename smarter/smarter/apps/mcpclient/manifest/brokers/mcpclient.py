@@ -141,7 +141,7 @@ class SAMMCPClientBroker(AbstractBroker):
             return False
         if self.manifest is not None or self.account is not None:
             self._ready = True
-            broker_ready.send(sender=self.__class__, broker=self)
+            self.send_broker_ready(broker_ready)
         return self._ready
 
     @property
@@ -434,6 +434,7 @@ class SAMMCPClientBroker(AbstractBroker):
             mcpclient = self.mcpclient
             if mcpclient is None:
                 mcpclient = MCPClient(**data)
+                changed = True
             else:
                 if mcpclient.user_profile != self.user_profile:
                     raise SAMMCPClientBrokerError(
@@ -441,11 +442,13 @@ class SAMMCPClientBroker(AbstractBroker):
                         thing=self.kind,
                         command=command,
                     )
-                for key, value in data.items():
-                    setattr(mcpclient, key, value)
+                changed = bool(self.assign_changed_fields(mcpclient, data))
+            changed = changed or self.tags_changed(mcpclient, tags)
             try:
-                mcpclient.save()
-                mcpclient.tags.set(tags)
+                # an unchanged mcpclient is not saved again: see assign_changed_fields().
+                if changed:
+                    mcpclient.save()
+                    mcpclient.tags.set(tags)
             except Exception as e:
                 logger.error(
                     "%s.apply() failed to save %s %s: %s",
@@ -459,7 +462,8 @@ class SAMMCPClientBroker(AbstractBroker):
                     f"Failed to apply {self.kind} {self.manifest.metadata.name}: {e}", thing=self.kind, command=command
                 ) from e
         self._mcpclient = mcpclient
-        self.cache_invalidations()
+        if changed:
+            self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
