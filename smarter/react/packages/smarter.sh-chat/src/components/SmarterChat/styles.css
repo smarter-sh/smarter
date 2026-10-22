@@ -193,6 +193,53 @@
   background-color: var(--smarter-chat-typing-color, #6ea9d7);
 }
 
+/* the idle banter of a slow prompt, with a twinkling sparkle, in the typing indicator. See lib/banter.ts. */
+.SmarterChat .smarter-chat-banter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-style: italic;
+}
+
+/* Smarter's orange, as in the progress steps' spinner, whatever the LLMClient's styles. */
+.SmarterChat .smarter-chat-banter-sparkle {
+  flex: none;
+  color: #d2691e;
+  overflow: visible;
+}
+
+.SmarterChat .smarter-chat-banter-sparkle-big {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smarter-chat-twinkle 1.8s ease-in-out infinite;
+}
+
+.SmarterChat .smarter-chat-banter-sparkle-small {
+  fill: #ff8c1a;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smarter-chat-twinkle 1.8s ease-in-out 0.9s infinite;
+}
+
+@keyframes smarter-chat-twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.7) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(45deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .SmarterChat .smarter-chat-banter-sparkle-big,
+  .SmarterChat .smarter-chat-banter-sparkle-small {
+    animation: none;
+  }
+}
+
 /* the avatars beside messages. */
 .SmarterChat .cs-message__avatar .cs-avatar img {
   object-fit: cover;
