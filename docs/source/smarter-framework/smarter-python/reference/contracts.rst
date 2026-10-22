@@ -520,6 +520,12 @@ models. See ``scripts/sync-contracts.sh``.
       :type: Optional
 
 
+   .. py:attribute:: total_tools
+      :type: Optional
+
+      The number of the LLMClient's extensions, plugins and MCPClients.
+
+
 
 .. py:class:: PromptChatApiOrmModel
 
@@ -588,20 +594,38 @@ models. See ``scripts/sync-contracts.sh``.
 
 
 
-.. py:class:: PromptChatApiLLMClientFunction
+.. py:class:: PromptChatApiLLMClientExtension
 
    Bases: :class:`smarter.models.chat.PromptChatApiOrmModel`
 
-   A built-in function of the LLMClient.
+   An extension of the LLMClient, whose tools it offers the LLM.
 
    .. py:attribute:: llmclient
       :type: int
 
 
+   .. py:attribute:: extension
+      :type: int
+
+      The Extension's id.
+
+
    .. py:attribute:: name
+      :type: str
+
+      The Extension's slug, e.g. weather.
+
+
+   .. py:attribute:: version
       :type: Optional
 
-      get_current_weather, date_calculator or calculator.
+      The Extension's installed version, e.g. 1.0.0.
+
+
+   .. py:attribute:: enabled
+      :type: bool
+
+      Whether the Extension is enabled, so that its tools are offered.
 
 
 
@@ -722,6 +746,8 @@ models. See ``scripts/sync-contracts.sh``.
 
    The chat session's history.
 
+   ``prompt_tool_call_history`` is returned only in the complete configuration, with ``verbose=True``.
+
    .. py:attribute:: chat_history
       :type: list
 
@@ -751,6 +777,9 @@ models. See ``scripts/sync-contracts.sh``.
 
    The LLMClient's state.
 
+   The complete configuration, from :meth:`~smarter.resources.llmclients.LLMClients.config` with
+   ``verbose=True``, adds the platform's other details of the LLMClient, which this model accepts as extra fields.
+
    .. py:attribute:: ready
       :type: Optional
 
@@ -763,12 +792,24 @@ models. See ``scripts/sync-contracts.sh``.
       :type: Optional
 
 
+   .. py:attribute:: is_authentication_required
+      :type: Optional
+
+      True if the LLMClient requires a Smarter api key, or a logged-in user.
+
+
+   .. py:attribute:: is_custom_domain
+      :type: Optional
+
+      True if the request's host is a custom domain.
+
+
 
 .. py:class:: PromptChatApiListMetaData
 
    Bases: :class:`smarter.models.base.SmarterModel`
 
-   The counts of a list of the LLMClient's plugins or functions.
+   The counts of a list of the LLMClient's plugins or extensions.
 
    .. py:attribute:: total_plugins
       :type: Optional
@@ -778,11 +819,11 @@ models. See ``scripts/sync-contracts.sh``.
       :type: Optional
 
 
-   .. py:attribute:: total_functions
+   .. py:attribute:: total_extensions
       :type: Optional
 
 
-   .. py:attribute:: functions_returned
+   .. py:attribute:: extensions_returned
       :type: Optional
 
 
@@ -793,6 +834,9 @@ models. See ``scripts/sync-contracts.sh``.
 
    The LLMClient's plugins.
 
+   The list itself is returned only in the complete configuration, with ``verbose=True``. Otherwise
+   ``plugins`` is empty, and ``meta_data`` has the counts.
+
    .. py:attribute:: meta_data
       :type: PromptChatApiListMetaData
 
@@ -802,17 +846,20 @@ models. See ``scripts/sync-contracts.sh``.
 
 
 
-.. py:class:: PromptChatApiFunctionList
+.. py:class:: PromptChatApiExtensionList
 
    Bases: :class:`smarter.models.base.SmarterModel`
 
-   The LLMClient's built-in functions.
+   The LLMClient's extensions.
+
+   The list itself is returned only in the complete configuration, with ``verbose=True``. Otherwise
+   ``extensions`` is empty, and ``meta_data`` has the counts.
 
    .. py:attribute:: meta_data
       :type: PromptChatApiListMetaData
 
 
-   .. py:attribute:: functions
+   .. py:attribute:: extensions
       :type: list
 
 
@@ -821,7 +868,7 @@ models. See ``scripts/sync-contracts.sh``.
 
    Bases: :class:`smarter.models.base.SmarterModel`
 
-   An LLMClient's chat configuration: the LLMClient, the chat session's key and history, and its plugins and functions.
+   An LLMClient's chat configuration: the LLMClient, the chat session's key and history, and its plugins and extensions.
 
    A new session's configuration has an empty history. Pass its ``session_key`` to the prompt api
    to continue the session.
@@ -864,7 +911,7 @@ models. See ``scripts/sync-contracts.sh``.
       :type: PromptChatApiPluginList
 
 
-   .. py:attribute:: functions
+   .. py:attribute:: extensions
       :type: Optional
 
 
@@ -1357,6 +1404,18 @@ them. See ``scripts/sync-contracts.sh``.
    .. py:attribute:: sort_fields
       :type: list
       :value: alias ``sortFields``
+
+
+   .. py:attribute:: filter
+      :type: str
+
+      The named filter that narrows the list, e.g. pending, or an empty string for none.
+
+
+   .. py:attribute:: filters
+      :type: list
+
+      The named filters that the list offers.
 
 
 
