@@ -1,16 +1,30 @@
-"""Test :mod:`smarter.apps.llmclient.models.utils`: the cached resolution of a request to its LLMClient."""
+"""Test :mod:`smarter.apps.llmclient.models.utils`: the cached resolution of a request to its LLMClient, and its tool counts."""
 
 from unittest.mock import MagicMock, patch
 
+from django.db import connection
 from django.test import RequestFactory
+from django.test.utils import CaptureQueriesContext
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.models import (
+    LLMClient,
+    LLMClientExtensions,
+    LLMClientPlugin,
+)
 from smarter.apps.llmclient.models.utils import (
     LLMCLIENT_HOST_PATHS,
+    LLMClientToolCounts,
     get_cached_llmclient_by_request,
+    get_cached_llmclient_tool_counts,
     invalidate_cached_llmclient_by_hosts,
+    invalidate_cached_llmclient_tool_counts,
 )
+from smarter.apps.llmclient.serializers import (
+    LLMClientConfigSerializer,
+    LLMClientSerializer,
+)
+from smarter.apps.llmtool.models import Extension, PluginMeta
 
 HELPER = "smarter.apps.llmclient.models.utils.LLMClientHelper"
 
@@ -97,3 +111,46 @@ class TestGetCachedLLMClientByRequest(TestAccountMixin):
                 request.user = user
                 get_cached_llmclient_by_request(request)
             self.assertEqual(helper.call_count, 2)
+
+
+class TestGetCachedLLMClientToolCounts(TestAccountMixin):
+    """Test that an LLMClient's tools are counted, cached, and counted again when a tool is added or removed."""
+
+    def setUp(self):
+        super().setUp()
+        self.llmclient = LLMClient.objects.create(
+            name=f"test_counts_{self.hash_suffix}", user_profile=self.user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
+        self.plugin_meta = PluginMeta.objects.create(
+            name=f"test_counts_{self.hash_suffix}",
+            plugin_class="static",
+            version="1.0.0",
+            user_profile=self.user_profile,
+        )
+        self.addCleanup(PluginMeta.objects.filter(pk=self.plugin_meta.pk).delete)
+        self.extension = Extension.objects.create(slug=f"test-counts-{self.hash_suffix}", display_name="Test Counts")
+        self.addCleanup(Extension.objects.filter(pk=self.extension.pk).delete)
+        self.addCleanup(get_cached_llmclient_tool_counts.invalidate, self.llmclient.pk)  # type: ignore[attr-defined]
+
+    def test_counts(self):
+        """Test the counts, and that they are the length of the serializer's tools."""
+        self.assertEqual(get_cached_llmclient_tool_counts(self.llmclient.pk), LLMClientToolCounts(0, 0, 0))
+        LLMClientPlugin.objects.create(llmclient=self.llmclient, plugin_meta=self.plugin_meta)
+        link = LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=self.extension)
+        counts = get_cached_llmclient_tool_counts(self.llmclient.pk)
+        self.assertEqual(counts, LLMClientToolCounts(extensions=1, plugins=1, mcpclients=0))
+        self.assertEqual(counts.total, len(LLMClientSerializer().get_tools(self.llmclient)))
+        self.assertEqual(LLMClientConfigSerializer().get_total_tools(self.llmclient), 2)
+        link.delete()
+        self.assertEqual(get_cached_llmclient_tool_counts(self.llmclient.pk).total, 1)
+
+    def test_cached(self):
+        """Test that a second call makes no query."""
+        get_cached_llmclient_tool_counts(self.llmclient.pk)
+        with CaptureQueriesContext(connection) as queries:
+            get_cached_llmclient_tool_counts(self.llmclient.pk)
+        self.assertEqual(len(queries), 0, [query["sql"] for query in queries])
+
+    def test_invalidate_without_an_llmclient(self):
+        invalidate_cached_llmclient_tool_counts(None)

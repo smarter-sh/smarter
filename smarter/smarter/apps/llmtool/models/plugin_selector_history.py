@@ -38,7 +38,8 @@ class PluginSelectorHistory(TimestampedModel):
     messages = models.JSONField(
         help_text="The user prompt messages.", default=list, blank=True, null=True, encoder=json.SmarterJSONEncoder
     )
-    session_key = models.CharField(max_length=255, blank=True, null=True, default="")
+    # indexed: a chat session's history is read by its key, e.g. by the cli's configuration api.
+    session_key = models.CharField(max_length=255, blank=True, null=True, default="", db_index=True)
 
     def __str__(self) -> str:
         return f"{str(self.plugin_selector.plugin.name)} - {self.search_term}"

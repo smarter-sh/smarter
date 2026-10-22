@@ -3,6 +3,7 @@
 import re
 from functools import wraps
 from http import HTTPStatus
+from typing import Optional
 
 from bs4 import BeautifulSoup
 from django import template
@@ -637,11 +638,31 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         verbose_logger.debug(
             "%s.dispatch() called with request: %s, user: %s", self.formatted_class_name, request, request.user
         )
-        wait = throttle_wait(request, self)
-        if wait is not None:
-            response = self.throttled_response(request, wait)
-        else:
+        response = self.throttle(request)
+        if response is None:
             response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ["Cookie"])
+        return response
+
+    def throttle(self, request: HttpRequest) -> Optional[HttpResponse]:
+        """
+        Check the request against its rate limits, once.
+
+        :meth:`dispatch` calls it before the handler runs. A subclass whose ``dispatch()`` does costly
+        work before it calls ``super().dispatch()``, e.g. queries or creating rows, calls it first, so
+        that a throttled request does none of it. The request is counted once however often it is
+        called, since every check counts against the limits.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :return: :meth:`throttled_response` if the request exceeded its rate limit, otherwise None.
+        :rtype: Optional[HttpResponse]
+        """
+        if not hasattr(self, "_throttle_wait"):
+            self._throttle_wait = throttle_wait(request, self)
+        if self._throttle_wait is None:
+            return None
+        response = self.throttled_response(request, self._throttle_wait)
         patch_vary_headers(response, ["Cookie"])
         return response
 

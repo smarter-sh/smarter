@@ -131,6 +131,24 @@ class TestSqlConnectionModel(SmarterTestBase):
         connection = sqlite_connection(authentication_method=DBMSAuthenticationMethods.LDAP_USER_PWD.value)
         self.assertEqual(connection.db_options, {"authentication": "LDAP"})
 
+    def test_mysql_timeouts(self):
+        """Test that a MySQL connection's timeout is the driver's connect, read and write timeouts."""
+        connection = sqlite_connection(db_engine=DbEngines.MYSQL.value, timeout=12)
+        options = connection.django_db_connection["OPTIONS"]
+        self.assertEqual(options["connect_timeout"], 12)
+        self.assertEqual(options["read_timeout"], 12)
+        self.assertEqual(options["write_timeout"], 12)
+
+    def test_postgres_timeouts(self):
+        """Test that a PostgreSQL connection's timeout is its connect timeout and statement timeout."""
+        connection = sqlite_connection(db_engine=DbEngines.POSTGRES.value, timeout=7)
+        self.assertEqual(connection.db_options, {"connect_timeout": 7, "options": "-c statement_timeout=7000"})
+
+    def test_default_timeout(self):
+        """Test that a connection without a timeout gets the default one."""
+        connection = sqlite_connection(db_engine=DbEngines.MYSQL.value, timeout=None)
+        self.assertEqual(connection.db_options["read_timeout"], SqlConnection.DBMS_DEFAULT_TIMEOUT)
+
     def test_settings_and_strings(self):
         connection = sqlite_connection(use_ssl=True, ssl_ca="ca", ssl_cert="cert", ssl_key="key")
         self.assertEqual(connection.db_options["ssl"], {"ca": "ca", "cert": "cert", "key": "key"})
