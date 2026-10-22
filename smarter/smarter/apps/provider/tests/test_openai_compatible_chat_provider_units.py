@@ -171,6 +171,39 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         self.assertTrue(any("weather_server" in content for content in appended))
         self.assertTrue(any("down_server" in content for content in appended))
 
+    def test_mcp_instructions_are_added_once(self):
+        """The persisted system message, which earlier prompts extended, gets the instructions once."""
+        toolkit = self.mcp_toolkit()
+        toolkit.system_prompt.return_value = f'{module.MCP_INSTRUCTIONS_PREFIX}weather" MCP server: Use it.'
+        for _ in range(3):
+            self.handle_mcp_clients(toolkit)
+        self.assertEqual(self.client.messages[0]["content"], f"You are a test.\n\n{toolkit.system_prompt.return_value}")
+
+    def test_mcp_instructions_replace_a_system_prompt_of_only_instructions(self):
+        """A system message that holds only earlier instructions is replaced by the current ones."""
+        toolkit = self.mcp_toolkit()
+        toolkit.system_prompt.return_value = f'{module.MCP_INSTRUCTIONS_PREFIX}weather" MCP server: new.'
+        self.client._messages = [
+            {"role": "system", "content": f'{module.MCP_INSTRUCTIONS_PREFIX}weather" MCP server: old.'},
+            {"role": "user", "content": "hi"},
+        ]
+        self.handle_mcp_clients(toolkit)
+        self.assertEqual(self.client.messages[0]["content"], toolkit.system_prompt.return_value)
+
+    def test_long_history_is_capped_in_the_request(self):
+        """The request leaves out the oldest turns of a long thread; the history keeps them."""
+        self.client.iteration = 1
+        self.client._messages = [
+            {"role": "system", "content": "You are a test."},
+            {"role": "user", "content": "x" * module.MAX_HISTORY_CHARACTERS},
+            {"role": "assistant", "content": "old answer"},
+            {"role": "user", "content": "latest"},
+        ]
+        messages = self.client.openai_messages
+        self.assertEqual([m["role"] for m in messages], ["system", "user"])
+        self.assertEqual(messages[1]["content"], "latest")
+        self.assertEqual(len(self.client._messages), 4)
+
     def test_mcp_instructions_without_a_system_prompt(self):
         """Without a system message, the instructions become one."""
         self.client._messages = [{"role": "user", "content": "hi"}]

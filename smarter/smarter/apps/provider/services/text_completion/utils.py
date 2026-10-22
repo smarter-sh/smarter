@@ -10,10 +10,8 @@ from typing import Any, Optional, Union
 from smarter.common.conf import smarter_settings
 from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib import (
-    json,  # library for interacting with JSON data https://www.json.org/json-en.html
-)
-from smarter.lib import (
+from smarter.lib import (  # library for interacting with JSON data https://www.json.org/json-en.html
+    json,
     logging,
 )
 from smarter.lib.django import waffle
@@ -300,4 +298,72 @@ def pair_tool_messages(messages: list[SmarterDictType]) -> list[SmarterDictType]
         retval.append(message)
         retval.extend(replies)
         i = j
+    return retval
+
+
+def message_characters(message: SmarterDictType) -> int:
+    """
+    Return the size of a message, in characters: its content and its tool calls.
+
+    :param message: A message of a thread.
+    :return: The number of characters.
+    """
+    content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
+    size = len(content) if isinstance(content, str) else len(json.dumps(content)) if content else 0
+    tool_calls = message.get("tool_calls")
+    if tool_calls:
+        size += len(json.dumps(tool_calls))
+    return size
+
+
+def cap_message_history(messages: list[SmarterDictType], max_characters: int) -> list[SmarterDictType]:
+    """
+    Return the messages without the oldest turns of the conversation, so that they fit in ``max_characters``.
+
+    A turn is a ``user`` message and every message that follows it until the next ``user`` message,
+    e.g. the assistant's tool calls, their ``tool`` replies and its answer. Whole turns are left out, so
+    every tool call stays paired with its reply. The ``system`` messages and the latest turn are always
+    kept, even if they alone are longer than ``max_characters``.
+
+    The messages themselves are not modified, and the list is a new one if any turn is left out.
+
+    :param messages: The message thread, oldest first.
+    :param max_characters: The most characters of content and tool calls to keep. See :func:`message_characters`.
+    :return: The message thread, without its oldest turns if it was too long.
+    """
+    role_key = OpenAIMessageKeys.MESSAGE_ROLE_KEY
+    total = sum(message_characters(message) for message in messages)
+    if total <= max_characters:
+        return messages
+    turn_starts = [
+        i for i, message in enumerate(messages) if message.get(role_key) == OpenAIMessageKeys.USER_MESSAGE_KEY
+    ]
+    if len(turn_starts) < 2:
+        return messages
+
+    # leave out the messages before each later turn's start, oldest first, until the rest fit.
+    cut = 0
+    dropped = 0
+    for start in turn_starts[1:]:
+        dropped += sum(
+            message_characters(message)
+            for message in messages[cut:start]
+            if message.get(role_key) != OpenAIMessageKeys.SYSTEM_MESSAGE_KEY
+        )
+        cut = start
+        if total - dropped <= max_characters:
+            break
+    retval = [
+        message
+        for i, message in enumerate(messages)
+        if i >= cut or message.get(role_key) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY
+    ]
+    logger.info(
+        "cap_message_history() left out %s of %s messages, %s of %s characters, to fit in %s characters",
+        len(messages) - len(retval),
+        len(messages),
+        dropped,
+        total,
+        max_characters,
+    )
     return retval

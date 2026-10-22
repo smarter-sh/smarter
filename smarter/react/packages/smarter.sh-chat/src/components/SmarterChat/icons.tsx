@@ -46,3 +46,30 @@ export function ProductionIcon() {
     />
   );
 }
+
+/**
+ * A twinkling sparkle: a four-pointed star with a small one beside it, displayed with the idle banter while a slow
+ * prompt runs. Its own drawing, in Smarter's orange; its colors and animation are in styles.css. See lib/banter.ts.
+ */
+export function BanterSparkleIcon() {
+  return (
+    <svg
+      className="smarter-chat-banter-sparkle"
+      viewBox="0 0 24 24"
+      width="1.25em"
+      height="1.25em"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        className="smarter-chat-banter-sparkle-big"
+        d="M10 1c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"
+      />
+      <path
+        className="smarter-chat-banter-sparkle-small"
+        d="M18.5 13c.3 2.2 1.3 3.2 3.5 3.5-2.2.3-3.2 1.3-3.5 3.5-.3-2.2-1.3-3.2-3.5-3.5 2.2-.3 3.2-1.3 3.5-3.5z"
+      />
+    </svg>
+  );
+}
