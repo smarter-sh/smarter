@@ -5,14 +5,14 @@ A four-week online course on the architecture of AI applications: retrieval, too
 structured data, MCP servers and multi-agent workflows, each a resource declared in a YAML manifest.
 Students work on the resources that ship with every Smarter installation: `nineteen built-in
 LLMClients
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmclient/data/llm-clients>`__,
+<https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__,
 from the bare ``simple`` assistant to ``research_analyst``, which searches the web through an `Exa
 MCP server
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/mcpclient/data/mcpclients/exa.yaml>`__,
-reads pages and PDFs, and checks its citations with guardrails; `twenty-five MCP clients
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient/data/mcpclients>`__
+<https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/exa.yaml>`__,
+reads pages and PDFs, and checks its citations with guardrails; `twenty-eight MCP clients
+<https://github.com/smarter-sh/example-manifests/tree/main/mcp-clients>`__
 for services such as GitHub, Notion and Stripe; `Vectorstores
-<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/vectorstore/data/vectorstores>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/vectorstores>`__
 on Qdrant and Pinecone; and an :doc:`Orchestrator </smarter-resources/smarter-orchestrator>` with
 six coordination strategies. There are twelve 30-minute recorded lectures and a 90-minute live
 session each week. Week 1 covers the building blocks, week 2 knowledge, week 3 action, and week 4

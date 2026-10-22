@@ -235,10 +235,8 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
     Example kwargs:
     kwargs: {'new_session': ['false'], 'uid': ['Lawrences-Mac-Studio.local-c6%3A6b%3A2e%3A7a%3A3d%3A6c']}
 
-    example request/response:
-    - smarter/apps/workbench/data/chat_config.json
-    - smarter/apps/workbench/data/request.json
-    - smarter/apps/workbench/data/response.json
+    example request/response: see the example chat configuration, request and response on
+    docs.smarter.sh, in docs/source/smarter-resources/prompt/.
     """
 
     _chat: Optional[Prompt] = None

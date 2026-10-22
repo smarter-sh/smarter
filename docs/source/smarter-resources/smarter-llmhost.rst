@@ -46,12 +46,14 @@ Example: Self-Hosting a Hugging Face Model
 
 This example self-hosts `Qwen/Qwen3-0.6B <https://huggingface.co/Qwen/Qwen3-0.6B>`__, the most
 downloaded text-generation model on Hugging Face at the time of writing. It is small enough to run
-on a single NVIDIA L4 GPU, and it is one of the built-in examples in
-``smarter/apps/llmhost/data/llmhost/``:
+on a single NVIDIA L4 GPU, and it is one of the examples in the ``llmhosts/`` folder of
+the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`:
 
-.. literalinclude:: ../../../smarter/smarter/apps/llmhost/data/llmhost/qwen3-0.6b.yaml
+.. literalinclude:: /_example-manifests/llmhosts/qwen3-0.6b.yaml
    :language: yaml
    :caption: qwen3-0.6b.yaml
+
+From `llmhosts/qwen3-0.6b.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llmhosts/qwen3-0.6b.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 The manifest describes four things:
 
@@ -63,7 +65,7 @@ The manifest describes four things:
   `vLLM <https://github.com/vllm-project/vllm>`__, with its own command-line ``args``. Here they
   enable Qwen3's reasoning parser.
 - ``spec.compute``: the kind of node to run on, here ``gpu_l4_1x``, one of the built-in
-  LLMHostCompute node groups in ``smarter/apps/llmhost/data/compute/``. Smarter adds a node to its
+  LLMHostCompute node groups in the ``llmhost-computes/`` folder of the same repository. Smarter adds a node to its
   node group when the LLMHost is launched, and removes it when no LLMHost needs it any more.
 - ``spec.resources``: what one replica's pod requests of that node: GPUs, VRAM, CPU and memory.
 
@@ -121,7 +123,7 @@ needs it.
 
 Gated models, such as Llama, Gemma and Mistral, also need a Hugging Face access token, in a Smarter
 Secret named in ``spec.model.tokenSecret``, and their license accepted on huggingface.co. The other
-examples in ``smarter/apps/llmhost/data/llmhost/`` cover larger models, every inference engine,
+examples in its ``llmhosts/`` folder cover larger models, every inference engine,
 GGUF models on CPU, and embedding models, such as
 `sentence-transformers/all-MiniLM-L6-v2 <https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2>`__,
 the most downloaded model of all on Hugging Face.

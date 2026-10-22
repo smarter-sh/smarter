@@ -6,11 +6,15 @@ namespace = "llmclient"
 presentation_app_name = "LLMClient"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-DATA_PATH = os.path.abspath(os.path.join(HERE, "data"))
-CUSTOM_DOMAINS_PATH = os.path.join(DATA_PATH, "custom-domains")
-"""The built-in CustomDomain manifests, which add_example_custom_domains applies."""
-EXAMPLE_LLMCLIENTS_PATH = os.path.join(DATA_PATH, "llm-clients")
-"""The example LLMClient manifests, which ``manage.py add_example_llmclients`` applies, and ``deploy_example_llmclients`` deploys."""
+EXAMPLE_MANIFESTS_REPOSITORY_URL = "https://github.com/smarter-sh/example-manifests"
+"""
+The community-supported collection of example manifests, one folder per kind.
+
+Its Guardrails, CustomDomain, Budgets, MCPClients, LLMHostComputes, LLMHosts, Proxies, Vectorstores,
+plugins and LLMClients. ``manage.py load_from_github`` applies all of them for the Smarter admin in
+``manage.py initialize_platform``, and the plugins and LLMClients for each account's admin in
+``manage.py initialize_account``.
+"""
 STACKADEMY_REPOSITORY_URL = "https://github.com/smarter-sh/stackademy"
 """
 The Stackademy project: the manifests of the fictional Stackademy code academy's AI resources.

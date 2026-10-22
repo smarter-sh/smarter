@@ -6,9 +6,6 @@ namespace = "llmhost"
 presentation_app_name = "LLMHost"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-DATA_PATH = os.path.abspath(os.path.join(HERE, "data"))
-BUILTIN_MANIFESTS_PATH = os.path.join(DATA_PATH, "llmhost")
-"""The example LLMHost manifests of the most popular open-weight models."""
 
 # --- Kubernetes ---------------------------------------------------------------
 
@@ -93,8 +90,6 @@ STATUS_REFRESH_MINUTES = 5
 
 # --- Compute ------------------------------------------------------------------
 
-BUILTIN_COMPUTE_PATH = os.path.join(DATA_PATH, "compute")
-"""The built-in LLMHostCompute: the kinds of node that the built-in LLMHosts fit."""
 RECONCILE_INTERVAL_SECONDS = 30
 """How often a compute is reconciled while its node group is adding or removing nodes."""
 RECONCILE_MAX_ATTEMPTS = 60

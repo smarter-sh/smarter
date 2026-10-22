@@ -81,9 +81,13 @@ summary:
    the sidebar link. See `smarter-django-react`.
 8. **Docs app**: a JSON schema view and an example manifest view in
    `smarter/smarter/apps/docs/views/`, routed in `smarter/smarter/apps/docs/urls.py`.
-9. **Built-in data** (if any): YAML manifests in `<app>/data/<kinds>/`, an
-   `add_example_<kinds>` command, and a step in `initialize_platform`. See
-   `smarter-management-commands`.
+9. **Example manifests** (if any): once the kind is released and its JSON
+   Schema published, add a folder for it to
+   [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests)
+   with a pull request there (its pre-commit hooks validate each manifest). No
+   app `data/` folder and no command: `initialize_platform` applies that
+   repository with `load_from_github`, in `SAMKinds.apply_order()`, so give the
+   kind its place there. See `smarter-management-commands`.
 10. **Dashboard counts** (if the dashboard shows them):
     `smarter/smarter/apps/dashboard/views/views/api/my_resources.py`.
 11. **Sphinx page**: `docs/source/smarter-resources/smarter-<kind>.rst`, plus the

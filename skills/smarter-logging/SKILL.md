@@ -15,7 +15,7 @@ The policy is in the Sphinx docs. Read them once, then follow this skill's idiom
 
 Each message's first argument is a formatted (colored) dot-notated path to the
 code that logged it, followed by the **unformatted** function or method name.
-Together they read like a stack trace: `smarter.lib.django.database.convert_database_to_utf8mb4() ...`.
+Together they read like a stack trace: `smarter.apps.llmtool.extension.registry.fetch_index_files() ...`.
 A message without the prefix can't be traced, and is a defect in review.
 
 **Module-level code** (functions, receivers, tasks, management command helpers):
@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
 
-def convert_database_to_utf8mb4(...):
-    logger.info("%s.convert_database_to_utf8mb4() converting table %s.", logger_prefix, table)
+def fetch_index_files(url):
+    logger.info("%s.fetch_index_files() downloading %s", logger_prefix, url)
 ```
 
 **Methods of a class** that has `formatted_class_name` (anything built on

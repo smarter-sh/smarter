@@ -7,6 +7,11 @@ The tests never call a Kubernetes cluster, Route53 or Hugging Face:
   :class:`~smarter.apps.llmhost.services.cluster.InMemoryClusterBackend` with
   :func:`~smarter.apps.llmhost.services.cluster.configure_cluster`, and disables DNS records.
 - :class:`FakeSession` answers the Hugging Face Hub API from ``data/huggingface.yaml``.
+
+The Smarter admin's example LLMHostComputes and LLMHosts, which ``manage.py initialize_platform``
+applies from https://github.com/smarter-sh/example-manifests, are represented by copies of some of
+their manifests, in ``data/llmhost-computes`` and ``data/llmhosts``. :class:`BuiltinFixturesMixin`
+creates those that do not exist, and deletes them afterwards.
 """
 
 import copy
@@ -16,7 +21,7 @@ from typing import Any, Optional
 from unittest.mock import patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.llmhost.const import BUILTIN_COMPUTE_PATH, LABEL_COMPUTE
+from smarter.apps.llmhost.const import LABEL_COMPUTE
 from smarter.apps.llmhost.manifest.brokers.llmhost import spec_to_django_orm
 from smarter.apps.llmhost.manifest.brokers.llmhost_compute import (
     compute_spec_to_django_orm,
@@ -35,7 +40,6 @@ from smarter.apps.llmhost.services.cluster import (
 )
 from smarter.apps.llmhost.services.compute import (
     ComputeProvisioner,
-    add_example_computes,
     builtin_computes,
     resolve_compute,
 )
@@ -49,11 +53,16 @@ from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = os.path.join(HERE, "data")
+BUILTIN_COMPUTE_PATH = os.path.join(DATA_PATH, "llmhost-computes")
+"""Copies of the example LLMHostCompute manifests, for the Smarter admin's computes."""
+BUILTIN_LLMHOST_PATH = os.path.join(DATA_PATH, "llmhosts")
+"""Copies of some of the example LLMHost manifests: one of each engine, model source and task."""
 NAMESPACE = "smarter-platform-test"
 HF_TOKEN_SECRET = "test_llmhost_hf_token"
 HF_TOKEN = "hf_test_token_value"
@@ -132,29 +141,134 @@ class FakeSession:
         return FakeResponse(self.data["model"])
 
 
+def builtin_manifests(path: str) -> list[SmarterDictType]:
+    """The manifests in a folder of ./data, sorted by file name."""
+    return [get_readonly_yaml_file(f) for f in sorted(glob.glob(os.path.join(path, "*.yaml")))]
+
+
 def builtin_compute_models() -> list[LLMHostCompute]:
-    """The built-in LLMHostComputes, from their manifests in data/compute, unsaved: for tests without a database."""
+    """The example LLMHostComputes, from their manifests in data/llmhost-computes, unsaved: for tests without a database."""
     computes = []
-    for filename in sorted(glob.glob(os.path.join(BUILTIN_COMPUTE_PATH, "*.yaml"))):
-        manifest = get_readonly_yaml_file(filename)
+    for manifest in builtin_manifests(BUILTIN_COMPUTE_PATH):
         spec = SAMLLMHostComputeSpec(**manifest["spec"])
         computes.append(LLMHostCompute(name=manifest["metadata"]["name"], **compute_spec_to_django_orm(spec)))
     return computes
 
 
-def ensure_builtin_computes() -> None:
-    """Apply the built-in LLMHostCompute manifests, owned by the Smarter admin, if they do not exist."""
-    if not builtin_computes().exists():
-        add_example_computes()
+def smarter_admin_user_profile():
+    """The Smarter admin's UserProfile, the owner of the example resources."""
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.account.utils import smarter_cached_objects
+
+    return smarter_cached_objects.smarter_admin_user_profile
 
 
-class LLMHostTestBase(TestAccountMixin):
+def metadata_fields(manifest: SmarterDictType) -> SmarterDictType:
+    """The model fields of a manifest's metadata, except its name and tags."""
+    metadata = manifest["metadata"]
+    return {
+        "description": metadata.get("description") or "",
+        "version": metadata.get("version") or "1.0.0",
+        "annotations": metadata.get("annotations") or [],
+    }
+
+
+def ensure_builtin_computes() -> list[LLMHostCompute]:
+    """
+    Create the Smarter admin's LLMHostComputes of data/llmhost-computes that do not exist, as the broker's apply does.
+
+    :returns: Those created, which the caller deletes.
+    """
+    user_profile = smarter_admin_user_profile()
+    created = []
+    for manifest in builtin_manifests(BUILTIN_COMPUTE_PATH):
+        name = manifest["metadata"]["name"]
+        if builtin_computes().filter(name=name).exists():
+            continue
+        spec = SAMLLMHostComputeSpec(**manifest["spec"])
+        compute = LLMHostCompute.objects.create(
+            name=name, user_profile=user_profile, **metadata_fields(manifest), **compute_spec_to_django_orm(spec)
+        )
+        compute.tags.set(manifest["metadata"].get("tags") or [])
+        created.append(compute)
+    return created
+
+
+def ensure_builtin_llmhosts() -> list[LLMHost]:
+    """
+    Create the Smarter admin's LLMHosts of data/llmhosts that do not exist, as the broker's apply does.
+
+    Their computes must exist: see :func:`ensure_builtin_computes`.
+
+    :returns: Those created, which the caller deletes.
+    """
+    user_profile = smarter_admin_user_profile()
+    created = []
+    for manifest in builtin_manifests(BUILTIN_LLMHOST_PATH):
+        name = manifest["metadata"]["name"]
+        if LLMHost.objects.filter(user_profile=user_profile, name=name).exists():
+            continue
+        spec = SAMLLMHostSpec(**manifest["spec"])
+        llmhost = LLMHost.objects.create(
+            name=name,
+            user_profile=user_profile,
+            **metadata_fields(manifest),
+            **spec_to_django_orm(spec, name, resolve_compute(spec, user_profile)),
+        )
+        llmhost.tags.set(manifest["metadata"].get("tags") or [])
+        created.append(llmhost)
+    return created
+
+
+def delete_builtin_fixtures(llmhosts: list[LLMHost], computes: list[LLMHostCompute]) -> None:
+    """
+    Delete the example LLMHosts and LLMHostComputes that :func:`ensure_builtin_llmhosts` and :func:`ensure_builtin_computes` created.
+
+    A compute that an LLMHost still uses is left in place: LLMHost.compute is protected.
+    """
+    LLMHost.objects.filter(pk__in=[llmhost.pk for llmhost in llmhosts]).delete()
+    for compute in computes:
+        if not LLMHost.objects.filter(compute_id=compute.pk).exists():
+            LLMHostCompute.objects.filter(pk=compute.pk).delete()
+
+
+class BuiltinFixturesMixin(SmarterTestBase):
+    """
+    The Smarter admin's example LLMHostComputes and LLMHosts, from data/llmhost-computes and data/llmhosts.
+
+    The development database may already hold them, from ``manage.py initialize_platform``. Those
+    that do not exist are created in setUpClass(), and deleted in tearDownClass(): tests may
+    rely on these fixtures, but not on the exact set of the Smarter admin's resources.
+    """
+
+    builtin_computes_created: list[LLMHostCompute]
+    builtin_llmhosts_created: list[LLMHost]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.builtin_computes_created = ensure_builtin_computes()
+        cls.builtin_llmhosts_created = ensure_builtin_llmhosts()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            delete_builtin_fixtures(cls.builtin_llmhosts_created, cls.builtin_computes_created)
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("%s.tearDownClass() cleanup failed: %s", cls.__name__, e)
+        finally:
+            super().tearDownClass()
+
+
+class LLMHostTestBase(TestAccountMixin, BuiltinFixturesMixin):
     """
     Base class for the llmhost app's database tests.
 
     - The cluster is an :class:`InMemoryClusterBackend`, emptied before each test.
     - DNS records are disabled.
     - The Secret test_llmhost_hf_token holds a fake Hugging Face token.
+    - The Smarter admin's example computes and LLMHosts exist: see :class:`BuiltinFixturesMixin`.
     - :meth:`create_llmhost` creates LLMHosts from the manifests in ./data, and tearDownClass()
       deletes every LLMHost, LLMHostEvent and generated Secret of the account.
     """
@@ -171,7 +285,6 @@ class LLMHostTestBase(TestAccountMixin):
         # a safety net: tests must never reach the real cluster, nor create real node groups.
         assert isinstance(get_cluster(), InMemoryClusterBackend)
         assert isinstance(get_nodegroups(), InMemoryNodeGroupBackend)
-        ensure_builtin_computes()
         cls._dns_patcher = patch("smarter.apps.llmhost.tasks.dns_enabled", return_value=False)
         cls._dns_patcher.start()
         cls.hf_secret = cls.create_secret(HF_TOKEN_SECRET, HF_TOKEN)

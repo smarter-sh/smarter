@@ -2,7 +2,6 @@
 """
 Test the plugin app's manage.py commands.
 
-- :mod:`smarter.apps.llmtool.management.commands.add_example_tools`
 - :mod:`smarter.apps.llmtool.management.commands.create_plugin`
 - :mod:`smarter.apps.llmtool.management.commands.delete_plugin`
 - :mod:`smarter.apps.llmtool.management.commands.get_plugins`
@@ -15,7 +14,6 @@ is given an exception, so a command's failures are asserted as ``SystemExit``.
 
 import io
 from contextlib import redirect_stdout
-from unittest import mock
 
 from django.core.management import call_command
 
@@ -36,7 +34,6 @@ NOT_A_MANIFEST_FILE = get_data_path("not-a-manifest.yaml")
 SKILL_PLUGIN_NAME = "test_plugin_app_skill_plugin"
 UNKNOWN_USERNAME = "test_plugin_app_no_such_user"
 UNKNOWN_ACCOUNT_NUMBER = "9999-9999-9999"
-COMMANDS_MODULE = "smarter.apps.llmtool.management.commands"
 
 
 # pylint: disable=too-many-public-methods
@@ -257,37 +254,3 @@ class TestPluginManagementCommands(PluginAppTestBase):
         """Test that get_plugins fails for an account that does not exist."""
         with self.assertRaises(SystemExit):
             self.call("get_plugins", account_number=UNKNOWN_ACCOUNT_NUMBER, username=self.username)
-
-    # -------------------------------------------------------------------------
-    # add_example_tools
-    # -------------------------------------------------------------------------
-    def test_add_example_tools(self):
-        """Test that add_example_tools creates the sample plugins, and nothing else."""
-        with (
-            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins") as add_example_plugins,
-            mock.patch(f"{COMMANDS_MODULE}.add_example_tools.Command.apply_all") as apply_all,
-        ):
-            self.call("add_example_tools", username=self.username, verbose=True)
-        add_example_plugins.assert_called_once()
-        self.assertEqual(add_example_plugins.call_args.kwargs["user_profile"], self.user_profile)
-        self.assertTrue(add_example_plugins.call_args.kwargs["verbose"])
-        apply_all.assert_not_called()
-
-    def test_add_example_tools_reports_failures(self):
-        """Test that add_example_tools reports, but doesn't fail on, the sample plugins that fail."""
-        with mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins", return_value=False):
-            output = self.call("add_example_tools", username=self.username)
-        self.assertIn("sample-plugins", output)
-
-    def test_add_example_tools_failure(self):
-        """Test that add_example_tools fails when the examples cannot be added."""
-        with mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins", side_effect=ValueError("boom")):
-            with self.assertRaises(SystemExit):
-                self.call("add_example_tools", username=self.username)
-
-    def test_add_example_tools_unknown_user(self):
-        """Test that add_example_tools fails for a user that does not exist."""
-        with mock.patch(f"{COMMANDS_MODULE}.add_example_tools.add_example_plugins") as add_example_plugins:
-            with self.assertRaises(SystemExit):
-                self.call("add_example_tools", username=UNKNOWN_USERNAME)
-        add_example_plugins.assert_not_called()

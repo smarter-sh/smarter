@@ -183,7 +183,8 @@ Built-in Guardrails
 -------------------
 
 Smarter installs the following Guardrails, owned by the Smarter admin user, and shared with every
-account. Install them with ``python manage.py add_example_guardrails``.
+account. ``manage.py initialize_platform`` applies them from the ``guardrails/`` folder of
+the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. list-table::
    :header-rows: 1
@@ -313,7 +314,6 @@ Technical Reference
    guardrail/caching
    guardrail/const
    guardrail/exceptions
-   guardrail/management
    guardrail/manifest
    guardrail/models
    guardrail/receivers
@@ -321,5 +321,4 @@ Technical Reference
    guardrail/services
    guardrail/signals
    guardrail/tasks
-   guardrail/utils
    guardrail/views

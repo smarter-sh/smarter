@@ -65,6 +65,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=app
+      # smarter-mariadb's MYSQL_ROOT_PASSWORD, as whom initialize_platform creates the Stackademy
+      # course database, with the pre script of its scripts/scripts.yaml.
+      - SMARTER_MYSQL_ROOT_PASSWORD=smarter
 
   smarter-worker:
     container_name: smarter-worker
