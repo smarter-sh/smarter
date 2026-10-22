@@ -273,10 +273,22 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
       An LLMClient's chat configuration, and a chat session.
 
+      By default, the configuration has what a chat needs: the LLMClient, the session's key and chat
+      history, a short ``meta_data``, and the counts of the LLMClient's plugins and extensions. ``verbose``
+      adds the diagnostic parts: the lists of plugins and extensions, the session's tool calls and the
+      complete ``meta_data``.
+
+      **Example**
+
+      .. code-block:: typescript
+
+         const config = await client.llmClients.config("calculator", { verbose: true });
+         console.log(config.plugins.plugins.map((plugin) => plugin.plugin_meta.name));
+
       :param id: The LLMClient's id or hashed id.
       :type id: SmarterId
-      :param options: ``sessionKey``: an existing session's key, to resume it with its history, or none for a new session.
-      :type options: PromptOptions | undefined
+      :param options: ``sessionKey``: an existing session's key, to resume it with its history, or none for a new session. ``verbose``: true to add the diagnostic parts (``?verbose=true``).
+      :type options: ConfigOptions | undefined
       :returns: The configuration, whose ``session_key`` identifies the session.
       :rtype: Promise<object>
 
@@ -318,15 +330,15 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
       :returns: A function that starts the request.
       :rtype: object
 
-   .. js:method:: functions(id, options?)
+   .. js:method:: extensions(id, options?)
 
-      An LLMClient's built-in functions, e.g. ``calculator``.
+      The extensions whose tools an LLMClient offers the LLM, e.g. ``calculator``.
 
       :param id: The LLMClient's integer id.
       :type id: SmarterId
       :param options: Per-request options.
       :type options: RequestOptions | undefined
-      :returns: The functions.
+      :returns: The extensions.
       :rtype: Promise<object[]>
 
    .. js:method:: plugins(id, options?)
@@ -1464,6 +1476,21 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
    The manifest kinds of plugins.
 
    :type: unknown
+
+.. js:class:: ConfigOptions
+
+   The options of an LLMClient's chat configuration, beside the session's key and the per-request options.
+
+   Extends ``PromptOptions``, and has its methods.
+
+   .. js:attribute:: verbose
+
+      True to add the configuration's diagnostic parts: the session's tool calls
+      (``history.prompt_tool_call_history``), the complete ``meta_data``, and the lists of the LLMClient's
+      plugins and extensions. Without it, the configuration has what a chat needs, and the counts of the
+      plugins and extensions. A deployed LLMClient's own host ignores it. Default false.
+
+      :type: boolean
 
 .. js:class:: JournalListOptions
 

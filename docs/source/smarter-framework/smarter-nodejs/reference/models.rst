@@ -699,7 +699,7 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
 .. js:class:: LLMClient
 
-   An LLMClient: a deployable AI agent, built from an LLM provider and model, a system prompt, plugins and functions.
+   An LLMClient: a deployable AI agent, built from an LLM provider and model, a system prompt, plugins and extensions.
 
    Prompt it with ``client.llmClients.prompt()``, or start a chat with ``client.llmClients.chat()``.
 
@@ -759,7 +759,7 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: string | null | undefined
 
-   .. js:attribute:: functions
+   .. js:attribute:: extensions
 
       :type: object[]
 
@@ -823,7 +823,7 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: tools
 
-      Everything that the LLMClient adds to a prompt: its functions, plugins, MCPClients and guardrails, in that order.
+      Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and guardrails, in that order.
 
       :type: object[]
 
@@ -935,15 +935,21 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: string | null | undefined
 
-.. js:class:: LLMClientFunction
+.. js:class:: LLMClientExtension
 
-   A built-in function of an LLMClient, e.g. ``calculator``.
+   An extension of an LLMClient, whose tools the LLMClient offers the LLM, e.g. ``calculator``.
 
    A Zod schema, and the type of the same name that it validates.
 
    .. js:attribute:: createdAt
 
       :type: string | null | undefined
+
+   .. js:attribute:: extension
+
+      The Extension's id.
+
+      :type: number | null | undefined
 
    .. js:attribute:: id
 
@@ -954,6 +960,8 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: number | null | undefined
 
    .. js:attribute:: name
+
+      The extension's slug, e.g. ``weather``.
 
       :type: string | null | undefined
 
@@ -1023,25 +1031,25 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
 .. js:class:: LLMClientTool
 
-   Something that an LLMClient adds to a prompt: a built-in function, plugin, MCPClient or guardrail.
+   Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient or guardrail.
 
    A Zod schema, and the type of the same name that it validates.
 
    .. js:attribute:: id
 
-      The id of the link row: the LLMClient's function, plugin, MCPClient or guardrail.
+      The id of the link row: the LLMClient's extension, plugin, MCPClient or guardrail.
 
       :type: number
 
    .. js:attribute:: kind
 
-      ``Function``, or the linked resource's manifest kind: ``Plugin``, ``MCPClient`` or ``Guardrail``.
+      ``Extension``, or the linked resource's manifest kind: ``Plugin``, ``MCPClient`` or ``Guardrail``.
 
       :type: string
 
    .. js:attribute:: name
 
-      The function's name, or the linked resource's.
+      The extension's slug, or the linked resource's name.
 
       :type: string
 
@@ -2369,7 +2377,15 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: string
 
+   .. js:attribute:: profileImage
+
+      The url of the image that the user uploaded, which takes precedence over ``profileImageUrl``.
+
+      :type: string | null | undefined
+
    .. js:attribute:: profileImageUrl
+
+      The url of the image that the oauth provider supplied.
 
       :type: string | null | undefined
 

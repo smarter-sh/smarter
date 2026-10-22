@@ -31,6 +31,21 @@ class TestAsyncioShieldedCancelFilter(SmarterTestBase):
         self.assertTrue(self.filter.filter(self.record("asyncio", "Task exception was never retrieved")))
         self.assertTrue(self.filter.filter(self.record("asyncio", "ValueError exception in shielded future")))
 
+    def test_suppresses_never_retrieved_cancelled_error(self):
+        """Some Python builds log the shielded CancelledError as a never-retrieved future instead."""
+        error = asyncio.CancelledError()
+        record = self.record("asyncio", "Future exception was never retrieved")
+        record.exc_info = (type(error), error, None)
+        self.assertFalse(self.filter.filter(record))
+
+    def test_keeps_never_retrieved_other_errors(self):
+        """A never-retrieved future with any other exception, or none attached, is still emitted."""
+        error = ValueError("boom")
+        record = self.record("asyncio", "Future exception was never retrieved")
+        record.exc_info = (type(error), error, None)
+        self.assertTrue(self.filter.filter(record))
+        self.assertTrue(self.filter.filter(self.record("asyncio", "Future exception was never retrieved")))
+
     def test_keeps_other_loggers(self):
         """The same message from a logger other than asyncio is emitted."""
         self.assertTrue(self.filter.filter(self.record("smarter", "CancelledError exception in shielded future")))
