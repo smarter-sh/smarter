@@ -12,7 +12,7 @@
  * :param buttonLabel: The button's label, by default Got it.
  * :param onDone: Called with what the user did.
  */
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { gettext } from "@smarter/common";
 
@@ -53,7 +53,8 @@ function Spotlight({ target, title, text, icon = "ki-star", buttonLabel, onDone 
     onDoneRef.current(outcome);
   }, []);
 
-  useEffect(() => {
+  // a layout effect, so that the element is listened to from the moment the note shows.
+  useLayoutEffect(() => {
     const handleClick = () => finish(OnboardingOutcomes.CLICKED);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") finish(OnboardingOutcomes.DISMISSED);
