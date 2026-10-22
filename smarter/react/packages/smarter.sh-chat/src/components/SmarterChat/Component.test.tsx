@@ -313,7 +313,7 @@ describe("SmarterChat", () => {
       expect(await screen.findByText("Stanley is typing")).toBeInTheDocument();
 
       await act(() => vi.advanceTimersByTimeAsync(BANTER_DELAY_MS));
-      const banter = await screen.findByText("Hang on while I flabberjabber your answer…");
+      const banter = await screen.findByText("Hang on while I flabberjabber the doohickey…");
       // eslint-disable-next-line testing-library/no-node-access -- the bubble and its sparkle are styled by their css class.
       expect(banter.closest("section.smarter-chat-banter-message.cs-message--incoming")).not.toBeNull();
       // eslint-disable-next-line testing-library/no-node-access -- the sparkle is decorative, hidden from the a11y tree.
@@ -325,7 +325,7 @@ describe("SmarterChat", () => {
       vi.mocked(Math.random).mockReturnValue(0.999999);
       await act(() => vi.advanceTimersByTimeAsync(BANTER_INTERVAL_MS));
       expect(await screen.findByText(/^Still here! Just pausing to /)).toBeInTheDocument();
-      expect(screen.queryByText("Hang on while I flabberjabber your answer…")).not.toBeInTheDocument();
+      expect(screen.queryByText("Hang on while I flabberjabber the doohickey…")).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -361,14 +361,14 @@ describe("SmarterChat", () => {
       expect(await screen.findByText(`Stanley: ${last}`)).toBeInTheDocument();
 
       await act(() => vi.advanceTimersByTimeAsync(BANTER_DELAY_MS));
-      expect(await screen.findByText("Hang on while I flabberjabber your answer…")).toBeInTheDocument();
+      expect(await screen.findByText("Hang on while I flabberjabber the doohickey…")).toBeInTheDocument();
       // the step is still reported in the typing indicator, not in the bubble.
       expect(screen.getByText(`Stanley: ${last}`)).toBeInTheDocument();
 
       // the response replaces the bubble.
       finish();
       expect(await screen.findByText("We offer CS210 Artificial Intelligence, for $700.00.")).toBeInTheDocument();
-      expect(screen.queryByText("Hang on while I flabberjabber your answer…")).not.toBeInTheDocument();
+      expect(screen.queryByText("Hang on while I flabberjabber the doohickey…")).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
