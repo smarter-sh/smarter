@@ -44,7 +44,7 @@ Do not edit: run ``scripts/generate_sam_models.py``. See :mod:`smarter.models.sa
    Smarter API Vectorsearch Manifest - Metadata class.
 
    .. py:attribute:: annotations
-      :type: None | list[dict[str, Union[str, int, float, bool, datetime.date, datetime.datetime, Annotated[str, StringConstraints(strip_whitespace=None, to_upper=None, to_lower=None, strict=None, min_length=None, max_length=None, pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', ascii_only=None)], uuid.UUID, bytes, list, dict[str, Any]]]]
+      :type: None | list[dict[str, str | int | float | bool | datetime.date | datetime.datetime | uuid.UUID | bytes | list | dict[str, Any]]]
 
       The manifest annotations.
 
