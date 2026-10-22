@@ -487,6 +487,25 @@ jobs:
           make docker-build
 
       #========================================================================
+      # Pull the MariaDB and Redis images, with retries
+      #
+      # Docker Hub sometimes answers a pull with a transient 5xx (e.g.
+      # "received unexpected HTTP status: 502 Bad Gateway"), which would fail
+      # `docker-compose up` inside make docker-init. Pulling here, with
+      # backoff, means docker-init finds the images locally and skips the pull.
+      #========================================================================
+      - name: Pull service images
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4 5; do
+            docker-compose pull smarter-mariadb smarter-redis && exit 0
+            echo "Pull failed (attempt $attempt of 5), retrying in $((attempt * 15))s ..."
+            sleep $((attempt * 15))
+          done
+          echo "Could not pull the service images from Docker Hub."
+          exit 1
+
+      #========================================================================
       # make docker-init
       #
       # Starts the containers, creates the database, migrates, and initializes
