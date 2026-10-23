@@ -191,8 +191,9 @@ Complete REST API Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The official Smarter REST API reference is available directly from the console
-as Swagger/OpenAPI documentation, providing comprehensive documentation of all
-API endpoints, request and response schemas, and example usage. This resource is invaluable for
+as the *OpenAPI Contract*: the typed OpenAPI 3.1 document of the Smarter api, rendered with
+Scalar, with its request and response schemas, code samples in several languages, and *Test
+Request* against your platform. This resource is invaluable for
 developers building custom integrations and extensibility resources that require
 direct API interaction.
 

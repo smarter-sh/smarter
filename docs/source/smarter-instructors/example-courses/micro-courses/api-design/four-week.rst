@@ -5,8 +5,8 @@ A four-week online course on designing and consuming REST APIs, taught on Smarte
 sides. Smarter's API has sixteen commands under `/api/v1/cli/
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/urls.py>`__ that
 apply, describe and delete every resource from a YAML manifest, resource-style endpoints for the web
-console, API keys of which only a hash is stored, one error format for every failure, and Swagger
-and ReDoc pages generated from the code. Its clients are real and public: the Go `smarter-cli
+console, API keys of which only a hash is stored, one error format for every failure, and a typed
+OpenAPI contract generated from the code. Its clients are real and public: the Go `smarter-cli
 <https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
 <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__ npm package, whose types are generated from the chat
 API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
@@ -74,7 +74,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 2
      - **Smarter's API.** The :doc:`REST API </smarter-framework/smarter-api>`, its commands,
-       Swagger documentation, and the manifest-based design.
+       OpenAPI contract, and the manifest-based design.
    * - 1
      - Lecture 3
      - **Authentication and errors.** API keys and sessions,
@@ -219,7 +219,7 @@ Assignment 3: A New Endpoint
 
 Students add a small read-only endpoint to their fork of Smarter, for example one that returns the
 caller's API keys with their creation and last-used dates (never the key itself), with a Pydantic
-response model, authentication, tests and Swagger documentation.
+response model, authentication, tests, and its operation in the OpenAPI contract.
 
 **Turn in:** a pull request against their fork.
 
@@ -245,7 +245,7 @@ response model, authentication, tests and Swagger documentation.
      - Happy path only.
    * - Documentation
      - 4
-     - Appears correctly in Swagger.
+     - Documented correctly in the OpenAPI contract.
      - Missing.
 
 Assignment 4: Security Review

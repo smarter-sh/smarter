@@ -864,21 +864,29 @@ class UserProfile(MetaDataModel):
         return super().get_cached_objects()  # type: ignore[return-value]
 
     def __str__(self) -> str:
+        """
+        The profile's string form, e.g. ``pk=42 ****Corp-j****@example.com``.
+
+        It is written to logs, so the company name and the user's email are masked with
+        :meth:`~smarter.common.mixins.helper_mixin.SmarterHelperMixin.mask_string` and
+        :func:`~smarter.common.utils.mask_email`.
+        The pk identifies the row.
+        """
         user_identifier = "NoUser"
         company_name = "NoAccount"
         try:
-            # the email is masked: a user profile's string form is written to logs.
             user_identifier = (
                 mask_email(self.user.email)
                 if self.user and self.user.email
                 else (self.user.username if self.user else "NoUser")
             )
-            company_name = self.account.company_name if self.account else "NoAccount"
+            if self.account:
+                company_name = self.mask_string(self.account.company_name or "")
         except User.DoesNotExist:
             pass
         except Account.DoesNotExist:
             pass
-        return f"{company_name}-{user_identifier}"
+        return f"pk={self.pk} {company_name}-{user_identifier}"
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} pk={self.pk} user_id={self.user_id} account_id={self.account_id}>"  # type: ignore[attr-defined]
