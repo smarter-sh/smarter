@@ -162,24 +162,16 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         Returns a formatted class name string for logging.
 
-        This property generates a readable class name, including its parent class, to improve log clarity
-        and traceability. Useful for debugging and monitoring, especially in complex inheritance scenarios.
+        The class name and the instance's id, as the other brokers log it, e.g.
+        ``SAMSqlConnectionBroker[139994400629440]``.
 
-        :returns: A string representing the fully qualified class name, e.g. ``ParentClass.SAMSqlConnectionBroker()``.
+        :returns: The formatted class name.
 
         .. seealso::
 
             - :meth:`SAMConnectionBaseBroker.formatted_class_name`
-
-        **Example Usage:**
-
-            .. code-block:: python
-
-                logger.info(broker.formatted_class_name)
-                # Output: ParentClass.SAMSqlConnectionBroker()
         """
-        class_name = f"{__name__}.{SAMSqlConnectionBroker.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
+        return self.formatted_text(f"{SAMSqlConnectionBroker.__name__}[{id(self)}]")
 
     @property
     def ORMMetaModelClass(self) -> Type[SqlConnection]:

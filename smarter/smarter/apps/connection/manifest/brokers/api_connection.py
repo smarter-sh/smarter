@@ -178,8 +178,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
             logger.info("%s: operation started", broker.formatted_class_name)
         """
-        class_name = f"{__name__}.{SAMApiConnectionBroker.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
+        return self.formatted_text(f"{SAMApiConnectionBroker.__name__}[{id(self)}]")
 
     @property
     def ORMMetaModelClass(self) -> Type[ApiConnection]:
@@ -856,14 +855,19 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             data.pop(field, None)
 
         try:
+            # compare each field with the row's current value, so that re-applying an
+            # unchanged manifest doesn't save the row (and fire its receivers) again.
             for key, value in data.items():
                 if key == api_key_name:
-                    if self.api_key_secret and key != self.api_key_secret.id:  # type: ignore[comparison-overlap]
+                    if self.api_key_secret and self.connection.api_key_id != self.api_key_secret.id:  # type: ignore[union-attr]
                         setattr(self.connection, key, self.api_key_secret)
                         logger.info("%s.apply() setting api_key Secret <Fk> to %s", self.formatted_class_name, value)
                         updated = True
                 elif key == proxy_password_name:
-                    if self.proxy_password_secret and key != self.proxy_password_secret.id:  # type: ignore[comparison-overlap]
+                    if (
+                        self.proxy_password_secret
+                        and self.connection.proxy_password_id != self.proxy_password_secret.id  # type: ignore[union-attr]
+                    ):
                         setattr(self.connection, key, self.proxy_password_secret)
                         logger.info(
                             "%s.apply() setting proxy_password Secret <Fk> to %s",
@@ -871,20 +875,16 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                             value,
                         )
                         updated = True
-                else:
-                    if key != value:
-                        setattr(self.connection, key, value)
-                        logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
-                        updated = True
+                elif getattr(self.connection, key, None) != value:
+                    setattr(self.connection, key, value)
+                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
+                    updated = True
 
-            if updated and isinstance(self.connection, ApiConnection):
-                self.connection.save()
+            if isinstance(self.connection, ApiConnection):
+                if updated:
+                    self.connection.save()
+                    logger.info("%s.apply() updated ApiConnection %s", self.formatted_class_name, self.connection.name)
                 self.connection.tags.set(tags)
-                logger.info(
-                    "%s.apply() updated ApiConnection %s",
-                    self.formatted_class_name,
-                    self.SerializerClass(self.connection).data,
-                )
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         self.cache_invalidations()
