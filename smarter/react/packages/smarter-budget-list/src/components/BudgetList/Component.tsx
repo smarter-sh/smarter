@@ -3,7 +3,8 @@
  *
  * Lists the budgets that the user may see. Each budget expands to the resources it is attached
  * to, with their budget versus actual spending, and a chart of the last 12 billing periods.
- * Superusers may delete a budget. Budgets are created and changed with Budget manifests.
+ * Superusers may delete a budget. Budgets are created and changed with Budget manifests. The
+ * Refresh button at the top loads the list again.
  */
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import {
@@ -211,6 +212,8 @@ const BudgetRow = React.memo(function BudgetRow({
 export default function BudgetList({ sessionContext }: { sessionContext: SessionContext }) {
   const [data, setData] = useState<BudgetListResponse | null>(null);
   const [errMessage, setErrMessage] = useState("");
+  // whether a load is in flight: the first one on mount, and each one of the Refresh button.
+  const [isLoading, setIsLoading] = useState(true);
 
   const load = useCallback(() => {
     fetchDjangoUrl(sessionContext, sessionContext.ApiUrl, JSON.stringify({}))
@@ -223,10 +226,16 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
       .catch((error: Error) => {
         console.error(loggerPrefix, "Error loading budgets:", error);
         setErrMessage(error.message);
-      });
+      })
+      .finally(() => setIsLoading(false));
   }, [sessionContext]);
 
   useEffect(() => {
+    load();
+  }, [load]);
+
+  const onRefresh = useCallback(() => {
+    setIsLoading(true);
     load();
   }, [load]);
 
@@ -264,6 +273,18 @@ export default function BudgetList({ sessionContext }: { sessionContext: Session
   return (
     <div className="card mt-5">
       <div className="card-body">
+        <div className="d-flex justify-content-end mb-3">
+          <button
+            type="button"
+            className="btn btn-sm btn-light"
+            disabled={isLoading}
+            title={gettext("Load the list again, with the latest changes")}
+            onClick={onRefresh}
+          >
+            <i className="ki-outline ki-arrows-circle fs-4 me-1" aria-hidden="true" />
+            {gettext("Refresh")}
+          </button>
+        </div>
         {errMessage && (
           <div className="alert alert-danger" role="alert">
             {errMessage}
