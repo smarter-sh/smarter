@@ -462,7 +462,7 @@ From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/exa
    :caption: External Resources
 
    external-links/support-smarter
-   external-links/swagger
+   external-links/openapi
    external-links/manifest-reference
    external-links/json-schemas
    external-links/youtube

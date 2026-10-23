@@ -3,10 +3,10 @@ The Smarter api's OpenAPI document, and a page that renders it, in the docs app.
 
 The document is the committed ``openapi.json`` of :mod:`smarter.apps.api.v1.contract`: the typed
 OpenAPI 3.1 contract of the cli api, the chat api and the REST reads, from which clients and SDKs
-are generated. It differs from the Swagger and Redoc pages, which drf-yasg generates from the
-views, in OpenAPI 2, with untyped request and response bodies.
+are generated. The page renders it with Scalar, which is vendored in
+``static/assets/plugins/custom/scalar/``.
 
-Both are public, as the Swagger page is: the document describes the api, and holds no data.
+Both are public: the document describes the api, and holds no data.
 """
 
 import json
@@ -24,7 +24,7 @@ def openapi_document(request: HttpRequest) -> SmarterDictType:
 
     The committed document's servers are the default platform's and a local one. This platform's
     own ``/api/v1``, relative to the document's url, is added before them, so that a viewer's
-    requests, e.g. Swagger UI's "Try it out", go to the platform that the reader is on.
+    requests, e.g. Scalar's "Test Request", go to the platform that the reader is on.
 
     :param request: The request for the document.
     :type request: HttpRequest
@@ -49,7 +49,7 @@ class DocsOpenApiJsonView(SmarterView):
 
 
 class DocsOpenApiView(SmarterWebHtmlView):
-    """A page that renders the Smarter api's OpenAPI document with Swagger UI, and links to it."""
+    """A page that renders the Smarter api's OpenAPI document with Scalar, and links to it."""
 
     template_path = "docs/openapi.html"
 

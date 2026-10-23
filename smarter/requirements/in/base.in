@@ -87,7 +87,6 @@ inflection                              # String transformation library (plurali
 # ------------
 beautifulsoup4                          # HTML parser for Wagtail page compression
 docutils                                # required by Django for django.contrib.admindocs
-drf-yasg                                # Swagger API documentation
 lxml                                    # parser for Wagtail page compression
 markdown                                # Markdown reader/parser
 pillow                                  # for provider.Provider.logo:

@@ -69,12 +69,6 @@ class TestSettings(SmarterTestBase):
                 re.match(r"^[a-zA-Z0-9.-]+(:[0-9]+)?$", host), f"Invalid host: {host} {smarter_settings.allowed_hosts}"
             )
 
-    def test_api_description(self):
-        self.assertIsNotNone(smarter_settings.api_description)
-
-    def test_api_name(self):
-        self.assertIsNotNone(smarter_settings.api_name)
-
     def test_api_schema(self):
         self.assertIsNotNone(smarter_settings.api_schema)
 

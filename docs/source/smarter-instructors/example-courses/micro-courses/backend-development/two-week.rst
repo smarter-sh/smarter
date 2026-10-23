@@ -280,7 +280,7 @@ tested.
 Students add an endpoint under Smarter's API that returns a summary of the caller's account: the
 number of resources of each kind, prompts in the last 30 days, and spending against budgets. It
 must authenticate with an API key, show only the caller's account, be built from a Pydantic
-response model, and appear in the Swagger documentation.
+response model, and be documented in the OpenAPI contract.
 
 **What students turn in:**
 
@@ -316,7 +316,7 @@ response model, and appear in the Swagger documentation.
      - Happy path only.
    * - Docs and walkthrough
      - 15
-     - Appears in Swagger and the docs; clear walkthrough.
+     - In the OpenAPI contract and the docs; clear walkthrough.
      - Undocumented.
 
 Recommended Texts
