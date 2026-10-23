@@ -403,6 +403,6 @@ Anthropic's side — wait a minute and retry. For persistent issues, check the
    - :doc:`/smarter-resources/smarter-provider`
    - :doc:`/smarter-resources/provider/manifest`
    - :doc:`/smarter-resources/provider/api`
-   - :doc:`/external-links/swagger`
+   - :doc:`/external-links/openapi`
    - `Claude API Documentation <https://platform.claude.com/docs/en/home>`_
    - `Anthropic Console <https://console.anthropic.com/>`_

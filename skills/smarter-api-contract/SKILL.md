@@ -232,6 +232,9 @@ validates every event's data against the schema that the extension names.
 
 ## Design decisions in openapi.py (don't undo them)
 
+- **No `jsonSchemaDialect`.** The document's schemas use OpenAPI 3.1's default
+  dialect (JSON Schema 2020-12 with OpenAPI's keywords). Swagger UI and other
+  viewers warn about, or reject, any other value, even plain 2020-12.
 - **OpenAPI 3.1**, because its schemas are exactly JSON Schema 2020-12, which
   Pydantic generates. Some generators read only 3.0 (oapi-codegen, for Go). Don't
   downgrade the document for them. Publish a converted copy beside it if one is
@@ -278,7 +281,9 @@ SMARTER_REF=<ref>`, into `test/data/` and `testdata/`), regenerate their SAM
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.
 - **Every platform serves the committed `openapi.json`** at `/docs/openapi.json`
   (`smarter.apps.docs.views.openapi`), with its own `/api/v1` added as the first
-  server, and renders it with drf-yasg's bundled Swagger UI 5 at `/docs/openapi/`,
+  server, and renders it with Scalar, vendored in
+  `smarter/smarter/static/assets/plugins/custom/scalar/` (its README says how to
+  upgrade it, and which settings keep it off Scalar's hosted services), at `/docs/openapi/`,
   the sidebar's _OpenAPI Contract_ link. It reads the file, so `make api-contract`
   is all it needs.
 
