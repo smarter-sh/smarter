@@ -277,7 +277,7 @@ class LLMClientDeploymentApiView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        return self.formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        return f"{self.formatted_text(__name__)}.{self.__class__.__name__}[{id(self)}]"
 
     def parse(self, request: HttpRequest) -> Optional[BaseModel]:
         """

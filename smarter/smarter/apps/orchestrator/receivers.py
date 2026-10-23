@@ -21,19 +21,19 @@ module_prefix = __name__
 def orchestrator_saved(sender, instance: Orchestrator, created: bool, **kwargs):
     """Create the default API for the orchestrator."""
 
-    prefix = logging.formatted_text(f"{module_prefix}.orchestrator_saved()")
+    prefix = f"{logging.formatted_text(module_prefix)}.orchestrator_saved()"
     data = logging.formatted_json(OrchestratorSerializer(instance).data)
     if created:
-        logger.info("%s - created %s, %s", prefix, instance, data)
+        logger.info("%s created %s, %s", prefix, instance, data)
     else:
-        logger.info("%s - updated %s, %s", prefix, instance, data)
+        logger.info("%s updated %s, %s", prefix, instance, data)
 
 
 @receiver(pre_delete, sender=Orchestrator)
 def orchestrator_deleted(sender, instance: Orchestrator, **kwargs):
     """Delete the default API for the orchestrator."""
-    prefix = logging.formatted_text(f"{module_prefix}.orchestrator_deleted()")
-    logger.info("%s - %s", prefix, instance)
+    prefix = f"{logging.formatted_text(module_prefix)}.orchestrator_deleted()"
+    logger.info("%s %s", prefix, instance)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class TestMetaDataModel(TestAccountMixin):
     """Test MetaDataModel model."""
 
-    logger_prefix = formatted_text(f"{__name__}.TestMetaDataModel()")
+    logger_prefix = f"{formatted_text(__name__)}.TestMetaDataModel()"
 
     def test_tags_list(self):
         """Test that tags_list returns a list of tags from the comma-separated string."""

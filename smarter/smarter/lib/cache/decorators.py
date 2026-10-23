@@ -56,7 +56,7 @@ from .cache_sentinel import CACHE_MISS_SENTINEL, CACHE_NONE_SENTINEL
 from .lazy_cache import lazy_cache
 
 logger = logging.getLogger(__name__)
-logger_prefix_normal = logging.formatted_text(f"{__name__}.@cache_results()")
+logger_prefix_normal = f"{logging.formatted_text(__name__)}.@cache_results()"
 logger_prefix_green = logging.formatted_text(
     f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.REGULAR_GREEN
 )
@@ -421,7 +421,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                 # manifest invalidates a dozen keys.
                 log = logger.info if (logging_enabled or lazy_cache.cache_logging) else logger.debug
                 log(
-                    "%s - invalidated %s - %s",
+                    "%s invalidated %s - %s",
                     logger_prefix_gray
                     + "."
                     + logging.formatted_text(
@@ -436,7 +436,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                 )
             else:
                 logger.debug(
-                    "%s - no cache entry found for %s (nothing to invalidate)",
+                    "%s no cache entry found for %s (nothing to invalidate)",
                     logger_prefix_gray
                     + "."
                     + logging.formatted_text(

@@ -104,7 +104,7 @@ def create_llmclient_request(llmclient_id: int, request_data: SmarterDictType):
         sender=create_llmclient_request, llmclient_id=llmclient_id, request_data=request_data, task_id=task_id
     )
     logger.info(
-        "%s - llmclient %s task_id: %s received request data: %s",
+        "%s llmclient %s task_id: %s received request data: %s",
         logger_prefix + f".{create_llmclient_request.__name__}() task_id: %s",
         llmclient_id,
         task_id,

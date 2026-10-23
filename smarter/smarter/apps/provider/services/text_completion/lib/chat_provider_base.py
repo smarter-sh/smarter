@@ -397,7 +397,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: The formatted class name.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{SmarterChatProviderBase.__name__}[{id(self)}]")
+        return f"{formatted_text(__name__)}.{SmarterChatProviderBase.__name__}[{id(self)}]"
 
     @property
     def base_url(self) -> Optional[str]:

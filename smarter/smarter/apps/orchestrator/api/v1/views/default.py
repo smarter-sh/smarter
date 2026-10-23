@@ -55,7 +55,7 @@ class DefaultOrchestratorApiView(OrchestratorApiBaseViewSet):
         else:
             self._orchestrator_id = kwargs.pop("orchestrator_id", None)
         self._name = kwargs.pop("name", None)
-        logger.info("%s - dispatch() %s %s ", self.formatted_class_name, self.orchestrator, self.user_profile)
+        logger.info("%s dispatch() %s %s ", self.formatted_class_name, self.orchestrator, self.user_profile)
 
         try:
             retval = super().dispatch(request, *args, **kwargs)

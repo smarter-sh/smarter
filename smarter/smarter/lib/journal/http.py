@@ -90,7 +90,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         if isinstance(data, dict):
             data.update(envelope.dump())
 
-        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
+        logger_prefix = f"{formatted_text(__name__)}.{self.formatted_class_name}.__init__()"
 
         def anonymous_serialized_request(request) -> SmarterDictType:
             """Handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`."""
@@ -291,7 +291,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 command=str(command),
             )
         )
-        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
+        logger_prefix = f"{formatted_text(__name__)}.{self.formatted_class_name}.__init__()"
         logger.error("%s %s", logger_prefix, formatted_json(error_response.dump()))
         # the stack trace is logged above, but, when include_stack_trace is False, never sent to the client.
         data = error_response.dump(include_stack_trace=include_stack_trace)

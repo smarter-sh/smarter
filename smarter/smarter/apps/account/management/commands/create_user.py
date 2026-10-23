@@ -76,7 +76,16 @@ class Command(SmarterCommand):
     """
 
     def create_user(
-        self, account_number, username, email, first_name, last_name, password=None, is_admin=False, language=None
+        self,
+        account_number,
+        username,
+        email,
+        first_name,
+        last_name,
+        password=None,
+        is_admin=False,
+        language=None,
+        show_password=False,
     ) -> bool:
         """
         Create a new user for the specified account.
@@ -94,7 +103,9 @@ class Command(SmarterCommand):
               False. Update the user's email, first name, last name, and active status.
               If a password is provided, set the user's password to the provided
               password. If no password is provided and the user was created, generate a
-              random password, set it for the user, and log the generated password.
+              random password and set it for the user. The generated password is printed
+              only when show_password is True, because this command's output ends up in
+              deployment job logs.
               Attempt to save the user and if there is an error during saving, log a
               failure and return False. Log a success message that the user has been
               created or updated.
@@ -123,6 +134,8 @@ class Command(SmarterCommand):
         :param str last_name: The last name of the new user.
         :param str password: The password for the new user. If not provided, a random password will be generated. Defaults to None.
         :param bool is_admin: Whether the new user should be an admin. Defaults to False.
+        :param bool show_password: Whether to print a generated password. Defaults to False, because the
+            command's output usually ends up in logs.
         :param str language: The user's preferred language, one of ``settings.LANGUAGES``, e.g. ``es``,
             in which the password and welcome emails are written. Defaults to None: English for a new
             user, and an existing user's preference is kept.
@@ -168,14 +181,25 @@ class Command(SmarterCommand):
             generated_password = "".join(secrets.choice(alphabet) for _ in range(12))
             user.set_password(generated_password)
             password = generated_password  # Set password to generated password for email
-            self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been set to {password}"))
+            # the password is printed only on request: this command's output usually ends up in
+            # deployment job logs.
+            if show_password:
+                self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been set to {password}"))
+            else:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Generated a random password for user {username}. It is sent in the new user email, "
+                        "when that is enabled. To see it, run this command with --show_password, or set "
+                        f"another with: manage.py changepassword {username}"
+                    )
+                )
         try:
             user.save()
         # pylint: disable=broad-except
         except Exception as e:
             raise CommandError(f"Error saving user {username}: {str(e)}")
 
-        self.handle_completed_success(msg=f"User {username} {email} has been created.")
+        self.handle_completed_success(msg=f"User {username} {email} has been {'created' if created else 'updated'}.")
 
         if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
             # Send email to user, in the language of the welcome email.
@@ -277,6 +301,12 @@ class Command(SmarterCommand):
             choices=welcome_email_languages(),
             help="The user's preferred language, for the password and welcome emails. Default: English",
         )
+        parser.add_argument(
+            "--show_password",
+            action="store_true",
+            default=False,
+            help="Print the generated password of a new user. Off by default, since the output may be logged.",
+        )
 
     def handle(self, *args, **options):
         """Create the user."""
@@ -290,6 +320,7 @@ class Command(SmarterCommand):
         password = options["password"]
         is_admin = options["admin"]
         language = options.get("language")
+        show_password = options.get("show_password", False)
         retval = False
 
         with transaction.atomic():
@@ -302,6 +333,7 @@ class Command(SmarterCommand):
                 password=password,
                 is_admin=is_admin,
                 language=language,
+                show_password=show_password,
             )
 
         if not retval:

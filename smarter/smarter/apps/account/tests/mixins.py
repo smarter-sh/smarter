@@ -9,18 +9,19 @@ from .factories import admin_user_factory, factory_account_teardown, mortal_user
 
 logger = logging.getLogger(__name__)
 HERE = __name__
-logger_prefix = logging.formatted_text(f"{HERE}.TestAccountMixin()")
+logger_prefix = f"{logging.formatted_text(HERE)}.TestAccountMixin()"
 
 
 class TestAccountMixin(SmarterTestBase):
     """A mixin that adds class-level account and user creation/destruction."""
 
-    test_account_mixin_logger_prefix = logging.formatted_text(f"{HERE}.TestAccountMixin()")
+    test_account_mixin_logger_prefix = f"{logging.formatted_text(HERE)}.TestAccountMixin()"
 
     @classmethod
     def setUpClass(cls):
         """
         Set up the test class with a single account, and admin and non-admin users.
+
         using the class setup so that we retain the same user_profile for each test,
         which is needed so that the django Secret model can be queried.
         """
@@ -90,9 +91,7 @@ class TestAccountMixin(SmarterTestBase):
         return True
 
     def request_factory(self) -> RequestFactory:
-        """
-        Prepare and get a response from an api/v1/ endpoint.
-        """
+        """Prepare and get a response from an api/v1/ endpoint."""
 
         factory = RequestFactory()
         return factory

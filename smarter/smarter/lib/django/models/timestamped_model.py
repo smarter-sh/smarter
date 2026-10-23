@@ -203,11 +203,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The original object ID if decoding is successful, otherwise None.
         :rtype: Optional[int]
         """
-        logger_prefix = logging.formatted_text(f"{cls.__name__}.id_from_hashed_id()")
+        logger_prefix = f"{logging.formatted_text(cls.__name__)}.id_from_hashed_id()"
         try:
             if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
                 logger.warning(
-                    "%s - Hashed ID '%s' does not start with '%s' or end with '%s'.",
+                    "%s Hashed ID '%s' does not start with '%s' or end with '%s'.",
                     logger_prefix,
                     hashed_id,
                     cls.HASH_PREFIX,
@@ -222,7 +222,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             decoded_str = decoded_bytes.decode()
             retval = int(decoded_str) - cls.HASH_FLOOR
             verbose_logger.debug(
-                "%s - decoded %s.hashed_id: %s to id: %d",
+                "%s decoded %s.hashed_id: %s to id: %d",
                 logger_prefix,
                 cls.__name__,
                 hashed_id,
@@ -231,7 +231,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             return retval
         except (base64.binascii.Error, ValueError) as e:  # type: ignore[name-defined]
             logger.error(
-                "%s - Failed to decode %s.hashed_id '%s': %s",
+                "%s Failed to decode %s.hashed_id '%s': %s",
                 logger_prefix,
                 cls.__name__,
                 hashed_id,
@@ -241,7 +241,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logging.exception(
-                "%s - Unexpected error while decoding %s.hashed_id '%s': %s",
+                "%s Unexpected error while decoding %s.hashed_id '%s': %s",
                 logger_prefix,
                 cls.__name__,
                 hashed_id,
@@ -258,7 +258,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The first matching hashed ID if found, otherwise None.
         :rtype: Optional[str]
         """
-        logger_prefix = logging.formatted_text(f"{cls.__name__}.find_hash()")
+        logger_prefix = f"{logging.formatted_text(cls.__name__)}.find_hash()"
         verbose_logger.debug(
             "%s.find_hash() - Searching for hashed ID in value: %s",
             logger_prefix,
@@ -380,9 +380,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[TimestampedModel]
         """
-        logger_prefix = logging.formatted_text(f"{cls.__name__}.get_object_by_locator()")
+        logger_prefix = f"{logging.formatted_text(cls.__name__)}.get_object_by_locator()"
         verbose_logger.debug(
-            "%s - Attempting to retrieve object with locator: %s",
+            "%s Attempting to retrieve object with locator: %s",
             logger_prefix,
             locator,
         )
@@ -390,7 +390,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             prefix = str(cls.__name__).lower()
             if not locator.startswith(f"{prefix}-"):
                 logger.warning(
-                    "%s - Locator '%s' does not start with expected prefix '%s-'.",
+                    "%s Locator '%s' does not start with expected prefix '%s-'.",
                     logger_prefix,
                     locator,
                     prefix,
@@ -400,7 +400,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             id_value = cls.id_from_hashed_id(hashed_part)
             if id_value is None:
                 logger.warning(
-                    "%s - Failed to decode hashed part '%s' from locator '%s'.",
+                    "%s Failed to decode hashed part '%s' from locator '%s'.",
                     logger_prefix,
                     hashed_part,
                     locator,
@@ -409,14 +409,14 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             obj = cls.get_cached_object(pk=id_value)
             if obj is None:
                 logger.warning(
-                    "%s - No object found with ID %d decoded from locator '%s'.",
+                    "%s No object found with ID %d decoded from locator '%s'.",
                     logger_prefix,
                     id_value,
                     locator,
                 )
             else:
                 verbose_logger.debug(
-                    "%s - Successfully retrieved object with ID %d from locator '%s'.",
+                    "%s Successfully retrieved object with ID %d from locator '%s'.",
                     logger_prefix,
                     id_value,
                     locator,
@@ -425,7 +425,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logging.exception(
-                "%s - Unexpected error while retrieving object with locator '%s': %s",
+                "%s Unexpected error while retrieving object with locator '%s': %s",
                 logger_prefix,
                 locator,
                 e,

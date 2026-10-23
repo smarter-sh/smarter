@@ -122,7 +122,7 @@ def create_custom_domain_dns_record(
     task_id = create_custom_domain_dns_record.request.id
 
     logger.info(
-        "%s - creating DNS record %s %s for LLMClientCustomDomain %s task_id: %s",
+        "%s creating DNS record %s %s for LLMClientCustomDomain %s task_id: %s",
         logger_prefix + ".create_custom_domain_dns_record() task_id: %s",
         record_type,
         record_name,
