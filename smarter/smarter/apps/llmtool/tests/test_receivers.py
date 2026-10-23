@@ -66,6 +66,7 @@ class TestPluginReceivers(PluginAppTestBase):
         self.messages: list[str] = []
         # messages are formatted when they are logged, while the models they
         # describe still exist.
+        self.logger.debug.side_effect = self.log
         self.logger.info.side_effect = self.log
         self.logger.warning.side_effect = self.log
 

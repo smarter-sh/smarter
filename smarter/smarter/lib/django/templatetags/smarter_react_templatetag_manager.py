@@ -125,8 +125,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         self.app_name = app_name
         self.templatetag_name = templatetag_name
         self.entry_key = self.find_entry_key()
-        logger.info(
-            "%s[%s] %s is registered to React app '%s'",
+        logger.debug(
+            "%s[%s].__init__() %s is registered to React app '%s'",
             self.formatted_class_name,
             id(self),
             self.templatetag_name,

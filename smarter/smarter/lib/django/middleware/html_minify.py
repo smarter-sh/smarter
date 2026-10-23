@@ -176,13 +176,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
     logger.debug(
         "%s is %s",
-        formatted_text(__name__ + ".HTMLMinifyMiddleware"),
+        formatted_text(__name__) + ".HTMLMinifyMiddleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        formatted_text(__name__ + ".HTMLMinifyMiddleware"),
+        formatted_text(__name__) + ".HTMLMinifyMiddleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 

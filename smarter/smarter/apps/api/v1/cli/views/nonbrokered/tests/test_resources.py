@@ -20,7 +20,7 @@ from smarter.lib.journal.enum import (
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
-logger_prefix = logging.formatted_text(f"{__name__}.TestApiCliV1Resources")
+logger_prefix = f"{logging.formatted_text(__name__)}.TestApiCliV1Resources"
 
 # the exact keys that every resource dict returned by ApiV1CliResourcesApiView.dictionaryize()
 # is expected to contain.

@@ -67,7 +67,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_sql_plugin_logger_prefix = formatted_text(f"{HERE}.TestSAMSqlPlugin()")
+    test_sam_sql_plugin_logger_prefix = f"{formatted_text(HERE)}.TestSAMSqlPlugin()"
 
     @classmethod
     def setUpClass(cls):

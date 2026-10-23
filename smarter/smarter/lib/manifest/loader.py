@@ -712,14 +712,16 @@ class SAMLoader(SmarterHelperMixin):
 
         :return: None
         """
-        msg = (
-            f"{super().formatted_class_name}[{id(self)}] {self.manifest_kind} {self.name} "
-            f"loader is {self.loader_ready_state()}. source={self.source}"
+        log = logger.debug if self.ready else logger.warning
+        log(
+            "%s[%s].log_loader_state() %s %s loader is %s. source=%s",
+            super().formatted_class_name,
+            id(self),
+            self.manifest_kind,
+            self.name,
+            self.loader_ready_state(),
+            self.source,
         )
-        if self.ready:
-            logger.info(msg)
-        else:
-            logger.warning(msg)
 
     def to_json(self) -> SmarterDictType:
         """

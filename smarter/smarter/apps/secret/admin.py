@@ -33,7 +33,7 @@ class SecretAdminForm(forms.ModelForm):
 
     model = Secret
     list_display = ["name", "user_profile", "description", "expires_at", "value"]
-    logger_prefix = formatted_text(f"{__name__}.SecretAdminForm()")
+    logger_prefix = f"{formatted_text(__name__)}.SecretAdminForm()"
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)  # Expecting the user to be passed in via kwargs
@@ -98,7 +98,7 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     determined by ownership and role.
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SecretAdmin()")
+    logger_prefix = f"{formatted_text(__name__)}.SecretAdmin()"
     request: HttpRequest
     user: User
     user_profile: UserProfile

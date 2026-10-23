@@ -49,7 +49,7 @@ if smarter_settings.enable_dropzone_manifest_apply:
         path("", DropzoneView.as_view(), name=DropzoneReverseNames.dropzone),
         path("api/", include(api_urls, api_urls.namespace)),
     ]
-    logger.info(
+    logger.debug(
         "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
         logging.formatted_text(__name__),
         app_name,

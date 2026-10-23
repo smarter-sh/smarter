@@ -18,8 +18,8 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 def handle_api_request_initiated(sender, instance, request: Request, **kwargs):
     """Handle API request initiated signal."""
     logger.info(
-        "%s - %s - %s - %s - user: %s",
-        logging.formatted_text(f"{__name__}.api_request_initiated()"),
+        "%s %s - %s - %s - user: %s",
+        f"{logging.formatted_text(__name__)}.api_request_initiated()",
         instance.__class__.__name__,
         request.path,
         request.method,
@@ -32,8 +32,8 @@ def handle_api_request_completed(sender, instance, request: Request, response, *
     """Handle API request completed signal."""
 
     logger.info(
-        "%s - %s - %s - %s - user: %s",
-        logging.formatted_text(f"{__name__}.api_request_completed()"),
+        "%s %s - %s - %s - user: %s",
+        f"{logging.formatted_text(__name__)}.api_request_completed()",
         instance.__class__.__name__,
         request.path,
         request.method,
