@@ -36,7 +36,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.mcpclient.models.MCPClient
-    - smarter.apps.mcpclient.serializers.MCPClientSerializer
 """
 
 from typing import Callable
@@ -53,7 +52,6 @@ from smarter.lib.typing import SmarterDictType
 from .connection import MCPServerCatalog, MCPServerConnection, is_tool_allowed
 from .exceptions import SmarterMCPClientConnectionError
 from .models import MCPClient, MCPConnectionStatus
-from .serializers import MCPClientSerializer
 from .signals import mcpclient_connected, mcpclient_connection_failed
 
 logger = logging.getSmarterLogger(
@@ -66,11 +64,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_mcpclients_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[MCPClient]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = MCPClient.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching MCPClients: %s",
-        logger_prefix,
-        logging.formatted_json(MCPClientSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -111,11 +104,6 @@ def invalidate_cached_mcpclients_owned_by_user_profile(user_profile: UserProfile
 def _get_cached_mcpclients_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[MCPClient]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = MCPClient.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching MCPClients: %s",
-        logger_prefix,
-        logging.formatted_json(MCPClientSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -155,11 +143,6 @@ def invalidate_cached_mcpclients_shared_with_user_profile(user_profile: UserProf
 def _get_cached_mcpclients_available_to_user_profile(user_profile_id) -> models.QuerySet[MCPClient]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = MCPClient.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching MCPClients: %s",
-        logger_prefix,
-        logging.formatted_json(MCPClientSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -232,6 +215,14 @@ FAILURE_CACHE_TTL = 60
 """Seconds to remember that an MCP server could not be reached."""
 
 
+def _invalidate_mcpclient_listview() -> None:
+    """Make the MCPClient list's cached pages stale, since update() sends no post_save for its status columns."""
+    # pylint: disable=import-outside-toplevel
+    from smarter.lib.django.listview import invalidate_listview_cache
+
+    invalidate_listview_cache("MCPClient")
+
+
 def record_connection(mcpclient: MCPClient, catalog: MCPServerCatalog) -> None:
     """
     Record a successful connection in the MCPClient's status fields.
@@ -254,6 +245,7 @@ def record_connection(mcpclient: MCPClient, catalog: MCPServerCatalog) -> None:
     MCPClient.objects.filter(pk=mcpclient.pk).update(**values)
     for key, value in values.items():
         setattr(mcpclient, key, value)
+    _invalidate_mcpclient_listview()
 
 
 def record_connection_failure(mcpclient: MCPClient, error: str) -> None:
@@ -267,6 +259,7 @@ def record_connection_failure(mcpclient: MCPClient, error: str) -> None:
     MCPClient.objects.filter(pk=mcpclient.pk).update(**values)
     for key, value in values.items():
         setattr(mcpclient, key, value)
+    _invalidate_mcpclient_listview()
 
 
 def connect(mcpclient: MCPClient) -> MCPServerCatalog:

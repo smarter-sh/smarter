@@ -6,6 +6,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from smarter.lib import logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .caching import invalidate_all_cached_proxies_for_user_profile
@@ -55,3 +56,7 @@ def invalidate_proxy_caches(sender, instance: Proxy, **kwargs):
     # pylint: disable=broad-except
     except Exception as e:
         logger.warning("%s failed to invalidate the cached proxies of %s: %s", logger_prefix, instance, e)
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("Proxy", "proxy.Proxy", "provider.Provider", "secret.Secret")

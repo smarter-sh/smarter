@@ -15,6 +15,9 @@ experience for exploring both personal and shared llmclients made possible via
 Smarter's role-based access control, which makes it easy to find and interact
 with the resources you need—all without requiring a page reload or manual refresh.
 
+A list that you have seen before paints at once, from the browser's cache, while it asks the api
+for a fresh page, and the api answers from its own cache: see :doc:`../lib/django/listview`.
+
 .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/prompt-list-react-component.png
    :alt: Prompts Passthrough React Component Screenshot
    :class: screenshot

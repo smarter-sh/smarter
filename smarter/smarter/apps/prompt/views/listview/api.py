@@ -45,25 +45,20 @@ Example Endpoints
 
 from http import HTTPStatus
 
-from django.db import models
 from django.db.models import Q
 from django.http import HttpRequest
 from django.http.response import JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.caching import (
-    get_cached_llmclients_available_to_user_profile,
-    get_cached_llmclients_owned_by_user_profile,
-    get_cached_llmclients_shared_with_user_profile,
     invalidate_all_cached_llmclients_for_user_profile,
 )
+from smarter.apps.llmclient.const import LLMCLIENT_LISTVIEW_CACHE_KIND
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.serializers import LLMClientSerializer
 from smarter.common.conf import smarter_settings
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
+from smarter.lib.django.listview import SmarterListApiView
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -99,133 +94,34 @@ verbose_logger = logging.getSmarterLogger(
 )
 
 
-class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
+class PromptListApiView(SmarterListApiView):
     """
-    List API view for the Smarter workbench web console.
+    List API view of the LLMClients, for the Smarter workbench web console.
 
-    This view returns a paginated list of LLMClients accessible to the authenticated
-    user, supporting filters for owned, shared, or all LLMClients. Results are
-    cached for responsiveness, with optional cache invalidation. User
-    authentication is required.
+    It returns a page of the LLMClients that the authenticated user owns, that are shared with
+    them, or both, cached per user. See :class:`~smarter.lib.django.listview.SmarterListApiView`.
 
     Example URL Paths:
         /workbench/api/listview/
-        /workbench/api/listview/all/
         /workbench/api/listview/all/?page=1&page_size=50&invalidate_cache=false
-        /workbench/api/listview/owned/
         /workbench/api/listview/owned/?page=1&page_size=25&invalidate_cache=true
-        /workbench/api/listview/shared/
-        /workbench/api/listview/shared/?page=2&page_size=10&invalidate_cache=false
-
-    Features:
-        - Returns paginated LLMClients for the authenticated user.
-        - Supports filtering by 'owned', 'shared', or 'all'.
-        - Caches results for improved performance.
-        - Allows cache invalidation via request.
-        - Requires user authentication.
-
-    Methods:
-        post(request, *args, **kwargs):
-            Handles POST requests to retrieve LLMClients based on filters and
-            pagination.
-
-            Keyword Args:
-                ownership_filter (str, optional): 'owned', 'shared', or 'all'.
-                    Defaults to 'all'.
-                page (int, optional): Page number for pagination. Defaults to 1.
-                invalidate_cache (bool, optional): If true, invalidates cache
-                    before fetching results. Defaults to False.
-                page_size (int, optional): Number of LLMClients per page. Defaults
-                    to smarter.lib.django.pagination.DEFAULT_PAGE_SIZE.
-                search (str, optional): Text that the LLMClient's name or
-                    description contains.
-                ordering (str, optional): The column of SORT_FIELDS to sort
-                    by, or the column after a minus sign to sort it in
-                    descending order.
+        /workbench/api/listview/shared/?page=2&page_size=10&search=support&ordering=-name
+        /workbench/api/listview/all/?filter=pending
     """
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{PromptListApiView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
-        """
-        Handle POST requests to retrieve a list of LLMClients based on ownership filters and pagination.
-
-        The response includes the authenticated user's profile, an admin profile for reference,
-        and the list of LLMClients serialized as JSON.
-
-        :param request: The HTTP request object containing query parameters for filtering and pagination.
-        :type request: HttpRequest
-        :param args: Additional positional arguments (not used).
-        :param kwargs: Additional keyword arguments, including:
-
-            - ownership_filter (str, optional): Filter for LLMClients based on ownership. Can be 'owned', 'shared', or 'all'. Defaults to 'all'.
-            - page (int, optional): Page number for pagination. Defaults to 1.
-            - page_size (int, optional): Number of LLMClients to return per page. Defaults to :data:`~smarter.lib.django.pagination.DEFAULT_PAGE_SIZE`.
-            - search (str, optional): Text that the LLMClient's name or description contains, ignoring case.
-            - ordering (str, optional): The column of :data:`SORT_FIELDS` to sort by, e.g. ``provider``, or ``-provider`` to sort it in descending order. Defaults to the most recently updated first.
-            - invalidate_cache (bool, optional): If true, invalidates the cache for the user's LLMClients before fetching results. Defaults to False.
-
-        :returns: A JsonResponse containing the user's profile, an admin profile, a list of LLMClients based on the specified filters and pagination, and a description of the page (see :func:`~smarter.lib.django.pagination.paginate_listview`).
-        :rtype: JsonResponse
-        """
-
-        qs: models.QuerySet[LLMClient]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
-
-        logger.debug(
-            "%s.post() Received request with ownership_filter=%s, page=%s, page_size=%s, search=%s, ordering=%s, invalidate_cache=%s",
-            self.formatted_class_name,
-            ownership_filter,
-            request.GET.get("page"),
-            request.GET.get("page_size"),
-            request.GET.get("search"),
-            request.GET.get("ordering"),
-            invalidate_cache,
-        )
-
-        if invalidate_cache:
-            invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_llmclients_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_llmclients_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_llmclients_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        llmclients, pagination = paginate_listview(
-            request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS, filters=FILTERS
-        )
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMClientSerializer(llmclients, many=True, context={"request": request}).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = LLMClient
+    serializer_class = LLMClientSerializer
+    listview_cache_kind = LLMCLIENT_LISTVIEW_CACHE_KIND
+    sort_fields = SORT_FIELDS
+    filters = FILTERS
+    select_related = ("custom_domain",)
+    prefetch_related = (
+        "llmclientextensions_set__extension",
+        "llmclientplugin_set__plugin_meta",
+        "llmclientmcpclients_set__mcpclient",
+        "llmclientguardrails_set__guardrail",
+        "llmclientapikey_set__api_key",
+    )
 
 
 class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):

@@ -27,7 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.llmtool.models.PluginMeta
-    - smarter.apps.llmtool.serializers.PluginMetaSerializer
 """
 
 from django.db import models
@@ -38,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import PluginMeta
-from .serializers import PluginMetaSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -50,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_plugins_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[PluginMeta]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = PluginMeta.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching PluginMetas owned by user: %s",
-        logger_prefix,
-        logging.formatted_json(PluginMetaSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -95,11 +88,6 @@ def invalidate_cached_plugins_owned_by_user_profile(user_profile: UserProfile) -
 def _get_cached_plugins_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[PluginMeta]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = PluginMeta.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching PluginMetas shared with user: %s",
-        logger_prefix,
-        logging.formatted_json(PluginMetaSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -139,11 +127,6 @@ def invalidate_cached_plugins_shared_with_user_profile(user_profile: UserProfile
 def _get_cached_plugins_available_to_user_profile(user_profile_id) -> models.QuerySet[PluginMeta]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = PluginMeta.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching PluginMetas available to user: %s",
-        logger_prefix,
-        logging.formatted_json(PluginMetaSerializer(retval, many=True).data),
-    )
     return retval
 
 

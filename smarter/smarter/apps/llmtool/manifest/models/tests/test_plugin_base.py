@@ -324,7 +324,11 @@ class TestPluginBase(TestAccountMixin):
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_delete")
         plugin_deleted.connect(self.plugin_deleted_signal_handler, dispatch_uid="plugin_deleted_test_delete")
 
-        plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
+        # an earlier test may have left the plugin, and an unchanged plugin sends neither
+        # plugin_created nor plugin_updated, so its description is made new.
+        data = copy.deepcopy(self.data)
+        data[SAMKeys.METADATA.value]["description"] = f"test_delete {self.hash_suffix}"
+        plugin = self.plugin_class(user_profile=self.user_profile, data=data)
         plugin_id = plugin.id
         plugin.delete()
 

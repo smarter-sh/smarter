@@ -13,4 +13,9 @@ describe("WorkbenchHelp", () => {
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
+
+  it("is hidden on phones, below Bootstrap's md breakpoint", () => {
+    render(<WorkbenchHelp title="Secrets" icon="ki-book-open" docsUrl="https://docs.example.com/" helpText="Help." />);
+    expect(screen.getByTestId("workbench-help")).toHaveClass("d-none", "d-md-block");
+  });
 });

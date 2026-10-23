@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { server } from "@test/server";
 
-import { makeCacheKey, writeCache } from "../../lib/cache";
+import { makeCacheKey, readCache, sessionScope, writeCache } from "../../lib/cache";
 import { API_URL, exampleContext, exampleContextWithOtherTab, sessionContext } from "../../mocks/example";
 import { examplePage, listErrorHandlers, listHandlers, manyExamples, otherHandler } from "../../mocks/handlers";
 import TabbedListView from "./Component";
@@ -13,6 +13,11 @@ import TabbedListView from "./Component";
 /** The rows of the example list view. */
 function rows() {
   return within(screen.getByRole("list", { name: "Examples" })).getAllByRole("listitem");
+}
+
+/** The cache key of a page of a tab, as the list writes it. */
+function key(tab: string, query: { page?: number; ordering?: string; filter?: string } = {}) {
+  return makeCacheKey(API_URL, tab, query, sessionScope(sessionContext));
 }
 
 function setup() {
@@ -53,17 +58,22 @@ describe("TabbedListView", () => {
     await vi.waitFor(() => expect(filters).toEqual(["even", "even", "", ""]));
   });
 
-  it("neither shows nor writes the unfiltered cache while a filter applies", async () => {
+  it("caches a filtered page apart from the unfiltered one", async () => {
     server.use(
       http.post(`${API_URL}:tab/`, ({ request }) => HttpResponse.json(examplePage(manyExamples(4), request.url))),
     );
-    writeCache(makeCacheKey(API_URL, "owned"), [{ id: 9, name: "cached_example" }]);
+    writeCache(key("owned"), [{ id: 9, name: "cached_example" }]);
     window.history.replaceState(null, "", "/?filter=even");
     setup();
     expect(screen.queryByText("cached_example")).not.toBeInTheDocument();
     expect(await screen.findByText("example_2")).toBeInTheDocument();
-    const cached = JSON.parse(sessionStorage.getItem(makeCacheKey(API_URL, "owned")) ?? "{}");
-    expect(cached.objects).toEqual([{ id: 9, name: "cached_example" }]);
+    expect(readCache(key("owned"))?.objects).toEqual([{ id: 9, name: "cached_example" }]);
+    await vi.waitFor(() =>
+      expect(readCache<{ name: string }>(key("owned", { filter: "even" }))?.objects.map((o) => o.name)).toEqual([
+        "example_2",
+        "example_4",
+      ]),
+    );
   });
 
   it("drops a filter that the list api doesn't offer", async () => {
@@ -99,11 +109,33 @@ describe("TabbedListView", () => {
     expect(sessionStorage.getItem("viewMode")).toBe("thumbnail");
   });
 
-  it("shows cached objects at once", () => {
+  it("shows cached objects at once, refreshing them", async () => {
     server.use(...listHandlers());
-    writeCache(makeCacheKey(API_URL, "owned"), [{ id: 9, name: "cached_example" }]);
+    writeCache(key("owned"), [{ id: 9, name: "cached_example" }]);
     setup();
     expect(screen.getByText("cached_example")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Refreshing" })).toBeInTheDocument();
+    expect(await screen.findByText("first_example")).toBeInTheDocument();
+    expect(screen.queryByText("cached_example")).not.toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "Refreshing" })).not.toBeInTheDocument();
+  });
+
+  it("shows a page seen before at once, when paging back to it", async () => {
+    server.use(
+      http.post(`${API_URL}:tab/`, async ({ request }) => {
+        await delay(200);
+        return HttpResponse.json(examplePage(manyExamples(12), request.url, 10));
+      }),
+    );
+    const user = setup();
+    expect(await screen.findByText("example_1")).toBeInTheDocument();
+    await vi.waitFor(() => expect(readCache(key("owned"))).not.toBeNull());
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(await screen.findByText("example_11")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Previous page" }));
+    // from the cache, before the 200 ms response.
+    expect(screen.getByText("example_1")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Refreshing" })).toBeInTheDocument();
   });
 
   it("queries again, invalidating the backend's cache", async () => {
@@ -237,7 +269,7 @@ describe("TabbedListView", () => {
     expect(requests.at(-1)).toMatch(/:1:$/);
   });
 
-  it("does not cache a sorted page, and queries again in the same order", async () => {
+  it("caches a sorted page apart from the default order, and queries again in the same order", async () => {
     const orderings: string[] = [];
     server.use(
       http.post(`${API_URL}:tab/`, ({ request }) => {
@@ -251,8 +283,10 @@ describe("TabbedListView", () => {
     await user.click(await screen.findByRole("button", { name: "Name" }));
     expect(await screen.findByText("example_9")).toBeInTheDocument();
     expect(rows()[0]).toHaveTextContent("example_9");
-    const cached = JSON.parse(sessionStorage.getItem(makeCacheKey(API_URL, "owned")) ?? "{}");
-    expect(cached.objects[0].name).toBe("example_1");
+    expect(readCache<{ name: string }>(key("owned"))?.objects[0].name).toBe("example_1");
+    await vi.waitFor(() =>
+      expect(readCache<{ name: string }>(key("owned", { ordering: "-name" }))?.objects[0].name).toBe("example_9"),
+    );
 
     await vi.waitFor(() => expect(orderings.filter((ordering) => ordering === "-name")).toHaveLength(2));
     orderings.length = 0;
@@ -266,8 +300,7 @@ describe("TabbedListView", () => {
     await screen.findByText("example_1");
     await user.type(screen.getByRole("searchbox", { name: "Search" }), "example_3");
     expect(await screen.findByText("Showing 1–2 of 2")).toBeInTheDocument();
-    const cached = JSON.parse(sessionStorage.getItem(makeCacheKey(API_URL, "owned")) ?? "{}");
-    expect(cached.objects).toHaveLength(10);
+    expect(readCache(key("owned"))?.objects).toHaveLength(10);
   });
 
   it("shows only the latest search, when an earlier one responds later", async () => {

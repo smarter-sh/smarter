@@ -27,7 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.proxy.models.Proxy
-    - smarter.apps.proxy.serializers.ProxySerializer
 """
 
 from django.db import models
@@ -38,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Proxy
-from .serializers import ProxySerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -50,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_proxies_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[Proxy]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Proxy.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching Proxies owned by user: %s",
-        logger_prefix,
-        logging.formatted_json(ProxySerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -95,11 +88,6 @@ def invalidate_cached_proxies_owned_by_user_profile(user_profile: UserProfile) -
 def _get_cached_proxies_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[Proxy]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Proxy.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching Proxies shared with user: %s",
-        logger_prefix,
-        logging.formatted_json(ProxySerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -139,11 +127,6 @@ def invalidate_cached_proxies_shared_with_user_profile(user_profile: UserProfile
 def _get_cached_proxies_available_to_user_profile(user_profile_id) -> models.QuerySet[Proxy]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Proxy.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching Proxies available to user: %s",
-        logger_prefix,
-        logging.formatted_json(ProxySerializer(retval, many=True).data),
-    )
     return retval
 
 

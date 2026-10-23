@@ -6,6 +6,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from smarter.lib import logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import LLMHost, LLMHostCompute
@@ -56,3 +57,8 @@ def llmhost_compute_deleted(sender, instance: LLMHostCompute, **kwargs):
         logger.info("%s - deleted the node group of %s", prefix, instance)
     except LLMHostComputeError as e:
         logger.error("%s - the node group of %s was not deleted: %s", prefix, instance, e)
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("LLMHost", "llmhost.LLMHost", "llmhost.LLMHostCompute")
+connect_listview_cache("LLMHostCompute", "llmhost.LLMHostCompute", "llmhost.LLMHost")
