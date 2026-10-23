@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.11...v0.36.12-alpha.1) (2026-10-23)
+
+### Bug Fixes
+
+* **react:** hide the list views' intro box on phones ([577e55a](https://github.com/smarter-sh/smarter/commit/577e55a3640b1f0c313c457998325827422e38e1))
+
+### Performance
+
+* **listview:** cache list pages per user and remove per-row queries ([b7377d8](https://github.com/smarter-sh/smarter/commit/b7377d8ad815bd323e2dc04b9ffb26f4567a1498))
+
 ## [0.36.11](https://github.com/smarter-sh/smarter/compare/v0.36.10...v0.36.11) (2026-10-22)
 
 ### Bug Fixes
