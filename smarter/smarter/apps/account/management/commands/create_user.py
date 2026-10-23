@@ -199,7 +199,7 @@ class Command(SmarterCommand):
         except Exception as e:
             raise CommandError(f"Error saving user {username}: {str(e)}")
 
-        self.handle_completed_success(msg=f"User {username} {email} has been {'created' if created else 'updated'}.")
+        self.stdout.write(f"User {username} {email} has been {'created' if created else 'updated'}.")
 
         if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
             # Send email to user, in the language of the welcome email.
@@ -254,8 +254,8 @@ class Command(SmarterCommand):
             raise CommandError(f"Error creating user profile for user {username}: {str(e)}")
 
         if created:
-            self.handle_completed_success(
-                msg=f"User profile created for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}."
+            self.stdout.write(
+                f"User profile created for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}."
             )
 
         try:
@@ -263,14 +263,13 @@ class Command(SmarterCommand):
             account_contact.first_name = first_name
             account_contact.last_name = last_name
             account_contact.save()
-            self.handle_completed_success(msg="smarter.apps.account.management.commands.create_user completed.")
         except AccountContact.DoesNotExist:
             try:
                 AccountContact(account=account, first_name=first_name, last_name=last_name, email=email).save(
                     language=language
                 )
-                self.handle_completed_success(
-                    msg=f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
+                self.stdout.write(
+                    f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
                 )
             # pylint: disable=broad-except
             except Exception as e:
@@ -279,7 +278,7 @@ class Command(SmarterCommand):
         except Exception as e:
             raise CommandError(f"Error creating account contact for user {username}: {str(e)}")
 
-        self.handle_completed_success(msg="create_user command completed successfully.")
+        self.handle_completed_success()
         return True
 
     def add_arguments(self, parser):

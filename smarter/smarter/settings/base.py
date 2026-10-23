@@ -1587,6 +1587,14 @@ LOGGING = {
             "level": smarter_settings.log_level_name,
             "propagate": True,
         },
+        "boto3": {
+            "level": "WARNING",
+            "propagate": True,
+        },
+        "botocore": {
+            "level": "WARNING",
+            "propagate": True,
+        },
     },
 }
 """
@@ -1641,6 +1649,11 @@ asyncio
 celery, celery.task
     Both propagate to the root logger and use the same log level as the rest
     of the application.
+boto3, botocore
+    WARNING. Their INFO records (``Found credentials in environment variables.``, on
+    every AWS client) and their DEBUG records (every request and response) say nothing
+    an operator needs, and the root logger's DEBUG level would otherwise send them all
+    to the redis handler.
 
 Log Level
 ---------

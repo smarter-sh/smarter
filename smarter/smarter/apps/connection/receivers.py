@@ -47,18 +47,15 @@ prefix = formatted_text(__name__) + "."
 def handle_api_connection_saved(sender, instance, created, **kwargs):
     """Handle API connection saved signal."""
 
-    if created:
-        logger.info(
-            "%s %s",
-            prefix + "post_save() ApiConnection() created",
-            formatted_json(model_to_dict(instance)),
-        )
-    else:
-        logger.info(
-            "%s %s",
-            prefix + "post_save() ApiConnection() updated",
-            formatted_json(model_to_dict(instance)),
-        )
+    logger.info(
+        "%shandle_api_connection_saved() ApiConnection %s %s",
+        prefix,
+        instance.name,
+        "created" if created else "updated",
+    )
+    # the whole row is only for a developer tracing a flow, and formatted_json() is costly.
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%shandle_api_connection_saved() %s", prefix, formatted_json(model_to_dict(instance)))
 
 
 @receiver(post_save, sender=SqlConnection)
@@ -66,20 +63,15 @@ def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwar
     """Handle SQL connection saved signal."""
 
     user_profile = str(instance.user_profile) if instance.user_profile else "(user_profile is missing)"
-    if created:
-        logger.info(
-            "%s %s %s",
-            prefix + "post_save() SqlConnection() created",
-            user_profile,
-            formatted_json(model_to_dict(instance)),
-        )
-    else:
-        logger.info(
-            "%s %s %s",
-            prefix + "post_save() SqlConnection() updated",
-            user_profile,
-            formatted_json(model_to_dict(instance)),
-        )
+    logger.info(
+        "%shandle_sql_connection_saved() SqlConnection %s %s for %s",
+        prefix,
+        instance.name,
+        "created" if created else "updated",
+        user_profile,
+    )
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%shandle_sql_connection_saved() %s", prefix, formatted_json(model_to_dict(instance)))
 
 
 def masked_dict(dic: SmarterDictType) -> SmarterDictType:
