@@ -21819,7 +21819,7 @@
     },
     "securitySchemes": {
       "ApiKeyAuth": {
-        "description": "An api key, as: Token <api key>.",
+        "description": "An api key, as: `Token <api key>`.",
         "in": "header",
         "name": "Authorization",
         "type": "apiKey"
@@ -21840,7 +21840,6 @@
     "title": "Smarter api",
     "version": "v1"
   },
-  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "openapi": "3.1.0",
   "paths": {
     "/accounts/": {

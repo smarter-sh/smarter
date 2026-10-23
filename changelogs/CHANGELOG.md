@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.17](https://github.com/smarter-sh/smarter/compare/v0.36.16...v0.36.17) (2026-10-23)
+
+### Bug Fixes
+
+* **account:** identify user profiles by pk and mask their company name ([3ed579d](https://github.com/smarter-sh/smarter/commit/3ed579d0e78ae8f9a31195edd4b7926deda0479f))
+
+### Refactoring
+
+* **docs:** replace drf-yasg with scalar and the openapi contract ([3c0c952](https://github.com/smarter-sh/smarter/commit/3c0c9522ba580ad24576d5713615c5817f56522f))
+
 ## [0.36.16](https://github.com/smarter-sh/smarter/compare/v0.36.15...v0.36.16) (2026-10-23)
 
 ### Bug Fixes

@@ -1,12 +1,11 @@
 """Test Api v1 CLI commands for secret."""
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Optional, Union
 from urllib.parse import urlencode
 
-import pytz
 from dateutil.relativedelta import relativedelta
 from django.db.models.signals import post_delete
 
@@ -61,7 +60,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
 
         self.secret_description = "TestApiCliV1Secret test description of the secret"
         self.secret_value = "testSecretValue_" + self.hash_suffix
-        self.secret_expiration = datetime.now(tz=pytz.UTC) + relativedelta(months=6)
+        self.secret_expiration = datetime.now(tz=timezone.utc) + relativedelta(months=6)
 
     def tearDown(self):
         try:

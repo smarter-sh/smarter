@@ -13,5 +13,4 @@ Views
    views/logs
    views/manifest
    views/schema
-   views/swagger
    views/undeploy

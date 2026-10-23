@@ -133,7 +133,6 @@ django==6.0.9
     #   django-timezone-field
     #   django-waffle
     #   djangorestframework
-    #   drf-yasg
     #   social-auth-app-django
 django-celery-beat==2.9.0
     # via -r smarter/requirements/in/base.in
@@ -161,14 +160,11 @@ djangorestframework==3.18.3
     # via
     #   -r smarter/requirements/in/base.in
     #   django-rest-knox
-    #   drf-yasg
 dnspython==2.9.0
     # via
     #   -r smarter/requirements/in/base.in
     #   email-validator
 docutils==0.23
-    # via -r smarter/requirements/in/base.in
-drf-yasg==1.21.18
     # via -r smarter/requirements/in/base.in
 email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
@@ -230,14 +226,10 @@ idna==3.20
     #   tldextract
     #   url-normalize
     #   yarl
-importlib-resources==7.1.0
-    # via swagger-spec-validator
 inflect==7.5.0
     # via -r smarter/requirements/in/base.in
 inflection==0.5.1
-    # via
-    #   -r smarter/requirements/in/base.in
-    #   drf-yasg
+    # via -r smarter/requirements/in/base.in
 invoke==3.0.3
     # via paramiko
 jh2==5.0.15
@@ -255,9 +247,7 @@ jsonpatch==1.36
 jsonpointer==3.4
     # via jsonpatch
 jsonschema==4.26.0
-    # via
-    #   mcp
-    #   swagger-spec-validator
+    # via mcp
 jsonschema-specifications==2025.9.1
     # via jsonschema
 kombu==5.6.2
@@ -356,7 +346,6 @@ ormsgpack==1.13.0
     # via langgraph-checkpoint
 packaging==26.3
     # via
-    #   drf-yasg
     #   kombu
     #   langchain-core
     #   langsmith
@@ -445,14 +434,10 @@ python-multipart==0.0.32
     # via mcp
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2026.5
-    # via drf-yasg
 pyyaml==6.0.3
     # via
     #   -r smarter/requirements/in/base.in
-    #   drf-yasg
     #   langchain-core
-    #   swagger-spec-validator
 qdrant-client==1.19.1
     # via
     #   -r smarter/requirements/in/base.in
@@ -537,8 +522,6 @@ starlette==1.9.0
     # via
     #   mcp
     #   sse-starlette
-swagger-spec-validator==3.0.4
-    # via drf-yasg
 tenacity==9.1.4
     # via
     #   celery-redbeat
@@ -581,7 +564,6 @@ typing-extensions==4.16.0
     #   pydantic
     #   pydantic-core
     #   pydantic-settings
-    #   swagger-spec-validator
     #   typeguard
     #   typing-inspection
 typing-inspection==0.4.4
@@ -595,8 +577,6 @@ tzdata==2026.5
     #   kombu
 tzlocal==5.4.4
     # via celery
-uritemplate==4.2.0
-    # via drf-yasg
 url-normalize==3.0.1
     # via requests-cache
 urllib3==2.8.0

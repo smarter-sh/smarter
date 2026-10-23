@@ -152,6 +152,14 @@ class TestUserProfile(TestAccountMixin):
         self.assertNotIn(email, str(self.user_profile))
         self.assertIn("@" + email.partition("@")[2], str(self.user_profile))
 
+    def test_str_identifies_the_row_and_masks_the_company_name(self):
+        """The string form starts with the pk, and masks the company name."""
+        company_name = self.user_profile.account.company_name
+        self.assertTrue(company_name)
+        masked = self.user_profile.mask_string(company_name)
+        self.assertTrue(str(self.user_profile).startswith(f"pk={self.user_profile.pk} {masked}-"))
+        self.assertNotIn(company_name, str(self.user_profile))
+
     def test_repr(self):
         """
         Test the `__repr__` method.

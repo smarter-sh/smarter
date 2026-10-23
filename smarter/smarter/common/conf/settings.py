@@ -327,67 +327,6 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"admin_password of type {type(v)} is not a SecretStr")
         return v
 
-    api_description: str = Field(
-        settings_defaults.API_DESCRIPTION,
-        description="The description of the API.",
-        examples=["A declarative AI resource management platform and developer framework"],
-        title="API Description",
-    )
-    """
-    The description of the API.
-
-    This setting provides a brief description of the API's purpose and functionality.
-    It is used in various contexts, such as Swagger Api documentation site, logging, and user interfaces.
-    :type: str
-    :default: Value from ``settings_defaults.API_DESCRIPTION``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    @before_field_validator("api_description")
-    def validate_api_description(cls, v: str) -> str:
-        """Validates the `api_description` field.
-
-        Args:
-            v (str): The API description value to validate.
-
-        Returns:
-            str: The validated API description.
-        """
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"api_description of type {type(v)} is not a string.")
-        return v
-
-    api_name: str = Field(
-        settings_defaults.API_NAME,
-        description="The name of the API.",
-        examples=["Smarter API", "My Custom API"],
-        title="API Name",
-    )
-    """
-    The name of the API.
-
-    This setting specifies the name of the API used in various contexts,
-    such as Swagger Api documentation site, logging, and user interfaces.
-
-    :type: str
-    :default: Value from ``settings_defaults.API_NAME``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    @before_field_validator("api_name")
-    def validate_api_name(cls, v: str) -> str:
-        """Validates the `api_name` field.
-
-        Args:
-            v (str): The API name value to validate.
-
-        Returns:
-            str: The validated API name.
-        """
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"api_name of type {type(v)} is not a string.")
-        return v
-
     @cached_property
     def api_schema(self) -> str:
         """

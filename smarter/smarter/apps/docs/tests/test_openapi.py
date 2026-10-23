@@ -32,13 +32,22 @@ class TestDocsOpenApi(SmarterTestBase):
         self.assertEqual({**document, "servers": committed["servers"]}, committed)
 
     def test_page(self):
-        """The page renders the document with Swagger UI, and links to it."""
+        """The page renders the document with Scalar, and links to it."""
         response = self.client.get(reverse(DocsReverseNames.namespace, DocsReverseNames.openapi))
         self.assertEqual(response.status_code, HTTPStatus.OK)
         html = response.content.decode()
         json_url = reverse(DocsReverseNames.namespace, DocsReverseNames.openapi_json)
         self.assertIn(f'url: "{json_url}"', html)
-        self.assertIn("swagger-ui-bundle.js", html)
+        self.assertIn("assets/plugins/custom/scalar/standalone.js", html)
+        # Scalar calls none of its own services: see static/assets/plugins/custom/scalar/README.md.
+        for setting in (
+            'proxyUrl: ""',
+            "telemetry: false",
+            "withDefaultFonts: false",
+            'showDeveloperTools: "never"',
+            "agent: { disabled: true }",
+        ):
+            self.assertIn(setting, html)
         self.assertIn("Download openapi.json", html)
 
     def test_sidebar(self):
