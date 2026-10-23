@@ -25,7 +25,7 @@ consistent design that is worth taking apart:
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/views/base.py>`__
   that maps every exception to a status code and one JSON error format; and a :doc:`journal
   </smarter-platform/smarter-journal>` of every request and response.
-- **Self-describing.** Swagger and ReDoc pages generated with drf-yasg, a JSON Schema and an example
+- **Self-describing.** A typed OpenAPI 3.1 contract generated from its Pydantic models, a JSON Schema and an example
   manifest for every kind, served by the API itself, and a chat API whose `Pydantic contract
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/models.py>`__
   is exported as a JSON Schema and tested to be current.

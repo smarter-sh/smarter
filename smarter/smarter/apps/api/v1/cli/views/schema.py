@@ -1,16 +1,7 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'schema' view."""
 
-from http import HTTPStatus
-
-from drf_yasg.utils import swagger_auto_schema
-
 from .base import CliBaseApiView
-from .swagger import (
-    COMMON_SWAGGER_PARAMETERS,
-    COMMON_SWAGGER_RESPONSES,
-    openai_success_response,
-)
 
 
 class ApiV1CliSchemaApiView(CliBaseApiView):
@@ -38,44 +29,30 @@ class ApiV1CliSchemaApiView(CliBaseApiView):
         this_class = f".{ApiV1CliSchemaApiView.__name__}[{id(self)}]"
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
-    @swagger_auto_schema(
-        operation_description="""
-Executes the 'schema' command for all Smarter resources.  The resource name is passed in the url query parameters.
-
-This is the API endpoint for the 'schema' command in the Smarter command-line interface (CLI). The 'schema'
-command is a Smarter Brokered and Journaled operation that is used with all Smarter resources.
-
-The client making the HTTP request to this endpoint is expected to be the Smarter CLI, written in
-Golang and available on Windows, macOS, and Linux, or the Smarter web console /docs/
-
-The response from this endpoint is a JSON object containing the published JSON schema.
-""",
-        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Schema generated successfully")},
-        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
-    )
     def post(self, request, kind: str, *args, **kwargs):
+        """
+        Return the JSON Schema of a kind's manifest.
+
+        Brokered and journaled.
+
+        :param request: The request.
+        :param kind: The resource's kind, e.g. ``LLMClient``.
+        :returns: The journaled json response.
+        """
         if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         return self.broker.schema(request=request, kwargs=kwargs)
 
-    @swagger_auto_schema(
-        operation_description="""
-Executes the 'schema' command for all Smarter resources.  The resource name is passed in the url query parameters.
-
-This is the API endpoint for the 'schema' command in the Smarter command-line interface (CLI). The 'schema'
-command is a Smarter Brokered and Journaled operation that is used with all Smarter resources.
-
-The client making the HTTP request to this endpoint is expected to be the Smarter CLI, written in
-Golang and available on Windows, macOS, and Linux, or the Smarter web console /docs/
-
-The response from this endpoint is a JSON object containing the published JSON schema.
-
-This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
-""",
-        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Schema retrieved successfully")},
-        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"], COMMON_SWAGGER_PARAMETERS["name_query_param"]],
-    )
     def get(self, request, kind: str, *args, **kwargs):
+        """
+        Return the JSON Schema of a kind's manifest.
+
+        Brokered and journaled.
+
+        :param request: The request.
+        :param kind: The resource's kind, e.g. ``LLMClient``.
+        :returns: The journaled json response.
+        """
         if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         response = self.broker.schema(request=request, kwargs=kwargs)

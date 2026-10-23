@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 10:13+0000\n"
+"POT-Creation-Date: 2026-10-23 17:23+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -1717,15 +1717,6 @@ msgid "API"
 msgstr "API"
 
 #: smarter/templates/cms/base/menu/api.html
-msgid "Swagger"
-msgstr "Swagger"
-
-#: smarter/templates/cms/base/menu/api.html
-#: smarter/templates/dashboard/sidebar.html
-msgid "Redoc"
-msgstr "Redoc"
-
-#: smarter/templates/cms/base/menu/api.html
 #: smarter/templates/dashboard/sidebar.html
 msgid "OpenAPI Contract"
 msgstr "Contrato OpenAPI"
@@ -1896,10 +1887,6 @@ msgstr "Site do projeto"
 #: smarter/templates/docs/manifests.html
 msgid "Example Manifests"
 msgstr "Manifestos de exemplo"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Swagger Api Docs"
-msgstr "Documentação da API no Swagger"
 
 #: smarter/templates/dashboard/sidebar.html
 msgid "Json Schemas"
@@ -2200,6 +2187,15 @@ msgstr "JSON Schemas do SAM"
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr "Sobre o contrato"
+
+#~ msgid "Swagger"
+#~ msgstr "Swagger"
+
+#~ msgid "Redoc"
+#~ msgstr "Redoc"
+
+#~ msgid "Swagger Api Docs"
+#~ msgstr "Documentação da API no Swagger"
 
 #~ msgid "Change Profile Image"
 #~ msgstr "Alterar foto de perfil"

@@ -45,8 +45,6 @@ def sitemap_pages() -> list[tuple[str, str]]:
         (reverse(docs, DocsReverseNames.example_manifests), "0.8"),
         (reverse(docs, DocsReverseNames.json_schemas), "0.8"),
         (reverse(docs, DocsReverseNames.openapi), "0.8"),
-        (reverse(docs, DocsReverseNames.swagger_docs), "0.8"),
-        (reverse(docs, DocsReverseNames.redoc), "0.8"),
         (reverse(docs, DocsReverseNames.developer_readme), "0.6"),
         (reverse(docs, DocsReverseNames.developer_changelog), "0.6"),
         (reverse(docs, DocsReverseNames.developer_code_of_conduct), "0.6"),

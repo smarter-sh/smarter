@@ -100,7 +100,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 8
      - **Generated reference.** Autodoc for Django models with ``sphinxcontrib_django``, Pydantic
-       models with ``autodoc_pydantic``, type hints with ``sphinx_autodoc_typehints``, and Swagger
+       models with ``autodoc_pydantic``, type hints with ``sphinx_autodoc_typehints``, and OpenAPI
        for APIs.
    * - 3
      - Lecture 9
