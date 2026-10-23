@@ -137,6 +137,21 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
             ApiConnection.objects.filter(name="test_api_connection", user_profile=self.user_profile).exists()
         )
 
+    def test_apply_unchanged_manifest_does_not_save(self):
+        """Test that re-applying an unchanged manifest leaves the row alone, and that a changed field is saved."""
+        self.apply_manifest()
+        self.addCleanup(ApiConnection.objects.filter(name="test_api_connection", user_profile=self.user_profile).delete)
+        with patch.object(ApiConnection, "save") as save:
+            self.apply_manifest()
+        save.assert_not_called()
+
+        connection = self.broker.connection
+        connection.timeout = connection.timeout + 1  # type: ignore[union-attr]
+        connection.save()  # type: ignore[union-attr]
+        self.apply_manifest()
+        connection.refresh_from_db()  # type: ignore[union-attr]
+        self.assertEqual(connection.timeout, self.broker.manifest.spec.connection.timeout)  # type: ignore[union-attr]
+
     def test_not_implemented(self):
         """Test that deploy(), undeploy(), prompt() and logs() are not implemented."""
         for method in (self.broker.deploy, self.broker.undeploy, self.broker.prompt, self.broker.logs):
