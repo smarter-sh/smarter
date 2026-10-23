@@ -105,7 +105,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Errors, versioning and documentation.** Smarter's
        :doc:`error format </smarter-framework/smarter-api/error-handling>`,
        :doc:`API versioning </adr/023-api-versioning>`, the absence of DRF throttling and what
-       Smarter uses instead, and Swagger.
+       Smarter uses instead, and its OpenAPI contract.
    * - 2
      - Live session 2
      - Review of Assignment 1. Live trace of an ``apply`` request with a debugger. Start

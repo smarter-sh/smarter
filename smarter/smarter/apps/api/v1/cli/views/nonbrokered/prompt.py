@@ -8,7 +8,6 @@ from typing import Any, Optional
 from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.views.decorators.csrf import csrf_exempt
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
@@ -38,12 +37,6 @@ from smarter.lib.manifest.enum import SAMMetadataKeys, SCLIResponseGet
 from smarter.lib.typing import SmarterDictType
 
 from ..base import APIV1CLIViewError, CliBaseApiView
-from ..swagger import (
-    COMMON_SWAGGER_PARAMETERS,
-    COMMON_SWAGGER_RESPONSES,
-    CliChatSerializer,
-    openai_success_response,
-)
 
 # for establishing a lifetime for prompt sessions. we create a session_key, then cache it
 # and reuse it until it eventually expires.
@@ -559,39 +552,21 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             SmarterValidator.validate_session_key(session_key=session_key)
 
     # pylint: disable=too-many-locals
-    @swagger_auto_schema(
-        operation_description="""
-Sends a prompt to an LLMClient, and returns its chat completion. This is a non-brokered operation.
-
-Chats are sticky sessions. The platform caches the session's key under the client's uid for 24 hours,
-so that the next prompt from the same client continues the same chat, unless new_session is true.
-
-Url parameters:
-- name: the LLMClient's name. It must belong to, or be shared with, the api key's account.
-
-Query parameters:
-- uid: required. A unique identifier of the client, e.g. a combination of the machine's MAC address and its hostname.
-- new_session: optional. true starts a new chat session. The default is false.
-
-Request body, as JSON (Content-Type: application/json):
-- prompt: required. The user's message.
-- session_key: optional. The chat session to continue. By default, the session that the uid used last.
-- messages: optional. The chat's earlier messages, to which the prompt is added. By default, a new chat.
-
-The response's data has the request that the platform sent to the LLMClient, and the LLMClient's response,
-whose body is decoded from a JSON string. See the Smarter api's OpenAPI document,
-smarter/smarter/apps/api/v1/contract/openapi.json, operation prompt.
-""",
-        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Prompt generated successfully")},
-        request_body=CliChatSerializer,
-        manual_parameters=[
-            COMMON_SWAGGER_PARAMETERS["llmclient_name"],
-            COMMON_SWAGGER_PARAMETERS["uid"],
-            COMMON_SWAGGER_PARAMETERS["new_session"],
-        ],
-    )
     @csrf_exempt
     def post(self, request, name, *args, **kwargs):
+        """
+        Send a prompt to an LLMClient, and return its chat completion.
+
+        Non-brokered.
+
+        Chats are sticky: the platform caches the session's key under the client's ``uid`` query
+        parameter, so that the next prompt continues the chat, unless ``new_session`` is true. The
+        request and response are the ``prompt`` operation of the Smarter api's OpenAPI document.
+
+        :param request: The request, whose json body has the ``prompt``.
+        :param name: The LLMClient's name.
+        :returns: The journaled json response.
+        """
 
         # validate the llmclient name, as this is the next most likely point of failure
         try:

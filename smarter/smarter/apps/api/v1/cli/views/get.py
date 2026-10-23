@@ -1,18 +1,10 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'get' view."""
 
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import CliBaseApiView
-from .swagger import (
-    COMMON_SWAGGER_PARAMETERS,
-    COMMON_SWAGGER_RESPONSES,
-    EXAMPLE_GET_RESPONSE,
-)
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
@@ -37,28 +29,16 @@ class ApiV1CliGetApiView(CliBaseApiView):
         this_class = f".{ApiV1CliGetApiView.__name__}[{id(self)}]"
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
-    @swagger_auto_schema(
-        operation_description="""
-Executes the 'get' command for Smarter resources using a YAML manifest in the smarter.sh/v1 format.
-
-This is the API endpoint for the 'get' command in the Smarter command-line interface (CLI). The 'get' command is a Smarter Brokered and Journaled operation that is used with all Smarter resources. Get criteria is passed as url query parameters.
-
-The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
-
-The response from this endpoint is a JSON object.
-
-This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
-""",
-        responses={
-            **COMMON_SWAGGER_RESPONSES,
-            200: openapi.Response(
-                description="Got resources successfully",
-                examples=EXAMPLE_GET_RESPONSE,
-            ),
-        },
-        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
-    )
     def post(self, request, kind: str, *args, **kwargs):
+        """
+        List the resources of a kind that the requester may read.
+
+        Brokered and journaled.
+
+        :param request: The request.
+        :param kind: The resource's kind, e.g. ``LLMClient``.
+        :returns: The journaled json response.
+        """
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )

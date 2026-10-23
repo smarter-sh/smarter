@@ -54,7 +54,7 @@ Django apps, which run on Linux.
     │ │ DRF           │ │ knox         │ │ Pydantic    │ │ waffle       │ │ Celery        ││
     │ │ REST views,   │ │ API-key      │ │ data        │ │ feature      │ │ async tasks,  ││
     │ │ serializers   │ │ token auth   │ │ models      │ │ flags and    │ │ beat (redbeat,││
-    │ │ (+ drf_yasg)  │ │              │ │             │ │ switches     │ │ django_celery_││
+    │ │               │ │              │ │             │ │ switches     │ │ django_celery_││
     │ └───────────────┘ └──────────────┘ └─────────────┘ └──────────────┘ │ beat)         ││
     │                                                                     └───────────────┘│
     │ also: django_hosts · corsheaders · social_django · storages · taggit                 │
