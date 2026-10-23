@@ -29,7 +29,7 @@ GitHub Repositories
      - `smarter-deploy (DockerHub) <https://github.com/smarter-sh/smarter-deploy>`_
    * - `smarter-nodejs (npm) <https://github.com/smarter-sh/smarter-nodejs>`_
      - `smarter-golang (Go) <https://github.com/smarter-sh/smarter-golang>`_
-   * - `smarter-chat (React, archived: now part of smarter) <https://github.com/smarter-sh/smarter-chat>`_
+   * - `smarter.sh-chat (npm, part of smarter) <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`_
      - some day™ 😄
 
 Core Contributors
@@ -77,7 +77,7 @@ both the platform and the community around it.
 Community Contributors
 -----------------------
 
-.. contributors:: smarter-sh/smarter smarter-sh/smarter-python smarter-sh/smarter-vscode-yaml smarter-sh/smarter-infrastructure smarter-sh/smarter-cli smarter-sh/smarter-deploy smarter-sh/smarter-chat
+.. contributors:: smarter-sh/smarter smarter-sh/smarter-python smarter-sh/smarter-vscode-yaml smarter-sh/smarter-infrastructure smarter-sh/smarter-cli smarter-sh/smarter-deploy
    :avatars:
    :names:
    :exclude: lpm0073, kentfuka, shoefish, actions-user, github-actions[bot], dependabot[bot], pre-commit-ci[bot], Semantic Release Bot
@@ -92,4 +92,3 @@ Community Contributors
 .. |smarter-infrastructure| replace:: smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>_
 .. |smarter-cli| replace:: smarter-cli <https://github.com/smarter-sh/smarter-cli>_
 .. |smarter-deploy| replace:: smarter-deploy <https://github.com/smarter-sh/smarter-deploy>_
-.. |smarter-chat| replace:: smarter-chat <https://github.com/smarter-sh/smarter-chat>_
