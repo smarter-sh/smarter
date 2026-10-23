@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.14](https://github.com/smarter-sh/smarter/compare/v0.36.13...v0.36.14) (2026-10-23)
+
+### Bug Fixes
+
+* **account:** stop printing generated passwords in create_user ([fcae349](https://github.com/smarter-sh/smarter/commit/fcae3494c6d1386a2c0b26cbe37c62d24ebb28f0))
+* **helm:** size celery worker and beat memory requests to real use ([d4bbd95](https://github.com/smarter-sh/smarter/commit/d4bbd952473d1491ebf10a130980153c2b852efa))
+* **helm:** stop running makemigrations in the init job ([236ada0](https://github.com/smarter-sh/smarter/commit/236ada02aafd4c7dbcc26bdc1ecb8858ebe621f1))
+* **logging:** format log origins consistently and quiet the init job ([b33a631](https://github.com/smarter-sh/smarter/commit/b33a631cd13a702dc14541323d757cba290af9db))
+
 ## [0.36.14-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.36.14-alpha.2...v0.36.14-alpha.3) (2026-10-23)
 
 ### Bug Fixes
