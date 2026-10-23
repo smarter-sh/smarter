@@ -126,8 +126,10 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
     def test_apply_changed_saves(self):
         """A changed field is saved."""
         self.broker.apply(self.request, **self.kwargs)
-        broker = self.broker_for("guardrail.yaml")
-        broker.manifest.spec.config.priority = 99  # type: ignore[union-attr]
+        # manifest models are frozen, so the change is made to the manifest's text.
+        with open(self.get_data_full_filepath("guardrail.yaml"), encoding="utf-8") as f:
+            manifest = f.read().replace("priority: 10", "priority: 99")
+        broker = SAMGuardrailBroker(request=self.request, loader=SAMLoader(manifest=manifest))
         broker.apply(self.request, **self.kwargs)
         self.assertEqual(self.guardrail().priority, 99)
 
