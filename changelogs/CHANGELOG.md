@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.15-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.14...v0.36.15-alpha.1) (2026-10-23)
+
+### Bug Fixes
+
+* **llmtool:** stop plugin() from storing a raw dict as the manifest ([084af56](https://github.com/smarter-sh/smarter/commit/084af569d2c1675d9e56f95918a8edcade5e5609))
+
 ## [0.36.14](https://github.com/smarter-sh/smarter/compare/v0.36.13...v0.36.14) (2026-10-23)
 
 ### Bug Fixes
