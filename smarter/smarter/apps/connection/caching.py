@@ -27,8 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.connection.models.ConnectionBase
-    - smarter.apps.connection.serializers.ConnectionSerializer
-
 """
 
 from django.db import models
@@ -39,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import ConnectionBase
-from .serializers import ConnectionSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -51,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_connections_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[ConnectionBase]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = ConnectionBase.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching Connections owned by user: %s",
-        logger_prefix,
-        logging.formatted_json(ConnectionSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -96,11 +88,6 @@ def invalidate_cached_connections_owned_by_user_profile(user_profile: UserProfil
 def _get_cached_connections_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[ConnectionBase]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = ConnectionBase.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching Connections shared with user: %s",
-        logger_prefix,
-        logging.formatted_json(ConnectionSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -140,11 +127,6 @@ def invalidate_cached_connections_shared_with_user_profile(user_profile: UserPro
 def _get_cached_connections_available_to_user_profile(user_profile_id) -> models.QuerySet[ConnectionBase]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = ConnectionBase.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching Connections available to user: %s",
-        logger_prefix,
-        logging.formatted_json(ConnectionSerializer(retval, many=True).data),
-    )
     return retval
 
 

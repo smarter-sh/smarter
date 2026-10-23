@@ -20,6 +20,7 @@ from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCPCLIENT_KIND,
 )
+from smarter.lib.django.serializers import related_rows
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 from .models import (
@@ -302,20 +303,21 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
         return fields
 
     def get_extensions(self, obj: LLMClient):
-        qs = LLMClientExtensions.objects.filter(llmclient=obj).select_related("extension").order_by("extension__slug")
-        return LLMClientExtensionsSerializer(qs, many=True).data
+        rows = related_rows(obj, "llmclientextensions_set", LLMClientExtensions, "extension")
+        rows.sort(key=lambda row: row.extension.slug)
+        return LLMClientExtensionsSerializer(rows, many=True).data
 
     def get_plugins(self, obj: LLMClient):
-        qs = LLMClientPlugin.objects.filter(llmclient=obj).select_related("plugin_meta")
-        return LLMClientPluginMiniSerializer(qs, many=True).data
+        rows = related_rows(obj, "llmclientplugin_set", LLMClientPlugin, "plugin_meta")
+        return LLMClientPluginMiniSerializer(rows, many=True).data
 
     def get_mcpclients(self, obj: LLMClient):
-        qs = LLMClientMCPClients.objects.filter(llmclient=obj).select_related("mcpclient")
-        return LLMClientMCPClientMiniSerializer(qs, many=True).data
+        rows = related_rows(obj, "llmclientmcpclients_set", LLMClientMCPClients, "mcpclient")
+        return LLMClientMCPClientMiniSerializer(rows, many=True).data
 
     def get_guardrails(self, obj: LLMClient):
-        qs = LLMClientGuardrails.objects.filter(llmclient=obj).select_related("guardrail")
-        return LLMClientGuardrailMiniSerializer(qs, many=True).data
+        rows = related_rows(obj, "llmclientguardrails_set", LLMClientGuardrails, "guardrail")
+        return LLMClientGuardrailMiniSerializer(rows, many=True).data
 
     def get_tools(self, obj: LLMClient):
         """
@@ -341,12 +343,12 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
         ]
 
     def get_custom_domains(self, obj: LLMClient):
-        qs = LLMClientCustomDomain.objects.filter(id=obj.custom_domain.id) if obj.custom_domain else LLMClientCustomDomain.objects.none()  # type: ignore
-        return LLMClientCustomDomainSerializer(qs, many=True).data
+        rows = [obj.custom_domain] if obj.custom_domain else []
+        return LLMClientCustomDomainSerializer(rows, many=True).data
 
     def get_api_keys(self, obj: LLMClient):
-        qs = LLMClientAPIKey.objects.filter(llmclient=obj)
-        return LLMClientAPIKeySerializer(qs, many=True).data
+        rows = related_rows(obj, "llmclientapikey_set", LLMClientAPIKey, "api_key")
+        return LLMClientAPIKeySerializer(rows, many=True).data
 
     def get_hashed_id(self, obj: LLMClient):
         return obj.hashed_id

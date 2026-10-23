@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 20:57+0000\n"
+"POT-Creation-Date: 2026-10-23 00:15+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -430,6 +430,10 @@ msgstr "Chargement…"
 #. Translators: used in react/packages/smarter-common/src/components/Loading/Component.tsx
 msgid "Loading"
 msgstr "Chargement"
+
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx
+msgid "Refreshing"
+msgstr "Actualisation"
 
 #. Translators: the label of the filter that narrows a list, e.g. "Pending deployment".
 #. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
@@ -1983,10 +1987,6 @@ msgstr "Rechercher des extensions"
 #. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx
 msgid "Publisher"
 msgstr "Éditeur"
-
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
-msgid "Refreshing"
-msgstr "Actualisation"
 
 #. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 msgid "Refresh"
