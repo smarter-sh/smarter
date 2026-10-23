@@ -9,6 +9,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django import waffle
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -95,3 +96,7 @@ def handle_smarter_token_authentication_failure(sender, user, token, error: Auth
         token,
         str(error),
     )
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("SmarterAuthToken", "drf.SmarterAuthToken", "llmclient.LLMClientAPIKey")

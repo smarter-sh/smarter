@@ -10,9 +10,16 @@ from django.dispatch import receiver
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.signals import plugin_deleting
 from smarter.lib import json, logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
 
+from .const import (
+    CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND,
+    CUSTOM_DOMAIN_LISTVIEW_CACHE_MODELS,
+    LLMCLIENT_LISTVIEW_CACHE_KIND,
+    LLMCLIENT_LISTVIEW_CACHE_MODELS,
+)
 from .models import (
     LLMClient,
     LLMClientAPIKey,
@@ -602,3 +609,7 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
         str(broker),
         broker.name,
     )
+
+
+connect_listview_cache(LLMCLIENT_LISTVIEW_CACHE_KIND, *LLMCLIENT_LISTVIEW_CACHE_MODELS)
+connect_listview_cache(CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND, *CUSTOM_DOMAIN_LISTVIEW_CACHE_MODELS)

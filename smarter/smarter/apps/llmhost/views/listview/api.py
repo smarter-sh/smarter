@@ -6,32 +6,18 @@ LLMHost and LLMHostCompute list views in the Smarter Dashboard.
 """
 
 from http import HTTPStatus
-from typing import Union
 
-from django.core.handlers.asgi import ASGIRequest
-from django.db import models
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmhost.caching import (
-    get_cached_llmhost_computes_available_to_user_profile,
-    get_cached_llmhost_computes_owned_by_user_profile,
-    get_cached_llmhost_computes_shared_with_user_profile,
-    get_cached_llmhosts_available_to_user_profile,
-    get_cached_llmhosts_owned_by_user_profile,
-    get_cached_llmhosts_shared_with_user_profile,
     invalidate_all_cached_llmhost_computes_for_user_profile,
     invalidate_all_cached_llmhosts_for_user_profile,
 )
 from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
 from smarter.apps.llmhost.serializers import LLMHostComputeSerializer, LLMHostSerializer
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseNotFound,
-)
-from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
+from smarter.lib.django.listview import SmarterListApiView
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -53,7 +39,7 @@ COMPUTE_SORT_FIELDS = {
 """The columns of the LLMHostCompute list that it may be sorted by, and the fields that sort them."""
 
 
-class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
+class LLMHostListApiView(SmarterListApiView):
     """
     Render the llmhost list view for the Smarter Workbench web console.
 
@@ -70,60 +56,10 @@ class LLMHostListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{LLMHostListApiView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        qs: models.QuerySet[LLMHost]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
-
-        logger.debug(
-            "%s.post() Rendering llmhost list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            request.user.username if request.user else "None",  # type: ignore[union-attr]
-            args,
-            kwargs,
-        )
-        if invalidate_cache:
-            invalidate_all_cached_llmhosts_for_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_llmhosts_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_llmhosts_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_llmhosts_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        llmhosts, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMHostSerializer(llmhosts, many=True, context={"request": request}).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = LLMHost
+    serializer_class = LLMHostSerializer
+    listview_cache_kind = "LLMHost"
+    sort_fields = SORT_FIELDS
 
 
 class LLMHostListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
@@ -328,61 +264,13 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
 # ------------------------------------------------------------------------------
 
 
-class LLMHostComputeListApiView(SmarterAuthenticatedNeverCachedWebView):
+class LLMHostComputeListApiView(SmarterListApiView):
     """Return the LLMHostComputes available to the authenticated user, for the React list view in the Smarter Workbench web console: their own, and those shared with them, e.g. the built-in LLMHostComputes, which the Smarter admin owns."""
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{LLMHostComputeListApiView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        qs: models.QuerySet[LLMHostCompute]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
-
-        logger.debug(
-            "%s.post() Rendering llmhost compute list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            request.user.username if request.user else "None",  # type: ignore[union-attr]
-            args,
-            kwargs,
-        )
-        if invalidate_cache:
-            invalidate_all_cached_llmhost_computes_for_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_llmhost_computes_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_llmhost_computes_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_llmhost_computes_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        computes, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=COMPUTE_SORT_FIELDS)
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMHostComputeSerializer(computes, many=True, context={"request": request}).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = LLMHostCompute
+    serializer_class = LLMHostComputeSerializer
+    listview_cache_kind = "LLMHostCompute"
+    sort_fields = COMPUTE_SORT_FIELDS
 
 
 class LLMHostComputeListApiCloneView(SmarterAuthenticatedNeverCachedWebView):

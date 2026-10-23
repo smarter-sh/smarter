@@ -6,35 +6,23 @@ Secret list view in the Smarter Dashboard.
 """
 
 from http import HTTPStatus
-from typing import Union
 
-from django.core.handlers.asgi import ASGIRequest
-from django.db import models
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.caching import (
-    get_cached_secrets_available_to_user_profile,
-    get_cached_secrets_owned_by_user_profile,
-    get_cached_secrets_shared_with_user_profile,
     invalidate_all_cached_secrets_for_user_profile,
 )
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.serializers import SecretSerializer
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseNotFound,
-)
-from smarter.lib.django.pagination import paginate_listview
+from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
 
 
-class SecretListApiView(SmarterAuthenticatedNeverCachedWebView):
+class SecretListApiView(SmarterListApiView):
     """
     Render the secret list view for the Smarter Workbench web console.
 
@@ -51,54 +39,9 @@ class SecretListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        qs: models.QuerySet[Secret]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
-
-        logger.debug(
-            "%s.get() Rendering secret list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            request.user.username if request.user else "None",  # type: ignore[union-attr]
-            args,
-            kwargs,
-        )
-        if invalidate_cache:
-            invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_secrets_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_secrets_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_secrets_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        secrets, pagination = paginate_listview(request, qs.order_by("-updated_at"))
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": SecretSerializer(secrets, many=True, context={"request": request}).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = Secret
+    serializer_class = SecretSerializer
+    listview_cache_kind = "Secret"
 
 
 class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):

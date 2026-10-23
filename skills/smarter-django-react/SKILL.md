@@ -43,9 +43,21 @@ sidebar link (context_processors.py)
    `javascript_extra`, and renders the root `<div>`, with each context value as
    an attribute.
 4. **List API** (`<app>/views/listview/api.py`), routed in `<app>/urls.py`:
-   - `react-integration/api/listview/(owned|shared|all)/`: returns
-     `{"objects": [...]}`, filtered by ownership. `?invalidate_cache=true`
-     bypasses the cache.
+   - `react-integration/api/listview/(owned|shared|all)/`: a subclass of
+     `SmarterListApiView` (`smarter.lib.django.listview`) that sets `model`,
+     `serializer_class`, `listview_cache_kind`, `sort_fields`, and the
+     `select_related`/`prefetch_related` its serializer reads. Never write its
+     `post()`: the base class filters by ownership, paginates, and caches each
+     page per user in Redis. `?invalidate_cache=true` (the Refresh button)
+     rebuilds the user's pages.
+   - In the app's `receivers.py`, `connect_listview_cache("<Kind>", "<app>.<Model>", ...)`
+     with every model the list shows (nested rows, names of related resources,
+     rows that decide `can_delete`), or its cached pages go stale. After a
+     `QuerySet.update()` of a shown column, call `invalidate_listview_cache("<Kind>")`.
+   - A serializer method that reads a reverse relation uses
+     `related_rows(obj, "<accessor>", <RowModel>, ...)` from
+     `smarter.lib.django.serializers`, so the prefetch is used. Check the page's
+     query count with `CaptureQueriesContext`: it should not grow per row.
    - `react-integration/api/clone/<id>/<new_name>/`,
      `.../rename/<id>/<new_name>/`, and `.../delete/<id>/`.
    - All are POSTs, scoped to what the user may read, own, or delete. A
@@ -67,7 +79,9 @@ sidebar link (context_processors.py)
   `X-Smarter-Capabilities`. A new custom header must also be added to Django's
   `CORS_ALLOW_HEADERS` in `smarter/smarter/settings/base.py`.
 - **`load()`** (`lib/load.tsx`) fetches `<ApiUrl>/<owned|shared|all>/?invalidate_cache=...`
-  and reads `objects`.
+  and reads `objects`. `TabbedListView` shows each page from `lib/cache.tsx`
+  (localStorage, keyed by `sessionScope()`, the tab, page, ordering and filter;
+  never searches) at once, with a "Refreshing" spinner, while it loads.
 - **`actionUrl(sessionContext, "clone/12/new_name/")`** turns the list URL into
   its sibling action URL.
 - **`TabbedListView`** (`@smarter/common`) gives the owned/shared tabs. Lists
