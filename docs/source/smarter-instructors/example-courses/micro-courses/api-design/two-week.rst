@@ -5,8 +5,8 @@ A two-week online course on designing and consuming REST APIs, taught on Smarter
 sides. Smarter's API has sixteen commands under `/api/v1/cli/
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/urls.py>`__ that
 apply, describe and delete every resource from a YAML manifest, resource-style endpoints for the web
-console, API keys of which only a hash is stored, one error format for every failure, and Swagger
-and ReDoc pages generated from the code. Its clients are real and public: the Go `smarter-cli
+console, API keys of which only a hash is stored, one error format for every failure, and a typed
+OpenAPI contract generated from the code. Its clients are real and public: the Go `smarter-cli
 <https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
 <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__ npm package, whose types are generated from the chat
 API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that

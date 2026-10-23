@@ -185,8 +185,6 @@ def sidebar_context() -> SmarterDictType:
                 LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview
             ),
             "example_manifests": console_reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
-            "swagger_docs": console_reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
-            "redoc": console_reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
             "openapi": console_reverse(DocsReverseNames.namespace, DocsReverseNames.openapi),
             "json_schemas": console_reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
             "admin": "/admin/",  # FIX ME
@@ -227,7 +225,7 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     ``terminal`` (while the web console terminal is enabled), ``providers``, ``plugins``,
     ``connections``, ``secrets``,
     ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
-    ``swagger_docs``, ``redoc``, ``openapi``, ``json_schemas``, ``admin``.
+    ``openapi``, ``json_schemas``, ``admin``.
 
     For a superuser, ``extension_updates`` is also the number of installed extensions for which
     the registry offers an update, which the Extensions link shows as a badge. It is counted on

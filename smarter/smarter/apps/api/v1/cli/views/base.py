@@ -25,6 +25,7 @@ from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.const import (
+    SMARTER_BUG_REPORT_URL,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
 )
 from smarter.common.exceptions import (
@@ -61,9 +62,14 @@ from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationErr
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.typing import SmarterDictType
 
-from .swagger import BUG_REPORT
-
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
+
+BUG_REPORT = (
+    "Encountered an unexpected error. "
+    f"This is a bug. Please contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} "
+    f"and/or report to {SMARTER_BUG_REPORT_URL}."
+)
+"""The note that an error response's description ends with, when the error is a bug in the platform."""
 
 
 class APIV1CLIViewError(SmarterException):

@@ -1,11 +1,9 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'prompt' config view."""
 
-from http import HTTPStatus
 from typing import TYPE_CHECKING, Optional
 
 from django.views.decorators.csrf import csrf_exempt
-from drf_yasg.utils import swagger_auto_schema
 
 from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -15,11 +13,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 from ..base import APIV1CLIViewError
-from ..swagger import (
-    COMMON_SWAGGER_PARAMETERS,
-    COMMON_SWAGGER_RESPONSES,
-    openai_success_response,
-)
 from .prompt import CACHE_EXPIRATION, ApiV1CliPromptBaseApiView
 
 if TYPE_CHECKING:
@@ -59,31 +52,6 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
         inherited_class = super().formatted_class_name
         return f"{inherited_class}.{ApiV1CliPromptConfigApiView.__name__}[{id(self)}]"
 
-    @swagger_auto_schema(
-        operation_description="""
-Returns the configuration of a chat with an LLMClient, and its session: the Smarter Chat api contract's
-version 2 configuration response. This is a non-brokered operation.
-
-The platform caches the session's key under the client's uid for 24 hours, so that the client's next prompt
-continues the same chat, unless new_session is true.
-
-Url parameters:
-- name: the LLMClient's name. It must belong to, or be shared with, the api key's account.
-
-Query parameters:
-- uid: required. A unique identifier of the client, e.g. a combination of the machine's MAC address and its hostname.
-- new_session: optional. true starts a new chat session. The default is false.
-
-The request has no body. See the Smarter api's OpenAPI document,
-smarter/smarter/apps/api/v1/contract/openapi.json, operation prompt_config.
-""",
-        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Config generated successfully")},
-        manual_parameters=[
-            COMMON_SWAGGER_PARAMETERS["llmclient_name"],
-            COMMON_SWAGGER_PARAMETERS["uid"],
-            COMMON_SWAGGER_PARAMETERS["new_session"],
-        ],
-    )
     @csrf_exempt
     def post(self, request: "HttpRequest", name: str, *args, **kwargs):
         """Handle POST requests for prompt config."""

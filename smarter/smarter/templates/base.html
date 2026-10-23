@@ -5,7 +5,7 @@
 <!--begin::Head-->
 <head>
   {% block head %}
-  <title>{{ branding.smarter_product_name }}</title>
+  <title>{% block title %}{{ branding.smarter_product_name }}{% endblock %}</title>
   <meta charset="utf-8" />
   <meta name="robots" content="index, follow" />
   <meta name="application-name" content="{{ branding.smarter_product_name }}" />

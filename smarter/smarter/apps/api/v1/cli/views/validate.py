@@ -2,8 +2,6 @@
 
 from http import HTTPStatus
 
-from drf_yasg.utils import swagger_auto_schema
-
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.contract.models import CliApiValidation
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -11,7 +9,6 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from .base import CliBaseApiView
-from .swagger import COMMON_SWAGGER_RESPONSES, openai_success_response
 
 
 class ApiV1CliValidateApiView(CliBaseApiView):
@@ -37,16 +34,13 @@ class ApiV1CliValidateApiView(CliBaseApiView):
         this_class = f".{ApiV1CliValidateApiView.__name__}[{id(self)}]"
         return f"{inherited_class}{self.formatted_text(this_class)}"
 
-    @swagger_auto_schema(
-        operation_description="""
-Validates a manifest in the smarter.sh/v1 format against the Pydantic model of its kind, without saving it.
-
-The response's data has 'valid', and 'errors': a list of the manifest's errors, each with a 'loc', the path of
-the invalid value in the manifest, a 'message' and a 'type'.
-""",
-        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Manifest validated")},
-    )
     def post(self, request, *args, **kwargs):
+        """
+        Validate the manifest in the request body against its kind's model, without saving it.
+
+        :param request: The request, whose body is a YAML or JSON manifest.
+        :returns: The journaled json response.
+        """
         manifest = self.manifest_data
         kind = manifest.get("kind") if isinstance(manifest, dict) else None
         broker_class = Brokers.get_broker(kind) if isinstance(kind, str) and kind else None

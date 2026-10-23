@@ -30,8 +30,8 @@ Where to Find It
    * - Location
      - What it is
    * - ``https://<your platform>/docs/openapi/``
-     - The document, rendered with Swagger UI. The web console's sidebar links to it as
-       *OpenAPI Contract*. Its *Try it out* sends requests to the platform that you are reading it on.
+     - The document, rendered with Scalar. The web console's sidebar links to it as
+       *OpenAPI Contract*. Its *Test Request* sends requests to the platform that you are reading it on.
        Authorize with ``Token <api key>``.
    * - ``https://<your platform>/docs/openapi.json``
      - The document itself, to generate clients from. Its first server is the platform's own
@@ -127,16 +127,6 @@ Schema that Pydantic writes. See :doc:`Developing the Node.js SDK <smarter-nodej
 Some generators read only OpenAPI 3.0. oapi-codegen, for Go, is one of them: it rejects the 3.1
 forms of ``exclusiveMinimum`` and ``exclusiveMaximum``. For those, generate types from the SAM
 schemas directly, or use a generator that supports 3.1.
-
-
-The Swagger and Redoc Pages
----------------------------
-
-Every platform also has *Swagger* (``/docs/swagger/``) and *Redoc* (``/docs/redoc/``) pages, which
-are a different thing. drf-yasg generates them from the platform's views, in OpenAPI 2, for every
-endpoint of the platform, including the REST writes, but with untyped request and response bodies.
-Use them to explore. Generate clients from ``openapi.json``. See
-:doc:`API Documentation <smarter-api/documentation>`.
 
 
 Changing the Contract

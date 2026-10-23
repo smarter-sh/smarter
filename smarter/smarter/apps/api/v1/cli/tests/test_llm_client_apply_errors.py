@@ -13,7 +13,7 @@ from typing import Any, Union
 import yaml
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.api.v1.cli.views.swagger import BUG_REPORT
+from smarter.apps.api.v1.cli.views.base import BUG_REPORT
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.enum import (
