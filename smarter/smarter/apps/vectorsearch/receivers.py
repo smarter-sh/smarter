@@ -6,6 +6,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from smarter.lib import logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Vectorsearch
@@ -33,3 +34,7 @@ def vectorsearch_deleted(sender, instance: Vectorsearch, **kwargs):
     """Delete the default API for the vectorsearch."""
     prefix = logging.formatted_text(f"{module_prefix}.vectorsearch_deleted()")
     logger.info("%s - %s", prefix, instance)
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("Vectorsearch", "vectorsearch.Vectorsearch")

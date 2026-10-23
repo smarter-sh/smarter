@@ -121,10 +121,23 @@ class TestPluginSignals(PluginAppTestBase):
         """Test that updating a plugin from its manifest sends plugin_updated."""
         name = "test_plugin_app_signals_updated"
         self.new_static_plugin(name)
+        # an unchanged manifest updates nothing, so the description is changed.
+        manifest = self.static_manifest(name)
+        manifest = manifest.model_copy(
+            update={"metadata": manifest.metadata.model_copy(update={"description": "An updated description."})}
+        )
         with capture_signal(signals.plugin_updated) as received:
-            plugin = StaticPlugin(manifest=self.static_manifest(name), user_profile=self.user_profile)
+            plugin = StaticPlugin(manifest=manifest, user_profile=self.user_profile)
         self.assertEqual(len(received), 1)
         self.assertIs(received[0]["plugin"], plugin)
+
+    def test_plugin_unchanged(self):
+        """Test that applying an unchanged manifest to a plugin sends no plugin_updated."""
+        name = "test_plugin_app_signals_unchanged"
+        self.new_static_plugin(name)
+        with capture_signal(signals.plugin_updated) as received:
+            StaticPlugin(manifest=self.static_manifest(name), user_profile=self.user_profile)
+        self.assertEqual(received, [])
 
     def test_plugin_deleted(self):
         """Test that deleting a plugin sends plugin_deleting, and then plugin_deleted."""

@@ -6,29 +6,20 @@ Plugin list view in the Smarter Dashboard.
 """
 
 from http import HTTPStatus
-from typing import Union
 
 from django.core.handlers.asgi import ASGIRequest
 from django.db import models
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmtool.caching import (
-    get_cached_plugins_available_to_user_profile,
-    get_cached_plugins_owned_by_user_profile,
-    get_cached_plugins_shared_with_user_profile,
     invalidate_all_cached_plugins_for_user_profile,
 )
 from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.llmtool.plugin.base import SmarterPluginError
 from smarter.apps.llmtool.serializers import PluginSerializer
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseNotFound,
-)
+from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import (
     DEFAULT_SORT_FIELDS,
     ListViewPagination,
@@ -64,7 +55,7 @@ EXTENSION_SEARCH_FIELDS = ("slug", "display_name", "description", "publisher")
 """The fields of an Extension that a search of the Extension list matches."""
 
 
-class PluginListApiView(SmarterAuthenticatedNeverCachedWebView):
+class PluginListApiView(SmarterListApiView):
     """
     Render the plugin list view for the Smarter Workbench web console.
 
@@ -81,60 +72,17 @@ class PluginListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{PluginListApiView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        qs: models.QuerySet[PluginMeta]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
-
-        logger.debug(
-            "%s.get() Rendering plugin list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            request.user.username if request.user else "None",  # type: ignore[union-attr]
-            args,
-            kwargs,
-        )
-        if invalidate_cache:
-            invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_plugins_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_plugins_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_plugins_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        plugins, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": PluginSerializer(plugins, many=True, context={"request": request}).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = PluginMeta
+    serializer_class = PluginSerializer
+    listview_cache_kind = "Plugin"
+    sort_fields = SORT_FIELDS
+    select_related = (
+        "plugin_selector_plugin",
+        "plugin_prompt_plugin",
+        "plugin_data_base_plugin__plugindatastatic",
+        "plugin_data_base_plugin__plugindatasql",
+        "plugin_data_base_plugin__plugindataapi",
+    )
 
 
 class PluginListApiExtensionsView(SmarterAuthenticatedNeverCachedWebView):

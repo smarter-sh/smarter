@@ -3,24 +3,18 @@
 
 from http import HTTPStatus
 
-from django.core.handlers.asgi import ASGIRequest
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.vectorstore.caching import (
-    get_cached_vectorstores_available_to_user_profile,
-    get_cached_vectorstores_owned_by_user_profile,
-    get_cached_vectorstores_shared_with_user_profile,
     invalidate_all_cached_vectorstores_for_user_profile,
 )
 from smarter.apps.vectorstore.models import VectorstoreMeta, VectorstoreStatus
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.apps.vectorstore.service import VectorstoreService
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
+from smarter.lib.django.listview import SmarterListApiView
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -49,37 +43,13 @@ SORT_FIELDS = {
 """The columns of the Vectorstore list that it may be sorted by, and the fields that sort them."""
 
 
-class VectorstoreListApiView(SmarterAuthenticatedNeverCachedWebView):
+class VectorstoreListApiView(SmarterListApiView):
     """The vectorstores that the user owns, those shared with them, or both."""
 
-    def get(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
-        ownership_filter = kwargs.get("ownership_filter") or SmarterResourceOwnershipFilterEnum.ALL
-        if request.GET.get("invalidate_cache", "false").lower() == "true":
-            invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_vectorstores_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_vectorstores_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_vectorstores_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        vectorstores, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
-        return JsonResponse(
-            {
-                "user": UserProfileSerializer(self.user_profile).data,
-                "admin": UserProfileSerializer(smarter_cached_objects.smarter_admin_user_profile).data,
-                "objects": VectorstoreSerializer(vectorstores, many=True, context={"request": request}).data,
-                "pagination": pagination,
-            }
-        )
+    model = VectorstoreMeta
+    serializer_class = VectorstoreSerializer
+    listview_cache_kind = "Vectorstore"
+    sort_fields = SORT_FIELDS
 
 
 class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):

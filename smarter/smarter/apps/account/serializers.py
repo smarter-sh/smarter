@@ -1,6 +1,7 @@
 """Account serializers for Smarter API."""
 
-from typing import List, Optional
+from collections.abc import Iterable, MutableMapping
+from typing import List, Optional, Set
 
 from rest_framework import serializers
 
@@ -273,7 +274,7 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
         return fields
 
 
-def user_can_delete(obj, kind: Optional[str], user: object) -> bool:
+def user_can_delete(obj, kind: Optional[str], user: object, owned_pks: Optional[Set] = None) -> bool:
     """
     Return True if a user may delete a resource now.
 
@@ -294,6 +295,10 @@ def user_can_delete(obj, kind: Optional[str], user: object) -> bool:
     :param user: The user, e.g. the request's user. Anything that is not a :class:`User`, e.g. an
         anonymous user or None, may delete nothing.
     :type user: object
+    :param owned_pks: The primary keys of the resources that the user has ownership permission for,
+        among those of a list's page, so that a page asks once rather than once per row. None asks
+        the database for this resource alone.
+    :type owned_pks: Optional[Set]
     :return: Whether the user may delete the resource.
     :rtype: bool
     """
@@ -303,7 +308,10 @@ def user_can_delete(obj, kind: Optional[str], user: object) -> bool:
     broker_class = Brokers.get_broker(kind) if kind else None
     if broker_class is None or not isinstance(user, User):
         return False
-    if not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
+    if owned_pks is not None:
+        if obj.pk not in owned_pks:
+            return False
+    elif not type(obj).objects.with_ownership_permission_for(user).filter(pk=obj.pk).exists():
         return False
     try:
         return not broker_class.has_dependents(obj)
@@ -370,6 +378,40 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
         :rtype: bool
         """
         request = self.context.get("request")
+        user = getattr(request, "user", None) if request is not None else None
         obj_kind = getattr(obj, "kind", None)
         kind = getattr(self.Meta, "kind", None) or getattr(obj_kind, "value", obj_kind)
-        return user_can_delete(obj, kind, getattr(request, "user", None) if request is not None else None)
+        return user_can_delete(obj, kind, user, owned_pks=self._owned_pks_of_page(obj, user))
+
+    def _owned_pks_of_page(self, obj, user) -> Optional[Set]:
+        """
+        Return the primary keys of the rows of a list's page that the user has ownership permission for.
+
+        When this serializer is the child of a list serializer (``many=True``), it asks the database
+        once for every row of the page, and keeps the answer in the shared serializer context.
+        Otherwise it returns None, and :func:`user_can_delete` asks for the one resource.
+
+        :param obj: The resource being serialized.
+        :param user: The request's user.
+        :return: The primary keys, or None.
+        """
+        parent = self.parent
+        rows: Iterable = ()
+        if isinstance(parent, serializers.ListSerializer) and isinstance(parent.instance, Iterable):
+            rows = parent.instance
+        else:
+            return None
+        if not isinstance(user, User):
+            return None
+        cache_key = f"_owned_pks.{type(obj).__module__}.{type(obj).__qualname__}.{user.pk}"
+        context = self.context
+        owned_pks = context.get(cache_key)
+        if owned_pks is None:
+            pks = [row.pk for row in rows if isinstance(row, type(obj))]
+            owned_pks = set(
+                type(obj).objects.with_ownership_permission_for(user).filter(pk__in=pks).values_list("pk", flat=True)
+            )
+            # the root serializer's context is a dict, shared by every row of the page.
+            if isinstance(context, MutableMapping):
+                context[cache_key] = owned_pks
+        return owned_pks

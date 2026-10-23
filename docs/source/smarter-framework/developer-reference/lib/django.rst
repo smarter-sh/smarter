@@ -23,6 +23,7 @@ For more information about Django, see the `official Django documentation <https
    django/healthz
    django/hosts
    django/http
+   django/listview
    django/manage
    django/middleware
    django/models
