@@ -137,6 +137,7 @@ class SettingsDefaults:
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
+    LISTVIEW_CACHE_EXPIRATION: int = int(get_env("LISTVIEW_CACHE_EXPIRATION", 60 * 60))  # 1 hour
     LLM_CLIENT_CACHE_EXPIRATION: int = int(get_env("LLM_CLIENT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     LLM_CLIENT_MAX_RETURNED_HISTORY: int = int(get_env("LLM_CLIENT_MAX_RETURNED_HISTORY", 25))
     LLM_CLIENT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("LLM_CLIENT_TASKS_CREATE_DNS_RECORD", True)

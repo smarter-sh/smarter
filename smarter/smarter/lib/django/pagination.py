@@ -233,6 +233,56 @@ def sort_queryset(
     return queryset.order_by(F(lookup).asc(nulls_last=True), "pk"), ordering
 
 
+def paginate_queryset(
+    queryset: QuerySet,
+    page: Optional[str] = None,
+    page_size: Optional[str] = None,
+    search: str = "",
+    ordering: str = "",
+    list_filter: str = "",
+    search_fields: Sequence[str] = DEFAULT_SEARCH_FIELDS,
+    sort_fields: Mapping[str, str] = DEFAULT_SORT_FIELDS,
+    filters: Optional[Mapping[str, Q]] = None,
+) -> tuple[Page, SmarterDictType]:
+    """
+    One page of a list api's resources, which match its search, and a description of the page.
+
+    The parameters are the list api's query parameters, as they arrived, so that a cached page can
+    be built again from them without the request. See :func:`paginate_listview` for their meaning.
+
+    :param queryset: The resources that the user may list, in their default order.
+    :param page: The page's number, from 1. A page past the last is the last, and an invalid one is the first.
+    :param page_size: The resources of a page, up to :data:`MAX_PAGE_SIZE`. :data:`DEFAULT_PAGE_SIZE` if invalid.
+    :param search: Text that one of ``search_fields`` contains, ignoring case.
+    :param ordering: The column of ``sort_fields`` to sort by, e.g. ``name``, or ``-name``. See :func:`sort_queryset`.
+    :param list_filter: The name of one of ``filters``, e.g. ``pending``. See :func:`filter_queryset`.
+    :param search_fields: The names of the fields that a search matches.
+    :param sort_fields: The columns that the list may be sorted by, and the fields that sort them.
+    :param filters: The list's named filters, and the conditions that they apply. None offers none.
+    :returns: The page, and its description, a dumped :class:`ListViewPagination`.
+    """
+    search = (search or "").strip()[:MAX_SEARCH_LENGTH]
+    size = positive_int(page_size, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
+    filters = filters or {}
+    queryset, applied_filter = filter_queryset(queryset, list_filter or "", filters)
+    queryset, applied_ordering = sort_queryset(queryset, ordering or "", sort_fields)
+    paginator = Paginator(search_queryset(queryset, search, search_fields), size)
+    # get_page() returns the last page for a page past it, and the first for an invalid one.
+    result = paginator.get_page(positive_int(page, 1))
+    pagination = ListViewPagination(
+        page=result.number,
+        page_size=size,
+        num_pages=paginator.num_pages,
+        count=paginator.count,
+        search=search,
+        ordering=applied_ordering,
+        sort_fields=sorted(sortable_fields(queryset, sort_fields)),
+        filter=applied_filter,
+        filters=sorted(filters),
+    )
+    return result, pagination.model_dump(mode="json")
+
+
 def paginate_listview(
     request: HttpRequest,
     queryset: QuerySet,
@@ -266,26 +316,17 @@ def paginate_listview(
         when the default order applies, and ``sortFields`` are the columns that the list may be
         sorted by, so that the list shows only those columns as sortable.
     """
-    search = request.GET.get("search", "").strip()[:MAX_SEARCH_LENGTH]
-    page_size = positive_int(request.GET.get("page_size"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
-    filters = filters or {}
-    queryset, applied_filter = filter_queryset(queryset, request.GET.get("filter", ""), filters)
-    queryset, ordering = sort_queryset(queryset, request.GET.get("ordering", ""), sort_fields)
-    paginator = Paginator(search_queryset(queryset, search, search_fields), page_size)
-    # get_page() returns the last page for a page past it, and the first for an invalid one.
-    page = paginator.get_page(positive_int(request.GET.get("page"), 1))
-    pagination = ListViewPagination(
-        page=page.number,
-        page_size=page_size,
-        num_pages=paginator.num_pages,
-        count=paginator.count,
-        search=search,
-        ordering=ordering,
-        sort_fields=sorted(sortable_fields(queryset, sort_fields)),
-        filter=applied_filter,
-        filters=sorted(filters),
+    return paginate_queryset(
+        queryset,
+        page=request.GET.get("page"),
+        page_size=request.GET.get("page_size"),
+        search=request.GET.get("search", ""),
+        ordering=request.GET.get("ordering", ""),
+        list_filter=request.GET.get("filter", ""),
+        search_fields=search_fields,
+        sort_fields=sort_fields,
+        filters=filters,
     )
-    return page, pagination.model_dump(mode="json")
 
 
 __all__ = [
@@ -298,6 +339,7 @@ __all__ = [
     "filter_queryset",
     "has_field",
     "paginate_listview",
+    "paginate_queryset",
     "positive_int",
     "search_queryset",
     "sort_queryset",

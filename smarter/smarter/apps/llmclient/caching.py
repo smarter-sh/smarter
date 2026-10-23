@@ -27,7 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.llmclient.models.LLMClient
-    - smarter.apps.llmclient.serializers.LLMClientSerializer
 """
 
 from django.db import models
@@ -38,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import LLMClient
-from .serializers import LLMClientSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -50,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_llmclients_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[LLMClient]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMClient.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMClients: %s",
-        logger_prefix,
-        logging.formatted_json(LLMClientSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -95,11 +88,6 @@ def invalidate_cached_llmclients_owned_by_user_profile(user_profile: UserProfile
 def _get_cached_llmclients_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[LLMClient]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMClient.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMClients: %s",
-        logger_prefix,
-        logging.formatted_json(LLMClientSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -139,11 +127,6 @@ def invalidate_cached_llmclients_shared_with_user_profile(user_profile: UserProf
 def _get_cached_llmclients_available_to_user_profile(user_profile_id) -> models.QuerySet[LLMClient]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMClient.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMClients: %s",
-        logger_prefix,
-        logging.formatted_json(LLMClientSerializer(retval, many=True).data),
-    )
     return retval
 
 

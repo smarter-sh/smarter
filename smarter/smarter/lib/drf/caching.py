@@ -27,8 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.authtoken.models.AuthToken
-    - smarter.apps.authtoken.serializers.AuthTokenSerializer
-
 """
 
 from django.db import models
@@ -39,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import SmarterAuthToken as AuthToken
-from .serializers.authtoken import SmarterAuthTokenSerializer as AuthTokenSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -51,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_authtokens_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[AuthToken]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = AuthToken.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching AuthTokens owned by user: %s",
-        logger_prefix,
-        logging.formatted_json(AuthTokenSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -96,11 +88,6 @@ def invalidate_cached_authtokens_owned_by_user_profile(user_profile: UserProfile
 def _get_cached_authtokens_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[AuthToken]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = AuthToken.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching AuthTokens shared with user: %s",
-        logger_prefix,
-        logging.formatted_json(AuthTokenSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -140,11 +127,6 @@ def invalidate_cached_authtokens_shared_with_user_profile(user_profile: UserProf
 def _get_cached_authtokens_available_to_user_profile(user_profile_id) -> models.QuerySet[AuthToken]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = AuthToken.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching and caching AuthTokens available to user: %s",
-        logger_prefix,
-        logging.formatted_json(AuthTokenSerializer(retval, many=True).data),
-    )
     return retval
 
 

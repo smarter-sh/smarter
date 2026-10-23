@@ -164,7 +164,8 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
         """
         Save a new verification status, and when it is Verified, the time of verification.
 
-        Invalidates the cached list of verified domains.
+        Invalidates the cached list of verified domains, and the cached pages of the lists that show
+        the verification status.
 
         :param status: One of :class:`VerificationStatusChoices`.
         :param message: Why the domain is not verified, if it is not.
@@ -182,6 +183,16 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
             verification_message=self.verification_message,
         )
         get_cached_verified_domains.invalidate()  # type: ignore[attr-defined]
+        # update() sends no post_save, so the lists that show the verification status are told here.
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmclient.const import (
+            CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND,
+            LLMCLIENT_LISTVIEW_CACHE_KIND,
+        )
+        from smarter.lib.django.listview import invalidate_listview_cache
+
+        invalidate_listview_cache(CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND)
+        invalidate_listview_cache(LLMCLIENT_LISTVIEW_CACHE_KIND)
 
     @classmethod
     def get_verified_domains(cls) -> list[str]:

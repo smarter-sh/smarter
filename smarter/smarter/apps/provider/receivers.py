@@ -10,6 +10,7 @@ from django.dispatch import receiver
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django import waffle
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -352,3 +353,7 @@ def handle_embed_failed(sender, backend, provider, user_profile, **kwargs):
         provider,
         user_profile,
     )
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("Provider", "provider.Provider", "proxy.Proxy", "secret.Secret")

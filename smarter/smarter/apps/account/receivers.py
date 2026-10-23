@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.lib import json, logging
+from smarter.lib.django.listview import LISTVIEW_CACHE_ALL, connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import (
@@ -334,3 +335,8 @@ def budget_released_receiver(sender, resource_constraint: ResourceConstraint, **
         logging.formatted_text(f"{module_prefix}.budget_released()"),
         resource_constraint,
     )
+
+
+# a user profile, an account or a resource's tags can change what every list shows: its owners,
+# what each user may see, and the tags column.
+connect_listview_cache(LISTVIEW_CACHE_ALL, "account.UserProfile", "account.Account", "taggit.TaggedItem")

@@ -184,6 +184,8 @@ gettext("Failed to load the budget series (%(status)s).");
 gettext("Loading…");
 // Translators: used in react/packages/smarter-common/src/components/Loading/Component.tsx
 gettext("Loading");
+// Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx
+gettext("Refreshing");
 // Translators: the label of the filter that narrows a list, e.g. "Pending deployment".
 // Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
 gettext("Showing: %(filter)s");
@@ -821,8 +823,6 @@ gettext("Loading the registry...");
 gettext("Search extensions");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx
 gettext("Publisher");
-// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
-gettext("Refreshing");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 gettext("Refresh");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
