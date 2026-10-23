@@ -23,3 +23,41 @@ Its Secrets, Connections, plugins, LLMClients and Budget. ``manage.py load_from_
 them, for the Smarter admin in ``manage.py initialize_platform``, and for each account's admin in
 ``manage.py initialize_account``. ``manage.py verify_stackademy`` prompts its LLMClients.
 """
+
+LLMCLIENT_LISTVIEW_CACHE_KIND = "LLMClient"
+"""The LLMClient list's name in the list view cache.
+
+See :mod:`smarter.lib.django.listview`.
+"""
+
+LLMCLIENT_LISTVIEW_CACHE_MODELS = (
+    "llmclient.LLMClient",
+    "llmclient.LLMClientAPIKey",
+    "llmclient.LLMClientCustomDomain",
+    "llmclient.LLMClientCustomDomainDNS",
+    "llmclient.LLMClientExtensions",
+    "llmclient.LLMClientGuardrails",
+    "llmclient.LLMClientMCPClients",
+    "llmclient.LLMClientPlugin",
+    "guardrail.Guardrail",
+    "llmtool.PluginMeta",
+    "mcpclient.MCPClient",
+    "orchestrator.OrchestratorHarness",
+)
+"""The models whose changes alter what the LLMClient list shows: the LLMClient, the rows that it.
+
+nests, and the resources whose names it shows.
+"""
+
+CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND = "LLMClientCustomDomain"
+"""The Custom Domain list's name in the list view cache.
+
+See :mod:`smarter.lib.django.listview`.
+"""
+
+CUSTOM_DOMAIN_LISTVIEW_CACHE_MODELS = (
+    "llmclient.LLMClientCustomDomain",
+    "llmclient.LLMClientCustomDomainDNS",
+    "llmclient.LLMClient",
+)
+"""The models whose changes alter what the Custom Domain list shows: the domain, its DNS records and its LLMClient."""

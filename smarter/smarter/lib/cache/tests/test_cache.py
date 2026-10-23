@@ -182,7 +182,8 @@ class TestCacheResults(SmarterTestBase):
         """Invalidate() reports a cached None as None, not as the sentinel string that stores it."""
         calls = []
 
-        @cache_results(timeout=60)
+        # an invalidation is logged at INFO only when cache logging is on.
+        @cache_results(timeout=60, logging_enabled=True)
         def nothing(x):
             calls.append(x)
 

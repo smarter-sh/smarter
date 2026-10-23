@@ -1453,6 +1453,46 @@ class Settings(BaseSettings):
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
 
+    listview_cache_expiration: int = Field(
+        settings_defaults.LISTVIEW_CACHE_EXPIRATION,
+        gt=0,
+        description="The cache expiration time in seconds for the pages of the web console's list views.",
+        title="List View Cache Expiration",
+    )
+    """
+    The cache expiration time in seconds for the pages of the web console's list views.
+
+    Each list api caches the pages that it returns, per user. Saving or deleting a resource
+    makes its list's cached pages stale at once (see :mod:`smarter.lib.django.listview`), so this
+    expiration only bounds how long a change made without Django's signals, such as a
+    ``QuerySet.update()``, can go unnoticed.
+
+    :type: int
+    :default: Value from ``settings_defaults.LISTVIEW_CACHE_EXPIRATION``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
+    @before_field_validator("listview_cache_expiration")
+    def parse_listview_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'listview_cache_expiration' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the listview_cache_expiration value to validate
+        Returns:
+            int: The validated listview_cache_expiration.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.LISTVIEW_CACHE_EXPIRATION
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError(f"listview_cache_expiration {int_value} must be a positive integer.")
+            return int_value
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError("could not validate listview_cache_expiration") from e
+
     llmclient_cache_expiration: int = Field(
         settings_defaults.LLM_CLIENT_CACHE_EXPIRATION,
         gt=0,

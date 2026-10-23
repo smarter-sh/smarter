@@ -30,7 +30,8 @@
  * - Narrows both tabs by a named filter of the list api, when the page is opened with
  *   ?filter=<name>, e.g. the dashboard's pending deployments link, ?filter=pending. A chip shows the
  *   filter's label, from the tabbedListViewContext's filters, and a button that removes it.
- * - Hydrates the UI from cached results before the initial fetch resolves, unless a filter applies.
+ * - Shows a page from the cache at once, when it holds it, while the page is fetched again, with a
+ *   small spinner that says it is refreshing.
  * - Shows loading and error states during fetches.
  * - Allows switching between list and card views.
  * - Persists the selected view mode in sessionStorage.
@@ -55,13 +56,12 @@
  *
  * Page Rendering Performance and Caching behavior:
  * - Improves the perceived load time by rendering cached results immediately when
- *   available while a fresh backend fetch is still in flight. It is not uncommon
- *   for the backend response to take up to 1-2 seconds, so this is important from
- *   a UX perspective.
- * - Reads the most recent owned/shared llmclient results from sessionStorage on mount,
- *   keyed by API URL and tab.
- * - Writes successful fetch results of each tab's first page, without a search or a sort, back to the
- *   cache so the next initial page load can show recent data without waiting on the network.
+ *   available while a fresh backend fetch is still in flight (stale-while-revalidate). The list
+ *   api caches its pages too (smarter.lib.django.listview), so the fresh fetch is usually quick.
+ * - Reads each page from localStorage, keyed by the session, the API URL, the tab, and the page's
+ *   page number, ordering and filter, on mount and whenever the page, ordering or filter changes.
+ * - Writes every successful fetch without a search back to the cache, with its pagination, so that
+ *   a return visit, a new browser tab, or paging back shows recent data without waiting on the network.
  *
  * Usage:
  * <TabbedListView sessionContext={sessionContext} />
@@ -79,7 +79,7 @@ import type {
 } from "../../lib/Types";
 import { load } from "../../lib/load";
 import { loggerPrefix } from "../../lib/const";
-import { makeCacheKey, readCache, writeCache } from "../../lib/cache";
+import { makeCacheKey, readCache, sessionScope, writeCache } from "../../lib/cache";
 
 import ToggleButton from "../ToggleButton";
 import type { ViewMode } from "../ToggleButton";
@@ -100,6 +100,8 @@ type TabbedListViewProps<TObject> = {
 type TabList = {
   objects: unknown[];
   isLoading: boolean;
+  /** Whether the objects shown are cached ones, while the list api is asked for fresh ones. */
+  isRefreshing: boolean;
   pagination: Pagination | null;
 };
 
@@ -117,15 +119,6 @@ function filterOfPageUrl(): string {
 
 /** How long to wait after the last keystroke of a search before it is requested, in milliseconds. */
 export const SEARCH_DELAY_MS = 300;
-
-/** The lists, with those of tabs loading, so that they show their loading skeleton while they load another page, or another search. */
-function withLoading(lists: TabRecord<TabList>, tabs: TabKey[]): TabRecord<TabList> {
-  const retval = { ...lists };
-  tabs.forEach((tab) => {
-    retval[tab] = { ...lists[tab], isLoading: true };
-  });
-  return retval;
-}
 
 // throttle duration for requerying to prevent excessive backend requests
 const REQUERY_THROTTLE_MS = 2000;
@@ -148,15 +141,26 @@ export default function TabbedListView<TObject>({
   // they'd most recently been, which should help prevent jarring resizing when
   // the real data loads.
   // A list is loading until the first load completes, unless its cache already has its objects.
-  // The cache keys are for session-based local caching of each tab's first page, without a search
-  // or a sort, to improve perceived load times on repeat visits.
-  // the named filter of both tabs, from the page's url. The cache holds unfiltered objects, so a
-  // filtered list doesn't show them while it loads.
+  // The cache holds every page, ordering and filter that the list showed, but no search, in
+  // localStorage, scoped by the session, so that a list paints at once on a return visit, in a new
+  // browser tab, and when paging back. See ../../lib/cache.
+  // the named filter of both tabs, from the page's url.
   const [filter, setFilter] = useState(filterOfPageUrl);
+  const scope = useMemo(() => sessionScope(sessionContext), [sessionContext]);
+  const cacheKey = useCallback(
+    (tab: TabKey, page: number, tabOrdering: string, tabFilter: string) =>
+      makeCacheKey(sessionContext.ApiUrl, tab, { page, ordering: tabOrdering, filter: tabFilter }, scope),
+    [sessionContext, scope],
+  );
   const [lists, setLists] = useState<TabRecord<TabList>>(() =>
     tabRecord(tabKeys, (tab) => {
-      const cached = filter ? null : readCache<unknown>(makeCacheKey(sessionContext.ApiUrl, tab));
-      return { objects: cached || [], isLoading: cached === null, pagination: null };
+      const cached = readCache<unknown>(cacheKey(tab, 1, "", filter));
+      return {
+        objects: cached?.objects ?? [],
+        isLoading: cached === null,
+        isRefreshing: cached !== null,
+        pagination: cached?.pagination ?? null,
+      };
     }),
   );
 
@@ -206,6 +210,15 @@ export default function TabbedListView<TObject>({
     ): Promise<void> => {
       const request = (latestRequest.current[tab] ?? 0) + 1;
       latestRequest.current[tab] = request;
+      // show the page from the cache at once, if it holds it, and its loading skeleton otherwise.
+      const key = cacheKey(tab, page, tabOrdering, tabFilter);
+      const cached = tabSearch ? null : readCache<unknown>(key);
+      setLists((prev) => ({
+        ...prev,
+        [tab]: cached
+          ? { objects: cached.objects, pagination: cached.pagination, isLoading: false, isRefreshing: true }
+          : { ...prev[tab], isLoading: true, isRefreshing: false },
+      }));
       console.debug(
         `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", ordering="${tabOrdering}", filter="${tabFilter}", invalidateCache=${invalidateCache}`,
       );
@@ -217,25 +230,23 @@ export default function TabbedListView<TObject>({
       }).then(({ objects, pagination }) => {
         if (!isActive() || request !== latestRequest.current[tab]) return;
         console.debug(`${loggerPrefix} loadTab() received ${tab} objects:`, objects, pagination);
-        setLists((prev) => ({ ...prev, [tab]: { objects, isLoading: false, pagination } }));
-        if (page === 1 && !tabSearch && !tabOrdering && !tabFilter) {
-          writeCache(makeCacheKey(sessionContext.ApiUrl, tab), objects);
+        setLists((prev) => ({ ...prev, [tab]: { objects, isLoading: false, isRefreshing: false, pagination } }));
+        if (!tabSearch && pagination) {
+          writeCache(key, objects, pagination);
         }
       });
     },
-    [sessionContext],
+    [sessionContext, cacheKey],
   );
 
   const onPage = (page: number) => {
     console.debug(`${loggerPrefix} onPage() going to page ${page} of the ${activeTab} objects`);
-    setLists((prev) => withLoading(prev, [activeTab]));
     setPages((prev) => ({ ...prev, [activeTab]: page }));
   };
 
   // sort both tabs by a column, from their first pages.
   const onSort = (requested: string) => {
     console.debug(`${loggerPrefix} onSort() sorting by "${requested}", reloading the first page of each tab`);
-    setLists((prev) => withLoading(prev, tabKeys));
     setPages(tabRecord(tabKeys, () => 1));
     setOrdering(requested);
   };
@@ -248,7 +259,6 @@ export default function TabbedListView<TObject>({
     const url = new URL(window.location.href);
     url.searchParams.delete("filter");
     window.history.replaceState(window.history.state, "", url);
-    setLists((prev) => withLoading(prev, tabKeys));
     setPages(tabRecord(tabKeys, () => 1));
     setFilter("");
   };
@@ -259,7 +269,6 @@ export default function TabbedListView<TObject>({
       const requested = searchInput.trim();
       if (requested === search) return;
       console.debug(`${loggerPrefix} search changed to "${requested}", reloading the first page of each tab`);
-      setLists((prev) => withLoading(prev, tabKeys));
       setPages(tabRecord(tabKeys, () => 1));
       setSearch(requested);
     }, SEARCH_DELAY_MS);
@@ -349,6 +358,14 @@ export default function TabbedListView<TObject>({
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pe-3">
           <div className="d-flex flex-wrap align-items-center gap-3">
             <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+            {list.isRefreshing && (
+              <span
+                className="spinner-border spinner-border-sm text-primary opacity-75"
+                role="status"
+                title={gettext("Refreshing")}
+                aria-label={gettext("Refreshing")}
+              ></span>
+            )}
             {appliedFilter && (
               <span className="badge badge-light-primary fs-7 fw-semibold d-inline-flex align-items-center gap-2 py-2 ps-3 pe-2">
                 {

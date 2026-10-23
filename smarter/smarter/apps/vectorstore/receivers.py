@@ -5,6 +5,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from smarter.lib import logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import VectorstoreMeta
@@ -62,3 +63,13 @@ def document_loaded_receiver(sender, document, **kwargs):
 @receiver(document_load_failed)
 def document_load_failed_receiver(sender, document, error, **kwargs):
     logger.warning("%s %s failed to load: %s", module_prefix, document, error)
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache(
+    "Vectorstore",
+    "vectorstore.VectorstoreMeta",
+    "vectorstore.VectorstoreDocument",
+    "vectorstore.VectorstoreSnapshot",
+    "vectorsearch.Vectorsearch",
+)

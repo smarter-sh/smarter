@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test SAMSqlPluginBroker."""
 
+import copy
 import os
 from typing import List
 
@@ -320,7 +321,10 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
 
         plugin_updated.connect(handler, weak=False)
         self.addCleanup(plugin_updated.disconnect, handler)
-        broker = self.SAMBrokerClass(request=self.request, loader=SAMLoader(manifest=json.dumps(self.loader.json_data)))
+        # an unchanged manifest updates nothing, so the description is changed.
+        manifest = copy.deepcopy(self.loader.json_data)
+        manifest["metadata"]["description"] = "An updated description."
+        broker = self.SAMBrokerClass(request=self.request, loader=SAMLoader(manifest=json.dumps(manifest)))
         response = broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertEqual(len(updates), 1)

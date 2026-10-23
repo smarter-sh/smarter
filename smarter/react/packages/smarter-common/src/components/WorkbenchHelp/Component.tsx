@@ -8,7 +8,8 @@ type WorkbenchHelpProps = {
 
 export default function WorkbenchHelp({ title, icon, docsUrl, helpText }: WorkbenchHelpProps) {
   return (
-    <div className="pt-5 pb-5">
+    // hidden on phones (below Bootstrap's md breakpoint, 768px), where it would push the list below the fold.
+    <div className="d-none d-md-block pt-5 pb-5" data-testid="workbench-help">
       {/* Modeled on a Sphinx/Read the Docs "note" admonition: tinted fill,
           colored left rule, thin border everywhere else. Reads as a callout
           referencing docs, not a promo card -- no shadow, no full-bleed width. */}

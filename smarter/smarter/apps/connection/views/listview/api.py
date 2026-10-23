@@ -6,19 +6,12 @@ ConnectionBase list view in the Smarter Dashboard.
 """
 
 from http import HTTPStatus
-from typing import Union
 
-from django.core.handlers.asgi import ASGIRequest
-from django.db import models, transaction
+from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.caching import (
-    get_cached_connections_available_to_user_profile,
-    get_cached_connections_owned_by_user_profile,
-    get_cached_connections_shared_with_user_profile,
     invalidate_all_cached_connections_for_user_profile,
 )
 from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlConnection
@@ -27,19 +20,15 @@ from smarter.apps.connection.serializers import (
     ConnectionSerializer,
     SqlConnectionSerializer,
 )
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseNotFound,
-)
-from smarter.lib.django.pagination import paginate_listview
+from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
 
 
-class ConnectionListApiView(SmarterAuthenticatedNeverCachedWebView):
+class ConnectionListApiView(SmarterListApiView):
     """
     Render the connection list view for the Smarter Workbench web console.
 
@@ -56,59 +45,9 @@ class ConnectionListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{ConnectionListApiView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        qs: models.QuerySet[ConnectionBase]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
-
-        logger.debug(
-            "%s.get() Rendering connection list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            request.user.username if request.user else "None",  # type: ignore[union-attr]
-            args,
-            kwargs,
-        )
-        if invalidate_cache:
-            invalidate_all_cached_connections_for_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_connections_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_connections_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_connections_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        connections, pagination = paginate_listview(request, qs.order_by("-updated_at"))
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": ConnectionSerializer(connections, many=True, context={"request": request}).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = ConnectionBase
+    serializer_class = ConnectionSerializer
+    listview_cache_kind = "Connection"
 
 
 class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
