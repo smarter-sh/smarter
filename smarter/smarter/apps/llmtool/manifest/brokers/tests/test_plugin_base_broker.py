@@ -201,6 +201,8 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
                     controller.return_value.obj = obj
                     self.assertIs(plugin(broker), obj)
                 self.assertEqual(controller.call_args.kwargs["manifest"], broker.loader.json_data)
+                # the loader's raw dict must not leak into _manifest, which holds a Pydantic model
+                self.assertIsNone(broker._manifest)
 
         broker._plugin = "cached"  # type: ignore[assignment]
         self.assertEqual(plugin(broker), "cached")
