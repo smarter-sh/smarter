@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.13](https://github.com/smarter-sh/smarter/compare/v0.36.12...v0.36.13) (2026-10-23)
+
+### Bug Fixes
+
+* **listview:** give the cached page's request the platform host ([f7d8875](https://github.com/smarter-sh/smarter/commit/f7d887563eb15fd11f0b75e81a3acc12588f1df9))
+
 ## [0.36.12](https://github.com/smarter-sh/smarter/compare/v0.36.11...v0.36.12) (2026-10-23)
 
 ### Bug Fixes
