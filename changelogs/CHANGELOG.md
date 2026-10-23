@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.14-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.36.14-alpha.2...v0.36.14-alpha.3) (2026-10-23)
+
+### Bug Fixes
+
+* **account:** stop printing generated passwords in create_user ([fcae349](https://github.com/smarter-sh/smarter/commit/fcae3494c6d1386a2c0b26cbe37c62d24ebb28f0))
+
 ## [0.36.14-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.14-alpha.1...v0.36.14-alpha.2) (2026-10-23)
 
 ### Bug Fixes
