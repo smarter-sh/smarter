@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.14-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.14-alpha.1...v0.36.14-alpha.2) (2026-10-23)
+
+### Bug Fixes
+
+* **helm:** stop running makemigrations in the init job ([236ada0](https://github.com/smarter-sh/smarter/commit/236ada02aafd4c7dbcc26bdc1ecb8858ebe621f1))
+* **logging:** format log origins consistently and quiet the init job ([b33a631](https://github.com/smarter-sh/smarter/commit/b33a631cd13a702dc14541323d757cba290af9db))
+
 ## [0.36.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.13...v0.36.14-alpha.1) (2026-10-23)
 
 ### Bug Fixes
