@@ -175,7 +175,7 @@ class Command(SmarterCommand):
         except Exception as e:
             raise CommandError(f"Error saving user {username}: {str(e)}")
 
-        self.handle_completed_success(msg=f"User {username} {email} has been created.")
+        self.handle_completed_success(msg=f"User {username} {email} has been {'created' if created else 'updated'}.")
 
         if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
             # Send email to user, in the language of the welcome email.

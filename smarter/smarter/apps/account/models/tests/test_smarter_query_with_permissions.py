@@ -18,15 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class TestSmarterQuerySetWithPermissions(TestAccountMixin):
-    """Test SmarterQuerySetWithPermissions model"""
+    """Test SmarterQuerySetWithPermissions model."""
 
-    logger_prefix = logging.formatted_text(f"{__name__}.TestSmarterQuerySetWithPermissions()")
+    logger_prefix = f"{logging.formatted_text(__name__)}.TestSmarterQuerySetWithPermissions()"
 
     @classmethod
     def setUpClass(cls):
-        """
-        Ensure that the Secret model has some data to query against.
-        """
+        """Ensure that the Secret model has some data to query against."""
         super().setUpClass()
 
         cls.unrelated_account_admin, cls.unrelated_account, cls.unrelated_account_user_profile = admin_user_factory()
@@ -60,9 +58,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
 
     @classmethod
     def tearDownClass(cls):
-        """
-        Clean up the accounts and users created for this test case.
-        """
+        """Clean up the accounts and users created for this test case."""
         try:
             factory_account_teardown(
                 user=cls.unrelated_account_admin,
@@ -94,9 +90,9 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
     def setUp(self):
         """
         Set up the test case.
+
         - Our admin user will the be the authenticated user for all tests.
         - The non_admin_user will be the unauthenticated user for all tests.
-
         """
         super().setUp()
         client = Client()
@@ -115,33 +111,25 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
         self.control_count = self.queryset.count()  # This should be 4, since we created four secrets in setUpClass()
 
     def test_with_read_permission_for_non_user(self):
-        """
-        Test that an unauthenticated user has no read permissions.
-        """
+        """Test that an unauthenticated user has no read permissions."""
         not_a_user = object()
         result = self.queryset.with_read_permission_for(not_a_user)  # type: ignore
         self.assertEqual(result.count(), 0)
 
     def test_with_read_permission_for_unauthenticated_user(self):
-        """
-        Test that an unauthenticated user has no read permissions.
-        """
+        """Test that an unauthenticated user has no read permissions."""
 
         result = self.queryset.with_read_permission_for(object())  # type: ignore
         self.assertEqual(result.count(), 0)
 
     def test_with_read_permission_for_superuser(self):
-        """
-        Test that a superuser has read permissions for all objects.
-        """
+        """Test that a superuser has read permissions for all objects."""
 
         result = self.queryset.with_read_permission_for(self.admin_user)
         self.assertEqual(result.count(), self.control_count)
 
     def test_with_read_permission_for_regular_unrelated_user(self):
-        """
-        Test that a regular user has read permissions only for their own objects.
-        """
+        """Test that a regular user has read permissions only for their own objects."""
         smarter_admin_read_count = self.queryset.with_read_permission_for(smarter_cached_objects.smarter_admin).count()
         result = self.queryset.with_read_permission_for(self.unrelated_non_admin_user)
         self.assertEqual(smarter_admin_read_count - result.count(), 2)
@@ -156,9 +144,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
             self.assertIn(secret.user_profile, ownership_set)
 
     def test_with_read_permission_for_staff_user(self):
-        """
-        Test that a staff user has read permissions for all objects in the account.
-        """
+        """Test that a staff user has read permissions for all objects in the account."""
 
         logger.debug(
             "%s.test_with_read_permission_for_staff_user() starting test with unrelated_non_admin_user %s",
@@ -199,32 +185,24 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
             self.admin_user.save()
 
     def test_with_ownership_permission_for_not_user_instance(self):
-        """
-        Test that an object that is not a user has no ownership permissions.
-        """
+        """Test that an object that is not a user has no ownership permissions."""
         not_a_user = object()
         result = self.queryset.with_ownership_permission_for(not_a_user)  # type: ignore
         self.assertEqual(result.count(), 0)
 
     def test_with_ownership_permission_for_unauthenticated_user(self):
-        """
-        Test that an unauthenticated user has no ownership permissions.
-        """
+        """Test that an unauthenticated user has no ownership permissions."""
         result = self.queryset.with_ownership_permission_for(object())  # type: ignore
         self.assertEqual(result.count(), 0)
 
     def test_with_ownership_permission_for_superuser(self):
-        """
-        Test that a superuser has ownership permissions for all objects.
-        """
+        """Test that a superuser has ownership permissions for all objects."""
 
         result = self.queryset.with_ownership_permission_for(self.admin_user)
         self.assertEqual(result.count(), self.control_count)
 
     def test_with_ownership_permission_for_staff_user(self):
-        """
-        Test that a staff user has ownership permissions for all objects in the account.
-        """
+        """Test that a staff user has ownership permissions for all objects in the account."""
 
         # temporarily demote the admin user to staff to test this case
         self.admin_user.is_superuser = False
@@ -247,9 +225,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
             self.admin_user.save()
 
     def test_with_ownership_permission_for_regular_user(self):
-        """
-        Test that a regular user has ownership permissions only for their own objects.
-        """
+        """Test that a regular user has ownership permissions only for their own objects."""
 
         logger.debug(
             "%s.test_with_ownership_permission_for_regular_user() starting test with unrelated_non_admin_user %s",

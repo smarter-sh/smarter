@@ -110,7 +110,7 @@ def undeploy_default_api(llmclient_id: int):
 
     task_id = undeploy_default_api.request.id
     prefix = logger_prefix + f".{undeploy_default_api.__name__}()"
-    logger.info("%s - llmclient %s task_id: %s", prefix, llmclient_id, task_id)
+    logger.info("%s llmclient %s task_id: %s", prefix, llmclient_id, task_id)
     pre_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)
 
     llmclient: LLMClient

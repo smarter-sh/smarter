@@ -162,7 +162,7 @@ def get_resolved_user(
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
         verbose_logger.debug(
-            "%s - user[%s] %s is instance of expected type: %s",
+            "%s user[%s] %s is instance of expected type: %s",
             logging.formatted_text(__name__) + ".get_resolved_user()",
             id(user),
             user,
@@ -176,7 +176,7 @@ def get_resolved_user(
     # pylint: disable=W0212
     if isinstance(user, SimpleLazyObject):
         verbose_logger.debug(
-            "%s - user[%s] %s is instance of SimpleLazyObject, returning wrapped user: %s",
+            "%s user[%s] %s is instance of SimpleLazyObject, returning wrapped user: %s",
             logging.formatted_text(__name__) + ".get_resolved_user()",
             id(user),
             user,
@@ -186,7 +186,7 @@ def get_resolved_user(
     # Allow unittest.mock.MagicMock or Mock for testing
     if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
         verbose_logger.debug(
-            "%s - user[%s] %s is instance of test mock: %s",
+            "%s user[%s] %s is instance of test mock: %s",
             logging.formatted_text(__name__) + ".get_resolved_user()",
             id(user),
             user,
@@ -414,7 +414,7 @@ class Account(MetaDataModel):
             if account:
                 print(account.company_name)
         """
-        logger_prefix = logging.formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger_prefix = f"{logging.formatted_text(__name__)}.{cls.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk=%s, name=%s, account_number=%s, company_name=%s, invalidate=%s",
             logger_prefix,

@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class TestMetaDataWithOwnershipModel(TestAccountMixin):
-    """Test MetaDataWithOwnershipModel model"""
+    """Test MetaDataWithOwnershipModel model."""
 
-    logger_prefix = logging.formatted_text(f"{__name__}.TestMetaDataWithOwnershipModel()")
+    logger_prefix = f"{logging.formatted_text(__name__)}.TestMetaDataWithOwnershipModel()"
 
     @classmethod
     def setUpClass(cls):
@@ -44,9 +44,7 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
             super().tearDownClass()
 
     def test_get_cached_object_by_pk(self):
-        """
-        Test get_cached_object retrieves an object by primary key with caching.
-        """
+        """Test get_cached_object retrieves an object by primary key with caching."""
 
         secret = Secret.get_cached_object(pk=self.secret1.pk, invalidate=True)
         self.assertEqual(secret, self.secret1)
@@ -56,9 +54,7 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
         self.assertEqual(secret, self.secret1)
 
     def test_get_cached_object_by_name_and_user_profile(self):
-        """
-        Test get_cached_object retrieves an object by name and user_profile with caching.
-        """
+        """Test get_cached_object retrieves an object by name and user_profile with caching."""
 
         secret = Secret.get_cached_object(name=self.secret1.name, user_profile=self.user_profile, invalidate=True)
         self.assertIsInstance(secret, Secret)
@@ -69,9 +65,7 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
         self.assertEqual(secret, self.secret1)
 
     def test_get_cached_object_by_name_and_account(self):
-        """
-        Test get_cached_object retrieves an object by name and account with caching.
-        """
+        """Test get_cached_object retrieves an object by name and account with caching."""
 
         secret = Secret.get_cached_object(name=self.secret1.name, account=self.account, invalidate=True)
         self.assertIsInstance(secret, Secret)
@@ -82,9 +76,7 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
         self.assertEqual(secret, self.secret1)
 
     def test_get_cached_object_invalidate_cache(self):
-        """
-        Test that cache invalidation works as expected in get_cached_object.
-        """
+        """Test that cache invalidation works as expected in get_cached_object."""
 
         # baseline
         secret = Secret.get_cached_object(pk=self.secret1.pk, invalidate=True)

@@ -336,7 +336,7 @@ class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """The class name, for logging."""
-        return self.formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return f"{self.formatted_text(__name__)}.{self.__class__.__name__}"
 
     def error(self, message: str, status: HTTPStatus = HTTPStatus.BAD_REQUEST) -> JsonResponse:
         """Return an error response."""

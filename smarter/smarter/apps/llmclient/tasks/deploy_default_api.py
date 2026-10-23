@@ -157,7 +157,7 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
 
     fn_name = logger_prefix + ".deploy_default_api()"
     task_id = deploy_default_api.request.id
-    logger.info("%s - llmclient %s task_id: %s", fn_name, llmclient_id, task_id)
+    logger.info("%s llmclient %s task_id: %s", fn_name, llmclient_id, task_id)
     llmclient: LLMClient
 
     pre_deploy_default_api.send(
@@ -401,7 +401,7 @@ def continue_default_api_deployment(
         if not (ingress_verified and secret_verified and certificate_verified):
             if attempt + 1 < CERTIFICATE_MAX_ATTEMPTS:
                 logger.info(
-                    "%s - llmclient %s ingress resources are not ready. Check %s of %s. task_id: %s",
+                    "%s llmclient %s ingress resources are not ready. Check %s of %s. task_id: %s",
                     fn_name,
                     domain_name,
                     attempt + 1,
@@ -411,7 +411,7 @@ def continue_default_api_deployment(
                 check_again(STAGE_CERTIFICATE, attempt + 1, CERTIFICATE_CHECK_INTERVAL)
                 return
             logger.error(
-                "%s - llmclient %s %s one or more resources were not created task_id: %s",
+                "%s llmclient %s %s one or more resources were not created task_id: %s",
                 fn_name,
                 domain_name,
                 llmclient,
@@ -425,7 +425,7 @@ def continue_default_api_deployment(
         llmclient.tls_certificate_issuance_status = llmclient.TlsCertificateIssuanceStatusChoices.ISSUED
         llmclient.save(asynchronous=True)
         logger.info(
-            "%s - llmclient %s %s all resources successfully created task_id: %s",
+            "%s llmclient %s %s all resources successfully created task_id: %s",
             fn_name,
             domain_name,
             llmclient,

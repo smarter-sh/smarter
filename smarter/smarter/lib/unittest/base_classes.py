@@ -18,14 +18,14 @@ from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 HERE = __name__
-logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")
+logger_prefix = f"{formatted_text(HERE)}.SmarterTestBase()"
 
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """Base class for all unit tests."""
 
     name: str
-    smarter_test_base_logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")
+    smarter_test_base_logger_prefix = f"{formatted_text(HERE)}.SmarterTestBase()"
     line_width = 150
 
     @classmethod

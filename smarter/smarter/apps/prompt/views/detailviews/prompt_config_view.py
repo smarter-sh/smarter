@@ -250,12 +250,10 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             self.account = self._llmclient_helper.account
             self.user = self._llmclient_helper.user
             self.user_profile = self._llmclient_helper.user_profile
-            verbose_logger.debug(
-                "%s - llmclient_helper() setter llmclient=%s", self.formatted_class_name, self.llmclient
-            )
+            verbose_logger.debug("%s llmclient_helper() setter llmclient=%s", self.formatted_class_name, self.llmclient)
         else:
             self._llmclient = None
-            verbose_logger.debug("%s - llmclient_helper() setter llmclient is unset", self.formatted_class_name)
+            verbose_logger.debug("%s llmclient_helper() setter llmclient is unset", self.formatted_class_name)
 
     def clean_url(self, url: str) -> str:
         """Clean the url of any query strings and trailing '/config/' strings."""
@@ -695,7 +693,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             )
 
         verbose_logger.debug(
-            "%s - llmclient=%s - llmclient_helper=%s",
+            "%s llmclient=%s - llmclient_helper=%s",
             self.formatted_class_name,
             self.llmclient,
             self.llmclient_helper,
@@ -721,7 +719,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         self, request: HttpRequest, *args, **kwargs
     ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse]:
         """Get the llmclient configuration."""
-        logger.debug("%s - post()", self.formatted_class_name)
+        logger.debug("%s post()", self.formatted_class_name)
         return self.config_response(request)
 
     def config_response(
@@ -750,7 +748,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
     ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse, HttpResponseNotAllowed]:
         """Get the llmclient configuration."""
         logger.warning(
-            "%s - get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
+            "%s get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
         )
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
 
