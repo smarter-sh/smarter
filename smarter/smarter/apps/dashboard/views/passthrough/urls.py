@@ -57,7 +57,7 @@ if smarter_settings.enable_dashboard_passthrough_prompt:
         path("", PromptPassthroughView.as_view(), name=PassthroughReverseNames.view),
         path("api/", include(api_urls, api_urls.namespace)),
     ]
-    logger.info(
+    logger.debug(
         "%s %s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
         logging.formatted_text(__name__),
         app_name,

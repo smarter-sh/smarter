@@ -70,13 +70,13 @@ class Command(SmarterCommand):
 
         if self._data is None:
             if self.manifest:
-                logger.debug("%s - using manifest provided on command line.", logger_prefix)
+                logger.debug("%s using manifest provided on command line.", logger_prefix)
                 self._data = self.manifest
             elif self.filespec:
                 try:
                     with open(self.filespec, encoding="utf-8") as file:
                         self._data = file.read()
-                    logger.debug("%s - using manifest from file: %s", logger_prefix, self.filespec)
+                    logger.debug("%s using manifest from file: %s", logger_prefix, self.filespec)
                 except FileNotFoundError as e:
                     raise SmarterValueError(f"File not found: {self.filespec}") from e
             if not self._data:
@@ -126,7 +126,7 @@ class Command(SmarterCommand):
         verbose = options.get("verbose", False)
 
         logger.debug(
-            "%s - handle called with filespec=%s, manifest=%s, username=%s",
+            "%s handle called with filespec=%s, manifest=%s, username=%s",
             logger_prefix,
             self.filespec,
             self.manifest,
@@ -173,7 +173,7 @@ class Command(SmarterCommand):
         #     logger.debug("%s manifest: %s", logger_prefix, self.data)
         #     logger.debug("%s headers: %s", logger_prefix, headers)
 
-        logger.debug("%s - applying manifest", logger_prefix)
+        logger.debug("%s applying manifest", logger_prefix)
 
         # ----------------------------------------------------------------------
         # PLAN B
@@ -196,9 +196,9 @@ class Command(SmarterCommand):
 
         if response and response.status_code == 200:
             if verbose:
-                logger.debug("%s - manifest applied successfully", logger_prefix)
+                logger.debug("%s manifest applied successfully", logger_prefix)
             else:
-                logger.debug("%s - manifest applied successfully", logger_prefix)
+                logger.debug("%s manifest applied successfully", logger_prefix)
             self.handle_completed_success()
             return
         else:
@@ -206,8 +206,8 @@ class Command(SmarterCommand):
             status_code = response.status_code if response is not None else None
             content = response.content if response is not None else None
             self.handle_completed_failure(msg=f"Manifest apply failed with status code: {status_code}")
-            logger.error("%s - manifest: %s", logger_prefix, self.data)
-            logger.error("%s - response: %s", logger_prefix, content)
+            logger.error("%s manifest: %s", logger_prefix, self.data)
+            logger.error("%s response: %s", logger_prefix, content)
             msg = f"Manifest apply failed with status code: {status_code}\nmanifest: {self.data}\nresponse: {content}"
             raise CommandError(msg)
 

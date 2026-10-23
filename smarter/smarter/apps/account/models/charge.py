@@ -135,7 +135,7 @@ class Charge(TimestampedModel):
         if is_new:
             logger.debug(
                 "%s.save() New user charge created for %s.",
-                logging.formatted_text(__name__ + ".Charge()"),
+                logging.formatted_text(__name__) + ".Charge()",
                 self.resource_locator,
             )
             new_charge_created.send(sender=self.__class__, charge=self)

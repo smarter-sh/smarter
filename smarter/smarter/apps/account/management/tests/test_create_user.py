@@ -41,14 +41,28 @@ class TestCreateUser(CommandTestBase):
         """Test that a new user gets a random password, which is emailed when the switch is on."""
         with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
             output = self.create(admin=True)
-        self.assertIn("has been set to", output)
+        self.assertIn("Generated a random password", output)
         user = User.objects.get(username=self.username)
         self.assertTrue(user.is_staff)
         self.assertTrue(UserProfile.objects.filter(user=user, account=self.account).exists())
         self.assertTrue(AccountContact.objects.filter(account=self.account, email=self.email).exists())
         self.infrastructure.email.send_email.assert_called_once()
         # the email has the password: the admin gets no blind copy.
-        self.assertFalse(self.infrastructure.email.send_email.call_args.kwargs["bcc_admin"])
+        kwargs = self.infrastructure.email.send_email.call_args.kwargs
+        self.assertFalse(kwargs["bcc_admin"])
+        # the password is in the email, and never in the command's output, which ends up in job logs.
+        password = kwargs["body"].split("Password: ", 1)[1].strip()
+        self.assertTrue(user.check_password(password))
+        self.assertNotIn(password, output)
+
+    def test_show_password_prints_the_generated_password(self):
+        """Test that --show_password prints a new user's generated password."""
+        with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
+            output = self.create(show_password=True)
+        body = self.infrastructure.email.send_email.call_args.kwargs["body"]
+        password = body.split("Password: ", 1)[1].strip()
+        self.assertIn(f"has been set to {password}", output)
+        self.assertNotIn("Generated a random password", output)
 
     def test_existing_user_is_updated(self):
         self.create(password="first")

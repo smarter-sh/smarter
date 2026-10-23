@@ -83,7 +83,6 @@ spec:
                   || { echo "This server has no SHOW CREATE ROUTINE privilege. Granting {{ $backupUsername }} the rest."; mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ $backupUsername }}'@'%';"; } \
                   || status=1
                 {{- end }}
-                run python manage.py makemigrations
                 run python manage.py migrate
                 # initialize_platform does all of the platform's initialization, and this Job adds none of its
                 # own: every example resource, and Stackademy, including its course database, which it creates

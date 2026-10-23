@@ -182,9 +182,9 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
     ``smarter.apps.guardrail.manifest.brokers.guardrail.SAMGuardrailBroker.broker_ready()``,
     rather than this module.
     """
-    logger.info(
+    logger.debug(
         "%s %s %s for %s is ready.",
-        formatted_text(f"{sender.__module__}.{sender.__name__}.broker_ready()"),
+        f"{formatted_text(sender.__module__)}.{sender.__name__}.broker_ready()",
         broker.kind,
         str(broker),
         broker.name,

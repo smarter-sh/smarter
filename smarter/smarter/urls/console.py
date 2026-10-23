@@ -268,7 +268,7 @@ if smarter_settings.enable_proxy:
     urlpatterns += [
         path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
     ]
-    logger.info("%s Proxy web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+    logger.debug("%s Proxy web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
 else:
     logger.info(
         "%s Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
@@ -279,7 +279,7 @@ if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     ]
-    logger.info("%s Vectorstore web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+    logger.debug("%s Vectorstore web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
 else:
     logger.info(
         "%s Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
