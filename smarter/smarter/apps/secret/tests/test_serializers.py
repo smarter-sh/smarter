@@ -18,7 +18,7 @@ class TestSerializers(TestAccountMixin):
     """Test serializers for the account app."""
 
     secret: Secret
-    test_serializers_logger_prefix = formatted_text(f"{__name__}.TestSerializers()")
+    test_serializers_logger_prefix = f"{formatted_text(__name__)}.TestSerializers()"
 
     @classmethod
     def setUpClass(cls):

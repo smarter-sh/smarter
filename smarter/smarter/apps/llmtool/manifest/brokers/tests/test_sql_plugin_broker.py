@@ -51,7 +51,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
     apply_builds_plugin = True
     orm_spec_method = "plugin_sql_spec_orm2pydantic"
 
-    test_smarter_sql_plugin_broker_logger_prefix = formatted_text(f"{HERE}.TestSmarterSqlPluginBroker()")
+    test_smarter_sql_plugin_broker_logger_prefix = f"{formatted_text(HERE)}.TestSmarterSqlPluginBroker()"
 
     @classmethod
     def setUpClass(cls):

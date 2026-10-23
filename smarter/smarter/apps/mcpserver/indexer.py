@@ -323,7 +323,7 @@ def collect_files(archive: IO[bytes]) -> list[ArchiveFile]:
         if len(files) >= MAX_FILES or total + file.size > MAX_INDEX_BYTES:
             logger.warning(
                 "%s the index limit was reached at %s files and %s bytes: the remaining files are not indexed.",
-                logging.formatted_text(f"{__name__}.collect_files()"),
+                f"{logging.formatted_text(__name__)}.collect_files()",
                 len(files),
                 total,
             )
@@ -384,7 +384,7 @@ def index_repository(name: str, force: bool = False) -> RepositoryIndex:
         index = index_repository("smarter-cli")
         index.status  # 'ready'
     """
-    prefix = logging.formatted_text(f"{__name__}.index_repository()")
+    prefix = f"{logging.formatted_text(__name__)}.index_repository()"
     repository = get_repository(name)
     if repository is None:
         raise SmarterMCPServerIndexError(f"{name} is not a repository of The Smarter Project.")

@@ -56,7 +56,7 @@ from smarter.lib.typing import SmarterDictType
 from . import PluginSerializer, SAMPluginBrokerError
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = formatted_text(__name__ + ".SAMPluginBaseBroker")
+logger_prefix = formatted_text(__name__) + ".SAMPluginBaseBroker"
 
 
 class SAMPluginBaseBroker(AbstractBroker):

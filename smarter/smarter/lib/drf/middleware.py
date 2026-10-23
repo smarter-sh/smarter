@@ -88,13 +88,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH):
     logger.debug(
         "%s is %s",
-        formatted_text(__name__ + ".SmarterTokenAuthenticationMiddleware"),
+        formatted_text(__name__) + ".SmarterTokenAuthenticationMiddleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        formatted_text(__name__ + ".SmarterTokenAuthenticationMiddleware"),
+        formatted_text(__name__) + ".SmarterTokenAuthenticationMiddleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 
@@ -181,7 +181,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
                 token=masked_token,
             )
 
-            logger.info("%s authenticated user=%s", self.formatted_class_name, request.user)
+            logger.debug("%s.process_request() authenticated user %s", self.formatted_class_name, request.user)
 
         except AuthenticationFailed as auth_failed:
 

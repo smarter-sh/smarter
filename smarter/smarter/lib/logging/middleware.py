@@ -79,13 +79,13 @@ logger = logging.getSmarterLogger(__name__)
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
     logger.debug(
         "%s is %s",
-        formatted_text(__name__ + ".SmarterRequestLogContextMiddleware"),
+        formatted_text(__name__) + ".SmarterRequestLogContextMiddleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        formatted_text(__name__ + ".SmarterRequestLogContextMiddleware"),
+        formatted_text(__name__) + ".SmarterRequestLogContextMiddleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 

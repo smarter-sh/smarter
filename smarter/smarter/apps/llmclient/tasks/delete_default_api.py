@@ -148,7 +148,7 @@ def delete_default_api(
             account_number = Account.get_cached_object(pk=account_id).account_number  # type: ignore[union-attr]
         except Account.DoesNotExist:
             logger.warning(
-                "%s - account %s no longer exists. Using the account number of the api url %s.",
+                "%s account %s no longer exists. Using the account number of the api url %s.",
                 logger_prefix,
                 account_id,
                 api_url,
@@ -157,7 +157,7 @@ def delete_default_api(
     if not _is_default_api_hostname(hostname, account_number):
         # not retried: a retry can't make the url valid.
         logger.error(
-            "%s - %s is not the default api url of an llmclient of account %s. Nothing was deleted.",
+            "%s %s is not the default api url of an llmclient of account %s. Nothing was deleted.",
             logger_prefix,
             api_url,
             account_number,
@@ -171,7 +171,7 @@ def delete_default_api(
 
     prefix = logger_prefix + f".{delete_default_api.__name__}()"
     logger.info(
-        "%s - llmclient %s account: %s name: %s task_id: %s",
+        "%s llmclient %s account: %s name: %s task_id: %s",
         prefix,
         api_url,
         account_number,
@@ -185,7 +185,7 @@ def delete_default_api(
     )
     if ingress_deleted and certificate_deleted and secret_delete:
         logger.info(
-            "%s - llmclient %s account: %s name: %s all resources successfully deleted task_id: %s",
+            "%s llmclient %s account: %s name: %s all resources successfully deleted task_id: %s",
             prefix,
             api_url,
             account_number,
@@ -194,7 +194,7 @@ def delete_default_api(
         )
     else:
         logger.error(
-            "%s - llmclient %s account: %s name: %s one or more resources were not deleted task_id: %s",
+            "%s llmclient %s account: %s name: %s one or more resources were not deleted task_id: %s",
             prefix,
             api_url,
             account_number,

@@ -161,10 +161,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             user=user,
             token=masked_token,
         )
-        logger.info(
-            "%s.authenticate_credentials() - successfully authenticated user %s", self.formatted_class_name, user
-        )
-        logger.info("%s - is %s", self.formatted_class_name, self.formatted_state_ready)
+        logger.info("%s.authenticate_credentials() authenticated user %s", self.formatted_class_name, user)
         return (user, smarter_auth_token)
 
     @classmethod
@@ -177,7 +174,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         Returns:
             User or SmarterAnonymousUser: The authenticated user if the token is valid, otherwise SmarterAnonymousUser.
         """
-        logger_prefix = formatted_text(f"{__name__}.{SmarterTokenAuthentication.__name__}.get_user_from_request()")
+        logger_prefix = f"{formatted_text(__name__)}.{SmarterTokenAuthentication.__name__}.get_user_from_request()"
         logger.debug("%s called with request: %s", logger_prefix, request)
 
         auth_header = request.META.get("HTTP_AUTHORIZATION")

@@ -130,7 +130,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
     domain_name = infrastructure.dns.resolve_domain(domain_name)
 
     logger.info(
-        "%s - Account %s %s attempting to register custom domain %s task_id: %s",
+        "%s Account %s %s attempting to register custom domain %s task_id: %s",
         logger_prefix + f".{register_custom_domain.__name__}() task_id: %s",
         account.company_name,
         account.account_number,
@@ -152,7 +152,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
             )
             verify_custom_domain.delay(hosted_zone_id=existing.aws_hosted_zone_id)
         logger.info(
-            "%s - custom domain %s already exists for account %s and certificate is verified. Nothing to do. task_id: %s",
+            "%s custom domain %s already exists for account %s and certificate is verified. Nothing to do. task_id: %s",
             logger_prefix,
             domain_name,
             account.company_name,
@@ -165,7 +165,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
     except LLMClientCustomDomain.DoesNotExist:
         # the custom domain doesn't exist, so we need to create it
         logger.info(
-            "%s - custom domain %s not found for account %s. Proceeding to create it. task_id: %s",
+            "%s custom domain %s not found for account %s. Proceeding to create it. task_id: %s",
             logger_prefix,
             domain_name,
             account.company_name,
@@ -174,7 +174,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
     except CertificateNotFound:
         # the certificate was not found, so we need to create it
         logger.info(
-            "%s - certificate for domain %s not found. Proceeding to create it. task_id: %s",
+            "%s certificate for domain %s not found. Proceeding to create it. task_id: %s",
             logger_prefix,
             domain_name,
             task_id,
@@ -182,7 +182,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
     except CertificateNotIssued:
         # the certificate has not been verified, so we need to verify it
         logger.info(
-            "%s - certificate for domain %s is not verified. Proceeding to verify it. task_id: %s",
+            "%s certificate for domain %s is not verified. Proceeding to verify it. task_id: %s",
             logger_prefix,
             domain_name,
             task_id,
@@ -197,7 +197,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
         err = f"{logger_prefix}.register_custom_domain() - Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.user_profile.account.company_name} task_id: {task_id}"
         logger.error(err)
         raise LLMClientCustomDomainExists(err)
-    logger.info("%s - domain %s is available to register. task_id: %s", logger_prefix, domain_name, task_id)
+    logger.info("%s domain %s is available to register. task_id: %s", logger_prefix, domain_name, task_id)
 
     # create a DNS zone for the custom domain
     zone, _ = infrastructure.dns.get_or_create_zone(domain_name)

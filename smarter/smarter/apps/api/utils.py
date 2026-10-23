@@ -148,7 +148,7 @@ def apply_manifest(
     headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
     logger.debug(
-        "%s - Applying manifest via api endpoint %s as user %s (verbose=%s)",
+        "%s Applying manifest via api endpoint %s as user %s (verbose=%s)",
         logger_prefix,
         url,
         user.username if user else "unknown",
@@ -273,14 +273,14 @@ def apply_manifest_v2(
     broker = BrokerClass(request=fake_request, loader=loader, user_profile=user_profile)
     response_content = broker.apply(request=fake_request)
     if response_content is None:
-        logger.error("%s - broker.apply() returned None", logger_prefix)
+        logger.error("%s broker.apply() returned None", logger_prefix)
         return False
 
     if response_content.status_code == 200:
-        logger.debug("%s - manifest applied successfully", logger_prefix)
+        logger.debug("%s manifest applied successfully", logger_prefix)
     else:
-        logger.error("%s - manifest: %s", logger_prefix, data)
-        logger.error("%s - response: %s", logger_prefix, response_content.content)
+        logger.error("%s manifest: %s", logger_prefix, data)
+        logger.error("%s response: %s", logger_prefix, response_content.content)
         msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response_content.content}"
         # pylint: disable=W0719
         raise Exception(msg)
