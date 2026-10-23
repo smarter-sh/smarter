@@ -154,6 +154,37 @@ describe("TabbedListView", () => {
     await vi.waitFor(() => expect(invalidations).toEqual(["false", "false", "true", "true"]));
   });
 
+  it("queries again from the Refresh button, invalidating the backend's cache", async () => {
+    const invalidations: (string | null)[] = [];
+    server.use(
+      http.post(`${API_URL}:tab/`, ({ request }) => {
+        invalidations.push(new URL(request.url).searchParams.get("invalidate_cache"));
+        return HttpResponse.json({ objects: [{ id: 1, name: "first_example" }] });
+      }),
+    );
+    const user = setup();
+    await screen.findByText("first_example");
+    await vi.waitFor(() => expect(invalidations).toEqual(["false", "false"]));
+    const refresh = screen.getByRole("button", { name: "Refresh" });
+    await vi.waitFor(() => expect(refresh).toBeEnabled());
+
+    await user.click(refresh);
+    await vi.waitFor(() => expect(invalidations).toEqual(["false", "false", "true", "true"]));
+  });
+
+  it("disables the Refresh button while the list loads", async () => {
+    server.use(
+      http.post(`${API_URL}:tab/`, async () => {
+        await delay(200);
+        return HttpResponse.json({ objects: [{ id: 1, name: "first_example" }] });
+      }),
+    );
+    setup();
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeDisabled();
+    await screen.findByText("first_example");
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeEnabled();
+  });
+
   it("pages through a tab, with the previous and next buttons and the page number box", async () => {
     server.use(...listHandlers(manyExamples(30), [], 10));
     const user = setup();

@@ -36,7 +36,8 @@
  * - Allows switching between list and card views.
  * - Persists the selected view mode in sessionStorage.
  * - Uses cookie-backed counts (owned/shared) to size loading skeleton rows.
- * - Supports requery with cache invalidation.
+ * - Supports requery with cache invalidation, from the Refresh button at the top of the list, and
+ *   from the list and card views after a clone, rename or delete.
  *
  * Props:
  * - sessionContext (SessionContext): Authentication and API context used for requests.
@@ -384,14 +385,26 @@ export default function TabbedListView<TObject>({
               </span>
             )}
           </div>
-          <SearchBox
-            value={searchInput}
-            onChange={setSearchInput}
-            placeholder={
-              // Translators: objects is the plural of a resource kind's name, e.g. secrets.
-              interpolate(gettext("Search %(objects)s"), { objects: `${objectTypeName}s` })
-            }
-          />
+          <div className="d-flex flex-wrap align-items-center gap-3">
+            <SearchBox
+              value={searchInput}
+              onChange={setSearchInput}
+              placeholder={
+                // Translators: objects is the plural of a resource kind's name, e.g. secrets.
+                interpolate(gettext("Search %(objects)s"), { objects: `${objectTypeName}s` })
+              }
+            />
+            <button
+              type="button"
+              className="btn btn-sm btn-light"
+              disabled={list.isLoading || list.isRefreshing}
+              title={gettext("Load the list again, with the latest changes")}
+              onClick={onRequery}
+            >
+              <i className="ki-outline ki-arrows-circle fs-4 me-1" aria-hidden="true" />
+              {gettext("Refresh")}
+            </button>
+          </div>
         </div>
 
         {viewMode === "list" ? (

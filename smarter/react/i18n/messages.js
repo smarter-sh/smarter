@@ -164,6 +164,10 @@ gettext("Failed to load budgets (%(status)s).");
 ngettext("Delete the budget %(name)s? It will no longer be enforced on its %(count)s resource.", "Delete the budget %(name)s? It will no longer be enforced on its %(count)s resources.", 1);
 // Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx
 gettext("Failed to delete the budget (%(status)s).");
+// Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+gettext("Load the list again, with the latest changes");
+// Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-common/src/components/TabbedListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
+gettext("Refresh");
 // Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx
 gettext("There are no budgets. Create one with a Budget manifest: smarter apply -f budget.yaml");
 // Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx
@@ -823,8 +827,6 @@ gettext("Loading the registry...");
 gettext("Search extensions");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx
 gettext("Publisher");
-// Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
-gettext("Refresh");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 gettext("No extensions match.");
 // Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
