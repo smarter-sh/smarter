@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.16-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.15...v0.36.16-alpha.1) (2026-10-23)
+
+### Bug Fixes
+
+* **logging:** batch redis log publishing, quiet init job noise ([505c424](https://github.com/smarter-sh/smarter/commit/505c42495ce51940acf4151806ff500867186b04))
+
 ## [0.36.15](https://github.com/smarter-sh/smarter/compare/v0.36.14...v0.36.15) (2026-10-23)
 
 ### Bug Fixes
