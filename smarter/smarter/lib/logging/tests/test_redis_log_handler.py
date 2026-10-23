@@ -32,6 +32,9 @@ class TestRedisLogHandler(SmarterTestBase):
         patcher = patch(f"{MODULE}.get_redis_cache", return_value=self.redis)
         patcher.start()
         self.addCleanup(patcher.stop)
+        patcher = patch.dict(handler._publish_state, {"failing": False})  # pylint: disable=protected-access
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def queued(self, *payloads):
         """Queue and dequeue payloads, as the worker does, so that flush() can mark them done."""
@@ -52,18 +55,59 @@ class TestRedisLogHandler(SmarterTestBase):
         pipe.execute.assert_called_once()
         self.assertEqual(self.queue.unfinished_tasks, 0)
 
-    def test_flush_redis_not_ready(self):
-        self.redis.ping.side_effect = ConnectionError("down")
-        buffer = self.queued({"channel": "logs:a", "data": "one"})
-        handler.flush(buffer)
+    def test_flush_does_not_ping(self):
+        """Test that flush() publishes without a round trip to check that Redis is up."""
+        handler.flush(self.queued({"channel": "logs:a", "data": "one"}))
+        self.redis.ping.assert_not_called()
+
+    def test_flush_redis_not_configured(self):
+        with patch(f"{MODULE}.get_redis_cache", return_value=None):
+            handler.flush(self.queued({"channel": "logs:a", "data": "one"}))
         self.redis.pipeline.assert_not_called()
         self.assertEqual(self.queue.unfinished_tasks, 0)
 
     def test_flush_pipeline_error(self):
-        self.redis.pipeline.return_value.execute.side_effect = Exception("pipeline failed")
+        """Test that a Redis outage is logged once, not once per batch, and that recovery is logged."""
+        execute = self.redis.pipeline.return_value.execute
+        execute.side_effect = Exception("pipeline failed")
         with patch(f"{MODULE}.logger") as logger:
             handler.flush(self.queued({"channel": "logs:a", "data": "one"}))
-        logger.exception.assert_called_once()
+            handler.flush(self.queued({"channel": "logs:a", "data": "two"}))
+            logger.exception.assert_called_once()
+            self.assertEqual(self.queue.unfinished_tasks, 0)
+
+            execute.side_effect = None
+            handler.flush(self.queued({"channel": "logs:a", "data": "three"}))
+            handler.flush(self.queued({"channel": "logs:a", "data": "four"}))
+            logger.info.assert_called_once()
+
+    def test_next_batch(self):
+        """Test that a batch takes everything that is queued, without waiting for more."""
+        self.queue.put_nowait({"channel": "logs:a", "data": "one"})
+        self.queue.put_nowait({"channel": "logs:a", "data": "two"})
+        buffer, stop = handler.next_batch(timeout=0.01)
+        self.assertEqual([payload["data"] for payload in buffer], ["one", "two"])
+        self.assertFalse(stop)
+        self.assertEqual(handler.next_batch(timeout=0.01), ([], False))
+
+    def test_next_batch_max_batch(self):
+        self.queue = queue.Queue()
+        with patch(f"{MODULE}.log_queue", self.queue), patch(f"{MODULE}.MAX_BATCH", 2):
+            for data in ("one", "two", "three"):
+                self.queue.put_nowait({"channel": "logs:a", "data": data})
+            buffer, stop = handler.next_batch(timeout=0.01)
+        self.assertEqual(len(buffer), 2)
+        self.assertFalse(stop)
+        self.assertEqual(self.queue.qsize(), 1)
+
+    def test_next_batch_shutdown(self):
+        """Test that the shutdown sentinel ends the batch, and the entries before it are kept."""
+        self.queue.put_nowait({"channel": "logs:a", "data": "one"})
+        self.queue.put_nowait(None)
+        buffer, stop = handler.next_batch(timeout=0.01)
+        self.assertEqual(len(buffer), 1)
+        self.assertTrue(stop)
+        self.assertEqual(handler.next_batch(timeout=0.01), ([], False))
 
     def test_redis_is_ready(self):
         self.assertTrue(handler.redis_is_ready())
@@ -97,7 +141,8 @@ class TestRedisLogHandler(SmarterTestBase):
         log_handler = handler.RedisLogHandler()
         dropped = handler.RedisLogHandler.dropped_logs
         log_handler.emit(record)  # 2 payloads: the user's channel and the global channel.
-        log_handler.emit(record)  # the queue is full after one more payload.
+        with patch(f"{MODULE}.sys.stderr"):
+            log_handler.emit(record)  # the queue is full after one more payload.
         self.assertEqual(self.queue.qsize(), 3)
         self.assertEqual(handler.RedisLogHandler.dropped_logs, dropped + 1)
 

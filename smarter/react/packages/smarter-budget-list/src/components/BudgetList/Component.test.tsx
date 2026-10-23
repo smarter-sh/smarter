@@ -24,6 +24,24 @@ describe("BudgetList", () => {
     expect(screen.getByRole("row", { name: /monthly_llm_budget/ })).toHaveTextContent("$100.00 / month");
   });
 
+  it("loads the budgets again from the Refresh button", async () => {
+    let requests = 0;
+    server.use(
+      http.post(sessionContext.ApiUrl, () => {
+        requests += 1;
+        return HttpResponse.json(listResponse);
+      }),
+    );
+    const user = userEvent.setup();
+    render(<BudgetList sessionContext={sessionContext} />);
+    await screen.findByRole("row", { name: /daily_token_budget/ });
+    expect(requests).toBe(1);
+
+    await user.click(screen.getByRole("button", { name: "Refresh" }));
+    await vi.waitFor(() => expect(requests).toBe(2));
+    expect(await screen.findByRole("button", { name: "Refresh" })).toBeEnabled();
+  });
+
   it("shows a budget's resources, and why one is blocked", async () => {
     server.use(...listHandlers());
     const user = userEvent.setup();
