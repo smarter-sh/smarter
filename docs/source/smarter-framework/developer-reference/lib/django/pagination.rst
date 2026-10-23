@@ -30,7 +30,9 @@ describes the page that it returns, alongside its ``objects``:
     }
 
 A page past the last is the last, and an invalid page or page size is the default. Every list
-api implements this with :func:`~smarter.lib.django.pagination.paginate_listview`.
+api implements this with :func:`~smarter.lib.django.pagination.paginate_queryset`, through
+:class:`~smarter.lib.django.listview.SmarterListApiView`, which also caches each page (see
+:doc:`listview`).
 
 Each list api names the columns that it can sort by, in camelCase as its ``objects`` name them,
 and the model field that sorts each one, e.g. ``"apiKey": "api_key__name"`` for a Provider's API

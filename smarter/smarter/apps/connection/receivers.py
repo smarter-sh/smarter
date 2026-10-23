@@ -11,6 +11,7 @@ from requests import Response
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
@@ -286,3 +287,7 @@ def handle_sql_connection_pre_delete(sender, instance, **kwargs):
         prefix + "SqlConnection().pre_delete()",
         instance,
     )
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("Connection", "connection.ConnectionBase", "llmtool.PluginDataApi", "llmtool.PluginDataSql")

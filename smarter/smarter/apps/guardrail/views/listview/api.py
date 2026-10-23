@@ -6,28 +6,17 @@ Guardrail list view in the Smarter Dashboard.
 """
 
 from http import HTTPStatus
-from typing import Union
 
-from django.core.handlers.asgi import ASGIRequest
-from django.db import models
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.guardrail.caching import (
-    get_cached_guardrails_available_to_user_profile,
-    get_cached_guardrails_owned_by_user_profile,
-    get_cached_guardrails_shared_with_user_profile,
     invalidate_all_cached_guardrails_for_user_profile,
 )
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.serializers import GuardrailSerializer
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseNotFound,
-)
-from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
+from smarter.lib.django.listview import SmarterListApiView
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -41,7 +30,7 @@ SORT_FIELDS = {
 """The columns of the Guardrail list that it may be sorted by, and the fields that sort them."""
 
 
-class GuardrailListApiView(SmarterAuthenticatedNeverCachedWebView):
+class GuardrailListApiView(SmarterListApiView):
     """
     Render the guardrail list view for the Smarter Workbench web console.
 
@@ -58,60 +47,10 @@ class GuardrailListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{GuardrailListApiView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        qs: models.QuerySet[Guardrail]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
-
-        logger.debug(
-            "%s.post() Rendering guardrail list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            request.user.username if request.user else "None",  # type: ignore[union-attr]
-            args,
-            kwargs,
-        )
-        if invalidate_cache:
-            invalidate_all_cached_guardrails_for_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = get_cached_guardrails_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = get_cached_guardrails_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
-
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = get_cached_guardrails_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        guardrails, pagination = paginate_listview(request, qs.order_by("-updated_at"), sort_fields=SORT_FIELDS)
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": GuardrailSerializer(guardrails, many=True, context={"request": request}).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = Guardrail
+    serializer_class = GuardrailSerializer
+    listview_cache_kind = "Guardrail"
+    sort_fields = SORT_FIELDS
 
 
 class GuardrailListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
