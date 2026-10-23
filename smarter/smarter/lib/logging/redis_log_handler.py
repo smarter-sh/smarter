@@ -81,6 +81,7 @@ import atexit
 import os
 import queue
 import re
+import sys
 import threading
 import uuid
 from contextvars import ContextVar
@@ -123,6 +124,8 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
 _redis_cache_holder = {"client": None}
+_publish_state = {"failing": False}
+"""Whether the last :func:`flush` failed, so that a Redis outage is logged once, not once per batch."""
 user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
 request_id_context: ContextVar[str | None] = ContextVar(REQUEST_ID_CONTEXT_NAME, default=None)
 session_key_context: ContextVar[str | None] = ContextVar(SESSION_KEY_CONTEXT_NAME, default=None)
@@ -309,15 +312,15 @@ def flush(buffer) -> None:
     efficiency. After publishing, it marks each entry as done in the
     log queue.
 
+    Redis isn't pinged first: that would cost a round trip per batch. When Redis is down,
+    ``pipe.execute()`` fails, the batch is dropped, and the failure is logged once, until a
+    batch is published again. Logging it on every batch would loop, because the exception's
+    own log record is queued for the next batch.
+
     :param buffer: List of log entries to be published.
     :type buffer: list
     :return: None
     """
-    if not redis_is_ready():
-        for _ in buffer:
-            log_queue.task_done()
-        return
-
     cache = get_redis_cache()
     if cache is None:
         for _ in buffer:
@@ -338,7 +341,47 @@ def flush(buffer) -> None:
         pipe.execute()
     # pylint: disable=broad-except
     except Exception:
-        logger.exception("%s.flush() Failed to execute Redis pipeline.", logger_prefix, exc_info=True)
+        if not _publish_state["failing"]:
+            _publish_state["failing"] = True
+            logger.exception(
+                "%s.flush() Failed to execute Redis pipeline. Dropping log records until Redis is available.",
+                logger_prefix,
+                exc_info=True,
+            )
+        return
+    if _publish_state["failing"]:
+        _publish_state["failing"] = False
+        logger.info("%s.flush() Redis is available again. Publishing log records.", logger_prefix)
+
+
+def next_batch(timeout: float = LOG_QUEUE_TIMEOUT) -> tuple[list, bool]:
+    """
+    Take the next batch of log entries from the queue.
+
+    Waits up to ``timeout`` seconds for one entry, then takes whatever else is
+    already queued, without waiting, up to ``MAX_BATCH`` entries.
+
+    :param timeout: Seconds to wait for the first entry.
+    :type timeout: float
+    :returns: The batch, which may be empty, and whether the shutdown sentinel (None) was taken.
+    :rtype: tuple[list, bool]
+    """
+    buffer: list = []
+    try:
+        item = log_queue.get(timeout=timeout)
+    except queue.Empty:
+        return buffer, False
+    while True:
+        if item is None:
+            log_queue.task_done()
+            return buffer, True
+        buffer.append(item)
+        if len(buffer) >= MAX_BATCH:
+            return buffer, False
+        try:
+            item = log_queue.get_nowait()
+        except queue.Empty:
+            return buffer, False
 
 
 def purge_log_context(context: str):
@@ -358,35 +401,24 @@ def redis_worker() -> None:
     and publishes them to Redis channels. This function runs in a separate
     thread and handles batching of log entries for efficiency.
 
-    The worker retrieves log entries from the queue, batches them up to a
-    maximum size defined by MAX_BATCH, and then flushes the batch to Redis.
-    If the queue is empty, it waits briefly before checking again. The worker
-    also listens for a sentinel value (None) to gracefully shut down when
-    the process is exiting.
+    The worker takes everything that is queued, up to MAX_BATCH entries (see
+    :func:`next_batch`), and publishes it to Redis in one pipeline. If the
+    queue is empty, it waits briefly before checking again. The worker also
+    listens for a sentinel value (None) to gracefully shut down when the
+    process is exiting.
 
     :param None: No parameters are required for this function.
     :return: None
     """
 
     logger.debug("%s.redis_worker() Starting Redis log worker thread.", logger_prefix)
-    buffer = []
 
     while True:
-        try:
-            item = log_queue.get(timeout=LOG_QUEUE_TIMEOUT)
-            if item is None:
-                log_queue.task_done()
-                break
-            buffer.append(item)
-            if len(buffer) >= MAX_BATCH:
-                flush(buffer)
-                buffer.clear()
-        except queue.Empty:
-            pass
-
+        buffer, stop = next_batch()
         if buffer:
             flush(buffer)
-            buffer.clear()
+        if stop:
+            break
 
 
 # Module-level background thread for asynchronous Redis log publishing.
@@ -514,7 +546,12 @@ class RedisLogHandler(logging.Handler):
         except queue.Full:
             RedisLogHandler.dropped_logs += 1
             if RedisLogHandler.dropped_logs % 100 == 0:
-                print(f"Dropped {RedisLogHandler.dropped_logs} logs")
+                # not logged: this handler's own log record would be queued, or dropped, too.
+                print(
+                    f"{logger_prefix}.RedisLogHandler.emit() the log queue is full: "
+                    f"{RedisLogHandler.dropped_logs} log records were not published to Redis.",
+                    file=sys.stderr,
+                )
         # pylint: disable=broad-except
         except Exception:
             logger.exception("%s.emit() Failed to emit log record.", logger_prefix, exc_info=True)

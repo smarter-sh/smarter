@@ -114,7 +114,7 @@ class Command(SmarterCommand):
         account.save()
 
         if created:
-            self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
+            self.stdout.write(f"Created account: {account.account_number} {account.company_name}")
 
         # Create the user as a superuser: the User post_save receiver looks up the admin user,
         # which must be a superuser, as soon as the row is inserted.
@@ -135,18 +135,16 @@ class Command(SmarterCommand):
             user.set_password(password)
             user.save()
 
-            self.handle_completed_success(msg=f"Created superuser {username} {email} has been created.")
+            self.stdout.write(f"Created superuser {username} {email}.")
         else:
-            self.handle_completed_success(msg=f"User {username} updated.")
+            self.stdout.write(f"User {username} updated.")
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
-            self.handle_completed_success(
-                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account}"
+            self.stdout.write(
+                f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account}"
             )
         else:
-            self.handle_completed_success(
-                msg=f"User profile already exists for {user_profile.user}, account {user_profile.account}"
-            )
+            self.stdout.write(f"User profile already exists for {user_profile.user}, account {user_profile.account}")
         UserProfile.get_cached_object(invalidate=True, pk=user_profile.pk)  # prime the cache
 
         account_contact, created = AccountContact.objects.get_or_create(
@@ -159,8 +157,8 @@ class Command(SmarterCommand):
             account_contact.email = SMARTER_CUSTOMER_SUPPORT_EMAIL
             account_contact.phone = SMARTER_CUSTOMER_SUPPORT_PHONE
             account_contact.save()
-            self.handle_completed_success(
-                msg=f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
+            self.stdout.write(
+                f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
             )
 
         # ensure that the Smarter admin user has at least one auth token (api key)
@@ -170,7 +168,7 @@ class Command(SmarterCommand):
                 user_profile=user_profile, name="smarter_admin_key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
             if self.email_api_key(user=user, auth_token=auth_token, token_key=token_key):
-                self.handle_completed_success(msg=f"Created API key {auth_token.name}, and emailed it to {user.email}.")
+                self.stdout.write(f"Created API key {auth_token.name}, and emailed it to {user.email}.")
             else:
                 self.stderr.write(
                     self.style.WARNING(
@@ -178,5 +176,4 @@ class Command(SmarterCommand):
                         f"be recovered. Once email works, run: manage.py create_api_key --username {user.username}"
                     )
                 )
-            return
         self.handle_completed_success()

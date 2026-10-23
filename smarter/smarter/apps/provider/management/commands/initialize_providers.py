@@ -204,7 +204,6 @@ class Command(SmarterCommand):
                 }
             """
             log_prefix = f"_initialize_provider_models({provider.name}):"
-            self.stdout.write("-" * 80)
             end_point = "models"
             url = urljoin(provider.base_url, end_point)
             headers = auth_headers(bearer_token)
