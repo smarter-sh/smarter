@@ -13,7 +13,6 @@ from smarter.apps.connection.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
 from smarter.apps.connection.models import ConnectionBase
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -86,8 +85,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         :return: The formatted class name.
         :rtype: str
         """
-        class_name = f"{formatted_text(__name__)}.{SAMConnectionBaseBroker.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
+        return self.formatted_text(f"{SAMConnectionBaseBroker.__name__}[{id(self)}]")
 
     @property
     def ORMModelClass(self) -> Type[ConnectionBase]:
