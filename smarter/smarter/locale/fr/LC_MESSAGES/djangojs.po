@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 00:15+0000\n"
+"POT-Creation-Date: 2026-10-23 13:25+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -384,6 +384,14 @@ msgstr[1] ""
 #. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx
 msgid "Failed to delete the budget (%(status)s)."
 msgstr "Impossible de supprimer le budget (%(status)s)."
+
+#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+msgid "Load the list again, with the latest changes"
+msgstr "Recharger la liste, avec les dernières modifications"
+
+#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-common/src/components/TabbedListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
+msgid "Refresh"
+msgstr "Actualiser"
 
 #. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx
 msgid ""
@@ -1987,10 +1995,6 @@ msgstr "Rechercher des extensions"
 #. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionCardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx
 msgid "Publisher"
 msgstr "Éditeur"
-
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
-msgid "Refresh"
-msgstr "Actualiser"
 
 #. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 msgid "No extensions match."
