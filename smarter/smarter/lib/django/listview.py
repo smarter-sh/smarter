@@ -38,6 +38,7 @@ import json
 import time
 from http import HTTPStatus
 from typing import Callable, ClassVar, Mapping, Optional, Protocol, Sequence, Union
+from urllib.parse import urlparse
 
 from django.apps import apps
 from django.contrib.auth.models import User
@@ -183,6 +184,30 @@ def _is_relation(model: type[models.Model], name: str) -> bool:
         return False
 
 
+class ListviewPageRequest(HttpRequest):
+    """
+    The request that a cached list page is serialized with, which no http request is.
+
+    A cached page is shared by every request of the user, so it is built without one. Its
+    serializer still needs a user, since ``can_delete`` depends on it, and a host and scheme,
+    since a file field, e.g. a Provider's ``logo``, is made an absolute url with
+    ``request.build_absolute_uri()``. Both are the platform's, :attr:`smarter_settings.environment_url`.
+
+    :param user: The user whose page it is.
+    """
+
+    def __init__(self, user: User):
+        super().__init__()
+        url = urlparse(smarter_settings.environment_url)
+        self.user = user
+        self.META["HTTP_HOST"] = url.netloc
+        self._listview_scheme = url.scheme or "https"
+
+    def _get_scheme(self) -> str:
+        """Return the platform's scheme, instead of HttpRequest's ``http``."""
+        return self._listview_scheme
+
+
 @cache_results(timeout=smarter_settings.listview_cache_expiration)
 def cached_listview_page(  # pylint: disable=W0613,R0913,R0917
     view: str,
@@ -326,9 +351,9 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         """
         Build one page of the list api's response, from the database.
 
-        The serializer gets a request whose user is the user profile's, since ``can_delete``
-        depends on it. The result is passed through JSON, so that the cache stores plain values,
-        not the serializer's ``ReturnDict``, which refers to the serializer.
+        The serializer gets a :class:`ListviewPageRequest`, whose user is the user profile's.
+        The result is passed through JSON, so that the cache stores plain values, not the
+        serializer's ``ReturnDict``, which refers to the serializer.
 
         :param user_profile: The authenticated user's UserProfile.
         :param ownership_filter: ``owned``, ``shared`` or ``all``.
@@ -354,8 +379,7 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
             sort_fields=cls.sort_fields,
             filters=cls.filters,
         )
-        request = HttpRequest()
-        request.user = user_profile.user
+        request = ListviewPageRequest(user_profile.user)
         response = {
             "user": UserProfileSerializer(user_profile).data,
             "admin": UserProfileSerializer(smarter_cached_objects.smarter_admin_user_profile).data,
@@ -419,6 +443,7 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 __all__ = [
     "LISTVIEW_CACHE_ALL",
+    "ListviewPageRequest",
     "SmarterListApiView",
     "cached_listview_page",
     "connect_listview_cache",
