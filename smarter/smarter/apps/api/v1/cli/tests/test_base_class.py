@@ -12,6 +12,7 @@ from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.base import (
+    BUG_REPORT,
     APIV1CLIViewBadRequestError,
     APIV1CLIViewError,
     CliBaseApiView,
@@ -20,7 +21,6 @@ from smarter.apps.api.v1.cli.views.base import (
     format_validation_error,
     http_status_for_exception,
 )
-from smarter.apps.api.v1.cli.views.swagger import BUG_REPORT
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse

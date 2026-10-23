@@ -775,7 +775,6 @@ INSTALLED_APPS = [
     "knox",
     "taggit",
     "corsheaders",
-    "drf_yasg",
     "django_celery_beat",
     "social_django",
     "waffle",

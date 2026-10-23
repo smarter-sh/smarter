@@ -1,73 +1,86 @@
+{% extends 'cms/base.html' %}
 {% load static i18n %}
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="The Smarter api's OpenAPI 3.1 contract." />
-    <meta name="keywords" content="Smarter, AI, OpenAPI, API, SDK" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content="Smarter OpenAPI Contract" />
-    <meta property="og:url" content="{{ branding.og_url }}" />
-    <meta property="og:site_name" content="Smarter" />
-    <title>{% translate "Smarter OpenAPI Contract" %}</title>
-    <link rel="icon" href="{% static 'images/logo/favicon256x256.png' %}" type="image/png" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
-    <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
-    <link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/swagger-ui-dist/swagger-ui.css' %}" />
-    <style>
-      .swagger-ui .btn.authorize {
-        color: rgba(255, 87, 51, 0.75);
-        border-color: rgba(255, 87, 51, 0.75);
-      }
-      .openapi-intro {
-        max-width: 1460px;
-        margin: 0 auto;
-        padding: 24px 20px 0 20px;
-      }
-    </style>
-  </head>
-  <body>
+
+{% block title %}{% translate "Smarter OpenAPI Contract" %}{% endblock %}
+
+{% block head_extra %}
+  {{ block.super }}
+  <style>
+    #openapi-reference {
+      --scalar-font: "Inter", sans-serif;
+      --scalar-color-accent: #ff5733;
+    }
+  </style>
+{% endblock %}
+
+{% comment %}
+  Scalar needs the page's full width, so this page replaces cms/base.html's card and
+  sidebar layout with one full-width container, between the same header and footer.
+{% endcomment %}
+{% block root %}
+<!--begin::Page-->
+<div class="app-page flex-column flex-column-fluid" id="kt_app_page">
+  <div class="smarter-static-header">
     {% include 'cms/base/header.html' %}
-
-    <div class="openapi-intro">
-      <h1 class="fs-2x text-gray-900 mb-4">{% translate "Smarter OpenAPI Contract" %}</h1>
-      <p class="fs-5 text-gray-700">
-        {% blocktranslate trimmed %}The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat api, and the REST
-        reads. Generate a client or an SDK from it, in any language. Authorize with an api key, as
-        <code>Token &lt;api key&gt;</code>, to try the operations against this platform.{% endblocktranslate %}
-      </p>
-      <p class="fs-5">
-        <a href="{% url 'docs:openapi-json' %}" download="openapi.json">{% translate "Download openapi.json" %}</a>
-        &nbsp;·&nbsp;
-        <a href="{% url 'docs:json_schemas' %}">{% translate "SAM JSON Schemas" %}</a>
-        &nbsp;·&nbsp;
-        <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-api/api-contract.html" target="_blank"
-          >{% translate "About the contract" %}</a
-        >
-      </p>
+  </div>
+  <!--begin::Wrapper-->
+  <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">
+    <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+      <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+          <div id="kt_app_content_container" class="app-container container-xxl">
+            <!--begin::Intro-->
+            <div class="pt-6">
+              <h1 class="fs-2x text-gray-900 mb-4">{% translate "Smarter OpenAPI Contract" %}</h1>
+              <p class="fs-5 text-gray-700">
+                {% blocktranslate trimmed %}The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat api, and the REST
+                reads. Generate a client or an SDK from it, in any language. Authorize with an api key, as
+                <code>Token &lt;api key&gt;</code>, to try the operations against this platform.{% endblocktranslate %}
+              </p>
+              <p class="fs-5">
+                <a href="{% url 'docs:openapi-json' %}" download="openapi.json">{% translate "Download openapi.json" %}</a>
+                &nbsp;·&nbsp;
+                <a href="{% url 'docs:json_schemas' %}">{% translate "SAM JSON Schemas" %}</a>
+                &nbsp;·&nbsp;
+                <a href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-api/api-contract.html" target="_blank"
+                  >{% translate "About the contract" %}</a
+                >
+              </p>
+            </div>
+            <!--end::Intro-->
+            <div id="openapi-reference"></div>
+          </div>
+        </div>
+      </div>
+      <div class="smarter-static-footer">
+        {% include 'cms/base/footer.html' %}
+      </div>
     </div>
+  </div>
+  <!--end::Wrapper-->
+</div>
+<!--end::Page-->
+{% endblock %}
 
-    <div id="swagger-ui"></div>
-
-    {% include 'cms/base/footer.html' %}
-
-    <script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-bundle.js' %}"></script>
-    <script>
-      window.addEventListener("load", function () {
-        window.ui = SwaggerUIBundle({
-          url: "{% url 'docs:openapi-json' %}",
-          dom_id: "#swagger-ui",
-          deepLinking: true,
-          persistAuthorization: true,
-          presets: [SwaggerUIBundle.presets.apis],
-          layout: "BaseLayout",
-        });
-      });
-    </script>
-    <script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
-    <script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
-  </body>
-</html>
+{% block javascript_extra %}
+  {{ block.super }}
+  <script src="{% static 'assets/plugins/custom/scalar/standalone.js' %}?v={{ STATIC_VERSION }}"></script>
+  <script>
+    // No Scalar service is called: no telemetry, no fonts.scalar.com, no proxy.scalar.com, and no
+    // Scalar-hosted AI agent or developer tools (share, deploy), so "Test Request" goes straight to
+    // this platform. See static/assets/plugins/custom/scalar/README.md.
+    window.Scalar.createApiReference("#openapi-reference", {
+      url: "{% url 'docs:openapi-json' %}",
+      proxyUrl: "",
+      telemetry: false,
+      withDefaultFonts: false,
+      showDeveloperTools: "never",
+      agent: { disabled: true },
+      persistAuth: true,
+      authentication: {
+        preferredSecurityScheme: "ApiKeyAuth",
+        securitySchemes: { ApiKeyAuth: { value: "Token " } },
+      },
+    });
+  </script>
+{% endblock %}

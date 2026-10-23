@@ -80,11 +80,12 @@ tests call, and the :doc:`Smarter Project MCP server <../../smarter-platform/sma
 whose protocol the Model Context Protocol specification defines, are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
 
-Every Smarter platform serves its document, at ``/docs/openapi.json``, and renders it with Swagger
-UI at ``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The
-served document lists the platform's own ``/api/v1`` as its first server, so that the page's *Try
-it out* sends requests to the platform that you are reading it on. Authorize with an api key, as
-``Token <api key>``.
+Every Smarter platform serves its document, at ``/docs/openapi.json``, and renders it with
+`Scalar <https://github.com/scalar/scalar>`__, which the platform ships in its static files, at
+``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The page calls
+none of Scalar's hosted services. The served document lists the platform's own ``/api/v1`` as its
+first server, so that the page's *Test Request* sends requests to the platform that you are
+reading it on. Authorize with an api key, as ``Token <api key>``.
 
 
 Where the Contract Lives
@@ -268,7 +269,7 @@ beside its ``detail``. Each operation's ``default`` response names its error's s
 Clients
 -------
 
-The live Swagger and Redoc pages, and how to generate a client from ``openapi.json``, are on the
+The live OpenAPI Contract page, and how to generate a client from ``openapi.json``, are on the
 user-facing :doc:`Smarter OpenAPI Contract <../smarter-openapi>` page.
 
 

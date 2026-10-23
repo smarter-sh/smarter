@@ -26,6 +26,27 @@ skills/blog.smarter.sh-blog-post/scripts/fetch-post.sh \
 WebFetch returns only a summary of a page, so use the script, not WebFetch, to
 read a post.
 
+## Story or state? Ask which kind of post it is
+
+Not every post is a story. A how-to, a design walkthrough, or a post about what
+an agent can do ("6 uses of Claude Code", "how Smarter's list views work")
+describes **the current state and what it makes possible**, in the present
+tense. For those posts:
+
+- Don't tell how it got there. No before/after numbers, no "it was slow, now
+  it's fast", no "we started at 75% and reached 96%", no bugs found along the
+  way, no timeline of commits, no "what went wrong" section.
+- Use evidence as present facts: what the design does, how it works, what it
+  enables, and what someone needs in place to get the same result. A commit is
+  cited as an example of the capability, not as a step in a story.
+- Leave out the numbers-with-caveats section, which exists to support a
+  story's claims.
+
+The user has had to correct this repeatedly. Unless the request asks for a
+story, a retrospective or a lesson learned, assume it is a state post. The rest
+of this skill (structure, "what went wrong", productivity arithmetic) applies
+to story posts.
+
 ## 1. Find the one idea
 
 A post argues one idea, and everything in it is evidence for that idea. Write
