@@ -38,14 +38,14 @@ def handle_auth_token_save(sender, instance, created, **kwargs):
     if created:
         logger.debug(
             "%s SmarterAuthToken: %s, created: %s",
-            formatted_text(f"{module_prefix}.smarter_auth_token_save()"),
+            f"{formatted_text(module_prefix)}.smarter_auth_token_save()",
             json_data,
             created,
         )
     else:
         logger.debug(
             "%s SmarterAuthToken: %s, created: %s",
-            formatted_text(f"{module_prefix}.smarter_auth_token_save()"),
+            f"{formatted_text(module_prefix)}.smarter_auth_token_save()",
             json_data,
             created,
         )
@@ -56,7 +56,7 @@ def handle_smarter_auth_token_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of SmarterAuthToken model."""
     logger.debug(
         "%s SmarterAuthToken: %s",
-        formatted_text(f"{module_prefix}.smarter_auth_token_delete()"),
+        f"{formatted_text(module_prefix)}.smarter_auth_token_delete()",
         instance,
     )
 
@@ -66,7 +66,7 @@ def handle_smarter_token_authentication_request(sender, token, url, **kwargs):
     """Signal receiver for authentication request."""
     logger.debug(
         "%s sender: %s, token: %s, url: %s",
-        formatted_text(f"{module_prefix}.smarter_token_authentication_request()"),
+        f"{formatted_text(module_prefix)}.smarter_token_authentication_request()",
         sender,
         token,
         url,
@@ -78,7 +78,7 @@ def handle_smarter_token_authentication_success(sender, user, token, **kwargs):
     """Signal receiver for authorization granted."""
     logger.debug(
         "%s sender: %s, user: %s, token: %s",
-        formatted_text(f"{module_prefix}.smarter_token_authentication_success()"),
+        f"{formatted_text(module_prefix)}.smarter_token_authentication_success()",
         sender,
         user,
         token,
@@ -90,7 +90,7 @@ def handle_smarter_token_authentication_failure(sender, user, token, error: Auth
     """Signal receiver for authorization denied."""
     logger.warning(
         "%s sender: %s, user: %s, token: %s, error: %s",
-        formatted_text(f"{module_prefix}.smarter_token_authentication_failure()"),
+        f"{formatted_text(module_prefix)}.smarter_token_authentication_failure()",
         sender,
         user,
         token,

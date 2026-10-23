@@ -40,7 +40,7 @@ from .env import get_env, is_missing_value
 from .services import Services
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__ + ".SettingsDefaults()")
+logger_prefix = formatted_text(__name__) + ".SettingsDefaults()"
 
 
 def optional_secret_env(var_name: str) -> Optional[SecretStr]:

@@ -42,7 +42,7 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
 
     client: Client
     request: HttpRequest
-    test_sam_api_connection_logger_prefix = formatted_text(f"{__name__}.AuthenticatedRequestMixin()")
+    test_sam_api_connection_logger_prefix = f"{formatted_text(__name__)}.AuthenticatedRequestMixin()"
 
     @classmethod
     def setUpClass(cls):
@@ -73,7 +73,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMApiConnection]
     connection_django_model: Optional[ApiConnection] = None
-    test_sam_api_connection_logger_prefix = formatted_text(f"{__name__}.ApiConnectionTestMixin()")
+    test_sam_api_connection_logger_prefix = f"{formatted_text(__name__)}.ApiConnectionTestMixin()"
 
     @classmethod
     def setUpClass(cls):
@@ -168,7 +168,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMSqlConnection]
     connection_django_model: Optional[SqlConnection] = None
-    test_sam_api_connection_logger_prefix = formatted_text(f"{__name__}.SqlConnectionTestMixin()")
+    test_sam_api_connection_logger_prefix = f"{formatted_text(__name__)}.SqlConnectionTestMixin()"
 
     @classmethod
     def setUpClass(cls):

@@ -85,7 +85,7 @@ from .services import AWS_REGIONS, services
 from .util import before_field_validator
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__ + ".Settings()")
+logger_prefix = formatted_text(__name__) + ".Settings()"
 
 
 #: A Django REST Framework throttle rate: requests per second, minute, hour or day.

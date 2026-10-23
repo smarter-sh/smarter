@@ -230,13 +230,13 @@ def verify_domain(
     task_id = task_id or verify_domain.request.id
     llmclient = LLMClient.objects.filter(pk=llmclient_id).first() if llmclient_id else None
     if attempt == 0:
-        logger.info("%s - verifying domain %s task_id: %s", fn_name, domain_name, task_id)
+        logger.info("%s verifying domain %s task_id: %s", fn_name, domain_name, task_id)
         pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
         llmclient_dns_verification_initiated.send(
             sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
         )
     logger.info(
-        "%s - Attempt %s of %s to verify domain %s task_id: %s",
+        "%s Attempt %s of %s to verify domain %s task_id: %s",
         fn_name,
         attempt + 1,
         VERIFY_DOMAIN_MAX_ATTEMPTS,

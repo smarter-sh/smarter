@@ -141,7 +141,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         **kwargs,
     ):
         charge_authorization(user_profile.record_locator, self.__class__.__name__)
-        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.handler()")
+        logger_prefix = f"{formatted_text(__name__)}.{self.formatted_class_name}.handler()"
         response: Optional[ChatCompletion] = None
         provider: Optional[Provider] = None
         if not hasattr(request, "user") or not request.user.is_authenticated:

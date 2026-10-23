@@ -100,7 +100,7 @@ class SmarterPromptSession(SmarterHelperMixin):
         )
         self.request = request
         if not isinstance(session_key, str):
-            logger.error("%s - session_key is not a string: %s", self.formatted_class_name, type(session_key))
+            logger.error("%s session_key is not a string: %s", self.formatted_class_name, type(session_key))
         self._session_key = session_key
 
         if llmclient:
@@ -109,7 +109,7 @@ class SmarterPromptSession(SmarterHelperMixin):
 
         # leaving this in place as a reminder that we need one or the other
         if not self.session_key and not self.llmclient:
-            logger.error("%s - either session_key or llmclient must be provided", self.formatted_class_name)
+            logger.error("%s either session_key or llmclient must be provided", self.formatted_class_name)
 
         self._chat_helper = PromptHelper(
             request, *args, session_key=self.session_key, llmclient=self.llmclient, **kwargs
@@ -118,7 +118,7 @@ class SmarterPromptSession(SmarterHelperMixin):
         # PromptHelper starts a new session when the key belongs to another llmclient's session.
         self._session_key = self._chat_helper.session_key
 
-        verbose_logger.debug("%s - session established: %s", self.formatted_class_name, self.session_key)
+        verbose_logger.debug("%s session established: %s", self.formatted_class_name, self.session_key)
 
         prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
@@ -173,7 +173,7 @@ class SmarterPromptSession(SmarterHelperMixin):
         """
         if self._session_key is None:
             logger.error(
-                "%s - session_key is None. This should not happen. Please report this issue to the Smarter team.",
+                "%s session_key is None. This should not happen. Please report this issue to the Smarter team.",
                 self.formatted_class_name,
             )
         return self._session_key

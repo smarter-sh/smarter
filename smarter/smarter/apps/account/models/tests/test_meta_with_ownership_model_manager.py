@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     """
     Test RBAC methods from MetaDataWithOwnershipModelManager class.
+
     Test 4 kinds of users from 3 different accounts:
 
     1. Smarter admin user (superuser, staff, belongs to Smarter account)
@@ -24,7 +25,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     4. Other non-admin user (does not have staff status, belongs to Account 2)
     """
 
-    logger_prefix = logging.formatted_text(f"{__name__}.TestMetaDataWithOwnershipModelManager()")
+    logger_prefix = f"{logging.formatted_text(__name__)}.TestMetaDataWithOwnershipModelManager()"
 
     @classmethod
     def setUpClass(cls):
@@ -138,9 +139,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
         )
 
     def test_with_ownership_permission_for_admin_user(self):
-        """
-        Test that with_ownership_permission_for() returns the correct secrets for the admin user.
-        """
+        """Test that with_ownership_permission_for() returns the correct secrets for the admin user."""
 
         secrets = Secret.objects.with_ownership_permission_for(self.admin_user)
         # yes

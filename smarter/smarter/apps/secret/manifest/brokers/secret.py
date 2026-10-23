@@ -130,8 +130,9 @@ class SAMSecretBroker(AbstractBroker):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        logger.info(msg)
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+        )
 
     def init_secret(self):
         """Initialize the secret transformer."""
@@ -365,8 +366,7 @@ class SAMSecretBroker(AbstractBroker):
 
             logger.debug(broker.formatted_class_name)
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMSecretBroker.__name__}[{id(self)}]"
+        return self.formatted_text(f"{SAMSecretBroker.__name__}[{id(self)}]")
 
     @property
     def kind(self) -> str:

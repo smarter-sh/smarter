@@ -23,7 +23,7 @@ from ..models import LLMClient, get_cached_llmclient_by_request
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 logger.debug(
     "%s is %s",
-    logging.formatted_text(__name__ + ".SmarterSecurityMiddleware"),
+    logging.formatted_text(__name__) + ".SmarterSecurityMiddleware",
     SmarterHelperMixin().formatted_state_ready,
 )
 

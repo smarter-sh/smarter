@@ -22,19 +22,19 @@ module_prefix = __name__
 def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
     """Create the default API for the llmhost."""
 
-    prefix = logging.formatted_text(f"{module_prefix}.llmhost_saved()")
+    prefix = f"{logging.formatted_text(module_prefix)}.llmhost_saved()"
     data = logging.formatted_json(LLMHostSerializer(instance).data)
     if created:
-        logger.info("%s - created %s, %s", prefix, instance, data)
+        logger.info("%s created %s, %s", prefix, instance, data)
     else:
-        logger.info("%s - updated %s, %s", prefix, instance, data)
+        logger.info("%s updated %s, %s", prefix, instance, data)
 
 
 @receiver(pre_delete, sender=LLMHost)
 def llmhost_deleted(sender, instance: LLMHost, **kwargs):
     """Delete the default API for the llmhost."""
-    prefix = logging.formatted_text(f"{module_prefix}.llmhost_deleted()")
-    logger.info("%s - %s", prefix, instance)
+    prefix = f"{logging.formatted_text(module_prefix)}.llmhost_deleted()"
+    logger.info("%s %s", prefix, instance)
 
 
 @receiver(pre_delete, sender=LLMHostCompute)
@@ -49,14 +49,14 @@ def llmhost_compute_deleted(sender, instance: LLMHostCompute, **kwargs):
     from .services.compute import ComputeProvisioner
     from .services.exceptions import LLMHostComputeError
 
-    prefix = logging.formatted_text(f"{module_prefix}.llmhost_compute_deleted()")
+    prefix = f"{logging.formatted_text(module_prefix)}.llmhost_compute_deleted()"
     if instance.nodegroup_status == LLMHostComputeNodeGroupStatus.ABSENT:
         return
     try:
         ComputeProvisioner().delete_nodegroup(instance)
-        logger.info("%s - deleted the node group of %s", prefix, instance)
+        logger.info("%s deleted the node group of %s", prefix, instance)
     except LLMHostComputeError as e:
-        logger.error("%s - the node group of %s was not deleted: %s", prefix, instance, e)
+        logger.error("%s the node group of %s was not deleted: %s", prefix, instance, e)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
