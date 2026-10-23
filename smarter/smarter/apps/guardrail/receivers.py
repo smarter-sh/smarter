@@ -34,16 +34,16 @@ module_prefix = __name__
 @receiver(post_save, sender=Guardrail)
 def guardrail_saved(sender, instance: Guardrail, created: bool, **kwargs):
     """Log a created or updated Guardrail."""
-    prefix = logging.formatted_text(f"{module_prefix}.guardrail_saved()")
+    prefix = f"{logging.formatted_text(module_prefix)}.guardrail_saved()"
     data = logging.formatted_json(GuardrailSerializer(instance).data)
-    logger.info("%s - %s %s, %s", prefix, "created" if created else "updated", instance, data)
+    logger.info("%s %s %s, %s", prefix, "created" if created else "updated", instance, data)
 
 
 @receiver(pre_delete, sender=Guardrail)
 def guardrail_deleted(sender, instance: Guardrail, **kwargs):
     """Log a deleted Guardrail."""
-    prefix = logging.formatted_text(f"{module_prefix}.guardrail_deleted()")
-    logger.info("%s - %s", prefix, instance)
+    prefix = f"{logging.formatted_text(module_prefix)}.guardrail_deleted()"
+    logger.info("%s %s", prefix, instance)
 
 
 @receiver(guardrail_triggered, dispatch_uid="guardrail_triggered")
@@ -53,8 +53,8 @@ def handle_guardrail_triggered(sender, guardrail: Guardrail, stage: str, disposi
     What it matched is not logged, because it may be personal data.
     """
     logger.info(
-        "%s - %s %s: %s",
-        logging.formatted_text(f"{module_prefix}.guardrail_triggered"),
+        "%s %s %s: %s",
+        f"{logging.formatted_text(module_prefix)}.guardrail_triggered",
         guardrail.name,
         stage,
         disposition,
@@ -65,8 +65,8 @@ def handle_guardrail_triggered(sender, guardrail: Guardrail, stage: str, disposi
 def handle_guardrail_blocked(sender, guardrail: Guardrail, stage: str, message: str, **kwargs):
     """Log a blocked message or reply."""
     logger.warning(
-        "%s - %s blocked the %s: %s",
-        logging.formatted_text(f"{module_prefix}.guardrail_blocked"),
+        "%s %s blocked the %s: %s",
+        f"{logging.formatted_text(module_prefix)}.guardrail_blocked",
         guardrail.name,
         stage,
         message,
@@ -80,8 +80,8 @@ def handle_guardrail_escalated(sender, guardrail: Guardrail, stage: str, event=N
     Its event awaits review in the Smarter admin.
     """
     logger.warning(
-        "%s - %s escalated the %s to human review, severity %s, event %s",
-        logging.formatted_text(f"{module_prefix}.guardrail_escalated"),
+        "%s %s escalated the %s to human review, severity %s, event %s",
+        f"{logging.formatted_text(module_prefix)}.guardrail_escalated",
         guardrail.name,
         stage,
         guardrail.severity,
@@ -93,8 +93,8 @@ def handle_guardrail_escalated(sender, guardrail: Guardrail, stage: str, event=N
 def handle_guardrail_failed(sender, guardrail: Guardrail, stage: str, error: str, fail_closed: bool, **kwargs):
     """Log a guardrail that failed to run."""
     logger.error(
-        "%s - %s failed on the %s%s: %s",
-        logging.formatted_text(f"{module_prefix}.guardrail_failed"),
+        "%s %s failed on the %s%s: %s",
+        f"{logging.formatted_text(module_prefix)}.guardrail_failed",
         guardrail.name,
         stage,
         ", and blocked it" if fail_closed else "",

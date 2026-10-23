@@ -65,7 +65,7 @@ class TestSAMSqlConnection(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_sql_connection_logger_prefix = formatted_text(f"{HERE}.TestSAMSqlConnection()")
+    test_sam_sql_connection_logger_prefix = f"{formatted_text(HERE)}.TestSAMSqlConnection()"
 
     @classmethod
     def setUpClass(cls):

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class TestTimestampedModel(TestAccountMixin):
     """Test TimestampedModel model."""
 
-    logger_prefix = formatted_text(f"{__name__}.TestTimestampedModel()")
+    logger_prefix = f"{formatted_text(__name__)}.TestTimestampedModel()"
 
     def test_hash_regex(self):
         """Test that hash_regex returns a compiled regex pattern."""

@@ -96,7 +96,7 @@ class LazyCache:
         if self._cache is None:
             from smarter.common.mixins.helper_mixin import SmarterReadyState
 
-            logger_prefix = logging.formatted_text(f"{__name__}.{LazyCache.__name__}.cache()")
+            logger_prefix = f"{logging.formatted_text(__name__)}.{LazyCache.__name__}.cache()"
             if apps.ready:
                 logger.debug(
                     "%s Django apps are %s. Proceeding to initialize django.core.cache.",

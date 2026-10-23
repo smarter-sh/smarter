@@ -72,7 +72,7 @@ class Command(SmarterCommand):
         :py:class:`smarter.apps.infrastructure.services.dns.DNSService` - the DNS service used for DNS operations.
     """
 
-    log_prefix = logging.formatted_text(f"{__name__}.Command()")
+    log_prefix = f"{logging.formatted_text(__name__)}.Command()"
 
     unchanged_a_record_domains: list[str]
     """Domains whose existing A record points somewhere other than the platform's load balancer, and was left unchanged."""
@@ -92,9 +92,7 @@ class Command(SmarterCommand):
             self.stdout.write(self.style.NOTICE(f"looking for an A record in {some_domain}..."))
             a_record = infrastructure.dns.get_environment_a_record(domain=some_domain)
             if a_record:
-                self.stdout.write(
-                    self.style.SUCCESS(f"{log_prefix} found an A record in the zone for domain: {a_record.name}")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Found an A record in the zone for domain: {a_record.name}"))
                 return a_record
 
         raise SmarterConfigurationError(
@@ -162,7 +160,7 @@ class Command(SmarterCommand):
         """
 
         log_prefix = self.log_prefix + ".verify_domain_delegated_from_parent()"
-        self.stdout.write(f"{log_prefix} - {child_domain} delegated from parent domain: {parent_domain}")
+        self.stdout.write(f"{child_domain} is delegated from parent domain {parent_domain}.")
         dns = infrastructure.dns
         if not dns.ready:
             logger.warning(
@@ -175,18 +173,16 @@ class Command(SmarterCommand):
         parent_zone, _ = dns.get_or_create_zone(parent_domain)
 
         self.stdout.write(self.style.NOTICE("-" * 80))
-        self.stdout.write(self.style.NOTICE(f"{log_prefix} verifying DNS configuration for {child_domain}"))
+        self.stdout.write(self.style.NOTICE(f"Verifying DNS configuration for {child_domain}"))
         self.stdout.write(self.style.NOTICE("-" * 80))
 
         child_zone, created = dns.get_or_create_zone(child_domain)
         if created:
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created DNS zone for child domain: {child_domain}"))
+            self.stdout.write(self.style.SUCCESS(f"Created DNS zone for child domain: {child_domain}"))
         else:
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified DNS zone for child domain: {child_domain}"))
+            self.stdout.write(self.style.SUCCESS(f"Verified DNS zone for child domain: {child_domain}"))
 
-        self.stdout.write(
-            self.style.NOTICE(f"{log_prefix} verify that an A record exists in child zone {child_domain}")
-        )
+        self.stdout.write(self.style.NOTICE(f"Verify that an A record exists in child zone {child_domain}"))
         # Never overwrite an existing A record. The root domain's A record is not necessarily
         # the platform's load balancer, e.g. example.com may be served by a CDN. Overwriting
         # child records with it takes the whole platform offline.
@@ -194,7 +190,7 @@ class Command(SmarterCommand):
         existing_a_record = dns.get_record(child_zone.id, child_domain, "A")
         if existing_a_record is not None:
             if existing_a_record.same_target(a_record):
-                self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified A record for {child_domain}."))
+                self.stdout.write(self.style.SUCCESS(f"Verified A record for {child_domain}."))
             else:
                 points_at_load_balancer = False
                 # by design, e.g. a host that a CDN serves. The command's output says so once; the
@@ -209,7 +205,7 @@ class Command(SmarterCommand):
                 )
                 self.stdout.write(
                     self.style.NOTICE(
-                        f"{log_prefix} the A record for {child_domain} does not point at the platform's load balancer. Left it unchanged."
+                        f"The A record for {child_domain} does not point at the platform's load balancer. Left it unchanged."
                     )
                 )
         else:
@@ -221,10 +217,10 @@ class Command(SmarterCommand):
                 values=a_record.values,
                 alias=a_record.alias,
             )
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created A record for {child_domain}."))
+            self.stdout.write(self.style.SUCCESS(f"Created A record for {child_domain}."))
 
         self.stdout.write(
-            self.style.NOTICE(f"{log_prefix} verify that NS records for {child_domain} exist in {parent_domain} zone.")
+            self.style.NOTICE(f"Verify that NS records for {child_domain} exist in {parent_domain} zone.")
         )
         _, created = dns.get_or_create_record(
             zone_id=parent_zone.id,
@@ -234,17 +230,13 @@ class Command(SmarterCommand):
             values=dns.get_name_servers(child_zone.id),
         )
         if created:
-            self.stdout.write(
-                self.style.SUCCESS(f"{log_prefix} created NS record for {child_domain} in {parent_domain}.")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Created NS record for {child_domain} in {parent_domain}."))
         else:
-            self.stdout.write(
-                self.style.SUCCESS(f"{log_prefix} verified NS record for {child_domain} in {parent_domain}.")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Verified NS record for {child_domain} in {parent_domain}."))
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"{log_prefix} verified that {child_domain} is properly delegated from parent domain: {parent_domain}"
+                f"Verified that {child_domain} is properly delegated from parent domain: {parent_domain}"
             )
         )
         return points_at_load_balancer
@@ -288,13 +280,9 @@ class Command(SmarterCommand):
         """
         log_prefix = self.log_prefix + ".verify_root_domain_dns_config()"
         # Look for an A record in the root domain hosted zone
+        self.stdout.write(self.style.NOTICE(f"Root domain DNS verification: {smarter_settings.root_domain}"))
         self.stdout.write(
-            self.style.NOTICE(f"{log_prefix} (1) root domain DNS verification: {smarter_settings.root_domain}")
-        )
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} verify that a zone exists for the root domain: {smarter_settings.root_domain}"
-            )
+            self.style.NOTICE(f"Verify that a zone exists for the root domain: {smarter_settings.root_domain}")
         )
         dns = infrastructure.dns
         if not dns.ready:
@@ -310,15 +298,11 @@ class Command(SmarterCommand):
                 f"{self.log_prefix} the DNS zone for root domain: {smarter_settings.root_domain} does not exist. Cannot proceed."
             )
         self.stdout.write(
-            self.style.SUCCESS(
-                f"{self.log_prefix}: verified the DNS zone for the root domain: {smarter_settings.root_domain}."
-            )
+            self.style.SUCCESS(f"Verified the DNS zone for the root domain: {smarter_settings.root_domain}.")
         )
 
         self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} verify that an A record exists in the zone for {smarter_settings.root_domain}"
-            )
+            self.style.NOTICE(f"Verify that an A record exists in the zone for {smarter_settings.root_domain}")
         )
         a_record = dns.get_environment_a_record(domain=smarter_settings.root_domain)
         if not a_record:
@@ -327,14 +311,12 @@ class Command(SmarterCommand):
                 f"{smarter_settings.root_domain}. Expected to find an 'A' record alias to an AWS Route53 "
                 "classic balancer. Cannot proceed."
             )
-        self.stdout.write(
-            self.style.SUCCESS(f"{log_prefix} found a propagatable A record in the zone for domain: {a_record.name}")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Found a propagatable A record in the zone for domain: {a_record.name}"))
 
         # check NS records in the root domain hosted zone
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} verify that we can retrieve a list of NS records from the zone for {smarter_settings.root_domain}"
+                f"Verify that we can retrieve a list of NS records from the zone for {smarter_settings.root_domain}"
             )
         )
         # we're expecting NS records that delegate platform.example.com and local.example.com.
@@ -342,13 +324,11 @@ class Command(SmarterCommand):
         additional_ns_records = [record.name for record in ns_records if record.name != root_zone.name]
         self.stdout.write(
             self.style.SUCCESS(
-                f"{log_prefix} found {len(additional_ns_records)} sets of delegated NS records in the zone for domain: {smarter_settings.root_domain}: {additional_ns_records}"
+                f"Found {len(additional_ns_records)} sets of delegated NS records in the zone for domain: {smarter_settings.root_domain}: {additional_ns_records}"
             )
         )
 
-        self.stdout.write(
-            self.style.SUCCESS(f"{log_prefix} verified root domain {smarter_settings.root_domain} DNS configuration.")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Verified root domain {smarter_settings.root_domain} DNS configuration."))
 
     def verify_base_dns_config(self) -> list[str]:
         """
@@ -381,7 +361,7 @@ class Command(SmarterCommand):
         self.unchanged_a_record_domains = []
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
+                f"Verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
             )
         )
 
@@ -405,7 +385,7 @@ class Command(SmarterCommand):
         else:
             self.stdout.write(
                 self.style.NOTICE(
-                    f"{log_prefix} skipping hosted zone verification for {smarter_settings.root_platform_domain} because environment is {SmarterEnvironments.LOCAL}."
+                    f"Skipping hosted zone verification for {smarter_settings.root_platform_domain} because environment is {SmarterEnvironments.LOCAL}."
                 )
             )
 
@@ -448,7 +428,7 @@ class Command(SmarterCommand):
         else:
             self.stdout.write(
                 self.style.NOTICE(
-                    f"{log_prefix} skipping hosted zone verification for {smarter_settings.root_api_domain} because environment is {SmarterEnvironments.LOCAL}."
+                    f"Skipping hosted zone verification for {smarter_settings.root_api_domain} because environment is {SmarterEnvironments.LOCAL}."
                 )
             )
 
@@ -498,13 +478,13 @@ class Command(SmarterCommand):
         if len(verified_domains) > 0:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{self.log_prefix} verified platform level DNS infrastructure for the following domains: {', '.join(verified_domains)}"
+                    f"Verified platform level DNS infrastructure for the following domains: {', '.join(verified_domains)}"
                 )
             )
         if self.unchanged_a_record_domains:
             self.stdout.write(
                 self.style.NOTICE(
-                    f"{self.log_prefix} delegated, but A record left unchanged because it does not point at the platform's load balancer: {', '.join(self.unchanged_a_record_domains)}"
+                    f"Delegated, but A record left unchanged because it does not point at the platform's load balancer: {', '.join(self.unchanged_a_record_domains)}"
                 )
             )
 

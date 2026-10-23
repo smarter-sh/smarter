@@ -24,3 +24,7 @@ that the ``ENABLE_NEW_USER_PASSWORD_EMAIL`` switch sends, are written in it. Use
 web console get the language of their browser, as the console itself does.
 ``manage.py send_welcome_email`` re-sends the welcome email, in the user's preferred language unless
 you give it another ``--language``.
+
+Without ``--password``, a new user gets a random password. The command doesn't print it, because its
+output usually ends up in deployment logs: the password email sends it, when that switch is on. Add
+``--show_password`` to print it, or set another with ``manage.py changepassword <username>``.

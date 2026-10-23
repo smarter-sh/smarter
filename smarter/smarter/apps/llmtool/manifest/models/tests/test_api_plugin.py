@@ -75,7 +75,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_api_plugin_logger_prefix = formatted_text(f"{HERE}.TestSAMApiPlugin()")
+    test_sam_api_plugin_logger_prefix = f"{formatted_text(HERE)}.TestSAMApiPlugin()"
 
     @classmethod
     def setUpClass(cls):

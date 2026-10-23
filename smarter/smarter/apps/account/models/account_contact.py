@@ -218,7 +218,7 @@ class AccountContact(TimestampedModel):
             subject = translation.gettext("Welcome to Smarter!")
         logger.debug(
             "%s.send_welcome_email() Sending the %s welcome email to %s",
-            logging.formatted_text(__name__ + ".AccountContact.send_welcome_email()"),
+            logging.formatted_text(__name__) + ".AccountContact.send_welcome_email()",
             language,
             self.email,
         )
@@ -321,7 +321,7 @@ class AccountContact(TimestampedModel):
                 html=True
             )
         """
-        prefix = logging.formatted_text(__name__ + ".AccountContact.send_email_to_primary_contact()")
+        prefix = logging.formatted_text(__name__) + ".AccountContact.send_email_to_primary_contact()"
         contact = cls.get_primary_contact(account)
         logger.debug(
             "%s.send_email_to_primary_contact() Attempting to send email to primary contact for account %s. Found contact: %s, subject: %s, body: %s, html: %s, from_email: %s",
@@ -369,7 +369,7 @@ class AccountContact(TimestampedModel):
             contact = AccountContact(account=account, email="jane@example.com", is_primary=True)
             contact.save()  # Ensures uniqueness and sends welcome email if needed
         """
-        prefix = logging.formatted_text(__name__ + ".AccountContact.save()")
+        prefix = logging.formatted_text(__name__) + ".AccountContact.save()"
         logger.debug("%s called with args: %s, kwargs: %s", prefix, args, kwargs)
         if self.is_primary:
             # Check for another primary contact for this account (excluding self if updating)

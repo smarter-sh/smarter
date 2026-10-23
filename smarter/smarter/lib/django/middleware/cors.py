@@ -111,13 +111,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
     logger.debug(
         "%s is %s",
-        logging.formatted_text(__name__ + ".SmarterCorsMiddleware"),
+        logging.formatted_text(__name__) + ".SmarterCorsMiddleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        logging.formatted_text(__name__ + ".SmarterCorsMiddleware"),
+        logging.formatted_text(__name__) + ".SmarterCorsMiddleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 

@@ -39,7 +39,7 @@ urlpatterns = [
 ]
 
 if smarter_settings.enable_dropzone_manifest_apply:
-    logger.info(
+    logger.debug(
         "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
         logging.formatted_text(__name__),
         namespace,

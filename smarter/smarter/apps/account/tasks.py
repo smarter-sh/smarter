@@ -88,7 +88,7 @@ def create_charge(*args, **kwargs):
         )
     # pylint: disable=W0703
     except Exception as e:
-        logger.error("%s - error creating charge: %s", prefix, e)
+        logger.error("%s error creating charge: %s", prefix, e)
 
 
 @app.task(

@@ -62,7 +62,7 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_api_connection_logger_prefix = formatted_text(f"{HERE}.TestSAMApiConnection()")
+    test_sam_api_connection_logger_prefix = f"{formatted_text(HERE)}.TestSAMApiConnection()"
 
     @classmethod
     def setUpClass(cls):

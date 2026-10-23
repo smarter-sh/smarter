@@ -49,7 +49,7 @@ if smarter_settings.enable_dashboard_server_logs:
         path("api/", include(api_urls, namespace=api_urls.app_name)),
     )
 
-    logger.info(
+    logger.debug(
         "%s Server logs app url endpoint is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=false` to disable.",
         logging.formatted_text(__name__),
         SmarterReadyState.READY,
