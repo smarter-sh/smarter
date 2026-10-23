@@ -53,7 +53,7 @@ class DefaultLLMClientApiView(LLMClientApiBaseViewSet):
         else:
             self._llmclient_id = kwargs.pop("llmclient_id", None)
         self._name = kwargs.pop("name", None)
-        logger.info("%s dispatch() %s %s ", self.formatted_class_name, self.llmclient, self.user_profile)
+        logger.info("%s.dispatch() %s %s", self.formatted_class_name, self.llmclient, self.user_profile)
 
         try:
             retval = super().dispatch(request, *args, **kwargs)
