@@ -29,7 +29,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.llmhost.models.LLMHost
-    - smarter.apps.llmhost.serializers.LLMHostSerializer
 """
 
 from django.db import models
@@ -40,7 +39,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import LLMHost, LLMHostCompute
-from .serializers import LLMHostComputeSerializer, LLMHostSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -52,11 +50,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_llmhosts_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[LLMHost]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMHost.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMHosts: %s",
-        logger_prefix,
-        logging.formatted_json(LLMHostSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -97,11 +90,6 @@ def invalidate_cached_llmhosts_owned_by_user_profile(user_profile: UserProfile) 
 def _get_cached_llmhosts_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[LLMHost]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMHost.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMHosts: %s",
-        logger_prefix,
-        logging.formatted_json(LLMHostSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -141,11 +129,6 @@ def invalidate_cached_llmhosts_shared_with_user_profile(user_profile: UserProfil
 def _get_cached_llmhosts_available_to_user_profile(user_profile_id) -> models.QuerySet[LLMHost]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMHost.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMHosts: %s",
-        logger_prefix,
-        logging.formatted_json(LLMHostSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -220,11 +203,6 @@ def invalidate_all_cached_llmhosts_for_user_profile(user_profile: UserProfile) -
 def _get_cached_llmhost_computes_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[LLMHostCompute]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMHostCompute.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMHostComputes: %s",
-        logger_prefix,
-        logging.formatted_json(LLMHostComputeSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -241,11 +219,6 @@ def invalidate_cached_llmhost_computes_owned_by_user_profile(user_profile: UserP
 def _get_cached_llmhost_computes_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[LLMHostCompute]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMHostCompute.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMHostComputes: %s",
-        logger_prefix,
-        logging.formatted_json(LLMHostComputeSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -262,11 +235,6 @@ def invalidate_cached_llmhost_computes_shared_with_user_profile(user_profile: Us
 def _get_cached_llmhost_computes_available_to_user_profile(user_profile_id) -> models.QuerySet[LLMHostCompute]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = LLMHostCompute.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching LLMHostComputes: %s",
-        logger_prefix,
-        logging.formatted_json(LLMHostComputeSerializer(retval, many=True).data),
-    )
     return retval
 
 
