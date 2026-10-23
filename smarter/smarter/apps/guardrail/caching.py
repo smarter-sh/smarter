@@ -27,7 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.guardrail.models.Guardrail
-    - smarter.apps.guardrail.serializers.GuardrailSerializer
 """
 
 from django.db import models
@@ -38,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Guardrail
-from .serializers import GuardrailSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -50,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_guardrails_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[Guardrail]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Guardrail.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Guardrails: %s",
-        logger_prefix,
-        logging.formatted_json(GuardrailSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -95,11 +88,6 @@ def invalidate_cached_guardrails_owned_by_user_profile(user_profile: UserProfile
 def _get_cached_guardrails_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[Guardrail]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Guardrail.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Guardrails: %s",
-        logger_prefix,
-        logging.formatted_json(GuardrailSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -139,11 +127,6 @@ def invalidate_cached_guardrails_shared_with_user_profile(user_profile: UserProf
 def _get_cached_guardrails_available_to_user_profile(user_profile_id) -> models.QuerySet[Guardrail]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Guardrail.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Guardrails: %s",
-        logger_prefix,
-        logging.formatted_json(GuardrailSerializer(retval, many=True).data),
-    )
     return retval
 
 

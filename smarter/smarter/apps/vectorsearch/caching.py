@@ -27,7 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.vectorsearch.models.Vectorsearch
-    - smarter.apps.vectorsearch.serializers.VectorsearchSerializer
 """
 
 from django.db import models
@@ -38,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Vectorsearch
-from .serializers import VectorsearchSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.VECTORSEARCH_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -50,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_vectorsearchs_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[Vectorsearch]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Vectorsearch.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Vectorsearchs: %s",
-        logger_prefix,
-        logging.formatted_json(VectorsearchSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -95,11 +88,6 @@ def invalidate_cached_vectorsearchs_owned_by_user_profile(user_profile: UserProf
 def _get_cached_vectorsearchs_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[Vectorsearch]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Vectorsearch.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Vectorsearchs: %s",
-        logger_prefix,
-        logging.formatted_json(VectorsearchSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -139,11 +127,6 @@ def invalidate_cached_vectorsearchs_shared_with_user_profile(user_profile: UserP
 def _get_cached_vectorsearchs_available_to_user_profile(user_profile_id) -> models.QuerySet[Vectorsearch]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Vectorsearch.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Vectorsearchs: %s",
-        logger_prefix,
-        logging.formatted_json(VectorsearchSerializer(retval, many=True).data),
-    )
     return retval
 
 

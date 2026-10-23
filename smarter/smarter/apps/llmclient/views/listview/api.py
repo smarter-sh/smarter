@@ -14,22 +14,15 @@ Deleting a custom domain deletes the Smarter resource, not its AWS Route53 hoste
 """
 
 from http import HTTPStatus
-from typing import Union
 
-from django.core.handlers.asgi import ASGIRequest
-from django.db import models
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.llmclient.const import CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND
 from smarter.apps.llmclient.models import LLMClientCustomDomain
 from smarter.apps.llmclient.serializers import LLMClientCustomDomainListSerializer
-from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseNotFound,
-)
-from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS, paginate_listview
+from smarter.lib.django.listview import SmarterListApiView
+from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -45,7 +38,7 @@ SORT_FIELDS = {
 """The columns of the Custom Domain list that it may be sorted by, and the fields that sort them."""
 
 
-class CustomDomainListApiView(SmarterAuthenticatedNeverCachedWebView):
+class CustomDomainListApiView(SmarterListApiView):
     """
     Return the custom domains available to the authenticated user, for the.
 
@@ -62,62 +55,11 @@ class CustomDomainListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: JsonResponse
     """
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{CustomDomainListApiView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        """Return the same json as a POST, so that the list api can be browsed."""
-        return self.post(request, *args, **kwargs)
-
-    def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        qs: models.QuerySet[LLMClientCustomDomain]
-        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
-        user = self.user_profile.user  # type: ignore[union-attr]
-
-        logger.debug(
-            "%s.post() Rendering custom domain list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            user.username,
-            args,
-            kwargs,
-        )
-
-        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
-            qs = LLMClientCustomDomain.objects.owned_by(user)  # type: ignore[arg-type]
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
-            qs = LLMClientCustomDomain.objects.shared_with(user)  # type: ignore[arg-type]
-        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
-            qs = LLMClientCustomDomain.objects.with_read_permission_for(user)  # type: ignore[arg-type]
-        else:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        custom_domains, pagination = paginate_listview(
-            request,
-            qs.select_related("user_profile__user", "llmclient__user_profile__user").order_by("-updated_at"),
-            sort_fields=SORT_FIELDS,
-        )
-
-        smarter_admin = smarter_cached_objects.smarter_admin_user_profile
-        retval = {
-            "user": UserProfileSerializer(self.user_profile).data,
-            "admin": UserProfileSerializer(smarter_admin).data,
-            "objects": LLMClientCustomDomainListSerializer(
-                custom_domains, many=True, context={"request": request}
-            ).data,
-            "pagination": pagination,
-        }
-        return JsonResponse(retval)
+    model = LLMClientCustomDomain
+    serializer_class = LLMClientCustomDomainListSerializer
+    listview_cache_kind = CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND
+    sort_fields = SORT_FIELDS
+    select_related = ("llmclient__user_profile__user",)
 
 
 class CustomDomainListApiCloneView(SmarterAuthenticatedNeverCachedWebView):

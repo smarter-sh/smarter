@@ -14,6 +14,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from smarter.lib import logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Guardrail
@@ -99,3 +100,7 @@ def handle_guardrail_failed(sender, guardrail: Guardrail, stage: str, error: str
         ", and blocked it" if fail_closed else "",
         error,
     )
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("Guardrail", "guardrail.Guardrail", "llmclient.LLMClientGuardrails")
