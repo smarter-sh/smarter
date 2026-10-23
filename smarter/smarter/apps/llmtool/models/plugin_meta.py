@@ -257,7 +257,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :rtype: Optional[PluginMeta]
         """
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{PluginMeta.__name__}.get_cached_object()")
+        logger_prefix = f"{formatted_text(__name__)}.{PluginMeta.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, plugin_class: %s",
             logger_prefix,

@@ -21,7 +21,7 @@ KIND = SAMKinds.ACCOUNT.value
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
-logger_prefix = logging.formatted_text(f"{__name__}.TestApiCliV1Account")
+logger_prefix = f"{logging.formatted_text(__name__)}.TestApiCliV1Account"
 
 
 class TestApiCliV1Account(ApiV1CliTestBase):

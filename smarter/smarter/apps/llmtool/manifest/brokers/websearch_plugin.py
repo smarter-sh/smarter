@@ -182,8 +182,9 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                     self.kind,
                     self._manifest.metadata.name,
                 )
-        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        logger.info(msg)
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+        )
 
     def plugin_init(self):
         """

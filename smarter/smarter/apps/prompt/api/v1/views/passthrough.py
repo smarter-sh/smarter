@@ -134,7 +134,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(  # type: ignore[return-value]
                 data={"error": "budget_exceeded", "message": e.message}, status=HTTPStatus.PAYMENT_REQUIRED.value
             )
-        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.post()")
+        logger_prefix = f"{formatted_text(__name__)}.{self.formatted_class_name}.post()"
         kwargs.pop("provider_name")
         logger.debug("%s called with request: %s, args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 

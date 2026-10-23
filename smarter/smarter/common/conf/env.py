@@ -89,7 +89,7 @@ def get_env(
     :rtype: EnvValueType
     """
     # pylint: disable=W0621
-    logger_prefix = formatted_text(__name__ + ".get_env()")
+    logger_prefix = formatted_text(__name__) + ".get_env()"
 
     def cast_value(val: Optional[str], default: EnvValueType) -> EnvValueType:
         """

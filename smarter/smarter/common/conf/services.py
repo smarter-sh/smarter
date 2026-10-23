@@ -20,7 +20,7 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(f"{__name__}.Services")
+logger_prefix = f"{formatted_text(__name__)}.Services"
 
 
 class Services:
