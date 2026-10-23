@@ -30,7 +30,7 @@ class TestSettings(SmarterTestBase):
     at runtime.
     """
 
-    smarter_test_base_logger_prefix = formatted_text(f"{__name__}.TestSettings()")
+    smarter_test_base_logger_prefix = f"{formatted_text(__name__)}.TestSettings()"
 
     @classmethod
     def setUpClass(cls):

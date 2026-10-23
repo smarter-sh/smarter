@@ -116,8 +116,9 @@ class SAMOrchestratorBroker(AbstractBroker):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        logger.info(msg)
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+        )
 
     @property
     def SerializerClass(self) -> Type[OrchestratorSerializer]:

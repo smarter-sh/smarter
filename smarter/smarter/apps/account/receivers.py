@@ -54,7 +54,7 @@ def new_user_created_receiver(sender, user_profile: UserProfile, **kwargs):
     """
     logger.info(
         "%s New user created: %s, id: %s",
-        logging.formatted_text(f"{module_prefix}.new_user_created_receiver()"),
+        f"{logging.formatted_text(module_prefix)}.new_user_created_receiver()",
         user_profile,
         user_profile.id,  # type: ignore
     )
@@ -70,7 +70,7 @@ def new_charge_created_receiver(sender, charge: Charge, **kwargs):
     """
     logger.debug(
         "%s New charge created: %s, id: %s",
-        logging.formatted_text(f"{module_prefix}.new_charge_created()"),
+        f"{logging.formatted_text(module_prefix)}.new_charge_created()",
         charge,
         charge.id,  # type: ignore
     )
@@ -86,7 +86,7 @@ def cache_invalidate_receiver(sender, **kwargs):
     """
     logger.debug(
         "%s Cache invalidation triggered.",
-        logging.formatted_text(f"{module_prefix}.cache_invalidate()"),
+        f"{logging.formatted_text(module_prefix)}.cache_invalidate()",
     )
 
 
@@ -99,7 +99,7 @@ def charge_authorized_receiver(sender, record_locator: str, charge: str, **kwarg
     """
     logger.debug(
         "%s Charge authorized: record_locator: %s, charge: %s",
-        logging.formatted_text(f"{module_prefix}.charge_authorized()"),
+        f"{logging.formatted_text(module_prefix)}.charge_authorized()",
         record_locator,
         charge,
     )
@@ -114,7 +114,7 @@ def charge_declined_receiver(sender, record_locator: str, charge: str, **kwargs)
     """
     logger.error(
         "%s Charge declined: record_locator: %s, charge: %s",
-        logging.formatted_text(f"{module_prefix}.charge_declined()"),
+        f"{logging.formatted_text(module_prefix)}.charge_declined()",
         record_locator,
         charge,
     )
@@ -133,7 +133,7 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
     # SmarterTokenAuthenticationMiddleware logs the user in on every api request that carries a token,
     # so those logins are logged at DEBUG. A sign-in to the web console is logged at INFO.
     log = logger.debug if request is not None and request.META.get("HTTP_AUTHORIZATION") else logger.info
-    log("%s User logged in: %s", logging.formatted_text(f"{module_prefix}.user_logged_in()"), user)
+    log("%s User logged in: %s", f"{logging.formatted_text(module_prefix)}.user_logged_in()", user)
     try:
         UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
@@ -141,7 +141,7 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
         UserProfile.objects.create(name=user.username, user=user, account=account, language=active_language())
         logger.info(
             "%s created a UserProfile for user %s with the default account %s",
-            logging.formatted_text(f"{module_prefix}.user_logged_in()"),
+            f"{logging.formatted_text(module_prefix)}.user_logged_in()",
             user,
             account,
         )
@@ -169,7 +169,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     log = logger.debug if last_login_only else logger.info
     log(
         "%s User post_save: %s, created: %s",
-        logging.formatted_text(f"{module_prefix}.user_post_save()"),
+        f"{logging.formatted_text(module_prefix)}.user_post_save()",
         instance,
         created,
     )
@@ -195,7 +195,7 @@ def user_post_delete(sender: User, instance: User, **kwargs):
     """Signal receiver for deleted of User model."""
     logger.info(
         "%s User post_delete: %s, id: %s",
-        logging.formatted_text(f"{module_prefix}.user_post_delete()"),
+        f"{logging.formatted_text(module_prefix)}.user_post_delete()",
         instance,
         instance.id,  # type: ignore
     )
@@ -206,7 +206,7 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
     """Signal receiver for created/saved of UserProfile model."""
     logger.info(
         "%s UserProfile post_save: %s, created: %s",
-        logging.formatted_text(f"{module_prefix}.user_profile_post_save()"),
+        f"{logging.formatted_text(module_prefix)}.user_profile_post_save()",
         instance,
         created,
     )
@@ -219,7 +219,7 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
     """Signal receiver for deleted of UserProfile model."""
     logger.info(
         "%s UserProfile: %s, id: %s",
-        logging.formatted_text(f"{module_prefix}.user_profile_post_delete()"),
+        f"{logging.formatted_text(module_prefix)}.user_profile_post_delete()",
         instance,
         instance.id,  # type: ignore
     )
@@ -238,7 +238,7 @@ ACCOUNT_CONTACT_FIELDS = ("phone_number", "address1", "address2", "city", "state
 @receiver(post_save, sender=Account)
 def account_post_save(sender: Account, instance: Account, created, **kwargs):
     """Signal receiver for created/saved of Account model."""
-    model_prefix = logging.formatted_text(f"{module_prefix}.account_post_save()")
+    model_prefix = f"{logging.formatted_text(module_prefix)}.account_post_save()"
     account_json = json.dumps(model_to_dict(instance, exclude=ACCOUNT_CONTACT_FIELDS))
     if created:
         logger.info("%s Account created: %s", model_prefix, account_json)
@@ -246,7 +246,7 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
         logger.info("%s Account updated: %s", model_prefix, account_json)
         logger.info(
             "%s invalidating cache for Account: %s",
-            logging.formatted_text(f"{module_prefix}.account_post_save()"),
+            f"{logging.formatted_text(module_prefix)}.account_post_save()",
             instance,
         )
 
@@ -256,7 +256,7 @@ def account_post_delete(sender: Account, instance: Account, **kwargs):
     """Signal receiver for deleted of Account model."""
     logger.info(
         "%s Account post_delete: %s, id: %s",
-        logging.formatted_text(f"{module_prefix}.account_post_delete()"),
+        f"{logging.formatted_text(module_prefix)}.account_post_delete()",
         instance,
         instance.id,  # type: ignore
     )
@@ -268,7 +268,7 @@ def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
     charge_json = json.dumps(model_to_dict(instance))
     logger.debug(
         "%s Charge post_save: %s, created: %s",
-        logging.formatted_text(f"{module_prefix}.charge_post_save()"),
+        f"{logging.formatted_text(module_prefix)}.charge_post_save()",
         charge_json,
         created,
     )
@@ -308,7 +308,7 @@ def budget_warning_receiver(sender, resource_constraint: ResourceConstraint, act
     """Signal receiver for budget_warning signal."""
     logger.warning(
         "%s Budget warning: %s has spent %s of its limit of %s.",
-        logging.formatted_text(f"{module_prefix}.budget_warning()"),
+        f"{logging.formatted_text(module_prefix)}.budget_warning()",
         resource_constraint,
         actual,
         limit,
@@ -320,7 +320,7 @@ def budget_exceeded_receiver(sender, resource_constraint: ResourceConstraint, lo
     """Signal receiver for budget_exceeded signal."""
     logger.warning(
         "%s Budget exceeded: %s %s %s",
-        logging.formatted_text(f"{module_prefix}.budget_exceeded()"),
+        f"{logging.formatted_text(module_prefix)}.budget_exceeded()",
         resource_constraint,
         "is locked." if lock else "is not locked, because the budget only warns.",
         reason,
@@ -332,7 +332,7 @@ def budget_released_receiver(sender, resource_constraint: ResourceConstraint, **
     """Signal receiver for budget_released signal."""
     logger.info(
         "%s Budget released: %s is no longer locked.",
-        logging.formatted_text(f"{module_prefix}.budget_released()"),
+        f"{logging.formatted_text(module_prefix)}.budget_released()",
         resource_constraint,
     )
 

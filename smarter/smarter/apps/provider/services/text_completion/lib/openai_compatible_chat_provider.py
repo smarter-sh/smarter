@@ -336,7 +336,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         except KeyError:
             prefix = formatted_text(f"{self.formatted_class_name} new_messages()")
             logger.error(
-                "%s - KeyError: '%s' key not found in message: %s", prefix, _InternalKeys.SMARTER_IS_NEW, self.messages
+                "%s KeyError: '%s' key not found in message: %s", prefix, _InternalKeys.SMARTER_IS_NEW, self.messages
             )
         return self.messages
 

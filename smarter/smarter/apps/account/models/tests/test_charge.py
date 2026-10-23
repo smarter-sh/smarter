@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TestCharge(TestAccountMixin):
     """Test Charge model."""
 
-    logger_prefix = logging.formatted_text(f"{__name__}.TestCharge()")
+    logger_prefix = f"{logging.formatted_text(__name__)}.TestCharge()"
 
     @classmethod
     def setUpClass(cls):

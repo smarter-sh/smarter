@@ -155,12 +155,12 @@ def verify_custom_domain(
     custom_domain = LLMClientCustomDomain.objects.filter(aws_hosted_zone_id=hosted_zone_id).first()
 
     if attempt == 0:
-        logger.info("%s - verifying %s, DNS zone %s task_id: %s", fn_name, domain_name, hosted_zone_id, task_id)
+        logger.info("%s verifying %s, DNS zone %s task_id: %s", fn_name, domain_name, hosted_zone_id, task_id)
         pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
         if custom_domain and not custom_domain.is_verified:
             custom_domain.set_verification_status(Status.VERIFYING, "Verification has started.")
     logger.info(
-        "%s - %s %s Attempt: %s of %s task_id: %s",
+        "%s %s %s Attempt: %s of %s task_id: %s",
         fn_name,
         hosted_zone_id,
         domain_name,
@@ -207,9 +207,7 @@ def verify_custom_domain(
         )
         return None
 
-    logger.error(
-        "%s - Domain verification failed for domain %s: %s task_id: %s", fn_name, domain_name, blocker, task_id
-    )
+    logger.error("%s Domain verification failed for domain %s: %s task_id: %s", fn_name, domain_name, blocker, task_id)
     if custom_domain:
         custom_domain.set_verification_status(Status.FAILED, blocker)
         _notify(

@@ -41,7 +41,7 @@ module_prefix = __name__
 
 
 def _prefix(fn_name: str, service, provider) -> str:
-    return logging.formatted_text(f"{module_prefix}.{fn_name}()") + f" [{provider}.{service}]"
+    return f"{logging.formatted_text(module_prefix)}.{fn_name}()" + f" [{provider}.{service}]"
 
 
 # pylint: disable=too-many-arguments

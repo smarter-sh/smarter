@@ -72,7 +72,7 @@ class Command(SmarterCommand):
 
         account_number = options.get("account_number")
         if not account_number:
-            logger.error("%s - account number is required.", logger_prefix)
+            logger.error("%s account number is required.", logger_prefix)
             self.handle_completed_failure(msg="account number is required.")
             return
         try:
@@ -80,12 +80,12 @@ class Command(SmarterCommand):
         except Account.DoesNotExist:
             account = None
         if not account:
-            logger.error("%s - Account with account number %s does not exist.", logger_prefix, account_number)
+            logger.error("%s Account with account number %s does not exist.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
             return
         admin_user = get_cached_admin_user_for_account(account=account)
         if not admin_user:
-            logger.error("%s - No admin user found for account %s.", logger_prefix, account_number)
+            logger.error("%s No admin user found for account %s.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"No admin user found for account {account_number}.")
             return
 

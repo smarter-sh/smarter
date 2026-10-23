@@ -97,11 +97,11 @@ def verify_certificate(certificate_arn: str):
 
     pre_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn, task_id=task_id)
     prefix = logger_prefix + ".verify_certificate()"
-    logger.info("%s - %s task_id: %s", prefix, certificate_arn, task_id)
+    logger.info("%s %s task_id: %s", prefix, certificate_arn, task_id)
 
     verified = infrastructure.certificates.wait_until_issued(certificate_arn)
     if verified:
-        logger.info("%s - certificate %s verified. task_id: %s", prefix, certificate_arn, task_id)
+        logger.info("%s certificate %s verified. task_id: %s", prefix, certificate_arn, task_id)
     else:
-        logger.error("%s - certificate %s verification failed. task_id: %s", prefix, certificate_arn, task_id)
+        logger.error("%s certificate %s verification failed. task_id: %s", prefix, certificate_arn, task_id)
     post_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn, task_id=task_id)

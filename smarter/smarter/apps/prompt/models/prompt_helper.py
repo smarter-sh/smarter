@@ -366,7 +366,7 @@ class PromptHelper(SmarterRequestMixin):
         :rtype: Optional[Prompt]
         """
         if not self.smarter_request:
-            logger.error("%s - request object is required for PromptHelper.", self.formatted_class_name)
+            logger.error("%s request object is required for PromptHelper.", self.formatted_class_name)
             return None
 
         prompt: Optional[Prompt] = None
@@ -374,7 +374,7 @@ class PromptHelper(SmarterRequestMixin):
             try:
                 prompt = get_cached_prompt_by_session_key(self.session_key)
                 logger_verbose.debug(
-                    "%s - retrieved Prompt instance: %s session_key: %s",
+                    "%s retrieved Prompt instance: %s session_key: %s",
                     self.formatted_class_name,
                     prompt,
                     prompt.session_key,

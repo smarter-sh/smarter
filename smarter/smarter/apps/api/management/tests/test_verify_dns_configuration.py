@@ -139,9 +139,9 @@ class TestVerifyDnsConfiguration(CommandTestBase):
         output = self.run_in(SmarterEnvironments.ALPHA)
 
         self.assertIn("does not point at the platform's load balancer. Left it unchanged.", output)
-        self.assertNotIn("verified A record for proxy.example.com", output)
-        self.assertIn("verified A record for platform.example.com", output)
-        summary = [line for line in output.splitlines() if "verified platform level DNS infrastructure" in line]
+        self.assertNotIn("Verified A record for proxy.example.com", output)
+        self.assertIn("Verified A record for platform.example.com", output)
+        summary = [line for line in output.splitlines() if "Verified platform level DNS infrastructure" in line]
         self.assertEqual(len(summary), 1)
         verified = summary[0].split("following domains: ", 1)[1].strip().split(", ")
         self.assertNotIn("proxy.example.com", verified)

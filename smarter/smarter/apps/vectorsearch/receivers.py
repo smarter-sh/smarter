@@ -21,19 +21,19 @@ module_prefix = __name__
 def vectorsearch_saved(sender, instance: Vectorsearch, created: bool, **kwargs):
     """Create the default API for the vectorsearch."""
 
-    prefix = logging.formatted_text(f"{module_prefix}.vectorsearch_saved()")
+    prefix = f"{logging.formatted_text(module_prefix)}.vectorsearch_saved()"
     data = logging.formatted_json(VectorsearchSerializer(instance).data)
     if created:
-        logger.info("%s - created %s, %s", prefix, instance, data)
+        logger.info("%s created %s, %s", prefix, instance, data)
     else:
-        logger.info("%s - updated %s, %s", prefix, instance, data)
+        logger.info("%s updated %s, %s", prefix, instance, data)
 
 
 @receiver(pre_delete, sender=Vectorsearch)
 def vectorsearch_deleted(sender, instance: Vectorsearch, **kwargs):
     """Delete the default API for the vectorsearch."""
-    prefix = logging.formatted_text(f"{module_prefix}.vectorsearch_deleted()")
-    logger.info("%s - %s", prefix, instance)
+    prefix = f"{logging.formatted_text(module_prefix)}.vectorsearch_deleted()"
+    logger.info("%s %s", prefix, instance)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

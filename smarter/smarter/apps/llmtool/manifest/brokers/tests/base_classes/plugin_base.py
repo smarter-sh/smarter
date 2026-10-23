@@ -29,7 +29,7 @@ HERE = __name__
 class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
     """Adds a class-level setup to create SqlConnection instances for use in plugin broker tests."""
 
-    test_smarter_plugin_broker_base_logger_prefix = formatted_text(f"{HERE}.TestSmarterPluginBrokerBase()")
+    test_smarter_plugin_broker_base_logger_prefix = f"{formatted_text(HERE)}.TestSmarterPluginBrokerBase()"
 
     @classmethod
     def setUpClass(cls):
