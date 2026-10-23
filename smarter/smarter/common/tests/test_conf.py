@@ -135,6 +135,9 @@ class TestSettings(SmarterTestBase):
     def test_chat_cache_expiration(self):
         self.assertIsNotNone(smarter_settings.chat_cache_expiration)
 
+    def test_listview_cache_expiration(self):
+        self.assertIsNotNone(smarter_settings.listview_cache_expiration)
+
     def test_llmclient_cache_expiration(self):
         self.assertIsNotNone(smarter_settings.llmclient_cache_expiration)
 

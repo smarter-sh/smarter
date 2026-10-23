@@ -15,6 +15,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from smarter.lib import logging
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
@@ -136,3 +137,7 @@ def handle_mcpclient_resource_read(sender, mcpclient: MCPClient, uri: str, chara
         uri,
         characters,
     )
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache("MCPClient", "mcpclient.MCPClient", "llmclient.LLMClientMCPClients")

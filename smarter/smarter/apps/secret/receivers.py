@@ -8,6 +8,7 @@ from django.forms.models import model_to_dict
 from smarter.apps.account.models import UserProfile
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
+from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
@@ -186,3 +187,18 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
         user_profile,
     )
     logger.debug("%s.secret_updated() dump: %s, tags: %s", logger_prefix, json_data, tags)
+
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache(
+    "Secret",
+    "secret.Secret",
+    "connection.ConnectionBase",
+    "llmhost.LLMHost",
+    "llmtool.PluginDataWebsearch",
+    "mcpclient.MCPClient",
+    "provider.Provider",
+    "proxy.Proxy",
+    "vectorsearch.Vectorsearch",
+    "vectorstore.VectorstoreMeta",
+)

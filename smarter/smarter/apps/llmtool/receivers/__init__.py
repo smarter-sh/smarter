@@ -13,6 +13,8 @@ Each module holds the receivers of one kind of work, alongside its signals in
   of each plugin kind's tool calls.
 """
 
+from smarter.lib.django.listview import connect_listview_cache
+
 from . import (  # noqa: F401
     api,
     extension,
@@ -24,5 +26,15 @@ from . import (  # noqa: F401
     websearch,
 )
 from .utils import response_characters
+
+# the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
+connect_listview_cache(
+    "Plugin",
+    "llmtool.PluginMeta",
+    "llmtool.PluginDataBase",
+    "llmtool.PluginPrompt",
+    "llmtool.PluginSelector",
+    "llmclient.LLMClientPlugin",
+)
 
 __all__ = ["api", "extension", "image_search", "models", "plugin", "response_characters", "skill", "sql", "websearch"]

@@ -27,7 +27,6 @@ Dependencies:
     - smarter.lib.cache.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.orchestrator.models.Orchestrator
-    - smarter.apps.orchestrator.serializers.OrchestratorSerializer
 """
 
 from django.db import models
@@ -38,7 +37,6 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Orchestrator
-from .serializers import OrchestratorSerializer
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -50,11 +48,6 @@ logger_prefix = logging.formatted_text(__name__)
 def _get_cached_orchestrators_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[Orchestrator]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Orchestrator.objects.owned_by(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Orchestrators: %s",
-        logger_prefix,
-        logging.formatted_json(OrchestratorSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -95,11 +88,6 @@ def invalidate_cached_orchestrators_owned_by_user_profile(user_profile: UserProf
 def _get_cached_orchestrators_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[Orchestrator]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Orchestrator.objects.shared_with(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Orchestrators: %s",
-        logger_prefix,
-        logging.formatted_json(OrchestratorSerializer(retval, many=True).data),
-    )
     return retval
 
 
@@ -139,11 +127,6 @@ def invalidate_cached_orchestrators_shared_with_user_profile(user_profile: UserP
 def _get_cached_orchestrators_available_to_user_profile(user_profile_id) -> models.QuerySet[Orchestrator]:
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = Orchestrator.objects.with_read_permission_for(user_profile.user)  # type: ignore
-    logger.debug(
-        "%s.post() Fetching Orchestrators: %s",
-        logger_prefix,
-        logging.formatted_json(OrchestratorSerializer(retval, many=True).data),
-    )
     return retval
 
 

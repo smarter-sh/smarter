@@ -109,6 +109,38 @@ class TestCanDelete(TestAccountMixin):
         self.assertIs(user_can_delete(self.guardrail, "NotAKind", self.admin_user), False)
         self.assertIs(user_can_delete(self.guardrail, None, self.admin_user), False)
 
+    def test_user_can_delete_with_owned_pks(self):
+        """Test that user_can_delete() reads ownership from owned_pks, when a list's page gives it."""
+        self.assertIs(
+            user_can_delete(self.guardrail, "Guardrail", self.admin_user, owned_pks={self.guardrail.pk}), True
+        )
+        self.assertIs(user_can_delete(self.guardrail, "Guardrail", self.admin_user, owned_pks=set()), False)
+
+    def test_page_asks_for_ownership_once(self):
+        """Test that serializing a page asks once which rows the user owns, with the same canDelete as one row."""
+        other = Guardrail.objects.create(
+            name="test_serializers_can_delete_other",
+            user_profile=self.non_admin_user_profile,
+            **copy.deepcopy(GUARDRAIL_DEFAULTS),
+        )
+        self.addCleanup(Guardrail.objects.filter(pk=other.pk).delete)
+        request = RequestFactory().get("/")
+        request.user = self.non_admin_user
+        with (
+            patch("smarter.apps.account.serializers.user_can_delete", wraps=user_can_delete) as can_delete,
+            patch.object(
+                Guardrail.objects,
+                "with_ownership_permission_for",
+                wraps=Guardrail.objects.with_ownership_permission_for,
+            ) as ownership,
+        ):
+            data = GuardrailSerializer([self.guardrail, other], many=True, context={"request": request}).data
+        self.assertEqual(ownership.call_count, 1)
+        self.assertEqual(can_delete.call_count, 2)
+        for row, item in zip((self.guardrail, other), data):
+            single = GuardrailSerializer(row, context={"request": request}).data["canDelete"]
+            self.assertEqual(item["canDelete"], single, row.name)
+
     def test_user_can_delete_builds_no_broker(self):
         """Test that user_can_delete() asks the broker class, so that a list page builds no broker per row."""
         with patch.object(SAMGuardrailBroker, "__init__", side_effect=AssertionError("a broker was built")):
