@@ -383,15 +383,15 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.PROMPT,
             )
-        if not self._manifest:
-            if self.loader:
-                self._manifest = self.loader.json_data
+        # pass the loader's raw dict straight to the controller. Don't store it in
+        # self._manifest, which subclasses expect to hold a Pydantic model.
+        manifest = self._manifest or (self.loader.json_data if self.loader else None)
 
         controller = PluginController(
             request=self.smarter_request,
             user_profile=self.user_profile,
-            manifest=self._manifest,  # type: ignore
-            plugin_meta=self.plugin_meta if not self._manifest else None,
+            manifest=manifest,  # type: ignore
+            plugin_meta=self.plugin_meta if not manifest else None,
             name=self.name,
         )
         self._plugin = controller.obj
@@ -406,8 +406,8 @@ class SAMPluginBaseBroker(AbstractBroker):
             logger.warning(
                 "%s.plugin() - could not resolve plugin. manifest=%s, plugin_meta=%s, name=%s, user_profile=%s.",
                 logger_prefix,
-                self._manifest,
-                self.plugin_meta,
+                manifest,
+                self._plugin_meta,
                 self.name,
                 self.user_profile,
             )
