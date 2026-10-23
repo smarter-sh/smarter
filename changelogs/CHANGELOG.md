@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.13...v0.36.14-alpha.1) (2026-10-23)
+
+### Bug Fixes
+
+* **helm:** size celery worker and beat memory requests to real use ([d4bbd95](https://github.com/smarter-sh/smarter/commit/d4bbd952473d1491ebf10a130980153c2b852efa))
+
 ## [0.36.13](https://github.com/smarter-sh/smarter/compare/v0.36.12...v0.36.13) (2026-10-23)
 
 ### Bug Fixes
