@@ -143,7 +143,7 @@ Step 7: Integrate into Your Workflow
    cat my_script.py | smarter chat <llmclient-name> --prompt "Review this code for bugs"
 
 **REST API** — call Smarter from scripts or CI/CD pipelines. See the
-:doc:`/external-links/swagger` for endpoint details.
+:doc:`/external-links/openapi` for endpoint details.
 
 **VS Code** — install the
 `Smarter YAML extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_
@@ -208,5 +208,5 @@ Troubleshooting
    - :doc:`/smarter-platform/api-keys`
    - :doc:`/smarter-resources/smarter-provider`
    - :doc:`/smarter-platform/adding-an-llm-provider`
-   - :doc:`/external-links/swagger`
+   - :doc:`/external-links/openapi`
    - `Anthropic Claude Documentation <https://docs.anthropic.com/>`_

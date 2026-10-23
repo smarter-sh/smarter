@@ -6,8 +6,8 @@ and documented API, from both sides: the server that provides it and the clients
 Smarter's API has sixteen commands under `/api/v1/cli/
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/urls.py>`__ that
 apply, describe and delete every resource from a YAML manifest, resource-style endpoints for the web
-console, API keys of which only a hash is stored, one error format for every failure, and Swagger
-and ReDoc pages generated from the code. Its clients are real and public: the Go `smarter-cli
+console, API keys of which only a hash is stored, one error format for every failure, and a typed
+OpenAPI contract generated from the code. Its clients are real and public: the Go `smarter-cli
 <https://github.com/smarter-sh/smarter-cli>`__, the React web console, the `@smarter.sh/ui-chat
 <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__ npm package, whose types are generated from the chat
 API's Pydantic contract, and a `Python SDK <https://github.com/smarter-sh/smarter-python>`__ that
@@ -70,7 +70,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 1: What makes an API good.** REST principles, resources and representations,
        methods and idempotence, status codes, and consistency. A first look at Smarter's
-       :doc:`REST API </smarter-framework/smarter-api>` and its Swagger documentation.
+       :doc:`REST API </smarter-framework/smarter-api>` and its OpenAPI contract.
    * - 2
      - 45
      - **Lab 1: Call it by hand.** With ``curl`` and an API key, apply, get, describe and delete a
