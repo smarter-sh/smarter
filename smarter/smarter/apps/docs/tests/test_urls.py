@@ -7,6 +7,7 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
+from http import HTTPStatus
 from logging import getLogger
 
 from django.test import Client
@@ -114,22 +115,22 @@ class TestDocsUrls(SmarterTestBase):
     # -----------------------------------------------------------------------
     # Documentation generators
     # -----------------------------------------------------------------------
-    def test_url_schema_json(self) -> None:
-        """Test url for schema json/yaml."""
-        url_json = reverse(f"{namespace}:schema-json", kwargs={"format": ".json"})
-        url_yaml = reverse(f"{namespace}:schema-json", kwargs={"format": ".yaml"})
-        self.process_url(url_json)
-        self.process_url(url_yaml)
-
-    def test_url_schema_swagger_ui(self) -> None:
-        """Test url for schema swagger UI."""
-        url = reverse(f"{namespace}:schema-swagger-ui")
+    def test_url_openapi(self) -> None:
+        """Test url for the OpenAPI contract page."""
+        url = reverse(namespace, DocsReverseNames.openapi)
         self.process_url(url)
 
-    def test_url_schema_redoc_ui(self) -> None:
-        """Test url for schema redoc UI."""
-        url = reverse(f"{namespace}:schema-redoc-ui")
+    def test_url_openapi_json(self) -> None:
+        """Test url for the OpenAPI document."""
+        url = reverse(namespace, DocsReverseNames.openapi_json)
         self.process_url(url)
+
+    def test_drf_yasg_pages_are_gone(self) -> None:
+        """The Swagger and Redoc pages that drf-yasg generated were replaced by the OpenAPI contract."""
+        self.client.force_login(self.user)
+        for path in ("/docs/swagger/", "/docs/swagger.json", "/docs/swagger.yaml", "/docs/redoc/"):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, path)
 
     # -----------------------------------------------------------------------
     # Json Schemas

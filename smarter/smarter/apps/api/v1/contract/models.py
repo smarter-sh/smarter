@@ -451,11 +451,15 @@ class OpenApiComponents(OpenApiModel):
 
 
 class OpenApiDocument(OpenApiModel):
-    """An OpenAPI 3.1 document."""
+    """
+    An OpenAPI 3.1 document.
+
+    It has no ``jsonSchemaDialect``: its schemas use the default dialect of OpenAPI 3.1, which is
+    JSON Schema 2020-12 with OpenAPI's keywords. Viewers such as Swagger UI support no other value.
+    """
 
     openapi: str
     info: OpenApiInfo
-    jsonSchemaDialect: str
     servers: list[OpenApiServer]
     security: list[dict[str, list[str]]]
     tags: list[OpenApiTag]
