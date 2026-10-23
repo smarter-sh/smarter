@@ -17,9 +17,11 @@ from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.guardrail.views.listview.api import GuardrailListApiView
+from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django.listview import (
     LISTVIEW_CACHE_ALL,
+    ListviewPageRequest,
     connect_listview_cache,
     invalidate_listview_cache,
     listview_cache_generation,
@@ -28,6 +30,19 @@ from smarter.lib.drf.views.listview.api import AuthTokenListApiView
 
 TEST_KIND = "TestListviewKind"
 """A list that no app connects, so that only these tests change its generation."""
+
+
+class TestListviewPageRequest(TestAccountMixin):
+    """Test the request that a cached list page is serialized with."""
+
+    def test_has_the_user_and_the_platform_host(self):
+        """It has the user, and the platform's host and scheme, so that a file field's url is absolute."""
+        request = ListviewPageRequest(self.user_profile.user)
+        self.assertEqual(request.user, self.user_profile.user)
+        self.assertEqual(
+            request.build_absolute_uri("/media/provider/provider_logos/logo.png"),
+            f"{smarter_settings.environment_url.rstrip('/')}/media/provider/provider_logos/logo.png",
+        )
 
 
 class TestListviewCacheGeneration(TestAccountMixin):
