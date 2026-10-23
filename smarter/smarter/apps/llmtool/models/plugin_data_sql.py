@@ -251,7 +251,7 @@ class PluginDataSql(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{PluginDataSql.__name__}.get_cached_object()")
+        logger_prefix = f"{formatted_text(__name__)}.{PluginDataSql.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,

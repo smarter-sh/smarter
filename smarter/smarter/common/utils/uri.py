@@ -1,5 +1,5 @@
 """
-smarter.common.utils.uri
+Smarter.common.utils.uri
 =========================
 
 Helpers for building absolute URIs from Django or DRF request objects.
@@ -21,7 +21,6 @@ returns a fallback test URL if the request cannot be resolved.
     request.path = '/api/v1/resource/'
     url = smarter_build_absolute_uri(request)
     print(url)  # Output: http://localhost:9357/api/v1/resource/
-
 """
 
 from typing import Optional
@@ -34,7 +33,7 @@ from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
 
-logger_prefix = logging.formatted_text(f"{__name__}.smarter_build_absolute_uri()")
+logger_prefix = f"{logging.formatted_text(__name__)}.smarter_build_absolute_uri()"
 
 
 def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
@@ -78,13 +77,10 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         # Example with None
         url = smarter_build_absolute_uri(None)
         print(url)  # Output: http://testserver/unknown/
-
     """
 
     def get_host(request: "HttpRequest") -> str:
-        """
-        Helper function to extract the host from the request object.
-        """
+        """Helper function to extract the host from the request object."""
         try:
             # Try Django's get_host method first. works well except that
             # it can raise KeyError on certain edge cases.

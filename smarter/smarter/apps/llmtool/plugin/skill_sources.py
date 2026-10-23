@@ -64,6 +64,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from . import safe_http
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
+logger_prefix = logging.formatted_text(__name__)
 
 GITHUB_API_URL = "https://api.github.com"
 REQUEST_TIMEOUT = 15
@@ -211,7 +212,9 @@ def list_github_skill_files(location: SkillSourceLocation) -> list[tuple[str, in
     if not isinstance(tree, dict) or not isinstance(tree.get("tree"), list):
         raise SkillSourceError(f"GitHub returned an invalid tree listing for {location.url}")
     if tree.get("truncated"):
-        logger.warning("list_github_skill_files() GitHub tree listing of %s is truncated.", location.url)
+        logger.warning(
+            "%s.list_github_skill_files() GitHub tree listing of %s is truncated.", logger_prefix, location.url
+        )
 
     prefix = f"{location.path}/" if location.path else ""
     files: list[tuple[str, int]] = []
@@ -247,7 +250,8 @@ def _retrieve_resources(
     for path, size in files:
         if len(resources) >= MAX_RESOURCES:
             logger.warning(
-                "retrieve_skill() %s bundles more than %s files. The remainder are ignored.",
+                "%s.retrieve_skill() %s bundles more than %s files. The remainder are ignored.",
+                logger_prefix,
                 location.url,
                 MAX_RESOURCES,
             )
@@ -255,16 +259,26 @@ def _retrieve_resources(
         try:
             path = normalize_resource_path(path)
         except SkillDocumentError:
-            logger.warning("retrieve_skill() ignoring invalid bundled file path %s in %s", path, location.url)
+            logger.warning(
+                "%s.retrieve_skill() ignoring invalid bundled file path %s in %s", logger_prefix, path, location.url
+            )
             continue
         if size is not None and (size > MAX_RESPONSE_BYTES or total_bytes + size > MAX_TOTAL_RESOURCE_BYTES):
-            logger.warning("retrieve_skill() bundled file %s of %s is too large to retrieve.", path, location.url)
+            logger.warning(
+                "%s.retrieve_skill() bundled file %s of %s is too large to retrieve.", logger_prefix, path, location.url
+            )
             resources[path] = None
             continue
         try:
             content = fetch_text(location.resource_url(path))
         except SkillSourceError as e:
-            logger.warning("retrieve_skill() bundled file %s of %s could not be retrieved: %s", path, location.url, e)
+            logger.warning(
+                "%s.retrieve_skill() bundled file %s of %s could not be retrieved: %s",
+                logger_prefix,
+                path,
+                location.url,
+                e,
+            )
             if size is not None:
                 resources[path] = None
             continue
@@ -299,7 +313,7 @@ def retrieve_skill(url: str) -> RetrievedSkill:
         list(skill.resources)  # ['LICENSE.txt', 'forms.md', 'reference.md', 'scripts/...', ...]
     """
     location = parse_source_url(url)
-    logger.info("retrieve_skill() retrieving skill from %s", location.skill_url)
+    logger.info("%s.retrieve_skill() retrieving skill from %s", logger_prefix, location.skill_url)
 
     files: list[tuple[str, Optional[int]]] = []
     if location.is_github:
@@ -313,7 +327,8 @@ def retrieve_skill(url: str) -> RetrievedSkill:
     expected_name = location.skill_directory_name
     if expected_name and expected_name != document.name:
         logger.warning(
-            "retrieve_skill() skill name %s does not match its directory name %s at %s",
+            "%s.retrieve_skill() skill name %s does not match its directory name %s at %s",
+            logger_prefix,
             document.name,
             expected_name,
             location.url,
@@ -324,6 +339,10 @@ def retrieve_skill(url: str) -> RetrievedSkill:
 
     resources = _retrieve_resources(location, files)
     logger.info(
-        "retrieve_skill() retrieved skill %s with %s bundled files from %s", document.name, len(resources), location.url
+        "%s.retrieve_skill() retrieved skill %s with %s bundled files from %s",
+        logger_prefix,
+        document.name,
+        len(resources),
+        location.url,
     )
     return RetrievedSkill(location=location, document=document, resources=resources)

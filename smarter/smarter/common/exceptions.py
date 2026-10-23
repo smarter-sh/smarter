@@ -25,7 +25,18 @@ class SmarterException(Exception):
         super().__init__(self.message)
 
     def __str__(self) -> str:
-        return self.get_formatted_err_message + ": " + self.message
+        """
+        The error label, followed by the message.
+
+        Some subclasses, e.g. the manifest broker errors, already include the message in their
+        label; it is not repeated.
+
+        :returns: ``"<label>: <message>"``, or the label alone when it already contains the message.
+        """
+        label = self.get_formatted_err_message
+        if self.message and self.message in label:
+            return label
+        return label + ": " + self.message
 
     @property
     def get_formatted_err_message(self):

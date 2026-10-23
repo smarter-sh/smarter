@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 logger.debug(
     "%s is %s",
-    logging.formatted_text(__name__ + ".SmarterSocialAuthExceptionMiddleware"),
+    logging.formatted_text(__name__) + ".SmarterSocialAuthExceptionMiddleware",
     SmarterHelperMixin().formatted_state_ready,
 )
 

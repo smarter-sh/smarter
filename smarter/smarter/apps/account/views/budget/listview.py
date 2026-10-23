@@ -64,7 +64,7 @@ class BudgetListView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        return self.formatted_text(f"{__name__}.{BudgetListView.__name__}[{id(self)}]")
+        return f"{self.formatted_text(__name__)}.{BudgetListView.__name__}[{id(self)}]"
 
     def get(self, request: ASGIRequest, *args, **kwargs):
         # pylint: disable=C0415
@@ -89,7 +89,7 @@ class BudgetListApiView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
-        return self.formatted_text(f"{__name__}.{BudgetListApiView.__name__}[{id(self)}]")
+        return f"{self.formatted_text(__name__)}.{BudgetListApiView.__name__}[{id(self)}]"
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
         user_profile: UserProfile = self.user_profile  # type: ignore[assignment]
@@ -114,7 +114,7 @@ class BudgetListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
-        return self.formatted_text(f"{__name__}.{BudgetListApiDeleteView.__name__}[{id(self)}]")
+        return f"{self.formatted_text(__name__)}.{BudgetListApiDeleteView.__name__}[{id(self)}]"
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         budget_id = kwargs.get("budget_id")

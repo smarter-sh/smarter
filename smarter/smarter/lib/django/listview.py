@@ -305,7 +305,7 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        return self.formatted_text(f"{self.__class__.__module__}.{self.__class__.__name__}[{id(self)}]")
+        return f"{self.formatted_text(self.__class__.__module__)}.{self.__class__.__name__}[{id(self)}]"
 
     @classmethod
     def view_path(cls) -> str:

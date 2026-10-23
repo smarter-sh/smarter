@@ -573,7 +573,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
         :rtype: models.Model
         """
-        logger_prefix = logging.formatted_text(cls.__name__ + ".get_cached_object()")
+        logger_prefix = logging.formatted_text(cls.__name__) + ".get_cached_object()"
 
         if username and not user and not user_profile:
             logger.debug("%s Resolving user_profile from username: %s", logger_prefix, username)
@@ -612,7 +612,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             )
             if not isinstance(pk, int):
                 raise SmarterValueError(
-                    f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
+                    f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()"} invalid pk value: {pk}. Expected an integer."
                 )
             if taggit:
                 retval = (
@@ -626,7 +626,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
             logger.debug(
                 "%s._get_object_by_pk() fetched %s - %s",
-                logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                 type(retval).__name__,
                 str(retval),
             )
@@ -672,7 +672,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     ).get(name=name, user_profile=user_profile)
                 logger.debug(
                     "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     name,
                     user_profile,
@@ -723,7 +723,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     ).get(name=name, user_profile__account=account)
                 logger.debug(
                     "%s._get_object_by_name_and_account() fetched %s for name: %s and account: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     name,
                     account,
@@ -777,7 +777,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     ).get(session_key=session_key)
                 logger.debug(
                     "%s._get_object_by_session_key() fetched %s for session_key: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     session_key,
                 )
@@ -819,7 +819,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             )
             logger.warning(
                 "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to newest result: %s",
-                logging.formatted_text(cls.__name__ + ".get_cached_object()"),
+                logging.formatted_text(cls.__name__) + ".get_cached_object()",
                 user,
                 account,
                 user_profile,

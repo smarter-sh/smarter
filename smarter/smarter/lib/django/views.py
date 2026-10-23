@@ -90,7 +90,7 @@ def smarter_cache_page_by_user(timeout):
             else:
                 key_prefix = f"{cache_prefix}.user_anon.{path}"
             verbose_logger.debug(
-                "%s - %s with cache key_prefix: %s and timeout %s", logger_prefix, path, key_prefix, timeout
+                "%s %s with cache key_prefix: %s and timeout %s", logger_prefix, path, key_prefix, timeout
             )
             return cache_page(timeout, key_prefix=key_prefix)(view_func)(request, *args, **kwargs)
 

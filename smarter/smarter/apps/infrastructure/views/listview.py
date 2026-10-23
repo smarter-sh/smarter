@@ -107,7 +107,7 @@ class InfrastructureResourceListView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        return self.formatted_text(f"{__name__}.{InfrastructureResourceListView.__name__}[{id(self)}]")
+        return f"{self.formatted_text(__name__)}.{InfrastructureResourceListView.__name__}[{id(self)}]"
 
     def get(self, request: ASGIRequest, *args, **kwargs):
         if not request.user.is_superuser:  # type: ignore[union-attr]
@@ -151,7 +151,7 @@ class InfrastructureResourceListApiView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
-        return self.formatted_text(f"{__name__}.{InfrastructureResourceListApiView.__name__}[{id(self)}]")
+        return f"{self.formatted_text(__name__)}.{InfrastructureResourceListApiView.__name__}[{id(self)}]"
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
         if not request.user.is_superuser:  # type: ignore[union-attr]

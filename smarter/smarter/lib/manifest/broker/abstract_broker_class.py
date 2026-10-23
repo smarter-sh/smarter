@@ -2713,7 +2713,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Log the current state of the AbstractBroker instance for debugging purposes.
 
-        A ready broker's state is logged at INFO, which is usually switched off, so it is built
+        A ready broker's state is logged at DEBUG, which is usually switched off, so it is built
         only when it will be logged: it reads the broker's ready state and ORM instance, which
         would otherwise cost every broker queries that its caller may never need. A broker that
         is not ready always logs a warning.
@@ -2721,7 +2721,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: None
         """
         is_ready = self.is_ready_abstract_broker
-        if is_ready and not logger.should_log(logging.INFO):
+        if is_ready and not logger.should_log(logging.DEBUG):
             return
         state = {
             "ready": self.ready,
@@ -2737,7 +2737,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             f"broker is {self.abstract_broker_ready_state}: " + logging.formatted_json(state)
         )
         if is_ready:
-            logger.info(msg)
+            logger.debug(msg)
         else:
             logger.warning(msg)
 

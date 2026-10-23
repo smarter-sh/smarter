@@ -226,7 +226,7 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
 
         if invalidate:
             get_cached_vectorstores_for_user_id.invalidate(user_id=user.id)  # type: ignore
-        logger.debug("%s for %s", formatted_text(f"{__name__}.get_cached_vectorstores_for_user()"), user)
+        logger.debug("%s for %s", f"{formatted_text(__name__)}.get_cached_vectorstores_for_user()", user)
         return get_cached_vectorstores_for_user_id(user_id=user.id)  # type: ignore
 
     def __str__(self) -> str:

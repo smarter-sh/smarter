@@ -108,7 +108,7 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str, task_id: Option
     dns = infrastructure.dns
     hostname = dns.resolve_domain(hostname)
     api_host_domain = dns.resolve_domain(api_host_domain)
-    logger.info("%s - %s task_id: %s", fn_name, hostname, task_id)
+    logger.info("%s %s task_id: %s", fn_name, hostname, task_id)
 
     # locate the DNS zone of the customer API domain. If it doesn't exist, neither does the record.
     zone = dns.get_zone(api_host_domain)

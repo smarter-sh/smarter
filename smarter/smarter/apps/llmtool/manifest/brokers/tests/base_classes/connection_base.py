@@ -38,7 +38,7 @@ HERE = __name__
 class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
     """Adds a class-level setup to create Secret instances for use in connection broker tests."""
 
-    test_smarter_connection_broker_base_logger_prefix = formatted_text(f"{HERE}.TestSmarterConnectionBrokerBase()")
+    test_smarter_connection_broker_base_logger_prefix = f"{formatted_text(HERE)}.TestSmarterConnectionBrokerBase()"
 
     @classmethod
     def setUpClass(cls):
