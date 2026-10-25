@@ -16,7 +16,10 @@ function and the argument's type, once per process. Pass the instance's id inste
 object is never used as a key: two rows with the same name would share an entry, and an object
 without its own ``__str__`` would have a new key in every process.
 
-The decorator, its keys and its settings depend only on Django. The ``CACHE_RESULTS`` setting (see
+The decorator, its keys and its settings depend only on Django, and are also maintained as a
+standalone package, `cache-results <https://github.com/smarter-sh/cache-results>`__, under the MIT
+license. Until Smarter installs that package, its own copy in ``smarter.lib.cache`` is kept in step
+with it. The ``CACHE_RESULTS`` setting (see
 :doc:`caching/conf`) names the cache alias, the default timeout, a key prefix and version that can
 abandon every cached result at once, the key encoder, and the logging hooks.
 :mod:`smarter.lib.cache.hooks` connects them to Smarter: the default timeout is

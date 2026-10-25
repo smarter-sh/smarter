@@ -2,6 +2,9 @@
 Smarter.lib.cache.conf
 ======================
 
+This module is also published as the standalone package cache-results
+(https://github.com/smarter-sh/cache-results). Make every change in both.
+
 Configuration of the ``@cache_results`` decorator, read from the
 ``CACHE_RESULTS`` Django setting. Every entry is optional:
 

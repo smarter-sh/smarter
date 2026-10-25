@@ -107,8 +107,10 @@ in Redis, skips the cache until Django's apps are ready (importing
 `django.core.cache` too early silently leaves it on a local-memory backend),
 caches `None` correctly, and gives every decorated function an
 `.invalidate(*args)`. The decorator, `keys.py` and `conf.py` depend only on
-Django, so that the decorator can become its own package: keep Smarter imports
-out of them. Smarter's parts (default timeout, waffle-switched logging, colored
+Django: keep Smarter imports out of them. They are also the standalone package
+cache-results (`../cache-results`, `src/cache_results/`). Until Smarter
+installs it from PyPI, make every change to these three files, and to
+`cache_sentinel.py`, in both repositories, with its tests. Smarter's parts (default timeout, waffle-switched logging, colored
 prefixes, Pydantic arguments) are hooks in `hooks.py`, named by the
 `CACHE_RESULTS` setting in `settings/base.py`. Outside tests, only the cache
 package and the `reset_cache` management command import `django.core.cache`,
