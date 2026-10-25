@@ -689,6 +689,23 @@ See:
 - https://artifacthub.io/packages/helm/project-smarter/smarter
 """
 
+CACHE_RESULTS = {
+    "CACHE_ALIAS": "default",
+    "TIMEOUT": smarter_settings.cache_expiration,
+    "KEY_ENCODER": "smarter.lib.cache.hooks.SmarterCacheKeyEncoder",
+    "LOGGING_ENABLED": "smarter.lib.cache.hooks.logging_enabled",
+    "VERBOSE_LOGGING": "smarter.lib.cache.hooks.verbose_logging",
+    "LOG_PREFIX": "smarter.lib.cache.hooks.log_prefix",
+}
+"""
+The configuration of the ``@cache_results`` decorator.
+
+Its default timeout is ``smarter_settings.cache_expiration``, and the hooks in
+``smarter.lib.cache.hooks`` connect it to the ``CACHE_LOGGING`` waffle switch,
+Smarter's colored log prefixes, and Pydantic cache key arguments. Every entry
+is described in :mod:`smarter.lib.cache.conf`.
+"""
+
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 """
 The Django session engine configuration for Smarter, using the cache backend.

@@ -102,11 +102,17 @@ consistent with most of the codebase wins. Say so in your summary.
 
 `@cache_results` (`smarter/smarter/lib/cache/decorators.py`) is the one way to
 cache results for an hour or longer. It builds a deterministic key from the
-module, qualified function name and bound arguments, stores results in Redis through
-`lazy_cache` (which avoids Django silently falling back to a local-memory cache
-when `django.core.cache` is imported too early), caches `None` correctly, and
-gives every decorated function an `.invalidate(*args)`. Outside tests, only `lazy_cache`
-and the `reset_cache` management command import `django.core.cache`.
+module, qualified function name and bound arguments (`keys.py`), stores results
+in Redis, skips the cache until Django's apps are ready (importing
+`django.core.cache` too early silently leaves it on a local-memory backend),
+caches `None` correctly, and gives every decorated function an
+`.invalidate(*args)`. The decorator, `keys.py` and `conf.py` depend only on
+Django, so that the decorator can become its own package: keep Smarter imports
+out of them. Smarter's parts (default timeout, waffle-switched logging, colored
+prefixes, Pydantic arguments) are hooks in `hooks.py`, named by the
+`CACHE_RESULTS` setting in `settings/base.py`. Outside tests, only the cache
+package and the `reset_cache` management command import `django.core.cache`,
+and only inside functions.
 
 - **Cache the expensive call itself**: the HTTP request, the third-party API
   call or the query, not a wrapper around a whole workflow. Cheap work such as
@@ -116,9 +122,13 @@ and the `reset_cache` management command import `django.core.cache`.
   be, explicitly and one by one, everything that can change the result: every
   query parameter, filter and flag. Don't fold them into an opaque JSON string
   or an object id. Use plain values (str, int, bool, tuples), never model
-  instances or `self`. `@cache_results` raises `TypeError` on an instance
-  method, because `self` would be part of the key. Classmethods and `async`
-  functions are fine. A function defined inside a method that subclasses
+  instances or `self`: pass `user.pk`, not `user`, and filter on `user_id`
+  (see `UserProfile.get_cached_object()`). A model instance, or any object the
+  key encoder doesn't know, runs the function uncached and logs an error once
+  per process; it is never keyed by `str()`. Dataclasses and Pydantic models
+  are fine, keyed by their fields. `@cache_results` raises `TypeError` on an
+  instance method, because `self` would be part of the key. Classmethods and
+  `async` functions are fine. A function defined inside a method that subclasses
   inherit keeps a `class_name: str = cls.__name__` parameter (see
   `get_cached_object()` in `metadata_with_ownership.py`): its qualified name
   names the class that defines it, so it is the same for every subclass.
