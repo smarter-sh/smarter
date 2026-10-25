@@ -102,6 +102,15 @@ hostnames, account numbers or customer data.
 its `--id`, or you'll publish a duplicate. It closes comments, like the earlier
 posts.
 
+**Never create a second post for an article that already exists**, not even a
+draft "for review". Two posts with one title in wp-admin confuse the user, who
+can't tell which one is live. An agent once copied a published post into a
+"REVISION of post 376" draft for review, then published the edits to the
+original and left the draft behind. The user had it deleted and said never to
+do that again. To change an existing post, edit that post by its `--id`. If the
+user wants to review edits before they go live, show the changed passages in
+the conversation and update the post once they approve.
+
 ## Conventions
 
 | Field     | Release announcement                                           | Example                                  |
