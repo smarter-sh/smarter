@@ -2,6 +2,9 @@
 Smarter.lib.cache.decorators
 ============================
 
+This module is also published as the standalone package cache-results
+(https://github.com/smarter-sh/cache-results). Make every change in both.
+
 This module provides the ``@cache_results`` decorator, for persistent,
 argument-based caching of function results in Django's cache framework.
 

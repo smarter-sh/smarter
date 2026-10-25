@@ -26,9 +26,12 @@ Example:
 
 PENDING:
 - `cache_results` should be moved into its own independently managed PyPi package. Its decorator, keys and
-  settings (`smarter.lib.cache.decorators`, `keys` and `conf`) already depend only on Django, and Smarter
-  configures them through the `CACHE_RESULTS` setting and the hooks in `smarter.lib.cache.hooks`, so the
-  remaining work is packaging: its own repository, CI across Django versions and cache backends, and docs.
+  settings (`smarter.lib.cache.decorators`, `keys` and `conf`) depend only on Django, and have been ported
+  to their own repository, https://github.com/smarter-sh/cache-results, with tests across Django versions
+  and against Redis. Smarter configures them through the `CACHE_RESULTS` setting and the hooks in
+  `smarter.lib.cache.hooks`, and keeps its own copy until the package is published to PyPI, with its own
+  documentation site. Smarter then installs the package, imports it in place of its copy, and keeps only
+  `hooks.py` and `lazy_cache.py`.
 - This is not a traditional "object caching" solution; it only covers function results, not class instances. This limitation needs to be addressed.
 
 Alternatives Considered

@@ -2,6 +2,9 @@
 Smarter.lib.cache.keys
 ======================
 
+This module is also published as the standalone package cache-results
+(https://github.com/smarter-sh/cache-results). Make every change in both.
+
 Cache keys for the ``@cache_results`` decorator.
 
 A cache key must be the same every time for equal arguments, in every process,
