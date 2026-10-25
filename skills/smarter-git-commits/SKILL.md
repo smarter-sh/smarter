@@ -21,21 +21,21 @@ broken this rule in exactly that situation.
 
 ## Authorship
 
-You are the author. Lawrence McDaniel is the co-author.
+Lawrence McDaniel is the author. You are the co-author, and your email is `noreply@anthropic.com`.
 
-- `--author="Claude <noreply@anthropic.com>"`
-- The last `-m` is `Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>`.
+- `--author="Lawrence McDaniel <lpm0073@gmail.com>"`
+- The last `-m` is `Co-authored-by: Claude <noreply@anthropic.com>`.
 
 ## Command format
 
 Exactly one `git commit` command in one code block:
 
 ```console
-git commit --author="Claude <noreply@anthropic.com>" \
+git commit --author="Lawrence McDaniel <lpm0073@gmail.com>" \
   -m "<type>(<scope>): <subject>" \
   -m "<body paragraph>" \
   -m "<body paragraph or bullet list>" \
-  -m "Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>"
+  -m "Co-authored-by: Claude <noreply@anthropic.com>"
 ```
 
 - Use one `-m` per paragraph. git joins them with blank lines.
