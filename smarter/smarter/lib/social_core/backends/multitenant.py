@@ -49,12 +49,17 @@ see https://github.com/smarter-sh/account-manager
 
 
 @cache_results()
-def verify_payment_status(username) -> bool:
+def verify_payment_status(username: str) -> bool:
     """
     Verify the payment status of a user by making an API call to the Account Manager subscription status endpoint.
 
     Returns True if the subscription is active, False otherwise. In case of errors, defaults to returning True to
     avoid blocking access due to transient issues.
+
+    :param username: The user's username. It is the cache key, so it must be the string, not the User.
+    :type username: str
+    :returns: True if the subscription is active, or the status can't be checked.
+    :rtype: bool
     """
 
     def handle_error(err_type: str, err) -> str:
@@ -179,9 +184,10 @@ class DjangoModelBackendMultitenant(ModelBackend):
 
     def authenticate(self, request, username=None, password=None, **kwargs):
         user = super().authenticate(request, username, password, **kwargs)
-        username = username or kwargs.get(USERNAME)
-        if user and username:
-            if not verify_payment_status(username):
+        if user:
+            # the authenticated user's own username: the username argument is whatever the caller
+            # passed, which can be a User, and verify_payment_status() is cached by its argument.
+            if not verify_payment_status(user.get_username()):
                 if request is not None:
                     messages.error(request, _("Your subscription is not active. Please check your payment status."))
                 return redirect(INACTIVE_ACCOUNT_REDIRECT_URL)
