@@ -666,79 +666,83 @@ class UserProfile(MetaDataModel):
         """
         logger_prefix = logging.formatted_text(__name__) + ".UserProfile.get_cached_object()"
 
+        # the cached functions take ids, not model instances: an argument is part of the cache key,
+        # and a key must be built from plain values.
         @cache_results(cls.cache_expiration)
         def _get_object_by_user_and_account(
-            user: User, account: Account, class_name: str = cls.__name__
+            user_id: int, account_id: int, class_name: str = cls.__name__
         ) -> "UserProfile":
             logger.debug(
-                "%s called with pk: %s, name: %s, user: %s, username: %s, account: %s, invalidate: %s",
+                "%s called with pk: %s, name: %s, user_id: %s, username: %s, account_id: %s, invalidate: %s",
                 logger_prefix,
                 pk,
                 name,
-                user,
+                user_id,
                 username,
-                account,
+                account_id,
                 invalidate,
             )
             try:
                 retval = (
                     UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
-                    .get(user=user, account=account)
+                    .get(user_id=user_id, account_id=account_id)
                 )
                 logger.debug(
-                    "%s._get_object_by_user_and_account() fetched %s for user: %s and account: %s",
+                    "%s._get_object_by_user_and_account() fetched %s for user_id: %s and account_id: %s",
                     logging.formatted_text(__name__) + ".UserProfile.get_cached_object()",
                     cls.__name__,
-                    user.email,
-                    account,
+                    user_id,
+                    account_id,
                 )
                 _ = retval.user
                 _ = retval.account
                 return retval
             except UserProfile.DoesNotExist as e:
                 logger.debug(
-                    "%s._get_object_by_user_and_account() no %s found for user: %s, account: %s",
+                    "%s._get_object_by_user_and_account() no %s found for user_id: %s, account_id: %s",
                     logging.formatted_text(__name__) + ".UserProfile.get_cached_object()",
                     UserProfile.__name__,
-                    user.email,
-                    account,
+                    user_id,
+                    account_id,
                 )
                 raise UserProfile.DoesNotExist(f"No UserProfile found for user {user} and account {account}") from e
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_user(user: User, class_name: str = cls.__name__) -> "UserProfile":
+        def _get_object_by_user(user_id: int, class_name: str = cls.__name__) -> "UserProfile":
             try:
-                retval = UserProfile.objects.prefetch_related("tags").select_related("user", "account").get(user=user)
+                retval = (
+                    UserProfile.objects.prefetch_related("tags").select_related("user", "account").get(user_id=user_id)
+                )
                 logger.debug(
-                    "%s._get_object_by_user() fetched %s for user: %s",
+                    "%s._get_object_by_user() fetched %s for user_id: %s",
                     logging.formatted_text(__name__) + ".UserProfile.get_cached_object()",
                     cls.__name__,
-                    user.email,
+                    user_id,
                 )
                 _ = retval.user
                 _ = retval.account
                 return retval
             except UserProfile.DoesNotExist as e:
                 logger.debug(
-                    "%s._get_object_by_user() no %s found for user: %s",
+                    "%s._get_object_by_user() no %s found for user_id: %s",
                     logging.formatted_text(__name__) + ".UserProfile.get_cached_object()",
                     UserProfile.__name__,
-                    user.email,
+                    user_id,
                 )
                 raise UserProfile.DoesNotExist(f"No UserProfile found for user {user} and account {account}") from e
             except UserProfile.MultipleObjectsReturned as e:
                 retval = (
                     UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
-                    .filter(user=user)
+                    .filter(user_id=user_id)
                     .order_by("-pk")
                     .first()
                 )
                 logger.warning(
-                    "%s.get_cached_object() Multiple UserProfiles found for user %s. Defaulting to newest result: %s",
+                    "%s.get_cached_object() Multiple UserProfiles found for user_id %s. Defaulting to newest result: %s",
                     logging.formatted_text(__name__) + ".UserProfile.get_cached_object()",
-                    user.email,
+                    user_id,
                     retval,
                 )
                 if not retval:
@@ -748,13 +752,15 @@ class UserProfile(MetaDataModel):
                 return retval
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_account(account: Account, class_name: str = cls.__name__) -> Optional["UserProfile"]:
+        def _get_object_by_account(account_id: int, class_name: str = cls.__name__) -> Optional["UserProfile"]:
+            admin_user = None
             try:
-                user = UserProfile.admin_for_account(account)
+                # account is the instance whose id is account_id: the caller passes account.pk.
+                admin_user = UserProfile.admin_for_account(account)  # type: ignore[arg-type]
                 retval = (
                     UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
-                    .get(account=account, user=user)
+                    .get(account_id=account_id, user=admin_user)
                 )
                 logger.debug(
                     "%s._get_object_by_account() fetched %s for account admin %s",
@@ -770,19 +776,19 @@ class UserProfile(MetaDataModel):
                     "%s._get_object_by_account() no %s found for account admin %s",
                     logging.formatted_text(__name__) + ".UserProfile.get_cached_object()",
                     UserProfile.__name__,
-                    user,
+                    admin_user,
                 )
                 return None
             except UserProfile.MultipleObjectsReturned:
                 logger.error(
-                    "%s.get_cached_object() Multiple UserProfiles found for account %s. Defaulting to first result.",
+                    "%s.get_cached_object() Multiple UserProfiles found for account_id %s. Defaulting to first result.",
                     logging.formatted_text(__name__) + ".UserProfile.get_cached_object()",
-                    account,
+                    account_id,
                 )
                 return (
                     UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
-                    .filter(account=account)
+                    .filter(account_id=account_id)
                     .first()
                 )
 
@@ -802,22 +808,27 @@ class UserProfile(MetaDataModel):
                 )
                 raise User.DoesNotExist(f"No user found with username {username}") from e
 
+        user_id = user.pk if user else None
+        account_id = account.pk if account else None
+
         if invalidate:
-            _get_object_by_user_and_account.invalidate(user=user, account=account, class_name=UserProfile.__name__)
-            _get_object_by_user.invalidate(user=user, class_name=UserProfile.__name__)
-            _get_object_by_account.invalidate(account=account, class_name=UserProfile.__name__)
+            _get_object_by_user_and_account.invalidate(
+                user_id=user_id, account_id=account_id, class_name=UserProfile.__name__
+            )
+            _get_object_by_user.invalidate(user_id=user_id, class_name=UserProfile.__name__)
+            _get_object_by_account.invalidate(account_id=account_id, class_name=UserProfile.__name__)
 
         if user or account:
             retval: UserProfile
             if user and account:
-                retval = _get_object_by_user_and_account(user, account, UserProfile.__name__)
+                retval = _get_object_by_user_and_account(user_id, account_id, UserProfile.__name__)
             elif user:
                 # the profile that the user chose in the user menu, else their newest one.
-                retval = cls.get_selected_object(user.pk) or _get_object_by_user(
-                    user=user, class_name=UserProfile.__name__
+                retval = cls.get_selected_object(user_id) or _get_object_by_user(
+                    user_id=user_id, class_name=UserProfile.__name__
                 )
             else:
-                retval = _get_object_by_account(account=account, class_name=UserProfile.__name__)
+                retval = _get_object_by_account(account_id=account_id, class_name=UserProfile.__name__)
             return retval
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
