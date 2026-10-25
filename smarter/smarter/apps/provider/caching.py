@@ -24,16 +24,16 @@ Functions:
 Dependencies:
 
     - Django ORM
-    - smarter.lib.cache.cache_results
+    - cache_results.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.provider.models.Provider
 """
 
+from cache_results import cache_results
 from django.db import models
 
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Provider

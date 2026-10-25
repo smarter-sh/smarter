@@ -70,6 +70,8 @@ botocore==1.43.116
     #   s3transfer
 build==1.6.1
     # via pip-tools
+cache-results==0.2.0
+    # via -r smarter/requirements/in/base.in
 cachetools==7.2.4
     # via
     #   -r smarter/requirements/in/base.in

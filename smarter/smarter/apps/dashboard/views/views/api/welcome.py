@@ -19,6 +19,7 @@ itself again in the same session.
 
 from http import HTTPStatus
 
+from cache_results import cache_results
 from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -28,7 +29,6 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 

@@ -5,7 +5,7 @@ Errors
 ------
 
 Every error that the SDK returns matches ``smarter.ErrSmarter`` with ``errors.Is``. The
-:doc:`Python SDK's <../smarter-python/errors>` exception hierarchy, which follows the platform's own
+`Python SDK's <https://docs.smarter-python.smarter.sh/guide/errors.html>`__ exception hierarchy, which follows the platform's own
 rule (:doc:`ADR-012 <../../adr/012-error-handling>`), becomes Go's sentinel errors and error types:
 
 .. list-table::

@@ -53,6 +53,7 @@ enabling seamless integration with a variety of large language model (LLM) backe
 
 from typing import Any, List, Optional, Union
 
+from cache_results import cache_results
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest
 from pydantic import SecretStr
@@ -70,7 +71,6 @@ from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

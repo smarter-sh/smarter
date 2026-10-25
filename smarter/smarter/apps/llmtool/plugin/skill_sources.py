@@ -39,6 +39,8 @@ from datetime import datetime, timezone
 from typing import Callable, Optional
 from urllib.parse import quote, urlparse
 
+from cache_results import cache_results
+
 from smarter.apps.llmtool.const import PluginCacheTtl
 from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
     MAX_RESOURCE_LENGTH,
@@ -58,7 +60,6 @@ from smarter.apps.llmtool.manifest.models.skill_plugin.source import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from . import safe_http
