@@ -130,6 +130,20 @@ administrative posts in category 4, and never add 4 to an article. Leave the
 publication date to WordPress (now), and keep the Markdown source at
 `~/desktop/blog-<slug>.md`.
 
+Post cards show no excerpt. That is snippet 6, "Post cards: hide excerpts", a
+front-end PHP snippet that prints `.entry-card .entry-excerpt { display: none; }`
+in `wp_head`. Its CSS goes through PHP because the blog does not serve Code
+Snippets' `site-css` snippets. The Code Snippets REST API
+(`/wp-json/code-snippets/v1/snippets`) accepts the same login and nonce as
+`wp.py`.
+
+WP Super Cache serves pages to visitors, and saving a snippet or theme setting
+does not clear it. After such a change, delete the whole cache: read the
+`wpsc_ajax` nonce from `wp-admin/options-general.php?page=wpsupercache`, then
+POST `action=ajax-delete-cache&path=/&admin=1&nonce=<nonce>` to
+`wp-admin/admin-ajax.php`. Verify with the plain url, not a `?query` url,
+which bypasses the cache and shows you a page that visitors don't get.
+
 ## Routine
 
 1. **Find where the announcements stopped.** `wp.py list` shows the latest
