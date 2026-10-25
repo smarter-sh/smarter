@@ -32,7 +32,7 @@ Smarter / SAM Checklist
     - :class:`smarter.apps.account.mixins.AccountMixin`
     - :class:`smarter.apps.account.tests.mixins.TestAccountMixin`
     - :class:`smarter.common.mixins.SmarterHelperMixin`
-    - :func:`smarter.lib.cache.cache_results` decorator
+    - :func:`cache_results.decorators.cache_results` decorator
     - :class:`smarter.lib.django.request.SmarterRequestMixin`
     - :class:`smarter.lib.django.validators.SmarterValidator`
     - :class:`smarter.lib.drf.serializers.SmarterCamelCaseSerializer` and :class:`smarter.apps.account.serializers.MetaDataWithOwnershipModelSerializer`

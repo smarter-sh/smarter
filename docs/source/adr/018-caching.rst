@@ -7,7 +7,7 @@ Accepted
 
 Context
 -------
-Efficient caching is important for performance and scalability. Smarter currently implements its own function results caching using `from smarter.lib.cache import cache_results`. This approach focuses on caching the results of function calls rather than traditional object or instance caching.
+Efficient caching is important for performance and scalability. Smarter caches function results with `from cache_results import cache_results`, the decorator of the standalone, Django-only package cache-results (https://pypi.org/project/cache-results/, documented at https://docs.cache-results.smarter.sh/). Smarter configures it through the `CACHE_RESULTS` setting and the hooks in `smarter.lib.cache.hooks`. This approach focuses on caching the results of function calls rather than traditional object or instance caching.
 
 Decision
 --------
@@ -17,7 +17,7 @@ Example:
 
 .. code-block:: python
 
-  from smarter.lib.cache import cache_results
+  from cache_results import cache_results
 
   @cache_results(timeout=3600, logging_enabled=True)
   def expensive_function(args):
@@ -25,13 +25,6 @@ Example:
       return result
 
 PENDING:
-- `cache_results` should be moved into its own independently managed PyPi package. Its decorator, keys and
-  settings (`smarter.lib.cache.decorators`, `keys` and `conf`) depend only on Django, and have been ported
-  to their own repository, https://github.com/smarter-sh/cache-results, with tests across Django versions
-  and against Redis. Smarter configures them through the `CACHE_RESULTS` setting and the hooks in
-  `smarter.lib.cache.hooks`, and keeps its own copy until the package is published to PyPI, with its own
-  documentation site. Smarter then installs the package, imports it in place of its copy, and keeps only
-  `hooks.py` and `lazy_cache.py`.
 - This is not a traditional "object caching" solution; it only covers function results, not class instances. This limitation needs to be addressed.
 
 Alternatives Considered

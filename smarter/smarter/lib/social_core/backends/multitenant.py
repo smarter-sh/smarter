@@ -17,6 +17,7 @@ Returns HTTP 200 if the subscription is active. 40x otherwise.
 from http import HTTPStatus
 
 import requests
+from cache_results import cache_results
 from django.contrib import messages
 from django.contrib.auth.backends import ModelBackend
 from django.shortcuts import redirect
@@ -31,7 +32,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)

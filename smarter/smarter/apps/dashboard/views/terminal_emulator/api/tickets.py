@@ -13,12 +13,12 @@ not been redeemed before.
 
 import secrets
 
+from cache_results import lazy_cache
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 
 from .const import TERMINAL_TICKET_TIMEOUT, TERMINAL_WEBSOCKET_PATH

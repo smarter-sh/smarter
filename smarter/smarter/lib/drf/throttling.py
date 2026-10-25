@@ -13,17 +13,17 @@ e.g. ``600/minute``. Either can be set to ``none`` to disable it.
 
 A client that exceeds a rate receives HTTP 429 Too Many Requests, with a
 ``Retry-After`` header. The counters are kept in the Redis cache, through
-:data:`smarter.lib.cache.lazy_cache`, so that every pod shares them.
+:data:`cache_results.lazy.lazy_cache`, so that every pod shares them.
 """
 
 from typing import Optional
 
+from cache_results import lazy_cache
 from django.http import HttpRequest
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache
 
 logger = logging.getLogger(__name__)
 

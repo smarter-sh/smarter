@@ -134,7 +134,7 @@ Guidance
        that the skills now carry; and commit bodies, which went from 4% to 44% of commits with
        five lines or more once the agent wrote them for the next agent.
        :doc:`ADR 029 </adr/029-docstrings>`.
-     - `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__,
+     - `cache_results/decorators.py <https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__,
        `skills/smarter-docstrings/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docstrings/SKILL.md>`__,
        `skills/smarter-git-commits/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-git-commits/SKILL.md>`__,
        :doc:`/adr`
@@ -153,7 +153,7 @@ The Antipattern
      - The canonical cache decorator, and the hand-rolled ``cache.get()`` and ``cache.set()``
        calls that grew beside it from four files at v0.14 to nine at v0.19, with the same opaque
        keys in each copy, and the image search that showed the same cat every time.
-     - `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__,
+     - `cache_results/decorators.py <https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__,
        `lib/cache/lazy_cache.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/lazy_cache.py>`__,
        `apps/llmtool/plugin/image_search.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/image_search.py>`__,
        `apps/mcpclient/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/mcpclient>`__

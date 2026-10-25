@@ -14,6 +14,7 @@ import socket
 from unittest import mock, skipUnless
 
 import requests
+from cache_results import lazy_cache
 from pydantic import SecretStr
 
 from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
@@ -34,7 +35,6 @@ from smarter.apps.llmtool.plugin.skill_sources import (
     validate_public_https_url,
 )
 from smarter.lib import json
-from smarter.lib.cache import lazy_cache
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import (

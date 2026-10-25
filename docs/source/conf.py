@@ -205,6 +205,7 @@ todo_include_todos = True
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "django": ("https://docs.djangoproject.com/en/5.2/", "https://docs.djangoproject.com/en/5.2/_objects/"),
+    "cache_results": ("https://docs.cache-results.smarter.sh/", None),
 }
 rst_epilog = f"""
 .. |project_version| replace:: {release}

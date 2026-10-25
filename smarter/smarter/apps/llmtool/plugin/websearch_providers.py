@@ -27,6 +27,8 @@ from dataclasses import dataclass
 from typing import Any, Optional
 from urllib.parse import urlparse
 
+from cache_results import cache_results
+
 from smarter.apps.llmtool.manifest.models.websearch_plugin.enum import (
     WebsearchProvider,
     WebsearchSafeSearch,
@@ -38,7 +40,6 @@ from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import (
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 

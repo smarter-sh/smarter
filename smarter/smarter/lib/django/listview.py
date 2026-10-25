@@ -4,7 +4,7 @@ Cached pages for the list apis of the React list views in the Smarter web consol
 Every resource list, e.g. the LLMClient or Secret list, asks its Django list api for one page of
 its resources at a time (see :mod:`smarter.lib.django.pagination`). :class:`SmarterListApiView` is
 the base class of those apis. It builds the page's whole response once, and caches it in Redis
-with :func:`~smarter.lib.cache.cache_results`, per user and per page, so that the next request for
+with :func:`~cache_results.decorators.cache_results`, per user and per page, so that the next request for
 the same page costs a few cache reads instead of a query and a serializer per resource.
 
 The cached pages stay correct because their cache key includes three *generations*, each a value
@@ -40,6 +40,7 @@ from http import HTTPStatus
 from typing import Callable, ClassVar, Mapping, Optional, Protocol, Sequence, Union
 from urllib.parse import urlparse
 
+from cache_results import cache_results
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.core.exceptions import FieldDoesNotExist
@@ -54,7 +55,6 @@ from rest_framework import serializers
 from smarter.common.conf import smarter_settings
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.pagination import (
     DEFAULT_SEARCH_FIELDS,
     DEFAULT_SORT_FIELDS,

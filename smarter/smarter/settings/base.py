@@ -695,15 +695,16 @@ CACHE_RESULTS = {
     "KEY_ENCODER": "smarter.lib.cache.hooks.SmarterCacheKeyEncoder",
     "LOGGING_ENABLED": "smarter.lib.cache.hooks.logging_enabled",
     "VERBOSE_LOGGING": "smarter.lib.cache.hooks.verbose_logging",
-    "LOG_PREFIX": "smarter.lib.cache.hooks.log_prefix",
+    "LOG_PREFIX": "cache_results.colors.log_prefix",
 }
 """
 The configuration of the ``@cache_results`` decorator.
 
-Its default timeout is ``smarter_settings.cache_expiration``, and the hooks in
-``smarter.lib.cache.hooks`` connect it to the ``CACHE_LOGGING`` waffle switch,
-Smarter's colored log prefixes, and Pydantic cache key arguments. Every entry
-is described in :mod:`smarter.lib.cache.conf`.
+Its default timeout is ``smarter_settings.cache_expiration``, the hooks in
+``smarter.lib.cache.hooks`` connect it to the ``CACHE_LOGGING`` waffle switch
+and Pydantic cache key arguments, and log messages are colored by the package's
+``cache_results.colors.log_prefix``. Every entry
+is described in :mod:`cache_results.conf`, the settings of the cache-results package.
 """
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"

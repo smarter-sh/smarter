@@ -2,12 +2,12 @@
 
 from unittest.mock import Mock, patch
 
+from cache_results import lazy_cache
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.lib.cache import lazy_cache
 from smarter.lib.drf.throttling import (
     SMARTER_THROTTLE_CLASSES,
     SmarterAnonRateThrottle,
