@@ -102,7 +102,7 @@ consistent with most of the codebase wins. Say so in your summary.
 
 `@cache_results` (`smarter/smarter/lib/cache/decorators.py`) is the one way to
 cache results for an hour or longer. It builds a deterministic key from the
-module, function name and bound arguments, stores results in Redis through
+module, qualified function name and bound arguments, stores results in Redis through
 `lazy_cache` (which avoids Django silently falling back to a local-memory cache
 when `django.core.cache` is imported too early), caches `None` correctly, and
 gives every decorated function an `.invalidate(*args)`. Outside tests, only `lazy_cache`
@@ -116,10 +116,12 @@ and the `reset_cache` management command import `django.core.cache`.
   be, explicitly and one by one, everything that can change the result: every
   query parameter, filter and flag. Don't fold them into an opaque JSON string
   or an object id. Use plain values (str, int, bool, tuples), never model
-  instances or `self`. `@cache_results` can't decorate an instance method,
-  because `self` would be part of the key.
+  instances or `self`. `@cache_results` raises `TypeError` on an instance
+  method, because `self` would be part of the key. Classmethods and `async`
+  functions are fine. A `class_name=` argument is no longer needed to tell
+  nested functions apart: the qualified name already does.
 - **Never pass a secret as an argument.** Arguments become the cache key and are
-  logged on hits and misses when cache logging is on. The normal pattern is an
+  logged on hits and misses when verbose cache logging is on. The normal pattern is an
   internal function, without the sensitive data, that can be decorated: pass a
   Secret's id, or nothing, and read the API key inside it (e.g.
   `SearchProvider.api_key(secret_id)` in `websearch_providers.py`). For the same
