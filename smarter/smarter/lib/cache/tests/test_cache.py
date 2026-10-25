@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass
 from unittest.mock import PropertyMock, patch
 
+from smarter.lib import json as smarter_json
 from smarter.lib.cache import cache_results, lazy_cache
 from smarter.lib.cache.lazy_cache import LazyCache
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -523,3 +524,25 @@ class TestCacheResults(SmarterTestBase):
         ):
             length_again.invalidate(circular)
         delete.assert_not_called()
+
+    def test_object_argument_warns(self):
+        """An object argument is still cached by its str(), but logs a warning that names the function and the type."""
+        smarter_json._cache_key_fallbacks_warned.clear()
+        calls = []
+
+        class _Named:
+            def __str__(self):
+                return "named"
+
+        @cache_results(timeout=60)
+        def by_object(obj):
+            calls.append(obj)
+            return str(obj)
+
+        with self.assertLogs("smarter.lib.json", level="WARNING") as logs:
+            self.assertEqual(by_object(_Named()), "named")
+        self.assertEqual(by_object(_Named()), "named")
+        self.assertEqual(len(calls), 1)
+        output = "\n".join(logs.output)
+        self.assertIn("test_object_argument_warns.<locals>.by_object", output)
+        self.assertIn("_Named", output)

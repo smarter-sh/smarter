@@ -97,7 +97,7 @@ def _lock_for(computed_cache_key: str):
         return lock
 
 
-def _normalize(obj: object) -> object:
+def _normalize(obj: object, context: str = "") -> object:
     """
     Convert an argument into a JSON-serializable value that is the same for equal arguments.
 
@@ -109,16 +109,19 @@ def _normalize(obj: object) -> object:
 
     :param obj: An argument of the decorated function.
     :type obj: object
+    :param context: The decorated function's qualified name, named in
+        :func:`smarter.lib.json.dumps_cache_key`'s fallback warning.
+    :type context: str
     :return: The normalized value.
     :rtype: object
     """
     if isinstance(obj, dict):
-        return {key: _normalize(value) for key, value in obj.items()}
+        return {key: _normalize(value, context) for key, value in obj.items()}
     if isinstance(obj, (list, tuple)):
-        return [_normalize(item) for item in obj]
+        return [_normalize(item, context) for item in obj]
     if isinstance(obj, (set, frozenset)):
-        items = [_normalize(item) for item in obj]
-        return {"__set__": sorted(items, key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":")))}
+        items = [_normalize(item, context) for item in obj]
+        return {"__set__": sorted(items, key=lambda item: json.dumps_cache_key(item, context=context))}
     if isinstance(obj, type):
         return {"__class__": f"{obj.__module__}.{obj.__qualname__}"}
     return obj
@@ -146,8 +149,9 @@ def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[st
     except (TypeError, ValueError):
         pass
     try:
-        key_data = [func.__qualname__, _normalize(args), _normalize(kwargs)]
-        return json.dumps(key_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        context = func.__qualname__
+        key_data = [context, _normalize(args, context), _normalize(kwargs, context)]
+        return json.dumps_cache_key(key_data, context=context).encode("utf-8")
     except (TypeError, ValueError, RecursionError) as e:
         logger.error("%s Failed to JSON serialize key data for %s: %s", logger_prefix_normal, func.__qualname__, e)
         return None
@@ -240,8 +244,11 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
 
     Arguments that can't be serialized are not cached: the function is called
     directly, and an error is logged. Arguments should be plain values (str,
-    int, bool, tuples), because any other object is serialized as ``str(obj)``.
-    For the same reason, instance methods can't be decorated. Classmethods can.
+    int, bool, tuples). Keys are serialized by
+    :func:`smarter.lib.json.dumps_cache_key`, which encodes datetimes, Decimals
+    and UUIDs, but serializes any other object as ``str(obj)`` and logs a
+    warning that names the function and the argument's type. For the same
+    reason, instance methods can't be decorated. Classmethods can.
 
     Within one process, concurrent callers that miss the same key wait for the
     first one to compute and cache it. Callers in other processes don't wait.
