@@ -15,6 +15,8 @@ import glob
 import os
 from unittest import mock
 
+from cache_results import lazy_cache
+
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.llmtool.manifest.controller import (
     PLUGIN_MAP,
@@ -46,7 +48,6 @@ from smarter.apps.llmtool.signals import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
-from smarter.lib.cache import lazy_cache
 
 from .base_classes import (
     SKILL_PLUGIN_NAME,

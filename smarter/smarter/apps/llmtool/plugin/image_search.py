@@ -55,6 +55,8 @@ from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import unquote, urlparse
 
+from cache_results import cache_results
+
 from smarter.apps.llmtool.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
@@ -101,7 +103,6 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

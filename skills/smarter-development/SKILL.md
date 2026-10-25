@@ -48,7 +48,7 @@ inside the `smarter-app` container.
    module levels. But we'd like at least 95% if that's achievable with moderate
    effort. Exercise common sense when deciding when "enough is enough".
 7. **Long-lived caching goes through `@cache_results`.** For anything cached
-   for 600 seconds or longer, use `from smarter.lib.cache import cache_results`.
+   for 600 seconds or longer, use `from cache_results import cache_results`.
    Never hand-roll `cache.get()`/`cache.set()` with `django.core.cache`. See
    [Caching](#caching).
 8. **Model structured data with Pydantic, not raw JSON.** Any sizable JSON that
@@ -100,17 +100,21 @@ consistent with most of the codebase wins. Say so in your summary.
 
 ## Caching
 
-`@cache_results` (`smarter/smarter/lib/cache/decorators.py`) is the one way to
-cache results for an hour or longer. It builds a deterministic key from the
-module, qualified function name and bound arguments (`keys.py`), stores results
-in Redis, skips the cache until Django's apps are ready (importing
-`django.core.cache` too early silently leaves it on a local-memory backend),
-caches `None` correctly, and gives every decorated function an
-`.invalidate(*args)`. The decorator, `keys.py` and `conf.py` depend only on
-Django, so that the decorator can become its own package: keep Smarter imports
-out of them. Smarter's parts (default timeout, waffle-switched logging, colored
-prefixes, Pydantic arguments) are hooks in `hooks.py`, named by the
-`CACHE_RESULTS` setting in `settings/base.py`. Outside tests, only the cache
+`@cache_results` is the one way to cache results for an hour or longer. It is
+the PyPI package cache-results (pinned in `smarter/requirements/`, source in
+`../cache-results`, docs at https://docs.cache-results.smarter.sh/), imported
+as `from cache_results import cache_results, lazy_cache`. It builds a deterministic key from the module,
+qualified function name and bound arguments, stores results in Redis, skips
+the cache until Django's apps are ready (importing `django.core.cache` too
+early silently leaves it on a local-memory backend), caches `None` correctly,
+and gives every decorated function an `.invalidate(*args)`. Its logger is
+`cache_results.decorators`. A change to the decorator itself is made in the
+cache-results repository, released, and then picked up here by bumping the pin.
+The package depends only on Django: never add a dependency to it. Smarter adapts
+it through the `CACHE_RESULTS` setting in `settings/base.py`, which names the
+package's colored `cache_results.colors.log_prefix` and Smarter's own hooks in
+`smarter/smarter/lib/cache/hooks.py` (waffle-switched logging, Pydantic
+arguments): the only cache code left in Smarter. Outside tests, only the cache
 package and the `reset_cache` management command import `django.core.cache`,
 and only inside functions.
 
@@ -158,7 +162,7 @@ and only inside functions.
   `invalidate_cached_catalog()`.
 - **Short-lived values** (seconds to minutes) may still use `@cache_results`
   (e.g. `@cache_results(15)` in `plugin_meta.py`). For raw `get`/`set`, use
-  `smarter.lib.cache.lazy_cache`, never `django.core.cache`.
+  `from cache_results import lazy_cache`, never `django.core.cache`.
 - In tests, `SmarterTestBase` clears the cache. To drop one entry, call the
   decorated function's `.invalidate()` with the same arguments.
 

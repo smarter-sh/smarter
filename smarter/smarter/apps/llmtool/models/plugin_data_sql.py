@@ -3,6 +3,7 @@
 import re
 from typing import Optional, Union
 
+from cache_results import cache_results
 from django.core.validators import MinValueValidator
 from django.db import models
 from pydantic import ValidationError
@@ -12,7 +13,6 @@ from smarter.apps.llmtool.manifest.models.common import TestValue
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 

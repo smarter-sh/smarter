@@ -19,12 +19,13 @@ import os
 import tarfile
 from unittest import mock
 
+from cache_results import lazy_cache
+
 from smarter.apps.mcpserver.indexer import ArchiveFile, file_kind, store_files
 from smarter.apps.mcpserver.models import RepositoryIndex
 from smarter.apps.mcpserver.repositories import ProjectRepository
 from smarter.apps.mcpserver.tools import queue_indexing_key
 from smarter.common.utils import get_readonly_yaml_file
-from smarter.lib.cache import lazy_cache
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

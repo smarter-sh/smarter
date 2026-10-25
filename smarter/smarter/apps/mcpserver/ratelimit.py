@@ -22,11 +22,11 @@ public address cannot be determined, e.g. in local development, is not limited.
 import time
 from typing import Optional
 
+from cache_results import lazy_cache
 from django.http import HttpRequest
 
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins import SmarterMiddlewareMixin
-from smarter.lib.cache import lazy_cache
 
 WINDOW_SECONDS = 60
 """The length of a rate limit window."""

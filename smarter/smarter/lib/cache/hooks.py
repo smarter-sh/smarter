@@ -2,34 +2,25 @@
 Smarter.lib.cache.hooks
 =======================
 
-Smarter's configuration of the ``@cache_results`` decorator.
+Smarter's hooks for the cache-results package.
 
-The decorator, its keys and its settings (:mod:`smarter.lib.cache.decorators`,
-:mod:`smarter.lib.cache.keys` and :mod:`smarter.lib.cache.conf`) depend only
-on Django. This module connects them to the rest of Smarter, through the
-``CACHE_RESULTS`` setting in ``smarter/settings/base.py``:
+The package (https://docs.cache-results.smarter.sh/) depends only on Django.
+Its ``CACHE_RESULTS`` setting, in ``smarter/settings/base.py``, names these
+hooks, which connect it to the parts of Smarter that it can't depend on:
 
 - :func:`logging_enabled` and :func:`verbose_logging` follow the
   ``CACHE_LOGGING`` waffle switch and ``smarter_settings.verbose_logging``.
-- :func:`log_prefix` colors log messages as the rest of Smarter's logs are:
-  green for hits, red for misses, gray for invalidations.
 - :class:`SmarterCacheKeyEncoder` also accepts Pydantic urls and models as
   cache key arguments.
+
+Log messages are colored by the package's own
+:func:`cache_results.colors.log_prefix`.
 """
 
+from cache_results import CacheKeyEncoder
 from pydantic import BaseModel, HttpUrl
 
-from smarter.common.helpers.console_helpers import SmarterFormattedTextColorCodes
-from smarter.lib import logging
-
-from .keys import CacheKeyEncoder
-from .lazy_cache import lazy_cache
-
-_EVENT_COLORS = {
-    "hit": SmarterFormattedTextColorCodes.REGULAR_GREEN,
-    "miss": SmarterFormattedTextColorCodes.DARK_RED,
-    "invalidate": SmarterFormattedTextColorCodes.LIGHT_GRAY,
-}
+from smarter.common.conf import smarter_settings
 
 
 def logging_enabled() -> bool:
@@ -39,34 +30,22 @@ def logging_enabled() -> bool:
     :return: True if the switch is on.
     :rtype: bool
     """
-    return lazy_cache.cache_logging
+    # pylint: disable=import-outside-toplevel
+    from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+
+    return switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
 
 
 def verbose_logging() -> bool:
     """
-    Whether cache logs include the arguments: ``CACHE_LOGGING`` and ``smarter_settings.verbose_logging``.
+    Whether cache logs include the arguments: ``smarter_settings.verbose_logging``.
 
-    :return: True if both are on.
+    The package asks only when :func:`logging_enabled` is True.
+
+    :return: True if verbose logging is on.
     :rtype: bool
     """
-    return lazy_cache.verbose_logging
-
-
-def log_prefix(text: str, event: str) -> str:
-    """
-    Format the start of a cache log message in Smarter's style.
-
-    :param text: e.g. ``smarter.lib.cache.decorators.@cache_results()``.
-    :type text: str
-    :param event: ``"hit"``, ``"miss"``, ``"invalidate"`` or ``""``.
-    :type event: str
-    :return: The formatted text.
-    :rtype: str
-    """
-    color = _EVENT_COLORS.get(event)
-    if color is None:
-        return logging.formatted_text(text)
-    return logging.formatted_text(text, color)
+    return bool(smarter_settings.verbose_logging)
 
 
 class SmarterCacheKeyEncoder(CacheKeyEncoder):
@@ -84,7 +63,7 @@ class SmarterCacheKeyEncoder(CacheKeyEncoder):
         :type o: object
         :return: A JSON-serializable representation of ``o``.
         :rtype: object
-        :raises smarter.lib.cache.keys.CacheKeyArgumentError: If ``o`` has no safe representation.
+        :raises cache_results.CacheKeyArgumentError: If ``o`` has no safe representation.
         """
         if isinstance(o, HttpUrl):
             return str(o)
@@ -96,4 +75,4 @@ class SmarterCacheKeyEncoder(CacheKeyEncoder):
         return super().default(o)
 
 
-__all__ = ["SmarterCacheKeyEncoder", "log_prefix", "logging_enabled", "verbose_logging"]
+__all__ = ["SmarterCacheKeyEncoder", "logging_enabled", "verbose_logging"]

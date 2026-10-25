@@ -5,6 +5,7 @@ from typing import Optional, Union
 from urllib.parse import urljoin
 
 import requests
+from cache_results import cache_results
 from django.core.validators import MinValueValidator
 from django.db import models
 from pydantic import ValidationError
@@ -19,7 +20,6 @@ from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType

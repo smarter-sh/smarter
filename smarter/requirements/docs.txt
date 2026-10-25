@@ -58,6 +58,8 @@ botocore==1.43.116
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
+cache-results==0.2.0
+    # via -r smarter/requirements/in/base.in
 cachetools==7.2.4
     # via -r smarter/requirements/in/base.in
 cattrs==26.2.1

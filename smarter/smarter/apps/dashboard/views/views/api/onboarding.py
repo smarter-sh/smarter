@@ -12,6 +12,7 @@ so that a hint needs no request before it shows.
 
 from http import HTTPStatus
 
+from cache_results import cache_results
 from django.conf import settings
 from django.http import HttpRequest, JsonResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -23,7 +24,6 @@ from smarter.apps.dashboard.models import (
     OnboardingOutcomes,
 )
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 

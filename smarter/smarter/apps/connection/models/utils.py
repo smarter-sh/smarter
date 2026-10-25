@@ -2,13 +2,14 @@
 
 from typing import Union
 
+from cache_results import cache_results
+
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .api_connection import ApiConnection
@@ -48,7 +49,7 @@ def get_cached_connection_detail_view_and_kind(
 
     - :class:`SqlConnection`
     - :class:`ApiConnection`
-    - :func:`smarter.lib.cache.cache_results`
+    - :func:`cache_results.decorators.cache_results`
     - :func:`smarter.apps.account.utils.get_cached_account_for_user`
     """
 

@@ -15,7 +15,7 @@ format. What makes it a good one:
 - You are the author, and Lawrence McDaniel is the co-author.
 
 ```console
-git commit --author="Claude <noreply@anthropic.com>" \
+git commit --author="Lawrence McDaniel <lpm0073@gmail.com>" \
   -m "fix(passthrough): make the prompt passthrough work across providers, and test every template against every provider" \
   -m "The dashboard's prompt passthrough page (/dashboard/passthrough/) failed with OpenAI's current models: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead. Investigating this showed the page was never tested the way users run it. The test sent one hand-written fixture per provider and never tried the page's three request templates (Hello World, Message Roles, Function Call). Testing every combination found 15 failures out of 24 across 8 providers." \
   -m "Passthrough client (smarter/apps/provider/clients.py):" \
@@ -34,7 +34,7 @@ git commit --author="Claude <noreply@anthropic.com>" \
 - metaai: base_url is the SDK root that 'chat/completions' is appended to, not an endpoint URL.
 - Fixed a crash when storing provider models: Together AI's /models endpoint returns a bare JSON list, not {\"data\": [...]}, which aborted the whole command." \
   -m "Current status: openai, googleai, cohere, fireworks, togetherai and metaai pass every template. anthropic (account credit balance too low) and mistral (429 rate limited, account-level) are skipped for account reasons, not code defects." \
-  -m "Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>"
+  -m "Co-authored-by: Claude <noreply@anthropic.com>"
 ```
 
 Notes on the format:
