@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.19](https://github.com/smarter-sh/smarter/compare/v0.36.18...v0.36.19) (2026-10-25)
+
+### Bug Fixes
+
+* **cache:** warn when a cache key falls back to str() of an argument ([f691ae9](https://github.com/smarter-sh/smarter/commit/f691ae9515b304465b4ec67de8c020ea3e2861c9))
+
 ## [0.36.18](https://github.com/smarter-sh/smarter/compare/v0.36.17...v0.36.18) (2026-10-25)
 
 ### Bug Fixes
