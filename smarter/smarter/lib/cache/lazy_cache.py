@@ -137,6 +137,21 @@ class LazyCache:
         return self._cache
 
     @property
+    def ready(self) -> bool:
+        """
+        Whether the cache can be used yet.
+
+        Until Django's apps are ready, :attr:`cache` returns ``None`` rather than
+        initialize Django's cache prematurely, so callers that may run during
+        startup, such as :func:`smarter.lib.cache.decorators.cache_results`,
+        check this first and skip the cache.
+
+        :return: True once Django's apps are ready, False before.
+        :rtype: bool
+        """
+        return apps.ready
+
+    @property
     def waffle(self):
         """
         Lazily import and return the Waffle module.
