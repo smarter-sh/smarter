@@ -118,8 +118,10 @@ and the `reset_cache` management command import `django.core.cache`.
   or an object id. Use plain values (str, int, bool, tuples), never model
   instances or `self`. `@cache_results` raises `TypeError` on an instance
   method, because `self` would be part of the key. Classmethods and `async`
-  functions are fine. A `class_name=` argument is no longer needed to tell
-  nested functions apart: the qualified name already does.
+  functions are fine. A function defined inside a method that subclasses
+  inherit keeps a `class_name: str = cls.__name__` parameter (see
+  `get_cached_object()` in `metadata_with_ownership.py`): its qualified name
+  names the class that defines it, so it is the same for every subclass.
 - **Never pass a secret as an argument.** Arguments become the cache key and are
   logged on hits and misses when verbose cache logging is on. The normal pattern is an
   internal function, without the sensitive data, that can be decorated: pass a
