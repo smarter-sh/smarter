@@ -102,6 +102,15 @@ hostnames, account numbers or customer data.
 its `--id`, or you'll publish a duplicate. It closes comments, like the earlier
 posts.
 
+**Never create a second post for an article that already exists**, not even a
+draft "for review". Two posts with one title in wp-admin confuse the user, who
+can't tell which one is live. An agent once copied a published post into a
+"REVISION of post 376" draft for review, then published the edits to the
+original and left the draft behind. The user had it deleted and said never to
+do that again. To change an existing post, edit that post by its `--id`. If the
+user wants to review edits before they go live, show the changed passages in
+the conversation and update the post once they approve.
+
 ## Conventions
 
 | Field     | Release announcement                                           | Example                                  |
@@ -120,6 +129,20 @@ Sidebar's "Announcements" widget instead. So put release announcements and other
 administrative posts in category 4, and never add 4 to an article. Leave the
 publication date to WordPress (now), and keep the Markdown source at
 `~/desktop/blog-<slug>.md`.
+
+Post cards show no excerpt. That is snippet 6, "Post cards: hide excerpts", a
+front-end PHP snippet that prints `.entry-card .entry-excerpt { display: none; }`
+in `wp_head`. Its CSS goes through PHP because the blog does not serve Code
+Snippets' `site-css` snippets. The Code Snippets REST API
+(`/wp-json/code-snippets/v1/snippets`) accepts the same login and nonce as
+`wp.py`.
+
+WP Super Cache serves pages to visitors, and saving a snippet or theme setting
+does not clear it. After such a change, delete the whole cache: read the
+`wpsc_ajax` nonce from `wp-admin/options-general.php?page=wpsupercache`, then
+POST `action=ajax-delete-cache&path=/&admin=1&nonce=<nonce>` to
+`wp-admin/admin-ajax.php`. Verify with the plain url, not a `?query` url,
+which bypasses the cache and shows you a page that visitors don't get.
 
 ## Routine
 
