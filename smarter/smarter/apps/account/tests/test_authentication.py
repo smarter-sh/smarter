@@ -97,7 +97,7 @@ class TestLoginView(TestAccountMixin):
 
     @patch(
         "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active",
-        side_effect=[True, True, True, True, True, True, True, True],
+        return_value=True,
     )
     def test_get_login_view_renders_for_anonymous(self, mock_waffle):
         """GET request to LoginView for anonymous user should render sign-in page with correct context."""
@@ -206,9 +206,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_google_oauth_enabled_key_missing(self, mock_switch, mock_settings, mock_smarter_settings, mock_logger):
         mock_smarter_settings.social_auth_google_oauth2_key.get_secret_value.return_value = ""
         mock_smarter_settings.social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
@@ -221,9 +219,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_google_oauth_enabled_secret_missing(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
@@ -238,9 +234,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_google_oauth_enabled_key_missing_default_missing_value(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
@@ -257,9 +251,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_google_oauth_enabled_secret_missing_default_missing_value(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
@@ -276,9 +268,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_google_oauth_enabled_backend_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
@@ -296,9 +286,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_google_oauth_enabled_backend_not_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
@@ -317,9 +305,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_github_oauth_enabled_key_missing(self, mock_switch, mock_settings, mock_smarter_settings, mock_logger):
         mock_smarter_settings.social_auth_github_key.get_secret_value.return_value = ""
         mock_smarter_settings.social_auth_github_secret.get_secret_value.return_value = "secret"
@@ -332,9 +318,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_github_oauth_enabled_secret_missing(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
@@ -381,9 +365,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_github_oauth_enabled_backend_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
@@ -401,9 +383,7 @@ class TestLoginView(TestAccountMixin):
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
     @patch("smarter.apps.account.views.authentication.login_view.settings")
-    @patch(
-        "smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", side_effect=[True, True, True]
-    )
+    @patch("smarter.apps.account.views.authentication.login_view.waffle.switch_is_active", return_value=True)
     def test_is_github_oauth_enabled_backend_not_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):

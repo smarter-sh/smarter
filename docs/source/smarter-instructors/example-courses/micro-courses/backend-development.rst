@@ -26,7 +26,7 @@ It shows the patterns that small projects never reach, each in code that student
 - **Work outside the request:** Celery workers on named queues and a
   `beat schedule <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__
   that aggregates charges and enforces budgets; caching with
-  `@cache_results <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__;
+  `@cache_results <https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__;
   and `management commands <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/management/commands>`__
   built on a shared ``SmarterCommand`` base class.
 - **Tests at scale:** more than five thousand unit tests, a

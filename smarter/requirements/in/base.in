@@ -39,6 +39,7 @@ Django
 django-debug-toolbar                    # a configurable set of panels that display various debug information about the current request/response.
                                         # We need this in base so that we can toggle DEBUG_MODE.
 django-redis                            # object caching
+cache-results                           # @cache_results and lazy_cache (configured by smarter.lib.cache.hooks)
 django-celery-beat                      # scheduled asynchronous tasks
 djangorestframework                     # for creating REST APIs on top of Django
 django-filter                           # REST API filtering

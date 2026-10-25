@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from typing import Optional, TypedDict
 
 import requests
+from cache_results import cache_results
 from django.conf import settings
 from django.db import models
 
@@ -30,7 +31,6 @@ from smarter.common.exceptions import (
 )
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.shortcuts import reverse

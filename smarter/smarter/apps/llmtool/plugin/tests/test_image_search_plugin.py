@@ -20,6 +20,7 @@ import os
 from typing import Any, Optional
 from unittest import mock
 
+from cache_results import lazy_cache
 from pydantic import ValidationError
 
 from smarter.apps.api.v1.cli.brokers import Brokers
@@ -76,7 +77,6 @@ from smarter.apps.llmtool.serializers import PluginImageSearchSerializer
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
-from smarter.lib.cache import lazy_cache
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.typing import SmarterDictType
 

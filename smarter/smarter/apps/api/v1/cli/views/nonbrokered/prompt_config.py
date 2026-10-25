@@ -3,12 +3,12 @@
 
 from typing import TYPE_CHECKING, Optional
 
+from cache_results import lazy_cache as cache
 from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json, logging
-from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 

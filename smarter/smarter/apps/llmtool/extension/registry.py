@@ -27,6 +27,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
 
+from cache_results import cache_results
 from django.utils import timezone
 from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
@@ -41,7 +42,6 @@ from smarter.apps.llmtool.models import Extension, ExtensionSource, ExtensionTru
 from smarter.apps.llmtool.plugin.safe_http import SafeHttpError, fetch
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .archive import MAX_ARCHIVE_BYTES

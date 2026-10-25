@@ -5,11 +5,11 @@ import unittest
 from http import HTTPStatus
 from unittest.mock import patch
 
+from cache_results import lazy_cache as cache
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse, HttpResponseNotFound
 from django.test import RequestFactory
 
-from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django.middleware.excessive_404 import (
     SmarterBlockExcessive404Middleware,
 )

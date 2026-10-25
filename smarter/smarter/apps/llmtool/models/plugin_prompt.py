@@ -2,12 +2,12 @@
 
 from typing import Union
 
+from cache_results import cache_results
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from smarter.common.conf import settings_defaults
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import (
     TimestampedModel,
 )

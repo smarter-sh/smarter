@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from cache_results import lazy_cache
 from django.test import Client
 from django.urls import resolve
 
@@ -18,7 +19,6 @@ from smarter.apps.dashboard.views.terminal_emulator.names import (
 )
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.lib import json
-from smarter.lib.cache import lazy_cache
 from smarter.lib.django.shortcuts import reverse
 
 ENABLED = "smarter.apps.dashboard.views.terminal_emulator.enabled.terminal_enabled"

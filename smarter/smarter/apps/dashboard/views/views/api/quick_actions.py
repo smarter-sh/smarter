@@ -9,6 +9,7 @@ the pages that only they may open: Extensions and Infrastructure Resources.
 
 from http import HTTPStatus
 
+from cache_results import cache_results
 from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.models import get_resolved_user
@@ -17,7 +18,6 @@ from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.secret.urls import SecretReverseNames
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 

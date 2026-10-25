@@ -22,6 +22,7 @@ Example:
         ]
 """
 
+from cache_results import cache_results
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
@@ -31,7 +32,6 @@ from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )

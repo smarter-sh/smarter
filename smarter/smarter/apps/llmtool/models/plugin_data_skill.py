@@ -11,6 +11,7 @@ PluginDataSkill model for storing Agent Skill (SKILL.md) plugin data.
 import posixpath
 from typing import Any, Optional, Union
 
+from cache_results import cache_results
 from django.db import models
 
 from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
@@ -22,7 +23,6 @@ from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
 )
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 

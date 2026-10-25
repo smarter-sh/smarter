@@ -5,6 +5,7 @@ from functools import cached_property
 from typing import Optional
 from urllib.parse import urljoin, urlparse
 
+from cache_results import cache_results
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -34,7 +35,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
