@@ -634,7 +634,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_user_profile(
-            name: str, user_profile: UserProfile, class_name: str = cls.__name__
+            name: str, user_profile_id: int, class_name: str = cls.__name__
         ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by name and user profile with caching.
@@ -643,7 +643,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             common SAM retrieval patterns for name/user.
 
             :param name: The name of the model instance to retrieve.
-            :param user_profile: The user profile associated with the model instance.
+            :param user_profile_id: The id of the user profile associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
             :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
@@ -664,28 +664,28 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     retval = (
                         cls.objects.prefetch_related("tags")
                         .select_related("user_profile", "user_profile__account", "user_profile__user")
-                        .get(name=name, user_profile=user_profile)
+                        .get(name=name, user_profile_id=user_profile_id)
                     )
                 else:
                     retval = cls.objects.select_related(
                         "user_profile", "user_profile__account", "user_profile__user"
-                    ).get(name=name, user_profile=user_profile)
+                    ).get(name=name, user_profile_id=user_profile_id)
                 logger.debug(
-                    "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile: %s",
+                    "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile_id: %s",
                     logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     name,
-                    user_profile,
+                    user_profile_id,
                 )
                 return retval
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
-                    f"Multiple {class_name} objects found for name '{name}' and user profile '{user_profile}'. This should not happen as there should be a unique constraint on name and user profile."
+                    f"Multiple {class_name} objects found for name '{name}' and user profile id {user_profile_id}. This should not happen as there should be a unique constraint on name and user profile."
                 ) from e
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(
-            name: str, account: Account, class_name: str = cls.__name__
+            name: str, account_id: int, class_name: str = cls.__name__
         ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by name and account with caching.
@@ -694,7 +694,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             common SAM retrieval patterns for name/account.
 
             :param name: The name of the model instance to retrieve.
-            :param account: The account associated with the model instance.
+            :param account_id: The id of the account associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
             :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
@@ -715,23 +715,23 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     retval = (
                         cls.objects.prefetch_related("tags")
                         .select_related("user_profile", "user_profile__account", "user_profile__user")
-                        .get(name=name, user_profile__account=account)
+                        .get(name=name, user_profile__account_id=account_id)
                     )
                 else:
                     retval = cls.objects.select_related(
                         "user_profile", "user_profile__account", "user_profile__user"
-                    ).get(name=name, user_profile__account=account)
+                    ).get(name=name, user_profile__account_id=account_id)
                 logger.debug(
-                    "%s._get_object_by_name_and_account() fetched %s for name: %s and account: %s",
+                    "%s._get_object_by_name_and_account() fetched %s for name: %s and account_id: %s",
                     logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     name,
-                    account,
+                    account_id,
                 )
                 return retval
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
-                    f"Multiple {class_name} objects found for name '{name}' and account '{account}'. This should not happen as there should be a unique constraint on name and account."
+                    f"Multiple {class_name} objects found for name '{name}' and account id {account_id}. This should not happen as there should be a unique constraint on name and account."
                 ) from e
 
         @cache_results(cls.cache_expiration)
@@ -790,9 +790,11 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         if invalidate:
             _get_object_by_pk.invalidate(pk=pk, class_name=cls.__name__)
             _get_object_by_name_and_user_profile.invalidate(
-                name=name, user_profile=user_profile, class_name=cls.__name__
+                name=name, user_profile_id=user_profile.pk if user_profile else None, class_name=cls.__name__
             )
-            _get_object_by_name_and_account.invalidate(name=name, account=account, class_name=cls.__name__)
+            _get_object_by_name_and_account.invalidate(
+                name=name, account_id=account.pk if account else None, class_name=cls.__name__
+            )
             _get_object_by_session_key.invalidate(session_key=session_key, class_name=cls.__name__)
 
         if pk:
@@ -827,10 +829,12 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         if user_profile:
             # call this regardless of whether name is provided.
-            retval = _get_object_by_name_and_user_profile(name=name, user_profile=user_profile, class_name=cls.__name__)
+            retval = _get_object_by_name_and_user_profile(
+                name=name, user_profile_id=user_profile.pk, class_name=cls.__name__
+            )
             return retval
         elif account:
-            retval = _get_object_by_name_and_account(name=name, account=account, class_name=cls.__name__)
+            retval = _get_object_by_name_and_account(name=name, account_id=account.pk, class_name=cls.__name__)
             return retval
 
         # no ownership info provided, so fall back to the super().
