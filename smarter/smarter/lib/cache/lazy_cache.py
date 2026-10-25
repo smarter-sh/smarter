@@ -143,8 +143,8 @@ class LazyCache:
 
         Until Django's apps are ready, :attr:`cache` returns ``None`` rather than
         initialize Django's cache prematurely, so callers that may run during
-        startup, such as :func:`smarter.lib.cache.decorators.cache_results`,
-        check this first and skip the cache.
+        startup check this first and skip the cache, as
+        :func:`smarter.lib.cache.decorators.cache_results` does.
 
         :return: True once Django's apps are ready, False before.
         :rtype: bool
