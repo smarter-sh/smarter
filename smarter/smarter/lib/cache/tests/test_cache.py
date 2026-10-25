@@ -1,10 +1,61 @@
 """Test cases for the cache decorators."""
 
-from unittest.mock import patch
+import asyncio
+import threading
+import time
+from dataclasses import dataclass
+from unittest.mock import PropertyMock, patch
 
-from smarter.lib.cache import cache_results
+from smarter.lib.cache import cache_results, lazy_cache
 from smarter.lib.cache.lazy_cache import LazyCache
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+
+@dataclass
+class _Point:
+    """A dataclass that is not hashable."""
+
+    x: int
+
+
+class _Alpha:
+    """One of two classes whose cached functions share a name."""
+
+    calls = 0
+
+    @staticmethod
+    @cache_results(timeout=60)
+    def get(x):
+        _Alpha.calls += 1
+        return f"alpha:{x}"
+
+
+class _Beta:
+    """The other class whose cached function is also named get()."""
+
+    calls = 0
+
+    @staticmethod
+    @cache_results(timeout=60)
+    def get(x):
+        _Beta.calls += 1
+        return f"beta:{x}"
+
+
+class _Shape:
+    """A class with a cached classmethod."""
+
+    calls: list = []
+
+    @classmethod
+    @cache_results(timeout=60)
+    def describe(cls, size):
+        _Shape.calls.append((cls.__name__, size))
+        return f"{cls.__name__}:{size}"
+
+
+class _Square(_Shape):
+    """A subclass, whose classmethod results are cached apart from its parent's."""
 
 
 class TestLazyCache(SmarterTestBase):
@@ -255,3 +306,220 @@ class TestCacheResults(SmarterTestBase):
         lookup.invalidate("x", "Account")
         self.assertEqual(lookup("x"), "Account:x")
         self.assertEqual(len(calls), 2)
+
+    def test_unhashable_argument(self):
+        """An argument that can't be hashed, e.g. a dataclass, is cached rather than crashing the call."""
+        calls = []
+
+        @cache_results(timeout=60)
+        def where(point):
+            calls.append(point)
+            return point.x
+
+        self.assertEqual(where(_Point(1)), 1)
+        self.assertEqual(where(_Point(1)), 1)
+        self.assertEqual(len(calls), 1)
+
+    def test_same_name_in_two_classes(self):
+        """Functions that share a module and a name, but not a qualified name, don't share cache entries."""
+        _Alpha.calls = _Beta.calls = 0
+        self.assertEqual(_Alpha.get(1), "alpha:1")
+        self.assertEqual(_Beta.get(1), "beta:1")
+        self.assertEqual(_Alpha.get(1), "alpha:1")
+        self.assertEqual((_Alpha.calls, _Beta.calls), (1, 1))
+
+    def test_instance_method_is_refused(self):
+        """Decorating an instance method raises at decoration time, because self would be part of the key."""
+        with self.assertRaises(TypeError):
+
+            class _Widget:  # pylint: disable=unused-variable
+                """A class with a decorated instance method."""
+
+                @cache_results(timeout=60)
+                def size(self, x):
+                    return x
+
+    def test_classmethod_is_cached_per_class(self):
+        """A classmethod is cached, and a subclass's results are cached apart from its parent's."""
+        _Shape.calls = []
+        self.assertEqual(_Shape.describe(2), "_Shape:2")
+        self.assertEqual(_Shape.describe(2), "_Shape:2")
+        self.assertEqual(_Square.describe(2), "_Square:2")
+        self.assertEqual(_Square.describe(2), "_Square:2")
+        self.assertEqual(_Shape.calls, [("_Shape", 2), ("_Square", 2)])
+        _Shape.describe.invalidate(_Shape, 2)
+        self.assertEqual(_Shape.describe(2), "_Shape:2")
+        self.assertEqual(len(_Shape.calls), 3)
+
+    def test_dict_and_pairs_have_different_keys(self):
+        """A dict and a list of its pairs don't share a key, and equal sets share one regardless of order."""
+        calls = []
+
+        @cache_results(timeout=60)
+        def echo(value):
+            calls.append(value)
+            return type(value).__name__
+
+        self.assertEqual(echo({"a": 1}), "dict")
+        self.assertEqual(echo([("a", 1)]), "list")
+        self.assertEqual(echo({"x", "y", "z"}), "set")
+        self.assertEqual(echo({"z", "y", "x"}), "set")
+        self.assertEqual(echo(["x", "y", "z"]), "list")
+        self.assertEqual(len(calls), 4)
+
+    def test_unserializable_argument_runs_uncached(self):
+        """Arguments that can't be serialized are not cached: the function runs every time, and an error is logged."""
+        calls = []
+        circular: list = []
+        circular.append(circular)
+
+        @cache_results(timeout=60)
+        def length(value):
+            calls.append(value)
+            return len(value)
+
+        with self.assertLogs("smarter.lib.cache.decorators", level="ERROR"):
+            self.assertEqual(length(circular), 1)
+        with self.assertLogs("smarter.lib.cache.decorators", level="ERROR"):
+            self.assertEqual(length(circular), 1)
+        self.assertEqual(len(calls), 2)
+
+    def test_logs_omit_results(self):
+        """Cache hit and miss logs name the function and the result's type, never the result."""
+
+        @cache_results(timeout=60, logging_enabled=True)
+        def reveal(x):
+            return f"do-not-log-{x}"
+
+        with self.assertLogs("smarter.lib.cache.decorators", level="INFO") as logs:
+            reveal(1)
+            reveal(1)
+        output = "\n".join(logs.output)
+        self.assertNotIn("do-not-log-1", output)
+        self.assertIn("caching str for", output)
+        self.assertIn("cache hit for", output)
+        self.assertIn("test_logs_omit_results.<locals>.reveal", output)
+
+    def test_before_apps_are_ready(self):
+        """Before Django's apps are ready, calls run uncached and invalidate() does nothing, rather than crash."""
+        calls = []
+
+        @cache_results(timeout=60)
+        def early(x):
+            calls.append(x)
+            return x
+
+        with (
+            patch.object(LazyCache, "ready", new_callable=PropertyMock, return_value=False),
+            patch("smarter.lib.cache.decorators.lazy_cache.get") as get,
+        ):
+            self.assertEqual(early(1), 1)
+            self.assertEqual(early(1), 1)
+            early.invalidate(1)
+        get.assert_not_called()
+        self.assertEqual(len(calls), 2)
+
+    def test_async_function(self):
+        """An async function's result is cached, rather than its coroutine."""
+        calls = []
+
+        @cache_results(timeout=60)
+        async def fetch(x):
+            calls.append(x)
+            return x * 10
+
+        self.assertEqual(asyncio.run(fetch(3)), 30)
+        self.assertEqual(asyncio.run(fetch(3)), 30)
+        self.assertEqual(len(calls), 1)
+        fetch.invalidate(3)
+        self.assertEqual(asyncio.run(fetch(3)), 30)
+        self.assertEqual(len(calls), 2)
+
+    def test_async_function_before_apps_are_ready(self):
+        """Before Django's apps are ready, an async function runs uncached."""
+        calls = []
+
+        @cache_results(timeout=60)
+        async def fetch_early(x):
+            calls.append(x)
+            return x
+
+        with patch.object(LazyCache, "ready", new_callable=PropertyMock, return_value=False):
+            self.assertEqual(asyncio.run(fetch_early(1)), 1)
+            self.assertEqual(asyncio.run(fetch_early(1)), 1)
+        self.assertEqual(len(calls), 2)
+
+    def test_concurrent_misses_compute_once(self):
+        """Threads that miss the same key at once wait for the first to compute it, rather than all compute it."""
+        calls = []
+        entered = threading.Event()
+        release = threading.Event()
+
+        @cache_results(timeout=60)
+        def slow(x):
+            calls.append(x)
+            entered.set()
+            release.wait(5)
+            return x
+
+        results = []
+        first = threading.Thread(target=lambda: results.append(slow(7)))
+        second = threading.Thread(target=lambda: results.append(slow(7)))
+        first.start()
+        self.assertTrue(entered.wait(5))
+        second.start()
+        time.sleep(0.2)  # let the second thread reach the lock
+        release.set()
+        first.join(5)
+        second.join(5)
+        self.assertEqual(results, [7, 7])
+        self.assertEqual(len(calls), 1)
+
+    def test_verbose_logs_omit_results(self):
+        """Verbose cache logging adds the arguments, but still never the result."""
+
+        @cache_results(timeout=60, logging_enabled=True)
+        def reveal_verbose(x):
+            return f"do-not-log-{x}"
+
+        with (
+            patch.object(lazy_cache, "verbose_logging", True),
+            self.assertLogs("smarter.lib.cache.decorators", level="INFO") as logs,
+        ):
+            reveal_verbose(2)
+            reveal_verbose(2)
+        output = "\n".join(logs.output)
+        self.assertNotIn("do-not-log-2", output)
+        self.assertIn("args: (2,)", output)
+
+    def test_explicit_cache_key(self):
+        """A decorator's cache_key is used for every call, and invalidate() clears it."""
+        calls = []
+
+        @cache_results(timeout=60, cache_key=f"test_explicit_cache_key_{self.hash_suffix}")
+        def constant():
+            calls.append(1)
+            return "constant"
+
+        self.assertEqual(constant(), "constant")
+        self.assertEqual(constant(), "constant")
+        self.assertEqual(len(calls), 1)
+        constant.invalidate()
+        self.assertEqual(constant(), "constant")
+        self.assertEqual(len(calls), 2)
+
+    def test_invalidate_unserializable_argument(self):
+        """Invalidate() with arguments that can't be serialized deletes nothing."""
+        circular: list = []
+        circular.append(circular)
+
+        @cache_results(timeout=60)
+        def length_again(value):
+            return len(value)
+
+        with (
+            self.assertLogs("smarter.lib.cache.decorators", level="ERROR"),
+            patch("smarter.lib.cache.decorators.lazy_cache.delete") as delete,
+        ):
+            length_again.invalidate(circular)
+        delete.assert_not_called()

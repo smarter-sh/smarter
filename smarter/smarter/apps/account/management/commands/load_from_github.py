@@ -322,12 +322,12 @@ class Command(SmarterCommand):
         Apply one manifest, and report, rather than raise, a failure.
 
         The manifest is applied in a transaction, so that one that fails leaves nothing behind.
+        A manifest that names a resource that doesn't exist is skipped, rather than failed, with
+        ``--skip_missing_references``: its file is added to :attr:`skipped`.
 
         :param filespec: The manifest's path.
         :param user_profile: The owner of the resource.
         :param manifest: The manifest to apply instead of the file's, e.g. a template's, filled in.
-        A manifest that names a resource that doesn't exist is skipped, rather than failed, with
-        ``--skip_missing_references``: its file is added to :attr:`skipped`.
 
         :returns: The error, or ``None`` if the manifest was applied or skipped.
         :rtype: Optional[str]

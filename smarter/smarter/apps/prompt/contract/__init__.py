@@ -2,7 +2,7 @@
 The Smarter Chat api contract.
 
 It is the versioned requests and responses of the configuration and prompt apis, which Smarter Chat
-(https://github.com/smarter-sh/smarter-chat) and the ``smarter`` cli call.
+(``smarter/react/packages/smarter.sh-chat``) and the ``smarter`` cli call.
 
 See :doc:`The Chat API Contract </smarter-framework/smarter-chat/api-contract>`.
 """

@@ -7,14 +7,17 @@ for persistent, argument-based function result caching in the Smarter framework.
 
 **Key Features:**
 
-- Deterministic cache key generation based on function name, arguments, and
-  sorted keyword arguments.
+- Deterministic cache key generation based on the function's module, qualified
+  name, and arguments bound to its signature.
 - Persistent caching using Smarter's Redis-backed cache infrastructure
   (via ``lazy_cache``), supporting application restarts and multi-instance deployments.
 - Handles serialization of arguments for robust cache key creation, with
-  fallback for non-serializable data.
+  fallback to an uncached call for arguments that can't be serialized.
 - Special handling for functions returning ``None`` using a sentinel value to distinguish
   between cached ``None`` and cache misses.
+- Decorates both regular and ``async`` functions, and classmethods.
+- Within one process, concurrent callers that miss the same key wait for the
+  first one to compute it, rather than all computing it.
 - Optional logging for cache hits, misses, and invalidations for debugging and transparency.
 - Provides an ``invalidate`` method on decorated functions to manually clear cache entries
   for specific arguments.
@@ -45,8 +48,12 @@ for persistent, argument-based function result caching in the Smarter framework.
 
 import hashlib
 import inspect
-from functools import lru_cache, wraps
-from typing import Callable, Optional, Union
+import threading
+import weakref
+from functools import wraps
+from typing import Callable, Optional
+
+from asgiref.sync import sync_to_async
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import SmarterFormattedTextColorCodes
@@ -61,115 +68,125 @@ logger_prefix_green = logging.formatted_text(
     f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.REGULAR_GREEN
 )
 logger_prefix_red = logging.formatted_text(f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.DARK_RED)
-logger_prefix_blue = logging.formatted_text(
-    f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.BOLD_DARK_BLUE
-)
 logger_prefix_gray = logging.formatted_text(f"{__name__}.@cache_results()", SmarterFormattedTextColorCodes.LIGHT_GRAY)
 
-LRU_CACHE_MAXSIZE = 128
-KwargsTupleType = tuple[tuple[str, object], ...]
+# One lock per cache key that is being computed right now. Entries disappear once
+# no thread holds or waits on their lock, so the dict stays small.
+_key_locks: "weakref.WeakValueDictionary[str, threading.RLock]" = weakref.WeakValueDictionary()
+_key_locks_guard = threading.Lock()
 
 
-@lru_cache(maxsize=LRU_CACHE_MAXSIZE)
-def _generate_sorted_kwargs_cached(sorted_items: KwargsTupleType) -> KwargsTupleType:
+def _lock_for(computed_cache_key: str):
     """
-    Returns a tuple of sorted keyword argument items.
+    Return the lock that serializes computing one cache key in this process.
 
-    This function is a helper used to ensure that keyword arguments are consistently
-    ordered for cache key generation. It is decorated with `functools.lru_cache` to
-    optimize repeated calls with the same input, improving performance when generating
-    cache keys for functions with identical keyword arguments.
+    The lock is reentrant, so a decorated function that ends up calling itself
+    with the same arguments recurses as it would without the decorator, rather
+    than deadlock.
 
-    :param sorted_items: A tuple of keyword argument items (key-value pairs), already sorted.
-    :type sorted_items: tuple
-    :return: A tuple of sorted keyword argument items.
-    :rtype: tuple
+    :param computed_cache_key: The cache key being computed.
+    :type computed_cache_key: str
+    :return: The lock for that key.
+    :rtype: threading.RLock
     """
-    return tuple(sorted(sorted_items))
+    with _key_locks_guard:
+        lock = _key_locks.get(computed_cache_key)
+        if lock is None:
+            lock = threading.RLock()
+            _key_locks[computed_cache_key] = lock
+        return lock
 
 
-def _generate_sorted_kwargs(kwargs: dict[str, object]) -> KwargsTupleType:
+def _normalize(obj: object) -> object:
     """
-    Sorts the keyword arguments for consistent generation of sha256 cache key, which is created, in part, on the results of this function.
+    Convert an argument into a JSON-serializable value that is the same for equal arguments.
 
-    :param kwargs: The keyword arguments to sort.
-    :return: A tuple of sorted keyword argument items.
-    :rtype: KwargsTupleType
+    Dicts and lists are kept as JSON objects and arrays, so that ``{"a": 1}``
+    and ``[("a", 1)]`` don't share a key. Sets are sorted, because their
+    iteration order changes from one process to the next, and are tagged so
+    that they don't share a key with a list. A class, e.g. the ``cls`` of a
+    classmethod, is identified by its module and qualified name.
+
+    :param obj: An argument of the decorated function.
+    :type obj: object
+    :return: The normalized value.
+    :rtype: object
     """
-
-    def _make_hashable(obj):
-        if isinstance(obj, dict):
-            return tuple(sorted((k, _make_hashable(v)) for k, v in obj.items()))
-        elif isinstance(obj, (list, tuple)):
-            return tuple(_make_hashable(x) for x in obj)
-        elif isinstance(obj, set):
-            return tuple(sorted(_make_hashable(x) for x in obj))
-        else:
-            return obj
-
-    hashable_items = tuple(sorted((k, _make_hashable(v)) for k, v in kwargs.items()))
-    return _generate_sorted_kwargs_cached(hashable_items)
-
-
-@lru_cache(maxsize=LRU_CACHE_MAXSIZE)
-def _json_cache_key_cached(key_tuple: tuple[KwargsTupleType, ...]) -> Union[bytes, None]:
-    """
-    Serializes the key data to JSON and encodes it as bytes for hashing.
-
-    This function takes a tuple representing cache key data, serializes it to a JSON string
-    with sorted keys and compact separators, and encodes the result as UTF-8 bytes.
-    This byte representation is suitable for deterministic hashing (e.g., with SHA-256)
-    to generate cache keys. If serialization fails due to non-serializable data,
-    the function logs an error and returns ``None``.
-
-    :param key_tuple: The tuple containing key data to serialize (typically function name, args, kwargs).
-    :type key_tuple: tuple
-    :return: The JSON-encoded bytes representation of the key data, or ``None`` if serialization fails.
-    :rtype: Optional[bytes]
-    """
-    try:
-        return json.dumps(key_tuple, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    except (TypeError, ValueError) as e:
-        logger.error("%s Failed to JSON serialize key data: %s", logger_prefix_normal, e)
-        return None
+    if isinstance(obj, dict):
+        return {key: _normalize(value) for key, value in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_normalize(item) for item in obj]
+    if isinstance(obj, (set, frozenset)):
+        items = [_normalize(item) for item in obj]
+        return {"__set__": sorted(items, key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":")))}
+    if isinstance(obj, type):
+        return {"__class__": f"{obj.__module__}.{obj.__qualname__}"}
+    return obj
 
 
 def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[str, object]) -> Optional[bytes]:
     """
-    Generates a raw cache key based on the function name, arguments, and sorted keyword arguments.
+    Serialize the function's qualified name and its bound arguments into bytes for hashing.
+
+    The arguments are bound to the function's signature, so that ``f(1, b=2)``,
+    ``f(a=1, b=2)`` and ``f(1)`` (when ``b`` defaults to 2) produce the same
+    key. Otherwise a function and its ``invalidate()`` could silently compute
+    different keys depending on how each was called.
 
     :param func: The function for which to generate the key.
     :param args: The positional arguments passed to the function.
     :param kwargs: The keyword arguments passed to the function.
-    :return: The raw key data as bytes.
+    :return: The key data as bytes, or ``None`` if the arguments can't be serialized.
     :rtype: Optional[bytes]
     """
-
-    # bind the arguments to the function's signature, so that f(1, b=2), f(a=1, b=2) and f(1)
-    # (when b defaults to 2) produce the same key. Otherwise a function and its invalidate()
-    # can silently compute different keys depending on how each was called.
     try:
         bound = inspect.signature(func).bind(*args, **kwargs)
         bound.apply_defaults()
         args, kwargs = (), dict(bound.arguments)
     except (TypeError, ValueError):
         pass
-    sorted_kwargs = _generate_sorted_kwargs(kwargs)
-    key_tuple = (func.__name__, args, sorted_kwargs)
-    return _json_cache_key_cached(key_tuple)
+    try:
+        key_data = [func.__qualname__, _normalize(args), _normalize(kwargs)]
+        return json.dumps(key_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    except (TypeError, ValueError, RecursionError) as e:
+        logger.error("%s Failed to JSON serialize key data for %s: %s", logger_prefix_normal, func.__qualname__, e)
+        return None
 
 
-@lru_cache(maxsize=LRU_CACHE_MAXSIZE)
-def _generate_cache_key_cached(func: Callable, key_data: bytes) -> str:
+def _generate_cache_key(func: Callable, key_data: bytes) -> str:
     """
-    Generates a deterministic cache key str based on the module name, function name and a 32-character hash of the complete set of key data.
+    Generate a deterministic cache key from the module name, qualified function name and a 32-character hash of the key data.
 
     :param func: The function for which to generate the key.
     :param key_data: The raw key data as bytes.
     :return: The generated cache key as a string.
     :rtype: str
     """
-    return f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
+    return f"{func.__module__}.{func.__qualname__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
+
+
+def _reject_instance_methods(func: Callable) -> None:
+    """
+    Refuse to decorate an instance method.
+
+    ``self`` would be part of the cache key, and an instance is serialized as
+    ``str(self)``, so two different objects with the same string, e.g. two
+    model rows with the same name, would share one cache entry. A classmethod's
+    ``cls`` is fine: it is identified by its module and qualified name.
+
+    :param func: The function being decorated.
+    :type func: Callable
+    :raises TypeError: If the function's first parameter is ``self``.
+    """
+    try:
+        parameters = list(inspect.signature(func).parameters)
+    except (TypeError, ValueError):
+        return
+    if parameters and parameters[0] == "self":
+        raise TypeError(
+            f"@cache_results can't decorate the instance method {func.__qualname__}(), because self would be "
+            "part of its cache key. Decorate a function of plain values (ids, names, flags) instead."
+        )
 
 
 def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional[str] = None, logging_enabled=False):
@@ -181,17 +198,16 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
         This decorator is intended for expensive and long-lasting, persistable
         caching scenarios such as Django ORM reads, where the results of the
         decorated function should endure application restarts and deployments.
-        This caching decorator itself is using Python function caching in order
-        to generate cache keys, which is to say that using this decorator could
-        be counter-productive for caching scenarios that are better served by
-        in-memory caching of short-lived results.
+        Every call serializes and hashes its arguments, and makes a round trip
+        to Redis, so this decorator could be counter-productive for caching
+        scenarios that are better served by in-memory caching of short-lived results.
 
     When the decorated function is called, the decorator first checks if a cached
     result exists for the given arguments. If a cached result is found, it is
     returned immediately. If not, the original function is called, its result
     is cached, and then returned. Smarter's cache infrastructure is based on
-    Redis and runs as a remote service that services application restarts,
-    deployments, and, it natively services multiple application server instances.
+    Redis and runs as a remote service that survives application restarts and
+    deployments, and that natively serves multiple application server instances.
 
     .. note::
 
@@ -209,13 +225,27 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
         such as users' browser session values not being stored, and cached
         results of this decorator enduring less than specified.*
 
+        *For this reason, a decorated function that is called before Django's
+        apps are ready runs uncached.*
+
     **How It works:**
 
-    A cache key is created by building a string of the module name + the function name,
-    and then appending a 32-character hash of its serialized positional arguments and sorted keyword pairs.
-    This ensures that each unique set of arguments maps to a unique but repeatable cache key.
-    Technically speaking, there is a statistical non-zero probability of hash collisions, but,
-    the risk of this happening is *EXTREMELY* low.
+    A cache key is created by building a string of the module name + the
+    function's qualified name (e.g. ``LLMClient.get_for_user.<locals>._get``),
+    and then appending a 32-character hash of its arguments, bound to its
+    signature and serialized. This ensures that each unique set of arguments
+    maps to a unique but repeatable cache key. Technically speaking, there is
+    a statistical non-zero probability of hash collisions, but, the risk of
+    this happening is *EXTREMELY* low.
+
+    Arguments that can't be serialized are not cached: the function is called
+    directly, and an error is logged. Arguments should be plain values (str,
+    int, bool, tuples), because any other object is serialized as ``str(obj)``.
+    For the same reason, instance methods can't be decorated. Classmethods can.
+
+    Within one process, concurrent callers that miss the same key wait for the
+    first one to compute and cache it. Callers in other processes don't wait.
+    ``async`` functions are cached too, without this wait.
 
     :param timeout: The cache timeout in seconds. Defaults to ``smarter_settings.cache_expiration``.
     :type timeout: int
@@ -225,10 +255,13 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
         be used if you are certain that the provided cache key is unique and
         correctly represents the function arguments. Defaults to ``None``.
     :type cache_key: Optional[str]
-    :param logging_enabled: Whether to enable logging for cache hits and misses. Defaults to ``True``.
+    :param logging_enabled: Whether to log cache hits, misses and
+        invalidations, as when the ``CACHE_LOGGING`` waffle switch is on.
+        Results are never logged, only their type. Defaults to ``False``.
     :type logging_enabled: bool
     :return: The decorated function with caching applied.
     :rtype: Callable
+    :raises TypeError: If the decorated function is an instance method.
 
     .. note::
         If the function returns ``None``, a sentinel value is cached to distinguish between a cached ``None``
@@ -246,130 +279,188 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
     """
 
     def decorator(func: Callable) -> Callable:
+        _reject_instance_methods(func)
+        qualname = func.__qualname__
 
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            """
-            Caches the result of the decorated function based on its arguments.
-
-            This function is the core of the :func:`cache_results` decorator. When you decorate a function with
-            :func:`cache_results`, calls to that function are intercepted by this wrapper, which manages
-            caching transparently. The wrapper first attempts to retrieve a cached result using a key
-            derived from the function's name and arguments. If a cached value is found, it is returned
-            immediately, avoiding redundant computation. If not, the original function is called, its result
-            is cached, and then returned.
-
-            **How it works:**
-
-            1. **Cache Key Generation:**
-                The wrapper serializes the function's name, positional arguments, and sorted keyword arguments
-                to create a unique and repeatable cache key. This ensures that each unique set of arguments,
-                including combinations and permutations of keyword arguments, maps to a unique cache entry.
-
-            2. **Cache Lookup:**
-                The wrapper checks if a result for this key is already stored in the cache. If so, it returns
-                the cached value. This is called a *cache hit*.
-
-            3. **Cache Miss Handling:**
-                If no cached value is found (a *cache miss*), the original function is called with the provided
-                arguments. The result is then stored in the cache for future calls.
-
-            4. **Handling None Results:**
-                If the function returns ``None``, a special sentinel value is cached to distinguish between a
-                cached ``None`` and a true cache miss.
-
-            5. **Logging (Optional):**
-                If logging is enabled, the wrapper logs cache hits, misses, and cache invalidations for
-                debugging and transparency.
-
-            **Decorator Usage Example:**
-
-            .. code-block:: python
-
-                    @cache_results(timeout=60)
-                    def expensive_function(x, y):
-                        # Perform expensive computation
-                        return x + y
-
-                    # First call: result is computed and cached
-                    result1 = expensive_function(1, 2)
-
-                    # Second call with same arguments: result is returned from cache
-                    result2 = expensive_function(1, 2)
-
-            **Why use this pattern?**
-
-            - *Performance*: Avoids repeating expensive computations for the same inputs.
-            - *Transparency*: The original function's interface is preserved; users call it as usual.
-            - *Extensibility*: The decorator adds an ``invalidate`` method to the wrapped function, allowing
-                manual cache clearing for specific arguments.
-
-            :param args: Positional arguments passed to the decorated function.
-            :type args: tuple
-            :param kwargs: Keyword arguments passed to the decorated function.
-            :type kwargs: dict
-            :return: The result of the decorated function, either from cache or freshly computed.
-            :rtype: Any
-            """
+        def compute_cache_key(args: tuple, kwargs: dict) -> Optional[str]:
+            """Return the cache key for these arguments, or None when they can't be cached."""
             if cache_key:
-                computed_cache_key = cache_key
-            else:
-                key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
-                # If key_data is None, we cannot generate a cache key, so we call the function directly
-                # and return the result without caching.
-                # This is a fallback to avoid breaking the application in case of pickling errors.
-                if key_data is None:
-                    logger.error("%s Failed to generate cache key data for %s", logger_prefix_normal, func.__name__)
-                    return func(*args, **kwargs)
-                computed_cache_key = _generate_cache_key_cached(func, key_data)
+                return cache_key
+            key_data = _generate_key_data(func, args, kwargs)
+            if key_data is None:
+                return None
+            return _generate_cache_key(func, key_data)
 
-            # look for a cached result ...
+        def log_enabled() -> bool:
+            return logging_enabled or lazy_cache.cache_logging
+
+        def lookup(computed_cache_key: str, args: tuple, kwargs: dict) -> tuple[bool, object]:
+            """Return (True, result) on a cache hit, and (False, None) on a miss."""
             cached_result = lazy_cache.get(computed_cache_key, CACHE_MISS_SENTINEL)
-            if cached_result is not CACHE_MISS_SENTINEL:
-                # cache hit, hooray!
-                result = (
-                    None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
-                )
-                if logging_enabled or lazy_cache.verbose_logging:
-                    class_name = kwargs.get("class_name", "")
-                    class_name = f"{class_name} - " if class_name else ""
+            if cached_result is CACHE_MISS_SENTINEL:
+                return False, None
+            # cache hit, hooray!
+            result = None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
+            if log_enabled():
+                if lazy_cache.verbose_logging:
                     logger.info(
-                        "%s cache hit for %s%s: %s args: %s kwargs: %s",
+                        "%s cache hit for %s: %s (%s) args: %s kwargs: %s",
                         logger_prefix_green,
-                        class_name,
+                        qualname,
                         computed_cache_key,
-                        "None" if result is None else result,
+                        type(result).__name__,
                         args,
                         kwargs,
                     )
-                elif logging_enabled or lazy_cache.cache_logging:
-                    class_name = kwargs.get("class_name", "")
-                    class_name = f"{class_name} - " if class_name else ""
+                else:
                     logger.info(
-                        "%s cache hit for %s: %s args: %s kwargs: %s",
+                        "%s cache hit for %s: %s (%s)",
                         logger_prefix_green,
-                        class_name,
+                        qualname,
                         computed_cache_key,
-                        args,
-                        kwargs,
+                        type(result).__name__,
                     )
-            else:
-                # Cache miss, boo! Call the function ...
-                result = func(*args, **kwargs)
-                cache_value = CACHE_NONE_SENTINEL if result is None else result
-                lazy_cache.set(computed_cache_key, cache_value, timeout)
-                if logging_enabled or lazy_cache.verbose_logging:
+            return True, result
+
+        def store(computed_cache_key: str, result: object, args: tuple, kwargs: dict) -> None:
+            """Cache a freshly computed result."""
+            cache_value = CACHE_NONE_SENTINEL if result is None else result
+            lazy_cache.set(computed_cache_key, cache_value, timeout)
+            if log_enabled():
+                if lazy_cache.verbose_logging:
                     logger.info(
-                        "%s caching %s - %s, with timeout %s args: %s kwargs: %s for %s",
+                        "%s caching %s for %s: %s, with timeout %s args: %s kwargs: %s",
                         logger_prefix_red,
-                        type(cache_value).__name__,
+                        type(result).__name__,
+                        qualname,
                         computed_cache_key,
                         timeout,
                         args,
                         kwargs,
-                        cache_value,
                     )
-            return result
+                else:
+                    logger.info(
+                        "%s caching %s for %s: %s, with timeout %s",
+                        logger_prefix_red,
+                        type(result).__name__,
+                        qualname,
+                        computed_cache_key,
+                        timeout,
+                    )
+
+        def cache_not_ready() -> bool:
+            """Whether the cache can't be used yet, so that this call must skip it."""
+            if not lazy_cache.ready:
+                logger.debug(
+                    "%s %s() called before Django's apps are ready. Calling it uncached.",
+                    logger_prefix_normal,
+                    qualname,
+                )
+                return True
+            return False
+
+        if inspect.iscoroutinefunction(func):
+
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                """
+                Caches the result of the decorated ``async`` function based on its arguments.
+
+                See :func:`cache_results`. The cache is read and written in a
+                worker thread, so that the event loop doesn't block on Redis.
+
+                :param args: Positional arguments passed to the decorated function.
+                :type args: tuple
+                :param kwargs: Keyword arguments passed to the decorated function.
+                :type kwargs: dict
+                :return: The result of the decorated function, either from cache or freshly computed.
+                :rtype: Any
+                """
+                computed_cache_key = compute_cache_key(args, kwargs)
+                # a None key means the arguments couldn't be serialized. _generate_key_data() logged why.
+                if computed_cache_key is None or cache_not_ready():
+                    return await func(*args, **kwargs)
+                hit, result = await sync_to_async(lookup)(computed_cache_key, args, kwargs)
+                if hit:
+                    return result
+                result = await func(*args, **kwargs)
+                await sync_to_async(store)(computed_cache_key, result, args, kwargs)
+                return result
+
+            wrapper = async_wrapper
+        else:
+
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                """
+                Caches the result of the decorated function based on its arguments.
+
+                This function is the core of the :func:`cache_results` decorator. When you decorate a function with
+                :func:`cache_results`, calls to that function are intercepted by this wrapper, which manages
+                caching transparently.
+
+                **How it works:**
+
+                1. **Cache Key Generation:**
+                    The wrapper binds the arguments to the function's signature and serializes them, with the
+                    function's qualified name, to create a unique and repeatable cache key.
+
+                2. **Cache Lookup:**
+                    The wrapper checks if a result for this key is already stored in the cache. If so, it returns
+                    the cached value. This is called a *cache hit*.
+
+                3. **Cache Miss Handling:**
+                    If no cached value is found (a *cache miss*), the wrapper takes this process's lock for the
+                    key, checks the cache again in case another thread just filled it, and otherwise calls the
+                    original function and stores its result.
+
+                4. **Handling None Results:**
+                    If the function returns ``None``, a special sentinel value is cached to distinguish between a
+                    cached ``None`` and a true cache miss.
+
+                5. **Logging (Optional):**
+                    If logging is enabled, the wrapper logs cache hits and misses, with the type of the result
+                    but never the result itself.
+
+                **Decorator Usage Example:**
+
+                .. code-block:: python
+
+                        @cache_results(timeout=60)
+                        def expensive_function(x, y):
+                            # Perform expensive computation
+                            return x + y
+
+                        # First call: result is computed and cached
+                        result1 = expensive_function(1, 2)
+
+                        # Second call with same arguments: result is returned from cache
+                        result2 = expensive_function(1, 2)
+
+                :param args: Positional arguments passed to the decorated function.
+                :type args: tuple
+                :param kwargs: Keyword arguments passed to the decorated function.
+                :type kwargs: dict
+                :return: The result of the decorated function, either from cache or freshly computed.
+                :rtype: Any
+                """
+                computed_cache_key = compute_cache_key(args, kwargs)
+                # a None key means the arguments couldn't be serialized. _generate_key_data() logged why.
+                if computed_cache_key is None or cache_not_ready():
+                    return func(*args, **kwargs)
+                hit, result = lookup(computed_cache_key, args, kwargs)
+                if hit:
+                    return result
+                # Cache miss, boo! Compute it once, while other threads that miss the same key wait.
+                with _lock_for(computed_cache_key):
+                    hit, result = lookup(computed_cache_key, args, kwargs)
+                    if hit:
+                        return result
+                    result = func(*args, **kwargs)
+                    store(computed_cache_key, result, args, kwargs)
+                    return result
+
+            wrapper = sync_wrapper
 
         def invalidate(*args, **kwargs):
             """
@@ -398,20 +489,22 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
             # the decorator's own cache_key, unless the caller passes one. (Assigning to
             # cache_key here would shadow the decorator's, so that it could never be invalidated.)
             explicit_cache_key = kwargs.pop("cache_key", None) or cache_key
-            logger.debug(
-                "%s -> %s called with args: %s kwargs: %s",
-                logger_prefix_gray,
-                logging.formatted_text(func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY),
-                args,
-                kwargs,
+            invalidate_prefix = (
+                logger_prefix_gray
+                + "."
+                + logging.formatted_text(qualname + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY)
             )
+            logger.debug("%s called with args: %s kwargs: %s", invalidate_prefix, args, kwargs)
+            if not lazy_cache.ready:
+                # nothing can have been cached yet.
+                return
             if explicit_cache_key:
                 computed_cache_key = explicit_cache_key
             else:
                 key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
                 if key_data is None:
                     return
-                computed_cache_key: str = _generate_cache_key_cached(func, key_data)
+                computed_cache_key = _generate_cache_key(func, key_data)
             # one read, rather than has_key() and then get(): an entry that expires, or is evicted,
             # between the two would be reported as an invalidated None.
             cached_value = lazy_cache.get(computed_cache_key, CACHE_MISS_SENTINEL)
@@ -419,14 +512,10 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                 lazy_cache.delete(computed_cache_key)
                 # like cache hits, invalidations are logged only when cache logging is on: applying one
                 # manifest invalidates a dozen keys.
-                log = logger.info if (logging_enabled or lazy_cache.cache_logging) else logger.debug
+                log = logger.info if log_enabled() else logger.debug
                 log(
                     "%s invalidated %s - %s",
-                    logger_prefix_gray
-                    + "."
-                    + logging.formatted_text(
-                        func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY
-                    ),
+                    invalidate_prefix,
                     (
                         "None"
                         if isinstance(cached_value, str) and cached_value == CACHE_NONE_SENTINEL
@@ -436,13 +525,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
                 )
             else:
                 logger.debug(
-                    "%s no cache entry found for %s (nothing to invalidate)",
-                    logger_prefix_gray
-                    + "."
-                    + logging.formatted_text(
-                        func.__name__ + "().invalidate()", SmarterFormattedTextColorCodes.LIGHT_GRAY
-                    ),
-                    computed_cache_key,
+                    "%s no cache entry found for %s (nothing to invalidate)", invalidate_prefix, computed_cache_key
                 )
 
         wrapper.invalidate = invalidate  # type: ignore[attr-defined]
