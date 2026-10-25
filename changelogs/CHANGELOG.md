@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.20](https://github.com/smarter-sh/smarter/compare/v0.36.19...v0.36.20) (2026-10-25)
+
+### Bug Fixes
+
+* **account:** key cached profile and ownership lookups by id ([de51422](https://github.com/smarter-sh/smarter/commit/de5142282d737be306c5c45cfb1610b84d9b86b0))
+* **cache:** refuse unsafe key arguments and depend only on Django ([c6c95d7](https://github.com/smarter-sh/smarter/commit/c6c95d7f413512e577a033c9fe194bfbb975dd49))
+
+## [0.36.20-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.19...v0.36.20-alpha.1) (2026-10-25)
+
+### Bug Fixes
+
+* **account:** key cached profile and ownership lookups by id ([de51422](https://github.com/smarter-sh/smarter/commit/de5142282d737be306c5c45cfb1610b84d9b86b0))
+* **cache:** refuse unsafe key arguments and depend only on Django ([c6c95d7](https://github.com/smarter-sh/smarter/commit/c6c95d7f413512e577a033c9fe194bfbb975dd49))
+
 ## [0.36.19](https://github.com/smarter-sh/smarter/compare/v0.36.18...v0.36.19) (2026-10-25)
 
 ### Bug Fixes

@@ -41,6 +41,14 @@ tense. For those posts:
   cited as an example of the capability, not as a step in a story.
 - Leave out the numbers-with-caveats section, which exists to support a
   story's claims.
+- Every sentence has to help explain the problem, how it's solved, or how to
+  use the solution. Leave out statements about how widely or how much it's
+  used: adoption counts ("148 decorated functions in 67 files"), tables of
+  uses per package, line counts of the module, and "it's the one/preferred way
+  Smarter does X". They praise the thing rather than explain it, and the
+  numbers go stale with the next commit. Show how it's used with the patterns
+  and their code instead. The user removed exactly these from the
+  `@cache_results()` how-to.
 
 The user has had to correct this repeatedly. Unless the request asks for a
 story, a retrospective or a lesson learned, assume it is a state post. The rest
