@@ -102,3 +102,48 @@ class TestDumps(SmarterTestBase):
         self.assertEqual(
             json.dumps({"b": 1, "a": 2}, indent=1, sort_keys=True, separators=(",", ":")), '{\n "a":2,\n "b":1\n}'
         )
+
+
+class TestDumpsCacheKey(SmarterTestBase):
+    """Test dumps_cache_key(), which serializes cache keys."""
+
+    def setUp(self):
+        json._cache_key_fallbacks_warned.clear()
+
+    def test_canonical_output(self):
+        """The output is compact, with sorted keys."""
+        self.assertEqual(json.dumps_cache_key({"b": 1, "a": [1, 2]}), '{"a":[1,2],"b":1}')
+
+    def test_uses_the_encoder(self):
+        """Known types are encoded by SmarterJSONEncoder, rather than by str() as in dumps()."""
+        value = datetime.datetime(2026, 1, 2, 3, 4, 5)
+        self.assertEqual(json.dumps_cache_key(value), '"2026-01-02T03:04:05"')
+        self.assertEqual(json.dumps(value), '"2026-01-02 03:04:05"')
+
+    def test_sets_are_sorted(self):
+        """Equal sets serialize the same, whatever their order."""
+        self.assertEqual(json.dumps_cache_key({"z", "x", "y"}), '["x","y","z"]')
+        self.assertEqual(json.dumps_cache_key(frozenset({3, 1, 2})), "[1,2,3]")
+
+    def test_unknown_type_falls_back_to_str_and_warns_once(self):
+        """An unknown object is serialized with str(), and a warning names its type and the context, not its value."""
+
+        class Opaque:
+            def __str__(self):
+                return "opaque-value"
+
+        with self.assertLogs("smarter.lib.json", level="WARNING") as logs:
+            self.assertEqual(json.dumps_cache_key(Opaque(), context="lookup"), '"opaque-value"')
+        output = "\n".join(logs.output)
+        self.assertIn("Opaque", output)
+        self.assertIn("lookup", output)
+        self.assertNotIn("opaque-value", output)
+        with self.assertNoLogs("smarter.lib.json", level="WARNING"):
+            json.dumps_cache_key(Opaque(), context="lookup")
+        with self.assertLogs("smarter.lib.json", level="WARNING"):
+            json.dumps_cache_key(Opaque(), context="another_lookup")
+
+    def test_refused_values_raise(self):
+        """Values the encoder refuses, such as a timezone-aware time, raise ValueError."""
+        with self.assertRaises(ValueError):
+            json.dumps_cache_key(datetime.time(3, 4, 5, tzinfo=datetime.timezone.utc))
