@@ -54,9 +54,6 @@ Its npm scripts run from the package's folder, or from ``smarter/react`` with
    * - ``npm run i18n``
      - Extracts, merges and compiles the translation catalogs.
 
-Smarter Chat's history up to version 0.16.2, when it had a repository of its own, is in the
-archived `smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`__ repository.
-
 
 Running It
 ----------

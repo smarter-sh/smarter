@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.18](https://github.com/smarter-sh/smarter/compare/v0.36.17...v0.36.18) (2026-10-25)
+
+### Bug Fixes
+
+* **cache:** harden cache_results keys, logging, startup and methods ([33c7b93](https://github.com/smarter-sh/smarter/commit/33c7b93276406d39078786b744ca77d91d9784a7))
+
 ## [0.36.17](https://github.com/smarter-sh/smarter/compare/v0.36.16...v0.36.17) (2026-10-23)
 
 ### Bug Fixes
