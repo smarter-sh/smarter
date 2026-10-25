@@ -199,86 +199,11 @@ def dumps(
     )
 
 
-# (context, type) pairs already warned about by SmarterCacheKeyEncoder, so that a hot code
-# path logs its fallback once per process rather than on every call.
-_cache_key_fallbacks_warned: set[tuple[str, str]] = set()
-
-
-class SmarterCacheKeyEncoder(SmarterJSONEncoder):
-    """
-    JSONEncoder subclass for cache keys, used by :func:`dumps_cache_key`.
-
-    A cache key must be the same every time for equal arguments, and different
-    for different ones. This encoder therefore:
-
-    - encodes the types that :class:`SmarterJSONEncoder` knows (datetimes,
-      Decimals, UUIDs, ...) with that encoder, which :func:`dumps` never does,
-      because its ``default=str`` replaces the encoder's own ``default()``;
-    - sorts sets, whose iteration order changes from one process to the next;
-    - falls back to :func:`str` for any other object, as :func:`dumps` does,
-      but logs a warning, once per context and type. ``str()`` of an object
-      can collide (two model rows with the same name) or change in every
-      process (``<Foo object at 0x...>``), so these fallbacks are being
-      found and removed before the fallback itself is.
-
-    :param context: What the key is for, e.g. the qualified name of a cached
-        function. It is only used in the warning.
-    :type context: str
-    """
-
-    def __init__(self, *args, context: str = "", **kwargs):
-        super().__init__(*args, **kwargs)
-        self.context = context
-
-    def default(self, o):
-        if isinstance(o, (set, frozenset)):
-            return sorted(o, key=lambda item: dumps_cache_key(item, context=self.context))
-        try:
-            return super().default(o)
-        except TypeError:
-            type_name = f"{type(o).__module__}.{type(o).__qualname__}"
-            if (self.context, type_name) not in _cache_key_fallbacks_warned:
-                _cache_key_fallbacks_warned.add((self.context, type_name))
-                # the type only, never the value: arguments can hold sensitive data.
-                logger.warning(
-                    "%s.dumps_cache_key() fell back to str() for a %s in the cache key of %s. "
-                    "Cache key arguments should be plain values (str, int, bool, tuples), such as an id.",
-                    logging.formatted_text(__name__),
-                    type_name,
-                    self.context or "an unnamed key",
-                )
-            return str(o)
-
-
-def dumps_cache_key(obj, *, context: str = "") -> str:
-    """
-    Serialize ``obj`` into the canonical JSON text of a cache key.
-
-    The output is compact, with sorted keys and sorted sets, so that equal
-    values always produce the same text. See :class:`SmarterCacheKeyEncoder`
-    for how other types are encoded, and for the warning it logs when it falls
-    back to :func:`str`.
-
-    :param obj: The value to serialize, e.g. a cached function's bound arguments.
-    :type obj: object
-    :param context: What the key is for, e.g. the qualified name of a cached
-        function, named in the fallback warning.
-    :type context: str
-    :return: The JSON text.
-    :rtype: str
-    :raises ValueError: If ``obj`` contains a circular reference, or a value
-        that :class:`SmarterJSONEncoder` refuses, such as a timezone-aware time.
-    """
-    return json.dumps(obj, cls=SmarterCacheKeyEncoder, context=context, sort_keys=True, separators=(",", ":"))
-
-
 __all__ = [
     "JSONDecodeError",
     "JSONDecoder",
-    "SmarterCacheKeyEncoder",
     "SmarterJSONEncoder",
     "dumps",
-    "dumps_cache_key",
     "load",
     "loads",
 ]

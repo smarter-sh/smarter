@@ -116,8 +116,10 @@ class TestMultitenantBackends(TestAccountMixin):
         backend = DjangoModelBackendMultitenant()
         request = RequestFactory().post("/")
         with patch("django.contrib.auth.backends.ModelBackend.authenticate", return_value=self.non_admin_user):
-            with patch(f"{MODULE}.verify_payment_status", return_value=True):
+            with patch(f"{MODULE}.verify_payment_status", return_value=True) as verify_status:
                 self.assertEqual(backend.authenticate(request, username="u", password="p"), self.non_admin_user)
+            # the authenticated user's username, a string, whatever the caller passed as username.
+            verify_status.assert_called_once_with(self.non_admin_user.get_username())
             with (
                 patch(f"{MODULE}.verify_payment_status", return_value=False),
                 patch(f"{MODULE}.messages") as messages,
