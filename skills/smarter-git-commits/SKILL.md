@@ -13,29 +13,34 @@ GIT COMMIT", all caps, profanity) still asks for the command text. Agents have
 broken this rule in exactly that situation.
 
 - Never execute `git commit`, `git add`, `git reset`, `git restore --staged`,
-  `git push`, `git stash`, or any other git command that writes. The user stages
-  and commits themselves.
+  `git push`, `git tag`, `git stash`, or any other git command that writes.
+  The user stages, commits, tags and pushes.
 - Read-only git commands (`git status`, `git diff`, `git log`) are fine for
   working out what changed.
 - Don't volunteer commit messages. Write one only when asked.
 
 ## Authorship
 
-Lawrence McDaniel is the author. You are the co-author, and your email is `noreply@anthropic.com`.
+You are the author. Lawrence McDaniel is the co-author.
 
-- `--author="Lawrence McDaniel <lpm0073@gmail.com>"`
-- The last `-m` is `Co-authored-by: Claude <noreply@anthropic.com>`.
+- `--author="Claude <noreply@anthropic.com>"`
+- The last `-m` is `Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>`.
+
+This is specific to this repository. The repositories published to PyPI
+(smarter-python, smarter-types, cache-results) are the other way round: Lawrence McDaniel is
+the author and you are the co-author, as their own commit skills say. A change
+to their authorship rule doesn't apply here.
 
 ## Command format
 
 Exactly one `git commit` command in one code block:
 
 ```console
-git commit --author="Lawrence McDaniel <lpm0073@gmail.com>" \
+git commit --author="Claude <noreply@anthropic.com>" \
   -m "<type>(<scope>): <subject>" \
   -m "<body paragraph>" \
   -m "<body paragraph or bullet list>" \
-  -m "Co-authored-by: Claude <noreply@anthropic.com>"
+  -m "Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>"
 ```
 
 - Use one `-m` per paragraph. git joins them with blank lines.

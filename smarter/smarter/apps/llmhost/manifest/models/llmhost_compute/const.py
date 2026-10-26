@@ -1,8 +1,8 @@
 """Smarter API LLMHostCompute Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.LLMHOST_COMPUTE.value
+MANIFEST_KIND = SAMKinds.LLM_HOST_COMPUTE.value
 
 DEFAULT_DISK_SIZE_GB = 100
 DEFAULT_MAX_NODES = 4

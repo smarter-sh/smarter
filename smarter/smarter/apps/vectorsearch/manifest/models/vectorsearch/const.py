@@ -1,5 +1,5 @@
 """Smarter API Vectorsearch Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.VECTORSEARCH.value
+MANIFEST_KIND = SAMKinds.VECTORSEARCH.value

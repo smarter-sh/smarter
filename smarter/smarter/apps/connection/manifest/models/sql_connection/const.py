@@ -1,5 +1,5 @@
-"""Smarter API SQL Connection Manifest Constants"""
+"""Smarter API SQL Connection Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.SQL_CONNECTION.value
+MANIFEST_KIND = SAMKinds.SQL_CONNECTION.value
