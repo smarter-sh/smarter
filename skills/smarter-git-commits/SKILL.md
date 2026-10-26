@@ -13,8 +13,8 @@ GIT COMMIT", all caps, profanity) still asks for the command text. Agents have
 broken this rule in exactly that situation.
 
 - Never execute `git commit`, `git add`, `git reset`, `git restore --staged`,
-  `git push`, `git stash`, or any other git command that writes. The user stages
-  and commits themselves.
+  `git push`, `git tag`, `git stash`, or any other git command that writes.
+  The user stages, commits, tags and pushes.
 - Read-only git commands (`git status`, `git diff`, `git log`) are fine for
   working out what changed.
 - Don't volunteer commit messages. Write one only when asked.
@@ -27,7 +27,7 @@ You are the author. Lawrence McDaniel is the co-author.
 - The last `-m` is `Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>`.
 
 This is specific to this repository. The repositories published to PyPI
-(smarter-python, cache-results) are the other way round: Lawrence McDaniel is
+(smarter-python, smarter-types, cache-results) are the other way round: Lawrence McDaniel is
 the author and you are the co-author, as their own commit skills say. A change
 to their authorship rule doesn't apply here.
 

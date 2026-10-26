@@ -33,6 +33,9 @@ Other honest uses:
 - Validators and normalizers whose job is to accept untrusted input of any type
   and reject or coerce it: `positive_int(value: Any, ...)`,
   `normalize_country(value: Any)`, arguments that an LLM supplies to a tool.
+- A value that is only stored, compared or passed on can also be `object`,
+  which accepts anything but keeps the type checker on: a function that
+  calls a method on an `object` fails type checking, one on `Any` doesn't.
 - Defensive pass-throughs that accept anything, transform the values they
   recognize, and return everything else unchanged, e.g.
   `without_diagnostics(response: Any) -> Any` in `apps/prompt/contract/builders.py`.
