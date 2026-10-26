@@ -36,7 +36,7 @@ VALIDATION_RECORD_TTL = 300
 
 @dataclass
 class Certificate:
-    """A TLS certificate, for a domain and its subdomains."""
+    """A TLS certificate, for one domain."""
 
     id: str
     """The provider's id of the certificate, e.g. an AWS ACM certificate ARN."""
@@ -100,7 +100,7 @@ class CertificateService(InfrastructureService):
 
     @abstractmethod
     def _request_certificate(self, domain_name: str) -> str:
-        """Request a DNS-validated certificate for a domain and its subdomains, and return its id."""
+        """Request a DNS-validated certificate for a domain, without a wildcard, and return its id."""
 
     @abstractmethod
     def _describe_certificate(self, certificate_id: str) -> Optional[Certificate]:
@@ -145,9 +145,14 @@ class CertificateService(InfrastructureService):
         """
         Return the id of a domain's certificate, and request one if it has none.
 
-        The certificate covers the domain and its subdomains, e.g. ``example.com`` and
+        The certificate covers the domain only, e.g. ``example.com``, never a wildcard such as
         ``*.example.com``. It is not issued until its validation records exist, see
         :meth:`create_validation_records`.
+
+        A custom domain's certificate is never served: it proves that the domain is delegated to
+        the platform's DNS zone, since the provider can only read its validation record through
+        that delegation. Each host of the domain is served with its own certificate, from
+        cert-manager.
 
         :param domain_name: The certificate's domain.
         :returns: The certificate's id, and whether it was requested.
@@ -199,7 +204,8 @@ class CertificateService(InfrastructureService):
         records: list[DNSRecord] = []
         seen: set[tuple[str, str]] = set()
         for wanted in certificate.validation_records:
-            # a domain and its wildcard share a validation record.
+            # a provider can list one record more than once, e.g. for a domain and its
+            # wildcard, on a certificate that names both.
             if (wanted.name, wanted.type) in seen:
                 continue
             seen.add((wanted.name, wanted.type))

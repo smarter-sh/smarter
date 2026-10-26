@@ -132,7 +132,8 @@ Docker and Kubernetes Compared
    * - TLS
      - None: plain HTTP on localhost.
      - cert-manager issues a certificate for every hostname, including one per deployed LLMClient.
-       Custom Domains also get an ACM certificate.
+       Custom Domains also get an ACM certificate, for the domain alone, which proves the domain's
+       delegation and is never served.
    * - Routing a request to an LLMClient
      - Django resolves the LLMClient from the URL path (sandbox URLs).
      - Traefik routes the hostname to the ``smarter`` Service through the LLMClient's own Ingress.
