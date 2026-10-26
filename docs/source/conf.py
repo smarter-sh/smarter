@@ -206,6 +206,8 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "django": ("https://docs.djangoproject.com/en/5.2/", "https://docs.djangoproject.com/en/5.2/_objects/"),
     "cache_results": ("https://docs.cache-results.smarter.sh/", None),
+    "smarter_python": ("https://docs.smarter-python.smarter.sh/", None),
+    "smarter_types": ("https://docs.smarter-types.smarter.sh/", None),
 }
 rst_epilog = f"""
 .. |project_version| replace:: {release}
@@ -266,26 +268,13 @@ def resolve_builtins_exactly(app, doctree):  # pylint: disable=unused-argument
 
 
 ###############################################################################
-# The smarter-python SDK's reference pages (smarter-framework/smarter-python)
-# declare its objects with py: directives, in its own smarter.models,
-# smarter.core, smarter.client and smarter.resources packages. Many share a
-# name with a platform object, e.g. Account, LLMClient or SmarterDictType, so
-# the fuzzy search behind docstring type fields finds both, warns "more than
-# one target found", and links to either, or links a platform docstring to the
-# SDK when the platform object has no page. Platform packages also re-export
-# their models, e.g. smarter.apps.llmclient.models.LLMClient, which matches
-# again. Of a fuzzy search's matches, keep those on the referring side of the
-# SDK boundary, and of a re-exported object, the module that defines it. Fully
-# qualified references are left alone.
+# Platform packages re-export their models, e.g.
+# smarter.apps.llmclient.models.LLMClient, so the fuzzy search behind docstring
+# type fields finds the same object under several names, warns "more than one
+# target found", and links to either. Of a re-exported object's matches, keep
+# the module that defines it. Fully qualified references are left alone. The
+# smarter-python SDK's objects are on its own site, through intersphinx.
 ###############################################################################
-SDK_PACKAGES = ("smarter.client", "smarter.core.", "smarter.models.", "smarter.resources.")
-
-
-def is_sdk_name(name: str) -> bool:
-    """Whether a fully qualified name belongs to the smarter-python SDK's reference pages."""
-    return name.startswith(SDK_PACKAGES)
-
-
 def defining_name(names: list[str]) -> str | None:
     """Of several names of one platform object, the one in the module that defines it."""
     objects = []
@@ -302,27 +291,24 @@ def defining_name(names: list[str]) -> str | None:
     return next((name for name in names if name.rpartition(".")[0] == module_name), None)
 
 
-def disambiguate_sdk_and_reexports(find_obj):
+def disambiguate_reexports(find_obj):
     """Wrap PythonDomain.find_obj to narrow ambiguous matches; see the comment above."""
 
     def wrapper(
         self, env, modname, classname, name, type, searchmode=0
     ):  # pylint: disable=too-many-arguments,too-many-positional-arguments,redefined-builtin
         matches = find_obj(self, env, modname, classname, name, type, searchmode)
-        if searchmode != 1 or not matches:
+        if searchmode != 1 or len(matches) < 2:
             return matches
-        from_sdk = is_sdk_name(f"{modname}.") if modname else False
-        matches = [match for match in matches if is_sdk_name(match[0]) == from_sdk]
-        if len(matches) > 1 and not from_sdk:
-            defining = defining_name([match[0] for match in matches])
-            if defining:
-                matches = [match for match in matches if match[0] == defining]
+        defining = defining_name([match[0] for match in matches])
+        if defining:
+            matches = [match for match in matches if match[0] == defining]
         return matches
 
     return wrapper
 
 
-PythonDomain.find_obj = disambiguate_sdk_and_reexports(PythonDomain.find_obj)
+PythonDomain.find_obj = disambiguate_reexports(PythonDomain.find_obj)
 
 
 ###############################################################################
