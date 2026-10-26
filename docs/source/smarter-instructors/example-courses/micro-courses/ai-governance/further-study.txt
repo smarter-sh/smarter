@@ -16,3 +16,16 @@
   Sayash Kapoor, on telling real capabilities from hype.
 - **YouTube:** Joy Buolamwini's TED talk *How I'm fighting bias in algorithms*, and the talks on the
   `Stanford HAI <https://www.youtube.com/@stanfordhai>`__ channel.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Django and httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
+  <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, on keeping the credential
+  that spends money at a provider in one place; `Smarter's Ownership Model: One Base Class for
+  Owning, Sharing and Tracking AI Resources
+  <https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__, on who owns, sees,
+  changes and pays for each resource; `Django Multi-Tenancy Without Schemas: Tenant Isolation as
+  Queryset Rules, and a Profile Switcher That Can't Be Spoofed
+  <https://blog.smarter.sh/2026/01/15/smarter-tenant-isolation-django-querysets/>`__, on keeping
+  each account's resources out of every other account's queries; `Why LLMs Love Code, and What That
+  Means for Everyone Else
+  <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
+  on why LLMs do better at code than at other work.

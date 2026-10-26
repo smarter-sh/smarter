@@ -14,5 +14,21 @@
   <https://newsletter.pragmaticengineer.com/podcast>`__ podcast and newsletter by Gergely Orosz,
   which reports on how engineering teams actually use AI.
 - **Writing:** Simon Willison's `weblog <https://simonwillison.net/>`__, which documents his own use
-  of coding agents in detail, and the essays on `blog.smarter.sh <https://blog.smarter.sh>`__ about
-  building Smarter with agents.
+  of coding agents in detail.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Part 1: Maintaining Long-Term Code Quality With Agentic AI
+  <https://blog.smarter.sh/2026/10/10/claude-code-large-django-codebase/>`__, on what an agent
+  multiplies in a large codebase, and what kept Smarter's code converging; `Part 2: The Antipattern
+  That Makes a Codebase Diverge
+  <https://blog.smarter.sh/2026/10/11/blog-prologue-geometric-series/>`__, on the pattern that makes
+  a series of agent changes diverge, and how to find it; `Part 3: What Claude Code Actually Reads
+  <https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__, on which docs, skills and code
+  an agent reads in each session; `Six High-Impact Uses of Claude Code
+  <https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__, on test coverage, commit messages,
+  refactoring, log reviews, translations and front-end design done with an agent; `Demystifying the
+  AI Coding Stack: AI Harnesses vs. The Smarter Project
+  <https://blog.smarter.sh/2026/06/30/demystifying-the-ai-coding-stack-ai-harnesses-vs-the-smarter-project/>`__,
+  on models, harnesses, agents and environments, and where Smarter fits; `Why LLMs Love Code, and
+  What That Means for Everyone Else
+  <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
+  on why LLMs do better at code than at other work.

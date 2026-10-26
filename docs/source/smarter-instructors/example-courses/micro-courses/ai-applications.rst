@@ -76,7 +76,8 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 **Read.** :doc:`/smarter-resources/smarter-vectorstore`,
 :doc:`/smarter-resources/smarter-vectorsearch`, :doc:`/smarter-resources/smarter-mcpclient`,
 :doc:`/smarter-resources/smarter-connection`, :doc:`/smarter-resources/llmtool/plugin/sql`,
-:doc:`/smarter-resources/smarter-orchestrator`, :doc:`/smarter-resources/llmtool/nlp`.
+:doc:`/smarter-resources/smarter-orchestrator`, :doc:`/smarter-resources/llmtool/nlp`, `Getting
+Started with Smarter's CLI <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__.
 
 **Exercises.**
 

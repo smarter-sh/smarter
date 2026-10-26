@@ -15,3 +15,14 @@
 - **Accessibility:** the W3C's `WCAG 2.2 quick reference
   <https://www.w3.org/WAI/WCAG22/quickref/>`__ and the `ARIA Authoring Practices Guide
   <https://www.w3.org/WAI/ARIA/apg/>`__.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Getting Started with @smarter.sh/ui-chat
+  <https://blog.smarter.sh/2026/08/08/getting-started-smarter-ui-chat/>`__, on using Smarter's chat
+  component in a React app; `How to Embed a Smarter Chatbot in an HTML Web Page
+  <https://blog.smarter.sh/2026/07/11/smarter-chat-html/>`__, on putting a chatbot on any web page
+  with one script tag; `How to Add a Smarter Chatbot to Your WordPress Site
+  <https://blog.smarter.sh/2026/10/26/smarter-chat-wordpress/>`__, with a plugin or a script tag;
+  `Django-React Integration <https://blog.smarter.sh/2026/05/29/react-integration/>`__, on how
+  Django hosts the console's React apps; `Smarter's List Views: One Design for Queries, Caching,
+  Pagination and Refresh <https://blog.smarter.sh/2026/08/15/smarter-list-views/>`__, on the server
+  and browser caches behind every console list page.
