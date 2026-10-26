@@ -2,12 +2,12 @@
 
 from typing import Any, Optional, Union
 
+from cache_results import cache_results
 from django.db import models
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import (
     dict_keys_to_list,
     list_of_dicts_to_dict,

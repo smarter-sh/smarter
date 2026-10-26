@@ -2,11 +2,11 @@
 
 from typing import Optional
 
+from cache_results import cache_results
 from django.db import models
 from django.utils import timezone
 
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken

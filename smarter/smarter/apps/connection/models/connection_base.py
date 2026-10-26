@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 
+from cache_results import cache_results
 from django.db import models
 from django.urls import reverse
 
@@ -13,7 +14,6 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])

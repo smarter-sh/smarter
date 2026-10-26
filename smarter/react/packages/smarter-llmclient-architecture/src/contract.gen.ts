@@ -99,7 +99,7 @@ export interface SAMDependencyTreeNode {
    */
   children: SAMDependencyTreeNode[];
   /**
-   * icon[String]: The kind's icon in the web console, a Keen Icons name without its ki- prefix, e.g. lock-2 for a Secret. See SAMKinds.icon(). Read only.
+   * icon[String]: The kind's icon in the web console, a Keen Icons name without its ki- prefix, e.g. lock-2 for a Secret. See sam_kind_icon(). Read only.
    */
   icon: string;
   /**

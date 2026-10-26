@@ -16,8 +16,8 @@ helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
   --timeout 900s \
   --namespace smarter-prod \
   --create-namespace \
-  --set env.MYSQL_HOST=your-mysql-host \
-  --set env.MYSQL_PASSWORD=your-password \
+  --set env.SMARTER_MYSQL_HOST=your-mysql-host \
+  --set env.SMARTER_MYSQL_PASSWORD=your-password \
   --set env.OPENAI_API_KEY=your-key \
   --set env.SECRET_KEY=your-django-secret \
   --set env.FERNET_ENCRYPTION_KEY=your-fernet-key \
@@ -27,8 +27,11 @@ helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
 See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml)
 for all available configuration options.
 
-**Note:** For production, use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
-to manage sensitive values like passwords and API keys.
+The chart stores `env` in a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/),
+`<global.appName>-env`, and every pod reads it with `envFrom`, so passwords and API keys aren't written
+into the pod specs of the Deployments, the init Job or the backup CronJob. A changed value rolls the
+Deployments. Keep your values file out of source control, or supply its secrets with `--set` from your
+CI's secret store.
 
 ## Prerequisites
 

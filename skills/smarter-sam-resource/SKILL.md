@@ -59,12 +59,22 @@ Read [references/canonical-sam-reference.md](references/canonical-sam-reference.
 for the full file-by-file list, with the CustomDomain file for each step. In
 summary:
 
-1. **Kind registration**
-   - `SmarterJournalThings` in `smarter/smarter/lib/journal/enum.py`, including
-     its `choices()` entry, plus a `lib/journal` migration for the changed
-     choices.
-   - `SAMKinds` in `smarter/smarter/apps/api/v1/manifests/enum.py`, imported from
-     the kind's `const.py`.
+1. **Kind registration**, in [smarter-types](https://github.com/smarter-sh/smarter-types)
+   (`../smarter-types`), the package that the platform and the Python SDK
+   share. `SAMKinds` is the single definition of which kinds exist:
+
+   - add the member to `SAMKinds` in `src/smarter_types/kinds.py`, with its
+     place in `apply_order()`,
+   - add the thing to `SmarterJournalThings` in `src/smarter_types/journal.py`
+     as `SAMKinds.<NAME>.value`, and its `choices()` entry,
+   - release smarter-types, then raise its version in the platform's
+     `requirements/in/base.in` and the SDK's `pyproject.toml`.
+
+   Then, in the platform: a `lib/journal` migration for the changed choices,
+   the kind's icon in `SAM_KIND_ICONS` in
+   `smarter/smarter/apps/api/v1/manifests/enum.py`, and the kind's `const.py`,
+   `MANIFEST_KIND = SAMKinds.<NAME>.value`.
+
 2. **Manifest models**: `<app>/manifest/models/<kind>/{const,metadata,spec,status,model}.py`.
 3. **Broker**: `<app>/manifest/brokers/<kind>.py`, registered in
    `smarter/smarter/apps/api/v1/cli/brokers.py`. Add the kind to the user

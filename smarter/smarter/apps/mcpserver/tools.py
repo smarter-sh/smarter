@@ -28,10 +28,10 @@ from abc import ABC, abstractmethod
 from typing import ClassVar, Optional, cast
 
 import mcp_types
+from cache_results import lazy_cache
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 

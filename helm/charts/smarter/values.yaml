@@ -42,7 +42,7 @@ env:
   CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CELERY_RESULT_BACKEND: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DEBUG_MODE: "false"
-  DJANGO_SETTINGS_MODULE: "smarter.settings.production"
+  DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
   DOCKERHUB_PAT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DOCKERHUB_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DUMP_DEFAULTS: "False"
@@ -196,8 +196,8 @@ app:
   # a write (env SMARTER_DATABASE_READ_TIMEOUT, PyMySQL's read_timeout and
   # write_timeout). A query that the database never answers would otherwise hold
   # the request's thread forever. Rendered only into the app Deployment, never
-  # into app.env or the global env map: app.env also reaches the init job, the
-  # backup job and the bastion, and the workers, beat and the init job run
+  # into app.env or the global env map: app.env also reaches the init job and the
+  # backup job's email container, and the workers, beat and the init job run
   # migrations, management commands and tasks that can legitimately take longer
   # than a web request. Leave it empty for no timeout.
   databaseReadTimeout: 60
@@ -321,7 +321,10 @@ databaseScheduledBackup:
   enabled: true
   schedule: "0 2 * * *" # Every day at 2am UTC
   notifyEmail: ""        # the Job emails the backup's result and log here. Empty: smarter_settings.email_admin
-  s3Uri: ""              # where backups are uploaded, e.g. s3://my-private-bucket/backups/sql. Empty: s3://<env.SMARTER_S3_BUCKET>/backups/sql
+  # where backups are uploaded, e.g. s3://my-private-bucket/backups/sql. Empty: s3://<env.SMARTER_S3_BUCKET>/backups/sql.
+  # Use a private bucket: the backup is a full copy of the database. The environment bucket that
+  # serves static assets is often public-read, so don't rely on the default there.
+  s3Uri: ""
   awsCliVersion: ""      # the AWS CLI release to install. Empty: the version pinned in configmap-debian-setup.yaml
 
 externalDatabase:

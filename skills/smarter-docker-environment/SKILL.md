@@ -14,6 +14,16 @@ description: Use whenever Smarter code must run in its Docker containers (smarte
 > exactly the files git lists as changed or new. If you must loop, use
 > `while read -r f; do ...; done < file` or `xargs`, and never discard
 > `docker cp`'s errors.
+>
+> **The same trap hits any variable that holds more than one argument**, not
+> just file lists. `pw="-e SMARTER_MYSQL_PASSWORD=p4ss"; docker exec $pw ...`
+> passes `-e SMARTER_MYSQL_PASSWORD=p4ss` as **one** argument. Docker doesn't
+> complain. The variable just never reaches the container, and the test reports
+> a bug in the code that isn't there. An agent once spent a debugging round
+> on exactly this, in a loop that tested "with and without a password". See
+> "Shell notes" below for the forms that work. And when a test of your own
+> harness gives a surprising result, suspect the harness before the code: rerun
+> the one failing case by hand, with the arguments spelled out.
 
 ## The containers
 
@@ -133,6 +143,24 @@ docker cp smarter-app:/home/smarter_user/smarter/smarter/apps/widget/migrations/
   breaks every command that follows ("command not found: curl").
 - An unquoted `$FILES` is **not** word-split in zsh (see the top of this page).
   Loop with `while read -r f; do ...; done <<< "$FILES"`, or pipe to `xargs`.
+- **Never put several arguments in one string variable**, e.g. flags for
+  `docker exec -e ...`, `curl -H ...` or `pytest -k ...`. zsh passes the
+  string as one argument. Use one of these instead:
+
+  ```zsh
+  # a function that takes the varying arguments as "$@"
+  run() { docker exec -e ENVIRONMENT=prod "$@" smarter-app python -c '...'; }
+  run -e SMARTER_MYSQL_PASSWORD=p4ss
+  run -e SMARTER_MYSQL_PASSWORD=SET-ME-PLEASE
+
+  # or an array, expanded with "${args[@]}"
+  args=(-e ENVIRONMENT=prod -e SMARTER_MYSQL_PASSWORD=p4ss)
+  docker exec "${args[@]}" smarter-app ...
+  ```
+
+  `${=var}` forces word-splitting in zsh, but it breaks on values with spaces.
+  Prefer the function or the array.
+
 - Use absolute paths, or paths from the repository root. A wrong relative `cd`
   silently runs a command against the wrong tree.
 

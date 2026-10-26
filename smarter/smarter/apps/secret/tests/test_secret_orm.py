@@ -5,7 +5,9 @@ from datetime import datetime, timedelta
 
 from django.utils.timezone import now
 
+from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.signals import secret_edited
 from smarter.common.exceptions import SmarterValueError
@@ -133,3 +135,87 @@ class TestSmarterSecretDjangoModel(TestAccountMixin):
                 name="testEmptyValue",
                 encrypted_value=None,
             )
+
+
+class TestSecretQuerySetPermissions(TestAccountMixin):
+    """
+    Test the Secret queryset's permission filters.
+
+    A Secret holds a credential, so, unlike the platform's other shared resources, a platform
+    Secret is not readable by every account. See :class:`smarter.apps.secret.models.SecretQuerySet`.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.platform_secret = Secret.objects.create(
+            name=f"test_qs_platform_secret_{cls.hash_suffix}",
+            user_profile=smarter_cached_objects.smarter_admin_user_profile,
+            encrypted_value=Secret.encrypt("platform-value"),
+        )
+        cls.admin_secret = Secret.objects.create(
+            name=f"test_qs_admin_secret_{cls.hash_suffix}",
+            user_profile=cls.user_profile,
+            encrypted_value=Secret.encrypt("admin-value"),
+        )
+        cls.mortal_secret = Secret.objects.create(
+            name=f"test_qs_mortal_secret_{cls.hash_suffix}",
+            user_profile=cls.non_admin_user_profile,
+            encrypted_value=Secret.encrypt("mortal-value"),
+        )
+        cls.staff_user, _, cls.staff_user_profile = mortal_user_factory(account=cls.account)
+        cls.staff_user.is_staff = True
+        cls.staff_user.save()
+        cls.ids = [cls.platform_secret.pk, cls.admin_secret.pk, cls.mortal_secret.pk]
+
+    @classmethod
+    def tearDownClass(cls):
+        Secret.objects.filter(pk__in=cls.ids).delete()
+        # deleted directly: factory_account_teardown() would sweep every test account, also the class's own.
+        cls.staff_user_profile.delete()
+        cls.staff_user.delete()
+        super().tearDownClass()
+
+    def readable(self, user) -> set[int]:
+        return set(Secret.objects.filter(pk__in=self.ids).with_read_permission_for(user).values_list("pk", flat=True))
+
+    def test_regular_user_reads_only_their_own_secrets(self):
+        """A regular user reads their own Secrets, not their colleagues' nor the platform's."""
+        self.assertEqual(self.readable(self.non_admin_user), {self.mortal_secret.pk})
+
+    def test_staff_user_reads_their_accounts_secrets(self):
+        """A staff user reads their account's Secrets, but not the platform's."""
+        self.assertEqual(self.readable(self.staff_user), {self.admin_secret.pk, self.mortal_secret.pk})
+
+    def test_superuser_reads_every_secret(self):
+        """A superuser reads every Secret, including the platform's."""
+        self.assertEqual(self.readable(self.admin_user), set(self.ids))
+
+    def test_platform_admin_reads_the_platform_secrets(self):
+        """The platform's own admin reads the platform's Secrets."""
+        self.assertIn(self.platform_secret.pk, self.readable(smarter_cached_objects.smarter_admin))
+
+    def test_manager_and_queryset_agree(self):
+        """The manager's with_read_permission_for() and shared_with() use the Secret rules too."""
+        for user in (self.non_admin_user, self.staff_user):
+            with self.subTest(user=user.username):
+                via_manager = set(
+                    Secret.objects.with_read_permission_for(user).filter(pk__in=self.ids).values_list("pk", flat=True)
+                )
+                self.assertEqual(via_manager, self.readable(user))
+                shared = set(Secret.objects.shared_with(user).filter(pk__in=self.ids).values_list("pk", flat=True))
+                self.assertNotIn(self.platform_secret.pk, shared)
+        self.assertEqual(
+            set(Secret.objects.shared_with(self.staff_user).filter(pk__in=self.ids).values_list("pk", flat=True)),
+            {self.admin_secret.pk, self.mortal_secret.pk},
+        )
+
+    def test_use_permission_includes_the_platform_secrets(self):
+        """With_use_permission_for() keeps the platform's Secrets for the plugins whose endpoint Smarter fixes."""
+        used = set(
+            Secret.objects.filter(pk__in=self.ids)
+            .with_use_permission_for(self.non_admin_user)
+            .values_list("pk", flat=True)
+        )
+        self.assertEqual(used, set(self.ids))
+        self.assertFalse(Secret.objects.with_use_permission_for(None).exists())  # type: ignore[arg-type]

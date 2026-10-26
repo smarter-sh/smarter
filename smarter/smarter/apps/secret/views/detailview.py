@@ -7,8 +7,6 @@ import yaml
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
@@ -96,48 +94,20 @@ class SecretDetailView(DocsBaseView):
             logger.error("%s.get() - Invalid or missing hashed_id: %s", self.formatted_class_name, hashed_id)
             return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
 
-        try:
-            self.secret = Secret.objects.get(id=pk_id, user_profile=self.user_profile)
-            logger.debug(
-                "%s.get() Found secret with id %s for user %s.",
-                self.formatted_class_name,
-                pk_id,
-                self.user_profile.user.username if self.user_profile else "unknown user",
-            )
-        except Secret.DoesNotExist:
-            try:
-                if self.user_profile:
-
-                    admin_user = UserProfile.admin_for_account(self.user_profile.account)
-                    admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
-                    self.secret = Secret.objects.get(id=pk_id, user_profile=admin_user_profile)
-                    logger.debug(
-                        "%s.get() Found secret with id %s for admin user %s.",
-                        self.formatted_class_name,
-                        pk_id,
-                        admin_user if admin_user else "unknown admin user",
-                    )
-            except Secret.DoesNotExist:
-                try:
-                    self.secret = Secret.objects.get(
-                        id=pk_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
-                    )
-                    logger.debug(
-                        "%s.get() Found secret with id %s for smarter admin user %s.",
-                        self.formatted_class_name,
-                        pk_id,
-                        smarter_cached_objects.smarter_admin_user_profile.user,
-                    )
-                except Secret.DoesNotExist:
-                    pass
+        # a Secret holds a credential, so the page shows only a Secret that the user may read:
+        # their own, their account's for a staff user, or any for a superuser. Never the
+        # platform's, which the read permission of the platform's other resources would include.
+        user = self.user_profile.user if self.user_profile else None
+        self.secret = Secret.objects.with_read_permission_for(user).filter(id=pk_id).first()  # type: ignore[arg-type]
         if not self.secret:
-            logger.error(
-                "%s.get() - Secret with id %s not found for user %s or admin users.",
+            logger.warning(
+                "%s.get() - Secret with id %s not found, or not readable by user %s.",
                 self.formatted_class_name,
                 pk_id,
-                self.user_profile.user.username if self.user_profile else "unknown user",
+                user.username if user else "unknown user",
             )
             return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
+        logger.debug("%s.get() Found secret with id %s for user %s.", self.formatted_class_name, pk_id, user)
 
         self.kind = SAMKinds.SECRET
 

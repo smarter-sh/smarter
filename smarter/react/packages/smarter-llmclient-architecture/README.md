@@ -17,7 +17,7 @@ only.
 - The tree is `AbstractBroker.dependency_tree()`, a `SAMDependencyTreeNode` (`smarter.lib.manifest.models`),
   which `smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView` returns, and
   the workbench fetches when its tab is first opened. Each node's `url` is the resource's manifest page
-  (`smarter.lib.manifest.record_locator.console_url`), and its `icon` a Keen icon (`SAMKinds.icon()`).
+  (`smarter.lib.manifest.record_locator.console_url`), and its `icon` a Keen icon (`sam_kind_icon()`).
 - `contract/llmclient-architecture.schema.json` is the tree's JSON Schema, which the backend generates
   (`make llmclient-architecture-contract`), and `src/contract.gen.ts` its TypeScript types
   (`npm run contract:types`). `src/contract.test.ts` fails if either is out of date, or if a test fixture

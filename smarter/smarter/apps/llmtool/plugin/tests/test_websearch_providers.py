@@ -13,6 +13,8 @@ in the documented format of each API.
 
 from unittest import mock
 
+from cache_results import lazy_cache
+
 from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import DomainPolicy
 from smarter.apps.llmtool.plugin.websearch_providers import (
     PROVIDERS,
@@ -26,7 +28,6 @@ from smarter.apps.llmtool.plugin.websearch_providers import (
     get_provider,
     post_filter,
 )
-from smarter.lib.cache import lazy_cache
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

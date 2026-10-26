@@ -61,7 +61,9 @@ rules, its limits and its upgrade steps, and that is what the post is made of.
 In this order:
 
 1. **Title:** `# vX.Y Release: <the release's theme in a few words>`, then a
-   date line.
+   date line. The H1 becomes the WordPress title, and the publishing script
+   leaves both out of the post's content, because the theme prints the title
+   and date (see `blog.smarter.sh-publish`).
 2. **Theme, in one or two short paragraphs.** Say how this release differs
    from the last one, e.g. "v0.15 was about describing an AI application.
    v0.16 is about running one."

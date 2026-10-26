@@ -25,6 +25,8 @@ import os
 from typing import Any, Optional
 from unittest import mock
 
+from cache_results import lazy_cache
+
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.tests.factories import secret_factory
@@ -64,7 +66,6 @@ from smarter.apps.llmtool.signals import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
-from smarter.lib.cache import lazy_cache
 from smarter.lib.typing import SmarterDictType
 
 from .base_classes import (

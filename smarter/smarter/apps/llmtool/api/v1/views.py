@@ -6,6 +6,7 @@ from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
+from cache_results import cache_results
 from django.core.exceptions import ValidationError
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseRedirect, JsonResponse
@@ -27,7 +28,6 @@ from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
