@@ -34,21 +34,7 @@ CELERY_BROKER_URL = os.getenv(
 CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
 CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("SMARTER_MYSQL_DATABASE"),
-        "USER": os.getenv("SMARTER_MYSQL_USER"),
-        "PASSWORD": os.getenv("SMARTER_MYSQL_PASSWORD"),
-        "HOST": os.getenv("SMARTER_MYSQL_HOST"),
-        "PORT": os.getenv("SMARTER_MYSQL_PORT", "3306"),  # default MySQL port
-        "OPTIONS": DATABASE_OPTIONS,
-    }
-}
-
+# Database: DATABASES is base.py's, from smarter_settings.mysql_*.
 
 STRIPE_LIVE_SECRET_KEY = (
     smarter_settings.stripe_live_secret_key.get_secret_value() if smarter_settings.stripe_live_secret_key else ""

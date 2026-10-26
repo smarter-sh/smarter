@@ -22,6 +22,7 @@ from datetime import datetime
 from http import HTTPStatus
 from typing import Literal, Optional
 
+from cache_results import cache_results
 from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
 from pydantic import BaseModel, ConfigDict
@@ -29,7 +30,6 @@ from pydantic import BaseModel, ConfigDict
 from smarter.apps.account.models import UserProfile, get_actuals, get_resolved_user
 from smarter.apps.account.models.budget import BudgetPeriod, add_periods, period_start
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
 logger = logging.getLogger(__name__)

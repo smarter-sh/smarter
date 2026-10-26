@@ -1781,7 +1781,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         others, such as Secrets. A resource that two others use is in the tree twice, once under each.
         A resource that is already one of its own ancestors is a leaf, so that a cycle ends.
 
-        Each node has the kind's icon, from :meth:`smarter.apps.api.v1.manifests.enum.SAMKinds.icon`, the
+        Each node has the kind's icon, from :func:`smarter.apps.api.v1.manifests.enum.sam_kind_icon`, the
         resource's owner, its record locator, and the path of its manifest page in the web console, derived
         from the record locator by :func:`smarter.lib.manifest.record_locator.console_url`, so that a web
         console page can draw the tree with a card for each resource. A resource that the authenticated user may not read has only
@@ -1827,10 +1827,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.brokers import Brokers
-        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.api.v1.manifests.enum import sam_kind_icon
 
         record_locator: Optional[str] = getattr(instance, "record_locator", None)
-        icon = SAMKinds.icon(kind)
+        icon = sam_kind_icon(kind)
         if not self.dependency_tree_readable(instance):
             return SAMDependencyTreeNode(kind=kind, icon=icon, recordLocator=record_locator, readable=False)
         children: List[SAMDependencyTreeNode] = []

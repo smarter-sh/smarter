@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Optional
 
+from cache_results import cache_results
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -22,7 +23,6 @@ from smarter.apps.account.models import (
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import to_snake_case
-from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 
 logger = getLogger(__name__)

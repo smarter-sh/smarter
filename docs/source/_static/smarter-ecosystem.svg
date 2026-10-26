@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 668" width="1000" height="668" role="img" aria-labelledby="t d">
+<title id="t">The Smarter ecosystem</title>
+<desc id="d">The Smarter platform at the center, with the open-source packages around it and the registry each is published to: the smarter CLI and VS Code extension, the Python, Go and Node.js SDKs, the shared Python libraries smarter-types and cache-results, the npm chat and widget components, the website integrations, Smarter Extensions, and the platform's Docker image and Helm chart.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker></defs>
+<rect width="1000" height="668" rx="14" fill="#F6F8FA"/>
+<rect x="360" y="224" width="280" height="230" rx="12" fill="#2980B9"/>
+<text x="500.0" y="260" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Smarter Platform</text>
+<text x="500.0" y="284" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#DCEBF7" text-anchor="middle">SAM manifests · REST API · OpenAPI</text>
+<rect x="378" y="304" width="244" height="128" rx="8" fill="#FFFFFF" fill-opacity="0.97"/>
+<text x="394" y="328" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F5F8B" text-anchor="start">Deploy it</text>
+<text x="394" y="352" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F2328" text-anchor="start">Docker image</text>
+<rect x="394" y="360" width="77" height="18" rx="9" fill="#1557C9"/>
+<text x="432.5" y="373" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Docker Hub</text>
+<text x="394" y="400" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F2328" text-anchor="start">Helm chart</text>
+<rect x="394" y="408" width="90" height="18" rx="9" fill="#2F6280"/>
+<text x="439.0" y="421" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Artifact Hub</text>
+<rect x="40" y="494" width="440" height="150" rx="10" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<rect x="40" y="494" width="440" height="34" rx="10" fill="#EAF2F9"/>
+<rect x="40" y="518" width="440" height="10" fill="#EAF2F9"/>
+<line x1="40" y1="528" x2="480" y2="528" stroke="#C9D1D9" stroke-width="1"/>
+<text x="56" y="516" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Shared Python libraries</text>
+<text x="56" y="552" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">smarter-types</text>
+<rect x="56" y="560" width="39" height="18" rx="9" fill="#2F6A9A"/>
+<text x="75.5" y="573" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">PyPI</text>
+<text x="56" y="610" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">cache-results</text>
+<rect x="56" y="618" width="39" height="18" rx="9" fill="#2F6A9A"/>
+<text x="75.5" y="631" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">PyPI</text>
+<rect x="520" y="494" width="440" height="150" rx="10" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<rect x="520" y="494" width="440" height="34" rx="10" fill="#EAF2F9"/>
+<rect x="520" y="518" width="440" height="10" fill="#EAF2F9"/>
+<line x1="520" y1="528" x2="960" y2="528" stroke="#C9D1D9" stroke-width="1"/>
+<text x="536" y="516" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Smarter Extensions</text>
+<text x="536" y="552" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">extensions-registry</text>
+<text x="701.8" y="552" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">the signed index</text>
+<rect x="536" y="560" width="52" height="18" rx="9" fill="#24292F"/>
+<text x="562.0" y="573" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">GitHub</text>
+<text x="536" y="610" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">smarter-extension-*</text>
+<text x="701.8" y="610" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">weather · calculator · dates</text>
+<rect x="536" y="618" width="52" height="18" rx="9" fill="#24292F"/>
+<text x="562.0" y="631" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">GitHub</text>
+<rect x="40" y="224" width="280" height="230" rx="10" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<rect x="40" y="224" width="280" height="34" rx="10" fill="#EAF2F9"/>
+<rect x="40" y="248" width="280" height="10" fill="#EAF2F9"/>
+<line x1="40" y1="258" x2="320" y2="258" stroke="#C9D1D9" stroke-width="1"/>
+<text x="56" y="246" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Command line and editor</text>
+<text x="56" y="282" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">smarter</text>
+<text x="123.39999999999999" y="282" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">the CLI</text>
+<rect x="56" y="290" width="64" height="18" rx="9" fill="#8A6100"/>
+<text x="88.0" y="303" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Homebrew</text>
+<rect x="126" y="290" width="77" height="18" rx="9" fill="#B5400F"/>
+<text x="164.5" y="303" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Ubuntu APT</text>
+<rect x="209" y="290" width="77" height="18" rx="9" fill="#5E4130"/>
+<text x="247.5" y="303" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Chocolatey</text>
+<rect x="56" y="314" width="77" height="18" rx="9" fill="#1557C9"/>
+<text x="94.5" y="327" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Docker Hub</text>
+<text x="56" y="364" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">smarter-manifest</text>
+<rect x="56" y="372" width="134" height="18" rx="9" fill="#5C2D91"/>
+<text x="123.0" y="385" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">VS Code Marketplace</text>
+<rect x="680" y="224" width="280" height="230" rx="10" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<rect x="680" y="224" width="280" height="34" rx="10" fill="#EAF2F9"/>
+<rect x="680" y="248" width="280" height="10" fill="#EAF2F9"/>
+<line x1="680" y1="258" x2="960" y2="258" stroke="#C9D1D9" stroke-width="1"/>
+<text x="696" y="246" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">SDKs</text>
+<text x="696" y="282" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">smarter-api</text>
+<text x="796.2" y="282" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">Python</text>
+<rect x="696" y="290" width="39" height="18" rx="9" fill="#2F6A9A"/>
+<text x="715.5" y="303" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">PyPI</text>
+<text x="696" y="340" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">smarter-golang</text>
+<text x="820.8" y="340" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">Go</text>
+<rect x="696" y="348" width="77" height="18" rx="9" fill="#00687D"/>
+<text x="734.5" y="361" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Go modules</text>
+<text x="696" y="398" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">@smarter.sh/api</text>
+<text x="829.0" y="398" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">Node.js</text>
+<rect x="696" y="406" width="52" height="18" rx="9" fill="#24292F"/>
+<text x="722.0" y="419" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">GitHub</text>
+<rect x="40" y="24" width="440" height="160" rx="10" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<rect x="40" y="24" width="440" height="34" rx="10" fill="#EAF2F9"/>
+<rect x="40" y="48" width="440" height="10" fill="#EAF2F9"/>
+<line x1="40" y1="58" x2="480" y2="58" stroke="#C9D1D9" stroke-width="1"/>
+<text x="56" y="46" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Chat and web components</text>
+<text x="56" y="82" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">@smarter.sh/ui-chat</text>
+<text x="221.79999999999998" y="82" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">React component, embed script</text>
+<rect x="56" y="90" width="33" height="18" rx="9" fill="#B8312F"/>
+<text x="72.5" y="103" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">npm</text>
+<text x="56" y="140" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="bold" fill="#1F2328" text-anchor="start">@smarter.sh/ui-widgets</text>
+<rect x="56" y="148" width="33" height="18" rx="9" fill="#B8312F"/>
+<text x="72.5" y="161" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">npm</text>
+<rect x="520" y="24" width="440" height="160" rx="10" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<rect x="520" y="24" width="440" height="34" rx="10" fill="#EAF2F9"/>
+<rect x="520" y="48" width="440" height="10" fill="#EAF2F9"/>
+<line x1="520" y1="58" x2="960" y2="58" stroke="#C9D1D9" stroke-width="1"/>
+<text x="536" y="46" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Website integrations</text>
+<text x="536" y="82" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="bold" fill="#1F2328" text-anchor="start">WordPress · Drupal · Shopify</text>
+<text x="536" y="112" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="bold" fill="#1F2328" text-anchor="start">Google Tag Manager</text>
+<text x="536" y="142" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="bold" fill="#1F2328" text-anchor="start">Docusaurus · MkDocs · Sphinx</text>
+<text x="536" y="172" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">built on the ui-chat embed script</text>
+<line x1="260" y1="184" x2="440" y2="222" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<line x1="740" y1="184" x2="560" y2="222" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<line x1="320" y1="339" x2="358" y2="339" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<line x1="680" y1="339" x2="642" y2="339" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<line x1="260" y1="494" x2="440" y2="456" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<line x1="740" y1="494" x2="560" y2="456" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<line x1="520" y1="104" x2="482" y2="104" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#head)"/>
+</svg>

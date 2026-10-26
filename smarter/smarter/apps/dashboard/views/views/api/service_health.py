@@ -26,13 +26,13 @@ from http import HTTPStatus
 from typing import Callable
 from uuid import uuid4
 
+from cache_results import cache_results, lazy_cache
 from django.db import connection
 from django.http import JsonResponse
 from django.http.request import HttpRequest
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results, lazy_cache
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )

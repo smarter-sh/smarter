@@ -1,0 +1,93 @@
+ADR-033: Don't Repeat Yourself
+==============================
+
+Status
+------
+Accepted
+
+Context
+-------
+Smarter has dozens of resource kinds, and each one needs much the same parts: a model with an owner, a
+manifest, a broker, an api, a web console list page, url names, tests and docs. Code like that invites
+copy and paste. A copy works the day it is made, and then drifts: a bug is fixed in one copy and not
+the others, or a rule (a permission check, a log prefix, a cache key) changes in one place and stays
+old everywhere else.
+
+Most of the codebase already avoids this with shared base classes and helpers, for example:
+
+- :class:`smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker` for every kind's broker
+  (:doc:`ADR-024 <024-broker-model>`);
+- ``MetaDataWithOwnershipModel`` in ``smarter.apps.account.models`` for every resource that has an
+  owner;
+- ``SmarterTestBase`` and ``ResourceViewsTestMixin`` in ``smarter.lib.unittest`` for test setup
+  (:doc:`ADR-013 <013-testing>`);
+- the ``Smarter...Type`` aliases in ``smarter.lib.typing`` for repeated annotations
+  (:doc:`ADR-027 <027-annotations>`);
+- ``@cache_results`` for caching (:doc:`ADR-018 <018-caching>`), and the ``<App>ReverseNames`` classes
+  for url names (:doc:`ADR-032 <032-url-names>`);
+- the ``smarter-common`` package for what the web console's React apps share.
+
+This ADR states the rule that those decisions have in common.
+
+Decision
+--------
+Every piece of knowledge in Smarter has one authoritative home. Code, tests and docs refer to it
+instead of restating it.
+
+1. **Extend what exists before writing something new.** Before adding a helper, base class, constant
+   or React hook, search for one that does the job, and extend it if it almost does.
+2. **The third copy is the signal.** Two similar blocks of code may stay as they are. When a third one
+   appears, move the shared part into a function, base class or mixin, and change all three to use it.
+3. **Shared code lives with its scope.** Code that several Django apps use goes in ``smarter/lib``
+   (framework) or the app that owns the concept (for example ``account`` for ownership). Code that
+   several React apps use goes in ``smarter-common``. An app never imports another app's private
+   helpers to avoid writing its own.
+4. **Generate, don't transcribe.** A value that can be derived from another (a url name from its view,
+   a JSON Schema or TypeScript type from a Pydantic model, a choice list from an enum) is derived in
+   code, and a test fails when a committed copy is out of date (:doc:`ADR-031 <031-pydantic-over-json>`).
+5. **Constants and configuration are defined once.** A string or number with a meaning (a namespace,
+   a limit, a setting's name) is a named constant or a setting, not a literal repeated in several
+   modules (:doc:`ADR-007 <007-settings>`).
+6. **Docs link instead of repeating.** A page that needs a fact explained elsewhere links to it with
+   ``:doc:`` or ``:ref:``. Technical reference comes from docstrings through autodoc
+   (:doc:`ADR-029 <029-docstrings>`), not from prose that copies them.
+7. **Don't merge things that only look alike.** Duplication is a problem when two copies must change
+   together. Two pieces of code that happen to look the same today, but answer to different rules,
+   stay separate. A shared helper full of flags for each caller is worse than the copies it replaced.
+8. **Tests may repeat themselves for clarity.** Shared setup belongs in base classes and fixtures, but
+   each test's own inputs and assertions stay visible in the test, even when its neighbours look much
+   the same.
+
+Alternatives Considered
+-----------------------
+- **No rule; reviewers judge each case.** This is how the copies that the shared classes later
+  replaced came about. A rule gives contributors and coding agents the same answer.
+- **Remove every duplicate as soon as it appears.** Abstracting from two examples guesses at the
+  shape of the third, and often guesses wrong. The rule of three waits for evidence.
+
+Consequences
+------------
+- **Positive:**
+
+  - A fix or a change of rule is made once, and reaches every caller.
+  - New resource kinds are mostly configuration of existing base classes, so they are quick to add
+    and behave like the others.
+  - Less code to read, test and keep covered.
+
+- **Negative:**
+
+  - Shared code has many callers, so changing it needs more care, and its tests must cover each kind
+    of caller.
+  - Indirection: understanding a resource means reading its base classes too.
+  - Judging rules 2 and 7 takes experience, and contributors will sometimes disagree.
+  - Older modules that predate a shared helper remain until someone changes them for another reason.
+
+Related ADRs
+------------
+- :doc:`ADR-013: Testing <013-testing>`
+- :doc:`ADR-018: Caching <018-caching>`
+- :doc:`ADR-024: Broker Model <024-broker-model>`
+- :doc:`ADR-027: Annotations <027-annotations>`
+- :doc:`ADR-028: Code Quality <028-code-quality>`
+- :doc:`ADR-031: Pydantic Models Over Raw JSON <031-pydantic-over-json>`
+- :doc:`ADR-032: Url Names Derived From View Classes <032-url-names>`

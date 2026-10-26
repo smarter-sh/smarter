@@ -695,15 +695,16 @@ CACHE_RESULTS = {
     "KEY_ENCODER": "smarter.lib.cache.hooks.SmarterCacheKeyEncoder",
     "LOGGING_ENABLED": "smarter.lib.cache.hooks.logging_enabled",
     "VERBOSE_LOGGING": "smarter.lib.cache.hooks.verbose_logging",
-    "LOG_PREFIX": "smarter.lib.cache.hooks.log_prefix",
+    "LOG_PREFIX": "cache_results.colors.log_prefix",
 }
 """
 The configuration of the ``@cache_results`` decorator.
 
-Its default timeout is ``smarter_settings.cache_expiration``, and the hooks in
-``smarter.lib.cache.hooks`` connect it to the ``CACHE_LOGGING`` waffle switch,
-Smarter's colored log prefixes, and Pydantic cache key arguments. Every entry
-is described in :mod:`smarter.lib.cache.conf`.
+Its default timeout is ``smarter_settings.cache_expiration``, the hooks in
+``smarter.lib.cache.hooks`` connect it to the ``CACHE_LOGGING`` waffle switch
+and Pydantic cache key arguments, and log messages are colored by the package's
+``cache_results.colors.log_prefix``. Every entry
+is described in :mod:`cache_results.conf`, the settings of the cache-results package.
 """
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -992,11 +993,11 @@ if smarter_settings.database_read_timeout:
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "smarter",
-        "USER": "smarter",
-        "PASSWORD": "smarter",
-        "HOST": "smarter-mariadb",  # Or an IP Address that your DB is hosted on
-        "PORT": "3306",
+        "NAME": smarter_settings.mysql_database,
+        "USER": smarter_settings.mysql_user,
+        "PASSWORD": smarter_settings.mysql_password.get_secret_value() if smarter_settings.mysql_password else "",
+        "HOST": smarter_settings.mysql_host,
+        "PORT": str(smarter_settings.mysql_port),
         "OPTIONS": DATABASE_OPTIONS,
     }
 }
@@ -1006,8 +1007,9 @@ The Django database configuration for Smarter, using MariaDB as the database bac
 Smarter **should** be able to support other common Sql databases supported by Django
 with minimal or no changes, but MariaDB is the recommended and tested database backend.
 
-This setting is environment specific and will typically be overridden in
-smarter/smarter/settings/base_aws.py or other environment-specific settings files.
+Every value comes from smarter_settings: ``SMARTER_MYSQL_HOST``, ``SMARTER_MYSQL_PORT``,
+``SMARTER_MYSQL_DATABASE``, ``SMARTER_MYSQL_USER`` and ``SMARTER_MYSQL_PASSWORD``. Their defaults are
+docker-compose.yml's smarter-mariadb service. Outside the local environment the password has no default.
 
 These credentials are created for you by the Smarter Terraform scripts when deploying
 the Smarter platform.

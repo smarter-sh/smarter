@@ -1,5 +1,5 @@
 """Smarter API Prompt Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.PROMPT.value
+MANIFEST_KIND = SAMKinds.PROMPT.value

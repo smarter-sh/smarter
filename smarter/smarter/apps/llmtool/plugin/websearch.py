@@ -265,13 +265,18 @@ class WebsearchPlugin(PluginBase):
 
     def resolve_api_key_secret(self, name: str) -> Secret:
         """
-        Return the Secret, which the plugin's user may read, that contains the web search API key.
+        Return the Secret, which the plugin's user may use, that contains the web search API key.
+
+        The plugin's user may use a Secret of their account, or of the platform account, e.g. its
+        tavily_api_key, which every account's copy of the example WebsearchPlugins shares. Smarter
+        fixes the web search API that receives the key, and never returns its value to the user.
+        See :meth:`smarter.apps.secret.models.SecretQuerySet.with_use_permission_for`.
 
         :param name: The name of the Secret.
-        :raises SmarterWebsearchPluginError: If there is no such Secret that the user may read.
+        :raises SmarterWebsearchPluginError: If there is no such Secret that the user may use.
         """
         user = self.user or (self.user_profile.user if self.user_profile else None)
-        secret = Secret.objects.filter(name=name).with_read_permission_for(user).first() if user else None  # type: ignore[attr-defined]
+        secret = Secret.objects.filter(name=name).with_use_permission_for(user).first() if user else None  # type: ignore[attr-defined]
         if not isinstance(secret, Secret):
             raise SmarterWebsearchPluginError(
                 f"{self.formatted_class_name}: the web search api key Secret {name} does not exist, or is not accessible."

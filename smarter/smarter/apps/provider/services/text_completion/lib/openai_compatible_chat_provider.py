@@ -1232,6 +1232,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :param prompt: The prompt session instance associated with this request.
         :type prompt: Prompt
         :param data: The request payload, typically containing a session key and a list of message dictionaries.
+            Only the latest user message is used: the conversation's history is the session's stored
+            history, or for a new session, the LLMClient's system role and introduction. See
+            :meth:`get_message_thread`.
         :type data: Union[SmarterDictType, list]
 
             Example::
@@ -1337,10 +1340,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             if self.messages:
                 self.append_message(role=OpenAIMessageKeys.USER_MESSAGE_KEY, content=self.input_text)
             else:
-                # new thread with no history, so we initialize with everything
-                # that was passed in by the React front-end. There customarily
-                # is 1 or more system messages, 1 or more assistant messages,
-                # and a user_profile message.
+                # new thread with no history, so we initialize it with the
+                # llmclient's system role and introduction, and the client's
+                # latest user message. A system message, or earlier turns, that
+                # the client sent are dropped: the guardrails scan only the
+                # latest user message. See get_message_thread().
                 self.messages = self.get_message_thread(data=self.data)
 
             # run the llmclient's input guardrails on the user's message. A block raises

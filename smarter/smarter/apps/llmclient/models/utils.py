@@ -2,6 +2,7 @@
 
 from typing import Callable, NamedTuple, Optional
 
+from cache_results import cache_results
 from django.http import HttpRequest
 
 from smarter.common.conf import smarter_settings
@@ -9,7 +10,6 @@ from smarter.common.helpers.console_helpers import (
     formatted_text,
 )
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
 from .llmclient import LLMClient

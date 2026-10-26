@@ -32,12 +32,13 @@ Example
 from decimal import Decimal
 from typing import Optional
 
+from cache_results import cache_results
+
 # django stuff
 from django.db import models
 
 # our stuff
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

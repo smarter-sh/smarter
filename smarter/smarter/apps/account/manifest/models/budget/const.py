@@ -1,8 +1,8 @@
 """Smarter API Budget Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.BUDGET.value
+MANIFEST_KIND = SAMKinds.BUDGET.value
 
 DEFAULT_WARNING_THRESHOLD = 80
 """Default percentage of a limit at which the budget_warning signal is sent."""

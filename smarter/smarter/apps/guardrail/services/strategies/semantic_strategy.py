@@ -10,6 +10,8 @@ so that each prompt embeds only the segment.
 
 import math
 
+from cache_results import cache_results
+
 from smarter.apps.guardrail.manifest.models.guardrail.const import (
     DEFAULT_EMBEDDING_MODEL,
 )
@@ -17,7 +19,6 @@ from smarter.apps.guardrail.services.exceptions import (
     GuardrailConfigError,
     GuardrailProviderError,
 )
-from smarter.lib.cache import cache_results
 
 from .base import BaseGuardrailStrategy, StrategyContext, StrategyMatch
 from .clients import get_client

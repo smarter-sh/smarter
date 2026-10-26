@@ -7,9 +7,9 @@ Smarter API ImageSearchPlugin Manifest Constants.
     Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental.
 """
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.IMAGE_SEARCH_PLUGIN.value
+MANIFEST_KIND = SAMKinds.IMAGE_SEARCH_PLUGIN.value
 
 DEFAULT_API_KEY_SECRET_NAME = "brave_search_api_key"
 """The default name of the Smarter Secret that contains the Brave Search API key.

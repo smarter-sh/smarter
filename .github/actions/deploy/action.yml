@@ -402,6 +402,9 @@ runs:
           S3_BUCKET="${{ inputs.environment }}.${{ inputs.platform-subdomain }}.${{ inputs.root-domain }}"
         fi
         echo "SMARTER_S3_BUCKET=${S3_BUCKET}" >> $GITHUB_ENV
+        # database backups go to a private bucket, never to the public-read environment
+        # bucket above. smarter-infrastructure creates it (s3_backup_bucket_name).
+        echo "SMARTER_MYSQL_BACKUP_S3_URI=s3://backups.${S3_BUCKET}/backups/sql" >> $GITHUB_ENV
 
     - name: Delete failed jobs
       id: delete-failed-jobs
@@ -558,6 +561,7 @@ runs:
           --set mariadb.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
           --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
           --set global.image.pullPolicy="IfNotPresent" \
+          --set databaseScheduledBackup.s3Uri="${{ env.SMARTER_MYSQL_BACKUP_S3_URI }}" \
           --values /tmp/values.yaml
 
     # Clean up secrets file

@@ -25,6 +25,7 @@ SMARTER_CHAT_DIR := smarter/react/packages/smarter.sh-chat
 
 
 .PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+	terraform-init terraform-plan terraform-apply \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
@@ -482,6 +483,20 @@ sphinx-publish:
 	aws s3 sync . s3://docs.smarter.sh/ --delete --acl public-read && \
 	aws cloudfront create-invalidation --distribution-id E3J3PFZATCQOFX --paths "/*"
 
+# docs.smarter.sh's AWS resources (terraform/docs). Terraform runs as the caller's AWS
+# profile; the account id is only needed for the state bucket's name, never written here.
+TF := terraform -chdir=terraform/docs
+
+terraform-init:
+	$(TF) init -backend-config="bucket=$$(aws sts get-caller-identity --query Account --output text)-terraform-tfstate-smarter"
+
+terraform-plan:
+	$(TF) plan -out=tfplan
+
+terraform-apply:
+	$(TF) apply tfplan
+	rm -f terraform/docs/tfplan
+
 ######################
 # HELP
 ######################
@@ -540,4 +555,7 @@ help:
 	@echo 'sphinx-docs            - Build Sphinx documentation'
 	@echo 'sphinx-linkcheck       - Check documentation links'
 	@echo 'sphinx-publish         - Publish documentation to AWS S3 and invalidate CloudFront cache'
+	@echo 'terraform-init         - Initialize the docs.smarter.sh stack (terraform/docs) and its state'
+	@echo 'terraform-plan         - Plan changes to docs.smarter.sh AWS resources, into terraform/docs/tfplan'
+	@echo 'terraform-apply        - Apply terraform/docs/tfplan'
 	@echo '===================================================================='

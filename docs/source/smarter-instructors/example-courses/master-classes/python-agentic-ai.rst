@@ -61,7 +61,7 @@ lab, in six themes:
 - `CLAUDE.md <https://github.com/smarter-sh/smarter/blob/main/CLAUDE.md>`__ and the 24 Agent
   Skills in `skills/ <https://github.com/smarter-sh/smarter/tree/main/skills>`__, most of them
   written by the agent after the work, with the traps it hit.
-- `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__,
+- `cache_results/decorators.py <https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__,
   the canonical helper at the center of the course's case study, and
   `lib/manifest/broker/abstract_broker_class.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__,
   the pattern every resource kind copies.
