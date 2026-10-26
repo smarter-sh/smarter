@@ -42,7 +42,7 @@ env:
   CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CELERY_RESULT_BACKEND: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DEBUG_MODE: "false"
-  DJANGO_SETTINGS_MODULE: "smarter.settings.production"
+  DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
   DOCKERHUB_PAT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DOCKERHUB_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DUMP_DEFAULTS: "False"

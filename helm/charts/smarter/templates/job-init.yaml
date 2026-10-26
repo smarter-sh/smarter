@@ -66,21 +66,28 @@ spec:
                   echo "--- $*"
                   "$@" || { echo "FAILED: $*"; status=1; }
                 }
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER DATABASE {{ .Values.env.SMARTER_MYSQL_DATABASE }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';" || status=1
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER USER '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.SMARTER_MYSQL_PASSWORD }}';" || status=1
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ .Values.env.SMARTER_MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;" || status=1
-                {{- $backupUsername := .Values.env.SMARTER_MYSQL_BACKUP_USERNAME | default "smarter_backup" }}
+                # The credentials come from the environment, i.e. the Secret in secret-env.yaml, never from
+                # this template, so they aren't written into the Job's spec. The root password is passed
+                # in MYSQL_PWD, where the mariadb client reads it, which keeps it off the command line.
+                db() {
+                  MYSQL_PWD="$SMARTER_MYSQL_ROOT_PASSWORD" mariadb --default-character-set=utf8mb4 \
+                    -u "$SMARTER_MYSQL_ROOT_USERNAME" --host "$SMARTER_MYSQL_HOST" --port "${SMARTER_MYSQL_PORT:-3306}" -e "$1"
+                }
+                db "CREATE DATABASE IF NOT EXISTS $SMARTER_MYSQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
+                db "ALTER DATABASE $SMARTER_MYSQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
+                db "CREATE USER IF NOT EXISTS '$SMARTER_MYSQL_USER'@'%' IDENTIFIED BY '$SMARTER_MYSQL_PASSWORD';" || status=1
+                db "ALTER USER '$SMARTER_MYSQL_USER'@'%' IDENTIFIED BY '$SMARTER_MYSQL_PASSWORD';" || status=1
+                db "GRANT ALL PRIVILEGES ON $SMARTER_MYSQL_DATABASE.* TO '$SMARTER_MYSQL_USER'@'%'; FLUSH PRIVILEGES;" || status=1
                 {{- $backupPassword := .Values.env.SMARTER_MYSQL_BACKUP_PASSWORD | default "" }}
                 {{- if and $backupPassword (not (hasPrefix "SET-ME" $backupPassword)) }}
                 # the read-only account that the nightly backup, job-mysql-backup.yaml, dumps the database with.
                 # SHOW CREATE ROUTINE exists in MariaDB 11.3 and later. On an older server, the grant without it
                 # still dumps every table, view, trigger and event.
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ $backupUsername }}'@'%' IDENTIFIED BY '{{ $backupPassword }}';" || status=1
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "ALTER USER '{{ $backupUsername }}'@'%' IDENTIFIED BY '{{ $backupPassword }}';" || status=1
-                mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT, SHOW CREATE ROUTINE ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ $backupUsername }}'@'%';" \
-                  || { echo "This server has no SHOW CREATE ROUTINE privilege. Granting {{ $backupUsername }} the rest."; mariadb --default-character-set=utf8mb4 -u "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.SMARTER_MYSQL_HOST }}" --port {{ .Values.env.SMARTER_MYSQL_PORT }} -e "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT ON {{ .Values.env.SMARTER_MYSQL_DATABASE }}.* TO '{{ $backupUsername }}'@'%';"; } \
+                backup_user="${SMARTER_MYSQL_BACKUP_USERNAME:-smarter_backup}"
+                db "CREATE USER IF NOT EXISTS '$backup_user'@'%' IDENTIFIED BY '$SMARTER_MYSQL_BACKUP_PASSWORD';" || status=1
+                db "ALTER USER '$backup_user'@'%' IDENTIFIED BY '$SMARTER_MYSQL_BACKUP_PASSWORD';" || status=1
+                db "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT, SHOW CREATE ROUTINE ON $SMARTER_MYSQL_DATABASE.* TO '$backup_user'@'%';" \
+                  || { echo "This server has no SHOW CREATE ROUTINE privilege. Granting $backup_user the rest."; db "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT ON $SMARTER_MYSQL_DATABASE.* TO '$backup_user'@'%';"; } \
                   || status=1
                 {{- end }}
                 run python manage.py migrate
@@ -98,11 +105,11 @@ spec:
           command:
             - /bin/sh
             - -c
+          # the platform's environment, from the Secret in secret-env.yaml
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.global.appName }}-env"
           env:
-            {{- range $key, $value := .Values.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
             {{- range $env := .Values.app.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
