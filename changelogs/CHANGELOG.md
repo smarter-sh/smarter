@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.21-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.21-alpha.1...v0.36.21-alpha.2) (2026-10-26)
+
+### Bug Fixes
+
+* **helm:** run the bastion pod as non-root with only the env it needs ([3fbe35d](https://github.com/smarter-sh/smarter/commit/3fbe35d133c011a1a5a596d1106115c0e681b8da))
+
 ## [0.36.21-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.20...v0.36.21-alpha.1) (2026-10-26)
 
 ### Bug Fixes
