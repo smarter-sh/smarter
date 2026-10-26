@@ -11,6 +11,8 @@ Unit tests for :py:mod:`smarter.apps.llmtool.plugin.websearch_fetch`, which read
 
 from unittest import mock
 
+from cache_results import lazy_cache
+
 from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import DomainPolicy
 from smarter.apps.llmtool.plugin.websearch_fetch import (
     TRUNCATION_MARKER,
@@ -22,7 +24,6 @@ from smarter.apps.llmtool.plugin.websearch_fetch import (
     robots_permit,
     truncate,
 )
-from smarter.lib.cache import lazy_cache
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import SAFE_HTTP_DNS_PATCH, FakeWebHost, mock_web_host

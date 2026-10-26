@@ -9,6 +9,9 @@ from unittest.mock import PropertyMock, patch
 from django.utils.crypto import get_random_string
 
 from smarter.apps.account.models import User, UserProfile
+from smarter.apps.account.models.metadata_with_ownership import (
+    SmarterQuerySetWithPermissions,
+)
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
@@ -29,13 +32,16 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         return secret
 
     def test_ownership(self):
-        """Test that a customer owns their secrets, and their account admin's are shared with them."""
+        """Test that a customer owns their secrets, and that the generic queryset shares their account admin's."""
         user = self.non_admin_user
         self.assertIn(self.mine, Secret.objects.owned_by(user))
         self.assertNotIn(self.shared, Secret.objects.owned_by(user))
-        self.assertIn(self.shared, Secret.objects.shared_with(user))
+        # the generic queryset shares the account admin's resources. Secret's own doesn't: see
+        # smarter.apps.secret.tests.test_secret_orm.TestSecretQuerySetPermissions.
+        self.assertIn(self.shared, SmarterQuerySetWithPermissions(Secret).shared_with(user))
+        self.assertNotIn(self.shared, Secret.objects.shared_with(user))
         self.assertIn(self.mine, Secret.objects.all().owned_by(user))
-        self.assertIn(self.shared, Secret.objects.all().shared_with(user))
+        self.assertNotIn(self.shared, Secret.objects.all().shared_with(user))
         self.assertIn(self.mine, Secret.objects.with_ownership_permission_for(user))
         self.assertNotIn(self.shared, Secret.objects.with_ownership_permission_for(user))
 

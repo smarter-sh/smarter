@@ -14,6 +14,7 @@ from smarter.apps.account.models.account import Account
 from smarter.apps.account.models.metadata_with_ownership import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
+    SmarterQuerySetWithPermissions,
 )
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.secret.signals import (
@@ -38,6 +39,74 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+class SecretQuerySet(SmarterQuerySetWithPermissions["Secret"]):
+    """
+    The permission-aware queryset of :class:`Secret`.
+
+    Other resources that the platform account owns, such as its Providers and example Plugins,
+    are shared built-ins that every account may read. A Secret holds a credential, so its read
+    permission is its ownership permission instead: a superuser reads every Secret, a staff user
+    the Secrets of their own account, and any other user only their own. No account but the
+    platform's reads the platform's Secrets, e.g. the provider api keys that
+    ``manage.py initialize_providers`` stores. Whatever a caller does with a Secret that it reads,
+    whether it clones it, describes it, or attaches it to a resource that sends it to a url of its
+    owner's choosing, it can't reach another account's credential.
+
+    Platform code that needs a platform Secret looks it up by its owner, e.g.
+    ``Secret.get_cached_object(name=..., user_profile=smarter_cached_objects.smarter_admin_user_profile)``,
+    rather than through a user's permissions.
+    """
+
+    def with_read_permission_for(self, user: User) -> "SecretQuerySet":
+        """
+        Returns the Secrets that ``user`` may read: the same Secrets that they may manage.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :returns: :class:`SecretQuerySet`
+            The Secrets that the user owns, or, for a staff user, that their account owns, or,
+            for a superuser, every Secret.
+
+        .. seealso::
+
+            :meth:`~smarter.apps.account.models.metadata_with_ownership.SmarterQuerySetWithPermissions.with_ownership_permission_for`
+        """
+        return self.with_ownership_permission_for(user)  # type: ignore[return-value]
+
+    def with_use_permission_for(self, user: User) -> "SecretQuerySet":
+        """
+        Returns the Secrets that a resource of ``user`` may use without revealing their value.
+
+        These are the Secrets of the user's accounts and of the platform account, which is the
+        read permission that the platform's other shared resources have. Use it only where Smarter
+        itself fixes the endpoint that receives the credential, e.g. the web search and image
+        search api keys of WebsearchPlugins and ImageSearchPlugins, which every account's copy of
+        the example plugins shares, and never to return a Secret's value to the user, to copy a
+        Secret, or to attach it to a resource whose url its owner chooses.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :returns: :class:`SecretQuerySet`
+            The Secrets that a resource of the user may use.
+        """
+        return super().with_read_permission_for(user)  # type: ignore[return-value]
+
+
+class SecretManager(MetaDataWithOwnershipModelManager["Secret"]):
+    """The manager of :class:`Secret`, which returns a :class:`SecretQuerySet`."""
+
+    def get_queryset(self) -> SecretQuerySet:
+        """Returns a :class:`SecretQuerySet` for the model."""
+        return SecretQuerySet(self.model, using=self._db)
+
+    def with_use_permission_for(self, user: User) -> SecretQuerySet:
+        """Returns the Secrets that a resource of ``user`` may use.
+
+        See :meth:`SecretQuerySet.with_use_permission_for`.
+        """
+        return self.get_queryset().with_use_permission_for(user)
 
 
 class Secret(MetaDataWithOwnershipModel):
@@ -73,7 +142,7 @@ class Secret(MetaDataWithOwnershipModel):
         verbose_name_plural = "Secrets"
         unique_together = ("user_profile", "name")
 
-    objects: MetaDataWithOwnershipModelManager["Secret"] = MetaDataWithOwnershipModelManager()
+    objects: SecretManager = SecretManager()
 
     last_accessed = models.DateTimeField(
         blank=True, editable=False, null=True, help_text="Timestamp of the last time the secret was accessed."
@@ -363,4 +432,4 @@ class Secret(MetaDataWithOwnershipModel):
         )
 
 
-__all__ = ["Secret"]
+__all__ = ["Secret", "SecretManager", "SecretQuerySet"]

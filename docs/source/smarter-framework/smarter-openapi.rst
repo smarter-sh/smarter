@@ -115,7 +115,7 @@ The Python SDK copies the contract from a checkout of the platform, at a commit 
 with datamodel-code-generator (``make sam-models``). Its tests parse every kind's committed example
 with its generated model, and check that every cli request that it sends is an operation of
 ``openapi.json``. No running platform is needed. See
-:doc:`Developing the SDK <smarter-python/development>`.
+`Contributing to the Python SDK <https://docs.smarter-python.smarter.sh/project/contributing.html>`__.
 
 The :doc:`Node.js SDK <smarter-nodejs>` and the :doc:`Go SDK <smarter-golang>` copy the same files
 the same way, and run the same tests. The Node.js SDK generates its TypeScript types from the SAM

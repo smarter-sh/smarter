@@ -42,6 +42,7 @@ import os
 import random
 from typing import TYPE_CHECKING, Optional, Union
 
+from cache_results import cache_results
 from django.contrib.auth.models import AbstractUser, AnonymousUser, User
 from django.core.validators import RegexValidator
 from django.db import models
@@ -51,7 +52,6 @@ from django.utils.functional import SimpleLazyObject
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.validators import SmarterValidator

@@ -1,5 +1,5 @@
-"""Smarter API User Manifest Constants"""
+"""Smarter API User Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.USER.value
+MANIFEST_KIND = SAMKinds.USER.value

@@ -32,7 +32,7 @@ Smarter / SAM Checklist
     - :class:`smarter.apps.account.mixins.AccountMixin`
     - :class:`smarter.apps.account.tests.mixins.TestAccountMixin`
     - :class:`smarter.common.mixins.SmarterHelperMixin`
-    - :func:`smarter.lib.cache.cache_results` decorator
+    - :func:`cache_results.decorators.cache_results` decorator
     - :class:`smarter.lib.django.request.SmarterRequestMixin`
     - :class:`smarter.lib.django.validators.SmarterValidator`
     - :class:`smarter.lib.drf.serializers.SmarterCamelCaseSerializer` and :class:`smarter.apps.account.serializers.MetaDataWithOwnershipModelSerializer`
@@ -41,7 +41,7 @@ Smarter / SAM Checklist
     - get_cached_object() and get_cached_objects() class methods on SAM ORM models
 2. Ensure that your unit test coverage ratio is at least 85% for any new code you add.
 3. Include SAM models and brokers for each relevant ORM model.
-4. Add new Smarter resource kinds to :class:`smarter.apps.api.v1.manifests.enum.SAMKinds`
+4. Add new Smarter resource kinds to :class:`~smarter_types.kinds.SAMKinds` in `smarter-types <https://docs.smarter-types.smarter.sh/>`__, which defines which kinds exist, then release it and raise its version here. :mod:`smarter.apps.api.v1.manifests.enum` re-exports it. See :doc:`../developer-reference/smarter-types`.
 5. Add waffle logging and feature switches as necessary to :class:`smarter.lib.django.waffle.SmarterWaffleSwitches`
 6. Ensure that your UI includes anchors as necessary in :file:`smarter/templates/dashboard/authenticated.html`
 7. Ensure that exceptions are properly handled and that you have inherited from :class:`smarter.common.exceptions.SmarterException`

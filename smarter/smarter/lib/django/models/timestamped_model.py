@@ -7,6 +7,7 @@ import re
 from functools import cached_property
 from typing import Any, Optional
 
+from cache_results import cache_results
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.query import QuerySet
@@ -18,7 +19,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType

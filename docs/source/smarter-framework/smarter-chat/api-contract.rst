@@ -449,6 +449,12 @@ Request body (:class:`~smarter.apps.prompt.contract.models.PromptChatApiPromptRe
 example an assistant message's ``tool_calls``. Smarter's own ``smarter`` and ``smarter_error``
 messages are never sent.
 
+The backend uses only the thread's latest ``user`` message. The rest of the conversation is the
+session's stored history, or, for a new session, the LLMClient's system role, welcome message and
+example prompts (:meth:`~smarter.apps.provider.services.text_completion.lib.chat_provider_base.SmarterChatProviderBase.get_message_thread`).
+A ``system`` message, or an earlier turn, that a client sends never reaches the LLM, so a client
+can't replace the LLMClient's system prompt, or add turns that the input Guardrails didn't scan.
+
 The view runs the prompt with the LLMClient's provider (``smarter_compatible_client``), which calls
 the LLM, its tools, plugins and MCP servers, and saves the new messages in the session's history.
 The provider adds the complete requests to and responses from the LLM to the completion, as

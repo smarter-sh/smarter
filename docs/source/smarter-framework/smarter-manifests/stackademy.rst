@@ -86,7 +86,7 @@ How a Platform Loads It
 
 ``manage.py load_from_github`` clones a GitHub repository of manifests and applies each of them, in
 the order of their kinds' dependencies, :meth:`SAMKinds.apply_order()
-<smarter.apps.api.v1.manifests.enum.SAMKinds.apply_order>`: Secrets first, then Connections,
+<smarter_types.kinds.SAMKinds.apply_order>`: Secrets first, then Connections,
 plugins, LLMClients, and Budgets last. It fills in manifest templates with the platform's own scheme and domain, and an
 LLMClient that is already deployed stays deployed.
 

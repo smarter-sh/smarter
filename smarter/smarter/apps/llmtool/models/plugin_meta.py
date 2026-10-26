@@ -3,6 +3,7 @@
 
 from typing import Optional
 
+from cache_results import cache_results
 from django.conf import settings
 from django.db import models
 from django.db.models import QuerySet
@@ -27,7 +28,6 @@ from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import rfc1034_compliant_str, to_snake_case
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -130,9 +130,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         Return the kind of the plugin based on its class.
 
         This property is used to determine how the plugin should be handled by the system.
-        It maps the plugin's class to a corresponding :class:`SAMKinds` enumeration value.
+        It maps the plugin's class to a corresponding :class:`~smarter_types.kinds.SAMKinds` enumeration value.
 
-        :return: The kind of the plugin as a :class:`SAMKinds` enum.
+        :return: The kind of the plugin as a :class:`~smarter_types.kinds.SAMKinds` enum.
         :rtype: SAMKinds
 
         **Example:**
@@ -402,7 +402,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         See also:
 
-        - :func:`smarter.lib.cache.cache_results`
+        - :func:`cache_results.decorators.cache_results`
         """
 
         try:

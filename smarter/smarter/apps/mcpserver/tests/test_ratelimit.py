@@ -3,6 +3,7 @@
 import json
 from unittest import mock
 
+from cache_results import lazy_cache
 from django.test import Client, RequestFactory
 from django.urls import reverse
 
@@ -16,7 +17,6 @@ from smarter.apps.mcpserver.ratelimit import (
     retry_after,
 )
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
-from smarter.lib.cache import lazy_cache
 
 from .base_classes import MCPServerTestBase
 

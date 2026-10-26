@@ -6,6 +6,7 @@ from http import HTTPStatus
 from typing import Optional
 
 from bs4 import BeautifulSoup
+from cache_results import lazy_cache
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
@@ -20,7 +21,6 @@ from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
