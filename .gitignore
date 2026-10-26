@@ -118,3 +118,9 @@ node_modules
 
 # compiled gettext catalogs, built from the committed .po files by compilemessages
 smarter/smarter/locale/**/*.mo
+
+# Terraform: local state, plans and providers. .terraform.lock.hcl is committed.
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
