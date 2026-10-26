@@ -17,12 +17,16 @@ bypass a hook (`--no-verify`, `SKIP=`, blanket `# noqa`) to make a change pass.
 | -------------------- | ----------------------------------- | ------------------------------------------------------------------------------ |
 | black                | `pyproject.toml`, line length 120   | Formatter. Let it reformat.                                                    |
 | isort                | `pyproject.toml`, `profile = black` | Import order.                                                                  |
-| autoflake            | `--remove-all-unused-imports`       | Deletes unused imports. Re-check that nothing you need was removed.            |
+| autoflake            | `--remove-all-unused-imports`       | **No-op**: `args` drops `--in-place`. Remove unused imports yourself.          |
 | flake8               | `.flake8`                           | Selects **only C101** (coding magic comment). It is not a general style check. |
 | bandit               | `-ll`                               | Medium or high severity security findings fail.                                |
 | pyupgrade            |                                     | Modern syntax for Python 3.14.                                                 |
 | pydocstringformatter |                                     | Normalizes docstring layout.                                                   |
 | codespell            | `codespell.txt` ignore list         | Also runs on docs and React. Add real project words to `codespell.txt`.        |
+
+autoflake's hook puts `--in-place` in its default `args`, which the `args`
+here replace, so it prints a diff, changes nothing and passes. flake8 (C101
+only) doesn't catch unused imports either.
 
 **ruff is not configured.** A repository-wide `ruff check` reports a large
 backlog (unused imports, E402) that is not the project's standard. Don't report
@@ -61,6 +65,13 @@ git ls-files --others --exclude-standard | xargs pre-commit run --files   # new 
   they changed.
 - `make pre-commit-run` runs every hook on every file. It is slower, and it
   touches files you didn't change.
+- **`--all-files` (and so `make pre-commit-run`) skips untracked files**: it
+  uses `git ls-files`. Check a new file with `--files`.
+- **The prettier hook can leave a `node_modules/.cache/` folder** in the
+  repository root. It is git-ignored. Don't pass it to the hooks.
+- `make pre-commit-init`, and so `make init`, runs `pre-commit autoupdate`,
+  which edits `.pre-commit-config.yaml`. That change is a commit of its own
+  (`build:`): don't fold it into an unrelated one.
 - For React alone: `make react-lint` (Prettier check, ESLint, `tsc`), as CI's
   `react` job does.
 

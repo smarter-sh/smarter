@@ -66,7 +66,9 @@ owner the result. ``status.verificationStatus`` is ``Not Verified``, ``Verifying
 1. its NS records are delegated to its Route53 hosted zone, i.e. your root domain's DNS settings
    include the NS records that ``describe`` reports, and
 2. its AWS Certificate Manager TLS certificate is issued. ACM validates the certificate with a DNS
-   record in the hosted zone, so it is issued once the domain is delegated.
+   record in the hosted zone, so it is issued once the domain is delegated. The certificate names
+   the domain itself, ``llmclients.example.com``, and no wildcard. It is the proof of delegation,
+   and is never served to browsers.
 
 While it is not verified, ``status.verificationMessage`` says which step is not complete, and why.
 https itself is served by each LLMClient that uses the domain, on its own subdomain,

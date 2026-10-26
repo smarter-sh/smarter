@@ -137,14 +137,26 @@ post are:
 
 In this order:
 
-1. **Title:** a claim or a story, not a topic, e.g. "Claude Code Shipped Our
-   Product Roadmap in 8 Days. Here's What Made It Work." Then a date line.
-2. **A TLDR jump link** for posts over about five minutes:
-   `(TLDR? [Click here](#tldr) to jump directly to ...)`. The anchor must be
-   set on the target heading in the blog editor, so tell the user which
-   heading it is.
-3. **The opening,** two to four paragraphs: the idea, the stakes and why now.
-   No warm-up sentences.
+1. **Title:** clear, not clever. It must name the technology the post is
+   about (OpenAPI, Docker, Kubernetes, Pydantic, Claude Code, ...), so a reader
+   scanning a list knows the subject at a glance, e.g. "Smarter's OpenAPI
+   Contract: One Extensibility Model for Python, Go, React and VS Code". A
+   title that names only Smarter's own concepts ("Smarter's Clients Don't Know
+   What a Broker Is") was rejected by the user as unclear. A claim or story is
+   fine after the technology's name, never instead of it. Then a date line. Both stay in
+   the Markdown only: the H1 becomes the WordPress title, and the publishing
+   script leaves both out of the post's content, because the theme prints the
+   title and date (see `blog.smarter.sh-publish`).
+2. **The first sentence names the technology** and says what the post is
+   about, e.g. "Smarter publishes its whole REST API as one OpenAPI 3.1
+   document". Don't open with a general problem, a metaphor or a scene and
+   name the subject paragraphs later: a reader who stops after one sentence
+   must know what the post covers. The user rejected an opening whose first
+   mention of OpenAPI was in its third paragraph.
+   **No TLDR jump link** (`(TLDR? [Click here](#tldr) ...)`) and no section
+   headed "TLDR". The user doesn't want them. Head the takeaways "Takeaways".
+3. **The rest of the opening,** one to three paragraphs: the problem, the
+   stakes and why now. No warm-up sentences.
 4. **The story, with a table early on** that summarizes it (releases, fixes,
    sizes, times). A reader who stops there should still have the gist.
 5. **Body sections** as `##`, with `###` and occasionally `####` beneath.
@@ -225,4 +237,7 @@ but describe what was exposed, not how to exploit an unpatched deployment.
   place. Never save it inside the repository or only in your scratchpad.
 - In your reply, list what to review before publishing: estimates and how
   they were made, anything said in the user's voice that they didn't tell you,
-  the TLDR anchor, the date, and the question of disclosure.
+  the date, and the question of disclosure.
+- The post needs a featured image. The project has an Envato account for
+  stock illustrations, so suggest a few search terms for the user to pick one
+  from. `blog.smarter.sh-publish` has the details.

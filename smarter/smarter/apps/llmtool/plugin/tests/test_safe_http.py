@@ -13,10 +13,10 @@ import socket
 from unittest import mock
 
 import requests
+from cache_results import lazy_cache
 
 from smarter.apps.llmtool.plugin import safe_http
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.cache import lazy_cache
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import (

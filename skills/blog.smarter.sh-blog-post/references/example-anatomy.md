@@ -21,9 +21,12 @@ multiplied."
 
 ## Section by section
 
+The published example opens with a TLDR jump link. Don't copy it: the user no
+longer wants TLDR links, and a post's first sentence must name its technology
+(see SKILL.md, section 3).
+
 | Section                                         | What it does                                                                                                                                                |
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TLDR link                                       | One line that jumps to the five success factors, for skimmers.                                                                                              |
 | Opening, four paragraphs                        | States the idea, sets out the two series, raises the stakes ("an involuntary career change on your part"), and closes with "This is the story about [...]". |
 | 8 days in October                               | The headline facts: 8 days, about 20 prompts, 1 to 4 hours each, six releases in a table that links each release post.                                      |
 | The codebase that Claude built                  | Sizes in a table (lines, apps, tests, coverage, docs pages, ADRs, hooks), so the reader knows this isn't a toy.                                             |

@@ -47,6 +47,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        checksum/env: "{{ include (print $.Template.BasePath "/secret-env.yaml") . | sha256sum }}"
       labels:
         app.kubernetes.io/name: "{{ .Values.global.appName }}"
         app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
@@ -76,11 +78,11 @@ spec:
           imagePullPolicy: '{{ .Values.global.image.pullPolicy | default "Always" }}'
           resources:
             {{- toYaml .Values.app.resources | nindent 12 }}
+          # the platform's environment, from the Secret in secret-env.yaml
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.global.appName }}-env"
           env:
-            {{- range $key, $value := .Values.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
             {{- range $env := .Values.app.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}

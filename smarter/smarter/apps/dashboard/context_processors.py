@@ -71,6 +71,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urljoin
 
+from cache_results import cache_results
 from django.conf import settings
 from django.templatetags.static import static
 
@@ -113,7 +114,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.utils import snake_case
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.urls import AuthTokenReverseNames
 from smarter.lib.typing import SmarterDictType

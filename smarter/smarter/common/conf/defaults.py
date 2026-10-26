@@ -238,6 +238,16 @@ class SettingsDefaults:
     # repository's scripts, e.g. to the Stackademy script that creates its course database and its users.
     MYSQL_ROOT_USERNAME: str = get_env("MYSQL_ROOT_USERNAME", "root")
     MYSQL_ROOT_PASSWORD: Optional[SecretStr] = optional_secret_env("MYSQL_ROOT_PASSWORD")
+
+    # the platform's own database, Django's DATABASES["default"]. The defaults are docker-compose.yml's
+    # smarter-mariadb service. Its password is a default only locally: elsewhere it must be set.
+    MYSQL_HOST: str = get_env("MYSQL_HOST", "smarter-mariadb")
+    MYSQL_PORT: int = get_env("MYSQL_PORT", 3306)
+    MYSQL_DATABASE: str = get_env("MYSQL_DATABASE", "smarter")
+    MYSQL_USER: str = get_env("MYSQL_USER", "smarter")
+    MYSQL_PASSWORD: Optional[SecretStr] = optional_secret_env("MYSQL_PASSWORD") or (
+        SecretStr("smarter") if ENVIRONMENT == SmarterEnvironments.LOCAL else None
+    )
     DATABASE_READ_TIMEOUT: int = int(get_env("DATABASE_READ_TIMEOUT", 0))  # 0: no timeout
 
     # the user and password that the Stackademy course database's script creates, scripts/smarter_test_db.sql

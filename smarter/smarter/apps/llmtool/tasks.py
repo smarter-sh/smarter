@@ -3,6 +3,8 @@
 
 from typing import Optional
 
+from cache_results import cache_results
+
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
@@ -14,7 +16,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 from smarter.workers.celery import app

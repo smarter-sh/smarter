@@ -38,6 +38,7 @@ from urllib.robotparser import RobotFileParser
 
 from bs4 import BeautifulSoup, Comment
 from bs4.element import NavigableString, Tag
+from cache_results import cache_results
 
 from smarter.apps.llmtool.const import PluginCacheTtl
 from smarter.apps.llmtool.manifest.models.websearch_plugin.const import (
@@ -50,7 +51,6 @@ from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import (
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from . import safe_http

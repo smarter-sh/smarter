@@ -1,5 +1,5 @@
 """Smarter API Plugin Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.STATIC_PLUGIN.value
+MANIFEST_KIND = SAMKinds.STATIC_PLUGIN.value

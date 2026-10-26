@@ -13,7 +13,7 @@ Pydantic `Settings
 Celery workers and a `beat schedule
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__, and
 caching with `@cache_results
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__. The
+<https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__. The
 ``guardrail`` app, the newest and cleanest, is the reference that the labs read and change. Students
 trace a request through it, add a field to a resource end to end, and write a management command,
 with tests. See :doc:`../course-formats` for the standard bootcamp day, the grading scale and the

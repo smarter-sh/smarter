@@ -1,5 +1,5 @@
 """
-smarter.common.utils.request
+Smarter.common.utils.request
 =============================
 
 Helpers for request authentication detection in Django and DRF.
@@ -19,7 +19,6 @@ and ASGIRequest types, and provides extensive logging for debugging and auditing
     request.user = SomeUserObject()
     authenticated = is_authenticated_request(request)
     print(authenticated)  # True or False depending on user.is_authenticated
-
 """
 
 import random
@@ -42,7 +41,9 @@ RequestType = Union["HttpRequest", "Request", "ASGIRequest"]
 
 def is_authenticated_request(request: Optional[RequestType]) -> bool:
     """
-    Determines whether the provided request is authenticated. Provides extensive logging for debugging purposes.
+    Determines whether the provided request is authenticated.
+
+    Provides extensive logging for debugging purposes.
 
     :param request: The request object to check. This can be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, or :class:`django.core.handlers.wsgi.ASGIRequest`. If ``None`` is provided, the function will return ``False``.
 
@@ -81,11 +82,10 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         print(authenticated)
     """
     # pylint: disable=import-outside-toplevel
+    from cache_results import cache_results
     from django.core.handlers.asgi import ASGIRequest
     from django.http import HttpRequest
     from rest_framework.request import Request
-
-    from smarter.lib.cache import cache_results
 
     if isinstance(request, (HttpRequest, Request, ASGIRequest)):
         path = request.path if hasattr(request, "path") else "unknown_path"

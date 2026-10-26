@@ -43,6 +43,8 @@ ownership and permission logic. Do not instantiate MetaDataWithOwnershipModel di
 from functools import cached_property
 from typing import Any, Optional, TypeVar, overload
 
+from cache_results import cache_results
+
 # django stuff
 from django.contrib.auth.models import User
 from django.db import models
@@ -53,7 +55,6 @@ from django.db.models.query import Prefetch
 from smarter.apps.account.models.budget import charge_authorization
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

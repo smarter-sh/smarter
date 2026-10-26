@@ -1,6 +1,9 @@
 # pylint: disable=wrong-import-position
 """Test RBAC methods from MetaDataWithOwnershipModelManager class."""
 
+from smarter.apps.account.models.metadata_with_ownership import (
+    SmarterQuerySetWithPermissions,
+)
 from smarter.apps.account.tests.factories import (
     factory_account_teardown,
     mortal_user_factory,
@@ -23,6 +26,10 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     2. Admin user (staff, belongs to Account 1)
     3. Non-admin user (does not have staff status, belongs to Account 1)
     4. Other non-admin user (does not have staff status, belongs to Account 2)
+
+    The read permission is tested on the generic queryset, with Secret's rows: Secret's own
+    queryset narrows it, because a Secret holds a credential. See
+    ``smarter.apps.secret.tests.test_secret_orm.TestSecretQuerySetPermissions``.
     """
 
     logger_prefix = f"{logging.formatted_text(__name__)}.TestMetaDataWithOwnershipModelManager()"
@@ -80,10 +87,14 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
             )
             super().tearDownClass()
 
+    def generic(self) -> SmarterQuerySetWithPermissions[Secret]:
+        """Return the generic permission queryset of every model with ownership, over Secret's rows."""
+        return SmarterQuerySetWithPermissions(Secret)
+
     def test_with_read_permission_for_smarter_admin_user(self):
         """Test that with_read_permission_for() returns the correct secrets for the smarter admin user."""
 
-        secrets = Secret.objects.with_read_permission_for(smarter_cached_objects.smarter_admin_user_profile.user)  # type: ignore
+        secrets = self.generic().with_read_permission_for(smarter_cached_objects.smarter_admin_user_profile.user)  # type: ignore
         # yes
         self.assertIn(
             self.secret_smarter_admin_user, secrets, "Smarter admin user should have access to their own secret."
@@ -125,7 +136,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     def test_with_read_permission_for_admin_user(self):
         """Test that with_read_permission_for() returns the correct secrets for the admin user."""
 
-        secrets = Secret.objects.with_read_permission_for(self.admin_user)
+        secrets = self.generic().with_read_permission_for(self.admin_user)
         # yes
         self.assertIn(self.secret_admin_user, secrets, "Admin user should have access to their own secret.")
         self.assertIn(self.secret_non_admin_user, secrets, "Admin user should have access to non-admin user's secret.")
@@ -163,7 +174,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     def test_with_read_permission_for_non_admin_user(self):
         """Test that with_read_permission_for() returns the correct secrets for the non-admin user."""
 
-        secrets = Secret.objects.with_read_permission_for(self.non_admin_user)
+        secrets = self.generic().with_read_permission_for(self.non_admin_user)
         # yes
         self.assertIn(self.secret_non_admin_user, secrets, "Non-admin user should have access to their own secret.")
         self.assertIn(self.secret_admin_user, secrets, "Non-admin user should have access to admin user's secret.")
@@ -205,7 +216,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     def test_with_read_permission_for_other_non_admin_user(self):
         """Test that with_read_permission_for() returns the correct secrets for the othernon-admin user."""
 
-        secrets = Secret.objects.with_read_permission_for(self.other_non_admin_user)
+        secrets = self.generic().with_read_permission_for(self.other_non_admin_user)
         # yes
         self.assertIn(
             self.secret_other_non_admin_user, secrets, "Other non-admin user should have access to their own secret."

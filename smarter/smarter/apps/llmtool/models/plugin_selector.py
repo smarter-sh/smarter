@@ -2,6 +2,7 @@
 
 from typing import Union
 
+from cache_results import cache_results
 from django.db import models
 from rest_framework import serializers
 
@@ -9,7 +10,6 @@ from smarter.apps.llmtool.manifest.enum import (
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
 )
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import (
     TimestampedModel,
 )

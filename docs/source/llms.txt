@@ -16,6 +16,12 @@ Official website: https://smarter.sh/
 
 - https://docs.smarter.sh/contributors.html
 
+- https://docs.smarter-python.smarter.sh/
+
+- https://docs.smarter-types.smarter.sh/
+
+- https://docs.cache-results.smarter.sh/
+
 
 ## Developer Resources
 

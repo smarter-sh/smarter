@@ -46,6 +46,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        checksum/env: "{{ include (print $.Template.BasePath "/secret-env.yaml") . | sha256sum }}"
       labels:
         app.kubernetes.io/name: "{{ .Values.global.appName }}-worker-infrastructure"
         app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
@@ -96,11 +98,11 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
             successThreshold: 1
+          # the platform's environment, from the Secret in secret-env.yaml
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.global.appName }}-env"
           env:
-            {{- range $key, $value := .Values.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
             {{- range $env := .Values.worker.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}

@@ -1,13 +1,9 @@
 """
-Smarter caching.
+Smarter's configuration of the cache-results package.
 
-- :func:`cache_results` caches a function's results by its arguments
-  (:mod:`smarter.lib.cache.decorators`, configured by :mod:`smarter.lib.cache.conf`).
-- :data:`lazy_cache` is Django's cache, imported only once Django is ready
-  (:mod:`smarter.lib.cache.lazy_cache`).
+Smarter caches with the cache-results package (https://docs.cache-results.smarter.sh/):
+``from cache_results import cache_results, lazy_cache``. The package depends
+only on Django. The hooks in :mod:`smarter.lib.cache.hooks`, named by the
+``CACHE_RESULTS`` setting in ``smarter/settings/base.py``, connect it to the
+parts of Smarter that it can't depend on.
 """
-
-from .decorators import cache_results
-from .lazy_cache import lazy_cache
-
-__all__ = ["cache_results", "lazy_cache"]

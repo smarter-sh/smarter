@@ -32,6 +32,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional, Union
 
+from cache_results import cache_results
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.db import models
@@ -47,7 +48,6 @@ from smarter.apps.account.signals import (
 )
 from smarter.common.exceptions import SmarterException, SmarterValueError
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
