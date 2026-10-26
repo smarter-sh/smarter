@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.21-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.36.21-alpha.2...v0.36.21-alpha.3) (2026-10-26)
+
+### Bug Fixes
+
+* **infrastructure:** no wildcard SAN on custom-domain certificates ([d42b9a0](https://github.com/smarter-sh/smarter/commit/d42b9a08e2b998cebe5a8d2bdddcf15752bc811e))
+* **prompt:** build a new session's thread on the server ([2ca56e8](https://github.com/smarter-sh/smarter/commit/2ca56e844538b415cf5874e23aa4338dd980cd62))
+* **secret:** a user can read only the Secrets their account owns ([a8c56b1](https://github.com/smarter-sh/smarter/commit/a8c56b17d14a223077afc8266704052c38973213))
+
 ## [0.36.21-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.21-alpha.1...v0.36.21-alpha.2) (2026-10-26)
 
 ### Bug Fixes
