@@ -1,5 +1,5 @@
 """Smarter API LLMClient Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.LLM_CLIENT.value
+MANIFEST_KIND = SAMKinds.LLM_CLIENT.value

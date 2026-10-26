@@ -43,3 +43,4 @@ See: `Michael Nygard’s ADRs <https://cognitect.com/blog/2011/11/15/documenting
    adr/030-task-queues
    adr/031-pydantic-over-json
    adr/032-url-names
+   adr/033-dry

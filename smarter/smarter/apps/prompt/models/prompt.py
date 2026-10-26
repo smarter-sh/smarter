@@ -1,5 +1,6 @@
 """Prompt model for the prompt app."""
 
+from cache_results import cache_results
 from django.db import models
 
 from smarter.apps.account.models import (
@@ -10,7 +11,6 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])

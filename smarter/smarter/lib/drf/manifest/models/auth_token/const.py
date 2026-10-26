@@ -1,5 +1,5 @@
-"""Smarter API SmarterAuthToken Manifest Constants"""
+"""Smarter API SmarterAuthToken Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.AUTH_TOKEN.value
+MANIFEST_KIND = SAMKinds.AUTH_TOKEN.value

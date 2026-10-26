@@ -8,7 +8,8 @@ which takes two steps, checked in order:
    DNS zone, e.g. an AWS Route53 hosted zone, i.e. the customer has delegated the domain to Smarter.
 2. **TLS certificate**: the domain's certificate, e.g. an AWS ACM certificate, is ``ISSUED``. The
    provider validates the certificate with a DNS record in the zone, so it can only be issued after step 1.
-   A certificate is requested if the domain has none.
+   A certificate is requested if the domain has none. It names the domain alone, with no
+   wildcard, and is never served: it is the proof of delegation.
 
 https itself is served by each LLMClient that uses the domain, on its own subdomain,
 ``<llmclient>.<domain>``, with its own Kubernetes-managed certificate. The LLMClient's

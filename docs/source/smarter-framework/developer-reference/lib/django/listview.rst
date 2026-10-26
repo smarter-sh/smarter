@@ -51,7 +51,7 @@ The server cache
 ----------------
 
 The list api caches each page's whole response in Redis, with
-:func:`~smarter.lib.cache.cache_results`, in
+:func:`~cache_results.decorators.cache_results`, in
 :func:`~smarter.lib.django.listview.cached_listview_page`. Its key is everything that can change the
 page: the user, the ownership tab, the page, page size, search, ordering and filter, and the
 generations described below. A page that is in the cache costs no query beyond the request's

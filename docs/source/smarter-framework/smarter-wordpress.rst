@@ -86,8 +86,8 @@ origin to the Smarter platform that hosts the chatbot. The chat keeps its sessio
 ``smarter_chat_<chatbot host>``. The plugin adds a suggested paragraph about both to WordPress's
 privacy policy guide (**Settings → Privacy**).
 
-**Script source**, in the settings' Advanced section, can load the chat's script from jsDelivr
-instead of your site.
+The chat's script is served from your own site, from the copy that the plugin ships. Nothing
+loads from a CDN.
 
 
 Troubleshooting

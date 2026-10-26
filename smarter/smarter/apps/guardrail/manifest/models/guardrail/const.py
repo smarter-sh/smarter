@@ -1,8 +1,8 @@
 """Smarter API Guardrail Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.GUARDRAIL.value
+MANIFEST_KIND = SAMKinds.GUARDRAIL.value
 
 DEFAULT_PRIORITY = 100
 """Default evaluation order of a Guardrail.

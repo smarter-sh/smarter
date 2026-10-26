@@ -120,7 +120,7 @@ full: each body explains what was wrong, what changed, and how it was tested.
      - A fix for caching design mistakes in plugins and the MCP client, which also added the
        caching rules to the entry skill so that the same mistake is not made again.
      - `commit eeb7a7a19 <https://github.com/smarter-sh/smarter/commit/eeb7a7a19bccd08c0b341feecf3ca444875a1f48>`__,
-       `lib/cache/decorators.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__
+       `cache_results/decorators.py <https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__
    * - A convention turned into a skill
      - A codebase-wide refactor that replaced improper uses of ``Any`` with typed aliases, and
        added the ``smarter-python-typing`` skill that keeps it that way.

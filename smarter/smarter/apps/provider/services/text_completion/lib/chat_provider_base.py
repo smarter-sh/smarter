@@ -19,7 +19,6 @@ from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_ENV_VARS
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.utils import (
-    ensure_system_role_present,
     get_request_body,
     parse_request,
 )
@@ -49,6 +48,25 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+EXAMPLE_PROMPTS_HEADING = "Some example prompts to get you started:"
+"""The heading of the example prompts message, as Smarter Chat displays it (in English)."""
+
+
+def example_prompts_message(prompts: Optional[list[str]]) -> str:
+    """
+    Return an LLMClient's example prompts as the assistant message that starts a session.
+
+    It is the message that Smarter Chat displays after the welcome message.
+
+    :param prompts: The LLMClient's example prompts.
+    :type prompts: Optional[list[str]]
+    :returns: The message, or an empty string if there are no example prompts.
+    :rtype: str
+    """
+    if not prompts:
+        return ""
+    return EXAMPLE_PROMPTS_HEADING + "\n\n" + "".join(f"- {prompt}\n" for prompt in prompts)
 
 
 class SmarterChatProviderBase(ChatDbMixin):
@@ -538,32 +556,160 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def get_message_thread(self, data: SmarterDictType) -> List[Dict[str, str]]:
         """
-        Initialize a new message thread with a system prompt and the incoming data.
+        Initialize the message thread of a session that has no stored history.
 
-        This method ensures that the system role is present in the message thread.
+        The server is the authority on the system prompt and on the conversation's history, so
+        the thread is built from the LLMClient's configuration, plus the client's latest user
+        message, and nothing else:
 
-        :raises SmarterValueError: If the request body is invalid.
+        - the LLMClient's system role, which starts with the date and time. When the prompt has
+          no LLMClient, or the LLMClient has no system role, the date and time only.
+        - the LLMClient's welcome message and example prompts, as assistant messages, which is
+          the introduction that Smarter Chat displays at the start of a session.
+        - the client's latest user message, which the input guardrails scan.
+
+        Everything else that the client sent is dropped: a ``system`` message, which would replace
+        the LLMClient's system role, and earlier ``user``, ``assistant`` or ``tool`` turns, which
+        no guardrail scans. Smarter Chat, the cli and the SDKs send a copy of the system role and
+        of the introduction, which is expected. Anything else is logged as a warning, without its
+        content. A session that has a stored history uses that history instead, so a client's
+        messages never reach the LLM, other than the latest user message.
+
+        :raises SmarterValueError: If the request body is invalid, or has no user message.
 
         :param data: The incoming data containing the message thread.
         :type data: SmarterDictType
         :returns: The initialized message thread.
         :rtype: List[Dict[str, str]]
         """
+        llmclient = self.prompt.llmclient if self.prompt else None
         # default_system_role_enhanced already starts with the date/time string.
         default_system_role = get_date_time_string()
-        if self.prompt and self.prompt.llmclient and self.prompt.llmclient.default_system_role:
-            default_system_role = self.prompt.llmclient.default_system_role_enhanced
+        if llmclient and llmclient.default_system_role:
+            default_system_role = llmclient.default_system_role_enhanced
         request_body = get_request_body(data=data)
-        client_message_thread, _ = parse_request(request_body)
+        client_message_thread, input_text = parse_request(request_body)
         if not isinstance(client_message_thread, list):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: Invalid request body. Expected a list of messages, got: {type(client_message_thread)}"
             )
-        client_message_thread = ensure_system_role_present(
-            messages=client_message_thread, default_system_role=default_system_role
+        if not input_text or not isinstance(input_text, str):
+            raise SmarterValueError(f"{self.formatted_class_name}: Invalid request body. A user message is required.")
+
+        welcome_message = getattr(llmclient, "app_welcome_message", None) if llmclient else None
+        welcome_message = welcome_message if isinstance(welcome_message, str) else ""
+        example_prompts = getattr(llmclient, "app_example_prompts", None) if llmclient else None
+        example_prompts = (
+            [prompt for prompt in example_prompts if isinstance(prompt, str)]
+            if isinstance(example_prompts, list)
+            else []
         )
-        retval = self.messages_set_is_new(client_message_thread, is_new=False)
+        thread: list[SmarterDictType] = [
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: default_system_role,
+            }
+        ]
+        for introduction in (welcome_message, example_prompts_message(example_prompts)):
+            if introduction:
+                thread.append(
+                    {
+                        OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: introduction,
+                    }
+                )
+        thread.append(
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: input_text,
+            }
+        )
+        self.log_dropped_client_messages(
+            client_message_thread=client_message_thread,
+            system_role=getattr(llmclient, "default_system_role", None) if llmclient else None,
+            welcome_message=welcome_message,
+            example_prompts=example_prompts,
+        )
+        retval = self.messages_set_is_new(thread, is_new=False)
         return retval
+
+    def log_dropped_client_messages(
+        self,
+        client_message_thread: list[SmarterDictType],
+        system_role: Optional[str],
+        welcome_message: str,
+        example_prompts: list[str],
+    ) -> None:
+        """
+        Log the messages of a new session's request that :meth:`get_message_thread` dropped.
+
+        Every message except the latest user message is dropped. A copy of the LLMClient's system
+        role, welcome message or example prompts, which Smarter Chat, the cli and the SDKs send at
+        the start of a session, is expected, and logged at debug level. Any other message, such as
+        a system message that would replace the system role, or an earlier turn of the
+        conversation, is logged as a warning. Only the number of messages, and their roles, are
+        logged, never their content.
+
+        :param client_message_thread: The messages that the client sent.
+        :type client_message_thread: list[SmarterDictType]
+        :param system_role: The LLMClient's system role, without the date and time.
+        :type system_role: Optional[str]
+        :param welcome_message: The LLMClient's welcome message.
+        :type welcome_message: str
+        :param example_prompts: The LLMClient's example prompts.
+        :type example_prompts: list[str]
+        :returns: None
+        :rtype: None
+        """
+        role_key, content_key = OpenAIMessageKeys.MESSAGE_ROLE_KEY, OpenAIMessageKeys.MESSAGE_CONTENT_KEY
+        latest_user_index = max(
+            (
+                index
+                for index, message in enumerate(client_message_thread)
+                if message.get(role_key) == OpenAIMessageKeys.USER_MESSAGE_KEY
+            ),
+            default=-1,
+        )
+        expected_system_roles = {
+            role.strip() for role in (system_role, smarter_settings.llm_default_system_role) if role
+        }
+
+        def is_expected(message: SmarterDictType) -> bool:
+            content = message.get(content_key)
+            text = content.strip() if isinstance(content, str) else None
+            if text is None:
+                return False
+            if not text:
+                return True
+            if message.get(role_key) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
+                # Smarter Chat and the SDKs send the system role as is, the cli maybe with the date and time.
+                return any(text.endswith(role) for role in expected_system_roles)
+            if message.get(role_key) == OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY:
+                # the example prompts' heading is translated by Smarter Chat, so look for the prompts.
+                return bool(welcome_message and welcome_message.strip() in text) or bool(
+                    example_prompts and all(prompt in text for prompt in example_prompts)
+                )
+            return False
+
+        dropped = [message for index, message in enumerate(client_message_thread) if index != latest_user_index]
+        unexpected = [message for message in dropped if not is_expected(message)]
+        if unexpected:
+            roles = sorted({str(message.get(role_key)) for message in unexpected})
+            logger.warning(
+                "%s.get_message_thread() dropped %d of the client's messages that a new session does not accept, "
+                "with the roles %s, for prompt %s. The LLMClient's system role, and the client's latest user message, "
+                "are used instead.",
+                self.formatted_class_name,
+                len(unexpected),
+                roles,
+                self.prompt.id if self.prompt else None,
+            )
+        if len(dropped) > len(unexpected):
+            logger.debug(
+                "%s.get_message_thread() dropped %d of the client's messages that copy the LLMClient's introduction.",
+                self.formatted_class_name,
+                len(dropped) - len(unexpected),
+            )
 
     def get_input_text_prompt(self, data: SmarterDictType) -> str:
         """

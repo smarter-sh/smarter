@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 
+from cache_results import lazy_cache
 from django.test import Client
 from django.urls import reverse
 
@@ -12,7 +13,6 @@ from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import Extension
 from smarter.lib import json
-from smarter.lib.cache import lazy_cache
 from smarter.lib.typing import SmarterDictType
 
 from ..const import namespace

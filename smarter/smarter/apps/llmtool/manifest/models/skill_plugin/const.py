@@ -8,6 +8,6 @@ Smarter API PluginData Skill Connection Manifest Constants.
     be documented.
 """
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.SKILL_PLUGIN.value
+MANIFEST_KIND = SAMKinds.SKILL_PLUGIN.value

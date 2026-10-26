@@ -13,7 +13,7 @@ Pydantic `Settings
 Celery workers and a `beat schedule
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__, and
 caching with `@cache_results
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/decorators.py>`__. The
+<https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__. The
 ``guardrail`` app, the newest and cleanest, is the reference that the course reads and changes.
 There are twelve 30-minute recorded lectures and a 90-minute live session each week. Week 1 covers
 Django and the ORM, week 2 the API layer, week 3 manifests, models and testing, and week 4

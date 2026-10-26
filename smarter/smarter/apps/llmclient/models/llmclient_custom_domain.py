@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
+from cache_results import cache_results
 from django.db import models
 from django.utils import timezone
 
@@ -12,7 +13,6 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
 )
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

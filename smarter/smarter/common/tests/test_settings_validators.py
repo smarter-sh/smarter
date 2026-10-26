@@ -129,6 +129,52 @@ class TestSettingsValidators(SmarterTestBase):
         with self.assertRaises(SmarterConfigurationError):
             call(validator, "a minute", {})
 
+    def test_mysql_port(self):
+        """Test that the database port parses an environment variable's string, defaults, and rejects non-ports."""
+        validator = Settings.validate_mysql_port
+        self.assertEqual(call(validator, "3307", {}), 3307)
+        self.assertEqual(call(validator, 3306, {}), 3306)
+        self.assertEqual(call(validator, "", {}), 3306)
+        self.assertEqual(call(validator, DEFAULT_MISSING_VALUE, {}), 3306)
+        for value in ("not-a-port", "0", "65536", "-1"):
+            with self.subTest(port=value), self.assertRaises(SmarterConfigurationError):
+                call(validator, value, {})
+
+    def test_mysql_names(self):
+        """Test that the database host, name and user are trimmed, default when missing, and reject non-strings."""
+        for validator, default in (
+            (Settings.validate_mysql_host, "smarter-mariadb"),
+            (Settings.validate_mysql_database, "smarter"),
+            (Settings.validate_mysql_user, "smarter"),
+        ):
+            with self.subTest(validator=validator.__name__):
+                self.assertEqual(call(validator, " db.example.com ", {}), "db.example.com")
+                self.assertEqual(call(validator, "", {}), default)
+                self.assertEqual(call(validator, DEFAULT_MISSING_VALUE, {}), default)
+                with self.assertRaises(SmarterConfigurationError):
+                    call(validator, 42, {})
+
+    def test_mysql_password(self):
+        """Test that the database password is a SecretStr, and that a placeholder is no password."""
+        validator = Settings.validate_mysql_password
+        self.assertEqual(call(validator, "s3cret", {}).get_secret_value(), "s3cret")
+        self.assertEqual(call(validator, SecretStr("s3cret"), {}).get_secret_value(), "s3cret")
+        self.assertIsNone(call(validator, DEFAULT_MISSING_VALUE, {}))
+        self.assertIsNone(call(validator, "SET-ME-IN-helm/charts/smarter/values.yaml", {}))
+        with self.assertRaises(SmarterConfigurationError):
+            call(validator, 42, {})
+
+    def test_databases_come_from_smarter_settings(self):
+        """Test that Django's DATABASES is built from smarter_settings, not read from the environment."""
+        # pylint: disable=import-outside-toplevel
+        from django.conf import settings
+
+        database = settings.DATABASES["default"]
+        self.assertEqual(database["HOST"], smarter_settings.mysql_host)
+        self.assertEqual(database["PORT"], str(smarter_settings.mysql_port))
+        self.assertEqual(database["USER"], smarter_settings.mysql_user)
+        self.assertIsNotNone(smarter_settings.mysql_password, "the local environment has a default password")
+
 
 class TestSettingsMethods(SmarterTestBase):
     """Test the Settings' methods and properties that the test_conf tests don't reach."""

@@ -229,15 +229,15 @@ make keen-server    # locally run the demo site
 
 ## AWS Cloud Infrastructure
 
-Smarter runs on AWS cloud infrastructure. Please take note that all Smarter cloud resources reside on a private network that is not publicly accessible to anyone; not even admins. To access this cluster to perform diagnostics and administrative activities you'll need ssh access to the Ubuntu bastion server, which is the sole publicly accessible host for this project. The operating system, system packages, license keys, and application software are all regularly updated, making this a convenient 1-stop shop for all your admin activities on this project.
+Smarter runs on AWS cloud infrastructure. Please take note that all Smarter cloud resources reside on a private network that is not publicly accessible to anyone; not even admins. The only public entry point is the load balancer in front of the ingress controller, and there is no SSH host. To perform diagnostics and administrative activities you use `kubectl`, which reaches the cluster through the EKS API with your IAM credentials, and the bastion pod, a shell inside the platform's namespace: `kubectl exec -it -n <namespace> deploy/smarter-bastion -- bash`. The bastion pod runs the platform's own image as a non-root user, holds the MariaDB client and the AWS CLI, and receives only the database, S3 and AWS settings.
 
 ### Kubernetes
 
-A single, shared Kubernetes cluster hosts test, staging and production environments. The bastion server has preconfigured kubectl cli as well as a nice ascii gui-based application named k9s that is especially helpful if you're unfamiliar with the inner workings of Kubernetes.
+A single, shared Kubernetes cluster hosts test, staging and production environments. Request an IAM user that is mapped to the cluster, then run `kubectl` from your own computer. [k9s](https://k9scli.io/), an ASCII gui-based application, is especially helpful if you're unfamiliar with the inner workings of Kubernetes.
 
 ### MariaDB
 
-Smarter persists most of its data to MariaDB running on AWS RDS. For simple SQL tasks the bastion server provides shortcuts for connecting to the MariaDB service from the command line. However, you can also connect to the service using Oracle's MariaDB Workbench desktop software which conveniently, offers a means of connecting to database hosts via a bastion server.
+Smarter persists most of its data to MariaDB running as a pod on Kubernetes. The database is reachable only from pods inside the cluster. For SQL tasks, open a shell in the bastion pod, whose welcome banner shows the `mariadb` command for connecting. To use a desktop client such as MySQL Workbench, forward the port with `kubectl port-forward` and connect to localhost.
 
 ### Other Resources
 

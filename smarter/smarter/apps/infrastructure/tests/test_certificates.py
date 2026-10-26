@@ -61,7 +61,7 @@ class TestCertificateService(InfrastructureTestBase):
         self.assertTrue(self.certificates.get_certificate(certificate_id).is_issued)
 
     def test_shared_validation_records_are_created_once(self):
-        """A domain and its wildcard share one validation record."""
+        """A validation record that the provider lists twice, e.g. for a domain and its wildcard, is created once."""
         record = DNSRecord(name="_x.example.com", type="CNAME", values=["_y.validations.example"])
         certificate = Certificate(
             id="cert", domain_name="example.com", status="PENDING_VALIDATION", validation_records=[record, record]

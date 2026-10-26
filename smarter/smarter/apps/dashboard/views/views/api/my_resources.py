@@ -58,6 +58,7 @@ detailed API documentation, refer to the generated documentation for each functi
 from http import HTTPStatus
 from typing import Optional
 
+from cache_results import cache_results
 from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
 
@@ -98,7 +99,6 @@ from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.utils.decorators import snake_case
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,

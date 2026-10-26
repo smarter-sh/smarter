@@ -1,5 +1,5 @@
-"""Smarter API Secret Manifest Constants"""
+"""Smarter API Secret Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.SECRET.value
+MANIFEST_KIND = SAMKinds.SECRET.value

@@ -4,6 +4,7 @@ from functools import cached_property
 from logging import getLogger
 from typing import Optional
 
+from cache_results import cache_results
 from django.apps import apps
 from django.db import models
 from django.db.models.query import QuerySet
@@ -15,7 +16,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import rfc1034_compliant_str
-from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
