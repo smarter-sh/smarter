@@ -1,5 +1,5 @@
 """Smarter API CustomDomain Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.CUSTOM_DOMAIN.value
+MANIFEST_KIND = SAMKinds.CUSTOM_DOMAIN.value
