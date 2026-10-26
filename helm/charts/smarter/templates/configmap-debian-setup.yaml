@@ -6,9 +6,11 @@
 #
 # - Maintainer: The Smarter Project, https://smarter.sh
 # - Purpose: Provides a shell script to install required packages and AWS CLI.
-# - Usage: Mounted into Bastion/Job Pods. install.sh installs the Bastion's
-#   administration tools; install.sh --backup installs only what the MariaDB
-#   backup Job needs (job-mysql-backup.yaml).
+# - Usage: Mounted into the MariaDB backup Job (job-mysql-backup.yaml), which runs
+#   install.sh --backup to install only what the backup needs. Without --backup,
+#   install.sh also installs a set of administration tools on a Debian host. The
+#   Bastion pod no longer uses it: it runs the platform's own image, which already
+#   holds the MariaDB client and the AWS CLI.
 # - Notes: The AWS CLI version is pinned, and the download is verified against the
 #   AWS CLI team's PGP signature. Set AWS_CLI_VERSION to install another version.
 #

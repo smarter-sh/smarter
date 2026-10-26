@@ -50,15 +50,15 @@ class AWSCertificateManager(AWSBase):
 
     def request_certificate(self, domain_name: str) -> str:
         """
-        Request a DNS-validated certificate for a domain and its subdomains.
+        Request a DNS-validated certificate for a domain, and for nothing else.
 
+        The certificate names only ``domain_name``, with no wildcard or other subject
+        alternative names, so ACM validates it with a single DNS record.
+
+        :param domain_name: The certificate's domain, e.g. ``example.com``.
         :returns: The certificate's ARN.
         """
-        response = self.acm.request_certificate(
-            DomainName=domain_name,
-            ValidationMethod="DNS",
-            SubjectAlternativeNames=[f"*.{domain_name}"],
-        )
+        response = self.acm.request_certificate(DomainName=domain_name, ValidationMethod="DNS")
         return response["CertificateArn"]
 
     def describe_certificate(self, certificate_arn: str) -> Optional[SmarterDictType]:

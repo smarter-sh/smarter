@@ -993,11 +993,11 @@ if smarter_settings.database_read_timeout:
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "smarter",
-        "USER": "smarter",
-        "PASSWORD": "smarter",
-        "HOST": "smarter-mariadb",  # Or an IP Address that your DB is hosted on
-        "PORT": "3306",
+        "NAME": smarter_settings.mysql_database,
+        "USER": smarter_settings.mysql_user,
+        "PASSWORD": smarter_settings.mysql_password.get_secret_value() if smarter_settings.mysql_password else "",
+        "HOST": smarter_settings.mysql_host,
+        "PORT": str(smarter_settings.mysql_port),
         "OPTIONS": DATABASE_OPTIONS,
     }
 }
@@ -1007,8 +1007,9 @@ The Django database configuration for Smarter, using MariaDB as the database bac
 Smarter **should** be able to support other common Sql databases supported by Django
 with minimal or no changes, but MariaDB is the recommended and tested database backend.
 
-This setting is environment specific and will typically be overridden in
-smarter/smarter/settings/base_aws.py or other environment-specific settings files.
+Every value comes from smarter_settings: ``SMARTER_MYSQL_HOST``, ``SMARTER_MYSQL_PORT``,
+``SMARTER_MYSQL_DATABASE``, ``SMARTER_MYSQL_USER`` and ``SMARTER_MYSQL_PASSWORD``. Their defaults are
+docker-compose.yml's smarter-mariadb service. Outside the local environment the password has no default.
 
 These credentials are created for you by the Smarter Terraform scripts when deploying
 the Smarter platform.

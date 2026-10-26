@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.21-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.36.21-alpha.2...v0.36.21-alpha.3) (2026-10-26)
+
+### Bug Fixes
+
+* **infrastructure:** no wildcard SAN on custom-domain certificates ([d42b9a0](https://github.com/smarter-sh/smarter/commit/d42b9a08e2b998cebe5a8d2bdddcf15752bc811e))
+* **prompt:** build a new session's thread on the server ([2ca56e8](https://github.com/smarter-sh/smarter/commit/2ca56e844538b415cf5874e23aa4338dd980cd62))
+* **secret:** a user can read only the Secrets their account owns ([a8c56b1](https://github.com/smarter-sh/smarter/commit/a8c56b17d14a223077afc8266704052c38973213))
+
+## [0.36.21-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.21-alpha.1...v0.36.21-alpha.2) (2026-10-26)
+
+### Bug Fixes
+
+* **helm:** run the bastion pod as non-root with only the env it needs ([3fbe35d](https://github.com/smarter-sh/smarter/commit/3fbe35d133c011a1a5a596d1106115c0e681b8da))
+
+## [0.36.21-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.20...v0.36.21-alpha.1) (2026-10-26)
+
+### Bug Fixes
+
+* **settings:** validate database settings, move Helm env to a Secret ([6c2d421](https://github.com/smarter-sh/smarter/commit/6c2d4212cef63b0af9ea74ef7e7681d2d9129131))
+
+### Refactoring
+
+* **api:** take SAMKinds and the journal enums from smarter-types ([dd2276e](https://github.com/smarter-sh/smarter/commit/dd2276edd26d6f6efc9ac7074d1c2a0470376fdb))
+* **cache:** use the cache-results package from pypi ([6ec3aa9](https://github.com/smarter-sh/smarter/commit/6ec3aa915d2e36e0bf08f93c52d8a71f06e2b5d7))
+
 ## [0.36.20](https://github.com/smarter-sh/smarter/compare/v0.36.19...v0.36.20) (2026-10-25)
 
 ### Bug Fixes

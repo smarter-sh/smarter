@@ -39,7 +39,11 @@ inside the `smarter-app` container.
 3. **Run the tests yourself.** Get your changes into the containers (`make build
 && make run`) and run the test modules you touched. Never ask the user to
    re-run them. Leave the full suite to the user unless they ask. See
-   `smarter-python-testing` and `smarter-docker-environment`.
+   `smarter-python-testing` and `smarter-docker-environment`. The host shell
+   is zsh, which doesn't word-split variables: a file list in `$FILES` or flags
+   in `$args` reach the command as one argument, and the result looks like a
+   bug in the code. Use `xargs`, a function with `"$@"`, or an array. See
+   `smarter-docker-environment`, "Shell notes".
 4. **Don't build the Sphinx docs.** The build takes about 20 minutes. Check
    `:doc:` targets by file existence only. See `smarter-sphinx-docs`.
 5. **The pre-commit hooks are the lint standard**, not ruff and not a generic

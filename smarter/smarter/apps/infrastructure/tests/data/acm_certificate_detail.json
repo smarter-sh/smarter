@@ -3,8 +3,7 @@
     "CertificateArn": "arn:aws:acm:us-east-1:123456789012:certificate/abcd1234-a123-456a-a12b-a123b4cd56ef",
     "DomainName": "example.com",
     "SubjectAlternativeNames": [
-      "example.com",
-      "*.example.com"
+      "example.com"
     ],
     "DomainValidationOptions": [
       {
@@ -14,16 +13,6 @@
           "Name": "_x1.example.com.",
           "Type": "CNAME",
           "Value": "_x2.acm-validations.aws."
-        },
-        "ValidationMethod": "DNS"
-      },
-      {
-        "DomainName": "*.example.com",
-        "ValidationStatus": "SUCCESS",
-        "ResourceRecord": {
-          "Name": "_x3.example.com.",
-          "Type": "CNAME",
-          "Value": "_x4.acm-validations.aws."
         },
         "ValidationMethod": "DNS"
       }
