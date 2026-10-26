@@ -81,7 +81,7 @@ class RepositoryManifest:
 
     @property
     def rank(self) -> int:
-        """The position of the manifest's kind in :meth:`SAMKinds.apply_order() <smarter.apps.api.v1.manifests.enum.SAMKinds.apply_order>`."""
+        """The position of the manifest's kind in :meth:`SAMKinds.apply_order() <smarter_types.kinds.SAMKinds.apply_order>`."""
         return SAMKinds.apply_rank(self.kind)
 
 
@@ -92,7 +92,7 @@ class Command(SmarterCommand):
 
     Clones a public GitHub repository and applies each Smarter manifest in it, as a user, through
     the same brokers as the ``apply`` api. The repository's folders are only for people: the
-    manifests are applied in the order of their kinds' dependencies, :meth:`SAMKinds.apply_order`, so
+    manifests are applied in the order of their kinds' dependencies, :meth:`SAMKinds.apply_order() <smarter_types.kinds.SAMKinds.apply_order>`, so
     that a Connection exists before the plugin that uses it, a plugin before the LLMClient that
     lists it, and so on. Within a kind, they are applied in the order of their paths.
 
@@ -260,7 +260,7 @@ class Command(SmarterCommand):
         Return the repository's manifests, in the order in which to apply them.
 
         :param local_path: The repository's clone.
-        :returns: The manifests, sorted by :meth:`SAMKinds.apply_order`, then by path.
+        :returns: The manifests, sorted by :meth:`SAMKinds.apply_order() <smarter_types.kinds.SAMKinds.apply_order>`, then by path.
         :rtype: list[RepositoryManifest]
         """
         retval: list[RepositoryManifest] = []
