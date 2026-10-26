@@ -61,7 +61,9 @@ Each course plan lists every file and page that it uses under *Smarter in the So
 :doc:`/smarter-framework/guides/code-of-conduct`,
 :doc:`/smarter-framework/guides/developer-guidelines`,
 :doc:`/smarter-framework/guides/semantic-versioning`,
-:doc:`/smarter-framework/guides/documentation`.
+:doc:`/smarter-framework/guides/documentation`, `Helm, cosign and Amazon ECR: What Smarter's Supply
+Chain Verifies, and What It Takes on Trust
+<https://blog.smarter.sh/2026/04/23/helm-cosign-supply-chain/>`__.
 
 **Exercises.**
 

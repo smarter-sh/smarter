@@ -15,3 +15,26 @@
   <https://twit.tv/shows/security-now>`__.
 - **YouTube:** `LiveOverflow <https://www.youtube.com/@LiveOverflow>`__ for how exploits work, and
   talks from DEF CON and Black Hat on their official channels, including the DEF CON AI Village.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Django and httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
+  <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, on keeping the credential
+  that spends money at a provider in one place; `Django Multi-Tenancy Without Schemas: Tenant
+  Isolation as Queryset Rules, and a Profile Switcher That Can't Be Spoofed
+  <https://blog.smarter.sh/2026/01/15/smarter-tenant-isolation-django-querysets/>`__, on keeping
+  each account's resources out of every other account's queries; `Django ALLOWED_HOSTS on a
+  Multi-Tenant Platform: Host Checks That Follow the Chatbots
+  <https://blog.smarter.sh/2026/05/03/smarter-django-allowed-hosts/>`__, on validating the Host
+  header when every chatbot has its own hostname; `Django Chat Sessions Across Subdomains: Why a
+  Smarter Session Key Opens Exactly One Chatbot
+  <https://blog.smarter.sh/2026/10/04/smarter-chat-session-one-chatbot/>`__, on binding a chat
+  session to the chatbot that created it; `Helm, cosign and Amazon ECR: What Smarter's Supply Chain
+  Verifies, and What It Takes on Trust
+  <https://blog.smarter.sh/2026/04/23/helm-cosign-supply-chain/>`__, on the signed Helm chart,
+  scanned images and npm provenance, and their limits; `Route 53 and cert-manager: One DNS Record
+  and One TLS Certificate per Deployed LLM
+  <https://blog.smarter.sh/2026/03/24/smarter-per-host-dns-tls/>`__, on per-chatbot DNS and
+  certificates instead of wildcards; `Route 53 and Celery Beat: A Daily Sweep for Orphaned DNS
+  Records <https://blog.smarter.sh/2026/06/29/smarter-orphan-dns-sweep/>`__, on safely deleting
+  dangling DNS records in production; `Django and AWS: Keeping the Cloud Out of Reach of Application
+  Code and Tests <https://blog.smarter.sh/2026/09/03/cloud-out-of-reach-of-tests/>`__, on the
+  service layer and guard that keep AWS and Kubernetes out of the tests.
