@@ -133,6 +133,8 @@ class FakeACMClient:
         with open(CERTIFICATE_DETAIL, encoding="utf-8") as detail:
             self.template = json.loads(detail.read())["Certificate"]
         self.certificates: dict[str, SmarterDictType] = {}
+        self.requests: list[SmarterDictType] = []
+        """The keyword arguments of each request_certificate() call."""
 
     def get_paginator(self, name):
         return Paginator(
@@ -145,11 +147,16 @@ class FakeACMClient:
             ]
         )
 
-    def request_certificate(
-        self, DomainName, ValidationMethod, SubjectAlternativeNames
-    ):  # pylint: disable=invalid-name
+    def request_certificate(self, DomainName, ValidationMethod, **kwargs):  # pylint: disable=invalid-name
+        self.requests.append({"DomainName": DomainName, "ValidationMethod": ValidationMethod, **kwargs})
         arn = f"arn:aws:acm:us-east-1:123456789012:certificate/{len(self.certificates) + 1}"
-        certificate = {**self.template, "CertificateArn": arn, "DomainName": DomainName, "Status": "PENDING_VALIDATION"}
+        certificate = {
+            **self.template,
+            "CertificateArn": arn,
+            "DomainName": DomainName,
+            "SubjectAlternativeNames": kwargs.get("SubjectAlternativeNames", [DomainName]),
+            "Status": "PENDING_VALIDATION",
+        }
         self.certificates[arn] = certificate
         return {"CertificateArn": arn}
 
@@ -390,9 +397,9 @@ class TestACMCertificateService(AWSTestBase):
         self.assertEqual(self.certificates.get_certificate_id("example.com"), certificate_id)
         self.assertEqual(self.certificates.certificate_status(certificate_id), "PENDING_VALIDATION")
 
-        # the domain's and its wildcard's validation records, from ACM's DomainValidationOptions.
+        # the domain's one validation record, from ACM's DomainValidationOptions.
         records = self.certificates.create_validation_records(certificate_id)
-        self.assertEqual([r.name for r in records], ["_x1.example.com", "_x3.example.com"])
+        self.assertEqual([r.name for r in records], ["_x1.example.com"])
         zone = self.provider.dns.get_zone("example.com")
         self.assertEqual(
             self.provider.dns.get_record(zone.id, "_x1.example.com", "CNAME").values, ["_x2.acm-validations.aws."]
@@ -403,11 +410,17 @@ class TestACMCertificateService(AWSTestBase):
         self.assertTrue(self.certificates.delete_certificate(certificate_id))
         self.assertFalse(self.certificates.delete_certificate(certificate_id))
 
+    def test_certificate_names_only_its_domain(self):
+        """A certificate is requested for its domain alone, with no wildcard subject alternative name."""
+        certificate_id, _ = self.certificates.get_or_create_certificate("example.com")
+        self.assertEqual(self.acm_client.requests, [{"DomainName": "example.com", "ValidationMethod": "DNS"}])
+        self.assertEqual(self.acm_client.certificates[certificate_id]["SubjectAlternativeNames"], ["example.com"])
+
     def test_to_certificate(self):
         with open(CERTIFICATE_DETAIL, encoding="utf-8") as detail:
             certificate = to_certificate(json.loads(detail.read())["Certificate"])
         self.assertEqual(certificate.domain_name, "example.com")
-        self.assertEqual(len(certificate.validation_records), 2)
+        self.assertEqual(len(certificate.validation_records), 1)
         self.assertFalse(certificate.is_issued)
         self.assertEqual(
             to_certificate(
