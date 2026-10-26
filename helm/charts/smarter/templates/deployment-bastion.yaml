@@ -3,17 +3,31 @@
 #
 # This deployment creates a single pod that serves as a bastion shell
 # for users to perform administrative tasks and to connect to the MariaDB database
-# which is only accessible from within the cluster. The pod is based on a
-# lightweight Debian image with minimal tools installed, including the
-# MariaDB client.
+# which is only accessible from within the cluster. There is no SSH server and no
+# open port: operators reach the shell with kubectl exec, through the Kubernetes
+# API, so access is decided by IAM and Kubernetes RBAC.
+#
+#   kubectl exec -it -n <namespace> deploy/smarter-bastion -- bash
+#
+# hardening:
+# -------------------------------------
+# - runs the platform's own image, at the same pinned release tag as the app.
+#   The image already holds the MariaDB client, the AWS CLI, curl, jq and git,
+#   so nothing is installed when the pod starts.
+# - runs as the image's non-root smarter_user (uid 1000), with no privilege
+#   escalation, no Linux capabilities and the runtime's default seccomp profile.
+# - receives only the environment variables that its administrative tasks need:
+#   the database, its accounts, the S3 location and the AWS credentials. The
+#   platform's other secrets (SECRET_KEY, LLM provider keys, SMTP and so on) are
+#   not passed in.
+# - mounts no Kubernetes service account token, so a shell in the pod can't call
+#   the Kubernetes API.
 #
 # setup:
 # -------------------------------------
-# - installs the MariaDB client
-# - creates a welcome message with usage instructions and environment variable
-#   information
-# - configures the welcome message to be displayed whenever a user connects to
-#   the pod
+# - creates a welcome message with usage instructions, shown whenever a user
+#   connects to the pod
+# - mounts the backup script, so that an operator can run a backup by hand
 # - keeps the pod running indefinitely to allow users to connect and use the shell
 #
 # Important: labels are referenced by other resources, in this repo as well as
@@ -26,6 +40,8 @@
 # between backing services. If the label is missing then the network policies are
 # assured to PREVENT communication.
 ###############################################################################
+{{- $backupPassword := .Values.env.SMARTER_MYSQL_BACKUP_PASSWORD | default "" }}
+{{- $useBackupAccount := and $backupPassword (not (hasPrefix "SET-ME" $backupPassword)) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -57,11 +73,22 @@ spec:
         {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:
         {{- toYaml .Values.global.tolerations | nindent 8 }}
+      automountServiceAccountToken: false
+      securityContext:
+        # the smarter_user that the Dockerfile creates. runAsNonRoot needs a numeric
+        # uid, because the image names its user rather than numbering it.
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       volumes:
-        - name: debian-setup-script
-          configMap:
-            name: debian-setup-script
-            defaultMode: 0755
+        # a writable home directory. Outside the local environment the image makes
+        # /home/smarter_user read-only (the Dockerfile's permissions stage), so the
+        # welcome banner, ~/.bashrc, the AWS CLI's cache and backup-to-s3.sh's dump
+        # all need somewhere else to write.
+        - name: bastion-home
+          emptyDir: {}
         - name: debian-welcome-banner
           configMap:
             name: debian-welcome-banner
@@ -72,8 +99,10 @@ spec:
             defaultMode: 0755
       containers:
         - name: "{{ .Values.global.appName }}-bastion"
-          image: ubuntu:latest
-          workingDir: /home/
+          image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
+          imagePullPolicy: '{{ .Values.global.image.pullPolicy | default "Always" }}'
+          # the backup script writes its dump to the working directory.
+          workingDir: /home/bastion
           command:
             - /bin/bash
             - -c
@@ -82,22 +111,21 @@ spec:
 
                 echo "Waiting for configMap mounts..."
                 for i in $(seq 1 10); do
-                  if [ -f /home/setup/install.sh ]; then break; fi
+                  if [ -f /home/welcome/install.sh ]; then break; fi
                   echo "Still waiting..."
                   sleep 1
                 done
 
-                ls -l /home/setup || true
-                ls -l /home/welcome || true
-                ls -l /home/backup || true
-
-                /home/setup/install.sh
                 /home/welcome/install.sh
 
                 echo "The Smarter Bastion Server is ready to use!"
 
                 while true; do sleep 3600; done
-          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           resources:
             requests:
               cpu: 50m
@@ -106,9 +134,8 @@ spec:
               cpu: 250m
               memory: 512Mi
           volumeMounts:
-            - name: debian-setup-script
-              mountPath: /home/setup/install.sh
-              subPath: install.sh
+            - name: bastion-home
+              mountPath: /home/bastion
             - name: debian-welcome-banner
               mountPath: /home/welcome/install.sh
               subPath: install.sh
@@ -116,12 +143,59 @@ spec:
               mountPath: /home/backup/backup-to-s3.sh
               subPath: backup-to-s3.sh
 
-          # the platform's environment, from the Secret in secret-env.yaml
-          envFrom:
-            - secretRef:
-                name: "{{ .Values.global.appName }}-env"
+          # only what the bastion's administrative tasks need: the database, its root
+          # account for administration, the backup account (when one is configured),
+          # the S3 location and the AWS credentials, so that backup-to-s3.sh runs here
+          # as it does in job-mysql-backup.yaml. Not the platform's other secrets.
+          # The passwords and AWS keys are read from the Secret in secret-env.yaml.
           env:
-            {{- range $env := .Values.app.env }}
-            - name: {{ $env.name }}
-              value: {{ $env.value | quote }}
+            # the writable emptyDir above. kubectl exec shells inherit it, so bash
+            # reads /home/bastion/.bashrc, where the welcome banner is installed.
+            - name: HOME
+              value: /home/bastion
+            - name: SMARTER_MYSQL_HOST
+              value: {{ .Values.env.SMARTER_MYSQL_HOST | quote }}
+            - name: SMARTER_MYSQL_PORT
+              value: {{ .Values.env.SMARTER_MYSQL_PORT | default "3306" | quote }}
+            - name: SMARTER_MYSQL_DATABASE
+              value: {{ .Values.env.SMARTER_MYSQL_DATABASE | quote }}
+            - name: SMARTER_MYSQL_ROOT_USERNAME
+              value: {{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME | quote }}
+            - name: SMARTER_MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ $.Values.global.appName }}-env"
+                  key: SMARTER_MYSQL_ROOT_PASSWORD
+                  optional: true
+            {{- if $useBackupAccount }}
+            - name: SMARTER_MYSQL_BACKUP_USERNAME
+              value: {{ .Values.env.SMARTER_MYSQL_BACKUP_USERNAME | default "smarter_backup" | quote }}
+            - name: SMARTER_MYSQL_BACKUP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ $.Values.global.appName }}-env"
+                  key: SMARTER_MYSQL_BACKUP_PASSWORD
+                  optional: true
+            {{- end }}
+            - name: SMARTER_S3_BUCKET
+              value: {{ .Values.env.SMARTER_S3_BUCKET | default "" | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ $.Values.global.appName }}-env"
+                  key: AWS_ACCESS_KEY_ID
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ $.Values.global.appName }}-env"
+                  key: AWS_SECRET_ACCESS_KEY
+                  optional: true
+            - name: AWS_REGION
+              value: {{ .Values.env.AWS_REGION | quote }}
+            {{- with .Values.databaseScheduledBackup }}
+            {{- if .s3Uri }}
+            - name: SMARTER_MYSQL_BACKUP_S3_URI
+              value: {{ .s3Uri | quote }}
+            {{- end }}
             {{- end }}
