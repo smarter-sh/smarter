@@ -1,7 +1,7 @@
 /**
  * How the tree presents each kind of SAM resource: its color, what it does for the LLMClient, in a few words, and
  * its page in the documentation. Kinds of the same family, e.g. the plugins, share them. Each kind's icon is the
- * backend's, in the tree's nodes: see SAMKinds.icon() in smarter.apps.api.v1.manifests.enum.
+ * backend's, in the tree's nodes: see sam_kind_icon() in smarter.apps.api.v1.manifests.enum.
  */
 import { gettext } from "@smarter/common";
 

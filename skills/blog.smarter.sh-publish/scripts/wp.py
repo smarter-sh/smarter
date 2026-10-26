@@ -13,11 +13,13 @@ Usage:
   wp.py categories
   wp.py list [--search TEXT] [--status publish|draft|any]
   wp.py get ID [--raw FILE]
-  wp.py publish POST.md --title TITLE --slug SLUG [--category ID] [--status draft|publish]
+  wp.py publish POST.md --slug SLUG [--title TITLE] [--category ID] [--status draft|publish]
                 [--excerpt TEXT] [--id ID]
   wp.py upload IMAGE [--alt TEXT]
 
-publish converts POST.md with md2wp.py. With --id it updates that post instead of
+publish converts POST.md with md2wp.py, which leaves out the post's # H1 and date
+line (the theme prints the title and date), and uses the H1 as the title unless
+--title is given. With --id it updates that post instead of
 creating one. It prints the post's id, status and link. upload adds a file to the
 media library and prints its id and url, for a ``![alt](url)`` line in a post.
 """
@@ -34,7 +36,7 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from md2wp import convert  # noqa: E402
+from md2wp import convert, split_header  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
 
@@ -124,7 +126,7 @@ def main() -> None:
     get.add_argument("--raw", help="write the post's block markup to this file")
     publish = sub.add_parser("publish")
     publish.add_argument("markdown")
-    publish.add_argument("--title", required=True)
+    publish.add_argument("--title", help="the post's title; defaults to the Markdown's # H1")
     publish.add_argument("--slug", required=True)
     publish.add_argument("--category", type=int, action="append", default=[])
     publish.add_argument("--status", choices=("draft", "publish"), default="draft")
@@ -159,8 +161,11 @@ def main() -> None:
         print(json.dumps({k: media[k] for k in ("id", "source_url", "alt_text")}))
     else:
         markdown = pathlib.Path(args.markdown).read_text(encoding="utf-8")
+        title = args.title or split_header(markdown)[0]
+        if not title:
+            sys.exit("publish: the Markdown has no # H1, so pass --title")
         body = {
-            "title": args.title,
+            "title": title,
             "slug": args.slug,
             "content": convert(markdown),
             "status": args.status,

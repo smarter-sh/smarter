@@ -33,19 +33,19 @@ does not delay every prompt by its timeout.
 Dependencies:
 
     - Django ORM
-    - smarter.lib.cache.cache_results
+    - cache_results.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
     - smarter.apps.mcpclient.models.MCPClient
 """
 
 from typing import Callable
 
+from cache_results import cache_results
 from django.db import models
 from django.utils import timezone
 
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 

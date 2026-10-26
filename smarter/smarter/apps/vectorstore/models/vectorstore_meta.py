@@ -3,6 +3,7 @@
 import re
 from typing import Any, Optional
 
+from cache_results import cache_results
 from django.db import models
 
 from smarter.apps.account.models import (
@@ -20,7 +21,6 @@ from smarter.apps.vectorstore.enum import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 

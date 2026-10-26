@@ -27,6 +27,7 @@ Example:
         ]
 """
 
+from cache_results import cache_results
 from django.conf import settings
 from django.http import HttpResponse
 from django.http.request import HttpRequest
@@ -34,7 +35,6 @@ from django.shortcuts import redirect, render
 
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active

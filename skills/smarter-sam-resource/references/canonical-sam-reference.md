@@ -7,12 +7,12 @@ unless they start with `docs/`.
 
 ## 1. Kind registration
 
-| Step              | File                                                    | CustomDomain example                                                                      |
-| ----------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Journal thing     | `lib/journal/enum.py`                                   | `SmarterJournalThings.CUSTOM_DOMAIN = "CustomDomain"` and its `choices()` tuple           |
-| Journal migration | `lib/journal/migrations/`                               | `0007_alter_samjournal_thing_custom_domain.py`                                            |
-| SAM kind          | `apps/api/v1/manifests/enum.py`                         | `SAMKinds.CUSTOM_DOMAIN = CUSTOM_DOMAIN_MANIFEST_KIND`, documented in the class docstring |
-| Kind constant     | `apps/llmclient/manifest/models/custom_domain/const.py` | `MANIFEST_KIND = "CustomDomain"`                                                          |
+| Step              | File                                                    | CustomDomain example                                                                    |
+| ----------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Journal thing     | smarter-types `src/smarter_types/journal.py`            | `SmarterJournalThings.CUSTOM_DOMAIN = SAMKinds.CUSTOM_DOMAIN.value` and its `choices()` |
+| Journal migration | `lib/journal/migrations/`                               | `0007_alter_samjournal_thing_custom_domain.py`                                          |
+| SAM kind          | smarter-types `src/smarter_types/kinds.py`              | `SAMKinds.CUSTOM_DOMAIN = "CustomDomain"`, with its place in `apply_order()`            |
+| Kind constant     | `apps/llmclient/manifest/models/custom_domain/const.py` | `MANIFEST_KIND = SAMKinds.CUSTOM_DOMAIN.value`                                          |
 
 ## 2. Manifest (Pydantic)
 
@@ -69,7 +69,7 @@ unless they start with `docs/`.
 | Step           | File                                                                                                                 |
 | -------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Manifest       | `custom-domains/example-com.yaml` in [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests) |
-| Apply order    | `apps/api/v1/manifests/enum.py`: `SAMKinds.apply_order()`                                                            |
+| Apply order    | smarter-types `src/smarter_types/kinds.py`: `SAMKinds.apply_order()`                                                 |
 | Platform setup | `apps/account/management/commands/initialize_platform.py`: `call_command("load_from_github", url=...)`               |
 
 ## 8. Sphinx

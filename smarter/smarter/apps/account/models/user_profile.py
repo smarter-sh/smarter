@@ -6,6 +6,8 @@ import uuid
 from typing import Any, Optional, TypeVar, overload
 from urllib.parse import urljoin
 
+from cache_results import cache_results
+
 # django stuff
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -24,7 +26,6 @@ from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import mask_email
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches

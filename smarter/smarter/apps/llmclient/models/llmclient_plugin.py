@@ -2,6 +2,7 @@
 
 from typing import List, Optional, Type
 
+from cache_results import cache_results
 from django.db import models
 
 from smarter.apps.account.models import (
@@ -12,7 +13,6 @@ from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.loader import SAMLoader

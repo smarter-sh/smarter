@@ -27,6 +27,7 @@ anyio==4.15.1
     #   starlette
 asgiref==3.12.1
     # via
+    #   cache-results
     #   channels
     #   channels-redis
     #   django
@@ -52,6 +53,8 @@ botocore==1.43.116
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
+cache-results==0.2.0
+    # via -r smarter/requirements/in/base.in
 cachetools==7.2.4
     # via -r smarter/requirements/in/base.in
 cattrs==26.2.1
@@ -121,6 +124,7 @@ distro==1.9.0
 django==6.0.9
     # via
     #   -r smarter/requirements/in/base.in
+    #   cache-results
     #   channels
     #   django-celery-beat
     #   django-cors-headers
@@ -229,7 +233,9 @@ idna==3.20
 inflect==7.5.0
     # via -r smarter/requirements/in/base.in
 inflection==0.5.1
-    # via -r smarter/requirements/in/base.in
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   smarter-types
 invoke==3.0.3
     # via paramiko
 jh2==5.0.15
@@ -497,6 +503,8 @@ six==1.17.0
     # via
     #   mailchimp-marketing
     #   python-dateutil
+smarter-types==0.1.0
+    # via -r smarter/requirements/in/base.in
 sniffio==1.3.1
     # via
     #   google-genai

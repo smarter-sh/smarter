@@ -1,8 +1,8 @@
 """Constants for Vectorstore manifest models."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.VECTORSTORE.value
+MANIFEST_KIND = SAMKinds.VECTORSTORE.value
 
 DEFAULT_QDRANT_IMAGE = "qdrant/qdrant:v1.19.1"
 """The Qdrant server image of a self-hosted database.

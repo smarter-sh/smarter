@@ -297,8 +297,12 @@ Security Notes
    Smarter tells the judge that the text is untrusted data, and asks for a JSON verdict, and the
    built-in judge prompts quote the text, but a judge should not be the only control against a
    determined attacker.
- - Input Guardrails scan only the user's latest message. The system prompt, and earlier messages,
-   were scanned when they were sent.
+ - Input Guardrails scan only the user's latest message, because Smarter, not the client, owns the
+   rest of the conversation. The system prompt is always the LLMClient's ``defaultSystemRole``, and
+   the earlier messages come from the session's stored history, whose user messages the input
+   Guardrails scanned when they were sent. A system message, or earlier turns, that a client
+   sends with its request are dropped and never reach the LLM. A new session starts with the
+   LLMClient's system role, welcome message and example prompts.
  - Event excerpts are masked: PII keeps its last four characters, and secrets only their length.
    Nevertheless, restrict access to the GuardrailEvent admin.
  - Start new Guardrails in ``monitor`` mode, and review their events, before you enforce them.

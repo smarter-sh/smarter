@@ -50,6 +50,11 @@ django-storages                         # Django storage subsystem
 django-waffle                           # Feature flagging
 social-auth-app-django                  # Social authentication for Django
 
+# Smarter PyPi Packages
+# ------------
+cache-results                           # @cache_results and lazy_cache (configured by smarter.lib.cache.hooks)
+smarter-types                           # SAMKinds and the journal enumerations, shared with the smarter-api SDK
+
 # Manifest support, and for working with data
 # ------------
 pandas                                  # Data manipulation for data science stuff

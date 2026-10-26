@@ -25,6 +25,7 @@ from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import quote
 
+from cache_results import cache_results
 from django.core.exceptions import MultipleObjectsReturned
 
 from smarter.apps.connection.models import ApiConnection
@@ -65,7 +66,6 @@ from smarter.common.const import SMARTER_ADMIN_USERNAME, SmarterHttpMethods
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

@@ -26,6 +26,7 @@ from typing import Callable, Optional
 from urllib.parse import urljoin
 
 import yaml
+from cache_results import cache_results
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.http.response import HttpResponseBase
@@ -54,7 +55,6 @@ from smarter.apps.prompt.contract.models import (
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.shortcuts import reverse

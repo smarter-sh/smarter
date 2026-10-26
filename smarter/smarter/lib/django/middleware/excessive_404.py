@@ -147,6 +147,7 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from http import HTTPStatus
 
+from cache_results import lazy_cache as cache
 from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
@@ -154,7 +155,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
-from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
