@@ -133,6 +133,7 @@ spec:
               # only what the backup needs: the database, the backup account, the S3 location
               # and the AWS credentials, not the platform's other secrets. The root account is
               # passed only when no backup account is configured (SMARTER_MYSQL_BACKUP_PASSWORD).
+              # The passwords and AWS keys are read from the Secret in secret-env.yaml.
               env:
                 - name: SMARTER_MYSQL_HOST
                   value: {{ .Values.env.SMARTER_MYSQL_HOST | quote }}
@@ -144,19 +145,35 @@ spec:
                 - name: SMARTER_MYSQL_BACKUP_USERNAME
                   value: {{ .Values.env.SMARTER_MYSQL_BACKUP_USERNAME | default "smarter_backup" | quote }}
                 - name: SMARTER_MYSQL_BACKUP_PASSWORD
-                  value: {{ $backupPassword | quote }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ $.Values.global.appName }}-env"
+                      key: SMARTER_MYSQL_BACKUP_PASSWORD
+                      optional: true
                 {{- else }}
                 - name: SMARTER_MYSQL_ROOT_USERNAME
                   value: {{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME | quote }}
                 - name: SMARTER_MYSQL_ROOT_PASSWORD
-                  value: {{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD | quote }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ $.Values.global.appName }}-env"
+                      key: SMARTER_MYSQL_ROOT_PASSWORD
+                      optional: true
                 {{- end }}
                 - name: SMARTER_S3_BUCKET
                   value: {{ .Values.env.SMARTER_S3_BUCKET | default "" | quote }}
                 - name: AWS_ACCESS_KEY_ID
-                  value: {{ .Values.env.AWS_ACCESS_KEY_ID | quote }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ $.Values.global.appName }}-env"
+                      key: AWS_ACCESS_KEY_ID
+                      optional: true
                 - name: AWS_SECRET_ACCESS_KEY
-                  value: {{ .Values.env.AWS_SECRET_ACCESS_KEY | quote }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ $.Values.global.appName }}-env"
+                      key: AWS_SECRET_ACCESS_KEY
+                      optional: true
                 - name: AWS_REGION
                   value: {{ .Values.env.AWS_REGION | quote }}
                 - name: BACKUP_SUMMARY_FILE
@@ -196,11 +213,11 @@ spec:
                 - name: job-log
                   mountPath: /job
                   readOnly: true
+              # the platform's environment, from the Secret in secret-env.yaml
+              envFrom:
+                - secretRef:
+                    name: "{{ .Values.global.appName }}-env"
               env:
-                {{- range $key, $value := .Values.env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
-                {{- end }}
                 {{- range $env := .Values.app.env }}
                 - name: {{ $env.name }}
                   value: {{ $env.value | quote }}
