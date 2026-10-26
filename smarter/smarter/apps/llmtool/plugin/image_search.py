@@ -636,16 +636,19 @@ class ImageSearchPlugin(PluginBase):
     # -------------------------------------------------------------------------
     def api_key(self) -> Optional[str]:
         """
-        Return the Brave Search API key, from a Secret that the plugin's user may read.
+        Return the Brave Search API key, from a Secret that the plugin's user may use.
 
-        If it is unavailable, a warning explains how to create it.
+        The plugin's user may use a Secret of their account, or of the platform account, whose
+        brave_search_api_key every account's copy of the example ImageSearchPlugins shares. See
+        :meth:`smarter.apps.secret.models.SecretQuerySet.with_use_permission_for`. If it is
+        unavailable, a warning explains how to create it.
 
-        :return: The api key, or None if there is no such Secret that the user may read.
+        :return: The api key, or None if there is no such Secret that the user may use.
         """
         plugin_data: PluginDataImageSearch = self.plugin_data  # type: ignore[assignment]
         name = plugin_data.api_key_secret_name
         user = self.user or (self.user_profile.user if self.user_profile else None)
-        secret = Secret.objects.filter(name=name).with_read_permission_for(user).first() if user else None  # type: ignore[attr-defined]
+        secret = Secret.objects.filter(name=name).with_use_permission_for(user).first() if user else None  # type: ignore[attr-defined]
         value = None
         if isinstance(secret, Secret):
             try:
