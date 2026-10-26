@@ -71,8 +71,15 @@ opens cleanly in the block editor, and the user can edit it there.
   for a 200 from
   `https://blog.smarter.sh/wp-content/plugins/syntaxhighlighter/syntaxhighlighter3/scripts/shBrush<Name>.js`,
   then add it to the map.
-- The post's first line, `# vX.Y Release: <theme>`, stays in the content as an
-  H1, as in every earlier post. The WordPress title is separate (see below).
+- **The H1 and the date line are not part of the content.** The theme prints
+  the WordPress title and the publication date above every post, so md2wp drops
+  the Markdown's first `# ...` line and the `Month D, YYYY · The Smarter
+Project` line after it. Left in, they showed every post's title and date
+  twice, and the user had them removed from every published post. `publish`
+  uses the H1 as the WordPress title unless you pass `--title`. A date line
+  with an update note (`October 21, 2026, updated October 25 for v0.36.20 ·
+The Smarter Project`) keeps the note as an italic first paragraph. Never add
+  a title, H1 or date to a post's content by hand.
 
 ## The commands
 
@@ -82,7 +89,7 @@ $S/wp.py whoami                    # {"id": 1, "name": "smarter_blog", "roles": 
 $S/wp.py categories                # 4 announcements Announcements ...
 $S/wp.py list --status any         # id, date, status, slug, categories, title
 $S/wp.py get 132 --raw /tmp/x.html # a post's metadata, and its block markup
-$S/wp.py publish ~/desktop/blog-v0.21-v0.23.md --title "Release v0.21 – v0.23" \
+$S/wp.py publish ~/desktop/blog-v0.21-v0.23.md \
   --slug release-v0-21-v0-23 --category 4 --status draft
 $S/wp.py publish ... --status publish --id 319   # update post 319, here to publish it
 $S/wp.py upload ~/desktop/shot.png --alt "What the image shows"  # id and source_url
@@ -97,6 +104,48 @@ saved anyway, but without its large sizes and never moved to
 (`DELETE media/<id>` with `force=true`) and upload the resized file. Read an
 image before uploading it. It is public too, so check it shows no keys,
 hostnames, account numbers or customer data.
+
+### Featured images
+
+Every article needs a featured image. The theme shows it on the post and on the
+home page's post cards. Release announcements (category 4) have none. Recent
+articles use flat, colorful vector illustrations on a white background (people,
+robots, browser windows, clouds, in orange, yellow, teal, navy and blue), or a
+close-up photo of code, at 1680 px wide and roughly 3:2.
+
+**The Smarter Project has an Envato account**, so licensed stock illustrations
+and photos from Envato are the first choice for a featured image. You can't
+sign in to Envato or license an item yourself. Suggest two or three search
+terms, or Envato items that suit the post, and ask the user to download the
+one they pick. Then resize it to 1680 px wide, `upload` it with alt text that
+says what it shows, and set it on the post:
+
+```bash
+python3 -c '
+from wp import Blog
+b = Blog()
+p = b.request("GET", "posts/<id>", context="edit")
+# send the content too, so Yoast SEO rebuilds the post's og:image
+b.request("POST", "posts/<id>", {"featured_media": <media id>, "content": p["content"]["raw"]})
+print(b.request("GET", "posts/<id>", context="edit")["yoast_head_json"]["og_image"][0]["url"])
+'
+```
+
+Setting `featured_media` alone changes the image on the page but not Yoast
+SEO's `og:image`, which link previews in Slack, LinkedIn and the like use: it
+keeps the old image, or none. Saving the content in the same request makes Yoast
+rebuild it. The command prints the new `og:image` url. Check that it is the new
+file, then clear the page cache.
+
+An original illustration that you draw is also fine, when no Envato item fits
+or the user would rather not pick one. The featured image of "Getting Started
+With smarter-api" (media 437) was made this way, and the user approved it.
+Draw an SVG in the same flat style and palette, about the post's own subject,
+render it with `rsvg-convert -w 1680 -h 1120`, and read the PNG before
+uploading it. Put `xml:space="preserve"` on any text group with
+code, or rsvg drops the spaces between words. Don't use trademarked logos,
+such as Python's. Before reusing an image from the media library, check that
+no other post uses it as its featured image.
 
 `publish` without `--id` creates a new post every time. To change a post, pass
 its `--id`, or you'll publish a duplicate. It closes comments, like the earlier
@@ -113,13 +162,14 @@ the conversation and update the post once they approve.
 
 ## Conventions
 
-| Field     | Release announcement                                           | Example                                  |
-| --------- | -------------------------------------------------------------- | ---------------------------------------- |
-| Title     | `Release vX.Y`, or `Release vX.Y – vX.Z` (en dash) for a group | `Release v0.21 – v0.23`                  |
-| Slug      | `release-vX-Y`, or `release-vX-Y-vX-Z`                         | `release-v0-21-v0-23`                    |
-| Category  | 4, Announcements                                               |                                          |
-| H1        | `vX.Y – vX.Z Release: <theme>`                                 |                                          |
-| Date line | the day you publish                                            | `October 17, 2026 · The Smarter Project` |
+| Field     | Release announcement                                                         | Example                                                   |
+| --------- | ---------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Title     | the Markdown's H1, `vX.Y Release: <theme>` or `vX.Y – vX.Z Release: <theme>` | `v0.33 – v0.34 Release: From the Workbench to a Live URL` |
+| Slug      | `release-vX-Y`, or `release-vX-Y-vX-Z`                                       | `release-v0-21-v0-23`                                     |
+| Category  | 4, Announcements                                                             |                                                           |
+| Date line | in the Markdown only, the day you publish                                    | `October 17, 2026 · The Smarter Project`                  |
+
+An article's title is its H1 too. Use the en dash (–) in a version range.
 
 Other articles use category 6 (Artificial Intelligence), 5 (How To) or 9
 (System Management). Run `categories` for the current list. The home page
@@ -137,8 +187,9 @@ Snippets' `site-css` snippets. The Code Snippets REST API
 (`/wp-json/code-snippets/v1/snippets`) accepts the same login and nonce as
 `wp.py`.
 
-Every article ends with the author's signature (name linked to
-lawrencemcdaniel.com, and a one-line bio). Announcements (category 4) don't.
+Every article ends with the author's signature: "Lawrence McDaniel – Author,
+The Smarter Project", with the name linked to lawrencemcdaniel.com, and a
+one-line bio under it. Announcements (category 4) don't.
 That is snippet 7, "Posts: author signature", a `the_content` filter plus its
 CSS in `wp_head`. So don't write a signature or bio into a post's Markdown: it
 would appear twice.

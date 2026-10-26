@@ -10,6 +10,10 @@ paragraphs, ``-`` and ``1.`` lists (one level), pipe tables, ``>`` quotes, ``---
 fenced code, ``![alt](url "caption")`` images on a line of their own, and inline
 bold, italics, code and links.
 
+The post's ``# Title`` line and the date line after it are left out of the content,
+because the theme prints the WordPress title and date above it. wp.py uses the
+H1 as the post's title.
+
 Usage: md2wp.py post.md > post.html
 """
 
@@ -82,8 +86,41 @@ def bullets(items: list[str], ordered: bool) -> str:
     return block("list", f'<{tag} class="wp-block-list">{lis}</{tag}>', {"ordered": True} if ordered else None)
 
 
-def convert(markdown: str) -> str:
+DATE_LINE = re.compile(r"^(?:[A-Z][a-z]+ )(?:\d{1,2}, )?\d{4}(?P<rest>.*)· The Smarter Project\s*$")
+
+
+def split_header(markdown: str) -> tuple[str | None, str]:
+    """
+    Take the post's ``# Title`` line, and the date line after it, off the top.
+
+    The theme prints the WordPress title and the publication date above every post,
+    so leaving them in the content shows each one twice. A date line that says
+    ``October 21, 2026, updated October 25 for v0.36.20 · The Smarter Project``
+    keeps its update note, as an italic first paragraph.
+
+    Returns the H1's text as plain text (or None when the post has no H1), and the rest.
+    """
     lines = markdown.splitlines()
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i == len(lines) or not lines[i].startswith("# "):
+        return None, markdown
+    title = re.sub(r"[`*]", "", lines[i][2:]).strip()
+    i += 1
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i < len(lines) and (date := DATE_LINE.match(lines[i].strip())):
+        i += 1
+        note = re.match(r",\s*(updated .*?)\s*$", date.group("rest"))
+        if note:
+            lines.insert(i, f"*{note.group(1)[0].upper()}{note.group(1)[1:]}.*")
+    return title, "\n".join(lines[i:])
+
+
+def convert(markdown: str) -> str:
+    """Convert a post to block markup, without its H1 and date line (see split_header)."""
+    lines = split_header(markdown)[1].splitlines()
     blocks: list[str] = []
     i = 0
     while i < len(lines):
