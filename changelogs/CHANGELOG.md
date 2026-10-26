@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.21-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.20...v0.36.21-alpha.1) (2026-10-26)
+
+### Bug Fixes
+
+* **settings:** validate database settings, move Helm env to a Secret ([6c2d421](https://github.com/smarter-sh/smarter/commit/6c2d4212cef63b0af9ea74ef7e7681d2d9129131))
+
+### Refactoring
+
+* **api:** take SAMKinds and the journal enums from smarter-types ([dd2276e](https://github.com/smarter-sh/smarter/commit/dd2276edd26d6f6efc9ac7074d1c2a0470376fdb))
+* **cache:** use the cache-results package from pypi ([6ec3aa9](https://github.com/smarter-sh/smarter/commit/6ec3aa915d2e36e0bf08f93c52d8a71f06e2b5d7))
+
 ## [0.36.20](https://github.com/smarter-sh/smarter/compare/v0.36.19...v0.36.20) (2026-10-25)
 
 ### Bug Fixes
