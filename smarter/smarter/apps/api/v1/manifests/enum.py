@@ -1,8 +1,8 @@
 """
 The kinds of Smarter Application Manifest (SAM), and their icons in the web console.
 
-:class:`SAMKinds` is the single definition of which kinds exist, and of the order in which manifests
-of several kinds are applied (:meth:`SAMKinds.apply_order`). It is defined in the
+:class:`~smarter_types.kinds.SAMKinds` is the single definition of which kinds exist, and of the order in which manifests
+of several kinds are applied (:meth:`SAMKinds.apply_order() <smarter_types.kinds.SAMKinds.apply_order>`). It is defined in the
 `smarter-types <https://docs.smarter-types.smarter.sh/>`__ package, which the platform and its Python
 SDK share, and is re-exported here. To add a kind, add it to ``SAMKinds`` in smarter-types first,
 with its place in the apply order, then give it an icon in :data:`SAM_KIND_ICONS`.

@@ -28,4 +28,6 @@ decisions: `docs.smarter-python.smarter.sh <https://docs.smarter-python.smarter.
 
 The package is ``smarter-api`` on `PyPI <https://pypi.org/project/smarter-api/>`__, and its import
 name is ``smarter``. Its source is
-`github.com/smarter-sh/smarter-python <https://github.com/smarter-sh/smarter-python>`__.
+`github.com/smarter-sh/smarter-python <https://github.com/smarter-sh/smarter-python>`__. It takes
+the list of manifest kinds and the journal's enumerations from the same package as the platform,
+:doc:`smarter-types <developer-reference/smarter-types>`, so the two always agree.

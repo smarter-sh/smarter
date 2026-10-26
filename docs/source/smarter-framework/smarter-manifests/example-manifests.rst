@@ -53,7 +53,7 @@ How a Platform Loads It
 
 ``manage.py load_from_github`` clones a GitHub repository of manifests and applies each of them, in
 the order of their kinds' dependencies, :meth:`SAMKinds.apply_order()
-<smarter.apps.api.v1.manifests.enum.SAMKinds.apply_order>`. Some examples need a resource that
+<smarter_types.kinds.SAMKinds.apply_order>`. Some examples need a resource that
 only the platform's operator can create, e.g. the Secret that holds an MCPClient's access token
 for a third-party service, or the ApiConnection of a managed vector database. With
 ``--skip_missing_references``, which both initialization commands pass, such a manifest is skipped,
