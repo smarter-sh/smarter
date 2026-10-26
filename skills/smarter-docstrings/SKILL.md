@@ -47,6 +47,11 @@ def deploy_custom_api(llmclient_id: int) -> Optional[str]:
 - A body paragraph starts with a capital letter. A body that starts lower case
   usually means a summary was split.
 - Use one blank line between paragraphs, and between the body and the fields.
+- **pydocstringformatter capitalizes the first word.** A summary that starts
+  with a name, e.g. `apply() creates ...`, becomes `Apply() creates ...`. Put
+  the name in double backticks, which the formatter leaves alone, or rephrase.
+  Start a module docstring with a sentence, not the module's dotted name:
+  about 20 modules open with a mangled title such as `Smarter.common.utils`.
 
 ## Content
 

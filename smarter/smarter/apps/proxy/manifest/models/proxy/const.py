@@ -1,5 +1,5 @@
 """Smarter API Proxy Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.PROXY.value
+MANIFEST_KIND = SAMKinds.PROXY.value

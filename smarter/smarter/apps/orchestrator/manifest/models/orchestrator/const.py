@@ -1,5 +1,5 @@
 """Smarter API Orchestrator Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.ORCHESTRATOR.value
+MANIFEST_KIND = SAMKinds.ORCHESTRATOR.value

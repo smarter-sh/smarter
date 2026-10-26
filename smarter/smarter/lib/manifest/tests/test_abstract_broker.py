@@ -16,7 +16,7 @@ from smarter.apps.account.models import Account, Budget, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.brokers import Brokers
-from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.api.v1.manifests.enum import SAMKinds, sam_kind_icon
 from smarter.apps.connection.models import ApiConnection, SqlConnection
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.guardrail.models import Guardrail
@@ -320,7 +320,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
 
         data = tree.model_dump(mode="json")
         self.assertEqual(set(data), {"kind", "icon", "name", "owner", "recordLocator", "url", "readable", "children"})
-        self.assertEqual(tree.icon, SAMKinds.icon(SAMKinds.LLM_CLIENT))
+        self.assertEqual(tree.icon, sam_kind_icon(SAMKinds.LLM_CLIENT))
         self.assertEqual(guardrail.icon, "shield-tick")
         self.assertEqual(tree.owner, AbstractBroker.dependency_tree_owner(llmclient))
         self.assertIn(self.user_profile.user.username, tree.owner)

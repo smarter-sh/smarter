@@ -137,6 +137,12 @@ Snippets' `site-css` snippets. The Code Snippets REST API
 (`/wp-json/code-snippets/v1/snippets`) accepts the same login and nonce as
 `wp.py`.
 
+Every article ends with the author's signature (name linked to
+lawrencemcdaniel.com, and a one-line bio). Announcements (category 4) don't.
+That is snippet 7, "Posts: author signature", a `the_content` filter plus its
+CSS in `wp_head`. So don't write a signature or bio into a post's Markdown: it
+would appear twice.
+
 WP Super Cache serves pages to visitors, and saving a snippet or theme setting
 does not clear it. After such a change, delete the whole cache: read the
 `wpsc_ajax` nonce from `wp-admin/options-general.php?page=wpsupercache`, then

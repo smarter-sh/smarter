@@ -8,9 +8,9 @@ Smarter API WebsearchPlugin Manifest Constants.
     be documented.
 """
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.WEBSEARCH_PLUGIN.value
+MANIFEST_KIND = SAMKinds.WEBSEARCH_PLUGIN.value
 
 MAX_QUERY_LENGTH = 400
 """The maximum length of a search query, in characters."""
