@@ -50,8 +50,7 @@ Installation
 
 .. code-block:: bash
 
-   helm repo add project-smarter https://project-smarter.github.io/helm-charts/
-   helm install my-release project-smarter/smarter -f my-values.yaml
+   helm install my-release oci://ghcr.io/smarter-sh/charts/smarter -f my-values.yaml
 
 Examples
 ~~~~~~~~~~~~~~~

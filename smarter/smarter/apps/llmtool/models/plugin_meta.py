@@ -130,9 +130,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         Return the kind of the plugin based on its class.
 
         This property is used to determine how the plugin should be handled by the system.
-        It maps the plugin's class to a corresponding :class:`SAMKinds` enumeration value.
+        It maps the plugin's class to a corresponding :class:`~smarter_types.kinds.SAMKinds` enumeration value.
 
-        :return: The kind of the plugin as a :class:`SAMKinds` enum.
+        :return: The kind of the plugin as a :class:`~smarter_types.kinds.SAMKinds` enum.
         :rtype: SAMKinds
 
         **Example:**
