@@ -1,8 +1,8 @@
 """Smarter API LLMHost Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.LLMHOST.value
+MANIFEST_KIND = SAMKinds.LLM_HOST.value
 
 DEFAULT_REPLICAS = 1
 DEFAULT_STORAGE_SIZE = "50Gi"

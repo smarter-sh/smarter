@@ -41,7 +41,7 @@ Smarter / SAM Checklist
     - get_cached_object() and get_cached_objects() class methods on SAM ORM models
 2. Ensure that your unit test coverage ratio is at least 85% for any new code you add.
 3. Include SAM models and brokers for each relevant ORM model.
-4. Add new Smarter resource kinds to :class:`smarter.apps.api.v1.manifests.enum.SAMKinds`
+4. Add new Smarter resource kinds to ``SAMKinds`` in `smarter-types <https://github.com/smarter-sh/smarter-types>`__, which defines which kinds exist, then release it and raise its version here. :class:`smarter.apps.api.v1.manifests.enum.SAMKinds` re-exports it.
 5. Add waffle logging and feature switches as necessary to :class:`smarter.lib.django.waffle.SmarterWaffleSwitches`
 6. Ensure that your UI includes anchors as necessary in :file:`smarter/templates/dashboard/authenticated.html`
 7. Ensure that exceptions are properly handled and that you have inherited from :class:`smarter.common.exceptions.SmarterException`

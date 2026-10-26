@@ -1,8 +1,8 @@
 """Smarter API MCPClient Manifest Constants."""
 
-from smarter.lib.journal.enum import SmarterJournalThings
+from smarter_types import SAMKinds
 
-MANIFEST_KIND = SmarterJournalThings.MCPCLIENT.value
+MANIFEST_KIND = SAMKinds.MCP_CLIENT.value
 
 DEFAULT_TIMEOUT = 30
 """Default seconds to wait for an MCP server to connect and respond."""
