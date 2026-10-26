@@ -138,7 +138,10 @@ post are:
 In this order:
 
 1. **Title:** a claim or a story, not a topic, e.g. "Claude Code Shipped Our
-   Product Roadmap in 8 Days. Here's What Made It Work." Then a date line.
+   Product Roadmap in 8 Days. Here's What Made It Work." Then a date line. Both stay in
+   the Markdown only: the H1 becomes the WordPress title, and the publishing
+   script leaves both out of the post's content, because the theme prints the
+   title and date (see `blog.smarter.sh-publish`).
 2. **A TLDR jump link** for posts over about five minutes:
    `(TLDR? [Click here](#tldr) to jump directly to ...)`. The anchor must be
    set on the target heading in the blog editor, so tell the user which
@@ -226,3 +229,6 @@ but describe what was exposed, not how to exploit an unpatched deployment.
 - In your reply, list what to review before publishing: estimates and how
   they were made, anything said in the user's voice that they didn't tell you,
   the TLDR anchor, the date, and the question of disclosure.
+- The post needs a featured image. The project has an Envato account for
+  stock illustrations, so suggest a few search terms for the user to pick one
+  from. `blog.smarter.sh-publish` has the details.
