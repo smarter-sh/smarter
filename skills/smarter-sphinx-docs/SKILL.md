@@ -132,6 +132,34 @@ Pydantic Models
 - Python API documentation comes from docstrings. Fix a bad API page in the
   docstring, not the `.rst`. See `smarter-docstrings`.
 
+## The ecosystem page and its diagram
+
+`docs/source/smarter-framework.rst` showcases every open-source package of the
+Smarter Project: what it is, the registry it's published on, how to install it,
+and its docs page. An SVG diagram of the same packages,
+`docs/source/_static/smarter-ecosystem.svg`, sits at the top.
+[scripts/ecosystem-diagram.py](scripts/ecosystem-diagram.py) draws it. When a
+package is published, renamed or moved to another registry, update both the
+page's tables and the diagram:
+
+```console
+skills/smarter-sphinx-docs/scripts/ecosystem-diagram.py
+rsvg-convert -w 1500 docs/source/_static/smarter-ecosystem.svg -o <scratchpad>/eco.png
+```
+
+Read the PNG before you finish: text that runs past a card's edge, or a badge
+that touches it, is easy to miss in the SVG source. Hand-edit the script, never
+the SVG.
+
+- **List only what's published.** Check each package on its registry before you
+  list it there (`registry.npmjs.org/<name>`, `pypi.org/pypi/<name>/json`,
+  `proxy.golang.org/<module>/@latest`, Docker Hub's and Artifact Hub's APIs).
+  A package that's only on GitHub gets the GitHub badge, not npm or PyPI.
+- **Copy install commands from the package's own README**, e.g. the CLI's
+  Homebrew, APT and Chocolatey steps from smarter-cli.
+- When a package gets its own docs site, add it to `intersphinx_mapping` in
+  `conf.py` too, and to `llms.txt`.
+
 ## ADRs
 
 One decision each, in Michael Nygard's format, in `docs/source/adr/NNN-<slug>.rst`
