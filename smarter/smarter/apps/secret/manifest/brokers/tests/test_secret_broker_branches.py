@@ -4,6 +4,7 @@ import os
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.manifest.brokers.secret import (
     SAMSecretBroker,
     SAMSecretBrokerError,
@@ -132,6 +133,36 @@ class TestSmarterSecretBrokerBranches(TestSAMBrokerBaseClass):
         broker = self.broker
         with self.assertRaises(SAMBrokerErrorNotFound):
             broker.describe(self.request, name=f"no_such_secret_{self.hash_suffix}")
+
+    def platform_secret(self) -> Secret:
+        """Return a new Secret that the platform account owns, which is deleted after the test."""
+        secret = Secret.objects.create(
+            name=f"test_broker_platform_secret_{self.hash_suffix}",
+            user_profile=smarter_cached_objects.smarter_admin_user_profile,
+            encrypted_value=Secret.encrypt(f"platform-value-{self.hash_suffix}"),
+        )
+        self.addCleanup(Secret.objects.filter(pk=secret.pk).delete)
+        return secret
+
+    def test_describe_refuses_a_platform_secret(self):
+        """Describe doesn't find, nor return the value of, a Secret that the platform account owns."""
+        secret = self.platform_secret()
+        broker = self.broker
+        self.patch_property("user_profile", self.non_admin_user_profile)
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            broker.describe(self.request, name=secret.name)
+
+    def test_get_omits_a_platform_secret(self):
+        """Get doesn't list a Secret that the platform account owns."""
+        secret = self.platform_secret()
+        broker = self.broker
+        self.patch_property("user_profile", self.non_admin_user_profile)
+        for kwargs in ({"name": secret.name}, {}):
+            with self.subTest(kwargs=kwargs):
+                response = broker.get(self.request, **kwargs)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertNotIn(secret.name.encode(), response.content)
+                self.assertNotIn(f"platform-value-{self.hash_suffix}".encode(), response.content)
 
     def test_django_orm_to_manifest_dict_needs_an_account_and_user_profile(self):
         """The ORM-to-manifest conversion needs an account and a user profile."""

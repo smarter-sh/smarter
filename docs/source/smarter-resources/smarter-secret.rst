@@ -19,6 +19,13 @@ resource, a Secret is defined and managed through a standard SAM manifest.
    :language: yaml
    :caption: Example Smarter Secret Manifest
 
+Unlike the platform's other built-in resources, which every account may read, a Secret is read
+only by its owner: a user reads, describes and clones their own Secrets, a staff user also those
+of the rest of their account, and a superuser every Secret. No other account reads the platform
+account's Secrets, such as its LLM provider api keys. Resources whose endpoint Smarter fixes, such
+as the web search and image search plugins, may still use a platform Secret without revealing
+its value. See :class:`~smarter.apps.secret.models.SecretQuerySet`.
+
 Platform administrators can also read and change a Secret's value from the command line, inside
 the Smarter application container. ``manage.py get_secret`` decrypts and prints the value of a
 Secret that a user may read, and ``manage.py update_secret`` encrypts and saves a new value for a

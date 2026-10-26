@@ -3249,6 +3249,174 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"mysql_root_password of type {type(v)} is not a SecretStr")
         return v
 
+    mysql_host: str = Field(
+        settings_defaults.MYSQL_HOST,
+        description="The host name of the platform's database server.",
+        examples=["smarter-mariadb", "mysql.example.com"],
+        title="MySQL Host",
+    )
+    """
+    The host name of the platform's database server, Django's ``DATABASES["default"]["HOST"]``.
+
+    Set it with ``SMARTER_MYSQL_HOST``.
+
+    :type: str
+    :default: Value from ``settings_defaults.MYSQL_HOST``, ``smarter-mariadb``, the local docker-compose
+        service, if it is not set.
+    :raises SmarterConfigurationError: If the value is not a non-empty string.
+    """
+
+    @before_field_validator("mysql_host")
+    def validate_mysql_host(cls, v: Optional[str]) -> str:
+        """Validates the `mysql_host` field.
+
+        Args:
+            v (Optional[str]): The host name to validate.
+        Returns:
+            str: The validated host name.
+        """
+        if v in THE_EMPTY_SET or is_missing_value(v):
+            v = settings_defaults.MYSQL_HOST
+        if not isinstance(v, str) or not v.strip():
+            raise SmarterConfigurationError(f"mysql_host of type {type(v)} is not a non-empty string.")
+        return v.strip()
+
+    mysql_port: int = Field(
+        settings_defaults.MYSQL_PORT,
+        ge=1,
+        le=65535,
+        description="The TCP port of the platform's database server.",
+        examples=[3306],
+        title="MySQL Port",
+    )
+    """
+    The TCP port of the platform's database server, Django's ``DATABASES["default"]["PORT"]``.
+
+    Set it with ``SMARTER_MYSQL_PORT``.
+
+    :type: int
+    :default: Value from ``settings_defaults.MYSQL_PORT``, 3306 if it is not set.
+    :raises SmarterConfigurationError: If the value is not a port number, 1 to 65535.
+    """
+
+    @before_field_validator("mysql_port")
+    def validate_mysql_port(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the `mysql_port` field.
+
+        Args:
+            v (Optional[Union[int, str]]): The port to validate, e.g. ``"3306"`` from an environment variable.
+        Returns:
+            int: The validated port.
+        """
+        if v in THE_EMPTY_SET or is_missing_value(v):
+            v = settings_defaults.MYSQL_PORT
+        try:
+            retval = int(v)  # type: ignore[arg-type]
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError(f"mysql_port {v} is not an integer.") from e
+        if not 1 <= retval <= 65535:
+            raise SmarterConfigurationError(f"mysql_port {retval} is not a port number, 1 to 65535.")
+        return retval
+
+    mysql_database: str = Field(
+        settings_defaults.MYSQL_DATABASE,
+        description="The name of the platform's database.",
+        examples=["smarter"],
+        title="MySQL Database",
+    )
+    """
+    The name of the platform's database, Django's ``DATABASES["default"]["NAME"]``.
+
+    Set it with ``SMARTER_MYSQL_DATABASE``.
+
+    :type: str
+    :default: Value from ``settings_defaults.MYSQL_DATABASE``, ``smarter`` if it is not set.
+    :raises SmarterConfigurationError: If the value is not a non-empty string.
+    """
+
+    @before_field_validator("mysql_database")
+    def validate_mysql_database(cls, v: Optional[str]) -> str:
+        """Validates the `mysql_database` field.
+
+        Args:
+            v (Optional[str]): The database name to validate.
+        Returns:
+            str: The validated database name.
+        """
+        if v in THE_EMPTY_SET or is_missing_value(v):
+            v = settings_defaults.MYSQL_DATABASE
+        if not isinstance(v, str) or not v.strip():
+            raise SmarterConfigurationError(f"mysql_database of type {type(v)} is not a non-empty string.")
+        return v.strip()
+
+    mysql_user: str = Field(
+        settings_defaults.MYSQL_USER,
+        description="The database user that the platform connects as.",
+        examples=["smarter"],
+        title="MySQL User",
+    )
+    """
+    The database user that the platform connects as, Django's ``DATABASES["default"]["USER"]``.
+
+    Set it with ``SMARTER_MYSQL_USER``.
+
+    :type: str
+    :default: Value from ``settings_defaults.MYSQL_USER``, ``smarter`` if it is not set.
+    :raises SmarterConfigurationError: If the value is not a non-empty string.
+    """
+
+    @before_field_validator("mysql_user")
+    def validate_mysql_user(cls, v: Optional[str]) -> str:
+        """Validates the `mysql_user` field.
+
+        Args:
+            v (Optional[str]): The user name to validate.
+        Returns:
+            str: The validated user name.
+        """
+        if v in THE_EMPTY_SET or is_missing_value(v):
+            v = settings_defaults.MYSQL_USER
+        if not isinstance(v, str) or not v.strip():
+            raise SmarterConfigurationError(f"mysql_user of type {type(v)} is not a non-empty string.")
+        return v.strip()
+
+    mysql_password: Optional[SecretStr] = Field(
+        settings_defaults.MYSQL_PASSWORD,
+        description="The password of mysql_user, the database user that the platform connects as.",
+        examples=["your-database-password"],
+        title="MySQL Password",
+    )
+    """
+    The password of :attr:`mysql_user`, Django's ``DATABASES["default"]["PASSWORD"]``.
+
+    Set it with ``SMARTER_MYSQL_PASSWORD``. In the local environment it defaults to the password of
+    docker-compose.yml's smarter-mariadb service. Elsewhere there is no default: a missing password, or
+    a placeholder such as ``SET-ME-PLEASE``, is None, and the platform can't connect to its database.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``settings_defaults.MYSQL_PASSWORD``.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("mysql_password")
+    def validate_mysql_password(cls, v: Optional[Union[SecretStr, str]]) -> Optional[SecretStr]:
+        """Validates the `mysql_password` field.
+
+        Args:
+            v (Optional[Union[SecretStr, str]]): The password to validate.
+        Returns:
+            Optional[SecretStr]: The validated password, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.MYSQL_PASSWORD
+        if isinstance(v, str):
+            v = SecretStr(v)
+        if is_missing_value(v):
+            return None
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"mysql_password of type {type(v)} is not a SecretStr")
+        return v
+
     database_read_timeout: int = Field(
         settings_defaults.DATABASE_READ_TIMEOUT,
         ge=0,
