@@ -1,69 +1,99 @@
 ---
 #------------------------------------------------------------------------------
-# - Initialize the full local development environment, as `make init` does
-# - Run the Smarter unit test suite inside the smarter-app container, with
-#   coverage.py, and upload the coverage report to Codecov (flag: python)
-# - Run the React unit tests with Vitest coverage, and upload that report to
-#   Codecov (flag: react)
+# Tests:           the Python unit test suite, plus the React apps' Prettier,
+#                  ESLint, TypeScript and Vitest unit tests.
 #
-# This workflow reproduces the local developer workflow from the Makefile:
-# the sub-targets of `make init` (Python venv, React build, collectstatic,
-# Docker build, MariaDB setup, migrations, platform initialization, example
-# resources) followed by `make docker-test`. The runner is first provisioned
-# with the prerequisites that `make init` assumes are already installed
-# locally.
+# Three jobs:
 #
-# The sub-targets are called one at a time, rather than via `make init`, so
-# that each can be skipped when its output is restored from cache:
+#   react          Prettier, ESLint, TypeScript and the Vitest unit tests of
+#                  smarter/react, as make react-lint and make react-test do.
+#                  Uploads its coverage to Codecov (flag: react). A few
+#                  minutes, on one runner.
+#   python         The Python suite, split into eight shards that run side by
+#                  side, one per runner.
 #
-#   python-init    -> venv/                     key: Python version + local.txt
-#                     node_modules/             key: Node version + package-lock.json
-#   react-install  -> smarter/react/**/node_modules
-#   react-build    -> smarter/smarter/static/react/, and the libraries' dist/
-#                                               key: git tree hash of smarter/react
-#   docker-build   -> BuildKit layer cache (type=gha)
+#                  Why: on one runner the suite took around 45 minutes (5 of
+#                  setup, the remainder of tests), which is too slow for
+#                  automating CI/CD on every pull request.
+#                  GitHub gives public repositories free runners that run in
+#                  parallel, so eight runners each take an eighth of the test
+#                  suite, reducing the overall time to around 10 minutes.
 #
-# Caches are restored and saved with actions/cache/restore and
-# actions/cache/save, so that they are saved as soon as they are built.
-# actions/cache only saves when the whole job succeeds, so a failing test
-# would otherwise prevent anything from ever being cached.
+#                  What a shard is: one eighth of the suite's tests, run by
+#                  one runner. Together the eight run every test exactly once.
+#                  A TestCase is never split, because its setUpClass builds
+#                  the fixtures that all its tests share.
 #
-# pre-commit-init is skipped: it installs a git hook and runs
-# `pre-commit autoupdate`, which rewrites .pre-commit-config.yaml. Neither
-# affects the tests.
+#                  Shards are proprietary to Smarter:  this job's matrix (shard: 1 to 8)
+#                  starts eight copies of the job. Each tells the test runner
+#                  its number in SMARTER_TEST_SHARD, e.g. 3/8. The runner,
+#                  SmarterTestRunner in smarter/smarter/lib/unittest/runner.py,
+#                  discovers the whole suite, deals its TestCases out to eight
+#                  shards (largest first, each to the shard with the fewest
+#                  tests so far), and runs only shard 3. Every copy deals the
+#                  same tests the same way, so the copies agree on the split
+#                  without talking to each other. Shards are balanced by test
+#                  count, not by time.
 #
-# The Python suite runs as eight shards, one per runner, side by side. Each
-# shard sets up its own containers and database, discovers the whole suite,
-# and runs its share (SMARTER_TEST_SHARD, see
-# smarter/smarter/lib/unittest/runner.py). In one job, setup took about 5
-# minutes and the tests about 27. The python-report job then merges the
-# shards' coverage data and test results, and uploads the coverage to Codecov
-# once.
+#                  Runners share nothing: no disk, containers or database. So
+#                  each shard builds its own throwaway copy of the platform
+#                  (see below), then runs its tests under coverage.py in its
+#                  smarter-app container.
 #
-# The "Create .env" step passes the repository and organization secrets
-# to the containers under the names that a local .env uses. At a minimum:
+#   python-report  Waits for the eight shards. Shows their test results in
+#                  one job summary, combines their coverage, and uploads it
+#                  to Codecov once (flag: python), when every shard passed.
+#                  It fails when any shard failed, so it stands for all eight.
 #
-# OPENAI_API_KEY
-# GOOGLE_MAPS_API_KEY
-# SMTP_USERNAME
-# SMTP_PASSWORD
+# How a shard builds the platform
 #
-# The "Upload coverage to Codecov" step uses the CODECOV_TOKEN secret.
+# It runs the steps of make init one at a time, on a bare GitHub runner:
+# make python-init (the venv), the React build, make collectstatic, make
+# docker-build (the smarter image), then make docker-init, which starts the
+# containers on a new, empty database, migrates it and initializes the
+# platform. The runner first gets what make init expects a developer to have
+# installed: Python 3.14, Node, MariaDB Connector/C and a docker-compose
+# command. make pre-commit-init is skipped: it installs a git hook and
+# rewrites .pre-commit-config.yaml, and neither matters to the tests.
 #
-# AWS credentials, ROOT_DOMAIN and EKS_CLUSTER_NAME are deliberately NOT
-# passed. With them, `make docker-init` deploys the example LLMClients to
-# real infrastructure: Route53 A records under api.local.<ROOT_DOMAIN> and
-# ingress manifests in the smarter-local namespace of the EKS cluster.
-# Unit tests that require connectivity to AWS are tagged `infrastructure`
-# and skipped by default.
+# The slow steps are cached, so that a shard skips them when nothing they
+# depend on has changed:
+#
+#   venv/                                   Python version + requirements/local.txt
+#   node_modules/ (repository root)         Node version + package-lock.json
+#   smarter/react node_modules, and the     see .github/actions/react-build,
+#     React build                           which build.yml shares
+#   the smarter image's layers              BuildKit's GitHub Actions cache
+#
+# Only shard 1 saves the caches. They are saved with actions/cache/save as
+# soon as they are built, because actions/cache would save nothing when a
+# test fails.
+#
+# Secrets
+#
+# The "Create .env" step writes the repository's and organization's secrets
+# into .env, under the names a developer's .env uses. The tests need at
+# least OPENAI_API_KEY, GOOGLE_MAPS_API_KEY, SMTP_USERNAME and SMTP_PASSWORD.
+# The workflow also uses DOCKERHUB_USERNAME and DOCKERHUB_PAT (image pulls)
+# and CODECOV_TOKEN.
+#
+# AWS credentials, ROOT_DOMAIN and AWS_EKS_CLUSTER_NAME are deliberately NOT
+# passed. With them, make docker-init would deploy the example LLMClients to
+# real infrastructure: Route53 records under api.local.<ROOT_DOMAIN> and
+# ingresses in the smarter-local namespace of the EKS cluster. The tests that
+# need AWS are tagged infrastructure, and are skipped.
 #------------------------------------------------------------------------------
 name: Tests
 
 #------------------------------------------------------------------------------
 # The first step of the pipeline (see build.yml): every pull request to main
-# runs the tests before it can be merged. Make the python and react jobs
-# required status checks of main, so that a failing pull request can't be
-# merged. A new push to the pull request cancels the run in progress.
+# runs the tests before it can be merged. python-report and react are main's
+# required status checks, so a pull request that fails them can't be merged.
+# A new push to the pull request cancels the run in progress.
+#
+# A pull request whose head commit says [skip ci] runs nothing, and its
+# required checks wait forever. Start this workflow by hand on the pull
+# request's branch: its checks then count for the pull request.
 #
 # Pull requests from forks get no secrets, so their LLM tests fail. A
 # maintainer runs the tests for them by hand, from a branch in this repository.
