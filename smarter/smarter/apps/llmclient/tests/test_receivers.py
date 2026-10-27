@@ -96,3 +96,21 @@ class TestLLMClientReceivers(SmarterTestBase):
                 with self.subTest(receiver=name, created=created):
                     getattr(receivers, name)(sender=None, instance=MagicMock(), created=created)
         receivers.llmclient_plugin_deleted(sender=None, instance=MagicMock())
+
+    def test_chat_requests_log_no_prompt_or_session_key(self):
+        """Test that a chat request's prompt is logged at DEBUG only, and its session key only masked."""
+        session_key = "77846410f51045319bd666642e325c05a7d28696407aadcfb0704827c686ad34"
+        request_data = {"session_key": session_key, "messages": [{"role": "user", "content": "a private question"}]}
+        with patch.object(receivers, "logger") as logger:
+            receivers.handle_pre_create_llmclient_request(sender=None, llmclient_id=1, request_data=request_data)
+            receivers.handle_post_create_llmclient_request(sender=None, llmclient_id=1, request_data=request_data)
+            receivers.llmclient_requests_saved(sender=None, instance=MagicMock(session_key=session_key), created=True)
+        logger.debug.assert_called()
+        logger.info.assert_called_once()
+        for call in logger.debug.call_args_list + logger.info.call_args_list:
+            logged = " ".join(str(arg) for arg in call.args)
+            self.assertNotIn(session_key, logged)
+        self.assertIn("****86ad34", " ".join(str(arg) for arg in logger.info.call_args.args))
+        self.assertNotIn("a private question", " ".join(str(arg) for arg in logger.info.call_args.args))
+        # the original request data is not changed by masking it for the log.
+        self.assertEqual(request_data["session_key"], session_key)
