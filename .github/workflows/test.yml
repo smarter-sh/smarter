@@ -59,8 +59,24 @@
 #------------------------------------------------------------------------------
 name: Tests
 
+#------------------------------------------------------------------------------
+# The first step of the pipeline (see build.yml): every pull request to main
+# runs the tests before it can be merged. Make the python and react jobs
+# required status checks of main, so that a failing pull request can't be
+# merged. A new push to the pull request cancels the run in progress.
+#
+# Pull requests from forks get no secrets, so their LLM tests fail. A
+# maintainer runs the tests for them by hand, from a branch in this repository.
+#------------------------------------------------------------------------------
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   ENVIRONMENT: "local"
@@ -622,6 +638,8 @@ jobs:
   #   Codecov, which receives one combined report under the python flag.
   #   Coverage is only reported when every shard passed, as before sharding:
   #   a failed shard's data would understate it.
+  # - It fails when any shard failed, so that it can stand for all of them as
+  #   a required status check.
   #----------------------------------------------------------------------------
   python-report:
     needs: python
@@ -689,3 +707,12 @@ jobs:
           flags: python
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      # This job, with react, is the required status check of main: one check
+      # for all eight shards, whose names would otherwise all be required.
+      - name: Fail when a shard failed
+        if: needs.python.result != 'success'
+        shell: bash
+        run: |
+          echo "::error::A shard of the Python tests did not pass: ${{ needs.python.result }}."
+          exit 1

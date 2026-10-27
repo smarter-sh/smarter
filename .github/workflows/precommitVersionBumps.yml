@@ -91,9 +91,9 @@ jobs:
         id: check_changes
         run: |
           if [[ -n "$(git status --porcelain .pre-commit-config.yaml)" ]]; then
-            echo "::set-output name=changes::true"
+            echo "changes=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::set-output name=changes::false"
+            echo "changes=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Commit and push changes
