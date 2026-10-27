@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.28](https://github.com/smarter-sh/smarter/compare/v0.36.27...v0.36.28) (2026-10-27)
+
+### Bug Fixes
+
+* **ci:** stop the deploy action printing kubernetes secrets ([fac06b4](https://github.com/smarter-sh/smarter/commit/fac06b467276de4b14123f76d643e9e394f80bae))
+
 ## [0.36.28-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.27...v0.36.28-alpha.1) (2026-10-27)
 
 ### Bug Fixes
