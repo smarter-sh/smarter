@@ -60,7 +60,8 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 
 **Read.** :doc:`/smarter-resources/smarter-llmhost`,
 :doc:`/smarter-framework/smarter-on-kubernetes`, :doc:`/smarter-resources/smarter-provider`,
-:doc:`/smarter-platform/cost-accounting`.
+:doc:`/smarter-platform/cost-accounting`, `Django and httpx: An LLM Proxy That Keeps Provider API
+Keys Away From Callers <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__.
 
 **Exercises.**
 

@@ -93,6 +93,9 @@ $S/wp.py publish ~/desktop/blog-v0.21-v0.23.md \
   --slug release-v0-21-v0-23 --category 4 --status draft
 $S/wp.py publish ... --status publish --id 319   # update post 319, here to publish it
 $S/wp.py upload ~/desktop/shot.png --alt "What the image shows"  # id and source_url
+$S/wp.py publish ... --id 546 --featured-media 548   # set the featured image (and og:image)
+$S/wp.py publish ... --date 2026-04-21T09:00:00      # backdate, only when the user asks
+$S/wp.py clear-cache                                 # delete WP Super Cache's page cache
 ```
 
 To add a screenshot, `upload` it and put its `source_url` in an image line.
@@ -118,24 +121,17 @@ and photos from Envato are the first choice for a featured image. You can't
 sign in to Envato or license an item yourself. Suggest two or three search
 terms, or Envato items that suit the post, and ask the user to download the
 one they pick. Then resize it to 1680 px wide, `upload` it with alt text that
-says what it shows, and set it on the post:
-
-```bash
-python3 -c '
-from wp import Blog
-b = Blog()
-p = b.request("GET", "posts/<id>", context="edit")
-# send the content too, so Yoast SEO rebuilds the post's og:image
-b.request("POST", "posts/<id>", {"featured_media": <media id>, "content": p["content"]["raw"]})
-print(b.request("GET", "posts/<id>", context="edit")["yoast_head_json"]["og_image"][0]["url"])
-'
-```
+says what it shows, and set it on the post with `publish ... --id <id>
+--featured-media <media id>`.
 
 Setting `featured_media` alone changes the image on the page but not Yoast
 SEO's `og:image`, which link previews in Slack, LinkedIn and the like use: it
 keeps the old image, or none. Saving the content in the same request makes Yoast
-rebuild it. The command prints the new `og:image` url. Check that it is the new
-file, then clear the page cache.
+rebuild it, which `--featured-media` does. When that request also changes the
+status (draft to publish), Yoast can still miss the image, and a second save of
+the content fixes it; `publish` checks for this and saves again. Then check
+`yoast_head_json.og_image` and the public page's `og:image` (both are the new
+file), and run `clear-cache`.
 
 An original illustration that you draw is also fine, when no Envato item fits
 or the user would rather not pick one. The featured image of "Getting Started
@@ -144,7 +140,13 @@ Draw an SVG in the same flat style and palette, about the post's own subject,
 render it with `rsvg-convert -w 1680 -h 1120`, and read the PNG before
 uploading it. Put `xml:space="preserve"` on any text group with
 code, or rsvg drops the spaces between words. Don't use trademarked logos,
-such as Python's. Before reusing an image from the media library, check that
+such as Python's, unless the user asks for them. When they do (a post about
+one technology, like Calico on Kubernetes), use the project's official logo, not
+a redrawing: the CNCF landscape hosts official SVGs of most cloud-native
+projects at `https://raw.githubusercontent.com/cncf/landscape/master/hosted_logos/<name>.svg`,
+and Kubernetes' own is `logo/logo.svg` in kubernetes/kubernetes. Embed each one
+in your SVG as a nested `<svg>` with its own `viewBox`, at its original
+proportions and colors. Before reusing an image from the media library, check that
 no other post uses it as its featured image.
 
 `publish` without `--id` creates a new post every time. To change a post, pass
@@ -177,8 +179,10 @@ leaves out category 4 (a Code Snippets snippet, "Home page: hide
 Announcements", in wp-admin > Snippets). Announcements are listed in the Main
 Sidebar's "Announcements" widget instead. So put release announcements and other
 administrative posts in category 4, and never add 4 to an article. Leave the
-publication date to WordPress (now), and keep the Markdown source at
-`~/desktop/blog-<slug>.md`.
+publication date to WordPress (now) unless the user asks for another date.
+Then pass `--date`, put the same date in the Markdown's date line, and make the
+post true as of that date: don't cite commits, releases or posts from after
+it. Keep the Markdown source at `~/desktop/blog-<slug>.md`.
 
 Post cards show no excerpt. That is snippet 6, "Post cards: hide excerpts", a
 front-end PHP snippet that prints `.entry-card .entry-excerpt { display: none; }`
@@ -195,10 +199,13 @@ CSS in `wp_head`. So don't write a signature or bio into a post's Markdown: it
 would appear twice.
 
 WP Super Cache serves pages to visitors, and saving a snippet or theme setting
-does not clear it. After such a change, delete the whole cache: read the
-`wpsc_ajax` nonce from `wp-admin/options-general.php?page=wpsupercache`, then
-POST `action=ajax-delete-cache&path=/&admin=1&nonce=<nonce>` to
-`wp-admin/admin-ajax.php`. Verify with the plain url, not a `?query` url,
+does not clear it. After such a change, delete the whole cache with
+`wp.py clear-cache`. It reads the `wpsc_ajax` nonce from
+`wp-admin/options-general.php?page=wpsupercache` and POSTs
+`action=ajax-delete-cache&path=/&admin=1&nonce=<nonce>` to
+`wp-admin/admin-ajax.php`, which answers `0` on success. To confirm, the
+`Cached page generated by WP-Super-Cache on <time>` comment at the end of the
+home page shows a new time on the next visit. Verify with the plain url, not a `?query` url,
 which bypasses the cache and shows you a page that visitors don't get.
 
 ## Routine

@@ -63,7 +63,11 @@ Each course plan lists every file that it uses, in both repositories, under *Sma
 Code*.
 
 **Read.** :doc:`/smarter-platform/cloud-infrastructure`, :doc:`/smarter-framework/technologies/aws`,
-:doc:`/smarter-framework/technologies/infrastructure`.
+:doc:`/smarter-framework/technologies/infrastructure`, `cert-manager and Route 53: DNS-01
+Certificates, One Issuer per Delegated Zone
+<https://blog.smarter.sh/2026/10/01/cert-manager-dns01-route53/>`__, `Amazon SES, DKIM and DMARC:
+Email Authentication for Every Smarter Environment
+<https://blog.smarter.sh/2026/08/09/amazon-ses-dkim-dmarc/>`__.
 
 **Exercises.**
 
