@@ -95,9 +95,12 @@ name: Tests
 # required status checks, so a pull request that fails them can't be merged.
 # A new push to the pull request cancels the run in progress.
 #
-# A pull request whose head commit says [skip ci] runs nothing, and its
-# required checks wait forever. Start this workflow by hand on the pull
-# request's branch: its checks then count for the pull request.
+# A pull request whose head commit's message contains a CI skip tag, such as
+# [skip ci] anywhere in its body, runs nothing, and its required checks wait
+# forever. The automated commits (release.config.js, precommitVersionBumps.yml)
+# leave the tag out for that reason. If it happens anyway, start this workflow
+# by hand on the pull request's branch: its checks then count for the pull
+# request.
 #
 # Pull requests from forks get no secrets, so their LLM tests fail. A
 # maintainer runs the tests for them by hand, from a branch in this repository.
