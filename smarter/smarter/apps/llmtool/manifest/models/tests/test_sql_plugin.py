@@ -36,7 +36,7 @@ from smarter.apps.llmtool.tests.base_classes import ManifestTestsMixin, TestPlug
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -67,7 +67,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_sql_plugin_logger_prefix = f"{formatted_text(HERE)}.TestSAMSqlPlugin()"
+    test_sam_sql_plugin_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMSqlPlugin()"
 
     @classmethod
     def setUpClass(cls):

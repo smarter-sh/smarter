@@ -42,7 +42,7 @@ differs.
      - Kubernetes (Helm chart)
    * - Web application and REST API
      - ``smarter-app``: one container, uvicorn with auto-reload, on port 9357.
-     - Deployment ``smarter``: uvicorn with 4 workers per pod (``app.workers``), on port 8000,
+     - Deployment ``smarter``: uvicorn with 2 workers per pod (``app.workers``), on port 8000,
        behind the ClusterIP Service ``smarter``. Each worker accepts at most 100 concurrent
        requests (``app.limitConcurrency``) and answers 503 above that, so an overloaded pod sheds
        load instead of running out of memory. A HorizontalPodAutoscaler scales it on CPU and

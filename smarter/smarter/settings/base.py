@@ -32,12 +32,13 @@ from dotenv import load_dotenv
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.env import is_missing_value
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import mask_string
+from smarter.common.utils.redis_url import redis_url_with_database
 from smarter.lib import json
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 load_dotenv()
 
@@ -676,11 +677,20 @@ CACHES = {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://:smarter@smarter-redis:6379/1",
         "OPTIONS": CACHE_OPTIONS,
-    }
+    },
+    "sessions": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": redis_url_with_database("redis://:smarter@smarter-redis:6379/1", 2),
+        "OPTIONS": CACHE_OPTIONS,
+    },
 }
 
 """
 The Django cache configuration for Smarter, using Redis as the cache backend.
+
+``default`` holds the application's cached objects, in Redis database 1. ``sessions``
+holds user sessions, in database 2 of the same server, so that ``cache.clear()``, e.g.
+from ``manage.py reset_cache``, doesn't log anyone out. See :data:`SESSION_CACHE_ALIAS`.
 
 See:
 
@@ -718,10 +728,23 @@ insulates from sessions being lost due to redeployments or restarts of web serve
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#session-engine
 """
 
+SESSION_CACHE_ALIAS = "sessions"
+"""
+The cache that holds user sessions: its own Redis database, apart from the application's.
+
+cached objects, so that clearing the ``default`` cache doesn't log users out.
+
+See: https://docs.djangoproject.com/en/5.0/ref/settings/#session-cache-alias
+"""
+
 # Default Celery Configuration
-CELERY_BROKER_URL = "redis://:smarter@smarter-redis:6379/1"
+CELERY_BROKER_URL = "redis://:smarter@smarter-redis:6379/0"
 """
 The Celery broker URL for Smarter, using Redis as the message broker.
+
+The broker uses Redis database 0, the cache database 1 and sessions database 2. They
+must differ: ``cache.clear()``, e.g. from ``manage.py reset_cache``, runs ``FLUSHDB`` on
+the cache's database, which would also delete the Celery queues and the RedBeat schedule.
 
 See:
 
@@ -902,12 +925,20 @@ if smarter_settings.debug_mode and not "test" in sys.argv:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]
-    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar is added to INSTALLED_APPS."))
+    logger.debug(
+        SmarterFormattedText.text(
+            "Debug mode is ON. debug_toolbar is added to INSTALLED_APPS.", SmarterFormattedText.BRIGHT_GREEN
+        )
+    )
 
     MIDDLEWARE += [
         "debug_toolbar.middleware.DebugToolbarMiddleware",
     ]
-    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar middleware is enabled."))
+    logger.debug(
+        SmarterFormattedText.text(
+            "Debug mode is ON. debug_toolbar middleware is enabled.", SmarterFormattedText.BRIGHT_GREEN
+        )
+    )
 
 
 ROOT_HOSTCONF = "smarter.hosts"
@@ -1928,7 +1959,7 @@ for key, value in os.environ.items():
     # needing to modify the settings file.
     if key not in globals():
         logger.debug(
-            formatted_text(
+            SmarterFormattedText.text(
                 "%s Environment variable %s does not match any existing Django setting. Inspecting the value to attempt to determine its intended type and usage: %s=%s"
             ),
             logger_prefix,

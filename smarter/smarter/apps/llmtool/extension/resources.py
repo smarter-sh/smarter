@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from smarter.apps.llmtool.models import Extension
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 FAKE_REQUEST_PATH = "/api/v1/cli/apply/"
 

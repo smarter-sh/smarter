@@ -24,7 +24,7 @@ from smarter.apps.llmtool.manifest.enum import (
     SAMPluginCommonMetadataClassValues,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import rfc1034_compliant_str, to_snake_case
 from smarter.lib import logging
@@ -33,7 +33,7 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
@@ -257,7 +257,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :rtype: Optional[PluginMeta]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{formatted_text(__name__)}.{PluginMeta.__name__}.get_cached_object()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginMeta.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, plugin_class: %s",
             logger_prefix,

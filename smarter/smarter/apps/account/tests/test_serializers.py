@@ -46,7 +46,7 @@ SERIALIZER_MODULES = [
 class TestSerializers(TestAccountMixin):
     """Test serializers for the account app."""
 
-    test_serializers_logger_prefix = f"{logging.formatted_text(__name__)}.TestSerializers()"
+    test_serializers_logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestSerializers()"
 
     def test_account_serializer(self):
         """Test the AccountSerializer."""

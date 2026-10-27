@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
-    test_account_mixin_logger_prefix = f"{logging.formatted_text(__name__)}.TestAccountMixin()"
+    test_account_mixin_logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestAccountMixin()"
 
     @classmethod
     def setUpClass(cls) -> None:

@@ -305,7 +305,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: Logger prefix string
         :rtype: str
         """
-        return f"{logging.formatted_text(__name__)}.{CliBaseApiView.__name__}[{id(self)}]"
+        return f"{logging.SmarterFormattedText.text(__name__)}.{CliBaseApiView.__name__}[{id(self)}]"
 
     @property
     def formatted_class_name(self) -> str:

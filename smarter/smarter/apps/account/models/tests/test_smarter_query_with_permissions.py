@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class TestSmarterQuerySetWithPermissions(TestAccountMixin):
     """Test SmarterQuerySetWithPermissions model."""
 
-    logger_prefix = f"{logging.formatted_text(__name__)}.TestSmarterQuerySetWithPermissions()"
+    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestSmarterQuerySetWithPermissions()"
 
     @classmethod
     def setUpClass(cls):

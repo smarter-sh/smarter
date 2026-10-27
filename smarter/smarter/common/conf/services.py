@@ -16,11 +16,11 @@ from botocore.exceptions import (
 
 from smarter.common.conf.const import get_env
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = f"{formatted_text(__name__)}.Services"
+logger_prefix = f"{SmarterFormattedText.text(__name__)}.Services"
 
 
 class Services:

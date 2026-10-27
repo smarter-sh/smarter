@@ -107,21 +107,23 @@ if smarter_settings.enable_proxy:
     urlpatterns += [
         path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
     ]
-    logger.debug("%s Proxy API endpoints are %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+    logger.debug("%s Proxy API endpoints are %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY)
 else:
     logger.info(
         "%s Proxy API endpoints are %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         SmarterReadyState.NOT_READY,
     )
 if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
     ]
-    logger.debug("%s Vectorstore API endpoints are %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+    logger.debug(
+        "%s Vectorstore API endpoints are %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY
+    )
 else:
     logger.info(
         "%s Vectorstore API endpoints are %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         SmarterReadyState.NOT_READY,
     )

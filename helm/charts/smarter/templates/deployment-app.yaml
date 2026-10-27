@@ -75,6 +75,9 @@ spec:
             {{- end }}
             - "--timeout-keep-alive=15"
             - "--timeout-graceful-shutdown=30"
+            # Django has no ASGI lifespan support, so turn it off instead of logging a
+            # "lifespan protocol appears unsupported" line for each worker.
+            - "--lifespan=off"
           imagePullPolicy: '{{ .Values.global.image.pullPolicy | default "Always" }}'
           resources:
             {{- toYaml .Values.app.resources | nindent 12 }}

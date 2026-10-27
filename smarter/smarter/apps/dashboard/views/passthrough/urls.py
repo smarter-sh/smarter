@@ -59,14 +59,14 @@ if smarter_settings.enable_dashboard_passthrough_prompt:
     ]
     logger.debug(
         "%s %s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         app_name,
         SmarterReadyState.READY,
     )
 else:
     logger.info(
         "%s %s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'true' to enable.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         app_name,
         SmarterReadyState.NOT_READY,
     )

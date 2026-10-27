@@ -3,7 +3,7 @@ The banner that the Smarter web server prints when it starts.
 
 It draws the Smarter logo, an infinity loop shaded from orange to yellow, next to the
 facts that someone reading a pod's log wants first: the version, the host, the
-environment and its url, and the database, cache and Celery broker that this process
+environment and its url, and the database, cache, session store and Celery broker that this process
 talks to. Passwords in those urls are masked.
 
 :func:`print_startup_banner` is called from :mod:`smarter.asgi`. Uvicorn's ``--workers``
@@ -11,20 +11,19 @@ imports the application once per worker process, so only the first worker of a
 server prints it.
 """
 
-import multiprocessing
 import os
 import platform
 import socket
 import sys
-import tempfile
 from collections.abc import Callable
 from datetime import datetime, timezone
 from urllib.parse import urlsplit, urlunsplit
 
+from smarter.common.helpers.processes import is_first_worker
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 ESC = "\033["
 RESET = f"{ESC}0m"
@@ -87,6 +86,29 @@ def _safe(getter: Callable[[], object]) -> str:
     return UNKNOWN if value in (None, "") else str(value)
 
 
+def platform_summary() -> str:
+    """
+    Return a short description of the operating system, e.g. ``linux · amzn 2023 · x86_64``.
+
+    :func:`platform.platform` names the kernel build and the C library as well, which is
+    more than someone reading a pod's log needs. The distribution comes from
+    ``/etc/os-release``, and is left out where there is none, e.g. on macOS.
+
+    :returns: The system, the distribution and its version if known, and the machine type,
+        separated by ``·``.
+    """
+    parts = [platform.system().lower()]
+    try:
+        release = platform.freedesktop_os_release()
+    except OSError:
+        release = {}
+    distro = " ".join(v for v in (release.get("ID", ""), release.get("VERSION_ID", "")) if v)
+    if distro:
+        parts.append(distro)
+    parts.append(platform.machine())
+    return "  ·  ".join(part for part in parts if part)
+
+
 def _database_url() -> str:
     """
     Return the default database as a url, without its password.
@@ -118,6 +140,7 @@ def banner_facts() -> list[tuple[str, str]]:
         ("url", _safe(lambda: smarter_settings.environment_url)),
         ("database", _safe(_database_url)),
         ("cache", mask_url(_safe(lambda: settings.CACHES["default"]["LOCATION"]))),
+        ("sessions", mask_url(_safe(lambda: settings.CACHES[settings.SESSION_CACHE_ALIAS]["LOCATION"]))),
         ("broker", mask_url(_safe(lambda: settings.CELERY_BROKER_URL))),
         ("log level", _safe(lambda: smarter_settings.log_level_name)),
         ("debug", "ON" if getattr(settings, "DEBUG", False) else "OFF"),
@@ -166,13 +189,13 @@ def startup_banner(color: bool = True) -> str:
     if color:
         right = [
             f"{BOLD}{WHITE}{title}{RESET}",
-            f"{GRAY}{_safe(platform.platform)}  {now}{RESET}",
+            f"{GRAY}{_safe(platform_summary)}  {now}{RESET}",
             "",
         ]
         right += [f"{GRAY}{label.ljust(label_width)}{RESET}  {value}" for label, value in facts]
         left = [_color_logo_line(line) for line in LOGO] + ["", f"{GRAY}{WORDMARK}{RESET}"]
     else:
-        right = [title, f"{_safe(platform.platform)}  {now}", ""]
+        right = [title, f"{_safe(platform_summary)}  {now}", ""]
         right += [f"{label.ljust(label_width)}  {value}" for label, value in facts]
         left = list(LOGO) + ["", WORDMARK]
 
@@ -188,29 +211,6 @@ def startup_banner(color: bool = True) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
-def _is_first_worker() -> bool:
-    """
-    Return whether this process should print the banner.
-
-    A process that wasn't started by :mod:`multiprocessing`, such as ``uvicorn`` without
-    ``--workers``, always prints it. Uvicorn's workers are its children, and share a
-    parent pid, so the first of them to create a marker file named for that pid prints it.
-
-    :returns: True if this process should print the banner.
-    """
-    if multiprocessing.parent_process() is None:
-        return True
-    marker = os.path.join(tempfile.gettempdir(), f"smarter-startup-banner-{os.getppid()}")
-    try:
-        fd = os.open(marker, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
-        return False
-    except OSError:
-        return True
-    os.close(fd)
-    return True
-
-
 def print_startup_banner() -> None:
     """
     Print the startup banner to stdout, once per server.
@@ -220,7 +220,7 @@ def print_startup_banner() -> None:
     banner can never keep the server from starting.
     """
     try:
-        if not _is_first_worker():
+        if not is_first_worker("startup-banner"):
             return
         sys.stdout.write(startup_banner(color=not os.environ.get("NO_COLOR")))
         sys.stdout.flush()
@@ -228,4 +228,4 @@ def print_startup_banner() -> None:
         logger.warning("%s.print_startup_banner() could not print the startup banner: %s", logger_prefix, e)
 
 
-__all__ = ["mask_url", "banner_facts", "startup_banner", "print_startup_banner"]
+__all__ = ["mask_url", "platform_summary", "banner_facts", "startup_banner", "print_startup_banner"]

@@ -457,6 +457,8 @@ class TestAWSHelpers(AWSTestBase):
             settings.aws_region = "us-east-1"
             self.assertTrue(eks.update_kubeconfig())
             self.assertEqual(call.call_args.args[0][:3], ["aws", "eks", "update-kubeconfig"])
+            # its stdout names the cluster's arn, which holds the AWS account id
+            self.assertIs(call.call_args.kwargs["stdout"], subprocess.DEVNULL)
             call.side_effect = subprocess.CalledProcessError(1, "aws")
             self.assertFalse(eks.update_kubeconfig())
             settings.aws_eks_cluster_name = None

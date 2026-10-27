@@ -45,7 +45,7 @@ from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 SECRET_ENV_NAME = re.compile(r"PASSWORD|SECRET|TOKEN|KEY", re.IGNORECASE)
 """Environment variables whose values are redacted from the log."""
