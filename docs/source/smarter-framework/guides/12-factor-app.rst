@@ -66,8 +66,8 @@ practices.
      Smarter Docker containers and images will achieve the same effect.
 
 10. **Dev/prod parity**: [✅] Keep development, staging, and
-    production as similar as possible. The GitHub Action
-    `pushMain.yml <.github/workflows/pushMain.yml>`_ executes a
+    production as similar as possible. After each release, the GitHub Action
+    `build.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/build.yml>`_ executes a
     forced merge from main to dev branches. This ensures that all dev
     branches are synced to main immediately after pull requests are
     merged to main.

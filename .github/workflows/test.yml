@@ -1,58 +1,121 @@
 ---
 #------------------------------------------------------------------------------
-# - Initialize the full local development environment, as `make init` does
-# - Run the Smarter unit test suite inside the smarter-app container, with
-#   coverage.py, and upload the coverage report to Codecov (flag: python)
-# - Run the React unit tests with Vitest coverage, and upload that report to
-#   Codecov (flag: react)
+# Tests:           the Python unit test suite, plus the React apps' Prettier,
+#                  ESLint, TypeScript and Vitest unit tests.
 #
-# This workflow reproduces the local developer workflow from the Makefile:
-# the sub-targets of `make init` (Python venv, React build, collectstatic,
-# Docker build, MariaDB setup, migrations, platform initialization, example
-# resources) followed by `make docker-test`. The runner is first provisioned
-# with the prerequisites that `make init` assumes are already installed
-# locally.
+# Four jobs:
 #
-# The sub-targets are called one at a time, rather than via `make init`, so
-# that each can be skipped when its output is restored from cache:
+#   fingerprint    Hashes the files each suite depends on (python: smarter/smarter,
+#                  react: smarter/react), and looks for a
+#                  record that those exact files already passed. If they
+#                  did, that suite is skipped and still reported as passing,
+#                  so unchanged code isn't tested twice. See the job.
+#   react         Prettier, ESLint, TypeScript and the Vitest unit tests of
+#                  smarter/react, as make react-lint and make react-test do.
+#                  Uploads its coverage to Codecov (flag: react). A few
+#                  minutes, on one runner.
+#   python         The Python suite, split into eight shards that run side by
+#                  side, one per runner.
 #
-#   python-init    -> venv/                     key: Python version + local.txt
-#                     node_modules/             key: Node version + package-lock.json
-#   react-install  -> smarter/react/**/node_modules
-#   react-build    -> smarter/smarter/static/react/, and the libraries' dist/
-#                                               key: git tree hash of smarter/react
-#   docker-build   -> BuildKit layer cache (type=gha)
+#                  Why: on one runner the suite took around 45 minutes (5 of
+#                  setup, the remainder of tests), which is too slow for
+#                  automating CI/CD on every pull request.
+#                  GitHub gives public repositories free runners that run in
+#                  parallel, so eight runners each take an eighth of the test
+#                  suite, reducing the overall time to around 10 minutes.
 #
-# Caches are restored and saved with actions/cache/restore and
-# actions/cache/save, so that they are saved as soon as they are built.
-# actions/cache only saves when the whole job succeeds, so a failing test
-# would otherwise prevent anything from ever being cached.
+#                  What a shard is: one eighth of the suite's tests, run by
+#                  one runner. Together the eight run every test exactly once.
+#                  A TestCase is never split, because its setUpClass builds
+#                  the fixtures that all its tests share.
 #
-# pre-commit-init is skipped: it installs a git hook and runs
-# `pre-commit autoupdate`, which rewrites .pre-commit-config.yaml. Neither
-# affects the tests.
+#                  Shards are proprietary to Smarter:  this job's matrix (shard: 1 to 8)
+#                  starts eight copies of the job. Each tells the test runner
+#                  its number in SMARTER_TEST_SHARD, e.g. 3/8. The runner,
+#                  SmarterTestRunner in smarter/smarter/lib/unittest/runner.py,
+#                  discovers the whole suite, deals its TestCases out to eight
+#                  shards (largest first, each to the shard with the fewest
+#                  tests so far), and runs only shard 3. Every copy deals the
+#                  same tests the same way, so the copies agree on the split
+#                  without talking to each other. Shards are balanced by test
+#                  count, not by time.
 #
-# The "Create .env" step passes the repository and organization secrets
-# to the containers under the names that a local .env uses. At a minimum:
+#                  Runners share nothing: no disk, containers or database. So
+#                  each shard builds its own throwaway copy of the platform
+#                  (see below), then runs its tests under coverage.py in its
+#                  smarter-app container.
 #
-# OPENAI_API_KEY
-# GOOGLE_MAPS_API_KEY
-# SMTP_USERNAME
-# SMTP_PASSWORD
+#   python-report  Waits for the eight shards. Shows their test results in
+#                  one job summary, combines their coverage, and uploads it
+#                  to Codecov once (flag: python), when every shard passed.
+#                  It fails when any shard failed, so it stands for all eight.
 #
-# The "Upload coverage to Codecov" step uses the CODECOV_TOKEN secret.
+# How a shard builds the platform
 #
-# AWS credentials, ROOT_DOMAIN and EKS_CLUSTER_NAME are deliberately NOT
-# passed. With them, `make docker-init` deploys the example LLMClients to
-# real infrastructure: Route53 A records under api.local.<ROOT_DOMAIN> and
-# ingress manifests in the smarter-local namespace of the EKS cluster.
-# Unit tests that require connectivity to AWS are tagged `infrastructure`
-# and skipped by default.
+# It runs the steps of make init one at a time, on a bare GitHub runner:
+# make python-init (the venv), the React build, make collectstatic, make
+# docker-build (the smarter image), then make docker-init, which starts the
+# containers on a new, empty database, migrates it and initializes the
+# platform. The runner first gets what make init expects a developer to have
+# installed: Python 3.14, Node, MariaDB Connector/C and a docker-compose
+# command. make pre-commit-init is skipped: it installs a git hook and
+# rewrites .pre-commit-config.yaml, and neither matters to the tests.
+#
+# The slow steps are cached, so that a shard skips them when nothing they
+# depend on has changed:
+#
+#   venv/                                   Python version + requirements/local.txt
+#   node_modules/ (repository root)         Node version + package-lock.json
+#   smarter/react node_modules, and the     see .github/actions/react-build,
+#     React build                           which build.yml shares
+#   the smarter image's layers              BuildKit's GitHub Actions cache
+#
+# Only shard 1 saves the caches. They are saved with actions/cache/save as
+# soon as they are built, because actions/cache would save nothing when a
+# test fails.
+#
+# Secrets
+#
+# The "Create .env" step writes the repository's and organization's secrets
+# into .env, under the names a developer's .env uses. The tests need at
+# least OPENAI_API_KEY, GOOGLE_MAPS_API_KEY, SMTP_USERNAME and SMTP_PASSWORD.
+# The workflow also uses DOCKERHUB_USERNAME and DOCKERHUB_PAT (image pulls)
+# and CODECOV_TOKEN.
+#
+# AWS credentials, ROOT_DOMAIN and AWS_EKS_CLUSTER_NAME are deliberately NOT
+# passed. With them, make docker-init would deploy the example LLMClients to
+# real infrastructure: Route53 records under api.local.<ROOT_DOMAIN> and
+# ingresses in the smarter-local namespace of the EKS cluster. The tests that
+# need AWS are tagged infrastructure, and are skipped.
 #------------------------------------------------------------------------------
 name: Tests
 
+#------------------------------------------------------------------------------
+# The first step of the pipeline (see build.yml): every pull request to main
+# runs the tests before it can be merged. python-report and react are main's
+# required status checks, so a pull request that fails them can't be merged.
+# A new push to the pull request cancels the run in progress.
+#
+# A pull request whose head commit's message contains a CI skip tag, such as
+# [skip ci] anywhere in its body, runs nothing, and its required checks wait
+# forever. The automated commits (release.config.js, precommitVersionBumps.yml)
+# leave the tag out for that reason. If it happens anyway, close and reopen
+# the pull request, or push a new commit to its branch. A workflow_dispatch
+# run does not help, whoever or whatever starts it: GitHub leaves it out of a
+# pull request's checks, even when it ran on the pull request's head commit.
+#
+# Pull requests from forks get no secrets, so their LLM tests fail. A
+# maintainer runs the tests for them by hand, from a branch in this repository.
+#------------------------------------------------------------------------------
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   ENVIRONMENT: "local"
@@ -61,6 +124,95 @@ env:
   MARKETING_SITE_URL: https://smarter.sh
 
 jobs:
+  #----------------------------------------------------------------------------
+  # Skip tests that already passed on exactly these files.
+  #
+  # Fingerprints what each suite depends on, as a hash of the git tree ids of
+  # its files, and looks in the Actions cache for a marker saying that a run
+  # with that fingerprint passed. react and the python shards are skipped
+  # when theirs is found, and python-report and react still report success,
+  # so a re-push, rebase or comment-only change that leaves those files as
+  # they were passes in a minute instead of re-running everything.
+  #
+  # The two suites have separate source trees, so each has its own
+  # fingerprint, and a change to one tree doesn't rerun the other's tests:
+  #
+  #   python   smarter/smarter, manage.py, requirements/ and .coveragerc; the
+  #            files the Dockerfile copies into data/ (docs/, README.md,
+  #            CHANGELOG.md, ...), which the docs app serves and its tests
+  #            request, so a docs change runs the Python tests again; and the
+  #            few files in smarter/react that the Python tests read:
+  #            react/i18n (update_console_messages), the onboarding app's
+  #            const.ts (test_onboarding), and each package's package.json
+  #            and vite.config.ts, which name the built pages that the
+  #            console's templates load.
+  #   react    smarter/react, which is self-contained: its tests read nothing
+  #            outside it.
+  #
+  # Both include this workflow.
+  #
+  # Markers are saved after a pass, by react and by python-report. GitHub
+  # scopes caches to a ref: a pull request's run sees the markers of earlier
+  # runs of the same pull request and of main, not of its head branch, so the
+  # first run of a new pull request always runs everything.
+  #----------------------------------------------------------------------------
+  fingerprint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      python-key: ${{ steps.keys.outputs.python }}
+      python-passed: ${{ steps.python.outputs.cache-hit }}
+      react-key: ${{ steps.keys.outputs.react }}
+      react-passed: ${{ steps.react.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # git ls-files -s prints each matching file's mode, blob id and path,
+      # and takes glob pathspecs. The hash of that listing changes when, and
+      # only when, one of the files is added, removed or changed.
+      - name: Fingerprint the tested files
+        id: keys
+        shell: bash
+        run: |
+          fingerprint() {
+            git ls-files -s -- "$@" | git hash-object --stdin
+          }
+          PYTHON=$(fingerprint smarter/smarter smarter/manage.py smarter/requirements smarter/.coveragerc \
+            smarter/react/i18n smarter/react/packages/smarter-onboarding/src/lib/const.ts \
+            'smarter/react/packages/*/package.json' 'smarter/react/packages/*/vite.config.ts' \
+            docs README.md changelogs/CHANGELOG.md CODE_OF_CONDUCT.md \
+            Dockerfile .dockerignore docker-compose.yml Makefile .env.example package.json \
+            .github/workflows/test.yml .github/actions/react-build)
+          REACT=$(fingerprint smarter/react .github/workflows/test.yml)
+          echo "python=tests-passed-python-$PYTHON" >> "$GITHUB_OUTPUT"
+          echo "react=tests-passed-react-$REACT" >> "$GITHUB_OUTPUT"
+
+      - name: Look for a python pass
+        id: python
+        uses: actions/cache/restore@v5
+        with:
+          path: .tests-passed
+          key: ${{ steps.keys.outputs.python }}
+          lookup-only: true
+
+      - name: Look for a react pass
+        id: react
+        uses: actions/cache/restore@v5
+        with:
+          path: .tests-passed
+          key: ${{ steps.keys.outputs.react }}
+          lookup-only: true
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "### Fingerprints"
+            echo "- python: ${{ steps.python.outputs.cache-hit == 'true' && 'passed before, skipped' || 'new, testing' }}"
+            echo "- react: ${{ steps.react.outputs.cache-hit == 'true' && 'passed before, skipped' || 'new, testing' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   #----------------------------------------------------------------------------
   # The React apps in smarter/react: formatting (Prettier), lint (ESLint),
   # types (TypeScript) and unit tests (Vitest, with every Storybook story
@@ -73,8 +225,14 @@ jobs:
   # library as an npm package does, so they are built (build:deps) before the
   # type check and the tests. The other tests use the workspace libraries'
   # TypeScript source.
+  #
+  # Skipped when these files passed before (see fingerprint). GitHub reports
+  # a skipped job as a success to a required status check. !cancelled()
+  # makes it run, rather than skip, if the fingerprint job itself fails.
   #----------------------------------------------------------------------------
   react:
+    needs: fingerprint
+    if: ${{ !cancelled() && needs.fingerprint.outputs.react-passed != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -124,9 +282,43 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      # Reached only when every step above passed.
+      - name: Record the pass
+        working-directory: .
+        shell: bash
+        run: |
+          mkdir -p .tests-passed
+          echo "${{ github.sha }}" > .tests-passed/commit
+
+      - name: Save the pass
+        uses: actions/cache/save@v5
+        with:
+          path: .tests-passed
+          key: ${{ needs.fingerprint.outputs.react-key }}
+
+  #----------------------------------------------------------------------------
+  # One shard of the Python suite. SHARDS must match the length of the shard
+  # list. fail-fast is off, so that one failing shard doesn't cancel the
+  # others: every failure is reported in one run.
+  #
+  # Only shard 1 saves the caches and exports the Docker layer cache. The
+  # shards build the same things, and eight concurrent saves of one key would
+  # only race each other.
+  #
+  # Skipped when these files passed before (see fingerprint).
+  #----------------------------------------------------------------------------
   python:
+    needs: fingerprint
+    if: ${{ !cancelled() && needs.fingerprint.outputs.python-passed != 'true' }}
+    name: python (shard ${{ matrix.shard }} of 8)
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    env:
+      SHARDS: 8
     steps:
       - name: Checkout code
         id: checkout
@@ -363,21 +555,21 @@ jobs:
           npm install
 
       - name: Save Python venv
-        if: steps.venv.outputs.cache-hit != 'true'
+        if: matrix.shard == 1 && steps.venv.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: venv
           key: ${{ steps.venv.outputs.cache-primary-key }}
 
       - name: Save pip downloads
-        if: steps.venv.outputs.cache-hit != 'true' && steps.pypi.outputs.cache-hit != 'true'
+        if: matrix.shard == 1 && steps.venv.outputs.cache-hit != 'true' && steps.pypi.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: .pypi_cache
           key: ${{ steps.pypi.outputs.cache-primary-key }}
 
       - name: Save root node_modules
-        if: steps.root-node-modules.outputs.cache-hit != 'true'
+        if: matrix.shard == 1 && steps.root-node-modules.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: node_modules
@@ -414,7 +606,9 @@ jobs:
       # - A generated override file adds cache_from/cache_to to the four
       #   services that build the smarter image, and COMPOSE_FILE layers it on
       #   top of docker-compose.yml so the Makefile runs unchanged. All four
-      #   build the identical image, so only smarter-app exports the cache.
+      #   build the identical image, so only smarter-app exports the cache,
+      #   and only in shard 1. smarter-app comes last in the file, so that
+      #   its cache_to can be appended.
       # - The override also sets PYTHON_BASE_IMAGE to Docker Hub's python
       #   image. The Dockerfile's default pulls it from the ECR Public Gallery,
       #   whose anonymous data quota GitHub's shared runner IPs exhaust
@@ -452,14 +646,6 @@ jobs:
           OVERRIDE="$RUNNER_TEMP/docker-compose.cache.yml"
           cat > "$OVERRIDE" <<'EOF'
           services:
-            smarter-app:
-              build:
-                args:
-                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
-                cache_from:
-                  - type=gha,scope=smarter-test
-                cache_to:
-                  - type=gha,scope=smarter-test,mode=max
             smarter-worker:
               build:
                 args:
@@ -478,7 +664,20 @@ jobs:
                   PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
                 cache_from:
                   - type=gha,scope=smarter-test
+            smarter-app:
+              build:
+                args:
+                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
+                cache_from:
+                  - type=gha,scope=smarter-test
           EOF
+          if [ "${{ matrix.shard }}" = "1" ]; then
+            cat >> "$OVERRIDE" <<'EOF'
+                cache_to:
+                  - type=gha,scope=smarter-test,mode=max
+          EOF
+          fi
+          cat "$OVERRIDE"
           echo "COMPOSE_FILE=$GITHUB_WORKSPACE/docker-compose.yml:$OVERRIDE" >> $GITHUB_ENV
 
       - name: make docker-build
@@ -518,77 +717,52 @@ jobs:
           make docker-init
 
       #========================================================================
-      # Run the unit tests with coverage
+      # Run this shard of the unit tests with coverage
       #
-      # Runs the same tests as `make docker-test`, under coverage.py. Coverage
-      # is measured for all of smarter, the same suite that the tests cover,
-      # rather than just smarter.apps as `make coverage` does. Tests and
-      # migrations are omitted. .coveragerc is excluded by .dockerignore, so
-      # the options are passed on the command line. coverage run exits with
-      # the test runner's exit code, so a failing test still fails this step.
+      # Runs this shard's share of the tests that `make docker-test` runs,
+      # under coverage.py. Coverage is measured for all of smarter, the same
+      # suite that the tests cover, rather than just smarter.apps as
+      # `make coverage` does. .coveragerc is excluded by .dockerignore, so the
+      # options are passed on the command line. coverage run exits with the
+      # test runner's exit code, so a failing test still fails this step.
       #
-      # coverage.xml is written inside the container and then copied to the
-      # workspace for the Codecov upload. Its paths are container paths,
-      # /home/smarter_user/smarter/smarter/..., which codecov.yml maps back
-      # to the repository's smarter/smarter/....
-      #
-      # SMARTER_TEST_JUNIT_XML makes the test runner also write the results as
-      # a JUnit XML report (see smarter/smarter/lib/unittest/runner.py), which
-      # the "Test summary" step renders in the job summary. coverage.json
-      # carries the totals for the "Coverage summary" step.
+      # SMARTER_TEST_SHARD picks the shard, and SMARTER_TEST_JUNIT_XML makes
+      # the test runner also write the results as a JUnit XML report (see
+      # smarter/smarter/lib/unittest/runner.py).
       #========================================================================
       - name: Run unit tests with coverage
         shell: bash
         run: |
-          docker exec -e SMARTER_TEST_JUNIT_XML=test-results.xml smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report && coverage xml -o coverage.xml && coverage json -o coverage.json"
-          docker cp smarter-app:/home/smarter_user/smarter/coverage.xml ./coverage.xml
-          docker cp smarter-app:/home/smarter_user/smarter/coverage.json ./coverage.json
+          docker exec \
+            -e SMARTER_TEST_SHARD=${{ matrix.shard }}/${{ env.SHARDS }} \
+            -e SMARTER_TEST_JUNIT_XML=test-results.xml \
+            smarter-app bash -c "coverage run --source=smarter manage.py test smarter"
 
       #========================================================================
-      # Job summary: the test results, like the react job's Vitest report, and
-      # the total coverage only. The per-file coverage report (some 2,000
-      # lines) stays in the log of the step above, and in Codecov.
+      # Hand the shard's coverage data and test results to python-report.
       #
-      # Both run even when a test fails, which is when the summary matters
-      # most. The test report is written as the tests run, so it exists
-      # whenever the suite ran to the end.
+      # Both are copied even when a test fails, which is when the results
+      # matter most. The test report is written as the tests run, so it exists
+      # whenever the shard ran to the end. The coverage data file's paths are
+      # container paths, /home/smarter_user/smarter/smarter/..., which
+      # python-report maps back to the repository's.
       #========================================================================
-      - name: Copy test results from the container
+      - name: Copy coverage data and test results from the container
         if: always()
         shell: bash
         run: |
-          docker cp smarter-app:/home/smarter_user/smarter/test-results.xml ./test-results.xml || echo "No test results were written."
+          mkdir -p shard
+          docker cp smarter-app:/home/smarter_user/smarter/.coverage shard/coverage-shard-${{ matrix.shard }} || echo "No coverage data was written."
+          docker cp smarter-app:/home/smarter_user/smarter/test-results.xml shard/test-results-shard-${{ matrix.shard }}.xml || echo "No test results were written."
 
-      - name: Test summary
+      - name: Upload coverage data and test results
         if: always()
-        uses: test-summary/action@v2
+        uses: actions/upload-artifact@v4
         with:
-          paths: test-results.xml
-          show: "fail, skip"
-
-      - name: Coverage summary
-        if: always()
-        shell: bash
-        run: |
-          if [ ! -f coverage.json ]; then
-            echo "No coverage report was written."
-            exit 0
-          fi
-          jq -r '
-            .totals as $t |
-            "## Python coverage\n",
-            "| Statements | Missed | Coverage |",
-            "| ---: | ---: | ---: |",
-            "| \($t.num_statements) | \($t.missing_lines) | **\($t.percent_covered_display)%** |"
-          ' coverage.json >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
-        with:
-          files: ./coverage.xml
-          flags: python
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: python-shard-${{ matrix.shard }}
+          path: shard/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Dump container logs
         if: failure()
@@ -601,3 +775,124 @@ jobs:
         shell: bash
         run: |
           docker compose down -v
+
+  #----------------------------------------------------------------------------
+  # Merge the shards' results into one report.
+  #
+  # - Test summary: every shard's JUnit XML report, rendered together in the
+  #   job summary, like the react job's Vitest report. It runs even when a
+  #   shard fails, which is when it matters most.
+  # - Coverage: the shards' coverage data files are combined, with their
+  #   container paths mapped back to the repository's checkout, and reported
+  #   against it. The coverage version matches requirements/local.txt, which
+  #   the container uses. Only the total goes in the job summary. The
+  #   per-file report (some 2,000 lines) stays in this job's log, and in
+  #   Codecov, which receives one combined report under the python flag.
+  #   Coverage is only reported when every shard passed, as before sharding:
+  #   a failed shard's data would understate it.
+  # - It fails when any shard failed, so that it can stand for all of them as
+  #   a required status check.
+  # - When every shard passed, it saves the pass marker (see fingerprint).
+  #   When the shards were skipped because these files passed before, it
+  #   says so, and passes.
+  #----------------------------------------------------------------------------
+  python-report:
+    needs: [fingerprint, python]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Passed before
+        if: needs.fingerprint.outputs.python-passed == 'true'
+        shell: bash
+        run: |
+          echo "These files passed the Python tests in an earlier run, so the shards were skipped." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Checkout code
+        if: needs.python.result != 'skipped'
+        uses: actions/checkout@v6
+
+      - name: Download the shards' results
+        if: needs.python.result != 'skipped'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: python-shard-*
+          path: shards
+
+      - name: Test summary
+        if: needs.python.result != 'skipped'
+        uses: test-summary/action@v2
+        with:
+          paths: "shards/**/test-results-shard-*.xml"
+          show: "fail, skip"
+
+      - name: Set up Python
+        if: needs.python.result == 'success'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Combine coverage
+        if: needs.python.result == 'success'
+        shell: bash
+        run: |
+          pip install "$(grep -E '^coverage==' smarter/requirements/local.txt)"
+          cat > "$RUNNER_TEMP/coveragerc" <<'EOF'
+          [run]
+          relative_files = True
+
+          [paths]
+          source =
+              smarter/
+              /home/smarter_user/smarter/
+          EOF
+          coverage combine --rcfile="$RUNNER_TEMP/coveragerc" shards/*/coverage-shard-*
+          coverage report --rcfile="$RUNNER_TEMP/coveragerc"
+          coverage xml --rcfile="$RUNNER_TEMP/coveragerc" -o coverage.xml
+          coverage json --rcfile="$RUNNER_TEMP/coveragerc" -o coverage.json
+
+      - name: Coverage summary
+        if: needs.python.result == 'success'
+        shell: bash
+        run: |
+          jq -r '
+            .totals as $t |
+            "## Python coverage\n",
+            "| Statements | Missed | Coverage |",
+            "| ---: | ---: | ---: |",
+            "| \($t.num_statements) | \($t.missing_lines) | **\($t.percent_covered_display)%** |"
+          ' coverage.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage to Codecov
+        if: needs.python.result == 'success'
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.xml
+          flags: python
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Record the pass
+        if: needs.python.result == 'success'
+        shell: bash
+        run: |
+          mkdir -p .tests-passed
+          echo "${{ github.sha }}" > .tests-passed/commit
+
+      - name: Save the pass
+        if: needs.python.result == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: .tests-passed
+          key: ${{ needs.fingerprint.outputs.python-key }}
+
+      # This job, with react, is the required status check of main: one check
+      # for all eight shards, whose names would otherwise all be required.
+      # A skip counts as a pass only when the fingerprint job found one: if
+      # the fingerprint job failed, python-passed is empty, and this fails.
+      - name: Fail when a shard failed
+        if: needs.python.result != 'success' && needs.fingerprint.outputs.python-passed != 'true'
+        shell: bash
+        run: |
+          echo "::error::A shard of the Python tests did not pass: ${{ needs.python.result }}."
+          exit 1

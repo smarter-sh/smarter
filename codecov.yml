@@ -7,7 +7,9 @@
 #
 # - python: the unit tests run with coverage inside the smarter-app
 #   container, where the repository's smarter/ folder is
-#   /home/smarter_user/smarter/.
+#   /home/smarter_user/smarter/. The python-report job combines the shards'
+#   data and already maps those paths back to the repository's, so the fix
+#   below only matters for a report made inside the container.
 # - react: the Vitest tests run in smarter/react, and lcov.info paths are
 #   relative to that folder (packages/...).
 #

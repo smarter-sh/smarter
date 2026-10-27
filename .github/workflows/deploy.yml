@@ -1,6 +1,18 @@
 ---
 #------------------------------------------------------------------------------
-# - Deploy to AWS Elastic Kubernetes Service (EKS)
+# Deploy to AWS Elastic Kubernetes Service (EKS): the third step of the
+# pipeline (see build.yml), after Build succeeds on main.
+#
+# Build hands over the release's tag as its release-info artifact. A Build run
+# that released nothing hands over nothing, and this run then deploys
+# nothing. After a deployment, this workflow hands the same tag to
+# publish.yml, which starts when this run succeeds.
+#
+# Started by hand, it deploys the given tag, or the branch's latest tag, to
+# the branch's environment: main to prod, alpha, beta and next to their own.
+#
+# workflow_run always runs this workflow's file from main, the default
+# branch, so github.ref is main, and the environment prod.
 #
 # IMPORTANT: Before running this workflow, ensure that you have first built your
 # AWS infrastructure using the [Smarter Infrastructure repository](https://github.com/smarter-sh/smarter-infrastructure).
@@ -10,7 +22,21 @@
 name: Deploy
 
 on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "A tag to deploy, e.g. v0.36.26. Empty deploys the branch's latest tag."
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   AWS_REGION: ca-central-1
@@ -24,13 +50,56 @@ env:
   VERSION: "latest"
 
 jobs:
+  #----------------------------------------------------------------------------
+  # The tag to deploy: Build's release-info, or the one given by hand.
+  #----------------------------------------------------------------------------
+  resolve:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      deploy: ${{ steps.tag.outputs.deploy }}
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Download Build's release-info
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: release-info
+          path: release-info
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Choose the tag
+        id: tag
+        shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          elif [ -s release-info/tag ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$(cat release-info/tag)" >> "$GITHUB_OUTPUT"
+            echo "Deploying $(cat release-info/tag), from Build." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Build released nothing, so there is nothing to deploy." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   deploy:
+    needs: resolve
+    if: needs.resolve.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         id: checkout_code
         uses: actions/checkout@v6
         with:
+          ref: ${{ needs.resolve.outputs.tag || github.ref }}
           fetch-depth: 0 # Ensures all history and tags are fetched
           fetch-tags: true
 
@@ -62,6 +131,7 @@ jobs:
       - name: Deploy
         uses: ./.github/actions/deploy
         with:
+          ref: ${{ needs.resolve.outputs.tag }}
           eks-cluster-name: ${{ secrets.EKS_CLUSTER_NAME }}
           environment: ${{ env.ENVIRONMENT }}
           namespace-base: ${{ env.NAMESPACE_BASE }}
@@ -145,3 +215,20 @@ jobs:
         env:
           VERSION: ${{ env.VERSION }}
           DEPLOYMENT_DOMAIN: ${{ env.DEPLOYMENT_DOMAIN }}
+
+      #------------------------------------------------------------------------
+      # Hand the deployed tag to publish.yml, which starts when this run
+      # succeeds on main.
+      #------------------------------------------------------------------------
+      - name: Write the deployed tag
+        shell: bash
+        run: |
+          mkdir -p release-info
+          echo "${{ env.VERSION }}" > release-info/tag
+
+      - name: Upload release-info
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-info
+          path: release-info/
+          retention-days: 7

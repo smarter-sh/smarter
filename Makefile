@@ -478,10 +478,14 @@ sphinx-docs:
 sphinx-linkcheck:
 	cd docs && make linkcheck
 
+# the bucket and distribution come from the Terraform stack's outputs (make terraform-apply), as
+# in smarter-python, smarter-types and cache-results. CloudFront reads the bucket through its OAC,
+# so the objects need no public ACL. publish.yml runs the same two commands.
 sphinx-publish:
-	cd docs/build/html && \
-	aws s3 sync . s3://docs.smarter.sh/ --delete --acl public-read && \
-	aws cloudfront create-invalidation --distribution-id E3J3PFZATCQOFX --paths "/*"
+	BUCKET=$$($(TF) output -raw bucket_name) && \
+	DISTRIBUTION=$$($(TF) output -raw distribution_id) && \
+	aws s3 sync docs/build/html "s3://$$BUCKET/" --delete --exclude ".doctrees/*" --exclude ".buildinfo" --exclude ".buildinfo.bak" && \
+	aws cloudfront create-invalidation --distribution-id "$$DISTRIBUTION" --paths "/*" --query Invalidation.Id --output text
 
 # docs.smarter.sh's AWS resources (terraform/docs). Terraform runs as the caller's AWS
 # profile; the account id is only needed for the state bucket's name, never written here.
