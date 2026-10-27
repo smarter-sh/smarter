@@ -1,9 +1,21 @@
 ---
 #------------------------------------------------------------------------------
-# Build the Sphinx documentation and publish it to docs.smarter.sh
+# Publish: the last step of the pipeline (see build.yml), after Deploy
+# succeeds on main. Builds the Sphinx documentation of the deployed release
+# and publishes it to docs.smarter.sh.
 #
-# The site is served by CloudFront from an S3 bucket (terraform/docs), and
-# uploaded by `make sphinx-publish`, as from a developer's machine.
+# Deploy hands over the deployed tag as its release-info artifact. Started by
+# hand, from main, it publishes the given tag, or main's head: e.g. after a
+# merge of docs-only commits, which release and deploy nothing.
+#
+# The site is served by CloudFront from an S3 bucket (terraform/docs). The
+# job signs in to AWS with GitHub's OIDC token, as the role that
+# terraform/docs creates for the "docs" environment, as the smarter-python,
+# smarter-types and cache-results Release workflows do: there is no AWS key.
+# Its repository variables are terraform/docs' outputs: DOCS_AWS_ROLE_ARN
+# (publisher_role_arn), DOCS_BUCKET (bucket_name) and DOCS_DISTRIBUTION_ID
+# (distribution_id). The "docs" environment is limited to main in the
+# repository's settings.
 #
 # A full build reads about a thousand pages, many of them autodoc pages that
 # import the Django apps, and takes several times longer on a 4-core runner
@@ -28,29 +40,25 @@
 #
 # Pages whose sources were deleted keep their old HTML in the cache. To start
 # over, delete the docs-build caches in the repository's Actions settings.
-#
-# Required secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION (an
-# identity that may sync the docs bucket and invalidate its distribution).
-# The docs are published only from main. On any other branch the workflow
-# builds them, as a check, without publishing.
 #------------------------------------------------------------------------------
-name: Docs
+name: Publish
 
 on:
+  workflow_run:
+    workflows: [Deploy]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "docs/**"
-      - "smarter/smarter/**/*.py"
-      - "smarter/requirements/local.txt"
-      - "scripts/sphinx_cache_mtimes.py"
-      - ".github/workflows/docs.yml"
+    inputs:
+      tag:
+        description: "A tag to publish the docs of, e.g. v0.36.26. Empty publishes main's head."
+        required: false
+        type: string
+        default: ""
 
 # Never cancel a run part way through an upload to S3.
 concurrency:
-  group: docs-${{ github.ref }}
+  group: publish-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -65,15 +73,64 @@ env:
   BLOB_MANIFEST: docs/build/source-blobs.json
 
 jobs:
+  #----------------------------------------------------------------------------
+  # The tag to publish: Deploy's release-info, or the one given by hand.
+  #----------------------------------------------------------------------------
+  resolve:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      publish: ${{ steps.tag.outputs.publish }}
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Download Deploy's release-info
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: release-info
+          path: release-info
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Choose the tag
+        id: tag
+        shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          elif [ -s release-info/tag ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$(cat release-info/tag)" >> "$GITHUB_OUTPUT"
+            echo "Publishing the docs of $(cat release-info/tag), from Deploy." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Deploy deployed nothing, so there is nothing to publish." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   docs:
+    needs: resolve
+    if: needs.resolve.outputs.publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    environment:
+      name: docs
+      url: https://docs.smarter.sh/
+    permissions:
+      contents: read
+      id-token: write
     steps:
       # conf.py finds the release with `git describe --tags`, which needs the
       # history and tags.
       - name: Checkout code
         uses: actions/checkout@v6
         with:
+          ref: ${{ needs.resolve.outputs.tag || github.ref }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -187,18 +244,21 @@ jobs:
           key: ${{ steps.build-cache.outputs.cache-primary-key }}
 
       #========================================================================
-      # Publish, from main only.
+      # Publish, as the docs environment's role.
       #========================================================================
       - name: Configure AWS credentials
-        if: github.ref == 'refs/heads/main'
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ vars.DOCS_AWS_ROLE_ARN }}
+          # the bucket's region (terraform/docs). CloudFront is global.
+          aws-region: us-east-2
 
-      - name: Publish to docs.smarter.sh
-        if: github.ref == 'refs/heads/main'
+      - name: Upload the site, and invalidate CloudFront
         shell: bash
+        env:
+          BUCKET: ${{ vars.DOCS_BUCKET }}
+          DISTRIBUTION: ${{ vars.DOCS_DISTRIBUTION_ID }}
         run: |
-          make sphinx-publish
+          # the same commands as make sphinx-publish.
+          aws s3 sync docs/build/html "s3://$BUCKET/" --delete --exclude ".doctrees/*" --exclude ".buildinfo" --exclude ".buildinfo.bak"
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths "/*" --query Invalidation.Id --output text

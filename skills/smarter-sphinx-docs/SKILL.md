@@ -177,11 +177,14 @@ and `adr.rst`'s toctree. Read `adr/000-intro.rst` first.
 ## Publishing and the site's AWS resources (`terraform/docs/`)
 
 `make sphinx-publish` uploads `docs/build/html` to the `docs.smarter.sh`
-bucket and invalidates the CloudFront distribution. The user publishes;
-publish yourself only when asked.
+bucket and invalidates the CloudFront distribution, both read from the
+Terraform stack's outputs, as in smarter-python, smarter-types and
+cache-results. The user publishes; publish yourself only when asked.
 
-`.github/workflows/docs.yml` builds and publishes on pushes to main that touch
-the docs or the Python code. Its build is incremental: it caches `docs/build`
+`.github/workflows/publish.yml` builds and publishes the docs of each release,
+after `deploy.yml` deploys it, signed in to AWS through GitHub's OIDC token as
+the `smarter-docs-publisher` role (`terraform/docs/github_actions.tf`), in the
+`docs` environment. Its build is incremental: it caches `docs/build`
 and the venv, and `scripts/sphinx_cache_mtimes.py` sets the files that haven't
 changed (by git blob id) to an old time, so that Sphinx reads only the changed
 pages again. Keep anything that changes from build to build out of the config
@@ -191,8 +194,8 @@ only in `html_title`, which just rewrites the HTML.
 
 The site's resources were made by hand in the AWS console, then adopted into
 Terraform in `terraform/docs/` with `import` blocks (`imports.tf`): the ACM
-certificate and its validation record, the bucket (ACLs enabled, because
-`make sphinx-publish` uploads with `--acl public-read`), its encryption and
+certificate and its validation record, the bucket (ACLs still enabled, as it
+was made, though uploads no longer set a public ACL), its encryption and
 policy (only the distribution may read it, through an OAC), the CloudFront
 distribution, its `docs-smarter-sh-redirect` function (`redirect.js`, which
 redirects the old `/en/latest/...` urls to the root), and the CNAME record. The

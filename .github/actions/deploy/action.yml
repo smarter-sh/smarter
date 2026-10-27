@@ -4,6 +4,10 @@ branding:
   icon: "play-circle"
   color: "green"
 inputs:
+  ref:
+    description: "The tag to check out and deploy, e.g. v0.36.26. Empty checks out the commit that started the run."
+    required: false
+    default: ""
   namespace-base:
     description: "The base name for the Kubernetes namespace (the environment name - alpha, beta, prod - will be appended to this)"
     required: false
@@ -226,6 +230,9 @@ runs:
       id: checkout_code
       uses: actions/checkout@v6
       with:
+        # A release's tag comes after the commit that started the run (see
+        # build.yml), whose own latest tag is the previous release.
+        ref: ${{ inputs.ref }}
         fetch-depth: 0 # Ensures all history and tags are fetched
         fetch-tags: true
 

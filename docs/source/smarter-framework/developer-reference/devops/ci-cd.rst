@@ -25,16 +25,35 @@ An *action* is a reusable unit of code that performs a specific task. Actions ca
 
 **Smarter’s Use of GitHub Actions**
 
-Smarter’s repository includes workflows for:
+Smarter's pipeline is four workflows, each starting the next when it succeeds:
 
-- **Building** the application (installing dependencies, running linters, running tests).
-- **Deploying** to production or staging environments.
-- **Continuous Integration (CI):** Ensuring code quality and correctness on every change.
+.. list-table::
+   :header-rows: 1
+   :widths: 20 25 55
 
-These workflows are defined in YAML files such as
-`.github/workflows/build.yml <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/build.yml>`_
-and `.github/workflows/deploy.yml <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/deploy.yml>`_.
-Each file specifies the jobs and steps required for that part of the CI/CD process.
+   * - Workflow
+     - When
+     - What
+   * - `Tests <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/test.yml>`_
+     - Every pull request to main, before the merge
+     - The Python suite, as eight shards on eight runners, and the React apps' lint, types and tests.
+       These are main's required status checks.
+   * - `Build <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/build.yml>`_
+     - Every merge into main
+     - semantic-release (version, changelog, tag, GitHub release), then the release's Docker image, to
+       Amazon ECR and Docker Hub, and its signed Helm chart, to GHCR. Afterwards, main is merged back
+       into the development branches.
+   * - `Deploy <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/deploy.yml>`_
+     - When Build succeeds on main
+     - The release, to the production namespace of the Kubernetes cluster.
+   * - `Publish <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/publish.yml>`_
+     - When Deploy succeeds on main
+     - The release's documentation, to docs.smarter.sh.
+
+A merge whose commits call for no release, such as one of only documentation or refactoring commits,
+builds and deploys nothing. Every workflow can also be started by hand from the Actions tab, for a
+given tag. On the development branches (alpha, beta, next), Build only makes prereleases, and Deploy
+can be started by hand to deploy a branch to its own environment.
 
 **Example Workflow Structure:**
 

@@ -46,11 +46,13 @@ so the shards together run each test exactly once.
 """
 
 import collections
-import functools
 import os
 import unittest
 
-from django.test.runner import DiscoverRunner, iter_test_cases
+from django.test.runner import DiscoverRunner
+from django.test.utils import (
+    iter_test_cases,  # pyright: ignore[reportAttributeAccessIssue]
+)
 
 INFRASTRUCTURE = "infrastructure"
 """The tag of tests that use real infrastructure: Kubernetes, AWS Route53, ACM, and so on."""
@@ -132,12 +134,12 @@ class SmarterTestRunner(DiscoverRunner):
     only one shard of the suite when :data:`SHARD_ENVIRONMENT_VARIABLE` asks for one.
     """
 
-    def __init__(self, *args, tags=None, exclude_tags=None, **kwargs):
-        tags = set(tags or [])
-        exclude_tags = set(exclude_tags or [])
+    def __init__(self, *args, tags: list[str] | None = None, exclude_tags: list[str] | None = None, **kwargs):
+        tags = list(tags or [])
+        exclude_tags = list(exclude_tags or [])
         self.skipping_infrastructure = INFRASTRUCTURE not in tags and not include_infrastructure()
-        if self.skipping_infrastructure:
-            exclude_tags.add(INFRASTRUCTURE)
+        if self.skipping_infrastructure and INFRASTRUCTURE not in exclude_tags:
+            exclude_tags.append(INFRASTRUCTURE)
         super().__init__(*args, tags=tags or None, exclude_tags=exclude_tags, **kwargs)
 
     def setup_test_environment(self, **kwargs):
@@ -200,7 +202,17 @@ class SmarterTestRunner(DiscoverRunner):
         if directory:
             os.makedirs(directory, exist_ok=True)
         with open(path, "wb") as output:
-            self.test_runner = functools.partial(xmlrunner.XMLTestRunner, output=output)
+            # A subclass that binds the output file, rather than functools.partial,
+            # because DiscoverRunner.test_runner is typed as a TextTestRunner class.
+            class XMLTestRunner(xmlrunner.XMLTestRunner):
+                """Xmlrunner's runner, writing its report to the open file."""
+
+                def __init__(self, **runner_kwargs):
+                    # xmlrunner annotates output as str, a directory of one report per
+                    # TestCase, but also takes an open file, for one combined report.
+                    super().__init__(output=output, **runner_kwargs)  # pyright: ignore[reportArgumentType]
+
+            self.test_runner = XMLTestRunner
             try:
                 return super().run_suite(suite, **kwargs)
             finally:

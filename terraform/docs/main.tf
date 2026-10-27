@@ -59,8 +59,9 @@ resource "aws_s3_bucket" "docs" {
   bucket = local.bucket_name
 }
 
-# make sphinx-publish uploads with --acl public-read, which needs ACLs enabled.
-# CloudFront ignores the ACLs: it reads through the OAC.
+# ACLs stay enabled, as the bucket was made. make sphinx-publish used to upload
+# with --acl public-read, and older objects still carry that ACL. CloudFront
+# ignores ACLs: it reads through the OAC, so uploads no longer set one.
 resource "aws_s3_bucket_ownership_controls" "docs" {
   bucket = aws_s3_bucket.docs.id
 

@@ -56,7 +56,7 @@ The Helm Chart
      - `templates/ <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter/templates>`__
    * - Releasing the chart
      - A workflow packages, signs and publishes the chart.
-     - `helmChartRelease.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/helmChartRelease.yml>`__
+     - `build.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/build.yml>`__
 
 The Cluster in Production
 ~~~~~~~~~~~~~~~~~~~~~~~~~
