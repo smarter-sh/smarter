@@ -53,8 +53,12 @@ jobs:
   #----------------------------------------------------------------------------
   # The tag to deploy: Build's release-info, or the one given by hand.
   #----------------------------------------------------------------------------
+  # A Build run started by semantic-release's own commit releases nothing.
   resolve:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.event.workflow_run.conclusion == 'success'
+          && !startsWith(github.event.workflow_run.head_commit.message, 'chore(release):'))
     runs-on: ubuntu-latest
     permissions:
       actions: read
