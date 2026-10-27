@@ -53,7 +53,11 @@ module.exports = {
           "pyproject.toml",
           "Dockerfile",
         ],
-        message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+        // No CI skip tag: this commit is often the head of the pull request
+        // from alpha to main, and GitHub would then start no Tests for it, so
+        // its required checks would never report. Its own push starts Build
+        // again, which finds nothing to release and builds nothing.
+        message: "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}",
       },
     ],
   ],

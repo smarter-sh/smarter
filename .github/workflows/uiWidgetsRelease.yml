@@ -1,11 +1,11 @@
 ---
 #------------------------------------------------------------------------------
 # Publish @smarter.sh/ui-widgets (smarter/react/packages/smarter.sh-widgets) to
-# npm, when semantic-release publishes a GitHub release (pushMain.yml), or by
+# npm, when semantic-release publishes a GitHub release (build.yml), or by
 # hand for such a release's tag.
 #
 # - The package's version is the platform's: the release's tag, without its
-#   v. It is set here, as helmChartRelease.yml sets the Helm chart's, and not
+#   v. It is set here, as build.yml's helm job sets the Helm chart's, and not
 #   committed: in the workspace, the package's version is the platform's
 #   placeholder, 9999.9999.9999.dev9999, as in pyproject.toml, which the
 #   web console's apps accept with their dependency, *.
@@ -34,7 +34,7 @@
 # repository's settings. npm offers trusted publishing only for a package that
 # exists, so its first version is published by hand.
 #
-# pushMain.yml's semantic-release step uses the PAT secret, not GITHUB_TOKEN,
+# build.yml's semantic-release job uses the PAT secret, not GITHUB_TOKEN,
 # so the release that it creates triggers this workflow.
 #------------------------------------------------------------------------------
 name: Release @smarter.sh/ui-widgets

@@ -20,7 +20,7 @@ pages are small React apps.
 | `smarter/react/packages`     | npm workspace of React apps, one per web console page, plus `smarter-common` |
 | `docs/source`                | Sphinx documentation, published to docs.smarter.sh                           |
 | `.pre-commit-config.yaml`    | The authoritative lint and format standard for Python and React              |
-| `.github/workflows/test.yml` | CI: the `python` and `react` jobs                                            |
+| `.github/workflows/`         | Pipeline: test.yml on PRs to main, then build, deploy, publish (build.yml)   |
 | `Makefile`                   | Developer commands (`make coverage`, `make react-test`, ...)                 |
 
 Host path `smarter/smarter/<path>` is `/home/smarter_user/smarter/smarter/<path>`

@@ -61,15 +61,15 @@ holds only what applies to nearly every task.
 
 ## Repository map
 
-| Path                                  | Contents                                                                 |
-| ------------------------------------- | ------------------------------------------------------------------------ |
-| `smarter/smarter/apps/<app>`          | Django apps, one per resource family (llmclient, plugin, secret, ...)    |
-| `smarter/smarter/apps/infrastructure` | Cloud-agnostic service layer for DNS, certificates, Kubernetes, email    |
-| `smarter/smarter/lib`                 | Framework code: django, drf, manifest brokers, journal, unittest helpers |
-| `smarter/react/packages`              | npm workspace: one React app per console page, plus `smarter-common`     |
-| `docs/source`                         | Sphinx docs, published to docs.smarter.sh                                |
-| `skills/`                             | Agent Skills for developing this repository                              |
-| `.github/workflows/test.yml`          | CI (`python` and `react` jobs). Started by hand, not on push or PR       |
+| Path                                  | Contents                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------- |
+| `smarter/smarter/apps/<app>`          | Django apps, one per resource family (llmclient, plugin, secret, ...)     |
+| `smarter/smarter/apps/infrastructure` | Cloud-agnostic service layer for DNS, certificates, Kubernetes, email     |
+| `smarter/smarter/lib`                 | Framework code: django, drf, manifest brokers, journal, unittest helpers  |
+| `smarter/react/packages`              | npm workspace: one React app per console page, plus `smarter-common`      |
+| `docs/source`                         | Sphinx docs, published to docs.smarter.sh                                 |
+| `skills/`                             | Agent Skills for developing this repository                               |
+| `.github/workflows/`                  | Pipeline: test (PRs to main), then build, deploy, publish (see build.yml) |
 
 Code never calls the AWS SDK directly. Go through the facade
 `smarter.apps.infrastructure.services.infrastructure` (`.dns`, `.certificates`,

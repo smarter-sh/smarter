@@ -51,6 +51,14 @@ git commit --author="Claude <noreply@anthropic.com>" \
   command with `zsh: event not found: important`, and the commit isn't made.
   Reword instead (e.g. "important declarations"); escaping `!` with a backslash
   leaves the backslash in the message.
+- Never write a CI skip instruction anywhere in the message, not even to
+  describe one: `[skip ci]`, `[ci skip]`, `[no ci]`, `[skip actions]`,
+  `[actions skip]`, or `skip-checks: true`. GitHub reads the whole message of
+  a push's head commit, body included, and then starts no workflows: no
+  Build, and no Tests on the pull request, whose required checks then wait
+  forever. A commit whose body explained the `[skip ci]` problem did exactly
+  that. Write "a CI skip instruction" or "semantic-release's skip tag"
+  instead.
 - When the user asks for the `git add` too, write it as a separate code block.
   List the paths explicitly. Leave out files that don't belong to the change
   (for example, untracked work for another task).
