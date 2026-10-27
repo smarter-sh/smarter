@@ -1,7 +1,8 @@
 {% extends "rest_framework/base.html" %}
 {% load static %}
 
-{% block title %}<h2>Smarter Api</h2>{% endblock %}
+{# rest_framework/base.html renders this block in <title>, so it is plain text. #}
+{% block title %}Smarter Api{% endblock %}
 
 {% block head %}
   {{ block.super }}
