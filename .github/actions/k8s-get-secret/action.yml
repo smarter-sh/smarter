@@ -1,24 +1,29 @@
 ---
 #------------------------------------------------------------------------------
-# written by: mcdaniel
-# date: june-2022
+# Read a Kubernetes secret into the job's environment.
 #
-# - Extract a secret from a k8s namespace
-# - unpack and decode the data values
-# - format into a collection of bash environment variables that can be
-#   consumed by tutor on the command line during a ´tutor config save´ operation
-# - add a mask for the password values so that these do not leak into the console
-# - echo k8s secret meta data to console
-# - echo masked secret to the console
+# Each key of the secret's data becomes an environment variable of the steps
+# that follow, named in upper case (mysql_password becomes MYSQL_PASSWORD), for
+# deploy/action.yml to pass to Helm.
+#
+# Every value is masked (::add-mask::) before it is written, so GitHub prints
+# *** wherever it appears later in the log. GitHub masks only the repository's
+# own secrets on its own: a value read from Kubernetes is printed in the clear
+# unless it is masked here. This repository is public, and so are its
+# workflow logs.
+#
+# Nothing is echoed but the secret's name, its namespace and its key names.
+# Its metadata isn't: a secret created with kubectl apply carries the whole
+# secret, base64 encoded, in its last-applied-configuration annotation.
 #------------------------------------------------------------------------------
 name: k8s get environment secret
-description: Github Action to convert k8s secrets into tutor config variables.
+description: Read a Kubernetes secret into masked environment variables.
 branding:
   icon: "cloud"
   color: "orange"
 inputs:
   eks-namespace:
-    description: "The Kubernetes namespace to which the environment will be deployed. Example: apps-host-service"
+    description: "The Kubernetes namespace of the secret. Example: smarter-ubc-prod"
     required: true
     type: string
   eks-secret-name:
@@ -29,27 +34,33 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # - fetch from Kubernetes secrets
-    # - dump secret metadata to console
-    # - parse data and decode values
-    # - output in JSON format
-    - name: Fetch secret meta data from k8s and echo to the console
-      id: fetch-metadata
-      shell: bash
-      run: |-
-        echo "k8s secret:"
-        echo "=================================================="
-        kubectl get secret ${{ inputs.eks-secret-name }} -n ${{ inputs.eks-namespace }}  -o json | jq  .metadata | jq -r 'keys[] as $k | "\($k)=\(.[$k])"'
-        echo "=================================================="
-
-    # Fetch, decode, and transpose into environment variables consumable by Helm
-    - name: Fetch decode and transform into tutor environment variables
+    - name: Read the secret into masked environment variables
       id: transform-secret
       shell: bash
-      run: kubectl get secret ${{ inputs.eks-secret-name }} -n ${{ inputs.eks-namespace }}  -o json | jq  '.data | map_values(@base64d)' | jq -r 'keys[] as $k | "\($k|ascii_upcase)=\(.[$k])"' >> $GITHUB_ENV
+      env:
+        SECRET_NAME: ${{ inputs.eks-secret-name }}
+        SECRET_NAMESPACE: ${{ inputs.eks-namespace }}
+      run: |-
+        set -euo pipefail
+        secret_json=$(kubectl get secret "$SECRET_NAME" -n "$SECRET_NAMESPACE" -o json)
 
-    # Echo the same output to the console
-    - name: dump masked output to the console
-      id: masked-dump
-      shell: bash
-      run: kubectl get secret ${{ inputs.eks-secret-name }} -n ${{ inputs.eks-namespace }}  -o json | jq  '.data | map_values(@base64d)' | jq -r 'keys[] as $k | "\($k|ascii_upcase)=\(.[$k])"'
+        echo "k8s secret $SECRET_NAMESPACE/$SECRET_NAME, keys:"
+        while IFS= read -r key; do
+          value=$(jq -r --arg k "$key" '.data[$k] | @base64d' <<<"$secret_json")
+          # mask each line of the value, and the whole value, before anything can print it
+          while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              echo "::add-mask::$line"
+            fi
+          done <<<"$value"
+          name=$(tr '[:lower:]' '[:upper:]' <<<"$key")
+          # the multiline syntax of GITHUB_ENV, with a random delimiter, so that a value
+          # containing a newline or an equals sign can't add or change another variable
+          delimiter="EOF_$(openssl rand -hex 16)"
+          {
+            echo "$name<<$delimiter"
+            printf '%s\n' "$value"
+            echo "$delimiter"
+          } >>"$GITHUB_ENV"
+          echo "  $name"
+        done < <(jq -r '.data // {} | keys[]' <<<"$secret_json")
