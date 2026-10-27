@@ -73,8 +73,9 @@ Source Code*.
 :doc:`/smarter-framework/guides/openai-json-examples`, :doc:`/smarter-framework/smarter-chat`,
 :doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-resources/smarter-llmtool`,
 :doc:`/smarter-resources/smarter-secret`, :doc:`/smarter-resources/smarter-proxy`,
-:doc:`/smarter-resources/smarter-guardrail`, :doc:`ADR 008 </adr/008-function-calling>`,
-:doc:`ADR 031 </adr/031-pydantic-over-json>`.
+:doc:`/smarter-resources/smarter-guardrail`, :doc:`ADR 008 </adr/008-function-calling>`, :doc:`ADR
+031 </adr/031-pydantic-over-json>`, `Django and httpx: An LLM Proxy That Keeps Provider API Keys
+Away From Callers <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__.
 
 **Exercises.**
 

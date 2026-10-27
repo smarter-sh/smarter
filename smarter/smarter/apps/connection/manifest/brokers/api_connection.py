@@ -268,7 +268,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     else None
                 ),
             )
-            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+            logger.debug("%s.manifest() initialized manifest from loader", self.formatted_class_name)
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing ApiConnection model if available
         elif self.connection:

@@ -57,7 +57,10 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 
 **Read.** :doc:`/smarter-resources/smarter-llmclient`, :doc:`/smarter-resources/smarter-llmtool`,
 :doc:`/smarter-resources/llmtool/nlp`, :doc:`/smarter-resources/llmclient/styles`,
-:doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-framework/smarter-manifests`.
+:doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-framework/smarter-manifests`, `Getting
+Started with Smarter's CLI <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__,
+`How to Embed a Smarter Chatbot in an HTML Web Page
+<https://blog.smarter.sh/2026/07/11/smarter-chat-html/>`__.
 
 **Exercises.**
 

@@ -59,8 +59,11 @@ Each course plan lists every file that it uses under *Smarter in the Source Code
 
 **Read.** :doc:`/smarter-framework/developer-reference/devops/test`,
 :doc:`/smarter-framework/developer-reference/devops/ci-cd`,
-:doc:`/smarter-framework/guides/semantic-versioning`,
-:doc:`ADR 013 on testing </adr/013-testing>`, :doc:`ADR 028 on code quality </adr/028-code-quality>`.
+:doc:`/smarter-framework/guides/semantic-versioning`, :doc:`ADR 013 on testing </adr/013-testing>`,
+:doc:`ADR 028 on code quality </adr/028-code-quality>`, `Django and AWS: Keeping the Cloud Out of
+Reach of Application Code and Tests
+<https://blog.smarter.sh/2026/09/03/cloud-out-of-reach-of-tests/>`__, `Six High-Impact Uses of
+Claude Code <https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__.
 
 **Exercises.**
 

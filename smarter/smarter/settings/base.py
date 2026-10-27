@@ -1613,6 +1613,14 @@ LOGGING = {
             "level": "WARNING",
             "propagate": True,
         },
+        "httpx": {
+            "level": "WARNING",
+            "propagate": True,
+        },
+        "httpcore": {
+            "level": "WARNING",
+            "propagate": True,
+        },
     },
 }
 """
@@ -1672,6 +1680,10 @@ boto3, botocore
     every AWS client) and their DEBUG records (every request and response) say nothing
     an operator needs, and the root logger's DEBUG level would otherwise send them all
     to the redis handler.
+httpx, httpcore
+    WARNING. httpx logs every request at INFO (``HTTP Request: POST https://... "HTTP/1.1 200 OK"``),
+    without Smarter's origin prefix, and the LLM provider SDKs make every request through it.
+    Smarter's own receivers already log each provider call, with its context.
 
 Log Level
 ---------

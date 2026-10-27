@@ -13,3 +13,15 @@
   <https://www.youtube.com/@Fireship>`__.
 - **Online:** `TestDriven.io <https://testdriven.io/blog/>`__ tutorials on Django with React, and
   `Real Python <https://realpython.com/>`__.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Django-React Integration <https://blog.smarter.sh/2026/05/29/react-integration/>`__, on how
+  Django hosts the console's React apps; `Smarter's List Views: One Design for Queries, Caching,
+  Pagination and Refresh <https://blog.smarter.sh/2026/08/15/smarter-list-views/>`__, on the server
+  and browser caches behind every console list page; `Getting Started with @smarter.sh/ui-chat
+  <https://blog.smarter.sh/2026/08/08/getting-started-smarter-ui-chat/>`__, on using Smarter's chat
+  component in a React app; `Django Chat Sessions Across Subdomains: Why a Smarter Session Key Opens
+  Exactly One Chatbot <https://blog.smarter.sh/2026/10/04/smarter-chat-session-one-chatbot/>`__, on
+  binding a chat session to the chatbot that created it; `Smarter's OpenAPI Contract: One
+  Extensibility Model for Python, Go, React and VS Code
+  <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
+  OpenAPI document that every client depends on.

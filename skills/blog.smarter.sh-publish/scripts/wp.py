@@ -14,14 +14,21 @@ Usage:
   wp.py list [--search TEXT] [--status publish|draft|any]
   wp.py get ID [--raw FILE]
   wp.py publish POST.md --slug SLUG [--title TITLE] [--category ID] [--status draft|publish]
-                [--excerpt TEXT] [--id ID]
+                [--excerpt TEXT] [--id ID] [--date YYYY-MM-DDTHH:MM:SS]
+                [--featured-media MEDIA_ID]
   wp.py upload IMAGE [--alt TEXT]
+  wp.py clear-cache
 
 publish converts POST.md with md2wp.py, which leaves out the post's # H1 and date
 line (the theme prints the title and date), and uses the H1 as the title unless
 --title is given. With --id it updates that post instead of
 creating one. It prints the post's id, status and link. upload adds a file to the
 media library and prints its id and url, for a ``![alt](url)`` line in a post.
+--date sets the publication date (blog time), for a post the user wants
+backdated. --featured-media sets the featured image in the same request as the
+content, which makes Yoast SEO rebuild the post's og:image; publish checks it
+and saves once more if Yoast has not caught up. clear-cache deletes WP Super
+Cache's whole page cache.
 """
 
 import argparse
@@ -30,6 +37,7 @@ import json
 import mimetypes
 import os
 import pathlib
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -112,6 +120,20 @@ class Blog:
             media = self.request("POST", f"media/{media['id']}", {"alt_text": alt})
         return media
 
+    def clear_cache(self) -> None:
+        """Delete WP Super Cache's whole page cache, as its settings page does."""
+        page = self.opener.open(f"{self.base}/wp-admin/options-general.php?page=wpsupercache").read().decode()
+        match = re.search(r"var wpsc_ajax = (\{.*?\});", page)
+        if not match:
+            sys.exit("clear-cache: no wpsc_ajax settings on the WP Super Cache page")
+        nonce = json.loads(match.group(1))["nonce"]
+        form = urllib.parse.urlencode(
+            {"action": "ajax-delete-cache", "path": "/", "admin": "1", "nonce": nonce}
+        ).encode()
+        # WP Super Cache answers "0" when it has deleted the cache.
+        self.opener.open(f"{self.base}/wp-admin/admin-ajax.php", form).read()
+        print("page cache cleared")
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -132,9 +154,12 @@ def main() -> None:
     publish.add_argument("--status", choices=("draft", "publish"), default="draft")
     publish.add_argument("--excerpt", default="")
     publish.add_argument("--id", help="update this post instead of creating one")
+    publish.add_argument("--date", help="publication date in blog time, e.g. 2026-04-21T09:00:00")
+    publish.add_argument("--featured-media", type=int, help="media id of the featured image")
     upload = sub.add_parser("upload")
     upload.add_argument("file")
     upload.add_argument("--alt", default="", help="the image's alt text")
+    sub.add_parser("clear-cache")
     args = parser.parse_args()
 
     blog = Blog()
@@ -156,6 +181,8 @@ def main() -> None:
             pathlib.Path(args.raw).write_text(post["content"]["raw"], encoding="utf-8")
         print(json.dumps({k: post[k] for k in ("id", "date", "status", "slug", "link", "categories")}))
         print(post["title"]["raw"])
+    elif args.command == "clear-cache":
+        blog.clear_cache()
     elif args.command == "upload":
         media = blog.upload(pathlib.Path(args.file), args.alt)
         print(json.dumps({k: media[k] for k in ("id", "source_url", "alt_text")}))
@@ -176,8 +203,17 @@ def main() -> None:
             body["categories"] = args.category
         if args.excerpt:
             body["excerpt"] = args.excerpt
+        if args.date:
+            body["date"] = args.date
+        if args.featured_media:
+            body["featured_media"] = args.featured_media
         route = f"posts/{args.id}" if args.id else "posts"
         post = blog.request("POST", route, body)
+        if args.featured_media:
+            # Yoast can miss the new image when the same request also changes the status.
+            route = f"posts/{post['id']}"
+            if not blog.request("GET", route, context="edit").get("yoast_head_json", {}).get("og_image"):
+                blog.request("POST", route, {"featured_media": args.featured_media, "content": body["content"]})
         print(json.dumps({k: post[k] for k in ("id", "status", "slug", "link")}))
 
 

@@ -56,8 +56,9 @@ ownership; and writing for coding agents.
 
 Each course plan lists every file that it uses under *Smarter in the Source Code*.
 
-**Read.** :doc:`/smarter-framework/guides/documentation`,
-:doc:`ADR 029 on docstrings </adr/029-docstrings>`, :doc:`/adr`.
+**Read.** :doc:`/smarter-framework/guides/documentation`, :doc:`ADR 029 on docstrings
+</adr/029-docstrings>`, :doc:`/adr`, `Part 3: What Claude Code Actually Reads
+<https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__.
 
 **Exercises.**
 

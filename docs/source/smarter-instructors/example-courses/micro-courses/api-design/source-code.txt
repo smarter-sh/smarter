@@ -113,7 +113,7 @@ The Clients
        `smarter/client.py <https://github.com/smarter-sh/smarter-python/blob/main/smarter/client.py>`__,
        `scripts/sync-contracts.sh <https://github.com/smarter-sh/smarter-python/blob/main/scripts/sync-contracts.sh>`__,
        `tests/test_contracts.py <https://github.com/smarter-sh/smarter-python/blob/main/tests/test_contracts.py>`__,
-       `ADR 022 <https://github.com/smarter-sh/smarter-python/blob/main/doc/adr/022-pinned-openapi.md>`__
+       `ADR 022 <https://github.com/smarter-sh/smarter-python/blob/main/docs/source/adr/022-pinned-openapi.rst>`__
    * - Validation in the editor
      - A VS Code extension that validates manifests against JSON Schemas.
        :doc:`/smarter-framework/vs-code-extension`.

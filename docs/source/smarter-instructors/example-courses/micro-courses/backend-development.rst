@@ -60,7 +60,13 @@ Each course plan lists every file that it uses, layer by layer, under *Smarter i
 
 **Read.** :doc:`/smarter-framework/smarter-broker-model`, :doc:`/smarter-framework/smarter-api`,
 :doc:`/smarter-framework/technologies/pydantic`, :doc:`/smarter-framework/getting-started` (a
-reading list for these technologies), :doc:`/smarter-framework/guides/developer-feature-checklist`.
+reading list for these technologies), :doc:`/smarter-framework/guides/developer-feature-checklist`,
+`Pydantic Settings: How Smarter Validates and Manages Its Configuration
+<https://blog.smarter.sh/2026/09/19/smarter-pydantic-settings/>`__, `Smarter's Ownership Model: One
+Base Class for Owning, Sharing and Tracking AI Resources
+<https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__, `Smarter's
+@cache_results() Decorator: Persistent Function Caching for Django
+<https://blog.smarter.sh/2026/05/09/smarter-cache-results/>`__.
 
 **Exercises.**
 

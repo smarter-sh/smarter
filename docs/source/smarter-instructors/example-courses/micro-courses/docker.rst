@@ -52,7 +52,8 @@ Each course plan lists every file that it uses under *Smarter in the Source Code
 **Read.** :doc:`/smarter-framework/technologies/docker`, :doc:`ADR 002 on Docker </adr/002-docker>`,
 :doc:`ADR 004 on the twelve-factor app </adr/004-12-factor>`,
 :doc:`/smarter-framework/developer-reference/devops/build`,
-:doc:`/smarter-platform/installation/quick-start`.
+:doc:`/smarter-platform/installation/quick-start`, `One Image, Laptop to Production: The Case for
+Smarter on Docker and Kubernetes <https://blog.smarter.sh/2026/04/11/smarter-docker-kubernetes/>`__.
 
 **Exercises.**
 

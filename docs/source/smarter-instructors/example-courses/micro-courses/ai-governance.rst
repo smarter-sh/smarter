@@ -60,7 +60,11 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 
 **Read.** :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-resources/smarter-budget`,
 :doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-platform/cost-accounting`,
-:doc:`/smarter-platform/smarter-journal`, :doc:`/smarter-platform/security`.
+:doc:`/smarter-platform/smarter-journal`, :doc:`/smarter-platform/security`, `Django and httpx: An
+LLM Proxy That Keeps Provider API Keys Away From Callers
+<https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, `Smarter's Ownership Model: One
+Base Class for Owning, Sharing and Tracking AI Resources
+<https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__.
 
 **Exercises.**
 
