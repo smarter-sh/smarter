@@ -162,9 +162,13 @@ make coverage
 # = docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"
 ```
 
-CI's `python` job (`.github/workflows/test.yml`) runs the same command and
-uploads `coverage.xml` to Codecov. A full run takes a long time, so to raise
-coverage efficiently:
+CI's `python` job (`.github/workflows/test.yml`) runs the same command as eight
+shards on eight runners, each with `SMARTER_TEST_SHARD=<n>/8` (see
+`smarter/lib/unittest/runner.py`: every shard discovers the whole suite, and
+TestCases are never split). The `python-report` job combines the shards'
+coverage data and uploads one `coverage.xml` to Codecov. To reproduce one
+shard locally, pass the same variable to `docker exec -e`. A full run takes a
+long time, so to raise coverage efficiently:
 
 1. Work from an existing report (`coverage report -m` output) rather than
    re-running the suite.

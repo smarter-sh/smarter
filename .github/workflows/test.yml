@@ -32,6 +32,14 @@
 # `pre-commit autoupdate`, which rewrites .pre-commit-config.yaml. Neither
 # affects the tests.
 #
+# The Python suite runs as eight shards, one per runner, side by side. Each
+# shard sets up its own containers and database, discovers the whole suite,
+# and runs its share (SMARTER_TEST_SHARD, see
+# smarter/smarter/lib/unittest/runner.py). In one job, setup took about 5
+# minutes and the tests about 27. The python-report job then merges the
+# shards' coverage data and test results, and uploads the coverage to Codecov
+# once.
+#
 # The "Create .env" step passes the repository and organization secrets
 # to the containers under the names that a local .env uses. At a minimum:
 #
@@ -124,9 +132,25 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  #----------------------------------------------------------------------------
+  # One shard of the Python suite. SHARDS must match the length of the shard
+  # list. fail-fast is off, so that one failing shard doesn't cancel the
+  # others: every failure is reported in one run.
+  #
+  # Only shard 1 saves the caches and exports the Docker layer cache. The
+  # shards build the same things, and eight concurrent saves of one key would
+  # only race each other.
+  #----------------------------------------------------------------------------
   python:
+    name: python (shard ${{ matrix.shard }} of 8)
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    env:
+      SHARDS: 8
     steps:
       - name: Checkout code
         id: checkout
@@ -363,21 +387,21 @@ jobs:
           npm install
 
       - name: Save Python venv
-        if: steps.venv.outputs.cache-hit != 'true'
+        if: matrix.shard == 1 && steps.venv.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: venv
           key: ${{ steps.venv.outputs.cache-primary-key }}
 
       - name: Save pip downloads
-        if: steps.venv.outputs.cache-hit != 'true' && steps.pypi.outputs.cache-hit != 'true'
+        if: matrix.shard == 1 && steps.venv.outputs.cache-hit != 'true' && steps.pypi.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: .pypi_cache
           key: ${{ steps.pypi.outputs.cache-primary-key }}
 
       - name: Save root node_modules
-        if: steps.root-node-modules.outputs.cache-hit != 'true'
+        if: matrix.shard == 1 && steps.root-node-modules.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: node_modules
@@ -414,7 +438,9 @@ jobs:
       # - A generated override file adds cache_from/cache_to to the four
       #   services that build the smarter image, and COMPOSE_FILE layers it on
       #   top of docker-compose.yml so the Makefile runs unchanged. All four
-      #   build the identical image, so only smarter-app exports the cache.
+      #   build the identical image, so only smarter-app exports the cache,
+      #   and only in shard 1. smarter-app comes last in the file, so that
+      #   its cache_to can be appended.
       # - The override also sets PYTHON_BASE_IMAGE to Docker Hub's python
       #   image. The Dockerfile's default pulls it from the ECR Public Gallery,
       #   whose anonymous data quota GitHub's shared runner IPs exhaust
@@ -452,14 +478,6 @@ jobs:
           OVERRIDE="$RUNNER_TEMP/docker-compose.cache.yml"
           cat > "$OVERRIDE" <<'EOF'
           services:
-            smarter-app:
-              build:
-                args:
-                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
-                cache_from:
-                  - type=gha,scope=smarter-test
-                cache_to:
-                  - type=gha,scope=smarter-test,mode=max
             smarter-worker:
               build:
                 args:
@@ -478,7 +496,20 @@ jobs:
                   PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
                 cache_from:
                   - type=gha,scope=smarter-test
+            smarter-app:
+              build:
+                args:
+                  PYTHON_BASE_IMAGE: docker.io/library/python:3.14-slim-trixie
+                cache_from:
+                  - type=gha,scope=smarter-test
           EOF
+          if [ "${{ matrix.shard }}" = "1" ]; then
+            cat >> "$OVERRIDE" <<'EOF'
+                cache_to:
+                  - type=gha,scope=smarter-test,mode=max
+          EOF
+          fi
+          cat "$OVERRIDE"
           echo "COMPOSE_FILE=$GITHUB_WORKSPACE/docker-compose.yml:$OVERRIDE" >> $GITHUB_ENV
 
       - name: make docker-build
@@ -518,77 +549,52 @@ jobs:
           make docker-init
 
       #========================================================================
-      # Run the unit tests with coverage
+      # Run this shard of the unit tests with coverage
       #
-      # Runs the same tests as `make docker-test`, under coverage.py. Coverage
-      # is measured for all of smarter, the same suite that the tests cover,
-      # rather than just smarter.apps as `make coverage` does. Tests and
-      # migrations are omitted. .coveragerc is excluded by .dockerignore, so
-      # the options are passed on the command line. coverage run exits with
-      # the test runner's exit code, so a failing test still fails this step.
+      # Runs this shard's share of the tests that `make docker-test` runs,
+      # under coverage.py. Coverage is measured for all of smarter, the same
+      # suite that the tests cover, rather than just smarter.apps as
+      # `make coverage` does. .coveragerc is excluded by .dockerignore, so the
+      # options are passed on the command line. coverage run exits with the
+      # test runner's exit code, so a failing test still fails this step.
       #
-      # coverage.xml is written inside the container and then copied to the
-      # workspace for the Codecov upload. Its paths are container paths,
-      # /home/smarter_user/smarter/smarter/..., which codecov.yml maps back
-      # to the repository's smarter/smarter/....
-      #
-      # SMARTER_TEST_JUNIT_XML makes the test runner also write the results as
-      # a JUnit XML report (see smarter/smarter/lib/unittest/runner.py), which
-      # the "Test summary" step renders in the job summary. coverage.json
-      # carries the totals for the "Coverage summary" step.
+      # SMARTER_TEST_SHARD picks the shard, and SMARTER_TEST_JUNIT_XML makes
+      # the test runner also write the results as a JUnit XML report (see
+      # smarter/smarter/lib/unittest/runner.py).
       #========================================================================
       - name: Run unit tests with coverage
         shell: bash
         run: |
-          docker exec -e SMARTER_TEST_JUNIT_XML=test-results.xml smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report && coverage xml -o coverage.xml && coverage json -o coverage.json"
-          docker cp smarter-app:/home/smarter_user/smarter/coverage.xml ./coverage.xml
-          docker cp smarter-app:/home/smarter_user/smarter/coverage.json ./coverage.json
+          docker exec \
+            -e SMARTER_TEST_SHARD=${{ matrix.shard }}/${{ env.SHARDS }} \
+            -e SMARTER_TEST_JUNIT_XML=test-results.xml \
+            smarter-app bash -c "coverage run --source=smarter manage.py test smarter"
 
       #========================================================================
-      # Job summary: the test results, like the react job's Vitest report, and
-      # the total coverage only. The per-file coverage report (some 2,000
-      # lines) stays in the log of the step above, and in Codecov.
+      # Hand the shard's coverage data and test results to python-report.
       #
-      # Both run even when a test fails, which is when the summary matters
-      # most. The test report is written as the tests run, so it exists
-      # whenever the suite ran to the end.
+      # Both are copied even when a test fails, which is when the results
+      # matter most. The test report is written as the tests run, so it exists
+      # whenever the shard ran to the end. The coverage data file's paths are
+      # container paths, /home/smarter_user/smarter/smarter/..., which
+      # python-report maps back to the repository's.
       #========================================================================
-      - name: Copy test results from the container
+      - name: Copy coverage data and test results from the container
         if: always()
         shell: bash
         run: |
-          docker cp smarter-app:/home/smarter_user/smarter/test-results.xml ./test-results.xml || echo "No test results were written."
+          mkdir -p shard
+          docker cp smarter-app:/home/smarter_user/smarter/.coverage shard/coverage-shard-${{ matrix.shard }} || echo "No coverage data was written."
+          docker cp smarter-app:/home/smarter_user/smarter/test-results.xml shard/test-results-shard-${{ matrix.shard }}.xml || echo "No test results were written."
 
-      - name: Test summary
+      - name: Upload coverage data and test results
         if: always()
-        uses: test-summary/action@v2
+        uses: actions/upload-artifact@v4
         with:
-          paths: test-results.xml
-          show: "fail, skip"
-
-      - name: Coverage summary
-        if: always()
-        shell: bash
-        run: |
-          if [ ! -f coverage.json ]; then
-            echo "No coverage report was written."
-            exit 0
-          fi
-          jq -r '
-            .totals as $t |
-            "## Python coverage\n",
-            "| Statements | Missed | Coverage |",
-            "| ---: | ---: | ---: |",
-            "| \($t.num_statements) | \($t.missing_lines) | **\($t.percent_covered_display)%** |"
-          ' coverage.json >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
-        with:
-          files: ./coverage.xml
-          flags: python
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: python-shard-${{ matrix.shard }}
+          path: shard/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Dump container logs
         if: failure()
@@ -601,3 +607,85 @@ jobs:
         shell: bash
         run: |
           docker compose down -v
+
+  #----------------------------------------------------------------------------
+  # Merge the shards' results into one report.
+  #
+  # - Test summary: every shard's JUnit XML report, rendered together in the
+  #   job summary, like the react job's Vitest report. It runs even when a
+  #   shard fails, which is when it matters most.
+  # - Coverage: the shards' coverage data files are combined, with their
+  #   container paths mapped back to the repository's checkout, and reported
+  #   against it. The coverage version matches requirements/local.txt, which
+  #   the container uses. Only the total goes in the job summary. The
+  #   per-file report (some 2,000 lines) stays in this job's log, and in
+  #   Codecov, which receives one combined report under the python flag.
+  #   Coverage is only reported when every shard passed, as before sharding:
+  #   a failed shard's data would understate it.
+  #----------------------------------------------------------------------------
+  python-report:
+    needs: python
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download the shards' results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: python-shard-*
+          path: shards
+
+      - name: Test summary
+        uses: test-summary/action@v2
+        with:
+          paths: "shards/**/test-results-shard-*.xml"
+          show: "fail, skip"
+
+      - name: Set up Python
+        if: needs.python.result == 'success'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Combine coverage
+        if: needs.python.result == 'success'
+        shell: bash
+        run: |
+          pip install "$(grep -E '^coverage==' smarter/requirements/local.txt)"
+          cat > "$RUNNER_TEMP/coveragerc" <<'EOF'
+          [run]
+          relative_files = True
+
+          [paths]
+          source =
+              smarter/
+              /home/smarter_user/smarter/
+          EOF
+          coverage combine --rcfile="$RUNNER_TEMP/coveragerc" shards/*/coverage-shard-*
+          coverage report --rcfile="$RUNNER_TEMP/coveragerc"
+          coverage xml --rcfile="$RUNNER_TEMP/coveragerc" -o coverage.xml
+          coverage json --rcfile="$RUNNER_TEMP/coveragerc" -o coverage.json
+
+      - name: Coverage summary
+        if: needs.python.result == 'success'
+        shell: bash
+        run: |
+          jq -r '
+            .totals as $t |
+            "## Python coverage\n",
+            "| Statements | Missed | Coverage |",
+            "| ---: | ---: | ---: |",
+            "| \($t.num_statements) | \($t.missing_lines) | **\($t.percent_covered_display)%** |"
+          ' coverage.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage to Codecov
+        if: needs.python.result == 'success'
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.xml
+          flags: python
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
