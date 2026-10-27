@@ -90,8 +90,13 @@ jobs:
   #----------------------------------------------------------------------------
   # semantic-release. The PAT secret, rather than GITHUB_TOKEN, makes its tag
   # and GitHub release trigger other workflows, such as uiChatRelease.yml.
+  #
+  # The PAT also makes semantic-release's own commit, chore(release): <version>,
+  # start this workflow again. That commit releases nothing, so the run skips
+  # every job. (It can't carry the CI skip tag instead: see release.config.js.)
   #----------------------------------------------------------------------------
   release:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.PAT }}
