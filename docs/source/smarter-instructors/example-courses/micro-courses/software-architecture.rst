@@ -94,7 +94,10 @@ Each course plan lists every file that it uses, factor by factor and principle b
 
 **Read.** :doc:`/adr`, :doc:`/smarter-framework/smarter-broker-model`,
 :doc:`/smarter-framework/guides/12-factor-app`, :doc:`/smarter-platform/cloud-infrastructure`,
-:doc:`/smarter-platform/security`.
+:doc:`/smarter-platform/security`, `One Image, Laptop to Production: The Case for Smarter on Docker
+and Kubernetes <https://blog.smarter.sh/2026/04/11/smarter-docker-kubernetes/>`__, `Smarter's
+OpenAPI Contract: One Extensibility Model for Python, Go, React and VS Code
+<https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__.
 
 **Exercises.**
 

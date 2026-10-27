@@ -42,7 +42,7 @@ types are generated from the chat contract; the
 typed `Python SDK <https://github.com/smarter-sh/smarter-python>`__, which keeps a copy of the
 platform's OpenAPI document and contracts, pinned to a platform release, and tests every request
 it sends against them. Its `ADR 022
-<https://github.com/smarter-sh/smarter-python/blob/main/doc/adr/022-pinned-openapi.md>`__ explains
+<https://github.com/smarter-sh/smarter-python/blob/main/docs/source/adr/022-pinned-openapi.rst>`__ explains
 why: the CLI once shipped two broken commands, for routes the platform had renamed, with every
 unit test passing.
 
@@ -75,7 +75,11 @@ in the Source Code*.
 **Read.** :doc:`/smarter-framework/smarter-api`,
 :doc:`/smarter-framework/smarter-api/authentication`,
 :doc:`/smarter-framework/smarter-api/error-handling`, :doc:`/smarter-framework/smarter-api/chat`,
-:doc:`/smarter-framework/smarter-chat/api-contract`, :doc:`/adr/023-api-versioning`.
+:doc:`/smarter-framework/smarter-chat/api-contract`, :doc:`/adr/023-api-versioning`, `Smarter's
+OpenAPI Contract: One Extensibility Model for Python, Go, React and VS Code
+<https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, `Getting Started With
+smarter-api, the Smarter Python SDK
+<https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__.
 
 **Exercises.**
 

@@ -62,7 +62,10 @@ Each course plan lists every file that it uses, step by step, under *Smarter in 
 
 **Read.** :doc:`/smarter-framework/developer-reference/react-integration`,
 :doc:`/smarter-framework/smarter-chat/web-console-hosting`,
-:doc:`/smarter-framework/smarter-chat/api-contract`.
+:doc:`/smarter-framework/smarter-chat/api-contract`, `Django-React Integration
+<https://blog.smarter.sh/2026/05/29/react-integration/>`__, `Smarter's List Views: One Design for
+Queries, Caching, Pagination and Refresh
+<https://blog.smarter.sh/2026/08/15/smarter-list-views/>`__.
 
 **Exercises.**
 

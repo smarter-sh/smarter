@@ -1,6 +1,7 @@
 """Base command class for custom management commands."""
 
 import sys
+import threading
 import traceback
 from typing import Optional
 
@@ -77,16 +78,58 @@ class SmarterCommand(BaseCommand):
     - Do not override ``__init__`` unless necessary; always call ``super().__init__``.
     """
 
+    # how many SmarterCommands are running in this thread, e.g. 2 for an apply_manifest that
+    # load_from_github called with call_command().
+    _nesting = threading.local()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    @property
+    def is_nested(self) -> bool:
+        """
+        Whether another SmarterCommand called this one, e.g. with ``call_command()``.
+
+        :returns: True when this command runs inside another SmarterCommand.
+        """
+        return getattr(SmarterCommand._nesting, "depth", 0) > 1
+
+    def execute(self, *args, **options):
+        """
+        Run the command, and keep count of the SmarterCommands that are running in this thread.
+
+        The count is what :meth:`is_nested` reads. It is decremented however the command ends.
+
+        :returns: whatever Django's ``BaseCommand.execute()`` returns.
+        """
+        SmarterCommand._nesting.depth = getattr(SmarterCommand._nesting, "depth", 0) + 1
+        try:
+            return super().execute(*args, **options)
+        finally:
+            SmarterCommand._nesting.depth -= 1
+
     def handle_begin(self):
+        """
+        Log the command's start, as a banner.
+
+        A command that another command called logs one DEBUG line instead: an init job runs
+        hundreds of ``apply_manifest`` commands, and their banners would be most of its log.
+        """
+        if self.is_nested:
+            logger.debug("%s started.", self.__module__)
+            return
         logger.info("%s manage.py %s", "-" * 35, "-" * 34)
         logger.info("%s started.", self.__module__)
-        logger.info("-" * 80)
 
     def handle_completed_success(self, msg: Optional[str] = None):
-        logger.info("-" * 80)
+        """
+        Log the command's success, and close its banner.
+
+        :param msg: the message to log, instead of ``<module> completed successfully.``
+        """
+        if self.is_nested:
+            logger.debug("%s", msg or f"{self.__module__} completed successfully.")
+            return
         if msg:
             logger.info("%s", msg)
         else:
