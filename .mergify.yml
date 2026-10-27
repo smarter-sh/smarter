@@ -1,6 +1,14 @@
+# Mergify: approve Dependabot's pull requests, and merge them once CI passes.
+#
+# Dependabot opens its pull requests against alpha (see .github/dependabot.yml),
+# so that is the branch merged into. test.yml runs only on pull requests to
+# main, so there is no check to wait for here: a dependency update is tested,
+# with the rest of alpha, by the pull request from alpha to main, whose
+# python-report and react checks are main's required status checks.
+#
 # see:
-#  - https://github.com/FullStackWithLawrence/aws-openai/settings/installations
 #  - https://docs.mergify.com/getting-started/
+#  - https://docs.mergify.com/conditions/
 pull_request_rules:
   - name: automatic approve dependabot pull requests
     conditions:
@@ -13,7 +21,7 @@ pull_request_rules:
     conditions:
       - "author~=dependabot[bot]|dependabot-preview[bot]|dependabot"
       - "#approved-reviews-by>=1"
-      - "base=main" # replace 'main' with the name of the branch you want to auto-merge into
+      - "base=alpha"
     actions:
       merge:
         method: merge
