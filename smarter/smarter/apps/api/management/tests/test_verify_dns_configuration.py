@@ -134,26 +134,52 @@ class TestVerifyDnsConfiguration(CommandTestBase):
         provider = InMemoryProvider()
         provider.dns.add_zone("example.com", a_record=LOAD_BALANCER)
         provider.dns.add_zone("platform.example.com", a_record=LOAD_BALANCER)
-        provider.dns.add_zone("proxy.example.com", a_record=cdn)
+        provider.dns.add_zone("api.platform.example.com", a_record=cdn)
         self.use(provider)
         output = self.run_in(SmarterEnvironments.ALPHA)
 
         self.assertIn("does not point at the platform's load balancer. Left it unchanged.", output)
-        self.assertNotIn("Verified A record for proxy.example.com", output)
+        self.assertNotIn("Verified A record for api.platform.example.com", output)
         self.assertIn("Verified A record for platform.example.com", output)
         summary = [line for line in output.splitlines() if "Verified platform level DNS infrastructure" in line]
         self.assertEqual(len(summary), 1)
         verified = summary[0].split("following domains: ", 1)[1].strip().split(", ")
-        self.assertNotIn("proxy.example.com", verified)
-        self.assertIn("api.proxy.example.com", verified)
+        self.assertNotIn("api.platform.example.com", verified)
         self.assertIn(
-            "A record left unchanged because it does not point at the platform's load balancer: proxy.example.com",
+            "A record left unchanged because it does not point at the platform's load balancer: api.platform.example.com",
             output,
         )
-        zone = provider.dns.get_zone("proxy.example.com")
-        self.assertEqual(provider.dns.get_record(zone.id, "proxy.example.com", "A").values, cdn)
-        root_zone = provider.dns.get_zone("example.com")
-        self.assertIsNotNone(provider.dns.get_record(root_zone.id, "proxy.example.com", "NS"))
+        zone = provider.dns.get_zone("api.platform.example.com")
+        self.assertEqual(provider.dns.get_record(zone.id, "api.platform.example.com", "A").values, cdn)
+        platform_zone = provider.dns.get_zone("platform.example.com")
+        self.assertIsNotNone(provider.dns.get_record(platform_zone.id, "api.platform.example.com", "NS"))
+
+    def test_shared_proxy_domains_pointing_elsewhere_are_verified(self):
+        """
+        Test that the local proxy domains, which every platform under the root domain shares, are verified.
+
+        Their A record may point at another platform's load balancer. It is left unchanged, and
+        not reported.
+        """
+        other_platform = ["198.51.100.2"]
+        provider = InMemoryProvider()
+        provider.dns.add_zone("example.com", a_record=LOAD_BALANCER)
+        provider.dns.add_zone("platform.example.com", a_record=LOAD_BALANCER)
+        provider.dns.add_zone("proxy.example.com", a_record=other_platform)
+        provider.dns.add_zone("api.proxy.example.com", a_record=other_platform)
+        self.use(provider)
+        output = self.run_in(SmarterEnvironments.ALPHA)
+
+        self.assertNotIn("Left it unchanged", output)
+        self.assertNotIn("A record left unchanged", output)
+        self.assertIn("Verified A record for proxy.example.com, which the platforms of example.com share.", output)
+        summary = [line for line in output.splitlines() if "Verified platform level DNS infrastructure" in line]
+        verified = summary[0].split("following domains: ", 1)[1].strip().split(", ")
+        self.assertIn("proxy.example.com", verified)
+        self.assertIn("api.proxy.example.com", verified)
+        for domain in ("proxy.example.com", "api.proxy.example.com"):
+            zone = provider.dns.get_zone(domain)
+            self.assertEqual(provider.dns.get_record(zone.id, domain, "A").values, other_platform, domain)
 
     def test_local_environment(self):
         """Test that only the proxy domains are verified in the local environment."""

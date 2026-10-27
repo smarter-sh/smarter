@@ -9,7 +9,7 @@ so the receivers log an entry's key, thing, command and status code, never its d
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -32,7 +32,7 @@ def samjournal_post_save(sender, instance: SAMJournal, created, **kwargs):
     """Signal receiver for created/saved of SAMJournal model."""
     logger.debug(
         "%s SAMJournal: %s, thing: %s, command: %s, status_code: %s, created: %s",
-        f"{formatted_text(module_prefix)}.samjournal_post_save()",
+        f"{SmarterFormattedText.text(module_prefix)}.samjournal_post_save()",
         instance.key,
         instance.thing,
         instance.command,
@@ -46,7 +46,7 @@ def samjournal_post_delete(sender, instance: SAMJournal, **kwargs):
     """Signal receiver for deleted of SAMJournal model."""
     logger.debug(
         "%s SAMJournal: %s",
-        f"{formatted_text(module_prefix)}.samjournal_post_delete()",
+        f"{SmarterFormattedText.text(module_prefix)}.samjournal_post_delete()",
         instance.key,
     )
 
@@ -56,7 +56,7 @@ def journal_entry_created_receiver(sender, journal: SAMJournal, **kwargs):
     """Signal receiver for journal_entry_created signal."""
     logger.debug(
         "%s sender: %s, journal: %s, thing: %s, command: %s, status_code: %s",
-        f"{formatted_text(module_prefix)}.journal_entry_created()",
+        f"{SmarterFormattedText.text(module_prefix)}.journal_entry_created()",
         sender,
         journal.key,
         journal.thing,
@@ -73,7 +73,7 @@ def journal_entry_failed_receiver(sender, user, thing, command, status, request,
     It logs at error level, whatever the waffle switches, because a missing journal entry is a gap in an
     audit record. Operators monitor the logs for ``could not create journal entry``.
     """
-    prefix = f"{formatted_text(module_prefix)}.journal_entry_failed()"
+    prefix = f"{SmarterFormattedText.text(module_prefix)}.journal_entry_failed()"
     error_logger.error(
         "%s sender=%s, user=%s, thing=%s, command=%s, status=%s\nrequest=%s\nresponse: %s",
         prefix,
@@ -93,7 +93,7 @@ def journal_entry_accessed_receiver(sender, journal: SAMJournal, user, **kwargs)
     """Signal receiver for journal_entry_accessed signal."""
     logger.debug(
         "%s sender: %s, journal: %s, user: %s",
-        f"{formatted_text(module_prefix)}.journal_entry_accessed()",
+        f"{SmarterFormattedText.text(module_prefix)}.journal_entry_accessed()",
         sender,
         journal.key,
         user,
@@ -105,7 +105,7 @@ def journal_entries_listed_receiver(sender, user, count, **kwargs):
     """Signal receiver for journal_entries_listed signal."""
     logger.debug(
         "%s sender: %s, user: %s, count: %s",
-        f"{formatted_text(module_prefix)}.journal_entries_listed()",
+        f"{SmarterFormattedText.text(module_prefix)}.journal_entries_listed()",
         sender,
         user,
         count,

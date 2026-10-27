@@ -41,7 +41,7 @@ Dependencies
 
 - Django
 - asgiref
-- smarter.common.helpers.logger_helpers
+- smarter.common.helpers.console_helpers
 - smarter.common.mixins
 - smarter.lib.logging.redis_log_handler
 - smarter.lib.django.waffle
@@ -55,7 +55,7 @@ from typing import cast
 
 from django.http import HttpRequest, HttpResponseBase
 
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterMiddlewareMixin
 from smarter.common.mixins.helper_mixin import SmarterHelperMixin
 from smarter.lib import logging
@@ -79,13 +79,13 @@ logger = logging.getSmarterLogger(__name__)
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS):
     logger.debug(
         "%s is %s",
-        formatted_text(__name__) + ".SmarterRequestLogContextMiddleware",
+        SmarterFormattedText.text(__name__) + ".SmarterRequestLogContextMiddleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        formatted_text(__name__) + ".SmarterRequestLogContextMiddleware",
+        SmarterFormattedText.text(__name__) + ".SmarterRequestLogContextMiddleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 

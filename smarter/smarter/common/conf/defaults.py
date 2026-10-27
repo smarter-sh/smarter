@@ -29,7 +29,7 @@ from smarter.common.const import (
 
 # our stuff
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils.utils import (
     bool_environment_variable,
     generate_fernet_encryption_key,
@@ -40,7 +40,7 @@ from .env import get_env, is_missing_value
 from .services import Services
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__) + ".SettingsDefaults()"
+logger_prefix = SmarterFormattedText.text(__name__) + ".SettingsDefaults()"
 
 
 def optional_secret_env(var_name: str) -> Optional[SecretStr]:

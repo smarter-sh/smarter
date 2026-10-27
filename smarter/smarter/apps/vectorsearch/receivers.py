@@ -21,8 +21,8 @@ module_prefix = __name__
 def vectorsearch_saved(sender, instance: Vectorsearch, created: bool, **kwargs):
     """Create the default API for the vectorsearch."""
 
-    prefix = f"{logging.formatted_text(module_prefix)}.vectorsearch_saved()"
-    data = logging.formatted_json(VectorsearchSerializer(instance).data)
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.vectorsearch_saved()"
+    data = logging.SmarterFormattedText.json(VectorsearchSerializer(instance).data)
     if created:
         logger.info("%s created %s, %s", prefix, instance, data)
     else:
@@ -32,7 +32,7 @@ def vectorsearch_saved(sender, instance: Vectorsearch, created: bool, **kwargs):
 @receiver(pre_delete, sender=Vectorsearch)
 def vectorsearch_deleted(sender, instance: Vectorsearch, **kwargs):
     """Delete the default API for the vectorsearch."""
-    prefix = f"{logging.formatted_text(module_prefix)}.vectorsearch_deleted()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.vectorsearch_deleted()"
     logger.info("%s %s", prefix, instance)
 
 

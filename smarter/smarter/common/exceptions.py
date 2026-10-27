@@ -5,7 +5,7 @@ import re
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class SmarterException(Exception):

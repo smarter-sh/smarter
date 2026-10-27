@@ -181,9 +181,13 @@ global:
 app:
   replicaCount: 2
   # The number of uvicorn worker processes in each app pod (uvicorn --workers). Each worker
-  # is a separate Python process that loads all of Django, about 420 MB at rest, so
-  # resources.requests.memory below must grow with this number.
-  workers: 4
+  # is a separate Python process that loads all of Django, about 420 MB at rest, and runs
+  # Python on at most one core at a time, so match it to resources.requests.cpu (one worker
+  # per core) and grow resources.requests.memory with it. Django's synchronous code runs on
+  # a thread pool inside each worker, so a worker that waits on an LLM provider keeps
+  # serving other requests. Capacity beyond that comes from more pods (hpa), not more
+  # workers per pod.
+  workers: 2
   # The most concurrent connections and tasks that each uvicorn worker accepts
   # (uvicorn --limit-concurrency). Above it, uvicorn answers 503 at once instead of
   # accepting the request. Without a limit, every request gets its own thread for
@@ -203,15 +207,16 @@ app:
   databaseReadTimeout: 60
   resources:
     requests:
-      cpu: "500m"
-      # About 420 MB for each of the 4 uvicorn workers (app.workers), plus headroom for
+      # One core per uvicorn worker (app.workers).
+      cpu: "1"
+      # About 420 MB for each of the 2 uvicorn workers (app.workers), plus headroom for
       # the threads and buffers of requests in flight. The scheduler only places a pod
       # on a node with this much memory free, and the HorizontalPodAutoscaler measures
       # memory utilization against it.
-      memory: "2Gi"
+      memory: "1280Mi"
     limits:
       cpu: "2"
-      memory: "4Gi"
+      memory: "2Gi"
   extraVolumeMounts: []
   # A PodDisruptionBudget that keeps voluntary disruptions (node drains, cluster
   # upgrades, Karpenter or cluster-autoscaler consolidation) from evicting more than
@@ -287,8 +292,8 @@ hpa:
   minReplicas: 3
   maxReplicas: 25
   targetCPUUtilizationPercentage: 75
-  # Measured against app.resources.requests.memory. The 4 uvicorn workers of an idle
-  # pod already use about 78% of their 2Gi request, and Python rarely returns memory
+  # Measured against app.resources.requests.memory. The 2 uvicorn workers of an idle
+  # pod already use about 66% of their 1280Mi request, and Python rarely returns memory
   # to the operating system, so a lower target would keep the app scaled out after
   # the load is gone. Leave it empty to scale on CPU only.
   targetMemoryUtilizationPercentage: 90

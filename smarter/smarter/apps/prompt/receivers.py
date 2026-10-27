@@ -11,7 +11,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.signals import plugin_deleting
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import request_to_json
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -50,7 +50,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_level = logger.getEffectiveLevel()
 prefix = __name__
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 
 def get_sender_name(sender: Any) -> str:
@@ -98,10 +98,10 @@ def handle_chat_config_invoked(
     url: Optional[str] = instance.url
 
     logger.info("%s by %s url=%s", f"{logger_prefix}.handle_chat_config_invoked()", get_sender_name(sender), url)
-    # formatted_json() of the whole configuration is costly, and it is evaluated before the call, so only
+    # SmarterFormattedText.json() of the whole configuration is costly, and it is evaluated before the call, so only
     # when it will be logged.
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("%s data: %s", f"{logger_prefix}.handle_chat_config_invoked()", formatted_json(data))
+        logger.debug("%s data: %s", f"{logger_prefix}.handle_chat_config_invoked()", SmarterFormattedText.json(data))
 
 
 @receiver(prompt_started, dispatch_uid="prompt_started")
@@ -138,7 +138,7 @@ def handle_chat_completion_request_sent(
             this_prefix,
             sender_name,
             prompt,
-            formatted_json(data) if data else None,
+            SmarterFormattedText.json(data) if data else None,
         )
 
 
@@ -170,7 +170,7 @@ def handle_chat_completion_response_received(
     if smarter_settings.enable_dashboard_server_logs or (logger_level == logging.DEBUG):
         request_data = request_to_json(request) if request else None
         if isinstance(request_data, (dict, list)):
-            formatted_request_data = formatted_json(
+            formatted_request_data = SmarterFormattedText.json(
                 dict(request_data) if isinstance(request_data, dict) else request_data
             )
         else:
@@ -188,7 +188,7 @@ def handle_chat_completion_response_received(
             sender_name,
             prompt,
             formatted_request_data,
-            formatted_json(response_data) if response_data else None,
+            SmarterFormattedText.json(response_data) if response_data else None,
         )
 
 
@@ -272,7 +272,7 @@ def handle_chat_response_success(
 
     if logger_level == logging.DEBUG:
         if isinstance(request_data, (dict, list)):
-            formatted_request_data = formatted_json(
+            formatted_request_data = SmarterFormattedText.json(
                 dict(request_data) if isinstance(request_data, dict) else request_data
             )
         else:
@@ -284,7 +284,7 @@ def handle_chat_response_success(
             prompt,
             get_sender_name(sender),
             formatted_request_data,
-            formatted_json(response_data) if response_data else None,
+            SmarterFormattedText.json(response_data) if response_data else None,
         )
 
 
@@ -311,7 +311,7 @@ def handle_chat_response_failure(
         sender_name,
         iteration,
         prompt if prompt else None,
-        formatted_json(request_meta_data) if request_meta_data else None,
+        SmarterFormattedText.json(request_meta_data) if request_meta_data else None,
         exception,
         stack_trace if stack_trace else "",
     )
@@ -319,17 +319,17 @@ def handle_chat_response_failure(
         logger.error(
             "%s %s for prompt: %s, first_iteration: %s",
             f"{logger_prefix}.handle_chat_response_failure()",
-            formatted_text("dump"),
+            SmarterFormattedText.text("dump"),
             prompt if prompt else None,
-            formatted_json(first_iteration) if first_iteration else None,
+            SmarterFormattedText.json(first_iteration) if first_iteration else None,
         )
     if isinstance(iteration, int) and iteration >= 2 and second_iteration:
         logger.error(
             "%s %s for prompt: %s, second_iteration: %s",
             f"{logger_prefix}.handle_chat_response_failure()",
-            formatted_text("dump"),
+            SmarterFormattedText.text("dump"),
             prompt if prompt else None,
-            formatted_json(second_iteration) if second_iteration else None,
+            SmarterFormattedText.json(second_iteration) if second_iteration else None,
         )
 
 
@@ -356,7 +356,7 @@ def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
         "%s: %s\n%s",
         f"{logger_prefix}.handle_chat_handler_console_output() console output",
         message,
-        formatted_json(json_obj),
+        SmarterFormattedText.json(json_obj),
     )
 
 
@@ -375,7 +375,7 @@ def handle_llm_tool_presented(sender, tool: SmarterDictType, **kwargs):
         "%s from %s: %s",
         f"{logger_prefix}.handle_llm_tool_presented()",
         sender_name,
-        formatted_json(tool),
+        SmarterFormattedText.json(tool),
     )
 
 
@@ -390,7 +390,7 @@ def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
         "%s from %s: %s",
         f"{logger_prefix}.handle_tool_requested()",
         sender_name,
-        formatted_json(tool_call),
+        SmarterFormattedText.json(tool_call),
     )
 
 
@@ -404,8 +404,8 @@ def handle_llm_tool_responded(sender, tool_call: SmarterDictType, tool_response:
         "%s from %s, tool_call: %s, tool_response: %s",
         f"{logger_prefix}.handle_llm_tool_responded()",
         sender_name,
-        formatted_json(tool_call),
-        formatted_json(tool_response),
+        SmarterFormattedText.json(tool_call),
+        SmarterFormattedText.json(tool_response),
     )
 
 

@@ -50,7 +50,7 @@ from .installer import ExtensionInstaller
 from .manifest import is_development_version
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 MAX_INDEX_BYTES = 5 * 1024 * 1024
 SIGNATURE_SUFFIX = ".sig"

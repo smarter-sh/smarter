@@ -9,13 +9,13 @@ from .factories import admin_user_factory, factory_account_teardown, mortal_user
 
 logger = logging.getLogger(__name__)
 HERE = __name__
-logger_prefix = f"{logging.formatted_text(HERE)}.TestAccountMixin()"
+logger_prefix = f"{logging.SmarterFormattedText.text(HERE)}.TestAccountMixin()"
 
 
 class TestAccountMixin(SmarterTestBase):
     """A mixin that adds class-level account and user creation/destruction."""
 
-    test_account_mixin_logger_prefix = f"{logging.formatted_text(HERE)}.TestAccountMixin()"
+    test_account_mixin_logger_prefix = f"{logging.SmarterFormattedText.text(HERE)}.TestAccountMixin()"
 
     @classmethod
     def setUpClass(cls):

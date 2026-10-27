@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from django.utils import timezone
 
-from smarter.apps.account.models import User, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.receivers import account_post_delete
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
@@ -91,9 +92,20 @@ class TestAccountPostSave(TestAccountMixin):
         self.account.phone_number = "+1 (555) 010-0199"
         self.account.address1 = "1 Logging Lane"
         self.account.postal_code = "00000"
+        company_name = self.account.company_name
+        self.addCleanup(Account.objects.filter(pk=self.account.pk).update, company_name=company_name)
+        self.addCleanup(setattr, self.account, "company_name", company_name)
+        self.account.company_name = "Ada Q. Lovelace"
         with patch("smarter.apps.account.receivers.logger") as logger:
             self.account.save()
         logged = " ".join(str(arg) for call in logger.mock_calls for arg in call.args)
         self.assertIn(self.account.account_number, logged)
-        for value in (self.account.phone_number, self.account.address1, self.account.postal_code):
+        for value in (self.account.phone_number, self.account.address1, self.account.postal_code, "Lovelace"):
             self.assertNotIn(value, logged)
+
+    def test_delete_does_not_log_the_company_name(self):
+        with patch("smarter.apps.account.receivers.logger") as logger:
+            account_post_delete(sender=Account, instance=self.account)
+        logged = " ".join(str(arg) for call in logger.mock_calls for arg in call.args)
+        self.assertIn(self.account.account_number, logged)
+        self.assertNotIn(self.account.company_name, logged)

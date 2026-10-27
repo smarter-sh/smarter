@@ -57,7 +57,7 @@ def invalidate_all_cached_vectorstores_for_user_profile(user_profile: UserProfil
     _get_cached_vectorstores_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
     _get_cached_vectorstores_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
     _get_cached_vectorstores_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
-    logger.debug("%s invalidated the vectorstores of %s", logging.formatted_text(__name__), user_profile)
+    logger.debug("%s invalidated the vectorstores of %s", logging.SmarterFormattedText.text(__name__), user_profile)
 
 
 __all__ = [

@@ -31,7 +31,7 @@ from smarter.common.const import (
 from smarter.common.exceptions import (
     SmarterException,
 )
-from smarter.common.helpers.console_helpers import formatted_json
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
@@ -505,6 +505,6 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "%s.dispatch() - rendering template %s with context: %s",
             self.formatted_class_name,
             self.template_path,
-            formatted_json(context),
+            SmarterFormattedText.json(context),
         )
         return render(request=request, template_name=self.template_path, context=context)

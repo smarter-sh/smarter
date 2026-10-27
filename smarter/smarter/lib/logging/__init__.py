@@ -1,5 +1,6 @@
 """
-Enhanced logging features for Smarter, including Waffle switch-controlled
+Enhanced logging features for Smarter, including Waffle switch-controlled.
+
 loggers and custom Redis and Streaming file handlers.
 """
 
@@ -51,13 +52,7 @@ from logging import (
     warning,
 )
 
-from smarter.common.helpers.console_helpers import (
-    formatted_json,
-    formatted_text,
-    formatted_text_blue,
-    formatted_text_green,
-    formatted_text_red,
-)
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 
 from .get_smarter_logger import getSmarterLogger
 from .redis_log_handler import (
@@ -106,11 +101,7 @@ __all__ = [
     "debug",
     "disable",
     "error",
-    "formatted_text",
-    "formatted_json",
-    "formatted_text_blue",
-    "formatted_text_green",
-    "formatted_text_red",
+    "SmarterFormattedText",
     "exception",
     "fatal",
     "getLevelName",

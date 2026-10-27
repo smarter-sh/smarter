@@ -58,7 +58,7 @@ def create_charge(*args, **kwargs):
     completion_tokens = kwargs.get("completion_tokens")
     total_tokens = kwargs.get("total_tokens")
     total_cost = kwargs.get("total_cost")
-    prefix = logging.formatted_text(module_prefix + "create_charge()")
+    prefix = logging.SmarterFormattedText.text(module_prefix + "create_charge()")
     if total_cost is None:
         total_cost = LLMPrices.cost_of(
             charge_type=charge_type,
@@ -113,7 +113,7 @@ def aggregate_records():
         # (see your Celery Beat configuration)
     """
 
-    prefix = logging.formatted_text(module_prefix + "aggregate_records()")
+    prefix = logging.SmarterFormattedText.text(module_prefix + "aggregate_records()")
     logger.info(prefix)
 
     aggregate_charges()
@@ -134,7 +134,7 @@ def evaluate_budget_constraints() -> int:
 
     :returns: The number of locked resources.
     """
-    prefix = logging.formatted_text(module_prefix + "evaluate_budget_constraints()")
+    prefix = logging.SmarterFormattedText.text(module_prefix + "evaluate_budget_constraints()")
     retval = evaluate_budgets()
     logger.info("%s %s resources are locked by a budget.", prefix, retval)
     return retval

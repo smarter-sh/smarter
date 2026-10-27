@@ -68,6 +68,6 @@ class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
             request,
             args,
             kwargs,
-            logging.formatted_json(context),
+            logging.SmarterFormattedText.json(context),
         )
         return render(request, template_name=self.template_path, context=context)

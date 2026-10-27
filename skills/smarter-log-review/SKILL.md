@@ -105,7 +105,7 @@ unformatted `.function_name()`, with %-style args. Defects seen in practice:
 - No prefix at all: `initialize_<provider>`, `No system role found ...`, `LLMClient ... is not ready`,
   `User ... has been created.` (`create_user`).
 - Truncated prefixes: `lib.drf.models...` and `dashboard.receivers...` (no `smarter.`, and the latter
-  is blue instead of the standard color). Use `logging.formatted_text(__name__)`.
+  is blue instead of the standard color). Use `logging.SmarterFormattedText.text(__name__)`.
 - Double formatting: `[1;31m[1;31msmarter.apps.connection.receivers[0m.sql_connection_attempted()[0m`
   - the function name was formatted along with the prefix.
 - `- ` or ` for iteration N` in place of `.function_name()`: `plugin.plugin_ready - <name>`,

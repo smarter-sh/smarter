@@ -13,7 +13,7 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.console_helpers import formatted_json
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
@@ -175,7 +175,7 @@ class ProviderDetailView(DocsBaseView):
                 "%s.dispatch() - Error converting JSON response to YAML: %s. JSON response: %s",
                 self.formatted_class_name,
                 str(e),
-                formatted_json(json_response),
+                SmarterFormattedText.json(json_response),
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error converting manifest to YAML")
 
@@ -196,7 +196,7 @@ class ProviderDetailView(DocsBaseView):
                 "%s.dispatch() - Error rendering template: %s. context: %s",
                 self.formatted_class_name,
                 str(e),
-                formatted_json(context),
+                SmarterFormattedText.json(context),
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response

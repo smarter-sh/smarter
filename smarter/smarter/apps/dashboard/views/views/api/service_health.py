@@ -38,7 +38,7 @@ from smarter.lib.django.views import (
 )
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CELERY_PING_TIMEOUT = 0.5  # seconds. the widget loads asynchronously, but should not hang.
 HEALTH_CHECKS_CACHE_TIMEOUT = 60  # seconds. one run of the checks serves every dashboard for a minute.

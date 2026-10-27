@@ -61,7 +61,7 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 from .models import EmailContactList
@@ -96,7 +96,7 @@ def smarter_has_ud_permission(request: ASGIRequest, obj=None) -> bool:
     rtype: bool
     return: True if the user has update/delete permission for the object, False otherwise
     """
-    logger_prefix = f"{formatted_text(__file__)}.smarter_has_ud_permission()"
+    logger_prefix = f"{SmarterFormattedText.text(__file__)}.smarter_has_ud_permission()"
     # First check if the user is authenticated
     if not hasattr(request, "user") or not request.user.is_authenticated:
         return False
@@ -125,7 +125,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request: ASGIRequest) -> bool:
         user = get_resolved_user(request.user)  # type: ignore
-        logger_prefix = f"{formatted_text(__name__)}.SmarterCustomerModelAdmin.has_module_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_module_permission()"
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
             return False
@@ -139,7 +139,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
 
         View permission is effectively granted to anyone who is authenticated, barring cases where obj is passed.
         """
-        logger_prefix = f"{formatted_text(__name__)}.SmarterCustomerModelAdmin.has_view_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_view_permission()"
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
         user = request.user
@@ -168,7 +168,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
         Add permission is granted to superusers only.
         """
         user = get_resolved_user(request.user)  # type: ignore
-        logger_prefix = f"{formatted_text(__name__)}.SmarterCustomerModelAdmin.has_add_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_add_permission()"
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
             return False
@@ -206,7 +206,7 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request: ASGIRequest, obj=None) -> bool:
         """Override the default add permission logic to restrict access to superusers only."""
-        logger_prefix = f"{formatted_text(__name__)}.SmarterStaffOnlyModelAdmin.has_add_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterStaffOnlyModelAdmin.has_add_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
@@ -237,7 +237,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
 
     def has_view_permission(self, request: ASGIRequest, obj=None):
         """Override the default view permission logic to restrict access to superusers only."""
-        logger_prefix = f"{formatted_text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_view_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_view_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
@@ -246,7 +246,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request: ASGIRequest, obj=None) -> bool:
         """Override the default add permission logic to restrict access to superusers only."""
-        logger_prefix = f"{formatted_text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_add_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_add_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
@@ -255,7 +255,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request: ASGIRequest, obj=None) -> bool:
         """Override the default change permission logic to restrict access to superusers only."""
-        logger_prefix = f"{formatted_text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_change_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_change_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
@@ -264,7 +264,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request: ASGIRequest, obj=None) -> bool:
         """Override the default delete permission logic to restrict access to superusers only."""
-        logger_prefix = f"{formatted_text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_delete_permission()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_delete_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
@@ -287,7 +287,7 @@ class RestrictedAdminSite(admin.AdminSite):
             self.role = "guest"
             return super().each_context(request)
         if not isinstance(user, User):
-            logger_prefix = f"{formatted_text(__name__)}.RestrictedAdminSite.each_context()"
+            logger_prefix = f"{SmarterFormattedText.text(__name__)}.RestrictedAdminSite.each_context()"
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
             self.role = "unknown"
             return super().each_context(request)

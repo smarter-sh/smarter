@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.http import HttpRequest
 from django.test import RequestFactory
 
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import hash_factory, to_snake_case
 from smarter.lib import json, logging
@@ -18,14 +18,14 @@ from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 HERE = __name__
-logger_prefix = f"{formatted_text(HERE)}.SmarterTestBase()"
+logger_prefix = f"{SmarterFormattedText.text(HERE)}.SmarterTestBase()"
 
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """Base class for all unit tests."""
 
     name: str
-    smarter_test_base_logger_prefix = f"{formatted_text(HERE)}.SmarterTestBase()"
+    smarter_test_base_logger_prefix = f"{SmarterFormattedText.text(HERE)}.SmarterTestBase()"
     line_width = 150
 
     @classmethod
@@ -53,7 +53,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         logger.debug(
             "%s.setUpClass() %s",
             cls.smarter_test_base_logger_prefix,
-            formatted_text_red("Django cache has been cleared"),
+            SmarterFormattedText.text("Django cache has been cleared", SmarterFormattedText.DARK_RED),
         )
 
     @classmethod

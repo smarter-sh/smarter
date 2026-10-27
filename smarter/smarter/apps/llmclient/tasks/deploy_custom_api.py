@@ -57,7 +57,7 @@ from .utils import apply_ingress_manifest, is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(

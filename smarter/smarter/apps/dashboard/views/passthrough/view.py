@@ -166,6 +166,6 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         logger.debug(
             "%s.get() rendering Prompt Passthrough View with context: %s",
             self.formatted_class_name,
-            logging.formatted_json(context),
+            logging.SmarterFormattedText.json(context),
         )
         return render(request, self.template_path, context=context)
