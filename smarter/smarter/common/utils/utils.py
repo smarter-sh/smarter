@@ -118,6 +118,40 @@ def mask_email(email: Optional[str], mask_char: str = "*") -> str:
     return f"{masked_local}{at}{domain}"
 
 
+def mask_identifier(value: Optional[str], visible: int = 6, mask_char: str = "*") -> str:
+    """
+    Mask an identifier for logging, all but its last ``visible`` characters.
+
+    Use it for values that grant access to something or point at someone, such as a chat
+    session key, which anyone holding it could use to continue that conversation. The last
+    characters are enough to match log lines that belong together.
+
+    :param value: The identifier, e.g. a 64-character session key.
+    :type value: Optional[str]
+    :param visible: How many characters to leave at the end. Default is 6.
+    :type visible: int, optional
+    :param mask_char: The character that replaces the masked characters. Default is ``'*'``.
+    :type mask_char: str, optional
+    :returns: The masked identifier, e.g. ``****325c05``, or an empty string if ``value`` is empty.
+        A value of ``visible`` characters or fewer is masked entirely.
+    :rtype: str
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import mask_identifier
+
+        mask_identifier("77846410f51045319bd666642e325c05")  # '****325c05'
+    """
+    if not value:
+        return ""
+    value = str(value)
+    if len(value) <= visible:
+        return mask_char * 4
+    return mask_char * 4 + value[-visible:]
+
+
 @deprecated("Use Pydantic's ``SecretStr`` or other secure alternatives for string masking.")
 def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: int = 4, string_length: int = 12) -> str:
     """
