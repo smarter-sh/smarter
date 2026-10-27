@@ -1,7 +1,39 @@
 ---
 #------------------------------------------------------------------------------
-# - Build from Dockerfile
-# - Push to AWS ECR
+# Build: the first step after a pull request is merged into main.
+#
+# The pipeline is four workflows, each starting the next when it succeeds:
+#
+#   test.yml      Test     on every pull request to main, before the merge
+#   build.yml     Build    on every push to main (this workflow)
+#   deploy.yml    Deploy   when Build succeeds on main
+#   publish.yml   Publish  when Deploy succeeds on main
+#
+# This workflow's jobs:
+#
+#   release     semantic-release: version, CHANGELOG, tag, GitHub release.
+#               On alpha and beta it makes prereleases (v0.36.26-alpha.1),
+#               and on next and next-major releases on their own channels.
+#               Nothing else runs for those branches.
+#   image       the Docker image of the release, to ECR and Docker Hub
+#   helm        the Helm chart of the release, to GHCR, signed with Cosign,
+#               and attached to the GitHub release
+#   handoff     the release's tag, as the release-info artifact, which
+#               deploy.yml reads
+#   merge-main  main, merged back into next, next-major, alpha and beta, and
+#               the release pushed to its major version's branch (v0)
+#
+# A push whose commits call for no release (only docs, ci, chore, refactor,
+# test commits, and so on, see release.config.js) builds and deploys nothing.
+#
+# The jobs after release check out the release's tag, not github.sha:
+# semantic-release's commit comes after the merge commit that started the run,
+# so github.sha would build the previous version.
+#
+# Started by hand, it also builds without a new release: the given tag, or the
+# branch's head, versioned as its latest tag. On a development branch (alpha,
+# beta, next) the image goes to that environment's ECR repository, and the
+# chart is not released. From main, Deploy and Publish follow.
 #
 # IMPORTANT: Before running this workflow, ensure that you have first built your
 # AWS infrastructure using the [Smarter Infrastructure repository](https://github.com/smarter-sh/smarter-infrastructure).
@@ -11,12 +43,35 @@
 # AWS_ACCESS_KEY_ID
 # AWS_REGION
 # AWS_SECRET_ACCESS_KEY
-# PAT
+# PAT (semantic-release, so that its tag and GitHub release trigger
+#      uiChatRelease.yml and uiWidgetsRelease.yml; the chart's GHCR login;
+#      the merge-back)
+# DOCKERHUB_USERNAME, DOCKERHUB_PAT, DOCKERHUB_ACCOUNT, DOCKERHUB_REPO
+# COSIGN_KEY, COSIGN_PASSWORD
 #------------------------------------------------------------------------------
 name: Build
 
 on:
+  push:
+    branches:
+      - main
+      - alpha
+      - beta
+      - next
+      - next-major
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "A tag to build, e.g. v0.36.26. Empty builds the branch's head."
+        required: false
+        type: string
+        default: ""
+
+# One run at a time per branch. A merge while a release runs waits for it, and
+# the next run releases everything since the last tag.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   AWS_REGION: ca-central-1
@@ -32,13 +87,82 @@ env:
   PRERELEASE: ""
 
 jobs:
-  build:
+  #----------------------------------------------------------------------------
+  # semantic-release. The PAT secret, rather than GITHUB_TOKEN, makes its tag
+  # and GitHub release trigger other workflows, such as uiChatRelease.yml.
+  #----------------------------------------------------------------------------
+  release:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.PAT }}
+    outputs:
+      published: ${{ steps.semantic.outputs.new_release_published }}
+      tag: ${{ steps.semantic.outputs.new_release_git_tag }}
+      major: ${{ steps.semantic.outputs.new_release_major_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+
+      - name: Install dependencies
+        run: npm install
+        shell: bash
+
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v5
+        id: semantic
+        with:
+          branches: |
+            [
+              '+([0-9])?(.{+([0-9]),x}).x',
+              'main',
+              'next',
+              'next-major',
+              {
+                name: 'beta',
+                prerelease: true
+              },
+              {
+                name: 'alpha',
+                prerelease: true
+              }
+            ]
+        env:
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "### Semantic release"
+            echo "- Branch: ${{ github.ref_name }}"
+            echo "- Last release: ${{ steps.semantic.outputs.last_release_version || 'none' }}"
+            echo "- New release: ${{ steps.semantic.outputs.new_release_version || 'none' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  #----------------------------------------------------------------------------
+  # The Docker image: after a release on main, or whenever started by hand.
+  #----------------------------------------------------------------------------
+  image:
+    needs: release
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.ref == 'refs/heads/main' && needs.release.outputs.published == 'true')
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get-latest-version-tag.outputs.tag }}
     steps:
       - name: Checkout code
         id: checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.tag || needs.release.outputs.tag || github.ref }}
           fetch-depth: 0 # Ensures all history and tags are fetched
           fetch-tags: true
 
@@ -71,6 +195,7 @@ jobs:
         run: |
           VERSION_TAG=$(git describe --tags --abbrev=0)
           echo "TAG=$VERSION_TAG" >> $GITHUB_ENV
+          echo "tag=$VERSION_TAG" >> $GITHUB_OUTPUT
 
       - name: Set version
         id: set-version
@@ -301,3 +426,179 @@ jobs:
             --tag "$TARGET:${{ github.run_id }}" \
             --tag "$TARGET:${{ env.DATESTAMP }}" \
             "$SOURCE"
+
+  #----------------------------------------------------------------------------
+  # The Helm chart of the release, from main only: package it, push it to
+  # GHCR, sign it with Cosign, verify the signature, and attach the package to
+  # the GitHub release.
+  #----------------------------------------------------------------------------
+  helm:
+    needs: image
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.image.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install oras and jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.1.0/oras_1.1.0_linux_amd64.tar.gz
+          tar -xzf oras_1.1.0_linux_amd64.tar.gz oras
+          sudo mv oras /usr/local/bin/
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.PAT }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      # Bitnami charts are served from Docker Hub's OCI registry. Anonymous
+      # pulls share the runner's IP-based rate limit and fail with 429.
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_PAT }}" | helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Set version
+        id: set-version
+        shell: bash
+        run: |
+          python scripts/bump_version.py ${{ needs.image.outputs.tag }} --cicd
+
+      - name: Package and Push Chart
+        run: |
+          cd helm/charts/smarter
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+          # `dependency update` downloads every chart into charts/; a following
+          # `dependency build` would pull them all from Docker Hub a second time.
+          helm dependency update --skip-refresh
+          cd ../../..
+          helm package helm/charts/smarter
+          helm push smarter-*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.4.0
+
+      - name: Login to GHCR for Cosign
+        run: |
+          echo "${{ secrets.PAT }}" | cosign login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Extract Chart Version
+        id: chart_version
+        run: |
+          VERSION=$(yq '.version' helm/charts/smarter/Chart.yaml)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get Chart Digest
+        id: chart_digest
+        run: |
+          CHART_REF="ghcr.io/${{ github.repository_owner }}/charts/smarter:${{ steps.chart_version.outputs.version }}"
+          DIGEST=$(oras manifest fetch --descriptor $CHART_REF | jq -r .digest)
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Sign OCI Helm Chart with Cosign
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
+          CHART_REF="ghcr.io/${{ github.repository_owner }}/charts/smarter@${{ steps.chart_digest.outputs.digest }}"
+          cosign sign --yes --key cosign.key $CHART_REF
+
+      - name: Verify OCI Helm Chart Signature
+        run: |
+          cosign verify --key sigstore/artifacthub-cosign.pub ghcr.io/${{ github.repository_owner }}/charts/smarter:${{ steps.chart_version.outputs.version }}
+
+      - name: Attach the chart to the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.image.outputs.tag }}
+          files: smarter-*.tgz
+
+  #----------------------------------------------------------------------------
+  # Hand the release's tag to deploy.yml, which starts when this run succeeds
+  # on main. A run that built nothing hands nothing, and Deploy then deploys
+  # nothing.
+  #----------------------------------------------------------------------------
+  handoff:
+    needs: [image, helm]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write the release's tag
+        shell: bash
+        run: |
+          mkdir -p release-info
+          echo "${{ needs.image.outputs.tag }}" > release-info/tag
+          echo "Handing ${{ needs.image.outputs.tag }} to Deploy." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release-info
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-info
+          path: release-info/
+          retention-days: 7
+
+  #----------------------------------------------------------------------------
+  # Keep the long-lived branches in step with main, so that the next pull
+  # request from alpha starts from the release, and push the release to its
+  # major version's branch, e.g. v0. It needs only the release, and runs
+  # alongside the image.
+  #----------------------------------------------------------------------------
+  merge-main:
+    needs: release
+    if: github.ref == 'refs/heads/main' && needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          token: ${{ secrets.PAT }}
+
+      - name: Push the release to its major version's branch
+        shell: bash
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          git fetch origin "refs/tags/$TAG:refs/tags/$TAG"
+          git push --force "https://x-access-token:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git" "$TAG^{commit}:refs/heads/v${{ needs.release.outputs.major }}"
+
+      - name: Merge main into next
+        uses: ./.github/actions/merge-branch
+        with:
+          github-token: ${{ secrets.PAT }}
+          source-branch: main
+          target-branch: next
+
+      - name: Merge main into next-major
+        uses: ./.github/actions/merge-branch
+        with:
+          github-token: ${{ secrets.PAT }}
+          source-branch: main
+          target-branch: next-major
+
+      - name: Merge main into alpha
+        uses: ./.github/actions/merge-branch
+        with:
+          github-token: ${{ secrets.PAT }}
+          source-branch: main
+          target-branch: alpha
+
+      - name: Merge main into beta
+        uses: ./.github/actions/merge-branch
+        with:
+          github-token: ${{ secrets.PAT }}
+          source-branch: main
+          target-branch: beta

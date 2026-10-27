@@ -1,5 +1,7 @@
 #------------------------------------------------------------------------------
-# Outputs, which make sphinx-publish can read: terraform -chdir=terraform/docs output -raw <name>.
+# Outputs, which make sphinx-publish reads: terraform -chdir=terraform/docs output -raw <name>.
+# bucket_name, distribution_id and publisher_role_arn are also the Publish workflow's
+# DOCS_BUCKET, DOCS_DISTRIBUTION_ID and DOCS_AWS_ROLE_ARN repository variables.
 #------------------------------------------------------------------------------
 
 output "url" {
@@ -15,4 +17,9 @@ output "bucket_name" {
 output "distribution_id" {
   description = "The CloudFront distribution that make sphinx-publish invalidates."
   value       = aws_cloudfront_distribution.docs.id
+}
+
+output "publisher_role_arn" {
+  description = "The IAM role that the Publish workflow's docs job assumes."
+  value       = aws_iam_role.docs_publisher.arn
 }

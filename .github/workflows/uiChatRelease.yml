@@ -1,7 +1,7 @@
 ---
 #------------------------------------------------------------------------------
 # Publish @smarter.sh/ui-chat (smarter/react/packages/smarter.sh-chat) to npm,
-# when semantic-release publishes a GitHub release (pushMain.yml), or by hand
+# when semantic-release publishes a GitHub release (build.yml), or by hand
 # for such a release's tag.
 #
 # - The package's version is the platform's: the release's tag, without its
@@ -35,7 +35,7 @@
 # environment npm. The package was published from smarter-sh/smarter-chat,
 # now archived, until it moved into this repository.
 #
-# pushMain.yml's semantic-release step uses the PAT secret, not GITHUB_TOKEN,
+# build.yml's semantic-release job uses the PAT secret, not GITHUB_TOKEN,
 # so the release that it creates triggers this workflow.
 #------------------------------------------------------------------------------
 name: Release @smarter.sh/ui-chat
