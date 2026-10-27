@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.24-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.24-alpha.1...v0.36.24-alpha.2) (2026-10-27)
+
+### Bug Fixes
+
+* **common:** tell type checkers formatted_class_name gets the class ([7954674](https://github.com/smarter-sh/smarter/commit/795467471d60c0c3095db8b4558eb0265f2a6cc2))
+
 ## [0.36.24-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.23...v0.36.24-alpha.1) (2026-10-27)
 
 ### Bug Fixes
