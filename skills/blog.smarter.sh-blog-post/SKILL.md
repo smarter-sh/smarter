@@ -199,6 +199,21 @@ The posts are written in the voice of Lawrence McDaniel, Smarter's creator.
 - Use headings, not bold lines, as section labels, and blank lines around
   lists. The user's editor flags bold-as-heading (MD036) and lists without
   blank lines (MD032).
+- **Colons are rare.** A colon is a special device for emphasis, used once or
+  twice in a post at most, not a way to join clauses, introduce lists, label
+  bullets or lead into code. Write two sentences, or end the lead-in with a
+  period. This applies to diagram titles and labels too. Count them before
+  handing over (prose outside code blocks and links). The user rejected a post
+  that used colons throughout.
+- **Only data that serves the point.** Having a number, a file count, a run
+  time or a configuration detail is not a reason to print it. Each fact must
+  help the reader follow the argument; cut the rest, however true.
+- **Qualify every term for a reader outside the repository.** Read each
+  sentence as someone who has never seen the code. "The folder", "the hooks",
+  "the build", "the platform" or "the packages" each need saying which one
+  (e.g. "the skills directory of the command-line tool's repository"). Name a
+  technology in plain words at first use (TestPyPI, a test instance of the
+  Python Package Index).
 
 When Claude Code drafts a post about its own work, it still writes in the
 user's voice, because the post goes out under the user's name. Whether to say
