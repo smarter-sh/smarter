@@ -13,7 +13,7 @@ from typing import Any
 from botocore.signers import RequestSigner
 
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_banner
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
@@ -60,7 +60,7 @@ class AWSEks(AWSBase):
         if not AWSEks._cluster_name_warned:
             AWSEks._cluster_name_warned = True
             logger.error(
-                formatted_banner(
+                SmarterFormattedText.banner(
                     "[KUBERNETES DISABLED] SMARTER_AWS_EKS_CLUSTER_NAME is not set.",
                     "The platform runs without it, but LLMClients and LLMHosts are not deployed to Kubernetes.",
                     "To deploy them, add the name of your AWS EKS cluster to .env, and restart the platform:",
@@ -143,7 +143,9 @@ class AWSEks(AWSBase):
             return False
         command = ["aws", "eks", "update-kubeconfig", "--region", region, "--name", cluster_name]
         try:
-            subprocess.check_call(command)  # nosec B603 B607
+            # The aws cli prints "Added new context <cluster arn>", and the arn holds the AWS
+            # account id, which the rest of the log masks. Errors still go to stderr.
+            subprocess.check_call(command, stdout=subprocess.DEVNULL)  # nosec B603 B607
         except (subprocess.CalledProcessError, OSError) as e:
             logger.error("%s.update_kubeconfig() failed to update the kubeconfig: %s", self.formatted_class_name, e)
             return False
