@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.27-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.27-alpha.1...v0.36.27-alpha.2) (2026-10-27)
+
+### Bug Fixes
+
+* **tests:** bind the junit report file with a runner subclass ([0564237](https://github.com/smarter-sh/smarter/commit/0564237cedbf9607badca15b0b2c41c670872623))
+
 ## [0.36.27-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.26...v0.36.27-alpha.1) (2026-10-27)
 
 ### Bug Fixes
