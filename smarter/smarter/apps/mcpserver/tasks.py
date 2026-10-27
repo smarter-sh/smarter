@@ -28,8 +28,7 @@ from .repositories import repository_names
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.MCPSERVER_LOGGING]
 )
-
-module_prefix = "smarter.apps.mcpserver.tasks."
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
@@ -44,8 +43,8 @@ def index_repository(name: str, force: bool = False) -> str:
     """
     index = indexer.index_repository(name, force=force)
     logger.info(
-        "%s %s is %s at %s.",
-        logging.SmarterFormattedText.text(module_prefix + "index_repository()"),
+        "%s.index_repository() %s is %s at %s.",
+        logger_prefix,
         name,
         index.status,
         index.commit_sha,
