@@ -44,6 +44,7 @@ from smarter.common.const import (
     SMARTER_CUSTOMER_SUPPORT_PHONE,
 )
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.models.utils import assign_changed_fields
 from smarter.lib.drf.models import SmarterAuthToken
 
 
@@ -98,20 +99,28 @@ class Command(SmarterCommand):
         account, created = Account.objects.get_or_create(
             account_number=SMARTER_ACCOUNT_NUMBER,
         )
-        account.name = f"{smarter_settings.platform_name} Admin Account"
-        account.description = f"automatically-generated {smarter_settings.platform_name} Admin account"
-        account.company_name = smarter_settings.branding_corporate_name
-        account.is_default_account = True
-        account.phone_number = smarter_settings.branding_support_phone_number
-        account.address1 = smarter_settings.branding_address1
-        account.address2 = smarter_settings.branding_address2
-        account.city = smarter_settings.branding_city
-        account.state = smarter_settings.branding_state
-        account.postal_code = smarter_settings.branding_postal_code
-        account.country = smarter_settings.branding_country
-        account.timezone = smarter_settings.branding_timezone
-        account.currency = smarter_settings.branding_currency
-        account.save()
+        # saved only when something changed: this runs on every deploy, and saving an unchanged
+        # row sends post_save to every receiver and invalidates the account's caches.
+        account_changed = assign_changed_fields(
+            account,
+            {
+                "name": f"{smarter_settings.platform_name} Admin Account",
+                "description": f"automatically-generated {smarter_settings.platform_name} Admin account",
+                "company_name": smarter_settings.branding_corporate_name,
+                "is_default_account": True,
+                "phone_number": smarter_settings.branding_support_phone_number,
+                "address1": smarter_settings.branding_address1,
+                "address2": smarter_settings.branding_address2,
+                "city": smarter_settings.branding_city,
+                "state": smarter_settings.branding_state,
+                "postal_code": smarter_settings.branding_postal_code,
+                "country": smarter_settings.branding_country,
+                "timezone": smarter_settings.branding_timezone,
+                "currency": smarter_settings.branding_currency,
+            },
+        )
+        if created or account_changed:
+            account.save()
 
         if created:
             self.stdout.write(f"Created account: {account.account_number} {account.company_name}")
@@ -121,11 +130,8 @@ class Command(SmarterCommand):
         user, created = User.objects.get_or_create(
             username=username, defaults={"is_superuser": True, "is_staff": True, "is_active": True}
         )
-        user.email = email
-        user.is_superuser = True
-        user.is_staff = True
-        user.is_active = True
-        user.save()
+        if assign_changed_fields(user, {"email": email, "is_superuser": True, "is_staff": True, "is_active": True}):
+            user.save()
         if created:
             if not password:
                 password_length = 16
@@ -137,7 +143,7 @@ class Command(SmarterCommand):
 
             self.stdout.write(f"Created superuser {username} {email}.")
         else:
-            self.stdout.write(f"User {username} updated.")
+            self.stdout.write(f"User {username} already exists.")
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
             self.stdout.write(

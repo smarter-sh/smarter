@@ -118,9 +118,14 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
 
 @receiver(plugin_ready, dispatch_uid="plugin_ready")
 def handle_plugin_ready(sender, plugin: PluginBase, **kwargs):
-    """Handle plugin ready signal."""
+    """
+    Handle plugin ready signal.
 
-    logger.info("%s.plugin_ready() %s", logger_prefix, plugin.name)
+    DEBUG, not INFO: the signal is sent each time :meth:`PluginBase.ready` passes, which
+    happens several times for every prompt that uses the plugin.
+    """
+
+    logger.debug("%s.plugin_ready() %s", logger_prefix, plugin.name)
 
 
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
