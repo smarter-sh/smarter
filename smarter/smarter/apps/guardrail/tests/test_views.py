@@ -8,6 +8,7 @@ Test the Guardrail dashboard views: the React list page, its api, the manifest d
     be documented.
 """
 
+import re
 from http import HTTPStatus
 
 from django.test import Client
@@ -94,6 +95,11 @@ class TestGuardrailViews(GuardrailTestBase):
         self.assertIn("Guardrail", content)
         # the manifest editor's root element, and its manifest, as json_script data.
         self.assertIn('id="smarter-manifest-editor-root"', content)
+        # the browser tab shows the name as plain text, and the page shows it in an h2.
+        title = re.search(r"<title>(.*?)</title>", content, re.S).group(1)  # type: ignore[union-attr]
+        self.assertIn(self.guardrail.name, title)
+        self.assertNotIn("<", title)
+        self.assertIn(f"<h2>{self.guardrail.name}</h2>", content)
         self.assertIn('<script id="smarter-manifest-editor-data" type="application/json">', content)
         self.assertEqual(
             self.client.get(url(Names.detailview, hashed_id="not-a-hash")).status_code, HTTPStatus.NOT_FOUND

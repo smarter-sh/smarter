@@ -93,7 +93,7 @@ def secret_created_receiver(sender, secret: Secret, **kwargs):
         "%s.secret_created() from %s Secret: %s id: %s, user_profile: %s",
         logger_prefix,
         sender_name(sender),
-        str(secret),
+        secret.name,
         secret.id,  # type: ignore
         secret.user_profile,
     )
@@ -113,12 +113,15 @@ def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
 
 @receiver(secret_ready)
 def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
-    """Signal receiver for secret_ready signal."""
-    logger.info(
+    """Signal receiver for secret_ready signal.
+
+    DEBUG: it fires on every load of a Secret.
+    """
+    logger.debug(
         "%s.secret_ready() from %s Secret: %s, id: %s, user_profile: %s",
         logger_prefix,
         sender_name(sender),
-        str(secret),
+        secret.name,
         secret.id,
         secret.user_profile,
     )
@@ -139,8 +142,11 @@ def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, 
 
 @receiver(secret_initializing)
 def secret_initializing_receiver(sender, secret_name: str, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_initializing signal."""
-    logger.info(
+    """Signal receiver for secret_initializing signal.
+
+    DEBUG: it fires on every load of a Secret.
+    """
+    logger.debug(
         "%s.secret_initializing() from %s name: %s, user_profile: %s",
         logger_prefix,
         sender_name(sender),
@@ -158,11 +164,12 @@ def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserP
     json_data = json.dumps(secret_log_dict(secret.secret))
     tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
-    logger.info(
+    # DEBUG: secret_created or secret_updated already logged this save at INFO.
+    logger.debug(
         "%s.secret_saved() from %s Secret: %s, id: %s, user_profile: %s",
         logger_prefix,
         sender_name(sender),
-        str(secret),
+        secret.name,
         secret.id,
         user_profile,
     )
@@ -182,7 +189,7 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
         "%s.secret_updated() from %s Secret: %s, id: %s, user_profile: %s",
         logger_prefix,
         sender_name(sender),
-        str(secret),
+        secret.name,
         secret.id,
         user_profile,
     )

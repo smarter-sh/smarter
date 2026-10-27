@@ -163,6 +163,7 @@ class TestSettingsReadyMessage(SmarterTestBase):
     def test_ready_is_logged_once_per_server(self):
         """The first worker logs READY as a warning, so it is seen; the others log it at DEBUG."""
         with (
+            patch.object(Settings, "ready", return_value=True),
             patch("smarter.common.conf.settings.is_first_worker", side_effect=[True, False]) as first,
             patch("smarter.common.conf.settings.logger") as logger,
         ):
@@ -188,6 +189,7 @@ class TestSettingsReadyMessage(SmarterTestBase):
     def test_the_prefix_is_not_red(self):
         """A healthy start doesn't look like an error."""
         with (
+            patch.object(Settings, "ready", return_value=True),
             patch("smarter.common.conf.settings.is_first_worker", return_value=True),
             patch("smarter.common.conf.settings.logger") as logger,
         ):
