@@ -17,14 +17,14 @@ from smarter.apps.prompt.contract.models import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 STACKADEMY_LLMCLIENTS = ("stackademy_sql", "stackademy_api")
 """The Stackademy LLMClients, in :data:`~smarter.apps.llmclient.const.STACKADEMY_REPOSITORY_URL`."""

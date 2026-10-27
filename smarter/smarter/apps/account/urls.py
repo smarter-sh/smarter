@@ -5,7 +5,7 @@ from django.urls import include, path
 from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 from .const import namespace
@@ -89,5 +89,5 @@ if smarter_settings.environment == SmarterEnvironments.LOCAL:
     from .views.email import EmailWelcomeView
 
     urlpatterns.append(path("email/welcome/<first_name>/", EmailWelcomeView.as_view(), name="welcome"))
-    logger_prefix = formatted_text(__name__)
+    logger_prefix = SmarterFormattedText.text(__name__)
     logger.debug("%s added %s URL pattern to Account app URLs.", logger_prefix, "welcome")

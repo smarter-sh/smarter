@@ -9,12 +9,12 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import hash_factory, to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-HERE = formatted_text(__name__)
+HERE = SmarterFormattedText.text(__name__)
 COMMON_VERSION = "0.0.1"
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])

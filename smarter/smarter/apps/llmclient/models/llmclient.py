@@ -817,7 +817,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["LLMClient"]
         """
-        logger_prefix = logging.formatted_text(__name__ + "." + LLMClient.__name__ + ".get_cached_object()")
+        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + LLMClient.__name__ + ".get_cached_object()")
         logger.debug(
             "%s called %s with pk=%s, name=%s, user=%s, user_profile=%s, account=%s, invalidate=%s",
             logger_prefix,
@@ -855,7 +855,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         :returns: A queryset of LLMClient instances associated with the user profile.
         :rtype: models.QuerySet["LLMClient"]
         """
-        logger_prefix = logging.formatted_text(__name__ + "." + LLMClient.__name__ + ".get_cached_objects()")
+        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + LLMClient.__name__ + ".get_cached_objects()")
 
         @cache_results()
         def _get_llmclients_for_user_profile_id(
@@ -969,7 +969,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         :returns: The cloned LLMClient instance.
         :rtype: LLMClient
         """
-        logger_prefix = logging.formatted_text(__name__ + "." + LLMClient.__name__ + ".clone()")
+        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + LLMClient.__name__ + ".clone()")
         logger.debug(
             "%s.clone() called for LLMClient id: %s with new_name: %s, new_version: %s, user_profile: %s",
             logger_prefix,

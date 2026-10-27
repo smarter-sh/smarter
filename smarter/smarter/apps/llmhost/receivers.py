@@ -22,8 +22,8 @@ module_prefix = __name__
 def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
     """Create the default API for the llmhost."""
 
-    prefix = f"{logging.formatted_text(module_prefix)}.llmhost_saved()"
-    data = logging.formatted_json(LLMHostSerializer(instance).data)
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_saved()"
+    data = logging.SmarterFormattedText.json(LLMHostSerializer(instance).data)
     if created:
         logger.info("%s created %s, %s", prefix, instance, data)
     else:
@@ -33,7 +33,7 @@ def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
 @receiver(pre_delete, sender=LLMHost)
 def llmhost_deleted(sender, instance: LLMHost, **kwargs):
     """Delete the default API for the llmhost."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmhost_deleted()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_deleted()"
     logger.info("%s %s", prefix, instance)
 
 
@@ -49,7 +49,7 @@ def llmhost_compute_deleted(sender, instance: LLMHostCompute, **kwargs):
     from .services.compute import ComputeProvisioner
     from .services.exceptions import LLMHostComputeError
 
-    prefix = f"{logging.formatted_text(module_prefix)}.llmhost_compute_deleted()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_compute_deleted()"
     if instance.nodegroup_status == LLMHostComputeNodeGroupStatus.ABSENT:
         return
     try:

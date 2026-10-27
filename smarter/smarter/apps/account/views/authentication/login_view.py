@@ -53,7 +53,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     @property
     def formatted_class_name(self):
-        return f"{logging.formatted_text(__name__)}.{LoginView.__name__}"
+        return f"{logging.SmarterFormattedText.text(__name__)}.{LoginView.__name__}"
 
     @property
     def is_google_oauth_enabled(self) -> bool:

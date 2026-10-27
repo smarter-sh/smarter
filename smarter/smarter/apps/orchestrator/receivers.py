@@ -21,8 +21,8 @@ module_prefix = __name__
 def orchestrator_saved(sender, instance: Orchestrator, created: bool, **kwargs):
     """Create the default API for the orchestrator."""
 
-    prefix = f"{logging.formatted_text(module_prefix)}.orchestrator_saved()"
-    data = logging.formatted_json(OrchestratorSerializer(instance).data)
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.orchestrator_saved()"
+    data = logging.SmarterFormattedText.json(OrchestratorSerializer(instance).data)
     if created:
         logger.info("%s created %s, %s", prefix, instance, data)
     else:
@@ -32,7 +32,7 @@ def orchestrator_saved(sender, instance: Orchestrator, created: bool, **kwargs):
 @receiver(pre_delete, sender=Orchestrator)
 def orchestrator_deleted(sender, instance: Orchestrator, **kwargs):
     """Delete the default API for the orchestrator."""
-    prefix = f"{logging.formatted_text(module_prefix)}.orchestrator_deleted()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.orchestrator_deleted()"
     logger.info("%s %s", prefix, instance)
 
 

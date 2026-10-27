@@ -41,7 +41,7 @@ from .models import Orchestrator
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR, SmarterWaffleSwitches.CACHE_LOGGING]
 )
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @cache_results()

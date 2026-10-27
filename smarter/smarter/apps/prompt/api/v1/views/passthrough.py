@@ -21,7 +21,7 @@ from smarter.apps.provider.services.text_completion.providers import (
     openai_compatible_client,
 )
 from smarter.common.exceptions import SmarterIlligalInvocationError
-from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -134,7 +134,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(  # type: ignore[return-value]
                 data={"error": "budget_exceeded", "message": e.message}, status=HTTPStatus.PAYMENT_REQUIRED.value
             )
-        logger_prefix = f"{formatted_text(__name__)}.{self.formatted_class_name}.post()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{self.formatted_class_name}.post()"
         kwargs.pop("provider_name")
         logger.debug("%s called with request: %s, args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 
@@ -167,7 +167,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
                 "%s calling handler: %s with data: %s",
                 logger_prefix,
                 self.handler,
-                formatted_json(data),
+                SmarterFormattedText.json(data),
             )
             retval = self.handler(request, user_profile, data, *args, **kwargs)  # type: ignore
         # pylint: disable=broad-except
@@ -185,7 +185,9 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
         # this is our hoped-for case. The handler should return a ChatCompletion
         # Pydantic model which we can directly serialize and return to the client.
         if isinstance(retval, ChatCompletion):
-            logger.debug("%s received ChatCompletion response: %s", logger_prefix, formatted_json(retval.model_dump()))
+            logger.debug(
+                "%s received ChatCompletion response: %s", logger_prefix, SmarterFormattedText.json(retval.model_dump())
+            )
             return SmarterJournaledJsonResponse(
                 request=request,
                 data=retval.model_dump(),

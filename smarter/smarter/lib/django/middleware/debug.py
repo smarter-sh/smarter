@@ -12,7 +12,7 @@ from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 logger.debug(
     "%s is %s",
-    logging.formatted_text(__name__) + ".SmarterDebugMiddleware",
+    logging.SmarterFormattedText.text(__name__) + ".SmarterDebugMiddleware",
     SmarterHelperMixin().formatted_state_ready,
 )
 
