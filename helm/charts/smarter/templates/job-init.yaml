@@ -69,8 +69,14 @@ spec:
                 # The credentials come from the environment, i.e. the Secret in secret-env.yaml, never from
                 # this template, so they aren't written into the Job's spec. The root password is passed
                 # in MYSQL_PWD, where the mariadb client reads it, which keeps it off the command line.
+                # The client doesn't count MYSQL_PWD as a password, so it already skips checking the server's
+                # certificate, with a warning on every call. --skip-ssl-verify-server-cert says so explicitly
+                # and silences the warning; it changes nothing. The database runs inside the cluster, where the
+                # network policies on app.kubernetes.io/application-group protect it, and has no public CA.
+                # Revisit this if the database moves to a managed service such as RDS, or outside the cluster's
+                # network: then pass the password in --defaults-extra-file and verify with --ssl-ca.
                 db() {
-                  MYSQL_PWD="$SMARTER_MYSQL_ROOT_PASSWORD" mariadb --default-character-set=utf8mb4 \
+                  MYSQL_PWD="$SMARTER_MYSQL_ROOT_PASSWORD" mariadb --default-character-set=utf8mb4 --skip-ssl-verify-server-cert \
                     -u "$SMARTER_MYSQL_ROOT_USERNAME" --host "$SMARTER_MYSQL_HOST" --port "${SMARTER_MYSQL_PORT:-3306}" -e "$1"
                 }
                 db "CREATE DATABASE IF NOT EXISTS $SMARTER_MYSQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
@@ -110,6 +116,10 @@ spec:
             - secretRef:
                 name: "{{ .Values.global.appName }}-env"
           env:
+            # Python block-buffers stdout when it is piped, here to tee, so the commands' summaries
+            # would otherwise come out after all of their logging, which goes to unbuffered stderr.
+            - name: PYTHONUNBUFFERED
+              value: "1"
             {{- range $env := .Values.app.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
