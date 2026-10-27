@@ -129,8 +129,10 @@ def is_sphinx_build():
 
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
-logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
+logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger_prefix_cache_invalidations = logging.SmarterFormattedText.text(
+    f"{__name__}.cache_invalidations()", logging.SmarterFormattedText.BOLD_DARK_BLUE
+)
 
 
 def static_version(request):
@@ -324,7 +326,7 @@ def base(request: "HttpRequest") -> SmarterDictType:
             "%s.base() cached dashboard context for user %s: %s",
             logger_prefix,
             username,
-            logging.formatted_json(cached_context),
+            logging.SmarterFormattedText.json(cached_context),
         )
         return cached_context
 
@@ -423,7 +425,9 @@ def branding(request: "HttpRequest") -> SmarterDictType:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/"),
             }
         }
-        logger.debug("%s.branding() cached branding context: %s", logger_prefix, logging.formatted_json(context))
+        logger.debug(
+            "%s.branding() cached branding context: %s", logger_prefix, logging.SmarterFormattedText.json(context)
+        )
         return context
 
     return get_cached_context()

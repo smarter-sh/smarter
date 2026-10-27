@@ -112,7 +112,9 @@ def is_authenticated_user(user: object) -> bool:
     :returns: True if the object is an authenticated user, False otherwise.
     """
     verbose_logger.debug(
-        "%s called for user type: %s", logging.formatted_text(__name__) + ".is_authenticated_user()", type(user)
+        "%s called for user type: %s",
+        logging.SmarterFormattedText.text(__name__) + ".is_authenticated_user()",
+        type(user),
     )
     if hasattr(user, "is_authenticated"):
         return bool(user.is_authenticated)  # type: ignore
@@ -154,7 +156,7 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
     """
     verbose_logger.debug(
-        "%s called for user type: %s", logging.formatted_text(__name__) + ".get_resolved_user()", type(user)
+        "%s called for user type: %s", logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()", type(user)
     )
     if user is None:
         return None
@@ -163,7 +165,7 @@ def get_resolved_user(
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
         verbose_logger.debug(
             "%s user[%s] %s is instance of expected type: %s",
-            logging.formatted_text(__name__) + ".get_resolved_user()",
+            logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()",
             id(user),
             user,
             type(user),
@@ -177,7 +179,7 @@ def get_resolved_user(
     if isinstance(user, SimpleLazyObject):
         verbose_logger.debug(
             "%s user[%s] %s is instance of SimpleLazyObject, returning wrapped user: %s",
-            logging.formatted_text(__name__) + ".get_resolved_user()",
+            logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()",
             id(user),
             user,
             type(user._wrapped),
@@ -187,7 +189,7 @@ def get_resolved_user(
     if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
         verbose_logger.debug(
             "%s user[%s] %s is instance of test mock: %s",
-            logging.formatted_text(__name__) + ".get_resolved_user()",
+            logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()",
             id(user),
             user,
             type(user),
@@ -414,7 +416,7 @@ class Account(MetaDataModel):
             if account:
                 print(account.company_name)
         """
-        logger_prefix = f"{logging.formatted_text(__name__)}.{cls.__name__}.get_cached_object()"
+        logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.{cls.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk=%s, name=%s, account_number=%s, company_name=%s, invalidate=%s",
             logger_prefix,

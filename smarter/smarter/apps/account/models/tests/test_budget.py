@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 class TestBudget(TestAccountMixin):
     """Test the enforcement of budgets."""
 
-    logger_prefix = f"{logging.formatted_text(__name__)}.TestBudget()"
+    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestBudget()"
 
     def setUp(self):
         super().setUp()

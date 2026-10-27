@@ -11,7 +11,7 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -41,12 +41,14 @@ module_prefix = "smarter.apps.prompt.tasks."
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_prompt_history(prompt_id, request, response, messages):
-    logger.debug("%s prompt_id: %s", formatted_text(module_prefix + "create_prompt_history()"), prompt_id)
+    logger.debug("%s prompt_id: %s", SmarterFormattedText.text(module_prefix + "create_prompt_history()"), prompt_id)
     try:
         prompt = Prompt.objects.get(id=prompt_id)
     except Prompt.DoesNotExist:
         logger.error(
-            "%s prompt_id: %s does not exist", formatted_text(module_prefix + "create_prompt_history()"), prompt_id
+            "%s prompt_id: %s does not exist",
+            SmarterFormattedText.text(module_prefix + "create_prompt_history()"),
+            prompt_id,
         )
         return
     PromptHistory.objects.create(prompt=prompt, request=request, response=response, messages=messages)
@@ -60,7 +62,7 @@ def create_prompt_history(prompt_id, request, response, messages):
 )
 def aggregate_prompt_history():
     """Summarize detail llmclient history into aggregate records."""
-    logger.debug("%s", formatted_text(module_prefix + "aggregate_prompt_history()"))
+    logger.debug("%s", SmarterFormattedText.text(module_prefix + "aggregate_prompt_history()"))
 
 
 @app.task(
@@ -87,7 +89,7 @@ def create_prompt(session_key, llmclient_id):
 )
 def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, function_args, request, response):
     """Create prompt tool call history record."""
-    logger.debug("%s", formatted_text(module_prefix + "create_prompt_tool_call_history()"))
+    logger.debug("%s", SmarterFormattedText.text(module_prefix + "create_prompt_tool_call_history()"))
     prompt = None
     plugin_meta = None
 
@@ -124,7 +126,10 @@ def create_prompt_plugin_usage(*args, **kwargs):
     plugin_id = kwargs.get("plugin_id", None)
 
     logger.debug(
-        "%s prompt_id=%s, plugin_id=%s", formatted_text(module_prefix + "create_plugin_usage()"), prompt_id, plugin_id
+        "%s prompt_id=%s, plugin_id=%s",
+        SmarterFormattedText.text(module_prefix + "create_plugin_usage()"),
+        prompt_id,
+        plugin_id,
     )
     if prompt_id is None:
         raise SmarterValueError("prompt_id is required")

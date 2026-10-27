@@ -26,14 +26,14 @@ from smarter.common.conf import smarter_settings
 from smarter.common.conf.const import get_env
 from smarter.common.conf.env import is_missing_value
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
-from smarter.common.helpers.console_helpers import formatted_banner
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.models.utils import assign_changed_fields
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 HERE = Path(__file__).resolve().parent
 
@@ -724,7 +724,11 @@ class Command(SmarterCommand):
             "",
             "    docker exec smarter-app python manage.py initialize_providers",
         ]
-        logger.error(formatted_banner(f"[API KEYS NOT SET] {len(self.missing_api_keys)} API keys are not set:", *lines))
+        logger.error(
+            SmarterFormattedText.banner(
+                f"[API KEYS NOT SET] {len(self.missing_api_keys)} API keys are not set:", *lines
+            )
+        )
 
     def echo_banner(self, name: str):
         """Echo a banner to the console."""

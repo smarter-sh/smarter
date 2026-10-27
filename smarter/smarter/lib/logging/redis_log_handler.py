@@ -121,7 +121,7 @@ GLOBAL_STREAM_TTL_SECONDS = (
 )  # 24 hours for the global stream, which is more of a firehose and may be consumed by multiple clients with different latencies
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 _redis_cache_holder = {"client": None}
 _publish_state = {"failing": False}

@@ -20,7 +20,7 @@ from .signals import (
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.VECTORSTORE_LOGGING]
 )
-module_prefix = logging.formatted_text(__name__)
+module_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(post_save, sender=VectorstoreMeta)

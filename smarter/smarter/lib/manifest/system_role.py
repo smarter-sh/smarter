@@ -11,7 +11,7 @@ question of tokens, for the model, and is not decided here.
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 SMARTER_MAX_SYSTEM_ROLE_LENGTH = 32768
 """The maximum length of a system role, in characters, about 8,000 tokens.

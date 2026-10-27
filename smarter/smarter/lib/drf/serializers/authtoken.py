@@ -34,7 +34,7 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         """Initialize the serializer and set the request context."""
         super().__init__(*args, **kwargs)
-        self.logger_prefix = logging.formatted_text(__name__ + "." + self.__class__.__name__)
+        self.logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + self.__class__.__name__)
 
         # Get the request from the context if available, while
         # guarding against Sphinx autodoc generation issues.

@@ -504,7 +504,7 @@ class Provider(MetaDataWithOwnershipModel):
     ) -> Optional["Provider"]:
         """Get a cached provider by account ID and name."""
 
-        logger_prefix = logging.formatted_text(
+        logger_prefix = logging.SmarterFormattedText.text(
             __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
         )
 
@@ -545,7 +545,9 @@ class Provider(MetaDataWithOwnershipModel):
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None
     ) -> Sequence["Provider"]:
         """Get cached providers for a user."""
-        logger_prefix = logging.formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
+        logger_prefix = logging.SmarterFormattedText.text(
+            __name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()"
+        )
 
         @cache_results()
         def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:

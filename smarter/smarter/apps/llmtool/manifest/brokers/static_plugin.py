@@ -181,7 +181,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     self.kind,
                     self._manifest.metadata.name,
                 )
-        logger.info(
+        logger.debug(
             "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
         )
 

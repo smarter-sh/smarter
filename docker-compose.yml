@@ -49,7 +49,7 @@ services:
         ENVIRONMENT: ${ENVIRONMENT}
         DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
     image: smarter
-    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- uvicorn smarter.asgi:application --host 0.0.0.0 --port 9357
+    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- uvicorn smarter.asgi:application --host 0.0.0.0 --port 9357 --lifespan off
     # volumes:
     #   - type: bind
     #     source: ./smarter

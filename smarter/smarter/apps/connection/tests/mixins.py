@@ -14,7 +14,7 @@ from smarter.apps.connection.manifest.models.sql_connection.model import (
     SAMSqlConnection,
 )
 from smarter.apps.connection.models import ApiConnection, SqlConnection
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -42,7 +42,7 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
 
     client: Client
     request: HttpRequest
-    test_sam_api_connection_logger_prefix = f"{formatted_text(__name__)}.AuthenticatedRequestMixin()"
+    test_sam_api_connection_logger_prefix = f"{SmarterFormattedText.text(__name__)}.AuthenticatedRequestMixin()"
 
     @classmethod
     def setUpClass(cls):
@@ -73,7 +73,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMApiConnection]
     connection_django_model: Optional[ApiConnection] = None
-    test_sam_api_connection_logger_prefix = f"{formatted_text(__name__)}.ApiConnectionTestMixin()"
+    test_sam_api_connection_logger_prefix = f"{SmarterFormattedText.text(__name__)}.ApiConnectionTestMixin()"
 
     @classmethod
     def setUpClass(cls):
@@ -168,7 +168,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMSqlConnection]
     connection_django_model: Optional[SqlConnection] = None
-    test_sam_api_connection_logger_prefix = f"{formatted_text(__name__)}.SqlConnectionTestMixin()"
+    test_sam_api_connection_logger_prefix = f"{SmarterFormattedText.text(__name__)}.SqlConnectionTestMixin()"
 
     @classmethod
     def setUpClass(cls):

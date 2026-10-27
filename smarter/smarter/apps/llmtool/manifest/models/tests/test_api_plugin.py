@@ -41,7 +41,7 @@ from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -75,7 +75,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_api_plugin_logger_prefix = f"{formatted_text(HERE)}.TestSAMApiPlugin()"
+    test_sam_api_plugin_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMApiPlugin()"
 
     @classmethod
     def setUpClass(cls):

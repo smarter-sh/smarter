@@ -12,7 +12,7 @@ from rest_framework.request import Request
 
 from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterException
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
@@ -174,7 +174,9 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         Returns:
             User or SmarterAnonymousUser: The authenticated user if the token is valid, otherwise SmarterAnonymousUser.
         """
-        logger_prefix = f"{formatted_text(__name__)}.{SmarterTokenAuthentication.__name__}.get_user_from_request()"
+        logger_prefix = (
+            f"{SmarterFormattedText.text(__name__)}.{SmarterTokenAuthentication.__name__}.get_user_from_request()"
+        )
         logger.debug("%s called with request: %s", logger_prefix, request)
 
         auth_header = request.META.get("HTTP_AUTHORIZATION")
