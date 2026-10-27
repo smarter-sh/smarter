@@ -14,3 +14,13 @@
   <https://www.oneusefulthing.org/>`__, on using AI well at work and in teaching.
 - **Practice:** `Gandalf <https://gandalf.lakera.ai/>`__, a game in which you prompt a model into
   revealing a password, is a memorable lesson in why instructions alone do not control a model.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Getting Started with Smarter's CLI
+  <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__, on applying, prompting and
+  deploying a chatbot from its manifest; `How to Embed a Smarter Chatbot in an HTML Web Page
+  <https://blog.smarter.sh/2026/07/11/smarter-chat-html/>`__, on putting a chatbot on any web page
+  with one script tag; `How to Add a Smarter Chatbot to Your WordPress Site
+  <https://blog.smarter.sh/2026/10/26/smarter-chat-wordpress/>`__, with a plugin or a script tag;
+  `Why LLMs Love Code, and What That Means for Everyone Else
+  <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
+  on why LLMs do better at code than at other work.

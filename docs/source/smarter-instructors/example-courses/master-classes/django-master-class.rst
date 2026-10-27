@@ -64,8 +64,14 @@ Each course plan lists every file that it uses, module by module, under *The Mod
 Source Code*.
 
 **Read.** :doc:`/adr`, :doc:`/smarter-framework/guides/12-factor-app`,
-:doc:`/smarter-framework/guides/developer-setup`, :doc:`/smarter-framework/guides/developer-guidelines`,
-:doc:`/smarter-platform/url-patterns`, :doc:`/smarter-platform/security`.
+:doc:`/smarter-framework/guides/developer-setup`,
+:doc:`/smarter-framework/guides/developer-guidelines`, :doc:`/smarter-platform/url-patterns`,
+:doc:`/smarter-platform/security`, `Pydantic Settings: How Smarter Validates and Manages Its
+Configuration <https://blog.smarter.sh/2026/09/19/smarter-pydantic-settings/>`__, `Smarter's
+Ownership Model: One Base Class for Owning, Sharing and Tracking AI Resources
+<https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__, `Django Multi-Tenancy
+Without Schemas: Tenant Isolation as Queryset Rules, and a Profile Switcher That Can't Be Spoofed
+<https://blog.smarter.sh/2026/01/15/smarter-tenant-isolation-django-querysets/>`__.
 
 **Exercises.**
 

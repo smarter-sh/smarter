@@ -61,8 +61,10 @@ Each course plan lists every file that it uses under *Smarter in the Source Code
 
 **Read.** :doc:`/smarter-framework/smarter-chat/development`,
 :doc:`/smarter-framework/smarter-chat/embedding`,
-:doc:`/smarter-framework/developer-reference/react-integration`,
-:doc:`ADR 019 on React </adr/019-react>`.
+:doc:`/smarter-framework/developer-reference/react-integration`, :doc:`ADR 019 on React
+</adr/019-react>`, `Getting Started with @smarter.sh/ui-chat
+<https://blog.smarter.sh/2026/08/08/getting-started-smarter-ui-chat/>`__, `Django-React Integration
+<https://blog.smarter.sh/2026/05/29/react-integration/>`__.
 
 **Exercises.**
 

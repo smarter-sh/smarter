@@ -12,3 +12,13 @@
 - **Online:** the `Postman Learning Center <https://learning.postman.com/>`__, and the API
   documentation of `Stripe <https://docs.stripe.com/api>`__ and `GitHub
   <https://docs.github.com/en/rest>`__, which are widely regarded as models of the craft.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Smarter's OpenAPI Contract: One Extensibility Model for Python, Go, React and VS Code
+  <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
+  OpenAPI document that every client depends on; `Getting Started With smarter-api, the Smarter
+  Python SDK <https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__, on the typed
+  Python client for the same API; `Getting Started with Smarter's CLI
+  <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__, on applying, prompting and
+  deploying a chatbot from its manifest; `Django and httpx: An LLM Proxy That Keeps Provider API
+  Keys Away From Callers <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, on
+  keeping the credential that spends money at a provider in one place.
