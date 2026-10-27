@@ -3,10 +3,11 @@ Semantic Versioning Guide
 
 See `Conventional Commits <https://www.conventionalcommits.org/>`__
 
-The `pushMain <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/pushMain.yml>`__,
-`build <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/build.yml>`__, and
-`deploy <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/deploy.yml>`__ Github Action Workflows
-found in most Smarter repos are designed to act on the commit comment rules that follow.
+The `build <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/build.yml>`__ Github Action
+Workflow, which starts semantic-release after every merge into main, acts on the commit comment rules
+that follow. A merge whose commits call for a release is then built, deployed by the
+`deploy <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/deploy.yml>`__ workflow, and
+its documentation published.
 
 As an open-source maintainer, squash feature branches onto master and
 write a standardized commit message while doing so. The commit message
