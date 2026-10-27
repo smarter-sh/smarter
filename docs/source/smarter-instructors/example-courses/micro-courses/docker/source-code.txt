@@ -118,7 +118,7 @@ Beyond the Laptop
    * - Signed artifacts
      - The Helm chart is signed with cosign when it is released, and its public key is published
        for verification on Artifact Hub.
-     - `helmChartRelease.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/helmChartRelease.yml>`__,
+     - `build.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/build.yml>`__,
        `sigstore/ <https://github.com/smarter-sh/smarter/tree/main/sigstore>`__
    * - The same image on Kubernetes
      - The Helm chart runs the same image as four Deployments, one for each role.
