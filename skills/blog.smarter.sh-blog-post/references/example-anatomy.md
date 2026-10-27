@@ -25,18 +25,18 @@ The published example opens with a TLDR jump link. Don't copy it: the user no
 longer wants TLDR links, and a post's first sentence must name its technology
 (see SKILL.md, section 3).
 
-| Section                                         | What it does                                                                                                                                                |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Opening, four paragraphs                        | States the idea, sets out the two series, raises the stakes ("an involuntary career change on your part"), and closes with "This is the story about [...]". |
-| 8 days in October                               | The headline facts: 8 days, about 20 prompts, 1 to 4 hours each, six releases in a table that links each release post.                                      |
-| The codebase that Claude built                  | Sizes in a table (lines, apps, tests, coverage, docs pages, ADRs, hooks), so the reader knows this isn't a toy.                                             |
-| Who built what?                                 | Splits credit honestly between humans, Copilot and Claude Code, with git blame percentages per package and three stated qualifications.                     |
-| What "subsystem" means here / Why this split... | Explains the human-built foundation in concrete terms (SAM, brokers, journal, tenancy, secrets, settings), then ties it to the telescope.                   |
-| Success factors #1 to #5                        | One `###` per factor, each with `####` subsections, real code samples, numbers and a closing line that returns to the metaphor.                             |
-| What went wrong                                 | The October 6 DNS outage: what the agent did, the cost (about 20 minutes offline), the small fix, and the lasting fix (a skill).                            |
-| Quantitative results                            | The 25 times multiplier, derived from contributor-graph numbers, then three caveats as "First ... Second ... Third ...".                                    |
-| If you want the same result on your codebase    | Seven bulleted takeaways "in rough order of payoff".                                                                                                        |
-| Closing thoughts                                | Where the roadmap stands, a last return to the metaphor, "Until then, happy Smartering!" and five links.                                                    |
+| Section                                         | What it does                                                                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Opening, four paragraphs                        | States the idea, sets out the two series, raises the stakes ("an involuntary career change on your part"), and closes with "This is the story about [...]".   |
+| 8 days in October                               | The headline facts: 8 days, about 20 prompts, 1 to 4 hours each, six releases in a table that links each release post.                                        |
+| The codebase that Claude built                  | Sizes in a table (lines, apps, tests, coverage, docs pages, ADRs, hooks), so the reader knows this isn't a toy.                                               |
+| Who built what?                                 | Splits credit honestly between humans, Copilot and Claude Code, with git blame percentages per package and three stated qualifications.                       |
+| What "subsystem" means here / Why this split... | Explains the human-built foundation in concrete terms (SAM, brokers, journal, tenancy, secrets, settings), then ties it to the telescope.                     |
+| Success factors #1 to #5                        | One `###` per factor, each with `####` subsections, real code samples, numbers and a closing line that returns to the metaphor.                               |
+| What went wrong                                 | The October 6 DNS outage: what the agent did, the cost (about 20 minutes offline), the small fix, and the lasting fix (a skill).                              |
+| Quantitative results                            | The 25 times multiplier, derived from contributor-graph numbers, then three caveats as "First ... Second ... Third ...".                                      |
+| If you want the same result on your codebase    | Seven bulleted takeaways "in rough order of payoff".                                                                                                          |
+| Closing thoughts                                | Where the roadmap stands, a last return to the metaphor, "Until then, happy Smartering!" (it follows the Part 2 and 3 roadmap; don't copy it) and five links. |
 
 ## Voice, in the post's own lines
 
