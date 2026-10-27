@@ -5,7 +5,8 @@
 #
 # Four jobs:
 #
-#   fingerprint    Hashes the files each suite depends on, and looks for a
+#   fingerprint    Hashes the files each suite depends on (python: smarter/smarter,
+#                  react: smarter/react), and looks for a
 #                  record that those exact files already passed. If they
 #                  did, that suite is skipped and still reported as passing,
 #                  so unchanged code isn't tested twice. See the job.
@@ -98,9 +99,10 @@ name: Tests
 # A pull request whose head commit's message contains a CI skip tag, such as
 # [skip ci] anywhere in its body, runs nothing, and its required checks wait
 # forever. The automated commits (release.config.js, precommitVersionBumps.yml)
-# leave the tag out for that reason. If it happens anyway, start this workflow
-# by hand on the pull request's branch: its checks then count for the pull
-# request.
+# leave the tag out for that reason. If it happens anyway, close and reopen
+# the pull request, or push a new commit to its branch. A workflow_dispatch
+# run does not help, whoever or whatever starts it: GitHub leaves it out of a
+# pull request's checks, even when it ran on the pull request's head commit.
 #
 # Pull requests from forks get no secrets, so their LLM tests fail. A
 # maintainer runs the tests for them by hand, from a branch in this repository.
@@ -132,12 +134,22 @@ jobs:
   # so a re-push, rebase or comment-only change that leaves those files as
   # they were passes in a minute instead of re-running everything.
   #
-  # The python fingerprint covers everything that goes into the test
-  # containers: smarter/ (Python, requirements and the React build), and the
-  # files the Dockerfile copies into data/ (docs/, README.md, CHANGELOG.md,
-  # ...), which the docs app serves and its tests request. A docs change
-  # therefore runs the Python tests again. The react fingerprint covers only
-  # smarter/react. Both include this workflow.
+  # The two suites have separate source trees, so each has its own
+  # fingerprint, and a change to one tree doesn't rerun the other's tests:
+  #
+  #   python   smarter/smarter, manage.py, requirements/ and .coveragerc; the
+  #            files the Dockerfile copies into data/ (docs/, README.md,
+  #            CHANGELOG.md, ...), which the docs app serves and its tests
+  #            request, so a docs change runs the Python tests again; and the
+  #            few files in smarter/react that the Python tests read:
+  #            react/i18n (update_console_messages), the onboarding app's
+  #            const.ts (test_onboarding), and each package's package.json
+  #            and vite.config.ts, which name the built pages that the
+  #            console's templates load.
+  #   react    smarter/react, which is self-contained: its tests read nothing
+  #            outside it.
+  #
+  # Both include this workflow.
   #
   # Markers are saved after a pass, by react and by python-report. GitHub
   # scopes caches to a ref: a pull request's run sees the markers of earlier
@@ -156,17 +168,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # git ls-tree prints each path's mode, type, id and name. A directory's
-      # id changes when any file in it changes, so the hash of that listing
-      # changes when, and only when, one of the files does.
+      # git ls-files -s prints each matching file's mode, blob id and path,
+      # and takes glob pathspecs. The hash of that listing changes when, and
+      # only when, one of the files is added, removed or changed.
       - name: Fingerprint the tested files
         id: keys
         shell: bash
         run: |
           fingerprint() {
-            git ls-tree HEAD -- "$@" | git hash-object --stdin
+            git ls-files -s -- "$@" | git hash-object --stdin
           }
-          PYTHON=$(fingerprint smarter docs README.md changelogs/CHANGELOG.md CODE_OF_CONDUCT.md \
+          PYTHON=$(fingerprint smarter/smarter smarter/manage.py smarter/requirements smarter/.coveragerc \
+            smarter/react/i18n smarter/react/packages/smarter-onboarding/src/lib/const.ts \
+            'smarter/react/packages/*/package.json' 'smarter/react/packages/*/vite.config.ts' \
+            docs README.md changelogs/CHANGELOG.md CODE_OF_CONDUCT.md \
             Dockerfile .dockerignore docker-compose.yml Makefile .env.example package.json \
             .github/workflows/test.yml .github/actions/react-build)
           REACT=$(fingerprint smarter/react .github/workflows/test.yml)
