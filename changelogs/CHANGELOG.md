@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.22](https://github.com/smarter-sh/smarter/compare/v0.36.21...v0.36.22) (2026-10-27)
+
+### Bug Fixes
+
+* **logging:** cut init job log noise and mask the cloud account id ([14c9afe](https://github.com/smarter-sh/smarter/commit/14c9afe79c6e9b49889f7bbe3077df2c01a5a0e5))
+
 ## [0.36.21](https://github.com/smarter-sh/smarter/compare/v0.36.20...v0.36.21) (2026-10-26)
 
 ### Bug Fixes
