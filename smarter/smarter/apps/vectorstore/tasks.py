@@ -31,7 +31,7 @@ from .service import VectorstoreService
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.VECTORSTORE_LOGGING]
 )
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 QUEUE = smarter_settings.llmclient_tasks_celery_task_queue
 # snapshots and reconciliation manage vector databases, which can take minutes, so they run
 # in the infrastructure queue, and never block the operational tasks of QUEUE.

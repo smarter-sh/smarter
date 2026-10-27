@@ -7,7 +7,7 @@ from unittest.mock import patch
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.test_account_mixin import TestAccountMixin
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 
 # our stuff
 from smarter.lib import logging
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class TestTimestampedModel(TestAccountMixin):
     """Test TimestampedModel model."""
 
-    logger_prefix = f"{formatted_text(__name__)}.TestTimestampedModel()"
+    logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestTimestampedModel()"
 
     def test_hash_regex(self):
         """Test that hash_regex returns a compiled regex pattern."""

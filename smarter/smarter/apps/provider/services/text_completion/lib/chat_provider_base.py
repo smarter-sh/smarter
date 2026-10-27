@@ -28,7 +28,7 @@ from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterValueError,
 )
-from smarter.common.helpers.console_helpers import formatted_banner, formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -353,7 +353,7 @@ class SmarterChatProviderBase(ChatDbMixin):
             "Or set the Provider's API key Secret in the web console."
         )
         base_logger.error(
-            formatted_banner(
+            SmarterFormattedText.banner(
                 f"[PROVIDER WITHOUT API KEY] Prompts to the {self.provider_name} Provider fail: it has no API key.",
                 "To set it, add the key to .env, restart the platform, and run:",
                 "",
@@ -415,7 +415,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: The formatted class name.
         :rtype: str
         """
-        return f"{formatted_text(__name__)}.{SmarterChatProviderBase.__name__}[{id(self)}]"
+        return f"{SmarterFormattedText.text(__name__)}.{SmarterChatProviderBase.__name__}[{id(self)}]"
 
     @property
     def base_url(self) -> Optional[str]:

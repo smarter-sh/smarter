@@ -6,9 +6,7 @@ from cache_results import cache_results
 from django.http import HttpRequest
 
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-)
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
@@ -68,7 +66,7 @@ def _llmclient_id_resolver(request: Optional[HttpRequest] = None) -> Callable[[s
             raise LLMClientNotResolvedError(f"No LLMClient serves {host}{path}")
         logger.debug(
             "%s.resolve_llmclient_id() resolved and cached llmclient '%s' for %s%s",
-            formatted_text(__name__),
+            SmarterFormattedText.text(__name__),
             llmclient,
             host,
             path,

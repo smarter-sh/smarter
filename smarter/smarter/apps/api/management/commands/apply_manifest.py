@@ -17,7 +17,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(f"{__name__}")
+logger_prefix = logging.SmarterFormattedText.text(f"{__name__}")
 
 
 class Command(SmarterCommand):

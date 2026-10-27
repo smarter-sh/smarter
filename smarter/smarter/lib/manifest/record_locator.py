@@ -27,12 +27,12 @@ from typing import Callable, Optional
 from django.conf import settings
 from django.urls import NoReverseMatch
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 ConsolePath = Callable[[str], Optional[str]]
 """Builds the path of a resource's web console page from the part of its record locator after the prefix."""

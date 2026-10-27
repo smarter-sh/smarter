@@ -99,6 +99,8 @@ class DropzoneView(SmarterAuthenticatedNeverCachedWebView):
         self.template_path = "react/drop-zone.html"
 
         logger.debug(
-            "%s.get() Rendering dropzone with context: %s", self.formatted_class_name, logging.formatted_json(context)
+            "%s.get() Rendering dropzone with context: %s",
+            self.formatted_class_name,
+            logging.SmarterFormattedText.json(context),
         )
         return render(request, self.template_path, context=context)

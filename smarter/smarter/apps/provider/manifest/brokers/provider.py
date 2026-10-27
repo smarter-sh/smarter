@@ -119,7 +119,7 @@ class SAMProviderBroker(AbstractBroker):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        logger.info(
+        logger.debug(
             "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
         )
 

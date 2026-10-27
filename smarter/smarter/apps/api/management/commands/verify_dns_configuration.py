@@ -53,7 +53,9 @@ class Command(SmarterCommand):
     example.com zone, because [platform].example.com is itself delegated.
 
     A child zone's existing A record is never overwritten. One that does not point at the
-    platform's load balancer, e.g. one served by a CDN, is reported, rather than verified.
+    platform's load balancer, e.g. one served by a CDN, is reported, rather than verified. The
+    local proxy domains are the exception: every platform under the root domain shares them, so
+    their A record may point at another platform's load balancer, and is verified.
 
     **Usage:**
 
@@ -72,7 +74,7 @@ class Command(SmarterCommand):
         :py:class:`smarter.apps.infrastructure.services.dns.DNSService` - the DNS service used for DNS operations.
     """
 
-    log_prefix = f"{logging.formatted_text(__name__)}.Command()"
+    log_prefix = f"{logging.SmarterFormattedText.text(__name__)}.Command()"
 
     unchanged_a_record_domains: list[str]
     """Domains whose existing A record points somewhere other than the platform's load balancer, and was left unchanged."""
@@ -134,7 +136,9 @@ class Command(SmarterCommand):
             )
         return a_record
 
-    def verify_domain_delegated_from_parent(self, child_domain: str, parent_domain: str, a_record: DNSRecord) -> bool:
+    def verify_domain_delegated_from_parent(
+        self, child_domain: str, parent_domain: str, a_record: DNSRecord, shared: bool = False
+    ) -> bool:
         """
         Verify the DNS zone for the child domain.
 
@@ -153,9 +157,13 @@ class Command(SmarterCommand):
         :type parent_domain: str
         :param a_record: an A record to use for verification and creation if needed. This should be an A record alias to the load balancer that serves the Smarter platform.
         :type a_record: DNSRecord
+        :param shared: True for a domain that every platform under the root domain shares, such as
+            the local proxy domains. Its existing A record belongs to whichever platform created
+            it, so one that points elsewhere is expected, and counts as verified.
+        :type shared: bool
 
-        :return: True if the child domain's A record points at the load balancer, False if it points elsewhere
-            and was left unchanged, or if the DNS service is not ready.
+        :return: True if the child domain's A record points at the load balancer, or the domain is shared,
+            False if it points elsewhere and was left unchanged, or if the DNS service is not ready.
         :rtype: bool
         """
 
@@ -191,6 +199,12 @@ class Command(SmarterCommand):
         if existing_a_record is not None:
             if existing_a_record.same_target(a_record):
                 self.stdout.write(self.style.SUCCESS(f"Verified A record for {child_domain}."))
+            elif shared:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Verified A record for {child_domain}, which the platforms of {smarter_settings.root_domain} share."
+                    )
+                )
             else:
                 points_at_load_balancer = False
                 # by design, e.g. a host that a CDN serves. The command's output says so once; the
@@ -242,7 +256,12 @@ class Command(SmarterCommand):
         return points_at_load_balancer
 
     def verify_child_domain(
-        self, child_domain: str, parent_domain: str, a_record: DNSRecord, verified_domains: list[str]
+        self,
+        child_domain: str,
+        parent_domain: str,
+        a_record: DNSRecord,
+        verified_domains: list[str],
+        shared: bool = False,
     ) -> None:
         """
         Verify a child domain, and record the result.
@@ -258,10 +277,13 @@ class Command(SmarterCommand):
         :type a_record: DNSRecord
         :param verified_domains: the domains verified so far.
         :type verified_domains: list[str]
+        :param shared: True for a domain that every platform under the root domain shares. See
+            :meth:`verify_domain_delegated_from_parent`.
+        :type shared: bool
         :return: None
         """
         if self.verify_domain_delegated_from_parent(
-            child_domain=child_domain, parent_domain=parent_domain, a_record=a_record
+            child_domain=child_domain, parent_domain=parent_domain, a_record=a_record, shared=shared
         ):
             verified_domains.append(child_domain)
         else:
@@ -397,6 +419,7 @@ class Command(SmarterCommand):
             parent_domain=smarter_settings.root_domain,
             a_record=a_record,
             verified_domains=verified_domains,
+            shared=True,
         )
 
         # ---------------------------------------------------------------------
@@ -407,6 +430,7 @@ class Command(SmarterCommand):
             parent_domain=smarter_settings.root_proxy_domain,
             a_record=a_record,
             verified_domains=verified_domains,
+            shared=True,
         )
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:

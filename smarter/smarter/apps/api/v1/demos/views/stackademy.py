@@ -28,7 +28,7 @@ from smarter.lib.typing import SmarterDictType
 from ..const import STACKADEMY_API_CONNECTION_NAME
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 STACKADEMY_COURSES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stackademy_courses.json")
 

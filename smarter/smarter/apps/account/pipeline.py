@@ -17,10 +17,10 @@ from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 logger.debug(
     "%s is %s",
-    logging.formatted_text(__name__) + ".SmarterSocialAuthExceptionMiddleware",
+    logging.SmarterFormattedText.text(__name__) + ".SmarterSocialAuthExceptionMiddleware",
     SmarterHelperMixin().formatted_state_ready,
 )
 

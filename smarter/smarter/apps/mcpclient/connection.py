@@ -291,7 +291,7 @@ class MCPServerConnection:
     @property
     def formatted_class_name(self) -> str:
         """The class name, for logging."""
-        return f"{logging.formatted_text(__name__)}.{self.__class__.__name__}[{self.mcpclient.name}]"
+        return f"{logging.SmarterFormattedText.text(__name__)}.{self.__class__.__name__}[{self.mcpclient.name}]"
 
     @property
     def timeout(self) -> float:

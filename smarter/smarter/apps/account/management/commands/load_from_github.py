@@ -55,7 +55,7 @@ from smarter.lib.manifest.template import TEMPLATE_EXTENSION, render_manifest_te
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 MANIFEST_EXTENSIONS = (".yaml", ".yml", TEMPLATE_EXTENSION)
 """The extensions of the files that may hold a manifest.
@@ -346,7 +346,8 @@ class Command(SmarterCommand):
             if not self.skip_missing_references:
                 logger.error("%s.apply() failed to apply %s: %s", logger_prefix, filespec, exc)
                 return f"{os.path.basename(filespec)}: {type(exc).__name__}: {exc}"
-            logger.info("%s.apply() skipped %s: %s", logger_prefix, filespec, exc)
+            # DEBUG, because the command's output below already says so, at the same moment.
+            logger.debug("%s.apply() skipped %s: %s", logger_prefix, filespec, exc)
             self.skipped.add(filespec)
             self.stdout.write(
                 self.style.WARNING(

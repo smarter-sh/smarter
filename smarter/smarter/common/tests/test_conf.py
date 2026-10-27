@@ -9,7 +9,7 @@ from pydantic import SecretStr
 
 # our stuff
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import INFRASTRUCTURE
@@ -30,7 +30,7 @@ class TestSettings(SmarterTestBase):
     at runtime.
     """
 
-    smarter_test_base_logger_prefix = f"{formatted_text(__name__)}.TestSettings()"
+    smarter_test_base_logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestSettings()"
 
     @classmethod
     def setUpClass(cls):

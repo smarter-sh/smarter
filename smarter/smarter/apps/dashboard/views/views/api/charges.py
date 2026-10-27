@@ -33,7 +33,7 @@ from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 TOKEN_USAGE_CACHE_TIMEOUT = 5 * 60  # seconds. the chart's newest point may be five minutes behind.
 

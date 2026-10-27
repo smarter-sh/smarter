@@ -158,7 +158,7 @@ from django.http import JsonResponse
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -170,13 +170,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
     logger.debug(
         "%s is %s",
-        formatted_text(__name__) + ".SmarterJsonErrorMiddleware",
+        SmarterFormattedText.text(__name__) + ".SmarterJsonErrorMiddleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        formatted_text(__name__) + ".SmarterJsonErrorMiddleware",
+        SmarterFormattedText.text(__name__) + ".SmarterJsonErrorMiddleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 

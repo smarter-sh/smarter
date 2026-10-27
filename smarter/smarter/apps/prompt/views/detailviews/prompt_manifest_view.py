@@ -18,7 +18,7 @@ from smarter.apps.llmclient.models import (
     LLMClientHelper,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_json
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -199,7 +199,7 @@ class LLMClientDetailView(DocsBaseView):
                 "%s.dispatch() - Error converting JSON response to YAML: %s. JSON response: %s",
                 self.formatted_class_name,
                 str(e),
-                formatted_json(json_response),
+                SmarterFormattedText.json(json_response),
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error converting manifest to YAML")
 
@@ -229,7 +229,7 @@ class LLMClientDetailView(DocsBaseView):
                 "%s.dispatch() - Error rendering template: %s. context: %s",
                 self.formatted_class_name,
                 str(e),
-                formatted_json(context),
+                SmarterFormattedText.json(context),
                 exc_info=True,
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")

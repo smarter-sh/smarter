@@ -26,7 +26,7 @@ from smarter.common.const import REPO_ROOT, SMARTER_PROJECT_REPOSITORY_URL
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 GIT_TIMEOUT = 2  # seconds. git answers instantly, or not at all.
 
