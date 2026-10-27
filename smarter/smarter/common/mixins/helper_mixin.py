@@ -2,7 +2,7 @@
 
 import re
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union, cast
 
 import yaml
 from django.utils.functional import classproperty
@@ -119,7 +119,8 @@ class SmarterHelperMixin:
         :return: The formatted class name as a string.
         :rtype: str
         """
-        return SmarterFormattedText.text(cls.__name__)
+        # classproperty passes the class, but type checkers can't tell, and take cls for an instance.
+        return SmarterFormattedText.text(cast(type, cls).__name__)
 
     @cached_property
     def unformatted_class_name(self) -> str:

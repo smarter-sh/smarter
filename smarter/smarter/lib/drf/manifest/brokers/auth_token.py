@@ -2,7 +2,7 @@
 """Smarter API SmarterAuthToken Manifest handler."""
 
 import traceback
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.core import serializers
 from django.core.handlers.asgi import ASGIRequest
