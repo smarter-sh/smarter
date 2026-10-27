@@ -123,7 +123,10 @@ GLOBAL_STREAM_TTL_SECONDS = (
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
-_redis_cache_holder = {"client": None}
+_redis_client: Optional["Redis"] = None
+"""The Redis connection that log records are published to, opened by :func:`get_redis_cache` on first use."""
+_redis_unconfigured_logged = False
+"""Whether :func:`get_redis_cache` has said that Redis isn't configured, so that it says so once."""
 _publish_state = {"failing": False}
 """Whether the last :func:`flush` failed, so that a Redis outage is logged once, not once per batch."""
 user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
@@ -283,24 +286,30 @@ def bind_log_context(func: Callable[_P, _T]) -> Callable[_P, _T]:
 
 def get_redis_cache() -> Optional["Redis"]:
     """
-    Lazily retrieves the configured Redis cache connection.
+    Return the Redis connection of Django's default cache, opening it on first use.
 
-    During early process startup (for example management command bootstrap),
-    Django settings may not yet be configured. In that case this returns None
-    and callers should safely skip publishing.
+    Early in a process's startup, e.g. while a management command bootstraps, Django's
+    cache may not be configured yet. Then nothing is cached, so that a later call can
+    still connect, and the caller skips publishing. That is logged once per process,
+    because this runs on every flush, and the warning would itself be queued for one.
+
+    :returns: The Redis connection, or None if Django's cache isn't configured yet.
+    :rtype: Optional[redis.Redis]
     """
-    cached_client = _redis_cache_holder["client"]
-    if cached_client is not None:
-        return cached_client
+    global _redis_client, _redis_unconfigured_logged  # pylint: disable=global-statement
 
-    try:
-        _redis_cache_holder["client"] = get_redis_connection("default")
-    except ImproperlyConfigured:
-        logger.warning(
-            "%s.get_redis_cache() Redis cache is not configured. Logs will not be published to Redis.", logger_prefix
-        )
-        return None
-    return _redis_cache_holder["client"]
+    if _redis_client is None:
+        try:
+            _redis_client = get_redis_connection("default")
+        except ImproperlyConfigured:
+            if not _redis_unconfigured_logged:
+                _redis_unconfigured_logged = True
+                logger.warning(
+                    "%s.get_redis_cache() Redis cache is not configured. Logs will not be published to Redis.",
+                    logger_prefix,
+                )
+            return None
+    return _redis_client
 
 
 def flush(buffer) -> None:
@@ -340,13 +349,15 @@ def flush(buffer) -> None:
     try:
         pipe.execute()
     # pylint: disable=broad-except
-    except Exception:
+    except Exception as e:
         if not _publish_state["failing"]:
             _publish_state["failing"] = True
-            logger.exception(
-                "%s.flush() Failed to execute Redis pipeline. Dropping log records until Redis is available.",
+            # Redis being down is handled here, and Celery and Django report it with
+            # their own tracebacks, so one line without a traceback is enough.
+            logger.warning(
+                "%s.flush() Failed to execute Redis pipeline: %s. Dropping log records until Redis is available.",
                 logger_prefix,
-                exc_info=True,
+                e,
             )
         return
     if _publish_state["failing"]:
