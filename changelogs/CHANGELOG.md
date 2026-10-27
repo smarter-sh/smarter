@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.23](https://github.com/smarter-sh/smarter/compare/v0.36.22...v0.36.23) (2026-10-27)
+
+### Bug Fixes
+
+* **asgi:** print a startup banner with the logo and server config ([6d54695](https://github.com/smarter-sh/smarter/commit/6d5469589970abc5f5915b8a50549c4950219646))
+* **react:** unmount each story after its test to stop a teardown error ([a7d0df8](https://github.com/smarter-sh/smarter/commit/a7d0df85a1ae55e4b9ba9525bd818e38292b5226))
+
+## [0.36.23-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.23-alpha.1...v0.36.23-alpha.2) (2026-10-27)
+
+### Bug Fixes
+
+* **react:** unmount each story after its test to stop a teardown error ([a7d0df8](https://github.com/smarter-sh/smarter/commit/a7d0df85a1ae55e4b9ba9525bd818e38292b5226))
+
+## [0.36.23-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.22...v0.36.23-alpha.1) (2026-10-27)
+
+### Bug Fixes
+
+* **asgi:** print a startup banner with the logo and server config ([6d54695](https://github.com/smarter-sh/smarter/commit/6d5469589970abc5f5915b8a50549c4950219646))
+
 ## [0.36.22](https://github.com/smarter-sh/smarter/compare/v0.36.21...v0.36.22) (2026-10-27)
 
 ### Bug Fixes
