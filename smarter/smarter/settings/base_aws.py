@@ -5,31 +5,42 @@ import os
 import sys
 
 from smarter.common.conf import smarter_settings
+from smarter.common.utils.redis_url import redis_url_with_database
 from smarter.lib import json, logging
 
 from .base import *
 
 logger = logging.getLogger(__name__)
 logger.debug("Loading smarter.settings.base_aws")
-default_redis_location = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379/1"
+default_redis_server = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379"
+# The cache and the Celery broker use different Redis databases, so that cache.clear()
+# can't delete the Celery queues. See CELERY_BROKER_URL in base.py.
+default_redis_location = f"{default_redis_server}/1"
+default_broker_location = f"{default_redis_server}/0"
 
+cache_location = os.getenv("CACHES_LOCATION", default_redis_location)
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv(
-            "CACHES_LOCATION",
-            default_redis_location,
-        ),
+        "LOCATION": cache_location,
         "OPTIONS": CACHE_OPTIONS,
-    }
+    },
+    # Sessions are in their own database of the same server, so that cache.clear() doesn't
+    # log users out. See SESSION_CACHE_ALIAS in base.py.
+    "sessions": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": redis_url_with_database(cache_location, 2),
+        "OPTIONS": CACHE_OPTIONS,
+    },
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "sessions"
 
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv(
     "CELERY_BROKER_URL",
-    default_redis_location,
+    default_broker_location,
 )
 CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
 CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
