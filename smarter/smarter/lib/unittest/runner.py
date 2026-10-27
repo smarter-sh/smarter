@@ -50,7 +50,10 @@ import functools
 import os
 import unittest
 
-from django.test.runner import DiscoverRunner, iter_test_cases
+from django.test.runner import DiscoverRunner
+from django.test.utils import (
+    iter_test_cases,  # pyright: ignore[reportAttributeAccessIssue]
+)
 
 INFRASTRUCTURE = "infrastructure"
 """The tag of tests that use real infrastructure: Kubernetes, AWS Route53, ACM, and so on."""
@@ -132,12 +135,12 @@ class SmarterTestRunner(DiscoverRunner):
     only one shard of the suite when :data:`SHARD_ENVIRONMENT_VARIABLE` asks for one.
     """
 
-    def __init__(self, *args, tags=None, exclude_tags=None, **kwargs):
-        tags = set(tags or [])
-        exclude_tags = set(exclude_tags or [])
+    def __init__(self, *args, tags: list[str] | None = None, exclude_tags: list[str] | None = None, **kwargs):
+        tags = list(tags or [])
+        exclude_tags = list(exclude_tags or [])
         self.skipping_infrastructure = INFRASTRUCTURE not in tags and not include_infrastructure()
-        if self.skipping_infrastructure:
-            exclude_tags.add(INFRASTRUCTURE)
+        if self.skipping_infrastructure and INFRASTRUCTURE not in exclude_tags:
+            exclude_tags.append(INFRASTRUCTURE)
         super().__init__(*args, tags=tags or None, exclude_tags=exclude_tags, **kwargs)
 
     def setup_test_environment(self, **kwargs):
