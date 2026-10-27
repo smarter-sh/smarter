@@ -10,6 +10,7 @@ from smarter.common.utils.utils import (
     hash_factory,
     is_async_context,
     mask_email,
+    mask_identifier,
     mask_string,
 )
 from smarter.lib import logging
@@ -81,6 +82,15 @@ class TestUtils(SmarterTestBase):
     def test_mask_email_empty(self):
         self.assertEqual(mask_email(""), "")
         self.assertEqual(mask_email(None), "")
+
+    def test_mask_identifier(self):
+        key = "77846410f51045319bd666642e325c05"
+        self.assertEqual(mask_identifier(key), "****325c05")
+        self.assertEqual(mask_identifier(key, visible=4), "****5c05")
+        self.assertEqual(mask_identifier(key, mask_char="#"), "####325c05")
+        self.assertEqual(mask_identifier("short"), "****")
+        self.assertEqual(mask_identifier(""), "")
+        self.assertEqual(mask_identifier(None), "")
 
     def test_mask_string_basic(self):
         string_length = 12

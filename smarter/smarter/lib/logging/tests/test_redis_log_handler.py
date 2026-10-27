@@ -73,7 +73,9 @@ class TestRedisLogHandler(SmarterTestBase):
         with patch(f"{MODULE}.logger") as logger:
             handler.flush(self.queued({"channel": "logs:a", "data": "one"}))
             handler.flush(self.queued({"channel": "logs:a", "data": "two"}))
-            logger.exception.assert_called_once()
+            logger.warning.assert_called_once()
+            logger.exception.assert_not_called()
+            self.assertEqual(str(logger.warning.call_args.args[-1]), "pipeline failed")
             self.assertEqual(self.queue.unfinished_tasks, 0)
 
             execute.side_effect = None
@@ -125,10 +127,27 @@ class TestRedisLogHandler(SmarterTestBase):
     def test_get_redis_cache_not_configured(self):
         """Test the real get_redis_cache(), which setUp() replaced, when Redis isn't configured."""
         with (
-            patch.dict(handler._redis_cache_holder, {"client": None}),  # pylint: disable=protected-access
-            patch(f"{MODULE}.get_redis_connection", side_effect=ImproperlyConfigured("no redis")),
+            patch.object(handler, "_redis_client", None),
+            patch.object(handler, "_redis_unconfigured_logged", False),
+            patch(f"{MODULE}.get_redis_connection", side_effect=ImproperlyConfigured("no redis")) as connect,
+            patch(f"{MODULE}.logger") as logger,
         ):
             self.assertIsNone(GET_REDIS_CACHE())
+            self.assertIsNone(GET_REDIS_CACHE())
+            # it tries again on each call, but says so once.
+            self.assertEqual(connect.call_count, 2)
+            logger.warning.assert_called_once()
+
+    def test_get_redis_cache_connects_once(self):
+        """Test the real get_redis_cache() opens the connection on first use, then reuses it."""
+        client = MagicMock()
+        with (
+            patch.object(handler, "_redis_client", None),
+            patch(f"{MODULE}.get_redis_connection", return_value=client) as connect,
+        ):
+            self.assertIs(GET_REDIS_CACHE(), client)
+            self.assertIs(GET_REDIS_CACHE(), client)
+            connect.assert_called_once_with("default")
 
     def test_get_user_context(self):
         user = MagicMock(username="ada")
