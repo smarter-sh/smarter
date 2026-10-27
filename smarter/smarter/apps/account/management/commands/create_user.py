@@ -65,6 +65,7 @@ from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.models.utils import assign_changed_fields
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -159,27 +160,31 @@ class Command(SmarterCommand):
         except Exception as e:
             raise CommandError(f"Error creating user {username}: {str(e)}")
 
-        if not created:
-            self.stdout.write(self.style.NOTICE(f"User {username} already exists, updating the existing user."))
-        if is_admin:
-            user.is_staff = True
-        else:
-            user.is_staff = False
-
         if not SmarterValidator.is_valid_email(email):
             raise CommandError(f"Invalid email address: {email}")
 
-        user.email = email
-        user.first_name = first_name
-        user.last_name = last_name
-        user.is_active = True
-        if password:
+        # an existing user is saved only when something changed: initialize_platform runs this on
+        # every deploy, and saving an unchanged row sends post_save to every receiver. A password
+        # is compared, not set, because set_password() writes a new salted hash every time.
+        changed = assign_changed_fields(
+            user,
+            {
+                "is_staff": bool(is_admin),
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "is_active": True,
+            },
+        )
+        if password and (created or not user.check_password(password)):
             user.set_password(password)
+            changed.append("password")
         elif created:
             # Generate a random password
             alphabet = string.ascii_letters + string.digits + string.punctuation
             generated_password = "".join(secrets.choice(alphabet) for _ in range(12))
             user.set_password(generated_password)
+            changed.append("password")
             password = generated_password  # Set password to generated password for email
             # the password is printed only on request: this command's output usually ends up in
             # deployment job logs.
@@ -193,13 +198,15 @@ class Command(SmarterCommand):
                         f"another with: manage.py changepassword {username}"
                     )
                 )
-        try:
-            user.save()
-        # pylint: disable=broad-except
-        except Exception as e:
-            raise CommandError(f"Error saving user {username}: {str(e)}")
-
-        self.stdout.write(f"User {username} {email} has been {'created' if created else 'updated'}.")
+        if created or changed:
+            try:
+                user.save()
+            # pylint: disable=broad-except
+            except Exception as e:
+                raise CommandError(f"Error saving user {username}: {str(e)}")
+            self.stdout.write(f"User {username} {email} has been {'created' if created else 'updated'}.")
+        else:
+            self.stdout.write(f"User {username} {email} already exists, unchanged.")
 
         if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
             # Send email to user, in the language of the welcome email.
@@ -233,7 +240,7 @@ class Command(SmarterCommand):
                         "The user account has been created, but the user may not have received their password."
                     )
                 )
-        else:
+        elif created:
             self.stdout.write(
                 self.style.WARNING(
                     f"Skipping sending password email to user {username} as the Waffle switch ENABLE_NEW_USER_PASSWORD_EMAIL is not active."
@@ -260,9 +267,8 @@ class Command(SmarterCommand):
 
         try:
             account_contact = AccountContact.objects.get(account=account, email=email)
-            account_contact.first_name = first_name
-            account_contact.last_name = last_name
-            account_contact.save()
+            if assign_changed_fields(account_contact, {"first_name": first_name, "last_name": last_name}):
+                account_contact.save()
         except AccountContact.DoesNotExist:
             try:
                 AccountContact(account=account, first_name=first_name, last_name=last_name, email=email).save(
