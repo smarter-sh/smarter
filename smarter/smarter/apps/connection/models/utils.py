@@ -8,7 +8,7 @@ from smarter.apps.account.models import User
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -16,7 +16,7 @@ from .api_connection import ApiConnection
 from .sql_connection import SqlConnection
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 def get_cached_connection_detail_view_and_kind(

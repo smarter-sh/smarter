@@ -36,7 +36,7 @@ from smarter.apps.llmhost.services import LLMHostService, LLMHostServiceError
 from smarter.apps.llmhost.services.compute import ComputeProvisioner
 from smarter.apps.llmhost.services.exceptions import LLMHostComputeError
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -45,7 +45,7 @@ from smarter.workers.celery import app
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_HOST_LOGGING]
 )
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 
 def managed_hostname(llmhost: LLMHost) -> Optional[str]:

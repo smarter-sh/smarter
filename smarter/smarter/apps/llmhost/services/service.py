@@ -90,7 +90,7 @@ from .renderer import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
-logger_prefix = f"{logging.formatted_text(__name__)}.LLMHostService"
+logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.LLMHostService"
 
 Status = SAMLLMHostStatusEnum
 EventType = SAMLLMHostEventType

@@ -65,6 +65,31 @@ class TestEnvironmentSettings(SmarterTestBase):
         self.assertIn("CACHES", module.__all__)
         self.assertNotIn("logger", module.__all__)
 
+    def test_cache_and_broker_use_different_redis_databases(self):
+        """The cache's Redis database, which cache.clear() flushes, must not hold the Celery queues."""
+        env = {k: v for k, v in os.environ.items() if k not in ("CACHES_LOCATION", "CELERY_BROKER_URL")}
+        with patch.dict(os.environ, env, clear=True):
+            module = fresh_import("smarter.settings.base_aws")
+        self.assertTrue(module.CACHES["default"]["LOCATION"].endswith(":6379/1"))
+        self.assertTrue(module.CELERY_BROKER_URL.endswith(":6379/0"))
+        self.assertNotEqual(base_settings.CACHES["default"]["LOCATION"], base_settings.CELERY_BROKER_URL)
+
+    def test_sessions_have_their_own_redis_database(self):
+        """Cache.clear() on the default cache must not log users out."""
+        env = {k: v for k, v in os.environ.items() if k != "CACHES_LOCATION"}
+        env["CACHES_LOCATION"] = "redis://:pw@redis.example.test:6379/1"
+        with patch.dict(os.environ, env, clear=True):
+            module = fresh_import("smarter.settings.base_aws")
+        self.assertEqual(module.SESSION_CACHE_ALIAS, "sessions")
+        self.assertEqual(module.CACHES["sessions"]["LOCATION"], "redis://:pw@redis.example.test:6379/2")
+        self.assertEqual(base_settings.SESSION_CACHE_ALIAS, "sessions")
+        locations = {
+            base_settings.CACHES["default"]["LOCATION"],
+            base_settings.CACHES["sessions"]["LOCATION"],
+            base_settings.CELERY_BROKER_URL,
+        }
+        self.assertEqual(len(locations), 3)
+
     def _assert_environment(self, environment: str, domain_fragment: str):
         module = fresh_import(f"smarter.settings.{environment}")
         self.assertEqual(module.environment_name, environment)

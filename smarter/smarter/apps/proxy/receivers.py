@@ -16,7 +16,7 @@ from .signals import broker_ready, proxy_request_completed, proxy_request_failed
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.PROXY_LOGGING]
 )
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(broker_ready)

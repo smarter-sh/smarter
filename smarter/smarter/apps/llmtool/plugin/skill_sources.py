@@ -65,7 +65,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from . import safe_http
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 GITHUB_API_URL = "https://api.github.com"
 REQUEST_TIMEOUT = 15

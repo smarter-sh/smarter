@@ -138,7 +138,9 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                     "smarter_request_id": self.generate_smarter_request_id(),
                 }
             }
-            logger.debug("%s.get() cached context: %s", self.formatted_class_name, logging.formatted_json(retval))
+            logger.debug(
+                "%s.get() cached context: %s", self.formatted_class_name, logging.SmarterFormattedText.json(retval)
+            )
             return retval
 
         self.template_path = "react/dashboard.html"

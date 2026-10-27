@@ -21,7 +21,7 @@ from smarter.apps.connection.signals import (
 )
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
@@ -31,7 +31,7 @@ from smarter.lib.typing import SmarterDictType
 from .connection_base import ConnectionBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class ApiConnection(ConnectionBase):

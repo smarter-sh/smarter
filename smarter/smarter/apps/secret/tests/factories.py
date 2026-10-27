@@ -5,14 +5,14 @@ from typing import Optional
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.secret.models import Secret
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-HERE = formatted_text(__name__)
+HERE = SmarterFormattedText.text(__name__)
 
 
 # pylint: disable=W0613

@@ -155,3 +155,41 @@ class TestSettingsValidators(SmarterTestBase):
         expected_profile = None if settings_defaults.AWS_PROFILE == "SET-ME-PLEASE" else settings_defaults.AWS_PROFILE
         self.assertIn(settings.aws_profile, (expected_profile, settings_defaults.AWS_PROFILE, None))
         self.assertIn(settings.aws_region, (settings_defaults.AWS_REGION, None))
+
+
+class TestSettingsReadyMessage(SmarterTestBase):
+    """Test the message that Settings logs when it is created."""
+
+    def test_ready_is_logged_once_per_server(self):
+        """The first worker logs READY as a warning, so it is seen; the others log it at DEBUG."""
+        with (
+            patch("smarter.common.conf.settings.is_first_worker", side_effect=[True, False]) as first,
+            patch("smarter.common.conf.settings.logger") as logger,
+        ):
+            make_settings()
+            make_settings()
+        first.assert_called_with("settings-ready")
+        ready = [c for c in logger.warning.call_args_list if "Settings are" in c.args[0]]
+        self.assertEqual(len(ready), 1)
+        self.assertIn("READY", ready[0].args[2])
+        self.assertEqual(len([c for c in logger.debug.call_args_list if "Settings are" in str(c.args[0])]), 1)
+
+    def test_not_ready_is_logged_by_every_process(self):
+        """NOT_READY is always a warning, whichever worker logs it."""
+        with (
+            patch.object(Settings, "ready", return_value=False),
+            patch("smarter.common.conf.settings.is_first_worker") as first,
+            patch("smarter.common.conf.settings.logger") as logger,
+        ):
+            make_settings()
+        first.assert_not_called()
+        self.assertIn("NOT_READY", logger.warning.call_args.args[2])
+
+    def test_the_prefix_is_not_red(self):
+        """A healthy start doesn't look like an error."""
+        with (
+            patch("smarter.common.conf.settings.is_first_worker", return_value=True),
+            patch("smarter.common.conf.settings.logger") as logger,
+        ):
+            make_settings()
+        self.assertTrue(logger.warning.call_args.args[1].startswith("\033[37m"))

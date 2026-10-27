@@ -5,7 +5,7 @@ from typing import Any, Optional, Union, overload
 
 from pydantic import SecretStr
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils.utils import bool_environment_variable
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
@@ -89,7 +89,7 @@ def get_env(
     :rtype: EnvValueType
     """
     # pylint: disable=W0621
-    logger_prefix = formatted_text(__name__) + ".get_env()"
+    logger_prefix = SmarterFormattedText.text(__name__) + ".get_env()"
 
     def cast_value(val: Optional[str], default: EnvValueType) -> EnvValueType:
         """

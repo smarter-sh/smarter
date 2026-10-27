@@ -16,7 +16,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 INGRESS_TEMPLATE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../k8s/ingress.yaml.tpl"))
 

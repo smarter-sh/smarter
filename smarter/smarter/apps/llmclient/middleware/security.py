@@ -23,7 +23,7 @@ from ..models import LLMClient, get_cached_llmclient_by_request
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 logger.debug(
     "%s is %s",
-    logging.formatted_text(__name__) + ".SmarterSecurityMiddleware",
+    logging.SmarterFormattedText.text(__name__) + ".SmarterSecurityMiddleware",
     SmarterHelperMixin().formatted_state_ready,
 )
 
@@ -106,7 +106,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SECURITY):
             return None
 
-        logger_prefix = logging.formatted_text(__name__ + "." + self.__class__.__name__)
+        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + self.__class__.__name__)
 
         logger.debug(
             "%s.process_request() called for %s",

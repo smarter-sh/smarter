@@ -9,7 +9,7 @@ import yaml
 from django.http import HttpRequest
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import mask_string
 from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
@@ -26,7 +26,7 @@ from smarter.lib.typing import SmarterDictType
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
-logger_prefix = f"{formatted_text(HERE)}.TestSAMBrokerBaseClass()"
+logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMBrokerBaseClass()"
 
 
 class TestSAMBrokerBaseClass(TestAccountMixin):
@@ -38,7 +38,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     _broker: AbstractBroker
     _broker_class: Type[AbstractBroker]
     _manifest_filespec: str
-    test_sam_broker_base_logger_prefix = f"{formatted_text(__name__)}.TestSAMBrokerBaseClass()"
+    test_sam_broker_base_logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestSAMBrokerBaseClass()"
 
     @classmethod
     def setUpClass(cls):

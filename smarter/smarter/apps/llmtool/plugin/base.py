@@ -54,7 +54,7 @@ from smarter.common.exceptions import (
     SmarterException,
     SmarterValueError,
 )
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.models.utils import assign_changed_fields, tags_changed
@@ -609,7 +609,7 @@ class PluginBase(ABC, AccountMixin):
         :return: The formatted class name.
         :rtype: str
         """
-        return formatted_text(self.__class__.__name__)
+        return SmarterFormattedText.text(self.__class__.__name__)
 
     @property
     def metadata_class(self) -> Optional[str]:

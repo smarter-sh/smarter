@@ -41,7 +41,7 @@ from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-HERE = logging.formatted_text(__name__)
+HERE = logging.SmarterFormattedText.text(__name__)
 
 
 logger = logging.getSmarterLogger(
@@ -120,7 +120,7 @@ class SmarterCachedObjects:
             if isinstance(self._smarter_admin_user_profile, UserProfile):
                 logger.debug(
                     "%s re-queried %s",
-                    f"{logging.formatted_text(__name__)}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()",
+                    f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()",
                     self._smarter_admin_user_profile,
                 )
                 try:
@@ -137,7 +137,7 @@ class SmarterCachedObjects:
                 self._smarter_admin_user_profile = user_profile
                 logger.debug(
                     "%s initialized %s",
-                    f"{logging.formatted_text(__name__)}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()",
+                    f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()",
                     user_profile,
                 )
                 return self._smarter_admin_user_profile  # type: ignore[return-value]
@@ -167,7 +167,7 @@ class SmarterCachedObjects:
                 self._admin_user.refresh_from_db()
             logger.debug(
                 "%s re-queried %s",
-                f"{logging.formatted_text(__name__)}.{SmarterCachedObjects.__name__}.admin_user()",
+                f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.admin_user()",
                 self._admin_user,
             )
 
@@ -176,7 +176,7 @@ class SmarterCachedObjects:
                 self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
                 logger.debug(
                     "%s initialized %s",
-                    f"{logging.formatted_text(__name__)}.{SmarterCachedObjects.__name__}.admin_user()",
+                    f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.admin_user()",
                     self._admin_user,
                 )
                 return self._admin_user
@@ -489,7 +489,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
                 account_number,
             )
             raise e
-        console_prefix = f"{logging.formatted_text(__name__)}.get_cached_admin_user_for_account()"
+        console_prefix = f"{logging.SmarterFormattedText.text(__name__)}.get_cached_admin_user_for_account()"
         user_profile = (
             UserProfile.objects.filter(account=account)
             .filter(Q(user__is_staff=True) | Q(user__is_superuser=True))

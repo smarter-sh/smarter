@@ -3,7 +3,7 @@
 
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -20,7 +20,7 @@ from .utils import response_characters
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 
 @receiver(sql_plugin_request_started, dispatch_uid="sql_plugin_request_started")

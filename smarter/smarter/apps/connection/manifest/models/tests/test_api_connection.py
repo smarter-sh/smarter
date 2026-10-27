@@ -30,7 +30,7 @@ from smarter.apps.connection.models import ApiConnection
 from smarter.apps.connection.tests.base_classes import TestConnectionBase
 from smarter.apps.connection.tests.factories import secret_factory
 from smarter.apps.secret.models import Secret
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -62,7 +62,7 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_api_connection_logger_prefix = f"{formatted_text(HERE)}.TestSAMApiConnection()"
+    test_sam_api_connection_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMApiConnection()"
 
     @classmethod
     def setUpClass(cls):

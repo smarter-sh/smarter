@@ -33,7 +33,7 @@ from email.mime.text import MIMEText
 from typing import Callable, List, Optional, Union
 
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_banner
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -280,7 +280,7 @@ class SMTPEmailService(EmailService):
             super().log_not_sent(subject, to)
             return
         logger.error(
-            formatted_banner(
+            SmarterFormattedText.banner(
                 f"[EMAIL NOT SENT] SMTP is not configured, so '{subject}' was not sent to: {to}",
                 "To send email, add your SMTP server's credentials to .env, and restart the platform:",
                 "",

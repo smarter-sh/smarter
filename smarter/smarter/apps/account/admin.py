@@ -52,7 +52,7 @@ def smarter_filter_queryset_for_user_profile(
         This function only works for models that inherit from
         smarter.apps.account.models.MetaDataWithOwnershipModel
     """
-    logger_prefix = f"{logging.formatted_text(__file__)}.smarter_filter_queryset_for_user_profile()"
+    logger_prefix = f"{logging.SmarterFormattedText.text(__file__)}.smarter_filter_queryset_for_user_profile()"
     # 1.) no user_profile, no queryset. This is checked first: the logging below reads user_profile.user.
     if not user_profile:
         logger.debug("%s: No user profile, returning empty queryset", logger_prefix)

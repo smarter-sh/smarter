@@ -36,7 +36,7 @@ from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def get_readonly_yaml_file(file_path: str) -> SmarterDictType:

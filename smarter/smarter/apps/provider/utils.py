@@ -10,7 +10,7 @@ from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
 from smarter.common.conf.env import get_env, is_missing_value
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -42,7 +42,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 module_prefix = "smarter.apps.provider.utils."
 
@@ -78,7 +78,7 @@ def get_provider_verification_for_type(
     provider: Provider, verification_type: ProviderVerificationTypes
 ) -> ProviderVerification:
     """Get the provider verification for a specific type."""
-    prefix = formatted_text(module_prefix + "get_provider_verification_for_type()")
+    prefix = SmarterFormattedText.text(module_prefix + "get_provider_verification_for_type()")
     logger.debug("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
 
     instance, _ = ProviderVerification.objects.get_or_create(provider=provider, verification_type=verification_type)
@@ -91,7 +91,7 @@ def get_model_verification_for_type(
     provider_model: ProviderModel, verification_type: ProviderModelVerificationTypes
 ) -> ProviderModelVerification:
     """Get the model verification for a specific type."""
-    prefix = formatted_text(module_prefix + "get_model_verification_for_type()")
+    prefix = SmarterFormattedText.text(module_prefix + "get_model_verification_for_type()")
     logger.debug("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
 
     instance, _ = ProviderModelVerification.objects.get_or_create(
@@ -106,7 +106,7 @@ def set_model_verification(
     provider_model_verification: ProviderModelVerification, is_successful: bool, **kwargs
 ) -> None:
     """Set the model verification status."""
-    prefix = formatted_text(module_prefix + "set_model_verification()")
+    prefix = SmarterFormattedText.text(module_prefix + "set_model_verification()")
     logger.debug(
         "%s Setting model verification for %s to %s",
         prefix,
@@ -128,7 +128,7 @@ def set_model_verification(
 
 def set_provider_verification(provider_verification: ProviderVerification, is_successful: bool, **kwargs) -> None:
     """Set the provider verification status."""
-    prefix = formatted_text(module_prefix + "set_provider_verification()")
+    prefix = SmarterFormattedText.text(module_prefix + "set_provider_verification()")
     logger.debug(
         "%s Setting provider verification for %s to %s",
         prefix,
@@ -146,7 +146,7 @@ def set_provider_verification(provider_verification: ProviderVerification, is_su
 
 def test_web_page(url: str, test_str: str) -> bool:
     """Test a web page to see if it is valid."""
-    prefix = formatted_text(module_prefix + "test_web_page()")
+    prefix = SmarterFormattedText.text(module_prefix + "test_web_page()")
     logger.debug("%s Testing web page %s", prefix, url)
 
     try:

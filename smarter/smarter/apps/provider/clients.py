@@ -18,7 +18,7 @@ from smarter.apps.prompt.signals import (
     prompt_started,
 )
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -141,7 +141,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         **kwargs,
     ):
         charge_authorization(user_profile.record_locator, self.__class__.__name__)
-        logger_prefix = f"{formatted_text(__name__)}.{self.formatted_class_name}.handler()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{self.formatted_class_name}.handler()"
         response: Optional[ChatCompletion] = None
         provider: Optional[Provider] = None
         if not hasattr(request, "user") or not request.user.is_authenticated:
@@ -157,7 +157,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             self.api_key,
             self.base_url,
             self.provider,
-            formatted_json(data),
+            SmarterFormattedText.json(data),
         )
         try:
             provider = Provider.objects.filter(name=self.provider).with_read_permission_for(request.user).first()  # type: ignore
@@ -193,7 +193,12 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         chat_request.send(sender=self.handler, data=data)
 
         try:
-            logger.debug("%s sending request to %s with data: %s", logger_prefix, openai.base_url, formatted_json(data))
+            logger.debug(
+                "%s sending request to %s with data: %s",
+                logger_prefix,
+                openai.base_url,
+                SmarterFormattedText.json(data),
+            )
             response = self.create_chat_completion(data, logger_prefix)
         # pylint: disable=broad-except
         except Exception as e:
@@ -226,7 +231,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         if isinstance(response, ChatCompletion):
             response_dict = response.model_dump()
 
-        logger.debug("%s returning response: %s", logger_prefix, formatted_json(response_dict))
+        logger.debug("%s returning response: %s", logger_prefix, SmarterFormattedText.json(response_dict))
         return SmarterJournaledJsonResponse(
             request=request,
             data=response_dict,

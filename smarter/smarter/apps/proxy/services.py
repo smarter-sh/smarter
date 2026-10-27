@@ -64,7 +64,7 @@ from .models import Proxy
 from .signals import proxy_request_completed, proxy_request_failed
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CONNECT_TIMEOUT = 10.0
 """Seconds to wait for a connection to the provider.
