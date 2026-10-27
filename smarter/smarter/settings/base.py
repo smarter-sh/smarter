@@ -15,11 +15,9 @@ Notes:
 import ast
 import logging
 import logging.config
-import math
 import os
 import re
 import secrets
-import subprocess
 import sys
 import time
 import urllib.parse
@@ -33,6 +31,7 @@ from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
+from smarter.common.helpers.resources import log_resource_limits
 from smarter.common.utils import mask_string
 from smarter.common.utils.redis_url import redis_url_with_database
 from smarter.lib import json
@@ -2113,51 +2112,7 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     except OSError as e:
         logger.error("Error reading container uptime: %s", e)
 
-    try:
-        # CPU limit (cgroup v2)
-        cpu_limit = None
-        cpu_max_path = "/sys/fs/cgroup/cpu.max"
-        if os.path.exists(cpu_max_path):
-            with open(cpu_max_path, encoding="utf-8") as f:
-                quota, period = f.read().strip().split()
-                if quota != "max":
-                    cpu_limit = math.ceil(int(quota) / int(period))
-                else:
-                    cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
-        else:
-            cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
-
-        # Memory limit (cgroup v2)
-        mem_limit = None
-        mem_max_path = "/sys/fs/cgroup/memory.max"
-        if os.path.exists(mem_max_path):
-            with open(mem_max_path, encoding="utf-8") as f:
-                mem_max = f.read().strip()
-                # "max" when the container has no memory limit.
-                mem_bytes = 1 << 60 if mem_max == "max" else int(mem_max)
-                if mem_bytes < 1 << 60:  # If not unlimited
-                    mem_gib = mem_bytes / 1024 / 1024 / 1024
-                    mem_limit = mem_gib
-                else:
-                    # Fallback to /proc/meminfo
-                    mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
-                    mem_kib = int(mem_total_line.split()[1])
-                    mem_limit = mem_kib / 1024 / 1024
-        else:
-            mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
-            mem_kib = int(mem_total_line.split()[1])
-            mem_limit = mem_kib / 1024 / 1024
-
-        logger.debug("CPU limit: %s cores", cpu_limit)
-        if cpu_limit < 2:
-            logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
-        logger.debug("Memory limit: %.2f GiB", mem_limit)
-        if mem_limit < 4.0:
-            logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_limit)
-    except (OSError, subprocess.CalledProcessError) as e:
-        logger.warning("Resource limits not available: %s", e)
-    except (ValueError, IndexError) as e:
-        logger.error("Error parsing resource limits: %s", e)
+    log_resource_limits(logger, logger_prefix)
 
     try:
         debian_version = "not found"
