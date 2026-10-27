@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.25-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.24...v0.36.25-alpha.1) (2026-10-27)
+
+### Bug Fixes
+
+* **account:** save seed users and the admin account only when changed ([2209de8](https://github.com/smarter-sh/smarter/commit/2209de8b0f2a145a45a8e9976ed35d5a9fda376b))
+* **common:** scale resource limit warnings with uvicorn workers ([91e9ecb](https://github.com/smarter-sh/smarter/commit/91e9ecb28f5f2e298d036c8b3d4a988f3514a92b))
+* **dashboard:** keep the h2 markup out of the manifest page title ([b0d2c96](https://github.com/smarter-sh/smarter/commit/b0d2c96711e5aa317e6c3bf9e48b5d8b57df9e61))
+* **logging:** log secret applies and plugin readiness once, at INFO ([c3a600b](https://github.com/smarter-sh/smarter/commit/c3a600b6fdddfb30a21d1e9a223b558c501623ac))
+
 ## [0.36.24](https://github.com/smarter-sh/smarter/compare/v0.36.23...v0.36.24) (2026-10-27)
 
 ### Bug Fixes
