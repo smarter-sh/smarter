@@ -3,9 +3,13 @@
 # Tests:           the Python unit test suite, plus the React apps' Prettier,
 #                  ESLint, TypeScript and Vitest unit tests.
 #
-# Three jobs:
+# Four jobs:
 #
-#   react          Prettier, ESLint, TypeScript and the Vitest unit tests of
+#   fingerprint    Hashes the files each suite depends on, and looks for a
+#                  record that those exact files already passed. If they
+#                  did, that suite is skipped and still reported as passing,
+#                  so unchanged code isn't tested twice. See the job.
+#   react         Prettier, ESLint, TypeScript and the Vitest unit tests of
 #                  smarter/react, as make react-lint and make react-test do.
 #                  Uploads its coverage to Codecov (flag: react). A few
 #                  minutes, on one runner.
@@ -116,6 +120,82 @@ env:
 
 jobs:
   #----------------------------------------------------------------------------
+  # Skip tests that already passed on exactly these files.
+  #
+  # Fingerprints what each suite depends on, as a hash of the git tree ids of
+  # its files, and looks in the Actions cache for a marker saying that a run
+  # with that fingerprint passed. react and the python shards are skipped
+  # when theirs is found, and python-report and react still report success,
+  # so a re-push, rebase or comment-only change that leaves those files as
+  # they were passes in a minute instead of re-running everything.
+  #
+  # The python fingerprint covers everything that goes into the test
+  # containers: smarter/ (Python, requirements and the React build), and the
+  # files the Dockerfile copies into data/ (docs/, README.md, CHANGELOG.md,
+  # ...), which the docs app serves and its tests request. A docs change
+  # therefore runs the Python tests again. The react fingerprint covers only
+  # smarter/react. Both include this workflow.
+  #
+  # Markers are saved after a pass, by react and by python-report. GitHub
+  # scopes caches to a ref: a pull request's run sees the markers of earlier
+  # runs of the same pull request and of main, not of its head branch, so the
+  # first run of a new pull request always runs everything.
+  #----------------------------------------------------------------------------
+  fingerprint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      python-key: ${{ steps.keys.outputs.python }}
+      python-passed: ${{ steps.python.outputs.cache-hit }}
+      react-key: ${{ steps.keys.outputs.react }}
+      react-passed: ${{ steps.react.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # git ls-tree prints each path's mode, type, id and name. A directory's
+      # id changes when any file in it changes, so the hash of that listing
+      # changes when, and only when, one of the files does.
+      - name: Fingerprint the tested files
+        id: keys
+        shell: bash
+        run: |
+          fingerprint() {
+            git ls-tree HEAD -- "$@" | git hash-object --stdin
+          }
+          PYTHON=$(fingerprint smarter docs README.md changelogs/CHANGELOG.md CODE_OF_CONDUCT.md \
+            Dockerfile .dockerignore docker-compose.yml Makefile .env.example package.json \
+            .github/workflows/test.yml .github/actions/react-build)
+          REACT=$(fingerprint smarter/react .github/workflows/test.yml)
+          echo "python=tests-passed-python-$PYTHON" >> "$GITHUB_OUTPUT"
+          echo "react=tests-passed-react-$REACT" >> "$GITHUB_OUTPUT"
+
+      - name: Look for a python pass
+        id: python
+        uses: actions/cache/restore@v5
+        with:
+          path: .tests-passed
+          key: ${{ steps.keys.outputs.python }}
+          lookup-only: true
+
+      - name: Look for a react pass
+        id: react
+        uses: actions/cache/restore@v5
+        with:
+          path: .tests-passed
+          key: ${{ steps.keys.outputs.react }}
+          lookup-only: true
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "### Fingerprints"
+            echo "- python: ${{ steps.python.outputs.cache-hit == 'true' && 'passed before, skipped' || 'new, testing' }}"
+            echo "- react: ${{ steps.react.outputs.cache-hit == 'true' && 'passed before, skipped' || 'new, testing' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  #----------------------------------------------------------------------------
   # The React apps in smarter/react: formatting (Prettier), lint (ESLint),
   # types (TypeScript) and unit tests (Vitest, with every Storybook story
   # rendered as a test), as `make react-lint && make react-test` do. It needs
@@ -127,8 +207,14 @@ jobs:
   # library as an npm package does, so they are built (build:deps) before the
   # type check and the tests. The other tests use the workspace libraries'
   # TypeScript source.
+  #
+  # Skipped when these files passed before (see fingerprint). GitHub reports
+  # a skipped job as a success to a required status check. !cancelled()
+  # makes it run, rather than skip, if the fingerprint job itself fails.
   #----------------------------------------------------------------------------
   react:
+    needs: fingerprint
+    if: ${{ !cancelled() && needs.fingerprint.outputs.react-passed != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -178,6 +264,20 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      # Reached only when every step above passed.
+      - name: Record the pass
+        working-directory: .
+        shell: bash
+        run: |
+          mkdir -p .tests-passed
+          echo "${{ github.sha }}" > .tests-passed/commit
+
+      - name: Save the pass
+        uses: actions/cache/save@v5
+        with:
+          path: .tests-passed
+          key: ${{ needs.fingerprint.outputs.react-key }}
+
   #----------------------------------------------------------------------------
   # One shard of the Python suite. SHARDS must match the length of the shard
   # list. fail-fast is off, so that one failing shard doesn't cancel the
@@ -186,8 +286,12 @@ jobs:
   # Only shard 1 saves the caches and exports the Docker layer cache. The
   # shards build the same things, and eight concurrent saves of one key would
   # only race each other.
+  #
+  # Skipped when these files passed before (see fingerprint).
   #----------------------------------------------------------------------------
   python:
+    needs: fingerprint
+    if: ${{ !cancelled() && needs.fingerprint.outputs.python-passed != 'true' }}
     name: python (shard ${{ matrix.shard }} of 8)
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -670,23 +774,35 @@ jobs:
   #   a failed shard's data would understate it.
   # - It fails when any shard failed, so that it can stand for all of them as
   #   a required status check.
+  # - When every shard passed, it saves the pass marker (see fingerprint).
+  #   When the shards were skipped because these files passed before, it
+  #   says so, and passes.
   #----------------------------------------------------------------------------
   python-report:
-    needs: python
+    needs: [fingerprint, python]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Passed before
+        if: needs.fingerprint.outputs.python-passed == 'true'
+        shell: bash
+        run: |
+          echo "These files passed the Python tests in an earlier run, so the shards were skipped." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Checkout code
+        if: needs.python.result != 'skipped'
         uses: actions/checkout@v6
 
       - name: Download the shards' results
+        if: needs.python.result != 'skipped'
         uses: actions/download-artifact@v4
         with:
           pattern: python-shard-*
           path: shards
 
       - name: Test summary
+        if: needs.python.result != 'skipped'
         uses: test-summary/action@v2
         with:
           paths: "shards/**/test-results-shard-*.xml"
@@ -738,10 +854,26 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Record the pass
+        if: needs.python.result == 'success'
+        shell: bash
+        run: |
+          mkdir -p .tests-passed
+          echo "${{ github.sha }}" > .tests-passed/commit
+
+      - name: Save the pass
+        if: needs.python.result == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: .tests-passed
+          key: ${{ needs.fingerprint.outputs.python-key }}
+
       # This job, with react, is the required status check of main: one check
       # for all eight shards, whose names would otherwise all be required.
+      # A skip counts as a pass only when the fingerprint job found one: if
+      # the fingerprint job failed, python-passed is empty, and this fails.
       - name: Fail when a shard failed
-        if: needs.python.result != 'success'
+        if: needs.python.result != 'success' && needs.fingerprint.outputs.python-passed != 'true'
         shell: bash
         run: |
           echo "::error::A shard of the Python tests did not pass: ${{ needs.python.result }}."
