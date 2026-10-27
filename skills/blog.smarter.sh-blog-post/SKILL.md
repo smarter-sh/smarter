@@ -229,6 +229,11 @@ but describe what was exposed, not how to exploit an unpatched deployment.
 ## 7. Before handing it over
 
 - Every number traces to a command in your notes, or to the earlier post.
+- Every linked commit is on `main` (`git branch -r --contains <sha>` lists
+  `origin/main`). In smarter-infrastructure and other repositories, the same
+  change can exist under different SHAs on other branches, and a link to one of
+  those breaks once the branch is deleted. Find the `main` copy with
+  `git log origin/main --format='%H %ad %s' --date=short -- <path>`.
 - Every commit SHA exists (`git cat-file -e <sha>^{commit}`), every GitHub
   path exists at `HEAD`, and every docs link's `.rst` exists under
   `docs/source/`. You can't check that the published URLs work, so say so.
