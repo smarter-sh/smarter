@@ -180,6 +180,15 @@ and `adr.rst`'s toctree. Read `adr/000-intro.rst` first.
 bucket and invalidates the CloudFront distribution. The user publishes;
 publish yourself only when asked.
 
+`.github/workflows/docs.yml` builds and publishes on pushes to main that touch
+the docs or the Python code. Its build is incremental: it caches `docs/build`
+and the venv, and `scripts/sphinx_cache_mtimes.py` sets the files that haven't
+changed (by git blob id) to an old time, so that Sphinx reads only the changed
+pages again. Keep anything that changes from build to build out of the config
+values that Sphinx re-reads every page for (`release`, `version`,
+`rst_epilog`, `rst_prolog` and most others). That is why the release tag is
+only in `html_title`, which just rewrites the HTML.
+
 The site's resources were made by hand in the AWS console, then adopted into
 Terraform in `terraform/docs/` with `import` blocks (`imports.tf`): the ACM
 certificate and its validation record, the bucket (ACLs enabled, because

@@ -1,0 +1,204 @@
+---
+#------------------------------------------------------------------------------
+# Build the Sphinx documentation and publish it to docs.smarter.sh
+#
+# The site is served by CloudFront from an S3 bucket (terraform/docs), and
+# uploaded by `make sphinx-publish`, as from a developer's machine.
+#
+# A full build reads about a thousand pages, many of them autodoc pages that
+# import the Django apps, and takes several times longer on a 4-core runner
+# than on a developer's machine. So the build is incremental: the previous
+# build's output (docs/build: the doctrees, Sphinx's environment and the
+# HTML) is cached, and only the pages whose sources changed are read again.
+# Three things keep that cache usable:
+#
+# - Sphinx compares modification times, and a fresh checkout makes every file
+#   new. scripts/sphinx_cache_mtimes.py records the git blob id of every
+#   tracked file after a build, and before the next one sets the files that
+#   haven't changed to an old, fixed time.
+# - About a third of the pages also depend on files in the venv (autodoc
+#   follows inherited members into Django and others), and the HTML depends
+#   on the theme's templates. The venv is cached too, so their times don't
+#   change either. A change to requirements/local.txt starts both caches over.
+# - The release tag is only in html_title (see docs/source/conf.py), so a new
+#   release rewrites the HTML but doesn't make Sphinx read every page again.
+#
+# The clone of smarter-sh/example-manifests that conf.py makes is cached
+# with the build, so that its unchanged files keep their times as well.
+#
+# Pages whose sources were deleted keep their old HTML in the cache. To start
+# over, delete the docs-build caches in the repository's Actions settings.
+#
+# Required secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION (an
+# identity that may sync the docs bucket and invalidate its distribution).
+# The docs are published only from main. On any other branch the workflow
+# builds them, as a check, without publishing.
+#------------------------------------------------------------------------------
+name: Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "smarter/smarter/**/*.py"
+      - "smarter/requirements/local.txt"
+      - "scripts/sphinx_cache_mtimes.py"
+      - ".github/workflows/docs.yml"
+
+# Never cancel a run part way through an upload to S3.
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # conf.py reads the platform's settings, e.g. html_baseurl from the root
+  # domain. The workflow has no .env, and conf.py's load_dotenv() never
+  # overrides these.
+  ENVIRONMENT: "local"
+  ROOT_DOMAIN: "smarter.sh"
+  BLOB_MANIFEST: docs/build/source-blobs.json
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      # conf.py finds the release with `git describe --tags`, which needs the
+      # history and tags.
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      #========================================================================
+      # The venv, restored only on an exact match, as in test.yml, but under
+      # its own key, because it is installed differently (no make python-init).
+      #
+      # It is installed from requirements/local.txt, as a developer's is.
+      # conf.py loads smarter.settings.local, which imports development
+      # packages such as django_extensions, and the Sphinx extensions it uses
+      # (sphinx_contributors, sphinx_sitemap) are not all in docs.txt.
+      #
+      # The mariadb package in local.txt has no Linux wheels, so pip builds it
+      # from source, against MariaDB Connector/C. Installed as in test.yml,
+      # and even when the venv is restored, because the package links against
+      # libmariadb at runtime.
+      #========================================================================
+      - name: Install MariaDB Connector/C
+        shell: bash
+        env:
+          MARIADB_VERSION: "12.2"
+        run: |
+          curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+          chmod +x mariadb_repo_setup
+          sudo ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}"
+          rm -f mariadb_repo_setup
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat
+          mariadb_config --cc_version
+
+      - name: Restore docs venv
+        id: venv
+        uses: actions/cache/restore@v5
+        with:
+          path: .venv-docs
+          key: docs-venv-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('smarter/requirements/local.txt') }}
+
+      - name: Create docs venv
+        if: steps.venv.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          python -m venv .venv-docs
+          .venv-docs/bin/pip install --upgrade pip
+          .venv-docs/bin/pip install -r smarter/requirements/local.txt
+
+      - name: Save docs venv
+        if: steps.venv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .venv-docs
+          key: ${{ steps.venv.outputs.cache-primary-key }}
+
+      - name: Add venv to PATH
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/.venv-docs/bin" >> $GITHUB_PATH
+
+      #========================================================================
+      # The previous build. The key's prefix matches the venv's, so a new venv
+      # starts a new build. Any earlier build with that prefix will do: the
+      # newest is restored.
+      #========================================================================
+      - name: Restore previous build
+        id: build-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            docs/build
+            docs/source/_example-manifests
+          key: docs-build-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('smarter/requirements/local.txt') }}-${{ github.sha }}
+          restore-keys: |
+            docs-build-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('smarter/requirements/local.txt') }}-
+
+      - name: Restore the times of unchanged files
+        shell: bash
+        run: |
+          python scripts/sphinx_cache_mtimes.py restore "$BLOB_MANIFEST"
+
+      #========================================================================
+      # The same options as `make sphinx-docs`, through docs/Makefile. The
+      # root Makefile isn't used here, because it would create a .env from
+      # .env.example and override the environment with it.
+      #
+      # GITHUB_TOKEN lets sphinx_contributors read the contributors of the
+      # repository without the anonymous rate limit.
+      #========================================================================
+      - name: Build the docs
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          make -C docs html SPHINXOPTS="-j auto -W -T -D language=en"
+
+      - name: Record the blob ids of this build's sources
+        shell: bash
+        run: |
+          python scripts/sphinx_cache_mtimes.py save "$BLOB_MANIFEST"
+
+      - name: Save this build
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            docs/build
+            docs/source/_example-manifests
+          key: ${{ steps.build-cache.outputs.cache-primary-key }}
+
+      #========================================================================
+      # Publish, from main only.
+      #========================================================================
+      - name: Configure AWS credentials
+        if: github.ref == 'refs/heads/main'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Publish to docs.smarter.sh
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          make sphinx-publish
