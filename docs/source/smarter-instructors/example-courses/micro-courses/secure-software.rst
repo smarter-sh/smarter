@@ -70,7 +70,13 @@ Each course plan lists every file that it uses, defense by defense, under *Smart
 Code*.
 
 **Read.** :doc:`/smarter-platform/security`, :doc:`/smarter-platform/security-faq`,
-:doc:`/smarter-resources/smarter-guardrail`, :doc:`ADR 016 on security </adr/016-security>`.
+:doc:`/smarter-resources/smarter-guardrail`, :doc:`ADR 016 on security </adr/016-security>`, `Django
+and httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
+<https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, `Django Multi-Tenancy Without
+Schemas: Tenant Isolation as Queryset Rules, and a Profile Switcher That Can't Be Spoofed
+<https://blog.smarter.sh/2026/01/15/smarter-tenant-isolation-django-querysets/>`__, `Helm, cosign
+and Amazon ECR: What Smarter's Supply Chain Verifies, and What It Takes on Trust
+<https://blog.smarter.sh/2026/04/23/helm-cosign-supply-chain/>`__.
 
 **Exercises.**
 

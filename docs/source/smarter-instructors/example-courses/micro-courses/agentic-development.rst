@@ -64,7 +64,12 @@ Each course plan lists every file and commit that it uses under *Smarter in the 
 
 **Read.** :doc:`/smarter-framework/developer-reference/agentic-development`,
 :doc:`/smarter-framework/developer-reference/devops/test`,
-:doc:`/smarter-framework/developer-reference/devops/ci-cd`.
+:doc:`/smarter-framework/developer-reference/devops/ci-cd`, `Part 1: Maintaining Long-Term Code
+Quality With Agentic AI <https://blog.smarter.sh/2026/10/10/claude-code-large-django-codebase/>`__,
+`Part 2: The Antipattern That Makes a Codebase Diverge
+<https://blog.smarter.sh/2026/10/11/blog-prologue-geometric-series/>`__, `Part 3: What Claude Code
+Actually Reads <https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__, `Six High-Impact
+Uses of Claude Code <https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__.
 
 **Exercises.**
 

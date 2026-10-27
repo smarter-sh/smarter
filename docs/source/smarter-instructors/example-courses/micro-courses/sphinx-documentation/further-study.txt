@@ -13,3 +13,12 @@
   channel, including Daniele Procida's talk on Diátaxis.
 - **Reading:** the documentation of Django, Stripe and the Python standard library, often held up as
   models, studied as examples of structure and voice.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Part 3: What Claude Code Actually Reads
+  <https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__, on which docs, skills and code
+  an agent reads in each session; `Six High-Impact Uses of Claude Code
+  <https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__, on test coverage, commit messages,
+  refactoring, log reviews, translations and front-end design done with an agent; `Smarter's OpenAPI
+  Contract: One Extensibility Model for Python, Go, React and VS Code
+  <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
+  OpenAPI document that every client depends on.

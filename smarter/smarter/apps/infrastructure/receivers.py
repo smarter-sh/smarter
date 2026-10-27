@@ -12,6 +12,8 @@ written is logged, and never fails the infrastructure operation.
 
 # pylint: disable=W0613
 
+from typing import Optional
+
 from django.dispatch import receiver
 
 from smarter.lib import logging
@@ -66,9 +68,29 @@ def _record(created: bool, service, provider, resource_type, resource_name, reso
 
 @receiver(infrastructure_authenticated, dispatch_uid="infrastructure_authenticated")
 def handle_infrastructure_authenticated(sender, service, provider, identity=None, **kwargs):
-    """Log that a provider authenticated with its cloud."""
+    """
+    Log that a provider authenticated with its cloud.
+
+    Only the last four characters of the cloud account id are logged. The id isn't a secret, but job
+    logs are emailed and shipped elsewhere, and the full id isn't needed to tell accounts apart.
+    """
     account = (identity or {}).get("Account") or (identity or {}).get("account")
-    logger.info("%s authenticated, account %s", _prefix("authenticated", service, provider), account)
+    logger.info("%s authenticated, account %s", _prefix("authenticated", service, provider), _mask_account(account))
+
+
+def _mask_account(account) -> Optional[str]:
+    """
+    Mask a cloud account id, all but its last four characters.
+
+    :param account: the account id, e.g. an AWS account number, or None.
+    :returns: e.g. ``********3456``, the id unchanged when it has four characters or fewer, or None.
+    """
+    if not account:
+        return None
+    account = str(account)
+    if len(account) <= 4:
+        return account
+    return "*" * (len(account) - 4) + account[-4:]
 
 
 @receiver(infrastructure_authentication_failed, dispatch_uid="infrastructure_authentication_failed")
