@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.36.26-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.25...v0.36.26-alpha.1) (2026-10-27)
+
+### Bug Fixes
+
+* **logging:** keep chat prompts and session keys out of the INFO log ([6f840c4](https://github.com/smarter-sh/smarter/commit/6f840c4414c44f37cfefdbea024181d4dbc43ea6))
+
 ## [0.36.25](https://github.com/smarter-sh/smarter/compare/v0.36.24...v0.36.25) (2026-10-27)
 
 ### Bug Fixes
