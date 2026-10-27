@@ -25,7 +25,7 @@ from .const import TERMINAL_TICKET_TIMEOUT, TERMINAL_WEBSOCKET_PATH
 from .messages import TerminalTicket
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 TICKET_CACHE_PREFIX = "smarter.apps.dashboard.terminal.ticket."
 """The cache key prefix of a ticket, whose value is the id of the user that it was issued to."""

@@ -2,19 +2,18 @@
 
 import io
 import os
-import tempfile
 from unittest.mock import patch
 
 from django.test import override_settings
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from .. import startup_banner as module
 from ..startup_banner import (
     LOGO,
     LOGO_WIDTH,
     banner_facts,
     mask_url,
+    platform_summary,
     print_startup_banner,
     startup_banner,
 )
@@ -40,7 +39,8 @@ class TestStartupBanner(SmarterTestBase):
     def test_banner_facts(self):
         facts = dict(banner_facts())
         self.assertEqual(
-            list(facts), ["environment", "url", "database", "cache", "broker", "log level", "debug", "runtime"]
+            list(facts),
+            ["environment", "url", "database", "cache", "sessions", "broker", "log level", "debug", "runtime"],
         )
         self.assertTrue(facts["database"].startswith("mysql://"))
         self.assertIn(facts["debug"], ("ON", "OFF"))
@@ -84,25 +84,29 @@ class TestStartupBanner(SmarterTestBase):
         self.assertEqual(out.getvalue(), "")
 
     def test_only_the_first_worker_prints(self):
-        ppid = 2_000_000_000 + os.getpid()
-        marker = os.path.join(tempfile.gettempdir(), f"smarter-startup-banner-{ppid}")
-        self.addCleanup(lambda: os.path.exists(marker) and os.remove(marker))
-        with (
-            patch(f"{MODULE}.multiprocessing.parent_process", return_value=object()),
-            patch(f"{MODULE}.os.getppid", return_value=ppid),
-        ):
-            self.assertTrue(module._is_first_worker())  # pylint: disable=protected-access
-            self.assertFalse(module._is_first_worker())  # pylint: disable=protected-access
+        out = io.StringIO()
+        with patch(f"{MODULE}.is_first_worker", return_value=False) as first, patch("sys.stdout", out):
+            print_startup_banner()
+        first.assert_called_once_with("startup-banner")
+        self.assertEqual(out.getvalue(), "")
 
-    def test_a_single_process_always_prints(self):
-        with patch(f"{MODULE}.multiprocessing.parent_process", return_value=None):
-            self.assertTrue(module._is_first_worker())  # pylint: disable=protected-access
-            self.assertTrue(module._is_first_worker())  # pylint: disable=protected-access
-
-    def test_an_unwritable_temp_dir_still_prints(self):
+    def test_platform_summary_on_linux(self):
         with (
-            patch(f"{MODULE}.multiprocessing.parent_process", return_value=object()),
-            patch(f"{MODULE}.tempfile.gettempdir", return_value="/nonexistent"),
-            patch(f"{MODULE}.os.open", side_effect=PermissionError),
+            patch(f"{MODULE}.platform.system", return_value="Linux"),
+            patch(f"{MODULE}.platform.machine", return_value="x86_64"),
+            patch(f"{MODULE}.platform.freedesktop_os_release", return_value={"ID": "amzn", "VERSION_ID": "2023"}),
         ):
-            self.assertTrue(module._is_first_worker())  # pylint: disable=protected-access
+            self.assertEqual(platform_summary(), "linux  ·  amzn 2023  ·  x86_64")
+
+    def test_platform_summary_without_os_release(self):
+        with (
+            patch(f"{MODULE}.platform.system", return_value="Darwin"),
+            patch(f"{MODULE}.platform.machine", return_value="arm64"),
+            patch(f"{MODULE}.platform.freedesktop_os_release", side_effect=OSError),
+        ):
+            self.assertEqual(platform_summary(), "darwin  ·  arm64")
+
+    def test_banner_shows_the_platform_summary(self):
+        with patch(f"{MODULE}.platform_summary", return_value="linux  ·  test 1  ·  x86_64"):
+            banner = startup_banner(color=False)
+        self.assertIn("linux  ·  test 1  ·  x86_64", banner)

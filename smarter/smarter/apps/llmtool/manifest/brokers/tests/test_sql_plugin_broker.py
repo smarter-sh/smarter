@@ -24,7 +24,7 @@ from smarter.apps.llmtool.models import (
 )
 from smarter.apps.llmtool.plugin.sql import SqlPlugin
 from smarter.apps.llmtool.signals import plugin_updated
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
@@ -51,7 +51,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
     apply_builds_plugin = True
     orm_spec_method = "plugin_sql_spec_orm2pydantic"
 
-    test_smarter_sql_plugin_broker_logger_prefix = f"{formatted_text(HERE)}.TestSmarterSqlPluginBroker()"
+    test_smarter_sql_plugin_broker_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSmarterSqlPluginBroker()"
 
     @classmethod
     def setUpClass(cls):

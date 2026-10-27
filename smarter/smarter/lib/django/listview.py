@@ -66,7 +66,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CACHE_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 LISTVIEW_CACHE_ALL = "*"
 """The generation of every list: invalidating it makes the cached pages of every list stale."""

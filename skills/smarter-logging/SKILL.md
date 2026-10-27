@@ -24,7 +24,7 @@ A message without the prefix can't be traced, and is a defect in review.
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def fetch_index_files(url):
@@ -47,11 +47,17 @@ A class without `formatted_class_name` uses the module's `logger_prefix` plus
 
 Details:
 
-- Format only the prefix (`formatted_text()`), never the function name. Write
-  the name with `()`, and keep it right when you rename the function.
-- Prefer `logging.formatted_text(__name__)`, the most common form, over
-  `formatted_text(f"{__name__}")` or a hard-coded module path, which goes stale
-  when the module moves.
+- Format only the prefix (`SmarterFormattedText.text()`), never the function
+  name. Write the name with `()`, and keep it right when you rename the function.
+- Prefer `logging.SmarterFormattedText.text(__name__)`, the most common form,
+  over a hard-coded module path, which goes stale when the module moves. Code
+  that runs before Django is set up, such as `smarter.common.conf`, imports
+  `SmarterFormattedText` from `smarter.common.helpers.console_helpers` instead,
+  because `smarter.lib.logging` imports Django.
+- Colors are attributes of the same class:
+  `SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED)`.
+  `SmarterFormattedText.json()` colors a JSON dump, and `.banner()` frames a
+  multi-line message.
 - `formatted_class_name` is the **runtime** class. In a base class's method, a
   subclass's name is logged, which is usually what you want; say so if not.
 
@@ -93,7 +99,7 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 ```
 
 `WARNING` and above are always emitted, whether or not the switch is on

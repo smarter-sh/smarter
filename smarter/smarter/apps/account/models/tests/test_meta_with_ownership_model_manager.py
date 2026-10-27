@@ -32,7 +32,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     ``smarter.apps.secret.tests.test_secret_orm.TestSecretQuerySetPermissions``.
     """
 
-    logger_prefix = f"{logging.formatted_text(__name__)}.TestMetaDataWithOwnershipModelManager()"
+    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestMetaDataWithOwnershipModelManager()"
 
     @classmethod
     def setUpClass(cls):

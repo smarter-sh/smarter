@@ -18,7 +18,7 @@ from django.core.exceptions import AppRegistryNotReady
 
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -47,7 +47,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-logger_prefix = f"{formatted_text(__name__)}.SmarterValidator"
+logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterValidator"
 
 
 # pylint: disable=R0904

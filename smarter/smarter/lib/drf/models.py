@@ -21,12 +21,12 @@ from smarter.apps.account.models import (
     UserProfile,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib.django.validators import SmarterValidator
 
 logger = getLogger(__name__)
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 ###############################################################################
 # API Key Management
@@ -270,7 +270,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             snake_case_name = to_snake_case(self.name)
             logger.warning(
                 "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
-                formatted_text(self.__class__.__name__),
+                SmarterFormattedText.text(self.__class__.__name__),
                 self.name,
                 snake_case_name,
             )
@@ -322,7 +322,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         :returns: A queryset of SmarterAuthToken objects matching the criteria.
         :rtype: QuerySet[SmarterAuthToken]
         """
-        logger_prefix = f"{formatted_text(__name__)}.{cls.__name__}.get_cached_objects()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{cls.__name__}.get_cached_objects()"
         logger.debug(
             "%s called with user_profile=%s, user=%s, name=%s, invalidate=%s",
             logger_prefix,

@@ -19,7 +19,7 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 
 from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
@@ -38,7 +38,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 verbose_logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.VIEW_LOGGING], condition_func=should_log_verbose
 )
-logger_prefix_invalidations = formatted_text_blue(f"{__name__}.smarter_cache_page_by_user.invalidate()")
+logger_prefix_invalidations = SmarterFormattedText.text(
+    f"{__name__}.smarter_cache_page_by_user.invalidate()", SmarterFormattedText.BOLD_DARK_BLUE
+)
 
 register = template.Library()
 cache_prefix = f"{__name__}.smarter_cache_page_by_user"
@@ -80,7 +82,7 @@ def smarter_cache_page_by_user(timeout):
 
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
-            logger_prefix = formatted_text(__name__)
+            logger_prefix = SmarterFormattedText.text(__name__)
 
             if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
                 return view_func(request, *args, **kwargs)
@@ -147,7 +149,7 @@ class SmarterView(View):
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
         class_name = f"{__name__}.{SmarterView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return logging.SmarterFormattedText.text(class_name)
 
     @property
     def ready(self) -> bool:
@@ -230,7 +232,7 @@ class SmarterWebXmlView(SmarterView):
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
         class_name = f"{__name__}.{SmarterWebXmlView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return logging.SmarterFormattedText.text(class_name)
 
 
 class SmarterWebTxtView(SmarterView):
@@ -246,7 +248,7 @@ class SmarterWebTxtView(SmarterView):
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
         class_name = f"{__name__}.{SmarterWebTxtView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return logging.SmarterFormattedText.text(class_name)
 
 
 class SmarterWebHtmlView(SmarterView):
@@ -260,7 +262,7 @@ class SmarterWebHtmlView(SmarterView):
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
         class_name = f"{__name__}.{SmarterWebHtmlView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return logging.SmarterFormattedText.text(class_name)
 
     # pylint: disable=W0613
     def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
@@ -325,7 +327,7 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
         class_name = f"{__name__}.{SmarterNeverCachedWebView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return logging.SmarterFormattedText.text(class_name)
 
 
 @method_decorator(login_required, name="dispatch")

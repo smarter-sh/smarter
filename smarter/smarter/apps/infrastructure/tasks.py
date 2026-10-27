@@ -17,7 +17,7 @@ from .services.inventory import sync_inventory
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.INFRASTRUCTURE_LOGGING]
 )
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)

@@ -33,7 +33,7 @@ from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
 
-logger_prefix = f"{logging.formatted_text(__name__)}.smarter_build_absolute_uri()"
+logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.smarter_build_absolute_uri()"
 
 
 def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
@@ -148,7 +148,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         except Exception as e:
             logger.warning(
                 "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
-                logging.formatted_text_red(str(e)),
+                logging.SmarterFormattedText.text(str(e), logging.SmarterFormattedText.DARK_RED),
                 logger_prefix,
             )
 
@@ -165,14 +165,14 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         logger.debug(
             "%s.smarter_build_absolute_uri() could not build url from request attributes due to a KeyError: %s",
             logger_prefix,
-            logging.formatted_text_red(str(e)),
+            logging.SmarterFormattedText.text(str(e), logging.SmarterFormattedText.DARK_RED),
         )
     # pylint: disable=W0718
     except Exception as e:
         logger.debug(
             "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s (%s)",
             logger_prefix,
-            logging.formatted_text_red(str(e)),
+            logging.SmarterFormattedText.text(str(e), logging.SmarterFormattedText.DARK_RED),
             type(e),
         )
 

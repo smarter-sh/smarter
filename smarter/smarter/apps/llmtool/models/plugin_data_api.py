@@ -18,7 +18,7 @@ from smarter.apps.llmtool.manifest.models.common import (
 )
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -28,7 +28,7 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginDataApi(PluginDataBase):
@@ -340,7 +340,7 @@ class PluginDataApi(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{formatted_text(__name__)}.{PluginDataApi.__name__}.get_cached_object()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginDataApi.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,

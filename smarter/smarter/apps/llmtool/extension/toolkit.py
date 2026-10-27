@@ -109,7 +109,7 @@ class ExtensionToolkit:
     @property
     def formatted_class_name(self) -> str:
         """The class name, for logging."""
-        return f"{logging.formatted_text(__name__)}.{self.__class__.__name__}"
+        return f"{logging.SmarterFormattedText.text(__name__)}.{self.__class__.__name__}"
 
     def function_name(self, slug: str, tool_name: str) -> str:
         """

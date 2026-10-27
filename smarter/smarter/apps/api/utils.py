@@ -88,7 +88,7 @@ def apply_manifest(
 
     user: Optional[User] = None
     data: Optional[str] = None
-    logger_prefix = logging.formatted_text("smarter.apps.api.utils.apply_manifest()")
+    logger_prefix = logging.SmarterFormattedText.text("smarter.apps.api.utils.apply_manifest()")
 
     logger.debug(
         "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
@@ -187,7 +187,11 @@ def apply_manifest(
     response = json.dumps(response_json) + "\n"
     if verbose:
         if httpx_response.status_code == httpx.codes.OK:
-            logger.debug("%s %s", logger_prefix, logging.formatted_text_green(response))
+            logger.debug(
+                "%s %s",
+                logger_prefix,
+                logging.SmarterFormattedText.text(response, logging.SmarterFormattedText.BRIGHT_GREEN),
+            )
             return True
 
         msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {data}\nresponse: {response}"
@@ -212,7 +216,7 @@ def apply_manifest_v2(
 
     user: Optional[User] = None
     data: Optional[str] = None
-    logger_prefix = logging.formatted_text("smarter.apps.api.utils.apply_manifest()")
+    logger_prefix = logging.SmarterFormattedText.text("smarter.apps.api.utils.apply_manifest()")
 
     logger.debug(
         "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
@@ -296,7 +300,11 @@ def apply_manifest_v2(
     response = json.dumps(response_json) + "\n"
     if verbose:
         if response_content.status_code == 200:
-            logger.debug("%s %s", logger_prefix, logging.formatted_text_green(response))
+            logger.debug(
+                "%s %s",
+                logger_prefix,
+                logging.SmarterFormattedText.text(response, logging.SmarterFormattedText.BRIGHT_GREEN),
+            )
             return True
 
         msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response}"

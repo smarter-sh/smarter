@@ -148,7 +148,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         if not isinstance(user, User):
             logger.debug(
                 "%s.with_read_permission_for() user is not an instance of User: %s",
-                logging.formatted_text(
+                logging.SmarterFormattedText.text(
                     __name__
                     + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
                 ),
@@ -156,7 +156,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             )
             return self.none()
 
-        logger_prefix = logging.formatted_text(
+        logger_prefix = logging.SmarterFormattedText.text(
             __name__ + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
         )
         logger.debug(
@@ -242,7 +242,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         .. note::
             If the user has multiple UserProfiles, the result is the union of all resources they can manage for each profile.
         """
-        logger_prefix = logging.formatted_text(
+        logger_prefix = logging.SmarterFormattedText.text(
             __name__
             + f".{self.__class__.__name__}.with_ownership_permission_for('{user}') - model: {self.model.__name__}"
         )
@@ -574,7 +574,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
         :rtype: models.Model
         """
-        logger_prefix = logging.formatted_text(cls.__name__) + ".get_cached_object()"
+        logger_prefix = logging.SmarterFormattedText.text(cls.__name__) + ".get_cached_object()"
 
         if username and not user and not user_profile:
             logger.debug("%s Resolving user_profile from username: %s", logger_prefix, username)
@@ -613,7 +613,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             )
             if not isinstance(pk, int):
                 raise SmarterValueError(
-                    f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()"} invalid pk value: {pk}. Expected an integer."
+                    f"{logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()"} invalid pk value: {pk}. Expected an integer."
                 )
             if taggit:
                 retval = (
@@ -627,7 +627,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
             logger.debug(
                 "%s._get_object_by_pk() fetched %s - %s",
-                logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                 type(retval).__name__,
                 str(retval),
             )
@@ -673,7 +673,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     ).get(name=name, user_profile_id=user_profile_id)
                 logger.debug(
                     "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile_id: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     name,
                     user_profile_id,
@@ -724,7 +724,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     ).get(name=name, user_profile__account_id=account_id)
                 logger.debug(
                     "%s._get_object_by_name_and_account() fetched %s for name: %s and account_id: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     name,
                     account_id,
@@ -778,7 +778,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     ).get(session_key=session_key)
                 logger.debug(
                     "%s._get_object_by_session_key() fetched %s for session_key: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
                     type(retval).__class__.__name__,
                     session_key,
                 )
@@ -822,7 +822,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             )
             logger.warning(
                 "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to newest result: %s",
-                logging.formatted_text(cls.__name__) + ".get_cached_object()",
+                logging.SmarterFormattedText.text(cls.__name__) + ".get_cached_object()",
                 user,
                 account,
                 user_profile,
@@ -863,7 +863,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
         :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
         """
-        logger_prefix = logging.formatted_text(
+        logger_prefix = logging.SmarterFormattedText.text(
             __name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()"
         )
 
@@ -956,7 +956,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: A new instance of MetaDataWithOwnershipModel that is a clone of this instance with the specified changes.
         :rtype: MetaDataWithOwnershipModel
         """
-        logger_prefix = logging.formatted_text(__name__ + f".{self.__class__.__name__}.clone()")
+        logger_prefix = logging.SmarterFormattedText.text(__name__ + f".{self.__class__.__name__}.clone()")
         logger.debug(
             "%s.clone() called with new_name: %s, new_version: %s, user_profile: %s",
             logger_prefix,

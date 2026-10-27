@@ -52,7 +52,7 @@ from .exceptions import LLMHostComputeError
 from .nodegroups import NodeGroupBackend, get_nodegroups
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
-logger_prefix = f"{logging.formatted_text(__name__)}.ComputeProvisioner"
+logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.ComputeProvisioner"
 
 NodeGroupStatus = LLMHostComputeNodeGroupStatus
 

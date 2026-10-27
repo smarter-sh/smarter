@@ -6,7 +6,7 @@ import os
 from smarter.apps.api.utils import apply_manifest
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -38,7 +38,9 @@ HERE = __name__
 class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
     """Adds a class-level setup to create Secret instances for use in connection broker tests."""
 
-    test_smarter_connection_broker_base_logger_prefix = f"{formatted_text(HERE)}.TestSmarterConnectionBrokerBase()"
+    test_smarter_connection_broker_base_logger_prefix = (
+        f"{SmarterFormattedText.text(HERE)}.TestSmarterConnectionBrokerBase()"
+    )
 
     @classmethod
     def setUpClass(cls):

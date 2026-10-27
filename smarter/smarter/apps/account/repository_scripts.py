@@ -57,7 +57,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 SCRIPTS_FOLDER = "scripts"
 """A repository's scripts folder, at its root.

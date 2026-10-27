@@ -76,7 +76,7 @@ class LLMClientAPIKey(TimestampedModel):
     @classmethod
     def has_active_api_key(cls, llmclient: LLMClient, invalidate: Optional[bool] = False) -> bool:
         """Returns True if the llmclient has at least one active API key."""
-        logger_prefix = logging.formatted_text(__name__ + "." + cls.__name__ + ".has_active_api_key()")
+        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + cls.__name__ + ".has_active_api_key()")
 
         @cache_results(cls.cache_expiration)
         def _has_active_api_key(llmclient_id: int, class_name: str) -> bool:
@@ -113,7 +113,9 @@ class LLMClientAPIKey(TimestampedModel):
         :returns: A queryset of LLMClientAPIKey instances associated with the LLMClient.
         :rtype: models.QuerySet["LLMClientAPIKey"]
         """
-        logger_prefix = logging.formatted_text(__name__ + "." + LLMClientAPIKey.__name__ + ".get_cached_objects()")
+        logger_prefix = logging.SmarterFormattedText.text(
+            __name__ + "." + LLMClientAPIKey.__name__ + ".get_cached_objects()"
+        )
 
         @cache_results(cls.cache_expiration)
         def _get_api_keys_for_llmclient_id(
@@ -163,7 +165,7 @@ class LLMClientAPIKey(TimestampedModel):
         cls._attachments_changed(llmclient)
         logger.debug(
             "%s.attach() %s api key %s to llmclient %s",
-            logging.formatted_text(__name__ + "." + cls.__name__),
+            logging.SmarterFormattedText.text(__name__ + "." + cls.__name__),
             "attached" if created else "kept",
             api_key.name,
             llmclient.name,
@@ -184,7 +186,7 @@ class LLMClientAPIKey(TimestampedModel):
         cls._attachments_changed(llmclient)
         logger.debug(
             "%s.detach() detached %s api keys from llmclient %s",
-            logging.formatted_text(__name__ + "." + cls.__name__),
+            logging.SmarterFormattedText.text(__name__ + "." + cls.__name__),
             count,
             llmclient.name,
         )

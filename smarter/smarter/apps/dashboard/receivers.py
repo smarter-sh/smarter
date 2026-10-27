@@ -7,7 +7,7 @@ from smarter.apps.account.signals import cache_invalidate
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(cache_invalidate)

@@ -44,7 +44,7 @@ from smarter.lib.unittest import running_unit_tests
 from .exceptions import LLMHostComputeError
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 NodeGroupStatus = LLMHostComputeNodeGroupStatus
 TAINT_EFFECTS = {"NoSchedule": "NO_SCHEDULE", "NoExecute": "NO_EXECUTE", "PreferNoSchedule": "PREFER_NO_SCHEDULE"}

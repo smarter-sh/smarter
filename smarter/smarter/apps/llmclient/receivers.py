@@ -86,7 +86,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     """Handle plugin deleting signal."""
     logger.info(
         "%s %s is being deleted. Pruning its usage records.",
-        f"{logging.formatted_text(module_prefix)}.plugin_deleting",
+        f"{logging.SmarterFormattedText.text(module_prefix)}.plugin_deleting",
         plugin_meta.name,
     )
 
@@ -94,7 +94,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 @receiver(llmclient_deploy_failed, dispatch_uid="llmclient_deploy_failed")
 def handle_llmclient_deploy_failed(sender, **kwargs):
     """Handle llmclient_deploy_failed signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_deploy_failed()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_deploy_failed()"
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.error("%s %s", prefix, llmclient.hostname if llmclient else "No llmclient instance provided")
 
@@ -103,20 +103,20 @@ def handle_llmclient_deploy_failed(sender, **kwargs):
 def llmclient_saved(sender, instance: LLMClient, created: bool, **kwargs):
     """Create the default API for the llmclient."""
 
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_saved()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_saved()"
     # its hosts may have changed, e.g. when it is renamed.
     invalidate_cached_llmclient_by_hosts(instance)
     logger.info("%s %s %s", prefix, "created" if created else "updated", instance.url)
     # the serialized LLMClient, with its tools, costs several queries, so only when it will be logged.
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("%s %s", prefix, logging.formatted_json(LLMClientSerializer(instance).data))
+        logger.debug("%s %s", prefix, logging.SmarterFormattedText.json(LLMClientSerializer(instance).data))
 
 
 @receiver(pre_delete, sender=LLMClient)
 def llmclient_deleted(sender, instance: LLMClient, **kwargs):
     """Delete the default API for the llmclient."""
     llmclient: LLMClient = instance
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_deleted()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_deleted()"
     logger.info("%s %s", prefix, instance.url)
     invalidate_cached_llmclient_by_hosts(llmclient)
     # the task is passed the account number, read now, because the llmclient may be deleted
@@ -151,14 +151,14 @@ for _tool_link in (LLMClientPlugin, LLMClientExtensions, LLMClientMCPClients):
 @receiver(pre_delete, sender=LLMClientPlugin)
 def llmclient_plugin_deleted(sender, instance: LLMClientPlugin, **kwargs):
     """Log deletion of LLMClientPlugin."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_plugin_deleted()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_plugin_deleted()"
     logger.info("%s deleting plugin %s for llmclient %s", prefix, instance.plugin_meta, instance.llmclient)
 
 
 @receiver(post_save, sender=LLMClientCustomDomain)
 def llmclient_custom_domain_saved(sender, instance: LLMClientCustomDomain, created: bool, **kwargs):
     """Log creation or update of LLMClientCustomDomain."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_custom_domain_saved()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_custom_domain_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.domain_name)
     else:
@@ -168,7 +168,7 @@ def llmclient_custom_domain_saved(sender, instance: LLMClientCustomDomain, creat
 @receiver(post_save, sender=LLMClientCustomDomainDNS)
 def llmclient_custom_domain_dns_saved(sender, instance: LLMClientCustomDomainDNS, created: bool, **kwargs):
     """Log creation or update of LLMClientCustomDomainDNS."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_custom_domain_dns_saved()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_custom_domain_dns_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.custom_domain.domain_name)
     else:
@@ -178,7 +178,7 @@ def llmclient_custom_domain_dns_saved(sender, instance: LLMClientCustomDomainDNS
 @receiver(post_save, sender=LLMClientAPIKey)
 def llmclient_api_key_saved(sender, instance: LLMClientAPIKey, created: bool, **kwargs):
     """Log creation or update of LLMClientAPIKey."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_api_key_saved()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_api_key_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.api_key)
     else:
@@ -188,7 +188,7 @@ def llmclient_api_key_saved(sender, instance: LLMClientAPIKey, created: bool, **
 @receiver(post_save, sender=LLMClientPlugin)
 def llmclient_plugin_saved(sender, instance: LLMClientPlugin, created: bool, **kwargs):
     """Log creation or update of LLMClientPlugin."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_plugin_saved()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_plugin_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.plugin_meta.name)
     else:
@@ -198,7 +198,7 @@ def llmclient_plugin_saved(sender, instance: LLMClientPlugin, created: bool, **k
 @receiver(post_save, sender=LLMClientExtensions)
 def llmclient_extensions_saved(sender, instance: LLMClientExtensions, created: bool, **kwargs):
     """Log creation or update of LLMClientExtensions."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_extensions_saved()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_extensions_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.extension.slug)
     else:
@@ -208,7 +208,7 @@ def llmclient_extensions_saved(sender, instance: LLMClientExtensions, created: b
 @receiver(post_save, sender=LLMClientRequests)
 def llmclient_requests_saved(sender, instance: LLMClientRequests, created: bool, **kwargs):
     """Log creation or update of LLMClientRequests."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_requests_saved()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_requests_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.session_key)
     else:
@@ -223,7 +223,7 @@ def llmclient_requests_saved(sender, instance: LLMClientRequests, created: bool,
 @receiver(llmclient_deploy_status_changed, dispatch_uid="llmclient_deploy_status_changed")
 def handle_llmclient_deploy_status_changed(sender, **kwargs):
     """Handle llmclient_deploy_status_changed signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_deploy_status_changed()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_deploy_status_changed()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info(
@@ -237,7 +237,7 @@ def handle_llmclient_deploy_status_changed(sender, **kwargs):
 @receiver(llmclient_undeploy, dispatch_uid="llmclient_undeploy")
 def handle_llmclient_undeploy(sender, llmclient: Optional[LLMClient] = None, **kwargs):
     """Handle llmclient_undeploy signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_undeploy()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_undeploy()"
 
     logger.info("%s %s", prefix, llmclient if llmclient else "No llmclient instance provided")
     if llmclient:
@@ -247,7 +247,7 @@ def handle_llmclient_undeploy(sender, llmclient: Optional[LLMClient] = None, **k
 @receiver(llmclient_deploy, dispatch_uid="llmclient_deploy")
 def handle_llmclient_deploy(sender, **kwargs):
     """Handle llmclient_deploy signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_deploy()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_deploy()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info(
@@ -261,7 +261,7 @@ def handle_llmclient_deploy(sender, **kwargs):
 @receiver(llmclient_deployed, dispatch_uid="llmclient_deployed")
 def handle_llmclient_deployed(sender, **kwargs):
     """Handle llmclient_deployed signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_deployed()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_deployed()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info("%s %s", prefix, llmclient.hostname if llmclient else "No llmclient instance provided")
@@ -274,7 +274,7 @@ def handle_llmclient_deployed(sender, **kwargs):
 @receiver(llmclient_dns_verification_status_changed, dispatch_uid="llmclient_dns_verification_status_changed")
 def handle_llmclient_dns_verification_status_changed(sender, **kwargs):
     """Handle llmclient_dns_verification_status_changed signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_dns_verification_status_changed()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_dns_verification_status_changed()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info(
@@ -288,7 +288,7 @@ def handle_llmclient_dns_verification_status_changed(sender, **kwargs):
 @receiver(llmclient_dns_verification_initiated, dispatch_uid="llmclient_dns_verification_initiated")
 def handle_llmclient_dns_verification_initiated(sender, **kwargs):
     """Handle llmclient_dns_verification_initiated signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_dns_verification_initiated()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_dns_verification_initiated()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info("%s %s", prefix, llmclient.hostname if llmclient else "No llmclient instance provided")
@@ -297,7 +297,7 @@ def handle_llmclient_dns_verification_initiated(sender, **kwargs):
 @receiver(llmclient_dns_verified, dispatch_uid="llmclient_dns_verified")
 def handle_llmclient_dns_verified(sender, **kwargs):
     """Handle llmclient_dns_verified signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_dns_verified()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_dns_verified()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info("%s %s", prefix, llmclient.hostname if llmclient else "No llmclient instance provided")
@@ -306,7 +306,7 @@ def handle_llmclient_dns_verified(sender, **kwargs):
 @receiver(llmclient_dns_failed, dispatch_uid="llmclient_dns_failed")
 def handle_llmclient_dns_failed(sender, **kwargs):
     """Handle llmclient_dns_failed signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_dns_failed()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_dns_failed()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info("%s %s", prefix, llmclient.hostname if llmclient else "No llmclient instance provided")
@@ -315,7 +315,7 @@ def handle_llmclient_dns_failed(sender, **kwargs):
 @receiver(llmclient_called, dispatch_uid="llmclient_called")
 def handle_llmclient_called(sender, **kwargs):
     """Handle llmclient_called signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.llmclient_called()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_called()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
     logger.info("%s %s", prefix, llmclient.hostname if llmclient else "No llmclient instance provided")
@@ -350,7 +350,7 @@ def handle_llmclient_called(sender, **kwargs):
 @receiver(pre_verify_certificate, dispatch_uid="pre_verify_certificate")
 def handle_pre_verify_certificate(sender, **kwargs):
     """Handle pre_verify_certificate signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_verify_certificate()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_verify_certificate()"
     certificate_arn = kwargs.get("certificate_arn")
     logger.info("%s certificate_arn: %s", prefix, certificate_arn)
 
@@ -358,7 +358,7 @@ def handle_pre_verify_certificate(sender, **kwargs):
 @receiver(post_verify_certificate, dispatch_uid="post_verify_certificate")
 def handle_post_verify_certificate(sender, **kwargs):
     """Handle post_verify_certificate signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_verify_certificate()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_verify_certificate()"
     certificate_arn = kwargs.get("certificate_arn")
     logger.info("%s certificate_arn: %s", prefix, certificate_arn)
 
@@ -366,7 +366,7 @@ def handle_post_verify_certificate(sender, **kwargs):
 @receiver(pre_create_llmclient_request, dispatch_uid="pre_create_llmclient_request")
 def handle_pre_create_llmclient_request(sender, **kwargs):
     """Handle pre_create_llmclient_request signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_create_llmclient_request()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_create_llmclient_request()"
     llmclient_id = kwargs.get("llmclient_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
@@ -374,14 +374,14 @@ def handle_pre_create_llmclient_request(sender, **kwargs):
         "%s llmclient_id: %s, request_data: %s",
         prefix,
         llmclient_id,
-        logging.formatted_json(request_data) if request_data else "No data",
+        logging.SmarterFormattedText.json(request_data) if request_data else "No data",
     )
 
 
 @receiver(post_create_llmclient_request, dispatch_uid="post_create_llmclient_request")
 def handle_post_create_llmclient_request(sender, **kwargs):
     """Handle post_create_llmclient_request signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_create_llmclient_request()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_create_llmclient_request()"
     llmclient_id = kwargs.get("llmclient_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
@@ -389,14 +389,14 @@ def handle_post_create_llmclient_request(sender, **kwargs):
         "%s llmclient_id: %s, request_data: %s",
         prefix,
         llmclient_id,
-        logging.formatted_json(request_data) if request_data else "No data",
+        logging.SmarterFormattedText.json(request_data) if request_data else "No data",
     )
 
 
 @receiver(pre_register_custom_domain, dispatch_uid="pre_register_custom_domain")
 def handle_pre_register_custom_domain(sender, **kwargs):
     """Handle pre_register_custom_domain signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_register_custom_domain()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_register_custom_domain()"
     account_id = kwargs.get("account_id")
     domain_name = kwargs.get("domain_name")
     logger.info("%s account_id: %s, domain_name: %s", prefix, account_id, domain_name)
@@ -405,7 +405,7 @@ def handle_pre_register_custom_domain(sender, **kwargs):
 @receiver(post_register_custom_domain, dispatch_uid="post_register_custom_domain")
 def handle_post_register_custom_domain(sender, **kwargs):
     """Handle post_register_custom_domain signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_register_custom_domain()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_register_custom_domain()"
     account_id = kwargs.get("account_id")
     domain_name = kwargs.get("domain_name")
     logger.info("%s account_id: %s, domain_name: %s", prefix, account_id, domain_name)
@@ -414,7 +414,7 @@ def handle_post_register_custom_domain(sender, **kwargs):
 @receiver(pre_create_custom_domain_dns_record, dispatch_uid="pre_create_custom_domain_dns_record")
 def handle_pre_create_custom_domain_dns_record(sender, **kwargs):
     """Handle pre_create_custom_domain_dns_record signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_create_custom_domain_dns_record()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_create_custom_domain_dns_record()"
     llmclient_custom_domain_id = kwargs.get("llmclient_custom_domain_id")
     record_name = kwargs.get("record_name")
     record_type = kwargs.get("record_type")
@@ -434,7 +434,7 @@ def handle_pre_create_custom_domain_dns_record(sender, **kwargs):
 @receiver(post_create_custom_domain_dns_record, dispatch_uid="post_create_custom_domain_dns_record")
 def handle_post_create_custom_domain_dns_record(sender, **kwargs):
     """Handle post_create_custom_domain_dns_record signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_create_custom_domain_dns_record()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_create_custom_domain_dns_record()"
     llmclient_custom_domain_id = kwargs.get("llmclient_custom_domain_id")
     record_name = kwargs.get("record_name")
     record_type = kwargs.get("record_type")
@@ -454,7 +454,7 @@ def handle_post_create_custom_domain_dns_record(sender, **kwargs):
 @receiver(pre_verify_custom_domain, dispatch_uid="pre_verify_custom_domain")
 def handle_pre_verify_custom_domain(sender, **kwargs):
     """Handle pre_verify_custom_domain signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_verify_custom_domain()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_verify_custom_domain()"
     hosted_zone_id = kwargs.get("hosted_zone_id")
     task_id = kwargs.get("task_id")
     logger.info("%s hosted_zone_id: %s, task_id: %s", prefix, hosted_zone_id, task_id)
@@ -463,7 +463,7 @@ def handle_pre_verify_custom_domain(sender, **kwargs):
 @receiver(post_verify_custom_domain, dispatch_uid="post_verify_custom_domain")
 def handle_post_verify_custom_domain(sender, **kwargs):
     """Handle post_verify_custom_domain signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_verify_custom_domain()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_verify_custom_domain()"
     hosted_zone_id = kwargs.get("hosted_zone_id")
     task_id = kwargs.get("task_id")
     logger.info("%s hosted_zone_id: %s, task_id: %s", prefix, hosted_zone_id, task_id)
@@ -472,7 +472,7 @@ def handle_post_verify_custom_domain(sender, **kwargs):
 @receiver(pre_verify_domain, dispatch_uid="pre_verify_domain")
 def handle_pre_verify_domain(sender, **kwargs):
     """Handle pre_verify_domain signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_verify_domain()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_verify_domain()"
     domain_name = kwargs.get("domain_name")
     record_type = kwargs.get("record_type")
     task_id = kwargs.get("task_id")
@@ -482,7 +482,7 @@ def handle_pre_verify_domain(sender, **kwargs):
 @receiver(post_verify_domain, dispatch_uid="post_verify_domain")
 def handle_post_verify_domain(sender, **kwargs):
     """Handle post_verify_domain signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_verify_domain()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_verify_domain()"
     domain_name = kwargs.get("domain_name")
     record_type = kwargs.get("record_type")
     task_id = kwargs.get("task_id")
@@ -492,7 +492,7 @@ def handle_post_verify_domain(sender, **kwargs):
 @receiver(pre_destroy_domain_A_record, dispatch_uid="pre_destroy_domain_A_record")
 def handle_pre_destroy_domain_A_record(sender, **kwargs):
     """Handle pre_destroy_domain_A_record signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_destroy_domain_A_record()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_destroy_domain_A_record()"
     hostname = kwargs.get("hostname")
     api_host_domain = kwargs.get("api_host_domain")
     task_id = kwargs.get("task_id")
@@ -502,7 +502,7 @@ def handle_pre_destroy_domain_A_record(sender, **kwargs):
 @receiver(post_destroy_domain_A_record, dispatch_uid="post_destroy_domain_A_record")
 def handle_post_destroy_domain_A_record(sender, **kwargs):
     """Handle post_destroy_domain_A_record signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_destroy_domain_A_record()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_destroy_domain_A_record()"
     hostname = kwargs.get("hostname")
     api_host_domain = kwargs.get("api_host_domain")
     task_id = kwargs.get("task_id")
@@ -512,7 +512,7 @@ def handle_post_destroy_domain_A_record(sender, **kwargs):
 @receiver(pre_deploy_default_api, dispatch_uid="pre_deploy_default_api")
 def handle_pre_deploy_default_api(sender, **kwargs):
     """Handle pre_deploy_default_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_deploy_default_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_deploy_default_api()"
     llmclient_id = kwargs.get("llmclient_id")
     with_domain_verification = kwargs.get("with_domain_verification")
     task_id = kwargs.get("task_id")
@@ -528,7 +528,7 @@ def handle_pre_deploy_default_api(sender, **kwargs):
 @receiver(post_deploy_default_api, dispatch_uid="post_deploy_default_api")
 def handle_post_deploy_default_api(sender, **kwargs):
     """Handle post_deploy_default_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_deploy_default_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_deploy_default_api()"
     llmclient_id = kwargs.get("llmclient_id")
     with_domain_verification = kwargs.get("with_domain_verification")
     task_id = kwargs.get("task_id")
@@ -544,7 +544,7 @@ def handle_post_deploy_default_api(sender, **kwargs):
 @receiver(pre_undeploy_default_api, dispatch_uid="pre_undeploy_default_api")
 def handle_pre_undeploy_default_api(sender, **kwargs):
     """Handle pre_undeploy_default_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_undeploy_default_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_undeploy_default_api()"
     llmclient_id = kwargs.get("llmclient_id")
     task_id = kwargs.get("task_id")
     logger.info("%s llmclient_id: %s, task_id: %s", prefix, llmclient_id, task_id)
@@ -553,7 +553,7 @@ def handle_pre_undeploy_default_api(sender, **kwargs):
 @receiver(post_undeploy_default_api, dispatch_uid="post_undeploy_default_api")
 def handle_post_undeploy_default_api(sender, **kwargs):
     """Handle post_undeploy_default_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_undeploy_default_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_undeploy_default_api()"
     llmclient_id = kwargs.get("llmclient_id")
     task_id = kwargs.get("task_id")
     logger.info("%s llmclient_id: %s, task_id: %s", prefix, llmclient_id, task_id)
@@ -562,7 +562,7 @@ def handle_post_undeploy_default_api(sender, **kwargs):
 @receiver(pre_delete_default_api, dispatch_uid="pre_delete_default_api")
 def handle_pre_delete_default_api(sender, **kwargs):
     """Handle pre_delete_default_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_delete_default_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_delete_default_api()"
     url = kwargs.get("url")
     account_number = kwargs.get("account_number")
     name = kwargs.get("name")
@@ -573,7 +573,7 @@ def handle_pre_delete_default_api(sender, **kwargs):
 @receiver(post_delete_default_api, dispatch_uid="post_delete_default_api")
 def handle_post_delete_default_api(sender, **kwargs):
     """Handle post_delete_default_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_delete_default_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_delete_default_api()"
     url = kwargs.get("url")
     account_number = kwargs.get("account_number")
     name = kwargs.get("name")
@@ -584,7 +584,7 @@ def handle_post_delete_default_api(sender, **kwargs):
 @receiver(pre_deploy_custom_api, dispatch_uid="pre_deploy_custom_api")
 def handle_pre_deploy_custom_api(sender, **kwargs):
     """Handle pre_deploy_custom_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.pre_deploy_custom_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.pre_deploy_custom_api()"
     llmclient_id = kwargs.get("llmclient_id")
     task_id = kwargs.get("task_id")
     logger.info("%s llmclient_id: %s, task_id: %s", prefix, llmclient_id, task_id)
@@ -593,7 +593,7 @@ def handle_pre_deploy_custom_api(sender, **kwargs):
 @receiver(post_deploy_custom_api, dispatch_uid="post_deploy_custom_api")
 def handle_post_deploy_custom_api(sender, **kwargs):
     """Handle post_deploy_custom_api signal."""
-    prefix = f"{logging.formatted_text(module_prefix)}.post_deploy_custom_api()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.post_deploy_custom_api()"
     llmclient_id = kwargs.get("llmclient_id")
     task_id = kwargs.get("task_id")
     logger.info("%s llmclient_id: %s, task_id: %s", prefix, llmclient_id, task_id)
@@ -604,7 +604,7 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
     """Handle broker ready signal."""
     logger.debug(
         "%s %s %s for %s is ready.",
-        f"{logging.formatted_text(module_prefix)}.broker_ready()",
+        f"{logging.SmarterFormattedText.text(module_prefix)}.broker_ready()",
         broker.kind,
         str(broker),
         broker.name,

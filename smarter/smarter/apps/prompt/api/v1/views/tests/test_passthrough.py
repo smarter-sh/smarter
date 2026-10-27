@@ -14,7 +14,7 @@ from smarter.apps.api.v1.const import namespace as smarter_apps_api_v1_namespace
 from smarter.apps.prompt.api.v1.urls import PromptAPINamespace
 from smarter.apps.prompt.const import namespace as smarter_apps_prompt_namespace
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.console_helpers import formatted_json
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.typing import SmarterDictType
@@ -161,5 +161,5 @@ class TestPassthroughView(TestAccountMixin):
         logger.debug(
             "Received response with status code: %s and content: %s",
             response.status_code,
-            formatted_json(response.json()),
+            SmarterFormattedText.json(response.json()),
         )
