@@ -46,7 +46,6 @@ so the shards together run each test exactly once.
 """
 
 import collections
-import functools
 import os
 import unittest
 
@@ -203,7 +202,17 @@ class SmarterTestRunner(DiscoverRunner):
         if directory:
             os.makedirs(directory, exist_ok=True)
         with open(path, "wb") as output:
-            self.test_runner = functools.partial(xmlrunner.XMLTestRunner, output=output)
+            # A subclass that binds the output file, rather than functools.partial,
+            # because DiscoverRunner.test_runner is typed as a TextTestRunner class.
+            class XMLTestRunner(xmlrunner.XMLTestRunner):
+                """Xmlrunner's runner, writing its report to the open file."""
+
+                def __init__(self, **runner_kwargs):
+                    # xmlrunner annotates output as str, a directory of one report per
+                    # TestCase, but also takes an open file, for one combined report.
+                    super().__init__(output=output, **runner_kwargs)  # pyright: ignore[reportArgumentType]
+
+            self.test_runner = XMLTestRunner
             try:
                 return super().run_suite(suite, **kwargs)
             finally:
