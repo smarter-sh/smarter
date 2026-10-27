@@ -8,7 +8,7 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 
 from smarter.apps.account import utils as account_utils
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.drf.models import SmarterAuthToken
 
@@ -76,6 +76,21 @@ class TestCreateSmarterAdmin(CommandTestBase):
         self.run_command("create_smarter_admin", username=username)
         self.run_command("create_smarter_admin", username=username)
         self.assertEqual(SmarterAuthToken.objects.filter(user__username=username).count(), 1)
+
+    def test_rerun_saves_nothing(self):
+        """Test that a second run with the same values, as on every deploy, saves neither the account nor the user."""
+        username = self.unique("test_smarter_admin")
+        self.addCleanup(User.objects.filter(username=username).delete)
+        self.addCleanup(SmarterAuthToken.objects.filter(user__username=username).delete)
+        self.run_command("create_smarter_admin", username=username, email=f"{username}@example.com")
+        with (
+            patch.object(Account, "save", autospec=True) as account_save,
+            patch.object(User, "save", autospec=True) as user_save,
+        ):
+            output = self.run_command("create_smarter_admin", username=username, email=f"{username}@example.com")
+        account_save.assert_not_called()
+        user_save.assert_not_called()
+        self.assertIn(f"User {username} already exists.", output)
 
     def test_create_platform_admin_on_a_new_database(self):
         """Test creating the platform's admin user when it doesn't exist yet, as make init does."""
