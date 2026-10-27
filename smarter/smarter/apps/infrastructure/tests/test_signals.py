@@ -186,6 +186,15 @@ class TestReceivers(InfrastructureTestBase):
             self.send(email_failed, subject="s", recipients=["a@example.com"], error="e")
             self.assertEqual(logger.error.call_count, 4)
 
+    def test_authenticated_masks_the_account_id(self):
+        """Only the last four characters of the account id are logged."""
+        with patch(f"{RECEIVERS}.logger") as logger:
+            self.send(infrastructure_authenticated, identity={"Account": "123456789012"})
+            self.send(infrastructure_authenticated, identity={"account": "1234"})
+            self.send(infrastructure_authenticated)
+        accounts = [c.args[2] for c in logger.info.call_args_list]
+        self.assertEqual(accounts, ["********9012", "1234", None])
+
     def test_reconciled_is_logged_as_found(self):
         """A resource that the inventory found, or found gone, is logged as info, and still recorded."""
         with patch(f"{RECEIVERS}.logger") as logger:
