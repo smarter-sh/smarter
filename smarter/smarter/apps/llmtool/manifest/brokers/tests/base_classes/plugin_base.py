@@ -7,7 +7,7 @@ from smarter.apps.api.utils import apply_manifest
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.llmtool.const import DATA_PATH as PLUGIN_DATA_PATH
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -29,7 +29,7 @@ HERE = __name__
 class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
     """Adds a class-level setup to create SqlConnection instances for use in plugin broker tests."""
 
-    test_smarter_plugin_broker_base_logger_prefix = f"{formatted_text(HERE)}.TestSmarterPluginBrokerBase()"
+    test_smarter_plugin_broker_base_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSmarterPluginBrokerBase()"
 
     @classmethod
     def setUpClass(cls):

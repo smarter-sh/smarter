@@ -180,7 +180,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             "%s.manifest loaded and cached manifest.json for %s: %s",
             self.formatted_class_name,
             self.app_name,
-            logging.formatted_json(manifest.model_dump(mode="json", by_alias=True, exclude_defaults=True)),
+            logging.SmarterFormattedText.json(manifest.model_dump(mode="json", by_alias=True, exclude_defaults=True)),
         )
         return manifest
 
@@ -260,6 +260,6 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             self.formatted_class_name,
             id(self),
             self.app_name,
-            logging.formatted_json(assets.model_dump(mode="json")),
+            logging.SmarterFormattedText.json(assets.model_dump(mode="json")),
         )
         return assets

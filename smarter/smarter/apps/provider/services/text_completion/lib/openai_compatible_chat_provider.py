@@ -66,7 +66,7 @@ from smarter.common.exceptions import (
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -334,7 +334,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         try:
             return [message for message in self.messages if message[_InternalKeys.SMARTER_IS_NEW]]
         except KeyError:
-            prefix = formatted_text(f"{self.formatted_class_name} new_messages()")
+            prefix = SmarterFormattedText.text(f"{self.formatted_class_name} new_messages()")
             logger.error(
                 "%s KeyError: '%s' key not found in message: %s", prefix, _InternalKeys.SMARTER_IS_NEW, self.messages
             )
@@ -1199,7 +1199,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             base_logger.warning(
                 "%s %s - model %s rejected function tools at its default reasoning_effort. Retrying with reasoning_effort='%s'.",
                 self.formatted_class_name,
-                formatted_text("create_first_completion()"),
+                SmarterFormattedText.text("create_first_completion()"),
                 self.model,
                 REASONING_EFFORT_NONE,
             )
@@ -1382,7 +1382,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             logger.debug(
                 "%s %s - openai.chat.completions.create() completions_kwargs: %s",
                 self.formatted_class_name,
-                formatted_text("handler()"),
+                SmarterFormattedText.text("handler()"),
                 completions_kwargs,
             )
 
@@ -1407,7 +1407,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 logger.debug(
                     "%s %s - %s tool calls detected, preparing second request",
                     self.formatted_class_name,
-                    formatted_text("handler()"),
+                    SmarterFormattedText.text("handler()"),
                     len(tool_calls),
                 )
                 self.iteration = 2
@@ -1462,7 +1462,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                         logger.debug(
                             "%s %s - %s more tool calls in round %s",
                             self.formatted_class_name,
-                            formatted_text("handler()"),
+                            SmarterFormattedText.text("handler()"),
                             len(tool_calls),
                             tool_rounds,
                         )

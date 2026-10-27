@@ -45,7 +45,7 @@ def index_repository(name: str, force: bool = False) -> str:
     index = indexer.index_repository(name, force=force)
     logger.info(
         "%s %s is %s at %s.",
-        logging.formatted_text(module_prefix + "index_repository()"),
+        logging.SmarterFormattedText.text(module_prefix + "index_repository()"),
         name,
         index.status,
         index.commit_sha,

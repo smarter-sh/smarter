@@ -7,7 +7,7 @@ from typing import Union
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.listview import connect_listview_cache
@@ -54,7 +54,9 @@ module_prefix = "smarter.apps.provider.receivers"
 def get_prefix(function_name: str = "") -> str:
     """Get the module prefix for logging."""
     return (
-        formatted_text(module_prefix + "." + function_name + "()") if function_name else formatted_text(module_prefix)
+        SmarterFormattedText.text(module_prefix + "." + function_name + "()")
+        if function_name
+        else SmarterFormattedText.text(module_prefix)
     )
 
 
@@ -324,7 +326,7 @@ def handle_embed_started(sender, backend, provider, user_profile, **kwargs):
     """Signal receiver for embed_started signal."""
     logger.info(
         "%s embed started for backend: %s, provider: %s, user_profile: %s",
-        f"{formatted_text(module_prefix)}.handle_embed_started()",
+        f"{SmarterFormattedText.text(module_prefix)}.handle_embed_started()",
         backend,
         provider,
         user_profile,
@@ -336,7 +338,7 @@ def handle_embed_success(sender, backend, provider, user_profile, **kwargs):
     """Signal receiver for embed_success signal."""
     logger.info(
         "%s embed succeeded for backend: %s, provider: %s, user_profile: %s",
-        f"{formatted_text(module_prefix)}.handle_embed_success()",
+        f"{SmarterFormattedText.text(module_prefix)}.handle_embed_success()",
         backend,
         provider,
         user_profile,
@@ -348,7 +350,7 @@ def handle_embed_failed(sender, backend, provider, user_profile, **kwargs):
     """Signal receiver for embed_failed signal."""
     logger.error(
         "%s embed failed for backend: %s, provider: %s, user_profile: %s",
-        f"{formatted_text(module_prefix)}.handle_embed_failed()",
+        f"{SmarterFormattedText.text(module_prefix)}.handle_embed_failed()",
         backend,
         provider,
         user_profile,

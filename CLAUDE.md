@@ -145,7 +145,7 @@ after fixing staticfiles.
   with a throwaway `SmarterAuthToken` you create and delete. Don't use the
   `smarter` CLI. See `smarter-api-testing`.
 - **Logging:** every log message starts with its origin, `logger_prefix`
-  (`logging.formatted_text(__name__)`) or `self.formatted_class_name`, then the
+  (`logging.SmarterFormattedText.text(__name__)`) or `self.formatted_class_name`, then the
   unformatted `.function_name()`, with %-style arguments. See `smarter-logging`.
 - **Docstrings** are reStructuredText (`:param:`, `:returns:`, `:raises:`);
   Sphinx autodoc publishes them.

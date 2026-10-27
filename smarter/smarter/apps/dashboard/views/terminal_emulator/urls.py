@@ -51,12 +51,12 @@ if smarter_settings.enable_dashboard_server_logs:
 
     logger.debug(
         "%s Server logs app url endpoint is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=false` to disable.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         SmarterReadyState.READY,
     )
 else:
     logger.info(
         "%s Server logs app is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /logs/.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         SmarterReadyState.NOT_READY,
     )

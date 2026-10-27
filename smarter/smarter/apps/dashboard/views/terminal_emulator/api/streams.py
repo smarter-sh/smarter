@@ -443,7 +443,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         user_context = job_id_factory()
     else:
         user_context = get_user_context(user)
-    logger_prefix = f"{logging.formatted_text(__name__)}.stream_user_logs()"
+    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.stream_user_logs()"
     min_level = _min_log_level(request)
     request_id = _request_id(request)
     session_key = _session_key(request)

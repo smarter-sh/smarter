@@ -33,7 +33,7 @@ from smarter.apps.llmtool.models import (
 )
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.llmtool.signals import broker_ready
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -56,7 +56,7 @@ from smarter.lib.typing import SmarterDictType
 from . import PluginSerializer, SAMPluginBrokerError
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = formatted_text(__name__) + ".SAMPluginBaseBroker"
+logger_prefix = SmarterFormattedText.text(__name__) + ".SAMPluginBaseBroker"
 
 
 class SAMPluginBaseBroker(AbstractBroker):

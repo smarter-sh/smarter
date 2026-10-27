@@ -21,7 +21,7 @@ from smarter.apps.provider.utils import (
     test_web_page,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -184,7 +184,7 @@ def verify_provider_production_api_key(provider: Provider, **kwargs) -> bool:
 
 def verify_provider(provider_id, **kwargs):
     """Run test bank on provider."""
-    prefix = formatted_text(module_prefix + "verify_provider()")
+    prefix = SmarterFormattedText.text(module_prefix + "verify_provider()")
     try:
         provider = Provider.objects.get(id=provider_id)
     except Provider.DoesNotExist:

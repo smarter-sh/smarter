@@ -185,7 +185,7 @@ class AccountActivateView(SmarterNeverCachedWebView):
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
         class_name = f"{__name__}.{AccountActivateView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return logging.SmarterFormattedText.text(class_name)
 
     def get(self, request, *args, **kwargs):
         logger.debug(

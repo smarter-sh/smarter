@@ -3,7 +3,7 @@
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.serializers import SecretSerializer
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 from .factories import (
@@ -18,7 +18,7 @@ class TestSerializers(TestAccountMixin):
     """Test serializers for the account app."""
 
     secret: Secret
-    test_serializers_logger_prefix = f"{formatted_text(__name__)}.TestSerializers()"
+    test_serializers_logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestSerializers()"
 
     @classmethod
     def setUpClass(cls):

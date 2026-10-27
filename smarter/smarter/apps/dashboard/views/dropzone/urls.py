@@ -51,14 +51,14 @@ if smarter_settings.enable_dropzone_manifest_apply:
     ]
     logger.debug(
         "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         app_name,
         SmarterReadyState.READY,
     )
 else:
     logger.info(
         "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         app_name,
         SmarterReadyState.NOT_READY,
     )

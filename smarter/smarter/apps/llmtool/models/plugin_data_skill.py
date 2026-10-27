@@ -30,7 +30,7 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = logging.formatted_text(f"{__name__}")
+logger_prefix = logging.SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginDataSkill(PluginDataBase):
@@ -325,14 +325,14 @@ class PluginDataSkill(PluginDataBase):
                 retval = cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
                     "%s.get_cached_data_by_plugin() fetched and cached PluginDataSkill for plugin_id: %s",
-                    logging.formatted_text(cls.__name__),
+                    logging.SmarterFormattedText.text(cls.__name__),
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    logging.formatted_text(cls.__name__),
+                    logging.SmarterFormattedText.text(cls.__name__),
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataSkill with plugin_id {plugin_id} does not exist.") from e
@@ -376,7 +376,7 @@ class PluginDataSkill(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{logging.formatted_text(__name__)}.{PluginDataSkill.__name__}.get_cached_object()"
+        logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.{PluginDataSkill.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,

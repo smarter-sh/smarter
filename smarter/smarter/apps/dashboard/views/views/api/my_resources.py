@@ -105,7 +105,7 @@ from smarter.lib.django.views import (
 )
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 EXTENSIONS_DOCS_URL = "https://docs.smarter.sh/en/latest/smarter-platform/extensions.html"
 
@@ -509,7 +509,9 @@ class MyResourcesView(SmarterAuthenticatedWebView):
                     else EXTENSIONS_DOCS_URL
                 ),
             }
-            logger.debug("%s.post() cached context %s", self.formatted_class_name, logging.formatted_json(retval))
+            logger.debug(
+                "%s.post() cached context %s", self.formatted_class_name, logging.SmarterFormattedText.json(retval)
+            )
             return retval
 
         retval = _get_resources(user_profile.id)  # type: ignore[union-attr]
