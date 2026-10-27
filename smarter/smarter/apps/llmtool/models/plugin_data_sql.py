@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.llmtool.manifest.models.common import TestValue
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -20,7 +20,7 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginDataSql(PluginDataBase):
@@ -251,7 +251,7 @@ class PluginDataSql(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{formatted_text(__name__)}.{PluginDataSql.__name__}.get_cached_object()"
+        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginDataSql.__name__}.get_cached_object()"
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,

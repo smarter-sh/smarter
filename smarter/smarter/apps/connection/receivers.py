@@ -8,7 +8,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
 
-from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 from smarter.lib.django.listview import connect_listview_cache
@@ -37,7 +37,7 @@ from .signals import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-prefix = formatted_text(__name__) + "."
+prefix = SmarterFormattedText.text(__name__) + "."
 
 
 # ------------------------------------------------------------------------------
@@ -53,9 +53,9 @@ def handle_api_connection_saved(sender, instance, created, **kwargs):
         instance.name,
         "created" if created else "updated",
     )
-    # the whole row is only for a developer tracing a flow, and formatted_json() is costly.
+    # the whole row is only for a developer tracing a flow, and SmarterFormattedText.json() is costly.
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("%shandle_api_connection_saved() %s", prefix, formatted_json(model_to_dict(instance)))
+        logger.debug("%shandle_api_connection_saved() %s", prefix, SmarterFormattedText.json(model_to_dict(instance)))
 
 
 @receiver(post_save, sender=SqlConnection)
@@ -71,7 +71,7 @@ def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwar
         user_profile,
     )
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("%shandle_sql_connection_saved() %s", prefix, formatted_json(model_to_dict(instance)))
+        logger.debug("%shandle_sql_connection_saved() %s", prefix, SmarterFormattedText.json(model_to_dict(instance)))
 
 
 def masked_dict(dic: SmarterDictType) -> SmarterDictType:
@@ -235,7 +235,7 @@ def handle_api_connection_query_success(
         "%s %s - response: %s",
         prefix + "api_connection_query_success()",
         connection.get_connection_string(),
-        formatted_json(response.json()) if response else None,
+        SmarterFormattedText.json(response.json()) if response else None,
     )
 
 
@@ -249,7 +249,7 @@ def handle_api_connection_query_failed(
         "%s %s - response: %s - error: %s",
         prefix + "api_connection_query_failed()",
         connection.get_connection_string(),
-        formatted_json(response.json()) if response else None,
+        SmarterFormattedText.json(response.json()) if response else None,
         error,
     )
 

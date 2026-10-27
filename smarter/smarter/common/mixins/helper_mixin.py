@@ -8,11 +8,7 @@ import yaml
 from django.utils.functional import classproperty
 
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    SmarterFormattedTextColorCodes,
-    formatted_json,
-    formatted_text,
-)
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import (
     ConvertibleCaseT,
 )
@@ -50,8 +46,8 @@ FOREVER = 60 * 60 * 24 * 365  # 1 year in seconds
 class SmarterReadyState:
     """Constants representing the ready state of a Smarter class, formatted for logging."""
 
-    READY = formatted_text("READY", SmarterFormattedTextColorCodes.BRIGHT_GREEN)
-    NOT_READY = formatted_text("NOT_READY", SmarterFormattedTextColorCodes.DARK_RED)
+    READY = SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)
+    NOT_READY = SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED)
 
 
 class SmarterHelperMixin:
@@ -123,7 +119,7 @@ class SmarterHelperMixin:
         :return: The formatted class name as a string.
         :rtype: str
         """
-        return formatted_text(cls.__name__)
+        return SmarterFormattedText.text(cls.__name__)
 
     @cached_property
     def unformatted_class_name(self) -> str:
@@ -253,7 +249,7 @@ class SmarterHelperMixin:
             string=string, mask_char=mask_char, mask_length=mask_length, string_length=string_length  # type: ignore
         )
 
-    def formatted_text(self, text: str, color_code: str = SmarterFormattedTextColorCodes.DEFAULT) -> str:
+    def formatted_text(self, text: str, color_code: str = SmarterFormattedText.DEFAULT) -> str:
         """
         Formats text with ANSI color codes for logging.
 
@@ -264,7 +260,7 @@ class SmarterHelperMixin:
         :return: The formatted text with ANSI color codes.
         :rtype: str
         """
-        return formatted_text(text, color_code=color_code)
+        return SmarterFormattedText.text(text, color_code=color_code)
 
     def formatted_text_green(self, text: str) -> str:
         """
@@ -275,7 +271,7 @@ class SmarterHelperMixin:
         :return: The formatted text in bright green.
         :rtype: str
         """
-        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.BRIGHT_GREEN)
+        return SmarterFormattedText.text(text, color_code=SmarterFormattedText.BRIGHT_GREEN)
 
     def formatted_text_red(self, text: str) -> str:
         """
@@ -286,7 +282,7 @@ class SmarterHelperMixin:
         :return: The formatted text in dark red.
         :rtype: str
         """
-        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.DARK_RED)
+        return SmarterFormattedText.text(text, color_code=SmarterFormattedText.DARK_RED)
 
     def formatted_text_blue(self, text: str) -> str:
         """
@@ -297,7 +293,7 @@ class SmarterHelperMixin:
         :return: The formatted text in bold dark blue.
         :rtype: str
         """
-        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.BOLD_DARK_BLUE)
+        return SmarterFormattedText.text(text, color_code=SmarterFormattedText.BOLD_DARK_BLUE)
 
     def formatted_json(self, json_obj: Union[SmarterDictType, list]) -> str:
         """
@@ -308,7 +304,7 @@ class SmarterHelperMixin:
         :return: A string representation of the JSON object with ANSI color codes.
         :rtype: str
         """
-        return formatted_json(json_obj)
+        return SmarterFormattedText.json(json_obj)
 
     def bool_environment_variable(self, var_name: str, default: bool = False) -> bool:
         """

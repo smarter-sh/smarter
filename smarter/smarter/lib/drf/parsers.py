@@ -4,11 +4,11 @@ import yaml
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import BaseParser
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = f"{formatted_text(__name__)}.YAMLParser()"
+logger_prefix = f"{SmarterFormattedText.text(__name__)}.YAMLParser()"
 
 
 class YAMLParser(BaseParser):

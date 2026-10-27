@@ -135,7 +135,7 @@ class TestAccountMixinMethods(TestAccountMixin):
 
     def test_to_json(self):
         data = self.mixin.to_json()
-        logger.debug("to_json: %s", logging.formatted_json(data))
+        logger.debug("to_json: %s", logging.SmarterFormattedText.json(data))
         self.assertTrue(data.get("am_ready", False))
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data.get("account"), dict)

@@ -44,7 +44,7 @@ from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 EXAMPLE_KINDS_PER_ACCOUNT = [
     SAMKinds.STATIC_PLUGIN.value,

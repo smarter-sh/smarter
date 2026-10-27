@@ -151,7 +151,7 @@ from cache_results import lazy_cache as cache
 from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
@@ -163,13 +163,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
     logger.debug(
         "%s is %s",
-        formatted_text(__name__) + ".SmarterBlockExcessive404Middleware",
+        SmarterFormattedText.text(__name__) + ".SmarterBlockExcessive404Middleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        formatted_text(__name__) + ".SmarterBlockExcessive404Middleware",
+        SmarterFormattedText.text(__name__) + ".SmarterBlockExcessive404Middleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 

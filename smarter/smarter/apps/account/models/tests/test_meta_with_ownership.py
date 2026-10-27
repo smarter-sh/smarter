@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class TestMetaDataWithOwnershipModel(TestAccountMixin):
     """Test MetaDataWithOwnershipModel model."""
 
-    logger_prefix = f"{logging.formatted_text(__name__)}.TestMetaDataWithOwnershipModel()"
+    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestMetaDataWithOwnershipModel()"
 
     @classmethod
     def setUpClass(cls):

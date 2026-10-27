@@ -5,7 +5,7 @@ from typing import Optional, Union
 
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
@@ -32,7 +32,7 @@ from ..tasks import create_plugin_selector_history
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 
 @receiver(plugin_created, dispatch_uid="plugin_created")
@@ -44,7 +44,7 @@ def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
         "%s.plugin_created() %s data: %s",
         logger_prefix,
         plugin.name,
-        formatted_json(plugin.data) if plugin.data else None,
+        SmarterFormattedText.json(plugin.data) if plugin.data else None,
     )
 
 
@@ -64,7 +64,7 @@ def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
         "%s.plugin_updated() %s data: %s",
         logger_prefix,
         plugin.name,
-        formatted_json(plugin.data) if plugin.data else None,
+        SmarterFormattedText.json(plugin.data) if plugin.data else None,
     )
 
 
@@ -112,7 +112,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
         logger_prefix,
         plugin.name,
         inquiry_type,
-        formatted_json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
+        SmarterFormattedText.json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
     )
 
 
@@ -134,7 +134,7 @@ def handle_plugin_selected(sender, *args, **kwargs):
     search_term: str = kwargs.get("search_term", "")
     user_id: int = user.id if user else None  # type: ignore
 
-    prompt = input_text if input_text else formatted_json(messages)
+    prompt = input_text if input_text else SmarterFormattedText.json(messages)
     logger.info(
         "%s.plugin_selected() %s search_term: %s",
         logger_prefix,
@@ -184,7 +184,7 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
     """
     logger.debug(
         "%s %s %s for %s is ready.",
-        f"{formatted_text(sender.__module__)}.{sender.__name__}.broker_ready()",
+        f"{SmarterFormattedText.text(sender.__module__)}.{sender.__name__}.broker_ready()",
         broker.kind,
         str(broker),
         broker.name,

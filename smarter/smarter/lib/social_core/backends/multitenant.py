@@ -30,12 +30,12 @@ from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 USERNAME = "username"
 # the account app's url name, in its namespace: a url name alone isn't found.

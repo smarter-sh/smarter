@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from smarter.apps.llmtool.models import ExtensionVersion
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 NAMESPACE = "smarter_extensions"
 """The top-level module under which every extension's code is imported."""

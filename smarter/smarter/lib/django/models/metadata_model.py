@@ -14,7 +14,7 @@ from taggit.managers import TaggableManager
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
@@ -221,7 +221,7 @@ class MetaDataModel(TimestampedModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["MetaDataModel"]
         """
-        logger_prefix = formatted_text(__name__ + "." + MetaDataModel.__name__ + ".get_cached_object()")
+        logger_prefix = SmarterFormattedText.text(__name__ + "." + MetaDataModel.__name__ + ".get_cached_object()")
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -295,7 +295,7 @@ class MetaDataModel(TimestampedModel):
         :returns: A queryset of all model instances.
         :rtype: QuerySet
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger_prefix = SmarterFormattedText.text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
         verbose_logger.debug(
             "%s.get_cached_objects() called for %s with invalidate=%s", logger_prefix, cls.__name__, invalidate
         )

@@ -45,7 +45,7 @@ urlpatterns = [
 
 (logger.debug if smarter_settings.enable_web_console_terminal else logger.info)(
     "%s Terminal app is %s. Set env `SMARTER_ENABLE_WEB_CONSOLE_TERMINAL=%s` to %s it.",
-    logging.formatted_text(__name__),
+    logging.SmarterFormattedText.text(__name__),
     SmarterReadyState.READY if smarter_settings.enable_web_console_terminal else SmarterReadyState.NOT_READY,
     "false" if smarter_settings.enable_web_console_terminal else "true",
     "disable" if smarter_settings.enable_web_console_terminal else "enable",

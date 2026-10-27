@@ -61,7 +61,7 @@ from rest_framework.request import Request
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
@@ -88,13 +88,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH):
     logger.debug(
         "%s is %s",
-        formatted_text(__name__) + ".SmarterTokenAuthenticationMiddleware",
+        SmarterFormattedText.text(__name__) + ".SmarterTokenAuthenticationMiddleware",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
         "%s is %s. Enable with Django waffle in the admin console.",
-        formatted_text(__name__) + ".SmarterTokenAuthenticationMiddleware",
+        SmarterFormattedText.text(__name__) + ".SmarterTokenAuthenticationMiddleware",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 
@@ -258,7 +258,8 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
     def authenticate_request(request: Request):
 
         logger.debug(
-            "%s.authenticate_request() called", logging.formatted_text(SmarterTokenAuthenticationMiddleware.__name__)
+            "%s.authenticate_request() called",
+            logging.SmarterFormattedText.text(SmarterTokenAuthenticationMiddleware.__name__),
         )
 
         request.auth = SmarterTokenAuthentication()
