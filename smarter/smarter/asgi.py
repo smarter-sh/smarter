@@ -17,6 +17,7 @@ from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
 from django.core.asgi import get_asgi_application
 
 from smarter.common.conf import smarter_settings
+from smarter.common.helpers.startup_banner import print_startup_banner
 from smarter.lib import logging
 from smarter.lib.django.healthz import HealthzASGIMiddleware
 
@@ -49,5 +50,7 @@ logger.debug("smarter is using django.core.asgi with ASGIStaticFilesHandler for 
 logger.debug("ASGI application: %s", application)
 logger.debug("static_root: %s", settings.STATIC_ROOT)
 logger.debug("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
+
+print_startup_banner()
 
 __all__ = ["application"]
