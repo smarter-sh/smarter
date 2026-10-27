@@ -15,3 +15,19 @@
   Simon Brown's talks on the C4 model.
 - **Case studies:** *The Architecture of Open Source Applications* (free at `aosabook.org
   <https://aosabook.org/>`__), in which the developers of well-known systems explain their designs.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `One Image, Laptop to Production: The Case for Smarter on Docker and Kubernetes
+  <https://blog.smarter.sh/2026/04/11/smarter-docker-kubernetes/>`__, on ADR 002 and ADR 003, and
+  one image from a laptop to a production cluster; `Smarter's OpenAPI Contract: One Extensibility
+  Model for Python, Go, React and VS Code
+  <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
+  OpenAPI document that every client depends on; `Smarter's Ownership Model: One Base Class for
+  Owning, Sharing and Tracking AI Resources
+  <https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__, on who owns, sees,
+  changes and pays for each resource; `Django and AWS: Keeping the Cloud Out of Reach of Application
+  Code and Tests <https://blog.smarter.sh/2026/09/03/cloud-out-of-reach-of-tests/>`__, on the
+  service layer and guard that keep AWS and Kubernetes out of the tests; `Why Smarter Abandoned
+  MySQL & Nginx <https://blog.smarter.sh/2026/05/02/why-smarter-abandoned-mysql-nginx/>`__, on what
+  production taught about MariaDB, Traefik and cost; `Part 2: The Antipattern That Makes a Codebase
+  Diverge <https://blog.smarter.sh/2026/10/11/blog-prologue-geometric-series/>`__, on the pattern
+  that makes a series of agent changes diverge, and how to find it.

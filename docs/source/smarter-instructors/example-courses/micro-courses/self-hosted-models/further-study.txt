@@ -15,3 +15,10 @@
   inference engines and open models, and `Practical AI <https://practicalai.fm/>`__.
 - **Community:** the `r/LocalLLaMA <https://www.reddit.com/r/LocalLLaMA/>`__ community, the most
   active place to compare open models on real hardware.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Django and httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
+  <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, on keeping the credential
+  that spends money at a provider in one place; `One Image, Laptop to Production: The Case for
+  Smarter on Docker and Kubernetes
+  <https://blog.smarter.sh/2026/04/11/smarter-docker-kubernetes/>`__, on ADR 002 and ADR 003, and
+  one image from a laptop to a production cluster.
