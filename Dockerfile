@@ -339,5 +339,5 @@ FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
-CMD ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "9357", "--workers", "2"]
+CMD ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "9357", "--workers", "2", "--lifespan", "off"]
 EXPOSE 8000

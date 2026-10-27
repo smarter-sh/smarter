@@ -64,11 +64,8 @@ from smarter.common.const import (
     SmarterEnvironments,
 )
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-    formatted_text_red,
-)
+from smarter.common.helpers.console_helpers import SmarterFormattedText
+from smarter.common.helpers.processes import is_first_worker
 from smarter.common.utils import (
     get_diagnostics,
     get_repository_url,
@@ -85,7 +82,7 @@ from .services import AWS_REGIONS, services
 from .util import before_field_validator
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__) + ".Settings()"
+logger_prefix = SmarterFormattedText.text(__name__) + ".Settings()"
 
 
 #: A Django REST Framework throttle rate: requests per second, minute, hour or day.
@@ -194,12 +191,23 @@ class Settings(BaseSettings):
         # need to be mindful that __init__ is called before Django startup has begun.
         # one consequence is that logging is not yet configured, so have have to
         # use janky logging levels in order to ensure that these log messages are seen.
-        msg = f"{formatted_text(__name__)} Pydantic version: {pydantic_version} pydantic_settings.BaseSettings."
-        if self.ready():
-            ready_msg = formatted_text_green("READY")
+        # The prefix is gray rather than the usual red, so that a healthy start doesn't
+        # look like an error. READY is logged by one uvicorn worker per server, and
+        # NOT_READY by every process.
+        prefix = SmarterFormattedText.text(__name__, SmarterFormattedText.LIGHT_GRAY)
+        msg = f"{prefix} Pydantic version: {pydantic_version} pydantic_settings.BaseSettings."
+        if not self.ready():
+            logger.warning(
+                "%s Settings are %s.", msg, SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED)
+            )
+        elif is_first_worker("settings-ready"):
+            logger.warning(
+                "%s Settings are %s.", msg, SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)
+            )
         else:
-            ready_msg = formatted_text_red("NOT_READY")
-        logger.warning("%s Settings are %s.", msg, ready_msg)
+            logger.debug(
+                "%s Settings are %s.", msg, SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)
+            )
 
     init_info: Optional[str] = Field(
         None,
@@ -563,13 +571,14 @@ class Settings(BaseSettings):
         retval = True
         if self.root_domain == DEFAULT_ROOT_DOMAIN and not self.environment_is_local:
             print(
-                formatted_text_red(
+                SmarterFormattedText.text(
                     "\n"
                     + "=" * 80
                     + "\n[WARNING] ROOT_DOMAIN is set to the default value 'example.com'.\n"
                     + "This is not recommended for production deployments. Please set ROOT_DOMAIN to your actual domain.\n"
                     + "=" * 80
-                    + "\n"
+                    + "\n",
+                    SmarterFormattedText.DARK_RED,
                 )
             )
             logger.warning(
@@ -579,13 +588,14 @@ class Settings(BaseSettings):
 
         if not self.aws_is_configured:
             print(
-                formatted_text_red(
+                SmarterFormattedText.text(
                     "\n"
                     + "=" * 80
                     + "\n[WARNING] AWS is not configured properly. Some features may not work as expected.\n"
                     + "Ensure that AWS credentials are set in environment variables, .env file, or AWS config files.\n"
                     + "=" * 80
-                    + "\n"
+                    + "\n",
+                    SmarterFormattedText.DARK_RED,
                 )
             )
             logger.warning("AWS is not configured properly. Some features may not work as expected.")
