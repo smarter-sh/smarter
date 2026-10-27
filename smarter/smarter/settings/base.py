@@ -763,6 +763,18 @@ times when deploying LLMClients/Agents.
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-task_time_limit
 """
 
+CELERY_WORKER_CANCEL_LONG_RUNNING_TASKS_ON_CONNECTION_LOSS = True
+"""
+Cancel running tasks with late acknowledgement when a worker loses its broker connection.
+
+Such a task can't be acknowledged once the connection is gone, so the broker redelivers it,
+and cancelling it keeps it from running twice. True is Celery 6's default. Celery 5 warns
+on every lost connection while it is False, e.g. during a Redis restart. Smarter's tasks
+don't use late acknowledgement, so this changes no task's behavior.
+
+See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-cancel-long-running-tasks-on-connection-loss
+"""
+
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
 """
 A Celery setting that prevents Celery workers from hijacking the root logger.
