@@ -72,6 +72,16 @@ class TestCreateUser(CommandTestBase):
         self.assertEqual(AccountContact.objects.get(account=self.account, email=self.email).first_name, "Renamed")
         self.assertFalse(user.is_staff)
 
+    def test_unchanged_user_is_not_saved(self):
+        """Test that a re-run with the same values, as on every deploy, saves nothing and says so."""
+        self.create(password="same")
+        with patch.object(User, "save", autospec=True) as save, patch.object(AccountContact, "save") as contact_save:
+            output = self.create(password="same")
+        save.assert_not_called()
+        contact_save.assert_not_called()
+        self.assertIn("already exists, unchanged", output)
+        self.assertNotIn("Skipping sending password email", output)
+
     def test_email_error_is_reported(self):
         self.infrastructure.email.send_email.side_effect = Exception("smtp down")
         with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
