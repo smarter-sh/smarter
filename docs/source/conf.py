@@ -103,7 +103,12 @@ project = "Smarter Documentation"
 # pylint: disable=redefined-builtin
 copyright = f"2023 - {datetime.now().year}"
 author = AUTHOR
-release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+
+# The latest release's tag, e.g. v0.36.25, shown in every page's title. It is deliberately not
+# Sphinx's ``release``, and not in rst_epilog: Sphinx re-reads every page when either changes,
+# which is every release, and every switch between main and alpha, whose tags differ.
+# html_title only makes Sphinx rewrite the HTML, which is far quicker than reading the pages.
+smarter_release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
 
 
 try:
@@ -209,10 +214,7 @@ intersphinx_mapping = {
     "smarter_python": ("https://docs.smarter-python.smarter.sh/", None),
     "smarter_types": ("https://docs.smarter-types.smarter.sh/", None),
 }
-rst_epilog = f"""
-.. |project_version| replace:: {release}
-"""
-
+html_title = f"{project} {smarter_release} documentation"
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_theme_options = {
