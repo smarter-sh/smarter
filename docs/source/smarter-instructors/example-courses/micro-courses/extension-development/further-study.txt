@@ -22,4 +22,11 @@
 - **Podcasts:** `Talk Python To Me <https://talkpython.fm/>`__ and `Python Bytes
   <https://pythonbytes.fm/>`__, which cover packaging, Pydantic and the Python ecosystem
   regularly, and `Latent Space <https://www.latent.space/podcast>`__, on building with LLMs.
-- **Writing:** `blog.smarter.sh <https://blog.smarter.sh>`__, on how Smarter was built.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Smarter's OpenAPI Contract: One Extensibility Model for Python, Go, React and VS Code
+  <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
+  OpenAPI document that every client depends on; `Getting Started With smarter-api, the Smarter
+  Python SDK <https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__, on the typed
+  Python client for the same API; `Getting Started with Smarter's CLI
+  <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__, on applying, prompting and
+  deploying a chatbot from its manifest.

@@ -23,5 +23,19 @@
   Python To Me <https://talkpython.fm/>`__, for the Python side.
 - **Community:** the `OpenAI Developer Community <https://community.openai.com/>`__, for API
   questions and changes.
-- **Smarter:** `blog.smarter.sh <https://blog.smarter.sh/>`__, on how Smarter's prompt handler,
-  plugins and guardrails were built.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `Django and httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
+  <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, on keeping the credential
+  that spends money at a provider in one place; `Getting Started With smarter-api, the Smarter
+  Python SDK <https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__, on the typed
+  Python client for the same API; `Getting Started with @smarter.sh/ui-chat
+  <https://blog.smarter.sh/2026/08/08/getting-started-smarter-ui-chat/>`__, on using Smarter's chat
+  component in a React app; `Django Chat Sessions Across Subdomains: Why a Smarter Session Key Opens
+  Exactly One Chatbot <https://blog.smarter.sh/2026/10/04/smarter-chat-session-one-chatbot/>`__, on
+  binding a chat session to the chatbot that created it; `Smarter's OpenAPI Contract: One
+  Extensibility Model for Python, Go, React and VS Code
+  <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
+  OpenAPI document that every client depends on; `Why LLMs Love Code, and What That Means for
+  Everyone Else
+  <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
+  on why LLMs do better at code than at other work.

@@ -123,7 +123,7 @@ Beyond the Request
      - ``@cache_results`` builds a cache key from the function and its arguments, stores results
        in Redis, and can invalidate them. :doc:`ADR 018 </adr/018-caching>`.
      - `cache_results/decorators.py <https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/decorators.py>`__,
-       `lib/cache/lazy_cache.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/lazy_cache.py>`__
+       `cache_results/lazy.py <https://github.com/smarter-sh/cache-results/blob/main/src/cache_results/lazy.py>`__
    * - Testing
      - ``SmarterTestBase``, which has no transaction rollback, so tests delete what they create,
        and an in-memory provider in place of every cloud call. :doc:`ADR 013 </adr/013-testing>`.
