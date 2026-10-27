@@ -48,6 +48,7 @@ from smarter.apps.llmclient.signals import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.utils import mask_identifier
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -103,15 +104,18 @@ def create_llmclient_request(llmclient_id: int, request_data: SmarterDictType):
     pre_create_llmclient_request.send(
         sender=create_llmclient_request, llmclient_id=llmclient_id, request_data=request_data, task_id=task_id
     )
-    logger.info(
-        "%s llmclient %s task_id: %s received request data: %s",
-        logger_prefix + f".{create_llmclient_request.__name__}() task_id: %s",
+    session_key = request_data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+    # the request holds the user's prompt, which is personal data, so only its
+    # size and the masked session key are logged here.
+    logger.debug(
+        "%s.create_llmclient_request() llmclient %s task_id: %s received %s message(s) for session %s",
+        logger_prefix,
         llmclient_id,
         task_id,
-        request_data,
+        len(request_data.get("messages") or []),
+        mask_identifier(session_key),
     )
     llmclient = LLMClient.objects.get(id=llmclient_id)
-    session_key = request_data.get(SMARTER_CHAT_SESSION_KEY_NAME)
     LLMClientRequests.objects.create(llmclient=llmclient, request=request_data, session_key=session_key)
     post_create_llmclient_request.send(
         sender=create_llmclient_request, llmclient_id=llmclient_id, request_data=request_data, task_id=task_id

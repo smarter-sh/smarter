@@ -9,6 +9,8 @@ from django.dispatch import receiver
 
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.signals import plugin_deleting
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.utils import mask_identifier
 from smarter.lib import json, logging
 from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -210,9 +212,9 @@ def llmclient_requests_saved(sender, instance: LLMClientRequests, created: bool,
     """Log creation or update of LLMClientRequests."""
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_requests_saved()"
     if created:
-        logger.info("%s created %s", prefix, instance.session_key)
+        logger.info("%s created session %s", prefix, mask_identifier(instance.session_key))
     else:
-        logger.info("%s updated %s", prefix, instance.session_key)
+        logger.info("%s updated session %s", prefix, mask_identifier(instance.session_key))
 
 
 ###############################################################################
@@ -370,11 +372,13 @@ def handle_pre_create_llmclient_request(sender, **kwargs):
     llmclient_id = kwargs.get("llmclient_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
-    logger.info(
+    # the user's prompt is personal data, so it is logged at DEBUG only, and the
+    # session key, which would let anyone continue the conversation, is masked.
+    logger.debug(
         "%s llmclient_id: %s, request_data: %s",
         prefix,
         llmclient_id,
-        logging.SmarterFormattedText.json(request_data) if request_data else "No data",
+        logging.SmarterFormattedText.json(_masked_request_data(request_data)) if request_data else "No data",
     )
 
 
@@ -385,12 +389,26 @@ def handle_post_create_llmclient_request(sender, **kwargs):
     llmclient_id = kwargs.get("llmclient_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
-    logger.info(
-        "%s llmclient_id: %s, request_data: %s",
+    session_key = request_data.get(SMARTER_CHAT_SESSION_KEY_NAME) if isinstance(request_data, dict) else None
+    logger.debug(
+        "%s llmclient_id: %s, session_key: %s",
         prefix,
         llmclient_id,
-        logging.SmarterFormattedText.json(request_data) if request_data else "No data",
+        mask_identifier(session_key),
     )
+
+
+def _masked_request_data(request_data):
+    """
+    Return a copy of a chat request's data, with its session key masked, for logging.
+
+    :param request_data: The request data that the chat api received, usually a dict.
+    :returns: A shallow copy of the dict with its session key masked, or ``request_data``
+        unchanged when it isn't a dict.
+    """
+    if not isinstance(request_data, dict) or SMARTER_CHAT_SESSION_KEY_NAME not in request_data:
+        return request_data
+    return {**request_data, SMARTER_CHAT_SESSION_KEY_NAME: mask_identifier(request_data[SMARTER_CHAT_SESSION_KEY_NAME])}
 
 
 @receiver(pre_register_custom_domain, dispatch_uid="pre_register_custom_domain")
