@@ -91,9 +91,9 @@ jobs:
         id: check_changes
         run: |
           if [[ -n "$(git status --porcelain .pre-commit-config.yaml)" ]]; then
-            echo "::set-output name=changes::true"
+            echo "changes=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::set-output name=changes::false"
+            echo "changes=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Commit and push changes
@@ -103,5 +103,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .pre-commit-config.yaml
-          git commit -m "chore: [gh] version bumps in .pre-commit-config.yaml [skip ci]"
+          # No CI skip tag: this commit can become the head of the pull
+          # request from alpha to main, whose Tests would then never start.
+          git commit -m "chore: [gh] version bumps in .pre-commit-config.yaml"
           git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:alpha
