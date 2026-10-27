@@ -62,7 +62,7 @@ def reverse(*args, urlconf: Optional[str] = None, **kwargs) -> str:
     retval = django_reverse(reverse_path, urlconf=urlconf)
     logger.debug(
         "%s.reverse() view name %s resolved to path %s",
-        logging.formatted_text(__name__),
+        logging.SmarterFormattedText.text(__name__),
         reverse_path,
         retval,
     )

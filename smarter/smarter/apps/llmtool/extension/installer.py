@@ -92,7 +92,7 @@ class ExtensionInstaller:
     @property
     def formatted_class_name(self) -> str:
         """The class name, for logging."""
-        return f"{logging.formatted_text(__name__)}.{self.__class__.__name__}"
+        return f"{logging.SmarterFormattedText.text(__name__)}.{self.__class__.__name__}"
 
     def context(
         self, extension: Extension, manifest: ExtensionManifest, previous_version: Optional[str] = None

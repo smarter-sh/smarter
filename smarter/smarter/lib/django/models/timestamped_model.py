@@ -16,7 +16,7 @@ from django.utils.timezone import is_aware, make_aware
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.json import SmarterJSONEncoder
@@ -203,7 +203,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The original object ID if decoding is successful, otherwise None.
         :rtype: Optional[int]
         """
-        logger_prefix = f"{logging.formatted_text(cls.__name__)}.id_from_hashed_id()"
+        logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.id_from_hashed_id()"
         try:
             if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
                 logger.warning(
@@ -258,7 +258,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The first matching hashed ID if found, otherwise None.
         :rtype: Optional[str]
         """
-        logger_prefix = f"{logging.formatted_text(cls.__name__)}.find_hash()"
+        logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.find_hash()"
         verbose_logger.debug(
             "%s.find_hash() - Searching for hashed ID in value: %s",
             logger_prefix,
@@ -380,7 +380,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[TimestampedModel]
         """
-        logger_prefix = f"{logging.formatted_text(cls.__name__)}.get_object_by_locator()"
+        logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.get_object_by_locator()"
         verbose_logger.debug(
             "%s Attempting to retrieve object with locator: %s",
             logger_prefix,
@@ -546,7 +546,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
         """
-        logger_prefix = formatted_text(__name__ + "." + TimestampedModel.__name__ + ".get_cached_object()")
+        logger_prefix = SmarterFormattedText.text(__name__ + "." + TimestampedModel.__name__ + ".get_cached_object()")
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -611,7 +611,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: A queryset of all model instances.
         :rtype: QuerySet
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger_prefix = SmarterFormattedText.text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
         verbose_logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
 
         if cls._meta.abstract:

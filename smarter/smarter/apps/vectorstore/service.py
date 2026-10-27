@@ -72,7 +72,7 @@ from .signals import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 API_KEY_SECRET_NAME = "vectorstore_{name}_api_key"
 API_KEY_BYTES = 32

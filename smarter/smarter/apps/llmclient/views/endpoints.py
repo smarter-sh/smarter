@@ -62,7 +62,7 @@ from smarter.lib.django.views import SmarterWebHtmlView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 EXAMPLE_PROMPT = "hello world"
 """The prompt that the page's example ``/prompt/`` command sends, for an LLMClient without example prompts."""
@@ -422,7 +422,7 @@ class LLMClientEndpointsView(SmarterWebHtmlView):
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
         class_name = f"{__name__}.{LLMClientEndpointsView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return logging.SmarterFormattedText.text(class_name)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """

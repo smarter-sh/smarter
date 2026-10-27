@@ -34,15 +34,15 @@ module_prefix = __name__
 @receiver(post_save, sender=Guardrail)
 def guardrail_saved(sender, instance: Guardrail, created: bool, **kwargs):
     """Log a created or updated Guardrail."""
-    prefix = f"{logging.formatted_text(module_prefix)}.guardrail_saved()"
-    data = logging.formatted_json(GuardrailSerializer(instance).data)
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_saved()"
+    data = logging.SmarterFormattedText.json(GuardrailSerializer(instance).data)
     logger.info("%s %s %s, %s", prefix, "created" if created else "updated", instance, data)
 
 
 @receiver(pre_delete, sender=Guardrail)
 def guardrail_deleted(sender, instance: Guardrail, **kwargs):
     """Log a deleted Guardrail."""
-    prefix = f"{logging.formatted_text(module_prefix)}.guardrail_deleted()"
+    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_deleted()"
     logger.info("%s %s", prefix, instance)
 
 
@@ -54,7 +54,7 @@ def handle_guardrail_triggered(sender, guardrail: Guardrail, stage: str, disposi
     """
     logger.info(
         "%s %s %s: %s",
-        f"{logging.formatted_text(module_prefix)}.guardrail_triggered",
+        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_triggered",
         guardrail.name,
         stage,
         disposition,
@@ -66,7 +66,7 @@ def handle_guardrail_blocked(sender, guardrail: Guardrail, stage: str, message: 
     """Log a blocked message or reply."""
     logger.warning(
         "%s %s blocked the %s: %s",
-        f"{logging.formatted_text(module_prefix)}.guardrail_blocked",
+        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_blocked",
         guardrail.name,
         stage,
         message,
@@ -81,7 +81,7 @@ def handle_guardrail_escalated(sender, guardrail: Guardrail, stage: str, event=N
     """
     logger.warning(
         "%s %s escalated the %s to human review, severity %s, event %s",
-        f"{logging.formatted_text(module_prefix)}.guardrail_escalated",
+        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_escalated",
         guardrail.name,
         stage,
         guardrail.severity,
@@ -94,7 +94,7 @@ def handle_guardrail_failed(sender, guardrail: Guardrail, stage: str, error: str
     """Log a guardrail that failed to run."""
     logger.error(
         "%s %s failed on the %s%s: %s",
-        f"{logging.formatted_text(module_prefix)}.guardrail_failed",
+        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_failed",
         guardrail.name,
         stage,
         ", and blocked it" if fail_closed else "",

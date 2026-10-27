@@ -27,7 +27,7 @@ from smarter.apps.account.models import (
     is_authenticated_user,
 )
 from smarter.common.api import SmarterApiVersions
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import to_snake_case
 from smarter.lib import json
@@ -36,7 +36,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.typing import SmarterDictType
 
 logger = getLogger(__name__)
-logger_prefix = formatted_text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 _CLIENT_MANIFEST: ContextVar[bool] = ContextVar("smarter_client_manifest", default=False)
 

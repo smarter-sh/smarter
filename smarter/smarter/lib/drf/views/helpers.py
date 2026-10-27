@@ -6,7 +6,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 
@@ -30,7 +30,7 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
     @property
     def formatted_class_name(self) -> str:
         class_name = f"{__name__}.{self.__class__.__name__}"
-        return formatted_text(class_name)
+        return SmarterFormattedText.text(class_name)
 
     def has_all_permission(self, request: Request, view) -> bool:
         """Allows internal view access to authenticated users and internal API requests."""

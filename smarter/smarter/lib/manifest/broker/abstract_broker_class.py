@@ -852,7 +852,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         logger.debug(
             "%s.manifest_to_django_orm() converted manifest metadata to Django ORM dict: %s",
             self.abstract_broker_logger_prefix,
-            logging.formatted_json(retval),
+            logging.SmarterFormattedText.json(retval),
         )
 
         return retval
@@ -2734,7 +2734,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         }
         msg = (
             f"{self.abstract_broker_logger_prefix} {self.kind} "
-            f"broker is {self.abstract_broker_ready_state}: " + logging.formatted_json(state)
+            f"broker is {self.abstract_broker_ready_state}: " + logging.SmarterFormattedText.json(state)
         )
         if is_ready:
             logger.debug(msg)

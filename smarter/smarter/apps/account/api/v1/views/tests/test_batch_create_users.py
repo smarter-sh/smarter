@@ -55,15 +55,15 @@ class TestUrls(TestAccountMixin):
     def test_batch_create_users(self):
         """Test batch user creation."""
         logger.debug(
-            "Testing batch user creation with url: %s and data: %s", self.url, logging.formatted_text(self.batch_data)  # type: ignore
+            "Testing batch user creation with url: %s and data: %s", self.url, logging.SmarterFormattedText.text(self.batch_data)  # type: ignore
         )
         data = json.dumps(self.batch_data)
-        logger.debug("calling self.client.post with data: %s", logging.formatted_text(data))
+        logger.debug("calling self.client.post with data: %s", logging.SmarterFormattedText.text(data))
         response = self.client.post(self.url, data=data, content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsInstance(response.json(), dict)
 
-        logger.debug("response: %s", logging.formatted_text(response.json()))
+        logger.debug("response: %s", logging.SmarterFormattedText.text(response.json()))
 
         batch_response_model = BatchCreateUsersResponseModel(**response.json())
 
@@ -111,7 +111,7 @@ class TestUrls(TestAccountMixin):
         """Test POST with invalid body returns 400."""
         # Missing required fields
         invalid_data = {"foo": "bar"}
-        logger.debug("calling self.client.post with data: %s", logging.formatted_json(invalid_data))
+        logger.debug("calling self.client.post with data: %s", logging.SmarterFormattedText.json(invalid_data))
         response = self.client.post(self.url, data=invalid_data, content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertIn("Invalid request data", response.content.decode())
@@ -121,7 +121,7 @@ class TestUrls(TestAccountMixin):
         admin_user = self.batch_model.users[0].model_copy()
         admin_user.is_admin = True
         batch_data = {"account_number": self.batch_model.account_number, "users": [admin_user.model_dump()]}
-        logger.debug("calling self.client.post with data: %s", logging.formatted_json(batch_data))
+        logger.debug("calling self.client.post with data: %s", logging.SmarterFormattedText.json(batch_data))
         response = self.client.post(self.url, data=batch_data, content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.OK)
         resp_json = response.json()

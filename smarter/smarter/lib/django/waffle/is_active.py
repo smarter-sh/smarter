@@ -11,7 +11,7 @@ from django.db.utils import OperationalError, ProgrammingError
 from waffle import get_waffle_switch_model
 from waffle.utils import get_cache
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 from .ready import is_database_ready
@@ -33,7 +33,7 @@ except ImportError:
     MariaDBOperationalError = None
     MariaDBProgrammingError = None
 
-prefix = f"{formatted_text(__name__)}.switch_is_active()"
+prefix = f"{SmarterFormattedText.text(__name__)}.switch_is_active()"
 
 SWITCH_CACHE_SECONDS = 5
 """

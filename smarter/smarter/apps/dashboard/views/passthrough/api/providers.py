@@ -96,7 +96,9 @@ class ProviderApiView(SmarterAuthenticatedNeverCachedWebView):
             providers = Provider.objects.with_read_permission_for(user=user).prefetch_related("tags")  # type: ignore
             serialized_providers = ProviderSerializer(providers, many=True).data
             retval = {"providers": serialized_providers}
-            logger.debug("cached providers for user %s: %s", self.user_profile, logging.formatted_json(retval))
+            logger.debug(
+                "cached providers for user %s: %s", self.user_profile, logging.SmarterFormattedText.json(retval)
+            )
             return retval
 
         cached_providers = _get_cached_providers_for_user(user.id)  # type: ignore

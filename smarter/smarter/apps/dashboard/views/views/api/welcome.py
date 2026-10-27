@@ -33,7 +33,7 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 WEATHER_LLMCLIENT_NAME = "weather"
 """The example LLMClient that the welcome dialog suggests trying first.

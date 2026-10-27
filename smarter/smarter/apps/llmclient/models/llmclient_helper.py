@@ -517,7 +517,9 @@ class LLMClientHelper(SmarterRequestMixin):
         :return: A string indicating whether the LLMClientHelper is ready or not.
         """
         return (
-            logging.formatted_text_green("Ready") if self.is_helper_ready else logging.formatted_text_red("Not Ready")
+            logging.SmarterFormattedText.text("Ready", logging.SmarterFormattedText.BRIGHT_GREEN)
+            if self.is_helper_ready
+            else logging.SmarterFormattedText.text("Not Ready", logging.SmarterFormattedText.DARK_RED)
         )
 
     @property

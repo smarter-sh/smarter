@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 RequestType = Union["HttpRequest", "Request", "ASGIRequest"]
 
 
@@ -172,7 +172,9 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
 
         # pylint: disable=W0718
         except Exception as e:
-            logger.error("%s.is_authenticated_request() failed: %s", logger_prefix, logging.formatted_text(str(e)))
+            logger.error(
+                "%s.is_authenticated_request() failed: %s", logger_prefix, logging.SmarterFormattedText.text(str(e))
+            )
             return False
 
     return cached_is_authenticated_request()

@@ -224,7 +224,9 @@ class LLMClientPlugin(TimestampedModel):
         :returns: A queryset of LLMClientPlugin instances associated with the LLMClient.
         :rtype: models.QuerySet["LLMClientPlugin"]
         """
-        logger_prefix = logging.formatted_text(__name__ + "." + LLMClientPlugin.__name__ + ".get_cached_objects()")
+        logger_prefix = logging.SmarterFormattedText.text(
+            __name__ + "." + LLMClientPlugin.__name__ + ".get_cached_objects()"
+        )
 
         @cache_results()
         def _get_plugins_for_llmclient_id(
