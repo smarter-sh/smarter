@@ -93,7 +93,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         self._token_key = None
         self._created = False
         super().__init__(*args, **kwargs)
-        logger.info(
+        logger.debug(
             "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
         )
 
@@ -215,7 +215,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         logger.debug(
             "%s.manifest_to_django_orm() converted manifest metadata to Django ORM dict: %s",
             self.formatted_class_name,
-            logging.formatted_json(retval),
+            logging.SmarterFormattedText.json(retval),
         )
         return retval
 
