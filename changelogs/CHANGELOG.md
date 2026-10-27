@@ -6,11 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
-## [0.36.24-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.36.24-alpha.1...v0.36.24-alpha.2) (2026-10-27)
+## [0.36.24](https://github.com/smarter-sh/smarter/compare/v0.36.23...v0.36.24) (2026-10-27)
 
 ### Bug Fixes
 
 * **common:** tell type checkers formatted_class_name gets the class ([7954674](https://github.com/smarter-sh/smarter/commit/795467471d60c0c3095db8b4558eb0265f2a6cc2))
+* **logging:** fix a leak and noise found in the init job log ([2a5dcfc](https://github.com/smarter-sh/smarter/commit/2a5dcfc15ea8d86cffe2e1c262ae40430825552e))
+* **server:** quiet the startup log and shorten its banner ([f30bb43](https://github.com/smarter-sh/smarter/commit/f30bb43ebe5cfbdca0b8e1acd6b2b2cf789af33c))
+* **settings:** keep broker, cache and sessions in separate redis dbs ([4747562](https://github.com/smarter-sh/smarter/commit/4747562cfdfa9b4dc8f29448d0dfe823cef98d0e))
+
+### Refactoring
+
+* **logging:** call SmarterFormattedText instead of formatted_text ([ca72ef0](https://github.com/smarter-sh/smarter/commit/ca72ef0d7ca66c495ffc63d0d14544449b6e6ee3))
+
+### Performance
+
+* **helm:** run 2 uvicorn workers per app pod, one per core ([ee15430](https://github.com/smarter-sh/smarter/commit/ee154308190d8f058567aa752d56ca2d2a82ee71))
 
 ## [0.36.24-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.23...v0.36.24-alpha.1) (2026-10-27)
 
