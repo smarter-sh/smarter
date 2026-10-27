@@ -1,6 +1,9 @@
 {% extends 'dashboard/base.html' %}
 {% load static react_manifest_editor %}
 
+{# base.html renders this block in <title>, so it is plain text. The visible heading is page_heading. #}
+{% block title %}{{ page_title }} | {{ branding.smarter_product_name }}{% endblock %}
+
 {% block style_extra %}
   {{ block.super }}
 
@@ -26,7 +29,7 @@
         <div class="col-xl-8 mb-5 mb-xl-10">
           <!--begin::Row-->
           <div class="row g-5 g-xl-10 mb-l-10">
-            {% block title %}<h2>{{ page_title }}</h2>{% endblock %}
+            {% block page_heading %}<h2>{{ page_title }}</h2>{% endblock %}
             {% include 'common/manifest_editor.html' %}
 
           </div>

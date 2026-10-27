@@ -47,9 +47,25 @@ class TestSecretLogging(TestAccountMixin):
 
     def test_saved_and_updated(self):
         transformer = MagicMock(secret=self.secret, id=self.secret.id)
+        transformer.name = self.secret.name
         for receiver in (receivers.secret_saved_receiver, receivers.secret_updated_receiver):
             with patch(f"{RECEIVERS}.logger") as logger:
                 receiver(sender=None, secret=transformer, user_profile=self.user_profile)
             self.assertIn(self.secret.name, self.logged(logger))
             self.assertNotIn(self.ciphertext, self.logged(logger))
             self.assertNotIn("encrypted_value", self.logged(logger))
+
+    def test_one_info_line_per_apply(self):
+        """Loading and saving a Secret log at DEBUG; only created or updated log at INFO."""
+        transformer = MagicMock(secret=self.secret, id=self.secret.id)
+        transformer.name = self.secret.name
+        with patch(f"{RECEIVERS}.logger") as logger:
+            receivers.secret_initializing_receiver(
+                sender=None, secret_name=self.secret.name, user_profile=self.user_profile
+            )
+            receivers.secret_ready_receiver(sender=None, secret=transformer)
+            receivers.secret_updated_receiver(sender=None, secret=transformer, user_profile=self.user_profile)
+            receivers.secret_saved_receiver(sender=None, secret=transformer, user_profile=self.user_profile)
+        self.assertEqual(logger.info.call_count, 1)
+        self.assertIn("secret_updated()", logger.info.call_args.args[0])
+        self.assertEqual(logger.info.call_args.args[3], self.secret.name)
