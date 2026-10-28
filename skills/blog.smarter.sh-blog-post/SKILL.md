@@ -170,9 +170,19 @@ In this order:
    Second ... Third ...".
 8. **Takeaways** the reader can apply to their own codebase, as bullets in
    rough order of payoff.
-9. **Closing thoughts,** one or two paragraphs, then "Until then, happy
-   Smartering!" and a short list of links: Smarter on GitHub, the docs, the
-   blog, the ADRs and anything the post leaned on.
+9. **Closing thoughts,** one or two paragraphs, then a short list of links:
+   Smarter on GitHub, the docs, the blog, the ADRs and anything the post
+   leaned on.
+
+   **No stock sign-off.** "Until then, happy Smartering!" closes the example
+   post because its last paragraph names the next two parts of a series, so
+   "then" refers to something. Copied onto 27 other posts, where nothing came
+   before it to wait for, it made no sense, and the user had it removed. Most
+   posts end best on their last sentence of substance, with no sign-off at
+   all. When one fits, write it for that post, make sense of every word
+   ("Until next time", not "Until then", unless the paragraph before names
+   what "then" is), and don't reuse the sign-off of the last few posts. Check
+   the newest published posts' endings before choosing one.
 
 ## 4. Voice
 

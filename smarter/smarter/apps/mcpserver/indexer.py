@@ -11,7 +11,9 @@ up to date with its branch:
    GitHub's codeload service, streaming it to a temporary file whose size is capped.
 3. It reads the archive's text files, in memory, without extracting anything to disk. It
    keeps documentation and source code, and skips binaries, generated and vendored files,
-   lock files, and files that are too large to be useful to an LLM.
+   lock files, and files that are too large to be useful to an LLM. The images of the
+   published Sphinx documentation get their published urls, as Markdown images: see
+   :func:`link_documentation_images`.
 4. It replaces the repository's files in one transaction, so that a search never sees a
    partial index.
 
@@ -33,6 +35,7 @@ import re
 import tarfile
 import tempfile
 from typing import IO, Iterator, Optional
+from urllib.parse import urlparse
 
 import requests
 from django.db import transaction
@@ -51,6 +54,7 @@ from .models import (
     RepositoryIndexStatus,
 )
 from .repositories import ProjectRepository, get_repository
+from .search import MAX_LINE_LENGTH
 from .signals import mcpserver_repository_index_failed, mcpserver_repository_indexed
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
@@ -144,6 +148,13 @@ EXCLUDED_PATTERNS = (
 
 RST_UNDERLINE = re.compile(r"^([=\-~^\"'`#*+:.])\1{2,}\s*$")
 MARKDOWN_HEADING = re.compile(r"^#{1,3}\s+(.+?)\s*#*\s*$")
+RST_IMAGE_DIRECTIVE = re.compile(r"^(?P<indent>\s*)\.\. (?P<directive>image|figure)::\s*(?P<target>\S*)\s*$")
+RST_OPTION = re.compile(r"^\s*:(?P<name>[\w-]+):\s*(?P<value>.*)$")
+WHITESPACE = re.compile(r"\s+")
+BADGE_HOSTS = frozenset({"img.shields.io"})
+"""Hosts of status badges, which are images, but illustrate nothing."""
+MAX_IMAGE_LINE_LENGTH = MAX_LINE_LENGTH
+"""The maximum length of a line with a Markdown image: the longest line that a search's passage shows whole."""
 
 
 class ArchiveFile(BaseModel):
@@ -199,6 +210,101 @@ def document_title(content: str) -> str:
             if len(lines[i + 1].strip()) >= len(text):
                 return text[:MAX_TITLE_LENGTH]
     return ""
+
+
+def markdown_image(description: str, url: str, prefix_length: int = 0) -> tuple[str, bool]:
+    """
+    Return a Markdown image, ``![description](url)``, that fits on one line of a search's passage.
+
+    The LLM cannot see an image, so its description, e.g. its alt text, is what tells the LLM
+    what it shows, and Smarter Chat displays the image when the LLM includes it in an answer.
+
+    :param description: What the image shows. Brackets become parentheses, which Markdown allows.
+    :param url: The image's url.
+    :param prefix_length: The length of the text before the image on its line.
+    :returns: The image, and whether its description is complete. A description that does not
+        fit within :data:`MAX_IMAGE_LINE_LENGTH` is shortened, and ends with an ellipsis.
+    """
+    text = WHITESPACE.sub(" ", description).strip().replace("[", "(").replace("]", ")") or "Illustration"
+    budget = MAX_IMAGE_LINE_LENGTH - prefix_length - len(url) - len("![](…)")
+    if len(text) <= budget:
+        return f"![{text}]({url})", True
+    short = text[: max(budget, 0)].rsplit(" ", 1)[0].rstrip(",;:.") if budget >= 20 else ""
+    return (f"![{short}…]({url})" if short else f"![Illustration]({url})"), False
+
+
+def documentation_image_url(repository: ProjectRepository, target: str) -> Optional[str]:
+    """
+    Return the published url of an image of a repository's Sphinx documentation.
+
+    Sphinx copies a local image to the ``_images/`` folder of the built site, by its file name.
+
+    :param repository: The repository.
+    :param target: The image directive's argument, e.g. ``/_static/api-key-claude.png``, or a url.
+    :returns: The url, or None for a status badge, or a local image of a repository without
+        published documentation.
+    """
+    if target.startswith(("http://", "https://")):
+        return None if urlparse(target).hostname in BADGE_HOSTS else target
+    if not target or not repository.docs_url or any(character in target for character in "()<>"):
+        return None
+    return f"{repository.docs_url}_images/{posixpath.basename(target)}"
+
+
+def link_documentation_images(repository: ProjectRepository, file: ArchiveFile) -> ArchiveFile:
+    """
+    Append a Markdown image to each ``image`` and ``figure`` directive of a Sphinx source file.
+
+    An LLM cannot turn ``.. image:: /_static/x.png`` into a link, so the line that names the
+    image gets its published url, as a Markdown image whose description is the directive's
+    ``:alt:``, or else a figure's caption. The image is appended to the line, rather than added on a
+    line of its own, so that line numbers still match the file on GitHub.
+
+    :param repository: The repository.
+    :param file: The file.
+    :returns: The file, with its images linked, or unchanged if it is not a reStructuredText
+        file of the repository's published documentation.
+    """
+    if not repository.docs_root or not file.path.startswith(repository.docs_root.rstrip("/") + "/"):
+        return file
+    if not file.path.endswith(".rst"):
+        return file
+    lines = file.content.split("\n")
+    changed = False
+    for i, line in enumerate(lines):
+        match = RST_IMAGE_DIRECTIVE.match(line)
+        if not match:
+            continue
+        indent = len(match.group("indent"))
+        target, target_line, j = match.group("target"), i, i + 1
+        if not target and j < len(lines) and indentation(lines[j]) > indent and not RST_OPTION.match(lines[j]):
+            target, target_line, j = lines[j].strip(), j, j + 1
+        url = documentation_image_url(repository, target)
+        if url is None:
+            continue
+        alt, caption, blank = "", "", False
+        while j < len(lines) and (not lines[j].strip() or indentation(lines[j]) > indent):
+            option = RST_OPTION.match(lines[j])
+            if not lines[j].strip():
+                blank = True
+            elif option and not blank:
+                alt = option.group("value") if option.group("name") == "alt" else alt
+            elif blank and not caption and match.group("directive") == "figure":
+                caption = lines[j].strip()
+            j += 1
+        prefix = lines[target_line].rstrip() + "  "
+        image, _ = markdown_image(alt or caption, url, prefix_length=len(prefix))
+        lines[target_line] = prefix + image
+        changed = True
+    if not changed:
+        return file
+    content = "\n".join(lines)
+    return file.model_copy(update={"content": content, "size": len(content.encode())})
+
+
+def indentation(line: str) -> int:
+    """Return the number of spaces before a line's text."""
+    return len(line) - len(line.lstrip())
 
 
 def decode_text(data: bytes) -> Optional[str]:
@@ -400,7 +506,7 @@ def index_repository(name: str, force: bool = False) -> RepositoryIndex:
         with tempfile.TemporaryFile() as archive:
             size = download_archive(repository, commit_sha, archive)
             logger.info("%s downloaded %s at %s: %s bytes.", prefix, repository.full_name, commit_sha, size)
-            files = collect_files(archive)
+            files = [link_documentation_images(repository, file) for file in collect_files(archive)]
         index = store_files(index, commit_sha, files)
     except SmarterMCPServerIndexError as e:
         status = RepositoryIndexStatus.READY if index.is_ready else RepositoryIndexStatus.FAILED
@@ -416,10 +522,13 @@ __all__ = [
     "ArchiveFile",
     "collect_files",
     "document_title",
+    "documentation_image_url",
     "download_archive",
     "file_kind",
     "index_repository",
     "latest_commit_sha",
+    "link_documentation_images",
+    "markdown_image",
     "read_archive",
     "store_files",
 ]
