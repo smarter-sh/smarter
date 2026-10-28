@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.37.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.36.28...v0.37.0-alpha.1) (2026-10-28)
+
+### Features
+
+* **mcpserver:** search the blog, read every repo and manifest schemas ([e7bf450](https://github.com/smarter-sh/smarter/commit/e7bf45081d8149d9a56b44c652f50435d43b72e2))
+
 ## [0.36.28](https://github.com/smarter-sh/smarter/compare/v0.36.27...v0.36.28) (2026-10-27)
 
 ### Bug Fixes

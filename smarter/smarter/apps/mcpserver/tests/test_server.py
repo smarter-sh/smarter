@@ -50,6 +50,7 @@ class TestSmarterProjectMCPServer(MCPServerTestBase):
         self.assertEqual(result.server_info.name, self.server.name)
         self.assertIn(self.docs_repository.full_name, result.instructions)
         self.assertIn("search_documentation", result.instructions)
+        self.assertIn("get_manifest_schema", result.instructions)
 
     def test_initialize_negotiates_the_protocol_version(self):
         """Every handshake version is accepted, and an unknown one is answered with the latest."""
@@ -69,22 +70,35 @@ class TestSmarterProjectMCPServer(MCPServerTestBase):
         instructions = self.all_server.instructions()
         for repository in self.repositories:
             self.assertIn(f"- {repository.name}: {repository.title}", instructions)
+        self.assertIn(f"search_blog finds the posts of the blog, {self.blog.url}", instructions)
+        self.assertIn("include its Markdown image in your answer", instructions)
+        self.assertNotIn("search_blog", self.server.instructions())
 
     def test_ping(self):
         """Ping returns an empty result."""
         self.assertEqual(self.server.handle(request("ping")), {"jsonrpc": "2.0", "id": 1, "result": {}})
 
     def test_tools_list(self):
-        """The five read-only tools are listed."""
+        """The read-only tools are listed, and the blog's only by the server of all of the repositories."""
         response = self.server.handle(request("tools/list", {}))
         result = mcp_types.ListToolsResult.model_validate(response["result"])
         self.assertEqual(
             [tool.name for tool in result.tools],
-            ["get_repository_overview", "search_documentation", "search_code", "read_file", "list_files"],
+            [
+                "get_repository_overview",
+                "search_documentation",
+                "search_code",
+                "read_file",
+                "list_files",
+                "get_manifest_schema",
+            ],
         )
         self.assertNotIn("repository", result.tools[3].input_schema["properties"])
         all_tools = mcp_types.ListToolsResult.model_validate(self.all_server.handle(request("tools/list"))["result"])
         self.assertIn("repository", all_tools.tools[3].input_schema["required"])
+        self.assertEqual(
+            [tool.name for tool in all_tools.tools[5:]], ["get_manifest_schema", "search_blog", "read_blog_post"]
+        )
 
     def test_tools_call(self):
         """A tool call returns text, and sends a signal."""

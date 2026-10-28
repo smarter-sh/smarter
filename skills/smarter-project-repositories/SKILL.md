@@ -45,7 +45,9 @@ loads, the command that handles that repository (`load_from_github`) fetches and
    `skills/smarter-project-repositories/scripts/smarter-project-mcp.sh <tool> '<json>'`.
    Its tools are `search_documentation`, `search_code`, `read_file`,
    `list_files` and `get_repository_overview`, each taking an optional
-   `repository`. It reads `SMARTER_PROJECT_MCP_URL`, which defaults to the local dev
+   `repository`, `get_manifest_schema`, which returns a kind's example manifest
+   and fields, and `search_blog` and `read_blog_post`, which read the posts of
+   blog.smarter.sh. It reads `SMARTER_PROJECT_MCP_URL`, which defaults to the local dev
    server. The user may set it to a deployed platform in their own environment.
    Never write a deployed platform's host into this repository. Its results cite the
    GitHub commit they were indexed at, which can differ from the checkout.
