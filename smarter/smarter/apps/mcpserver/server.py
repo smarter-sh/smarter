@@ -9,7 +9,7 @@ The Smarter Project MCP server: the Model Context Protocol, over Streamable HTTP
 - ``initialize``: the server's identity, its tools capability and its instructions.
 - ``notifications/initialized`` and every other notification: accepted, and ignored.
 - ``ping``: an empty result.
-- ``tools/list``: the tools of :mod:`smarter.apps.mcpserver.tools`.
+- ``tools/list``: the tools of :mod:`smarter.apps.mcpserver.tools` that the server serves.
 - ``tools/call``: runs a tool. A tool's own errors, e.g. a file that does not exist, are
   returned as a result with ``isError`` set, so that the LLM can correct its call.
 
@@ -46,6 +46,7 @@ from .exceptions import SmarterMCPServerToolError
 from .repositories import (
     SMARTER_PROJECT_DOCS_LATEST_URL,
     ProjectRepository,
+    project_blog,
     project_repositories,
 )
 from .signals import mcpserver_called, mcpserver_tool_called
@@ -70,12 +71,24 @@ documentation that is published at {docs_url}, and in READMEs.
 - search_code finds how something is implemented, and a class, function, setting or manifest field by name.
 - read_file reads a file that a search returned, to confirm the details before you answer.
 - get_repository_overview and list_files describe a repository's layout.
+- get_manifest_schema returns a resource kind's example manifest and every field of its manifest, from \
+the JSON Schema that the platform validates manifests with. Call it before you write, fix or explain a \
+manifest, and never invent a field that it does not list.{blog}
 
 Search with specific keywords and identifiers. Some clients allow only one round of tool calls \
 per answer, so make every search that you need at once, in parallel, e.g. search_documentation and \
 search_code together, rather than one after another. Their results include the matching lines, which \
 are usually enough to answer. Cite your sources: link to the published documentation page when a result has one, and \
 otherwise to the GitHub url of the file.{repositories}"""
+
+BLOG_INSTRUCTIONS = """
+- search_blog finds the posts of the blog, {blog_url}: release announcements, and articles about how \
+and why Smarter was built, e.g. its security, logging, testing and caching. They often explain a design, \
+and its limits, more completely than the documentation does. For why and how questions, and questions \
+about safety, design decisions or what changed in a release, call search_blog together with \
+search_documentation. read_blog_post reads a post that a search returned. A post's illustrations are \
+Markdown images, ![description](url), followed by their full description: when one shows what the \
+user asked about, include its Markdown image in your answer."""
 
 
 class SmarterProjectMCPServer:
@@ -96,7 +109,7 @@ class SmarterProjectMCPServer:
             repositories=(repository,) if repository else project_repositories(),
         )
         self.tools: dict[str, SmarterProjectTool] = {
-            tool_class.name: tool_class(self.scope) for tool_class in TOOL_CLASSES
+            tool_class.name: tool_class(self.scope) for tool_class in TOOL_CLASSES if tool_class.serves(self.scope)
         }
 
     def __repr__(self) -> str:
@@ -123,7 +136,7 @@ class SmarterProjectMCPServer:
             description=(
                 repository.description
                 if repository
-                else "The documentation and source code of every repository of The Smarter Project."
+                else "The documentation and source code of every repository of The Smarter Project, and its blog."
             ),
             website_url=SMARTER_PROJECT_WEBSITE_URL,
         )
@@ -134,12 +147,16 @@ class SmarterProjectMCPServer:
         if repository:
             subject = f"the {repository.full_name} GitHub repository, {repository.title}"
             repositories = ""
+            blog = ""
         else:
-            subject = "every GitHub repository of The Smarter Project"
+            subject = "every GitHub repository of The Smarter Project, and its blog"
             repositories = "\n\nThe repositories:\n" + "\n".join(
                 f"- {r.name}: {r.title}" for r in self.scope.repositories
             )
-        return INSTRUCTIONS.format(subject=subject, docs_url=SMARTER_PROJECT_DOCS_LATEST_URL, repositories=repositories)
+            blog = BLOG_INSTRUCTIONS.format(blog_url=project_blog().url)
+        return INSTRUCTIONS.format(
+            subject=subject, docs_url=SMARTER_PROJECT_DOCS_LATEST_URL, repositories=repositories, blog=blog
+        )
 
     # -------------------------------------------------------------------------
     # JSON-RPC
