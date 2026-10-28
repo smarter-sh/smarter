@@ -14,6 +14,7 @@ import requests
 from smarter.apps.mcpserver import indexer
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerIndexError
 from smarter.apps.mcpserver.indexer import (
+    ArchiveFile,
     collect_files,
     decode_text,
     document_title,
@@ -21,6 +22,8 @@ from smarter.apps.mcpserver.indexer import (
     file_kind,
     index_repository,
     latest_commit_sha,
+    link_documentation_images,
+    markdown_image,
     read_archive,
 )
 from smarter.apps.mcpserver.models import (
@@ -34,7 +37,13 @@ from smarter.apps.mcpserver.signals import (
     mcpserver_repository_indexed,
 )
 
-from .base_classes import COMMIT_SHA, NEW_COMMIT_SHA, MCPServerTestBase, build_archive
+from .base_classes import (
+    COMMIT_SHA,
+    DOCS_URL,
+    NEW_COMMIT_SHA,
+    MCPServerTestBase,
+    build_archive,
+)
 
 REQUESTS_PATCH = "smarter.apps.mcpserver.indexer.requests.get"
 
@@ -212,6 +221,98 @@ class TestIndexerHelpers(MCPServerTestBase):
         with mock.patch(REQUESTS_PATCH, side_effect=requests.exceptions.ReadTimeout("slow")):
             with self.assertRaises(SmarterMCPServerIndexError):
                 download_archive(self.docs_repository, NEW_COMMIT_SHA, io.BytesIO())
+
+
+RST_WITH_IMAGES = """\
+Guide
+=====
+
+.. image:: /_static/api-key-claude.png
+   :alt: The [API keys] page
+
+.. figure::
+   https://cdn.example.com/pre-commit.png
+   :alt: pre-commit output
+
+   pre-commit output
+
+.. figure:: https://cdn.example.com/naming.png
+  :align: center
+
+  How resources are named.
+
+.. image:: https://img.shields.io/badge/x-y-blue
+   :alt: A badge
+
+.. image:: _static/diagram.svg
+
+    .. image:: https://cdn.example.com/indented.png
+       :alt: Indented
+Text after."""
+
+
+class TestDocumentationImages(MCPServerTestBase):
+    """Test the Markdown images of the Sphinx documentation's image directives."""
+
+    def rst_file(self, path: str = "docs/source/guide.rst", content: str = RST_WITH_IMAGES) -> ArchiveFile:
+        return ArchiveFile(
+            path=path,
+            kind=RepositoryFileKind.DOCUMENTATION,
+            title="Guide",
+            content=content,
+            size=len(content.encode()),
+            line_count=content.count("\n") + 1,
+        )
+
+    def test_markdown_image(self):
+        """A description that does not fit on the line is shortened, and one that cannot fit is an Illustration."""
+        self.assertEqual(markdown_image("A [b]  c", "https://x/y.png"), ("![A (b) c](https://x/y.png)", True))
+        self.assertEqual(markdown_image("", "https://x/y.png"), ("![Illustration](https://x/y.png)", True))
+        image, complete = markdown_image("word " * 100, "https://x/y.png")
+        self.assertFalse(complete)
+        self.assertTrue(image.endswith("…](https://x/y.png)"))
+        self.assertLessEqual(len(image), indexer.MAX_IMAGE_LINE_LENGTH)
+        self.assertEqual(
+            markdown_image("word " * 10, "https://x/y.png", prefix_length=220),
+            ("![Illustration](https://x/y.png)", False),
+        )
+
+    def test_link_documentation_images(self):
+        """Each image gets its published url on the line that names it, so line numbers do not change."""
+        file = link_documentation_images(self.docs_repository, self.rst_file())
+        lines = file.content.split("\n")
+        self.assertEqual(len(lines), len(RST_WITH_IMAGES.split("\n")))
+        self.assertEqual(file.size, len(file.content.encode()))
+        self.assertEqual(
+            lines[3],
+            f".. image:: /_static/api-key-claude.png  ![The (API keys) page]({DOCS_URL}_images/api-key-claude.png)",
+        )
+        self.assertEqual(
+            lines[7],
+            "   https://cdn.example.com/pre-commit.png  ![pre-commit output](https://cdn.example.com/pre-commit.png)",
+        )
+        self.assertTrue(lines[12].endswith("![How resources are named.](https://cdn.example.com/naming.png)"))
+        self.assertNotIn("![", lines[17])
+        self.assertTrue(lines[20].endswith(f"![Illustration]({DOCS_URL}_images/diagram.svg)"))
+        self.assertTrue(lines[22].endswith("![Indented](https://cdn.example.com/indented.png)"))
+
+    def test_files_that_are_not_published_documentation(self):
+        """Files outside docs_root, files that are not reStructuredText, and repositories without docs are unchanged."""
+        for repository, file in (
+            (self.code_repository, self.rst_file()),
+            (self.docs_repository, self.rst_file(path="README.rst")),
+            (self.docs_repository, self.rst_file(path="docs/source/guide.md")),
+            (self.docs_repository, self.rst_file(content="No images here.")),
+        ):
+            with self.subTest(repository=repository.name, path=file.path):
+                self.assertIs(link_documentation_images(repository, file), file)
+
+    def test_local_images_of_a_repository_without_published_documentation(self):
+        """A local image has no url without published documentation, and a remote one keeps its own."""
+        repository = self.code_repository.model_copy(update={"docs_root": "docs/source"})
+        lines = link_documentation_images(repository, self.rst_file()).content.split("\n")
+        self.assertNotIn("![", lines[3])
+        self.assertIn("![pre-commit output](https://cdn.example.com/pre-commit.png)", lines[7])
 
 
 class TestIndexRepository(MCPServerTestBase):

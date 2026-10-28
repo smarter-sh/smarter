@@ -1,0 +1,37 @@
+# The posts of the test blog of the mcpserver tests, as the WordPress REST api returns them.
+# base_classes.py indexes them with blog.post_file() and indexer.store_files(), and
+# test_blog.py serves them from a fake WordPress.
+- id: 102
+  date: "2026-10-20T09:00:00"
+  modified: "2026-10-22T10:30:00"
+  slug: keeping-secrets-out-of-the-logs
+  link: https://blog.example.com/2026/10/20/keeping-secrets-out-of-the-logs/
+  title:
+    rendered: "Keeping Secrets Out of the Logs &#8211; a Review"
+  content:
+    rendered: |
+      <p class="wp-block-paragraph">Every log message is reviewed for <strong>leaked credentials</strong> before a release.</p>
+      <h2 class="wp-block-heading">How the review works</h2>
+      <p>The scanner reads the init job's log, and flags passwords, tokens and api keys.</p>
+      <div class="wp-block-syntaxhighlighter-code"><pre class="brush: bash">
+      scan-log init-job.log
+      </pre></div>
+      <ul><li>Secrets are <code>SecretStr</code> values.</li><li>Connection strings are masked.</li></ul>
+      <figure class="wp-block-table"><table><thead><tr><th>Leak</th><th>Fix</th></tr></thead>
+      <tbody><tr><td>token prefix</td><td>removed</td></tr></tbody></table></figure>
+      <blockquote><p>A log is public until proven otherwise.</p></blockquote>
+      <figure class="wp-block-image"><img src="https://blog.example.com/x.png" alt=""/><figcaption>The scanner's report.</figcaption></figure>
+      <ol><li>Scan.</li><li>Fix.</li></ol>
+      <hr/>
+- id: 101
+  date: "2026-10-01T09:00:00"
+  modified: "2026-10-01T09:00:00"
+  slug: release-v1-0
+  link: https://blog.example.com/2026/10/01/release-v1-0/
+  title:
+    rendered: "v1.0 Release: Custom Domains"
+  content:
+    rendered: |
+      <p>v1.0 adds custom domains, with hourly verification of their DNS records.</p>
+      <h3>Upgrading</h3>
+      <p>Run the migrations, then restart the workers.</p>

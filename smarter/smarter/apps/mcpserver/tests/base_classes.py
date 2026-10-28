@@ -1,11 +1,12 @@
 """
 Test harness for the mcpserver app.
 
-The tests never contact GitHub. :class:`MCPServerTestBase` replaces The Smarter Project's
-repositories with throwaway test repositories, whose names are unique to the test class, so
-that their indexes never collide with the real repositories' indexes in the database. It
-indexes two of them from ./data/repository-files.yaml, and leaves a third unindexed. The
-Celery task that indexes a repository is replaced for every test.
+The tests never contact GitHub or the blog. :class:`MCPServerTestBase` replaces The Smarter
+Project's repositories, and its blog, with throwaway test repositories and a test blog,
+whose names are unique to the test class, so that their indexes never collide with the real
+indexes in the database. It indexes two of the repositories from ./data/repository-files.yaml,
+leaves a third unindexed, and indexes the blog from ./data/blog-posts.yaml. The Celery tasks
+that index a repository, and the blog, are replaced for every test.
 
 .. note::
 
@@ -21,9 +22,15 @@ from unittest import mock
 
 from cache_results import lazy_cache
 
+from smarter.apps.mcpserver.blog import (
+    WORDPRESS_POSTS,
+    WordPressPost,
+    post_file,
+    posts_fingerprint,
+)
 from smarter.apps.mcpserver.indexer import ArchiveFile, file_kind, store_files
 from smarter.apps.mcpserver.models import RepositoryIndex
-from smarter.apps.mcpserver.repositories import ProjectRepository
+from smarter.apps.mcpserver.repositories import ProjectBlog, ProjectRepository
 from smarter.apps.mcpserver.tools import queue_indexing_key
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.typing import SmarterDictType
@@ -35,13 +42,21 @@ DATA_PATH = os.path.join(HERE, "data")
 COMMIT_SHA = "0123456789abcdef0123456789abcdef01234567"
 NEW_COMMIT_SHA = "fedcba9876543210fedcba9876543210fedcba98"
 DOCS_URL = "https://docs.example.com/en/latest/"
+BLOG_URL = "https://blog.example.com"
 REPOSITORIES_PATCH = "smarter.apps.mcpserver.repositories.SMARTER_PROJECT_REPOSITORIES"
+BLOG_PATCH = "smarter.apps.mcpserver.repositories.SMARTER_PROJECT_BLOG"
 INDEX_TASK_PATCH = "smarter.apps.mcpserver.tasks.index_repository"
+INDEX_BLOG_TASK_PATCH = "smarter.apps.mcpserver.tasks.index_blog"
 
 
 def repository_files() -> SmarterDictType:
     """Return the test repositories' files, from ./data/repository-files.yaml."""
     return get_readonly_yaml_file(os.path.join(DATA_PATH, "repository-files.yaml"))
+
+
+def blog_posts() -> list[WordPressPost]:
+    """Return the test blog's posts, from ./data/blog-posts.yaml."""
+    return WORDPRESS_POSTS.validate_python(get_readonly_yaml_file(os.path.join(DATA_PATH, "blog-posts.yaml")))
 
 
 def archive_files(files: list[SmarterDictType]) -> list[ArchiveFile]:
@@ -95,7 +110,10 @@ class MCPServerTestBase(SmarterTestBase):
     - ``code_repository``: a repository without published documentation, indexed at :data:`COMMIT_SHA`.
     - ``unindexed_repository``: a repository that is not indexed.
 
-    ``mock_index_task`` replaces the Celery task that indexes a repository.
+    - ``blog``: a blog, whose posts are indexed.
+
+    ``mock_index_task`` replaces the Celery task that indexes a repository, and
+    ``mock_index_blog_task`` the one that indexes the blog.
     """
 
     docs_repository: ProjectRepository
@@ -104,6 +122,8 @@ class MCPServerTestBase(SmarterTestBase):
     repositories: tuple[ProjectRepository, ...]
     docs_index: RepositoryIndex
     code_index: RepositoryIndex
+    blog: ProjectBlog
+    blog_index: RepositoryIndex
 
     @classmethod
     def setUpClass(cls):
@@ -123,17 +143,30 @@ class MCPServerTestBase(SmarterTestBase):
             name=f"test-mcpserver-unindexed-{suffix}", title="the test sdk", description="A test sdk."
         )
         cls.repositories = (cls.docs_repository, cls.code_repository, cls.unindexed_repository)
+        cls.blog = ProjectBlog(
+            name=f"test-mcpserver-blog-{suffix}", title="the test blog", description="The test blog.", url=BLOG_URL
+        )
         cls.repositories_patcher = mock.patch(REPOSITORIES_PATCH, cls.repositories)
         cls.repositories_patcher.start()
+        cls.blog_patcher = mock.patch(BLOG_PATCH, cls.blog)
+        cls.blog_patcher.start()
         files = repository_files()
         cls.docs_index = cls.build_index(cls.docs_repository, files["docs"])
         cls.code_index = cls.build_index(cls.code_repository, files["code"])
+        posts = blog_posts()
+        blog_index, _ = RepositoryIndex.objects.get_or_create(repository=cls.blog.name)
+        cls.blog_index = store_files(
+            blog_index, posts_fingerprint(posts), [post_file(cls.blog, post) for post in posts]
+        )
 
     @classmethod
     def tearDownClass(cls):
         try:
-            RepositoryIndex.objects.filter(repository__in=[repository.name for repository in cls.repositories]).delete()
+            RepositoryIndex.objects.filter(
+                repository__in=[repository.name for repository in cls.repositories] + [cls.blog.name]
+            ).delete()
         finally:
+            cls.blog_patcher.stop()
             cls.repositories_patcher.stop()
             super().tearDownClass()
 
@@ -148,5 +181,8 @@ class MCPServerTestBase(SmarterTestBase):
         patcher = mock.patch(INDEX_TASK_PATCH)
         self.mock_index_task = patcher.start()
         self.addCleanup(patcher.stop)
-        for repository in self.repositories:
-            lazy_cache.delete(queue_indexing_key(repository.name))
+        blog_patcher = mock.patch(INDEX_BLOG_TASK_PATCH)
+        self.mock_index_blog_task = blog_patcher.start()
+        self.addCleanup(blog_patcher.stop)
+        for name in [repository.name for repository in self.repositories] + [self.blog.name]:
+            lazy_cache.delete(queue_indexing_key(name))
