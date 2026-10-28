@@ -3,9 +3,11 @@ Celery tasks for the mcpserver app.
 
 - :func:`index_repository` brings one repository's index up to date. The MCP server's
   tools queue it for a repository that is not indexed yet.
+- :func:`index_blog` brings the blog's index up to date with its published posts.
 - :func:`index_repositories` queues :func:`index_repository` for every repository of The
-  Smarter Project. Celery Beat runs it hourly, and ``manage.py initialize_platform`` queues
-  it. A repository whose branch has not moved costs one request to the GitHub api.
+  Smarter Project, and :func:`index_blog`. Celery Beat runs it hourly, and ``manage.py
+  initialize_platform`` queues it. A repository whose branch has not moved costs one
+  request to the GitHub api, and the blog one request per 100 posts.
 
 A repository that cannot be indexed is recorded in its index's ``error``. It is not an error
 of the task, so the tasks do not retry.
@@ -22,7 +24,7 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
-from . import indexer
+from . import blog, indexer
 from .repositories import repository_names
 
 logger = logging.getSmarterLogger(
@@ -53,18 +55,39 @@ def index_repository(name: str, force: bool = False) -> str:
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+def index_blog(force: bool = False) -> str:
+    """
+    Bring the blog's index up to date with its published posts.
+
+    :param force: Index the posts even if they are already indexed.
+    :returns: The index's status.
+    :rtype: str
+    """
+    index = blog.index_blog(force=force)
+    logger.info(
+        "%s.index_blog() %s is %s: %s posts.",
+        logger_prefix,
+        index.repository,
+        index.status,
+        index.file_count,
+    )
+    return str(index.status)
+
+
+@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
 def index_repositories(force: bool = False) -> int:
     """
-    Queue :func:`index_repository` for every repository of The Smarter Project.
+    Queue :func:`index_repository` for every repository of The Smarter Project, and :func:`index_blog`.
 
-    :param force: Index each repository even if its latest commit is already indexed.
-    :returns: The number of repositories queued.
+    :param force: Index each repository, and the blog, even if they are already indexed.
+    :returns: The number of repositories queued, not counting the blog.
     :rtype: int
     """
     names = repository_names()
     for name in names:
         index_repository.delay(name, force=force)
+    index_blog.delay(force=force)
     return len(names)
 
 
-__all__ = ["index_repositories", "index_repository"]
+__all__ = ["index_blog", "index_repositories", "index_repository"]
