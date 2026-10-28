@@ -27,6 +27,14 @@ class SmarterMCPClientConnectionError(SmarterMCPClientException):
         return "Smarter MCPClient connection error"
 
 
+class SmarterMCPClientToolError(SmarterMCPClientException):
+    """An MCP server's tool reported an error, which is returned to the LLM and never cached."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter MCPClient tool error"
+
+
 class SmarterMCPClientPermissionError(SmarterMCPClientException):
     """A tool or resource is not allowed by an MCPClient's allowedTools or allowedResources."""
 

@@ -11,7 +11,11 @@ Test :mod:`smarter.apps.mcpclient.toolkit`.
 from unittest import mock
 
 from smarter.apps.llmtool.plugin.tests.base_classes import capture_signal
-from smarter.apps.mcpclient.connection import MCPServerConnection, MCPToolInfo
+from smarter.apps.mcpclient.connection import (
+    MCPServerConnection,
+    MCPToolInfo,
+    MCPToolResult,
+)
 from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
 from smarter.apps.mcpclient.signals import (
     mcpclient_resource_read,
@@ -137,6 +141,95 @@ class TestMCPToolkit(MCPClientTestBase):
             result = toolkit.call(self.function_name(toolkit, "echo"), {"text": "hi"})
         self.assertIn("server is down", result)
         self.assertEqual(failed[0]["tool_name"], "echo")
+
+    def test_read_only(self):
+        """Test that a tool is read-only when the server marks it readOnlyHint, and the read_resource tool always is."""
+        toolkit = self.load()
+        self.assertTrue(toolkit.functions[self.function_name(toolkit, "echo")].read_only)
+        self.assertFalse(toolkit.functions[self.function_name(toolkit, "add_numbers")].read_only)
+        self.assertTrue(toolkit.functions[f"mcp{self.mcpclient.id}_read_resource"].read_only)
+
+    def test_read_only_tool_is_cached(self):
+        """Test that a read-only tool's result is cached, by its arguments, and reported as cached."""
+        toolkit = self.load()
+        name = self.function_name(toolkit, "echo")
+        with (
+            mock_mcp_server(),
+            mock.patch.object(
+                MCPServerConnection, "call_tool", autospec=True, side_effect=MCPServerConnection.call_tool
+            ) as call_tool,
+            capture_signal(mcpclient_tool_called) as called,
+            capture_signal(mcpclient_tool_responded) as responded,
+        ):
+            first = toolkit.call(name, {"text": "cached once"})
+            second = toolkit.call(name, {"text": "cached once"})
+            other = toolkit.call(name, {"text": "other arguments"})
+        self.assertEqual((first, second, other), ("cached once", "cached once", "other arguments"))
+        self.assertEqual(call_tool.call_count, 2)
+        self.assertEqual(len(called), 3)
+        self.assertEqual([signal["cached"] for signal in responded], [False, True, False])
+
+    def test_tool_that_is_not_read_only_is_not_cached(self):
+        """Test that a tool that may change something is called every time."""
+        toolkit = self.load()
+        name = self.function_name(toolkit, "add_numbers")
+        with (
+            mock_mcp_server(),
+            mock.patch.object(
+                MCPServerConnection, "call_tool", autospec=True, side_effect=MCPServerConnection.call_tool
+            ) as call_tool,
+        ):
+            self.assertEqual(toolkit.call(name, {"a": 1, "b": 2}), "3")
+            self.assertEqual(toolkit.call(name, {"a": 1, "b": 2}), "3")
+        self.assertEqual(call_tool.call_count, 2)
+
+    def test_read_only_tool_error_is_not_cached(self):
+        """Test that an error reported by a read-only tool is returned to the LLM, and not cached."""
+        toolkit = self.load()
+        name = self.function_name(toolkit, "echo")
+        with (
+            mock.patch.object(
+                MCPServerConnection, "call_tool", return_value=MCPToolResult(text="no such text", is_error=True)
+            ) as call_tool,
+            capture_signal(mcpclient_tool_responded) as responded,
+        ):
+            first = toolkit.call(name, {"text": "an error"})
+            second = toolkit.call(name, {"text": "an error"})
+        self.assertEqual(first, "Error: no such text")
+        self.assertEqual(second, first)
+        self.assertEqual(call_tool.call_count, 2)
+        self.assertTrue(all(signal["is_error"] and not signal["cached"] for signal in responded))
+
+    def test_cache_ttl_zero_disables_the_cache(self):
+        """Test that an MCPClient with cacheTtl 0 calls even its read-only tools every time."""
+        mcpclient = self.new_mcpclient("test_mcpclient_no_cache", cache_ttl=0)
+        toolkit = self.load(mcpclient)
+        name = next(name for name, function in toolkit.functions.items() if function.tool_name == "echo")
+        with (
+            mock_mcp_server(),
+            mock.patch.object(
+                MCPServerConnection, "call_tool", autospec=True, side_effect=MCPServerConnection.call_tool
+            ) as call_tool,
+        ):
+            toolkit.call(name, {"text": "uncached"})
+            toolkit.call(name, {"text": "uncached"})
+        self.assertEqual(call_tool.call_count, 2)
+
+    def test_read_resource_is_cached(self):
+        """Test that a resource read is cached, and reported as cached."""
+        toolkit = self.load()
+        name = f"mcp{self.mcpclient.id}_read_resource"
+        with (
+            mock_mcp_server(),
+            mock.patch.object(
+                MCPServerConnection, "read_resource", autospec=True, side_effect=MCPServerConnection.read_resource
+            ) as read_resource,
+            capture_signal(mcpclient_resource_read) as read,
+        ):
+            self.assertEqual(toolkit.call(name, {"uri": README_URI, "x": 1}), README_TEXT)
+            self.assertEqual(toolkit.call(name, {"x": 1, "uri": README_URI}), README_TEXT)
+        self.assertEqual(read_resource.call_count, 1)
+        self.assertEqual([signal["cached"] for signal in read], [False, True])
 
     def test_call_unknown_function(self):
         """Test that an unknown function name is reported to the LLM as text."""

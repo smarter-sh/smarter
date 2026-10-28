@@ -90,10 +90,12 @@ Arguments:
     version: The extension's version.
     tool_name: The tool's name.
     characters: The length of the result, as JSON.
+    cached: True if the result came from the cache, without running the tool. See
+        :attr:`~smarter.apps.llmtool.extension.protocol.SmarterExtensionTool.cache_ttl`.
 
 Example::
 
-    extension_tool_responded.send(sender=self.__class__, slug="weather", version="1.0.0", tool_name="get_weather", characters=1024)
+    extension_tool_responded.send(sender=self.__class__, slug="weather", version="1.0.0", tool_name="get_weather", characters=1024, cached=False)
 """
 
 extension_tool_failed = Signal()

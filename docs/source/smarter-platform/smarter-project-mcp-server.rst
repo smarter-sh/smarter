@@ -179,6 +179,13 @@ modification times, and a blog whose posts have not changed is not stored again.
 The indexes are the ``RepositoryIndex`` and ``RepositoryFile`` rows of the Django admin's
 *MCPServer* app, which shows each repository's commit, file count and last error.
 
+Because the data changes only when an index does, each tool call's result is cached for an hour, by
+the server, the tool and its arguments, so a repeated search or read costs no query at all. A
+repository or blog that is indexed again starts a new index generation, which is part of every
+cached result's key, so new files and posts are found at once rather than an hour later. Errors are
+never cached. See :mod:`smarter.apps.mcpserver.caching`. The server marks every tool read-only, so
+an MCPClient that calls it caches the results on its side too.
+
 The Built-in MCPClients
 -----------------------
 

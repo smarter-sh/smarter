@@ -454,6 +454,7 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             pk=3, slug="calculator", installed_version=MagicMock(version="1.0.0")
         )
         toolkit.tool_name_for.return_value = "calculator"
+        toolkit.functions = {"ext_calculator_calculator": MagicMock(tool=MagicMock(cache_ttl=0))}
         self.client.extension_toolkit = toolkit
         self.addCleanup(setattr, self.client, "extension_toolkit", None)
         return toolkit
