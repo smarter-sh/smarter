@@ -68,6 +68,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
+from smarter.lib.cache.tool_results import is_error_result
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -76,6 +77,14 @@ from smarter.lib.typing import SmarterDictType
 from .chat_provider_base import SmarterChatProviderBase
 from .exception_map import exception_status_and_message
 from .internal_keys import _InternalKeys
+from .prompt_cache import (
+    PromptCacheHit,
+    PromptCacheKey,
+    cache_prompt_response,
+    claim_first_message,
+    get_cached_prompt_response,
+    message_digest,
+)
 
 
 # pylint: disable=W0613
@@ -86,14 +95,6 @@ def should_log(level):
 
 OPENAI_TOOL_CHOICE = "auto"
 
-MAX_TOOL_ROUNDS = 4
-"""
-The most requests of one prompt that offer the LLM its tools.
-
-An LLM often needs more than one round of tool calls, e.g. a forecast, and then an image search
-with the forecast's place, or one calculation after another. After this many requests with tools,
-the LLM is sent the tool results without tools, so that it answers.
-"""
 MAX_HISTORY_CHARACTERS = 100_000
 """
 The most characters of a prompt's message history that are sent to the LLM, about 25,000 tokens.
@@ -188,6 +189,18 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     """The MCP tools of the current prompt.
 
     See :meth:`handle_mcp_clients`.
+    """
+
+    prompt_cache_key: Optional[PromptCacheKey] = None
+    """The cache key of the current prompt, if it is the first message of a conversation.
+
+    See :meth:`handle_prompt_cache_lookup`.
+    """
+
+    prompt_cacheable: bool = False
+    """Whether the current prompt's answer may be cached.
+
+    A tool call that may change something clears it.
     """
 
     extension_toolkit: Optional[ExtensionToolkit] = None
@@ -713,6 +726,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         serialized_tool_call = {}
         plugin: Optional[PluginBase] = None
         function_name = tool_call.function.name
+        # pylint: disable=W0612
         try:
             function_to_call = self.available_functions[function_name]
         except KeyError as e:
@@ -795,11 +809,16 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}: function '{function_name}' not recognized. Available functions: {self.available_functions}"
             )
+        if budget_refusal is not None or not self.tool_call_is_cacheable(function_name, function_response, plugin):
+            # the prompt used something that may change, so its answer is not cached.
+            self.prompt_cacheable = False
         tool_call_message = {
             OpenAIMessageKeys.TOOL_CALL_ID: tool_call.id,
             OpenAIMessageKeys.MESSAGE_NAME_KEY: function_name,
         }
-        if isinstance(function_response, (dict, list)):
+        if not isinstance(function_response, str):
+            # a tool message's content is text, so any other JSON value, e.g. an extension
+            # tool's number, is sent as its JSON.
             function_response = json.dumps(function_response)
         self.append_message(
             role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=function_response, message=tool_call_message
@@ -843,9 +862,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             return self.extension_toolkit.tool_name_for(function_name) or function_name
         if function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             try:
-                return PluginMeta.get_cached_object(pk=int(function_name.rsplit("_", 1)[-1])).name or function_name
+                plugin_meta = PluginMeta.get_cached_object(pk=int(function_name.rsplit("_", 1)[-1]))
             except (PluginMeta.DoesNotExist, ValueError):
                 return function_name
+            return (plugin_meta.name if plugin_meta else None) or function_name
         return function_name
 
     def authorize_budgets(self) -> None:
@@ -864,6 +884,105 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         charge_authorization(
             [resource.record_locator for resource in resources if resource is not None], self.__class__.__name__
         )
+
+    def first_message_cache_key(self) -> Optional[PromptCacheKey]:
+        """
+        Return the cache key of the prompt, if its answer may be cached.
+
+        Only the first message of a conversation is cached, because the answers to later
+        messages depend on the conversation. See
+        :mod:`~smarter.apps.provider.services.text_completion.lib.prompt_cache`.
+
+        :returns: The key, or None if the prompt is not the conversation's first message,
+            or the cache is disabled.
+        """
+        if not smarter_settings.prompt_response_cache_expiration:
+            return None
+        llmclient = getattr(self.prompt, "llmclient", None)
+        if llmclient is None or not self.input_text or not isinstance(self.messages, list):
+            return None
+        user_messages = [
+            message
+            for message in self.messages
+            if isinstance(message, dict)
+            and message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.USER_MESSAGE_KEY
+        ]
+        if len(user_messages) != 1:
+            return None
+        if not isinstance(self.prompt, Prompt) or not claim_first_message(self.prompt.pk):
+            # a later message, sent before the conversation's history was saved.
+            return None
+        return PromptCacheKey(
+            llmclient_id=llmclient.pk,
+            llmclient_updated_at=llmclient.updated_at.isoformat() if llmclient.updated_at else "",
+            provider=str(self.provider_name or ""),
+            model=str(self.model or ""),
+            temperature=float(self.temperature or 0),
+            max_completion_tokens=int(self.max_completion_tokens or 0),
+            message=message_digest(self.input_text),
+        )
+
+    def handle_prompt_cache_lookup(self) -> None:
+        """
+        Answer the first message of a conversation from the cache, if its answer is cached.
+
+        Otherwise, remember the prompt's cache key, so that :meth:`handle_prompt_cache_store`
+        can cache its answer.
+
+        :raises PromptCacheHit: If the answer is cached.
+        """
+        self.prompt_cache_key = self.first_message_cache_key()
+        self.prompt_cacheable = self.prompt_cache_key is not None
+        if self.prompt_cache_key is None:
+            return
+        cached = get_cached_prompt_response(self.prompt_cache_key)
+        if cached is not None:
+            raise PromptCacheHit(cached)
+
+    def handle_prompt_cache_store(self, response: Optional[ChatCompletion]) -> None:
+        """
+        Cache the answer to the first message of a conversation, if everything that it used can be cached.
+
+        The answer is not cached if a tool call made the prompt uncacheable (see
+        :meth:`tool_call_is_cacheable`), or if the LLM did not finish its answer.
+
+        :param response: The LLM's final answer, after the output guardrails.
+        """
+        if not self.prompt_cacheable or self.prompt_cache_key is None or response is None:
+            return
+        if not response.choices or response.choices[0].finish_reason != "stop":
+            return
+        cache_prompt_response(self.prompt_cache_key, response)
+
+    def tool_call_is_cacheable(
+        self, function_name: str, function_response: object, plugin: Optional[PluginBase]
+    ) -> bool:
+        """
+        Return whether a tool call leaves the prompt's answer cacheable.
+
+        A call is cacheable if its own result is cached, or could be: a read-only MCP tool or
+        resource read, an extension tool that sets ``cache_ttl``, or a plugin, whose remote
+        calls are cached, unless it is an ApiPlugin that sends anything but GET. A call that
+        returned nothing, or an error by :func:`~smarter.lib.cache.tool_results.is_error_result`,
+        such as a budget refusal, is not.
+
+        :param function_name: The function that the LLM called.
+        :param function_response: The function's result.
+        :param plugin: The plugin that answered the call, if any.
+        :returns: True if the prompt's answer may still be cached.
+        """
+        if function_response in (None, "") or is_error_result(function_response):  # type: ignore[arg-type]
+            return False
+        if self.extension_toolkit is not None and self.extension_toolkit.is_extension_function(function_name):
+            function = self.extension_toolkit.functions[function_name]
+            return function.tool.cache_ttl > 0
+        if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+            function = self.mcp_toolkit.functions[function_name]
+            return function.read_only and bool(function.mcpclient.cache_ttl)
+        if plugin is not None:
+            method = getattr(plugin.plugin_data, "method", None)
+            return not method or str(method).upper() == "GET"
+        return False
 
     def tool_budget_refusal(self, function_name: str) -> Optional[str]:
         """
@@ -944,16 +1063,18 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         self.guardrail_pipeline = None
         llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
-        if llmclient is None or not isinstance(self.messages, list):
+        messages = self.messages
+        if llmclient is None or not isinstance(messages, list):
             return
         pipeline = GuardrailPipeline.for_llmclient(llmclient, session_key=self.prompt.session_key)  # type: ignore[union-attr]
         if not pipeline.guardrails:
             return
         self.guardrail_pipeline = pipeline
-        result = pipeline.run_pre({"messages": self.messages})
+        result = pipeline.run_pre({"messages": messages})
         if result.disposition in (PipelineDisposition.REDACTED, PipelineDisposition.TRANSFORMED):
-            self.messages = result.payload["messages"]
-            for message in reversed(self.messages):
+            messages = result.payload["messages"]
+            self.messages = messages
+            for message in reversed(messages):
                 if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.USER_MESSAGE_KEY:
                     content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
                     if isinstance(content, str):
@@ -964,7 +1085,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if result.blocked:
             # the blocked message is replaced in the conversation's history, so that it is
             # not sent to the LLM with the history of the conversation's later prompts.
-            for message in reversed(self.messages):
+            for message in reversed(messages):
                 if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.USER_MESSAGE_KEY:
                     message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = BLOCKED_MESSAGE_PLACEHOLDER
                     break
@@ -1221,6 +1342,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         - Validating input and internal state.
         - Initializing or updating the message thread.
+        - Answering the first message of a conversation from the cache, when its answer is cached,
+          and caching it otherwise. See
+          :mod:`~smarter.apps.provider.services.text_completion.lib.prompt_cache`.
         - Selecting and configuring the tools of the LLMClient's plugins, MCPClients and extensions.
         - Preparing and sending requests to the OpenAI API (or compatible provider).
         - Handling tool calls and plugin responses.
@@ -1303,6 +1427,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             )
         self.data = data  # type: ignore[assignment]
         self.plugins = plugins
+        self.prompt_cache_key = None
+        self.prompt_cacheable = False
 
         prompt_started.send(sender=self.handler, prompt=self.prompt, data=self.data)
         # the status and the message of an error, e.g. a 400 from the LLM provider, if any.
@@ -1351,6 +1477,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             # GuardrailBlockedError, which is answered with the guardrail's message below.
             self.handle_input_guardrails()
 
+            # the answer to the first message of a conversation may be cached. A hit raises
+            # PromptCacheHit, which is answered with the cached answer below.
+            self.handle_prompt_cache_lookup()
+
             # add plugins to the prompt if any are selected
             if self.plugins:
                 for plugin in self.plugins:
@@ -1386,24 +1516,25 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 completions_kwargs,
             )
 
-            self.first_response = self.create_first_completion(completions_kwargs)
-            if not isinstance(self.first_response, ChatCompletion):
+            first_response = self.create_first_completion(completions_kwargs)
+            if not isinstance(first_response, ChatCompletion):
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: first_response must be a ChatCompletion, got {type(self.first_response)}"
+                    f"{self.formatted_class_name}: first_response must be a ChatCompletion, got {type(first_response)}"
                 )
-            if self.first_response.choices and self.first_response.choices[0].message.tool_calls is None:
+            if first_response.choices and first_response.choices[0].message.tool_calls is None:
                 # this is the final response, so the output guardrails run on it
-                self.first_response = self.handle_output_guardrails(self.first_response)
+                first_response = self.handle_output_guardrails(first_response)
+            self.first_response = first_response
             self.handle_response()
-            self.append_openai_response(self.first_response)
-            response_message = self.first_response.choices[0].message
+            self.append_openai_response(first_response)
+            response_message = first_response.choices[0].message
             if not isinstance(response_message, ChatCompletionMessage):
                 raise SmarterValueError(
                     f"{self.formatted_class_name}: response_message must be a ChatCompletionMessage, got {type(response_message)}"
                 )
 
             if response_message.tool_calls is not None:
-                tool_calls: Optional[list[ChatCompletionMessageToolCallUnion]] = response_message.tool_calls
+                tool_calls: list[ChatCompletionMessageToolCallUnion] = response_message.tool_calls
                 logger.debug(
                     "%s %s - %s tool calls detected, preparing second request",
                     self.formatted_class_name,
@@ -1437,8 +1568,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                             f"{self.formatted_class_name}: max_completion_tokens must be an int, got {type(self.max_completion_tokens)}"
                         )
                     # the LLM may call more tools, e.g. an image search with the place that a
-                    # forecast named, until MAX_TOOL_ROUNDS requests have offered them.
-                    offer_tools = bool(self.tools) and tool_rounds < MAX_TOOL_ROUNDS
+                    # forecast named, until smarter_settings.max_tool_rounds requests have offered them.
+                    offer_tools = bool(self.tools) and tool_rounds < smarter_settings.max_tool_rounds
                     completions_kwargs = {
                         _InternalKeys.MODEL_KEY: self.model,
                         _InternalKeys.MESSAGES_KEY: self.openai_messages,
@@ -1448,14 +1579,19 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                     if offer_tools:
                         completions_kwargs[_InternalKeys.TOOLS_KEY] = self.tools
                         completions_kwargs[_InternalKeys.TOOL_CHOICE] = OPENAI_TOOL_CHOICE
-                        self.second_response = self.create_first_completion(completions_kwargs)
+                        response = self.create_first_completion(completions_kwargs)
                     else:
-                        self.second_response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
-                    message = self.second_response.choices[0].message if self.second_response.choices else None
+                        response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+                    if not isinstance(response, ChatCompletion):
+                        raise SmarterValueError(
+                            f"{self.formatted_class_name}: second_response must be a ChatCompletion, got {type(response)}"
+                        )
+                    self.second_response = response
+                    message = response.choices[0].message if response.choices else None
                     if offer_tools and message is not None and message.tool_calls:
                         # another round: charge and record this response, then answer its tool calls.
                         self.handle_response()
-                        self.append_openai_response(self.second_response)
+                        self.append_openai_response(response)
                         tool_calls = message.tool_calls
                         tool_rounds += 1
                         self.iteration += 1
@@ -1467,10 +1603,20 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                             tool_rounds,
                         )
                         continue
-                    self.second_response = self.handle_output_guardrails(self.second_response)
-                    self.append_openai_response(self.second_response)
+                    response = self.handle_output_guardrails(response)
+                    self.second_response = response
+                    self.append_openai_response(response)
                     self.handle_response()
                     break
+
+            self.handle_prompt_cache_store(self.second_response if self.iteration >= 2 else self.first_response)
+
+        # the answer to the first message of the conversation is cached, so the LLM is not called
+        except PromptCacheHit as hit:
+            self.iteration = 1
+            self.first_response = hit.response
+            self.handle_response()
+            self.append_openai_response(self.first_response)
 
         # an input guardrail blocked the user's message, so the LLM is not called
         except GuardrailBlockedError as blocked:

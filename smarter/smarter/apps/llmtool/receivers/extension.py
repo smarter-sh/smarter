@@ -74,15 +74,18 @@ def handle_extension_tool_called(sender, slug: str, version: str, tool_name: str
 
 
 @receiver(extension_tool_responded, dispatch_uid="extension_tool_responded")
-def handle_extension_tool_responded(sender, slug: str, version: str, tool_name: str, characters: int = 0, **kwargs):
+def handle_extension_tool_responded(
+    sender, slug: str, version: str, tool_name: str, characters: int = 0, cached: bool = False, **kwargs
+):
     """Handle extension tool responded signal."""
     logger.info(
-        "%s.extension_tool_responded() %s %s %s characters: %s",
+        "%s.extension_tool_responded() %s %s %s characters: %s cached: %s",
         logger_prefix,
         slug,
         version,
         tool_name,
         characters,
+        cached,
     )
 
 

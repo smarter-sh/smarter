@@ -60,6 +60,47 @@ class TestExtensionToolkit(ExtensionTestMixin):
         self.assertEqual(received, [extension_tool_called, extension_tool_responded])
         self.assertEqual(self.toolkit.call("ext_echo_echo", {"text": "dict"})["echo"], "hello dict")  # type: ignore[index]
 
+    def test_tools_are_not_cached_by_default(self):
+        """A tool without cache_ttl runs on every call, because its result may depend on who calls it."""
+        self.assertEqual(self.toolkit.functions["ext_echo_echo"].tool.cache_ttl, 0)
+        with patch.object(ExtensionToolkit, "execute", autospec=True, side_effect=ExtensionToolkit.execute) as execute:
+            self.toolkit.call("ext_echo_echo", {"text": "twice"})
+            self.toolkit.call("ext_echo_echo", {"text": "twice"})
+        self.assertEqual(execute.call_count, 2)
+
+    def test_cache_ttl_caches_results(self):
+        """A tool that sets cache_ttl runs once per arguments, and its cached results are reported as cached."""
+        responded = []
+        extension_tool_responded.connect(
+            lambda **kwargs: responded.append(kwargs["cached"]), weak=False, dispatch_uid="cached"
+        )
+        try:
+            with (
+                patch.object(self.toolkit.functions["ext_echo_echo"].tool, "cache_ttl", 60),
+                patch.object(
+                    ExtensionToolkit, "execute", autospec=True, side_effect=ExtensionToolkit.execute
+                ) as execute,
+            ):
+                first = self.toolkit.call("ext_echo_echo", {"text": "cached"})
+                second = self.toolkit.call("ext_echo_echo", '{"text": "cached"}')
+                other = self.toolkit.call("ext_echo_echo", {"text": "other"})
+        finally:
+            extension_tool_responded.disconnect(dispatch_uid="cached")
+        self.assertEqual(first, second)
+        self.assertEqual(other["echo"], "hello other")  # type: ignore[index]
+        self.assertEqual(execute.call_count, 2)
+        self.assertEqual(responded, [False, True, False])
+
+    def test_cache_ttl_never_caches_errors(self):
+        """A tool that fails is run again on the next call, even when it sets cache_ttl."""
+        with (
+            patch.object(self.toolkit.functions["ext_echo_fail"].tool, "cache_ttl", 60),
+            patch.object(ExtensionToolkit, "execute", autospec=True, side_effect=ExtensionToolkit.execute) as execute,
+        ):
+            self.assertIn("error", self.toolkit.call("ext_echo_fail", None))  # type: ignore[operator]
+            self.assertIn("error", self.toolkit.call("ext_echo_fail", None))  # type: ignore[operator]
+        self.assertEqual(execute.call_count, 2)
+
     def test_call_with_switch(self):
         """A tool reads the extension's own switches."""
         Switch.objects.filter(name="ext_echo_verbose").update(active=True)
