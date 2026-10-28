@@ -33,7 +33,6 @@ from smarter.common.utils import to_snake_case
 from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.typing import SmarterDictType
 
 logger = getLogger(__name__)
 logger_prefix = SmarterFormattedText.text(__name__)
@@ -117,24 +116,13 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
         super().__init__(**data)
         if isinstance(user_profile, UserProfile):
             self._user_profile = user_profile
-            logger.debug(
-                "%s initialized with user_profile: %s", logger_prefix + f".{self.__class__.__name__}", user_profile
-            )
             self._user = user_profile.user
-            logger.debug("%s user set from user_profile: %s", logger_prefix + f".{self.__class__.__name__}", self._user)
         elif user is not None:
             user = get_resolved_user(user)
             if is_authenticated_user(user):  # type: ignore
                 self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
                 if isinstance(self._user_profile, UserProfile):
-                    logger.debug(
-                        "%s initialized with user: %s, resolved user_profile: %s",
-                        logger_prefix + f".{self.__class__.__name__}",
-                        user,
-                        self._user_profile,
-                    )
                     self._user = self._user_profile.user
-                    logger.debug("%s initialized with user: %s", logger_prefix + f".{self.__class__.__name__}", user)
 
     @model_validator(mode="before")
     def coerce_none_strings(cls, data):

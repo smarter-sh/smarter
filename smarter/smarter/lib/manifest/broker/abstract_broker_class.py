@@ -4,7 +4,7 @@
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
-from functools import wraps
+from functools import cached_property, wraps
 from http import HTTPStatus
 from typing import (
     Any,
@@ -89,6 +89,12 @@ inflect_engine = inflect.engine()
 SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 SmarterRequest = Union[HttpRequest, Request, ASGIRequest]
 
+KNOWN_KINDS = frozenset(SmarterJournalThings.all())
+"""Every valid broker kind.
+
+An enum's members are fixed, so the set is built once.
+"""
+
 
 # pylint: disable=W0613
 def should_log(level):
@@ -123,6 +129,7 @@ def memoized_dependencies(func: Callable[..., List["SAMDependency"]]) -> Callabl
     :rtype: Callable[..., List[SAMDependency]]
     """
 
+    # pylint: disable=W0212
     @wraps(func)
     def wrapper(self: "AbstractBroker") -> List["SAMDependency"]:
         if self._dependencies is None:
@@ -265,24 +272,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         url: Optional[str] = None,
         **kwargs,
     ):
-        logger.debug(
-            (
-                "%s.__init__() called with request=%s, name=%s, kind=%s, "
-                "loader=%s, api_version=%s, manifest=%s, file_path=%s, url=%s, "
-                "args=%s, kwargs=%s"
-            ),
-            self.abstract_broker_logger_prefix,
-            request,
-            name,
-            kind,
-            loader,
-            api_version,
-            manifest,
-            file_path,
-            url,
-            args,
-            kwargs,
-        )
         # ----------------------------------------------------------------------
         # Attempt to preset the API version, name, and kind.
         #
@@ -291,10 +280,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # to initialize the loader from the ORM, which will in turn allow us to
         # load the manifest.
         # ----------------------------------------------------------------------
-        logger.debug(
-            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs.",
-            self.abstract_broker_logger_prefix,
-        )
         self.api_version = api_version or SmarterApiVersions.V1
         name = name or kwargs.pop("name", None)
         if name:
@@ -324,14 +309,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         SmarterRequestMixin.__init__(
             self, request=request, *args, user=user, account=account, user_profile=user_profile, **kwargs
         )
-        logger.debug(
-            "%s.__init__() after SmarterRequestMixin init - request=%s, user=%s, account=%s, user_profile=%s",
-            self.abstract_broker_logger_prefix,
-            request,
-            user,
-            account,
-            user_profile,
-        )
 
         # ----------------------------------------------------------------------
         # Manifest and SAMLoader resolution logic. Prioritize the manifest
@@ -353,8 +330,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             if isinstance(file_path, str):
                 if self._loader:
                     logger.warning(
-                        f"{self.abstract_broker_logger_prefix}.__init__() - Both loader and file_path provided. "
-                        f"file_path will override loader."
+                        "%s.__init__() - Both loader and file_path provided. file_path will override loader.",
+                        self.abstract_broker_logger_prefix,
                     )
                 self.loader = SAMLoader(file_path=file_path)
                 if self._loader and self._loader.ready:
@@ -375,7 +352,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # log initialization state.
         # ----------------------------------------------------------------------
         self.log_abstract_broker_state()
-        logger.debug("%s.__init__() is complete.", self.abstract_broker_logger_prefix)
 
     def __str__(self) -> str:
         """
@@ -435,9 +411,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
-    @property
+    @cached_property
     def abstract_broker_logger_cache_invalidation_prefix(self) -> str:
         """Return the logger prefix for the AbstractBroker cache invalidation.
+
+        It is built once per broker: every log message starts with it.
 
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
@@ -445,9 +423,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         prefix = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
         return self.formatted_text_blue(prefix)
 
-    @property
+    @cached_property
     def abstract_broker_logger_prefix(self) -> str:
         """Return the logger prefix for the AbstractBroker.
+
+        It is built once per broker: every log message starts with it.
 
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
@@ -463,8 +443,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
+        return self.abstract_broker_logger_prefix
 
     @property
     def formatted_class_name_cache_invalidations(self) -> str:
@@ -473,8 +452,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker cache invalidations.
         :rtype: str
         """
-        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
-        return self.formatted_text_blue(class_name)
+        return self.abstract_broker_logger_cache_invalidation_prefix
 
     @property
     def is_ready_abstract_broker(self) -> bool:
@@ -491,59 +469,28 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if self._is_ready_abstract_broker:
             return self._is_ready_abstract_broker
 
-        logger.debug(
-            "%s.is_ready_abstract_broker() called. Beginning ready state: %s",
-            self.abstract_broker_logger_prefix,
-            self._is_ready_abstract_broker,
-        )
         # ---------------------------------------------------------------------
         # there are five possible ways for us to be ready.
         # ---------------------------------------------------------------------
         if self.request and "example-manifest" in self.request.path:
             # 1.) if the request path indicates this is an example-manifest operation
-            logger.debug(
-                "%s.is_ready_abstract_broker() request path indicates this is an example-manifest operation. Marking as ready.",
-                self.abstract_broker_logger_prefix,
-            )
             self._is_ready_abstract_broker = True
             return self._is_ready_abstract_broker
         if self.request and "json-schema" in self.request.path:
             # 2.) if the request path indicates this is a json-schema operation
-            logger.debug(
-                "%s.is_ready_abstract_broker() request path indicates this is a json-schema operation. Marking as ready.",
-                self.abstract_broker_logger_prefix,
-            )
             self._is_ready_abstract_broker = True
             return self._is_ready_abstract_broker
         if bool(self._manifest):
             # 3.) if we have a manifest.
-            logger.debug(
-                "%s.is_ready_abstract_broker() manifest is loaded.",
-                self.abstract_broker_logger_prefix,
-            )
             self._is_ready_abstract_broker = True
         if bool(self.loader) and self.loader.ready:
             # 4.) we have a loader and it's in a ready state.
-            logger.debug(
-                "%s.is_ready_abstract_broker() loader is ready.",
-                self.abstract_broker_logger_prefix,
-            )
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
             # 5.) we have an ORM meta instance.
-            logger.debug(
-                "%s.is_ready_abstract_broker() %s instance is available.",
-                self.abstract_broker_logger_prefix,
-                self.ORMMetaModelClass.__name__,
-            )
             self._is_ready_abstract_broker = True
 
         if self._is_ready_abstract_broker:
-            logger.debug(
-                "%s.is_ready_abstract_broker() ready state is now: %s",
-                self.abstract_broker_logger_prefix,
-                self._is_ready_abstract_broker,
-            )
             return self._is_ready_abstract_broker
 
         # hereon we know that there is no manifest nor loader to initialize from
@@ -575,11 +522,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 self.abstract_broker_logger_prefix,
             )
 
-        logger.debug(
-            "%s.is_ready_abstract_broker() returning false. Final ready state: %s",
-            self.abstract_broker_logger_prefix,
-            self._is_ready_abstract_broker,
-        )
         return self._is_ready_abstract_broker
 
     @property
@@ -738,13 +680,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return
         if not isinstance(value, str):
             raise SmarterValueError(f"kind must be a string. Got: {type(value)} {value}")
-        if not value in SmarterJournalThings.all():
+        if value not in KNOWN_KINDS:
             raise SmarterValueError(
                 f"kind '{value}' is not a valid SmarterJournalThings value. Expected one of: {SmarterJournalThings.all()}"
             )
 
         self._kind = value
-        logger.debug("%s.kind() setter set kind to %s", self.abstract_broker_logger_prefix, self._kind)
 
     @property
     def name(self) -> Optional[str]:
@@ -771,35 +712,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._name
         if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
             self._name = self._manifest.metadata.name
-            logger.debug(
-                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
-            )
-            return self._name
-        if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
-            self._name = self._manifest.metadata.name
-            logger.debug(
-                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
-            )
             return self._name
         if self._loader:
-            logger.debug(
-                "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
-                self.abstract_broker_logger_prefix,
-            )
             self._name = self._loader.manifest_metadata.get("name")
             if self._name:
-                logger.debug(
-                    "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
-                )
                 return self._name
             logger.warning("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
-        if isinstance(self.params, QueryDict):
-            name_param = self.params.get("name", None)
+        params = self.params
+        if isinstance(params, QueryDict):
+            name_param = params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.debug(
-                    "%s.name() set name to %s from name url param", self.abstract_broker_logger_prefix, self._name
-                )
         if not self._name:
             logger.warning("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
         return self._name
@@ -849,11 +772,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             "user_profile": self.user_profile,
             **metadata,
         }
-        logger.debug(
-            "%s.manifest_to_django_orm() converted manifest metadata to Django ORM dict: %s",
-            self.abstract_broker_logger_prefix,
-            logging.SmarterFormattedText.json(retval),
-        )
 
         return retval
 
@@ -878,10 +796,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # Delete cached_property value if present
         try:
             del self.__dict__["name"]  # type: ignore
-            logger.debug("%s.name() setter cleared cached_property", self.abstract_broker_logger_prefix)
         except KeyError:
             pass
-        logger.debug("%s.name() setter set name to %s", self.abstract_broker_logger_prefix, self._name)
 
     @property
     def api_version(self) -> str:
@@ -904,9 +820,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not isinstance(value, str):
             raise SmarterValueError("api_version must be a string")
         self._api_version = value
-        logger.debug(
-            "%s.api_version() setter set api_version to %s", self.abstract_broker_logger_prefix, self._api_version
-        )
 
     @property
     def loader(self) -> Optional[SAMLoader]:
@@ -953,10 +866,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         if not value:
             self._loader = None
-            logger.debug(
-                "%s.loader() setter - unset loader.",
-                self.abstract_broker_logger_prefix,
-            )
             return
         if not isinstance(value, SAMLoader):
             raise SmarterValueError("loader must be a SAMLoader instance")
@@ -966,8 +875,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
         self.raise_for_unknown_keys(value.json_data)
         self._loader = value
-
-        logger.debug("%s.loader() setter set loader to %s", self.abstract_broker_logger_prefix, self._loader)
 
     ###########################################################################
     # Abstract Properties
@@ -1036,46 +943,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         :return: None
         """
-        logger.debug(
-            "%s.orm_meta_instance_setter() called for %s %s owned by %s",
-            self.abstract_broker_logger_prefix,
-            self._kind,
-            self._name,
-            self._user_profile,
-        )
         if not self._name or not self._user_profile:
-            logger.debug(
-                "%s.orm_meta_instance_setter() cannot initialize ORM meta instance because name or user_profile is not set.",
-                self.abstract_broker_logger_prefix,
-            )
             return
         if self.ORMMetaModelClass == self.ORMModelClass and self._orm_instance:
-            logger.debug(
-                "%s.orm_meta_instance_setter() ORMMetaModelClass is the same as ORMModelClass and orm_instance is already set. Setting orm_meta_instance to orm_instance.",
-                self.abstract_broker_logger_prefix,
-            )
             self._orm_meta_instance = self._orm_instance
             return
 
         self._orm_meta_instance = None
         ModelClass = self.ORMMetaModelClass
 
-        logger.debug(
-            "%s.orm_meta_instance_setter() - Attempting to initialize %s using %s owned by %s.",
-            self.abstract_broker_logger_prefix,
-            ModelClass.__name__,
-            self._name,
-            self._user_profile,
-        )
         try:
             self._orm_meta_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
-            if self._orm_meta_instance:
-                logger.debug(
-                    "%s.orm_meta_instance_setter() - Successfully initialized %s: %s",
-                    self.abstract_broker_logger_prefix,
-                    ModelClass.__name__,
-                    self._orm_meta_instance,
-                )
         except ModelClass.MultipleObjectsReturned:
             logger.error(
                 "%s.orm_meta_instance_setter() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
@@ -1089,22 +967,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
             account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
             try:
-                logger.debug(
-                    "%s.orm_meta_instance_setter() attempting to retrieve %s for %s owned by %s.",
-                    self.abstract_broker_logger_prefix,
-                    ModelClass.__name__,
-                    self.name,
-                    account_admin_user_profile,
-                )
                 self._orm_meta_instance = ModelClass.get_cached_object(  # type: ignore
                     name=self.name, user_profile=account_admin_user_profile
-                )
-                logger.debug(
-                    "%s.orm_meta_instance_setter() - retrieved %s for %s owned by %s",
-                    self.abstract_broker_logger_prefix,
-                    ModelClass.__name__,
-                    self.name,
-                    account_admin_user_profile,
                 )
             except ModelClass.MultipleObjectsReturned:
                 logger.error(
@@ -1119,22 +983,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 # finally try with Smarter platform admin user_profile
                 smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
                 try:
-                    logger.debug(
-                        "%s.orm_meta_instance_setter() attempting to retrieve %s for %s owned by %s.",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
-                    )
                     self._orm_meta_instance = ModelClass.get_cached_object(  # type: ignore
                         name=self.name, user_profile=smarter_admin_user_profile
-                    )
-                    logger.debug(
-                        "%s.orm_meta_instance_setter() - retrieved %s for %s owned by %s",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
                     )
                 except ModelClass.MultipleObjectsReturned:
                     logger.error(
@@ -1147,13 +997,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                     return None
                 except ModelClass.DoesNotExist:
                     # expected: a manifest that is applied for the first time has no ORM instance yet.
-                    logger.debug(
-                        "%s.orm_meta_instance_setter() - %s does not exist for %s owned by %s",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        self.user_profile,
-                    )
                     return None
                 # pylint: disable=broad-except
                 except Exception as e:
@@ -1207,40 +1050,15 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._orm_instance
 
         if not self.name:
-            logger.debug(
-                "%s.orm_instance() - name is not set. Cannot retrieve %s instance.",
-                self.abstract_broker_logger_prefix,
-                self.ORMModelClass.__name__,
-            )
             return None
         if not self.user_profile:
-            logger.debug(
-                "%s.orm_instance() - user_profile is not set. Cannot retrieve %s instance for %s.",
-                self.abstract_broker_logger_prefix,
-                self.ORMModelClass.__name__,
-                self.name,
-            )
             return None
 
         ModelClass = self.ORMModelClass
 
         try:
             # first try with the user_profile
-            logger.debug(
-                "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
-                self.abstract_broker_logger_prefix,
-                self.ORMModelClass.__name__,
-                self.name,
-                self.user_profile,
-            )
             self._orm_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
-            logger.debug(
-                "%s.orm_instance() - retrieved %s for %s owned by %s",
-                self.abstract_broker_logger_prefix,
-                ModelClass.__name__,
-                self.name,
-                self.user_profile,
-            )
         except ModelClass.MultipleObjectsReturned:
             logger.error(
                 "%s.orm_instance() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
@@ -1255,22 +1073,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
             account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
             try:
-                logger.debug(
-                    "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
-                    self.abstract_broker_logger_prefix,
-                    self.ORMModelClass.__name__,
-                    self.name,
-                    account_admin_user_profile,
-                )
                 self._orm_instance = ModelClass.get_cached_object(  # type: ignore
                     name=self.name, user_profile=account_admin_user_profile
-                )
-                logger.debug(
-                    "%s.orm_instance() - retrieved %s for %s owned by %s",
-                    self.abstract_broker_logger_prefix,
-                    ModelClass.__name__,
-                    self.name,
-                    account_admin_user_profile,
                 )
             except ModelClass.MultipleObjectsReturned:
                 logger.error(
@@ -1285,22 +1089,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 # finally try with Smarter platform admin user_profile
                 smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
                 try:
-                    logger.debug(
-                        "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
-                        self.abstract_broker_logger_prefix,
-                        self.ORMModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
-                    )
                     self._orm_instance = ModelClass.get_cached_object(  # type: ignore
                         name=self.name, user_profile=smarter_admin_user_profile
-                    )
-                    logger.debug(
-                        "%s.orm_instance() - retrieved %s for %s owned by %s",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
                     )
                 except ModelClass.MultipleObjectsReturned:
                     logger.error(
@@ -1313,13 +1103,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                     return None
                 except ModelClass.DoesNotExist:
                     # expected: a manifest that is applied for the first time has no ORM instance yet.
-                    logger.debug(
-                        "%s.orm_instance() - %s does not exist for %s owned by %s",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        self.user_profile,
-                    )
                     return None
                 # pylint: disable=broad-except
                 except Exception as e:
@@ -1357,29 +1140,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 exc_info=True,
             )
             return None
-        if self._orm_instance:
-            logger.debug(
-                "%s.orm_instance() - retrieved %s: %s",
-                self.abstract_broker_logger_prefix,
-                ModelClass.__name__,
-                serializers.serialize("json", [self._orm_instance]),  # type: ignore
-            )
-        else:
-            logger.debug(
-                "%s.orm_instance() - could not retrieve %s instance for %s owned by %s",
-                self.abstract_broker_logger_prefix,
-                ModelClass.__name__,
-                self.name,
-                self.user_profile,
-            )
         if self.ORMModelClass == self.ORMMetaModelClass:
             self._orm_meta_instance = self._orm_instance
-            logger.debug(
-                "%s.orm_instance() - set orm_meta_instance to %s because ORMModelClass %s is the same as ORMMetaModelClass",
-                self.abstract_broker_logger_prefix,
-                self._orm_meta_instance,
-                self.ORMModelClass.__name__,
-            )
         else:
             self.orm_meta_instance_setter()
 
@@ -1417,17 +1179,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :param value: The manifest to set, either as a Pydantic model or a dictionary.
         :type value: Optional[Union[AbstractSAMBase, dict]]
         """
-        logger.debug(
-            "%s.manifest() setter called with value: %s",
-            self.abstract_broker_logger_prefix,
-            value,
-        )
         if value is None:
             self._manifest = None
-            logger.debug(
-                "%s.manifest() setter - unset manifest.",
-                self.abstract_broker_logger_prefix,
-            )
             return
         if isinstance(value, AbstractSAMBase):
             self._manifest = value
@@ -1435,30 +1188,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self.name_cached_property_setter(self._manifest.metadata.name)
             self.kind_setter(self._manifest.kind)
             self.loader = SAMLoader(manifest=self._manifest.model_dump())
-            logger.debug(
-                "%s.manifest() setter set manifest from Pydantic model: %s",
-                self.abstract_broker_logger_prefix,
-                self._manifest,
-            )
         elif isinstance(value, dict):
-            logger.debug(
-                "%s.manifest() setter - dict detected. Initializing SAMLoader from dict representation of manifest.",
-                self.abstract_broker_logger_prefix,
-            )
             self.loader = SAMLoader(manifest=value)
             if not isinstance(self._loader, SAMLoader):
                 raise SmarterValueError("loader must be a SAMLoader instance after setting manifest from dict")
-            logger.debug(
-                "%s.manifest() setter initialized SAMLoader from dict. Loader ready: %s",
-                self.abstract_broker_logger_prefix,
-                self._loader.ready,
-            )
-            if self._loader.ready and self.manifest:
-                logger.debug(
-                    "%s.manifest() setter set manifest from SAMLoader",
-                    self.abstract_broker_logger_prefix,
-                )
-            else:
+            if not (self._loader.ready and self.manifest):
                 logger.warning(
                     "%s.manifest() setter - manifest is not ready after lazy load attempt from SAMLoader. Loader ready: %s, manifest initialized: %s",
                     self.abstract_broker_logger_prefix,
@@ -1478,12 +1212,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             if not isinstance(self._loader.json_data, dict):
                 raise SmarterValueError("cannot set manifest from dict: loader json_data is not a dict")
 
-            logger.debug(
-                "%s.manifest() setter set manifest %s from dict: %s",
-                self.abstract_broker_logger_prefix,
-                type(self._manifest).__name__,
-                self._manifest,
-            )
         if self._manifest:
             self._validated = True
             self._created = True
@@ -1569,11 +1297,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     def cache_invalidations(self) -> None:
         """Handle broker specific cache invalidation logic."""
-        logger.debug(
-            "%s.cache_invalidations() called for %s",
-            self.abstract_broker_logger_cache_invalidation_prefix,
-            self.user_profile,
-        )
 
         # This should be the very last thing that happens. This Django
         # signal will potentially trigger a wide variety of cache invalidations
@@ -1807,9 +1530,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         instance = self.dependency_tree_instance
         if instance is None:
-            logger.debug(
-                "%s.dependency_tree() %s %s does not exist", self.abstract_broker_logger_prefix, self.kind, self.name
-            )
             return None
         return self.dependency_tree_node(str(self.kind), instance, ancestors=frozenset())
 
@@ -2225,32 +1945,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The created or retrieved Secret object.
         :rtype: Secret
         """
-        logger.debug(
-            "%s.get_or_create_secret() called for user_profile=%s, name=%s, value=%s, description=%s, expiration=%s",
-            self.abstract_broker_logger_prefix,
-            user_profile,
-            name,
-            value,
-            description,
-            expiration,
-        )
 
         secret: Optional[Secret] = None
         try:
-            logger.debug(
-                "%s.get_or_create_secret() attempting to retrieve Secret %s for user %s",
-                self.abstract_broker_logger_prefix,
-                name,
-                user_profile,
-            )
             secret = Secret.objects.get(user_profile=user_profile, name=name)
         except Secret.DoesNotExist:
-            logger.debug(
-                "%s.get_or_create_secret() Secret %s not found for user %s",
-                self.abstract_broker_logger_prefix,
-                name,
-                user_profile,
-            )
+            pass
 
         if not secret:
             if not value:
@@ -2521,13 +2221,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 command=command,
             )
         stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-        logger.debug(
-            "%s Error processing request. thing: %s, command: %s, stack_trace: %s",
-            self.abstract_broker_logger_prefix,
-            self.thing,
-            command,
-            stack_trace,
-        )
         return SmarterJournaledJsonErrorResponse(
             request=self.request,
             thing=self.thing,
