@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """A helper class that provides setters/getters for account and user."""
 
+from functools import cached_property
 from typing import Optional, Union
 
 from django.contrib.auth.models import AnonymousUser
@@ -8,13 +9,14 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import mask_string
 from smarter.lib import logging
+from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import (
     SmarterAnonymousUser,
     SmarterTokenAuthentication,
 )
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Account, User, UserProfile
 from .serializers import (
@@ -22,17 +24,21 @@ from .serializers import (
     UserMiniSerializer,
     UserProfileSerializer,
 )
-from .utils import (
-    account_number_from_url,
-    get_cached_account_for_user,
-)
+from .utils import get_cached_account_for_user
 
 UserType = Union[AnonymousUser, User, None]
 AccountNumberType = Optional[str]
 ApiTokenType = Optional[bytes]
 
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING])
+# pylint: disable=W0613
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING)
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class AccountMixin(SmarterHelperMixin):
@@ -86,18 +92,6 @@ class AccountMixin(SmarterHelperMixin):
         self._am_ready: bool = False
         super().__init__(*args, **kwargs)
 
-        logger.debug(
-            "%s.__init__() called with args=%s, user=%s, account=%s, user_profile=%s, account_number=%s, api_token=%s, kwargs=%s",
-            self._am_formatted_class_name,
-            args,
-            user,
-            account,
-            user_profile,
-            account_number,
-            mask_string(api_token.decode()) if api_token else None,
-            kwargs,
-        )
-
         # ---------------------------------------------------------------------
         # Initial resolution of parameters, taking into consideration that
         # they may be passed in via args or kwargs.
@@ -115,108 +109,39 @@ class AccountMixin(SmarterHelperMixin):
         api_token = api_token or kwargs.get("api_token", None)
 
         if isinstance(account_number, str):
-            logger.debug(
-                "%s.__init__(): received account_number %s. This will take precedence over other account information",
-                self._am_formatted_class_name,
-                account_number,
-            )
             account = Account.get_cached_object(account_number=account_number)
 
         # ---------------------------------------------------------------------
         # Process the request object if available. We're looking for any of
-        # - account_number in the URL
         # - API token in the Authorization header
         # - user in the request object
+        # A named url's account number is resolved by SmarterRequestMixin.url_account_number.
         # ---------------------------------------------------------------------
         if request is not None:
-            url: Optional[str] = self.smarter_build_absolute_uri(request)
-            logger.debug(
-                "%s.__init__(): received a request object: %s. This will take precedence over other information.",
-                self._am_formatted_class_name,
-                url,
-            )
-            account_number = account_number or account_number_from_url(url)  # type: ignore[arg-type]
             auth_header = request.headers.get("Authorization", "")
             if auth_header.startswith("Token "):
-                if auth_header.split("Token ")[1].encode():
-                    api_token = auth_header.split("Token ")[1].encode()
-                    logger.debug(
-                        "%s.__init__(): found API token in Authorization header of request object %s. This will take precedence over other information.",
-                        self._am_formatted_class_name,
-                        mask_string(api_token.decode()) if isinstance(api_token, (bytes, bytearray)) else None,
-                    )
+                token = auth_header.split("Token ")[1].encode()
+                if token:
+                    api_token = token
             if not api_token and hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
                 user = request.user  # type: ignore[union-attr]
-                if isinstance(user, User):
-                    logger.debug(
-                        "%s.__init__(): found a user object in the request: %s. This will supersede other user information.",
-                        self._am_formatted_class_name,
-                        user,
-                    )
-                else:
-                    logger.debug(
-                        "%s.__init__(): could not resolve user from the request object %s",
-                        self._am_formatted_class_name,
-                        request.build_absolute_uri(),
-                    )
+                if not isinstance(user, User):
                     user = None
-
-        logger.debug(
-            "%s.__init__(): resolved api_token=%s, account_number=%s, account=%s, user=%s, user_profile=%s",
-            self._am_formatted_class_name,
-            mask_string(api_token.decode()) if isinstance(api_token, (bytes, bytearray)) else None,
-            account_number,
-            account,
-            user,
-            user_profile,
-        )
 
         # ---------------------------------------------------------------------
         # Final initialization based on priority order
         # ---------------------------------------------------------------------
         if isinstance(api_token, bytes):
-            logger.debug(
-                "%s.__init__(): found API token: %s. This will take precedence over other information.",
-                self._am_formatted_class_name,
-                mask_string(api_token.decode()),
-            )
             AccountMixin.authenticate(self, api_token)
         else:
             if user_profile:
-                logger.debug(
-                    "%s.__init__(): found a user_profile object: %s. This will take precedence over other information.",
-                    self._am_formatted_class_name,
-                    user_profile,
-                )
                 self.user_profile = user_profile
             elif user and account:
-                logger.debug(
-                    "%s.__init__(): found a user and account: %s, %s. This will take precedence over other information.",
-                    self._am_formatted_class_name,
-                    user,
-                    account,
-                )
                 self.user_profile = UserProfile.get_cached_object(user=user, account=account)  # type: ignore
             elif user and not self.user:
-                logger.debug(
-                    "%s.__init__(): found a user object: %s. This will take precedence over other information.",
-                    self._am_formatted_class_name,
-                    user,
-                )
                 self.user = user
             elif account and not self.account:
-                logger.debug(
-                    "%s.__init__(): found an account object: %s. This will take precedence over other information.",
-                    self._am_formatted_class_name,
-                    account,
-                )
                 self.account = account
-
-        logger.debug(
-            "%s.__init__() - finished %s",
-            self._am_formatted_class_name,
-            AccountMixin.__repr__(self),
-        )
 
         self._am_log_ready_status()
 
@@ -280,12 +205,6 @@ class AccountMixin(SmarterHelperMixin):
         :param kwargs: Keyword arguments passed to the init method.
         :return: None
         """
-        logger.debug(
-            "%s.init() called with args: %s, kwargs: %s",
-            self._am_formatted_class_name,
-            args,
-            kwargs,
-        )
         if not self.am_ready:
             user = kwargs.get("user", None)
             account = kwargs.get("account", None)
@@ -311,24 +230,15 @@ class AccountMixin(SmarterHelperMixin):
         :return: The result of the superclass setup method.
         :rtype: None
         """
-        logger.debug(
-            "%s.setup() called with args: %s, kwargs: %s",
-            self._am_formatted_class_name,
-            args,
-            kwargs,
-        )
         if not self.am_ready:
             self.init(*args, **kwargs)
-        logger.debug(
-            "%s.setup() completed with args: %s, kwargs: %s",
-            self._am_formatted_class_name,
-            args,
-            kwargs,
-        )
 
-    @property
+    @cached_property
     def _am_formatted_class_name(self) -> str:
-        """Returns the logger prefix for the class."""
+        """Returns the logger prefix for the class.
+
+        It never changes, so it is built once.
+        """
         class_name = f"{__name__}.{AccountMixin.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -348,12 +258,6 @@ class AccountMixin(SmarterHelperMixin):
                 return self._account
             if isinstance(self._user_profile, UserProfile):
                 self._account = self._user_profile.account
-                logger.debug(
-                    "%s.account() set _account to %s based on user_profile %s",
-                    self._am_formatted_class_name,
-                    self._account,
-                    self._user_profile,
-                )
                 return self._account
             if self._user:
                 try:
@@ -378,20 +282,9 @@ class AccountMixin(SmarterHelperMixin):
                     )  # if there are multiple accounts then we're unable to lazily set from UserProfile
 
                 if self._account:
-                    logger.debug(
-                        "%s.account() set _account to %s based on user %s",
-                        self._am_formatted_class_name,
-                        self._account,
-                        self._user,
-                    )
                     try:
                         self._user_profile = UserProfile.get_cached_object(user=self._user, account=self._account)  # type: ignore[assignment]
                         self._am_ready = True
-                        logger.debug(
-                            "%s.account() lazily set _user_profile to %s",
-                            self._am_formatted_class_name,
-                            self._user_profile,
-                        )
                         self._am_log_ready_status()
                     except UserProfile.DoesNotExist as e:
                         logger.error(
@@ -404,12 +297,6 @@ class AccountMixin(SmarterHelperMixin):
                             f"Could not find a user_profile for user {self._user} and account {self._account} during lazy loading."
                         ) from e
                 return self._account
-            logger.debug(
-                "%s.account() could not initialize _account for user: %s, user_profile: %s",
-                self._am_formatted_class_name,
-                self._user,
-                self._user_profile,
-            )
             return None
         except AttributeError as e:
             logger.error(
@@ -440,9 +327,7 @@ class AccountMixin(SmarterHelperMixin):
         if isinstance(self._account, Account) and account is not None:
             raise SmarterBusinessRuleViolation(f"Account is already set to {self._account}. It is now immutable.")
         self._account = account
-        logger.debug("%s.account.setter: set _account to %s", self._am_formatted_class_name, self._account)
         self._user_profile = None
-        logger.debug("%s.account.setter: reset _user_profile to None", self._am_formatted_class_name)
         if not account:
             return
 
@@ -452,11 +337,6 @@ class AccountMixin(SmarterHelperMixin):
             try:
                 self._user_profile = UserProfile.get_cached_object(invalidate=False, user=self.user, account=account)  # type: ignore[arg-type]
                 self._am_ready = True
-                logger.debug(
-                    "%s.account.setter: lazily set _user_profile to %s",
-                    self._am_formatted_class_name,
-                    self._user_profile,
-                )
                 self._am_log_ready_status()
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
@@ -492,19 +372,11 @@ class AccountMixin(SmarterHelperMixin):
             raise SmarterBusinessRuleViolation(f"Account is already set to {self._account}. It is now immutable.")
         if not account_number:
             self._account = None
-            logger.debug("%s.account_number.setter: unset _account", self._am_formatted_class_name)
             self._user_profile = None
-            logger.debug("%s.account_number.setter: unset _user_profile", self._am_formatted_class_name)
             return
         account = Account.get_cached_object(account_number=account_number)
         if isinstance(account, Account):
             self._account = account
-            logger.debug(
-                "%s: set account to %s based on account_number %s",
-                self._am_formatted_class_name,
-                self._account,
-                account_number,
-            )
 
     @property
     def user(self) -> UserType:
@@ -522,12 +394,6 @@ class AccountMixin(SmarterHelperMixin):
 
             if self._user_profile:
                 self._user = self._user_profile.user
-                logger.debug(
-                    "%s.user() set _user to %s based on user_profile %s",
-                    self._am_formatted_class_name,
-                    self._user,
-                    self._user_profile,
-                )
             return self._user
         except AttributeError as e:
             logger.error(
@@ -560,22 +426,13 @@ class AccountMixin(SmarterHelperMixin):
         if isinstance(self._user, User):
             raise SmarterBusinessRuleViolation(f"User is already set to {self._user}. It is now immutable.")
         self._user = user
-        logger.debug("%s.user.setter: set user to %s", self._am_formatted_class_name, self._user)
         if not user:
             self._account = None
-            logger.debug("%s.user.setter: unset _account", self._am_formatted_class_name)
             self._user_profile = None
-            logger.debug("%s.user.setter: unset _user_profile", self._am_formatted_class_name)
             return
         try:
             self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore[assignment]
             self._am_ready = True
-            logger.debug(
-                "%s.user.setter: lazily set _user_profile to %s based on user %s",
-                self._am_formatted_class_name,
-                self._user_profile,
-                self._user,
-            )
             self._am_log_ready_status()
         except UserProfile.DoesNotExist as e:
             raise SmarterBusinessRuleViolation(f"User {self._user} does not belong to any account.") from e
@@ -607,13 +464,6 @@ class AccountMixin(SmarterHelperMixin):
                 try:
                     self._user_profile = UserProfile.get_cached_object(user=self._user, account=self._account)
                     self._am_ready = True
-                    logger.debug(
-                        "%s.user_profile() lazily set _user_profile to %s based on user %s and account %s",
-                        self._am_formatted_class_name,
-                        self._user_profile,
-                        self._user,
-                        self._account,
-                    )
                     self._am_log_ready_status()
                     return self._user_profile
                 except UserProfile.DoesNotExist as e:
@@ -623,20 +473,8 @@ class AccountMixin(SmarterHelperMixin):
             if isinstance(self._user, User):
                 self._user_profile = UserProfile.get_cached_object(user=self._user)
                 self._am_ready = True
-                logger.debug(
-                    "%s.user_profile() lazily set _user_profile to %s",
-                    self._am_formatted_class_name,
-                    self._user_profile,
-                )
                 self._am_log_ready_status()
-            if not self._user_profile:
-                logger.debug(
-                    "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",
-                    self._am_formatted_class_name,
-                    self._user,
-                    self._account,
-                )
-            else:
+            if self._user_profile:
                 self._am_ready = True
                 self._am_log_ready_status()
             return self._user_profile
@@ -677,19 +515,12 @@ class AccountMixin(SmarterHelperMixin):
                 f"UserProfile is already set to {self._user_profile}. It is now immutable."
             )
         self._user_profile = user_profile
-        logger.debug(
-            "%s.user_profile.setter: set _user_profile to %s", self._am_formatted_class_name, self._user_profile
-        )
         if not self._user_profile:
             self._user = None
-            logger.debug("%s.user_profile.setter: unset _user", self._am_formatted_class_name)
             self._account = None
-            logger.debug("%s.user_profile.setter: unset _account", self._am_formatted_class_name)
         else:
             self._user = self._user_profile.user
-            logger.debug("%s.user_profile.setter: set _user to %s", self._am_formatted_class_name, self._user)
             self._account = self._user_profile.account
-            logger.debug("%s.user_profile.setter: set _account to %s", self._am_formatted_class_name, self._account)
             self._am_ready = True
             self._am_log_ready_status()
 
@@ -711,28 +542,12 @@ class AccountMixin(SmarterHelperMixin):
             return True
         try:
             if not super().ready:
-                logger.debug(
-                    "%s.am_ready() returning false because superclass is not ready.",
-                    self._am_formatted_class_name,
-                )
                 return False
             if not isinstance(self.user_profile, UserProfile):
-                logger.debug(
-                    "%s.am_ready() returning false because user_profile is not initialized.",
-                    self._am_formatted_class_name,
-                )
                 return False
             if not isinstance(self.user, User):
-                logger.debug(
-                    "%s.am_ready() had to initialize user from user_profile. This is a bug.",
-                    self._am_formatted_class_name,
-                )
                 self._user = self.user_profile.cached_user
             if not isinstance(self.account, Account):
-                logger.debug(
-                    "%s.am_ready() had to initialize account from user_profile. This is a bug.",
-                    self._am_formatted_class_name,
-                )
                 self._account = self.user_profile.cached_account
             self._am_ready = True
             self._am_log_ready_status()
@@ -809,18 +624,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: True if authentication was successful, False otherwise.
         :rtype: bool
         """
-        logger.debug(
-            "%s.authenticate() called with api_token=%s",
-            self._am_formatted_class_name,
-            mask_string(api_token.decode() if isinstance(api_token, bytes) else str(api_token)),
-        )
         if self.is_authenticated:
-            logger.debug(
-                "%s.authenticate(): user %s is already authenticated with account %s. Skipping authentication.",
-                self._am_formatted_class_name,
-                self.user,
-                self.account,
-            )
             return True
         if not isinstance(api_token, bytes):
             logger.warning(
@@ -834,11 +638,6 @@ class AccountMixin(SmarterHelperMixin):
             self._user = user
             self._account = None
             self._user_profile = None
-            logger.debug(
-                "%s.authenticate(): successfully authenticated user %s from API token.",
-                self._am_formatted_class_name,
-                self._user,
-            )
             return True
         except AuthenticationFailed:
             self._user = SmarterAnonymousUser()
@@ -850,11 +649,16 @@ class AccountMixin(SmarterHelperMixin):
         return False
 
     def log_ready_status(self):
-        """Logs the ready status of the view."""
-        msg = f"{self.formatted_class_name} is {self.ready_state}"
-        logger.info(msg)
+        """Logs the ready status of the view, building the message only when it will be logged."""
+        if logger.should_log(logging.INFO):
+            logger.info("%s is %s", self.formatted_class_name, self.ready_state)
 
     def _am_log_ready_status(self):
-        """Logs the am_ready status of the AccountMixin."""
-        msg = f"{self._am_formatted_class_name} is {self._am_ready_state}"
-        logger.info(msg)
+        """
+        Logs the am_ready status of the AccountMixin.
+
+        It runs from every setter, often several times per request, so the message, which reads
+        the ready state, is only built when it will be logged.
+        """
+        if logger.should_log(logging.INFO):
+            logger.info("%s is %s", self._am_formatted_class_name, self._am_ready_state)

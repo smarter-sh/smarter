@@ -145,6 +145,31 @@ class TestLLMClientHelperNamedUrl(TestAccountMixin):
                 helper = self.helper(self.admin_llmclient.rfc1034_compliant_name, path=path)
                 self.assertEqual(helper.llmclient, self.admin_llmclient)
 
+    def test_the_label_wins_over_the_callers_llmclient_of_a_shorter_name(self):
+        """
+        ``x-developer`` is ``x_developer`` for everyone, even for the owner of an LLMClient named ``x``.
+
+        The name parsed from the url ends at the label's first hyphen, so a caller who owns ``x`` used to
+        resolve ``x``, and its resolution was cached for every caller of the host.
+        """
+        decoy = LLMClient.objects.create(name=f"dev{self.hash_suffix}", user_profile=self.user_profile)
+        self.addCleanup(LLMClient.objects.filter(pk=decoy.pk).delete)
+        target = LLMClient.objects.create(name=f"dev{self.hash_suffix}_developer", user_profile=self.user_profile)
+        self.addCleanup(LLMClient.objects.filter(pk=target.pk).delete)
+        host = (
+            f"{target.rfc1034_compliant_name}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
+        )
+        for user in (AnonymousUser(), self.admin_user):
+            with self.subTest(user=user):
+                request = RequestFactory().get("/config/", HTTP_HOST=host)
+                request.user = user
+                self.assertEqual(LLMClientHelper(request).llmclient, target)
+
+    def test_the_account_of_a_named_url(self):
+        """A named url's account is the account in the url, the account of the LLMClient it names."""
+        helper = self.helper(self.admin_llmclient.rfc1034_compliant_name)
+        self.assertEqual(helper.account, self.account)
+
     def test_other_paths_are_not_named_urls(self):
         """Paths that a deployed host doesn't serve, e.g. the console's /dashboard/, resolve nothing."""
         for path in ("/dashboard/", "/jsi18n/", "/config/extra/"):
