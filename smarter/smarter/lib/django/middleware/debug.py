@@ -1,6 +1,7 @@
 """Debug middleware for logging the type of the response returned by the view."""
 
 from collections.abc import Awaitable
+from functools import cached_property
 
 from django.http import HttpRequest, HttpResponseBase
 
@@ -52,7 +53,7 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
 
         return response
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
         """
         Return the formatted class name for logging purposes.
