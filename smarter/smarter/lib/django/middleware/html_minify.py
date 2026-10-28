@@ -161,6 +161,7 @@ errors automatically fall back to the original unmodified response.
 from __future__ import annotations
 
 from collections.abc import Awaitable
+from functools import cached_property
 
 from asgiref.sync import sync_to_async
 from bs4 import BeautifulSoup, Comment
@@ -235,26 +236,24 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
             return self.get_response(request)
 
-        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = super().__call__(request)
-        response = self.process_response(request, response)
-
-        if response is not None:
-            return response
-
-        return self.get_response(request)
+        # process_response() always returns a response, so the view is never called twice.
+        return self.process_response(request, response)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
             return await super().__acall__(request)
 
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = await super().__acall__(request)
         response = await self.async_process_response(request, response)
         return response
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging.
+
+        It names the instance, not a request.
+        """
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -284,9 +283,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         if not hasattr(response, "content"):
             return True
 
-        if not response.content:
-            return True
-
+        # the header and path checks come before reading the content, which joins the body.
         content_type = response.get("Content-Type", "").lower()
 
         if "text/html" not in content_type:
@@ -297,14 +294,10 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         if path in self.SKIP_PATHS:
             return True
 
-        if path.endswith(self.SKIP_SUFFIXES):
+        if path.endswith(self.SKIP_SUFFIXES) or path.startswith(self.SKIP_PATH_PREFIXES):
             return True
 
-        for prefix in self.SKIP_PATH_PREFIXES:
-            if path.startswith(prefix):
-                return True
-
-        return False
+        return not response.content
 
     def minify_response(self, response):
         """Minify HTML response content."""
@@ -321,8 +314,6 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
             minified_html = self.serialize_html(soup)
             response.content = minified_html.encode("utf-8")
             response["Content-Length"] = str(len(response.content))
-
-            logger.debug("%s.minify_response() - minified HTML response", self.formatted_class_name)
 
         except Exception as exc:  # pylint: disable=broad-except
             logging.exception("%s.minify_response() - failed to minify HTML: %s", self.formatted_class_name, exc)
@@ -342,9 +333,8 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
     def looks_like_xml(cls, html: str) -> bool:
         """Detect XML/RSS/Feed responses."""
 
-        html = html.lower()
-
-        return any(html.startswith(prefix) for prefix in cls.XML_PREFIXES)
+        # only the start of the document matters, so don't lowercase all of it.
+        return html[:16].lower().startswith(cls.XML_PREFIXES)
 
     @staticmethod
     def remove_comments(soup: BeautifulSoup) -> None:

@@ -10,7 +10,6 @@ from django.http import HttpRequest
 from rest_framework import serializers
 
 from smarter.apps.llmclient.models import LLMClient, get_cached_llmclient_by_request
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
@@ -22,16 +21,7 @@ from .prompt_history import PromptHistory
 from .prompt_plugin_usage import PromptPluginUsage
 from .prompt_tool_call import PromptToolCall
 
-
-# pylint: disable=W0613
-def should_log_verbose(level) -> bool:
-    return smarter_settings.verbose_logging
-
-
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
-logger_verbose = logging.getSmarterLogger(
-    __name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING], condition_func=should_log_verbose
-)
 
 
 # --------------------------------------------------------------------------------
@@ -145,13 +135,6 @@ class PromptHelper(SmarterRequestMixin):
         :raises SmarterValueError: If neither a session key nor a LLMClient instance is provided.
         :raises SmarterConfigurationError: If there is an error creating a new Prompt object.
         """
-        logger_verbose.debug(
-            "%s.__init__() - received request: %s session_key: %s, llmclient: %s",
-            self.formatted_class_name,
-            self.smarter_build_absolute_uri(request),
-            session_key,
-            llmclient,
-        )
         if not request:
             raise SmarterValueError(f"{self.formatted_class_name} request object is required.")
         super().__init__(request, session_key=session_key, **kwargs)
@@ -167,12 +150,6 @@ class PromptHelper(SmarterRequestMixin):
             )
 
         if llmclient and llmclient.user_profile:
-            logger_verbose.debug("%s.__init__() received LLMClient instance: %s", self.formatted_class_name, llmclient)
-            logger_verbose.debug(
-                "%s.__init__() - reinitializing AccountMixin from llmclient.user_profile: %s",
-                self.formatted_class_name,
-                llmclient.user_profile,
-            )
             self._user_profile = llmclient.user_profile
             self._account = llmclient.user_profile.account
             self._user = llmclient.user_profile.user
@@ -184,22 +161,8 @@ class PromptHelper(SmarterRequestMixin):
 
         if session_key:
             self._session_key = session_key
-            logger_verbose.debug(
-                "%s.__init__() - setting session_key to %s from session_key parameter",
-                self.formatted_class_name,
-                self._session_key,
-            )
         if self.session_key:
-            logger_verbose.debug("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
             self._chat = self.get_cached_chat()
-
-        logger_verbose.debug(
-            "%s.__init__() - %s with session_key: %s, prompt: %s",
-            self.formatted_class_name,
-            "is ready" if self.ready else "is not ready",
-            self.session_key,
-            self._chat,
-        )
 
     def __str__(self) -> str:
         return self.session_key
@@ -292,6 +255,7 @@ class PromptHelper(SmarterRequestMixin):
         if self._llmclient:
             return self._llmclient
         self._llmclient = get_cached_llmclient_by_request(request=self.smarter_request)
+        return self._llmclient
 
     @property
     def prompt_history(self) -> Union[models.QuerySet, list]:
@@ -312,7 +276,8 @@ class PromptHelper(SmarterRequestMixin):
         :returns: A queryset of PromptToolCall instances for the current prompt session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        if self._prompt_tool_call:
+        # "is not None": an empty result is cached too, rather than queried again on every access.
+        if self._prompt_tool_call is not None:
             return self._prompt_tool_call
         self._prompt_tool_call = PromptToolCall.objects.filter(prompt=self.prompt).order_by("-created_at") or []
         return self._prompt_tool_call
@@ -325,7 +290,7 @@ class PromptHelper(SmarterRequestMixin):
         :returns: A queryset of PromptPluginUsage instances for the current prompt session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        if self._prompt_plugin_usage:
+        if self._prompt_plugin_usage is not None:
             return self._prompt_plugin_usage
         self._prompt_plugin_usage = PromptPluginUsage.objects.filter(prompt=self.prompt).order_by("-created_at") or []
         return self._prompt_plugin_usage
@@ -338,7 +303,7 @@ class PromptHelper(SmarterRequestMixin):
         :returns: A dictionary containing serialized prompt, prompt history, tool calls, and plugin usage.
         :rtype: dict
         """
-        if self._history:
+        if self._history is not None:
             return self._history
         chat_serializer = PromptSerializer(self.prompt)
         prompt_tool_call_serializer = PromptToolCallSerializer(self.prompt_tool_call, many=True)
@@ -373,12 +338,6 @@ class PromptHelper(SmarterRequestMixin):
         if self.session_key:
             try:
                 prompt = get_cached_prompt_by_session_key(self.session_key)
-                logger_verbose.debug(
-                    "%s retrieved Prompt instance: %s session_key: %s",
-                    self.formatted_class_name,
-                    prompt,
-                    prompt.session_key,
-                )
             except Prompt.DoesNotExist:
                 pass
 
