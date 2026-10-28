@@ -232,20 +232,6 @@ class PluginBase(ABC, AccountMixin):
             (account for account in args if isinstance(account, Account)), None
         )
         AccountMixin.__init__(self, *args, user=user, user_profile=user_profile, account=account, **kwargs)
-        sources = [
-            key
-            for key, present in [
-                ("data", bool(data)),
-                ("manifest", bool(manifest)),
-                ("plugin_id", bool(plugin_id)),
-                ("plugin_meta", bool(plugin_meta)),
-                ("name", bool(name)),
-            ]
-            if present
-        ]
-        comma_separated = ", ".join(sorted(set(sources)))
-        msg = f"{self.formatted_pluginbase_class_name}.__init__() initializing from {comma_separated}."
-        logger.debug(msg)
         self._api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile
@@ -381,12 +367,6 @@ class PluginBase(ABC, AccountMixin):
              - ``plugin_prompt``
              - ``plugin_data``
         """
-
-        logger.debug(
-            "%s.cache_invalidations() called. Invalidating cached properties for plugin: %s",
-            self.formatted_pluginbase_class_name,
-            self,
-        )
 
         if self.user_profile:
             UserProfile.get_cached_object(invalidate=True, pk=self.user_profile.id)  # type: ignore
@@ -601,10 +581,12 @@ class PluginBase(ABC, AccountMixin):
     ###########################################################################
     # Base class properties
     ###########################################################################
-    @property
+    @cached_property
     def formatted_pluginbase_class_name(self) -> str:
         """
         Return the formatted class name for logging.
+
+        It depends only on the class, so it is formatted once.
 
         :return: The formatted class name.
         :rtype: str
@@ -650,7 +632,6 @@ class PluginBase(ABC, AccountMixin):
         :param value: The plugin parameters to set.
         :type value: dict
         """
-        logger.debug("Setting plugin parameters: %s", value)
         if not isinstance(value, dict):
             raise SmarterValueError("Plugin parameters must be a dictionary.")
         self._params = value
@@ -777,19 +758,9 @@ class PluginBase(ABC, AccountMixin):
                 self._plugin_meta = PluginMeta.get_cached_object(
                     invalidate=True, account=self.user_profile.cached_account, name=self.manifest.metadata.name
                 )
-                logger.debug(
-                    "%s.plugin_meta() PluginMeta found for plugin %s %s.",
-                    self.formatted_pluginbase_class_name,
-                    self.manifest.metadata.name,
-                    self.user_profile,
-                )
             except PluginMeta.DoesNotExist:
-                logger.debug(
-                    "%s.plugin_meta() PluginMeta does not exist for plugin %s %s.",
-                    self.formatted_pluginbase_class_name,
-                    self.manifest.metadata.name,
-                    self.user_profile,
-                )
+                # a plugin that does not exist yet, e.g. one that is about to be applied from a manifest.
+                pass
 
         return self._plugin_meta
 
@@ -1363,29 +1334,13 @@ class PluginBase(ABC, AccountMixin):
         if not self._manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
 
-        logger.debug(
-            "%s.create() creating plugin %s", self.formatted_pluginbase_class_name, self.manifest.metadata.name
-        )
-
         def committed(plugin: PluginMeta):
             plugin_id: int = plugin.id if isinstance(plugin, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
             self.id = plugin_id
             plugin_created.send(sender=self.__class__, plugin=self)
             plugin_meta = self._plugin_meta
-            logger.debug(
-                "%s.create() created and committed plugin %s: %s.",
-                self.formatted_pluginbase_class_name,
-                self.plugin_meta.name if self.plugin_meta else "Unknown",
-                plugin_meta.id if isinstance(plugin_meta, PluginMeta) else "Unknown",  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
-            )
 
         if self.plugin_meta:
-            logger.debug(
-                "%s.create() Plugin %s already exists. Updating plugin %s.",
-                self.formatted_pluginbase_class_name,
-                self.plugin_meta.name,
-                self.plugin_meta.id,  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
-            )
             return self.update()
 
         meta_data = self.plugin_meta_django_model
@@ -1397,8 +1352,6 @@ class PluginBase(ABC, AccountMixin):
             plugin_meta = PluginMeta.objects.create(**meta_data)
             tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
             plugin_meta.tags.set(tags)
-
-            logger.debug("%s.create() created PluginMeta: %s", self.formatted_pluginbase_class_name, plugin_meta)
 
             selector = self.plugin_selector_django_model
             prompt = self.plugin_prompt_django_model
@@ -1413,16 +1366,9 @@ class PluginBase(ABC, AccountMixin):
 
             if selector is not None:
                 plugin_selector = PluginSelector.objects.create(**selector)
-                logger.debug(
-                    "%s.create() created PluginSelector: %s", self.formatted_pluginbase_class_name, plugin_selector
-                )
             if prompt is not None:
                 plugin_prompt = PluginPrompt.objects.create(**prompt)
-                logger.debug(
-                    "%s.create() created PluginPrompt: %s", self.formatted_pluginbase_class_name, plugin_prompt
-                )
             if plugin_data is not None:
-                logger.debug("%s.create() creating PluginData: %s", self.formatted_pluginbase_class_name, plugin_data)
                 self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin=plugin_meta))
@@ -1438,15 +1384,11 @@ class PluginBase(ABC, AccountMixin):
         :rtype: bool
         :raises SmarterPluginError: If the plugin manifest is not set or the plugin does not exist.
         """
-        logger.debug(
-            "%s.update() updating plugin %s: %s", self.formatted_pluginbase_class_name, self.plugin_meta, self.id
-        )
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
             plugin_id: Optional[int] = self.plugin_meta.id if isinstance(self.plugin_meta, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
             self.id = plugin_id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
-            logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         if not self.manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
@@ -1511,7 +1453,6 @@ class PluginBase(ABC, AccountMixin):
             transaction.on_commit(committed)
         else:
             self.id = self.plugin_meta.id  # type: ignore[reportAttributeAccessIssue]
-            logger.debug("%s.update() plugin %s is unchanged.", self.formatted_pluginbase_class_name, self.name)
         self._persisted_manifest = self._manifest
 
         return True
@@ -1527,7 +1468,6 @@ class PluginBase(ABC, AccountMixin):
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
-            logger.debug("Saved plugin %s: %s.", self.name, self.id)
 
         if not self.ready:
             logger.warning("%s.save() Plugin is not ready. Cannot save.", self.formatted_pluginbase_class_name)
@@ -1570,7 +1510,6 @@ class PluginBase(ABC, AccountMixin):
             plugin_deleted.send(
                 sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta, plugin_name=plugin_name
             )
-            logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
 
         if not self.ready:
             return False
@@ -1623,13 +1562,6 @@ class PluginBase(ABC, AccountMixin):
         # pylint: disable=W0613
         def committed(new_plugin: Optional[PluginMeta]):
             plugin_cloned.send(sender=self.__class__, plugin=self)
-            logger.debug(
-                "Cloned plugin %s: %s to %s: %s",
-                self.id,
-                self.name,
-                new_plugin,
-                new_plugin.name if new_plugin else "Unknown",
-            )
 
         def get_new_name(plugin_name, new_name=None):
             """Get a new name for the plugin."""

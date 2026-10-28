@@ -314,17 +314,6 @@ class SAMLoader(SmarterHelperMixin):
         self._file_path = file_path
         self._url = url
         super().__init__(*args, **kwargs)
-        logger.debug(
-            "%s.__init__() - called with *args %s, api_version=%s, kind=%s, manifest=%s, file_path=%s, url=%s, **kwargs %s",
-            self.formatted_class_name,
-            args,
-            api_version,
-            kind,
-            manifest,
-            file_path,
-            url,
-            kwargs,
-        )
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMLoaderError(f"Unsupported API version: {api_version}")
 
@@ -364,7 +353,6 @@ class SAMLoader(SmarterHelperMixin):
         # Therefore, this call will only validate the top-level keys and values
         # of the manifest.
         self.validate_manifest()
-        logger.debug("%s.__init__() - %r", super().formatted_class_name, self)
         self.log_loader_state()
 
     def __str__(self) -> str:

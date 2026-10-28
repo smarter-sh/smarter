@@ -203,6 +203,7 @@ import re
 import unicodedata
 import urllib.parse
 from collections.abc import Awaitable, Callable, Iterable
+from functools import cached_property
 from typing import cast
 
 from asgiref.sync import sync_to_async
@@ -338,6 +339,9 @@ SENSITIVE_FILES = frozenset(
 EXACT_MATCHES = frozenset(pattern for pattern in SENSITIVE_FILES if "*" not in pattern)
 GLOB_MATCHES = frozenset(pattern for pattern in SENSITIVE_FILES if "*" in pattern)
 
+REPEATED_SLASHES = re.compile(r"/+")
+"""Collapses repeated slashes in a request path."""
+
 
 class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     """
@@ -370,7 +374,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
             return super().__call__(request)
 
-        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = self._inspect_request(request)
 
         if response is not None:
@@ -383,7 +386,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
             return await super().__acall__(request)
 
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = await sync_to_async(self._inspect_request)(request)
 
         if response is not None:
@@ -392,8 +394,12 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         get_response = cast(AsyncGetResponseCallable, self.get_response)
         return await get_response(request)
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging.
+
+        It names the instance, not a request.
+        """
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -405,11 +411,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         normalized_path = self.normalize_path(request.path)
 
         if self.is_amnesty_path(normalized_path):
-            logger.debug(
-                "%s amnesty granted to: %s",
-                self.formatted_class_name,
-                normalized_path,
-            )
             return None
 
         client_ip = self.get_client_ip(request)
@@ -461,7 +462,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         path = path.replace("\\", "/")
         path = path.replace("\x00", "")
 
-        path = re.sub(r"/+", "/", path)
+        path = REPEATED_SLASHES.sub("/", path)
 
         path = posixpath.normpath(path)
 
@@ -475,16 +476,15 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         if path.replace("/", "") in self.amnesty_urls:
             return True
 
-        for pattern in self.allowed_patterns:
-            if pattern.match(path):
-                return True
+        if not self.allowed_patterns:
+            return False
 
-        for segment in self.iter_path_segments(path):
-            for pattern in self.allowed_patterns:
-                if pattern.match(segment):
-                    return True
+        if any(pattern.match(path) for pattern in self.allowed_patterns):
+            return True
 
-        return False
+        return any(
+            pattern.match(segment) for segment in self.iter_path_segments(path) for pattern in self.allowed_patterns
+        )
 
     def is_throttled(self, client_ip: str) -> bool:
 
@@ -529,13 +529,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         """Cached sensitive file detection."""
 
         path_segments = tuple(cls.iter_path_segments(path))
-
-        logger.debug(
-            "%s checking normalized path: %s",
-            cls.__name__,
-            path,
-        )
-
         normalized_full_path = path.lstrip("/")
 
         if normalized_full_path in EXACT_MATCHES:
