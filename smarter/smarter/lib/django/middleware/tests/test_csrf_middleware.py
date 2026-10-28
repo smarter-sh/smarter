@@ -2,13 +2,15 @@
 
 # pylint: disable=W0718,W0212
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from django.http import HttpRequest
-from django.test import override_settings
+from django.test import RequestFactory, override_settings
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.django.middleware.csrf import SmarterCsrfViewMiddleware
+
+MODULE = "smarter.lib.django.middleware.csrf"
 
 
 class TestSmarterCsrfViewMiddleware(TestAccountMixin):
@@ -83,7 +85,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
         self.request.META["SERVER_NAME"] = "example.com"
         self.request.META["SERVER_PORT"] = "443"
         setattr(self.middleware, "request", self.request)  # type: ignore
-        with patch.object(type(self.middleware), "is_llmclient", new_callable=PropertyMock, return_value=True):
+        with patch.object(SmarterCsrfViewMiddleware, "llmclient_request_kind", return_value=(True, False)):
             result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)
 
@@ -102,10 +104,39 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
         self.request.META["HTTP_HOST"] = "example.com"
         setattr(self.middleware, "request", self.request)  # type: ignore
         with (
-            patch.object(SmarterCsrfViewMiddleware, "is_llmclient", new_callable=PropertyMock, return_value=False),
+            patch.object(SmarterCsrfViewMiddleware, "llmclient_request_kind", return_value=(False, False)),
             patch.object(
                 SmarterCsrfViewMiddleware, "get_dynamic_trusted_origins", return_value=["https://*.example.com"]
             ),
         ):
             response = self.middleware.process_view(self.request, lambda request: None, (), {})
         self.assertEqual(response.status_code, 403)
+
+    def test_llmclient_request_kind_reads_the_request(self):
+        """Each request is classified by its own url, and the result is kept on the request."""
+        llmclient_request = RequestFactory().post("/api/v1/cli/prompt/example/")
+        llmclient_request.user = self.admin_user
+        other_request = RequestFactory().post("/dashboard/")
+        other_request.user = self.admin_user
+        self.assertEqual(self.middleware.llmclient_request_kind(llmclient_request), (True, False))
+        self.assertEqual(self.middleware.llmclient_request_kind(other_request), (False, False))
+        with patch(f"{MODULE}.SmarterRequestMixin") as srm:
+            self.assertEqual(self.middleware.llmclient_request_kind(llmclient_request), (True, False))
+            srm.assert_not_called()
+
+    def test_a_request_that_cannot_be_classified_gets_the_full_check(self):
+        request = RequestFactory().post("/api/v1/cli/prompt/example/")
+        with patch(f"{MODULE}.SmarterRequestMixin", side_effect=ValueError("boom")):
+            self.assertEqual(self.middleware.llmclient_request_kind(request), (False, False))
+
+    @patch("smarter.lib.django.middleware.csrf.smarter_settings")
+    @patch("smarter.lib.django.middleware.csrf.waffle")
+    def test_a_safe_request_is_not_classified(self, mock_waffle, mock_smarter_settings):
+        mock_waffle.switch_is_active.return_value = True
+        mock_smarter_settings.environment = "prod"
+        mock_smarter_settings.internal_ip_prefixes = []
+        request = RequestFactory().get("/dashboard/")
+        request.user = self.admin_user
+        with patch.object(SmarterCsrfViewMiddleware, "llmclient_request_kind") as kind:
+            self.assertIsNone(self.middleware.process_view(request, lambda request: None, (), {}))
+            kind.assert_not_called()
