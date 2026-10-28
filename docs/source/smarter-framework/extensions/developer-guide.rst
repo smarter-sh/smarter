@@ -45,6 +45,14 @@ Every tool, in every Extension, implements the same protocol: it is a subclass o
 The class docstring
     The tool's description for the LLM. A tool can set ``description`` instead.
 
+``cache_ttl``, optionally
+    Seconds to cache the tool's results, by its arguments and the Extension's settings, so that
+    the same call, from any LLMClient, is answered without running the tool again. The default, 0,
+    caches nothing. Set it only for a tool that changes nothing and whose result doesn't depend on
+    who calls it, such as a weather forecast (``cache_ttl = 3600``). Errors are never cached. A
+    first message whose answer used only cacheable tools can have its whole answer cached too: see
+    :doc:`/smarter-framework/developer-reference/lib/caching`.
+
 ``call(self, arguments, context) -> JsonValue``
     Does the work. ``arguments`` is an instance of ``arguments_model``, already validated, and
     ``context`` is an :class:`~smarter.apps.llmtool.extension.protocol.ExtensionContext`: the

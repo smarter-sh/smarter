@@ -15,6 +15,7 @@ from django.dispatch import receiver
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
+from .caching import invalidate_cached_tool_results
 from .models import RepositoryIndex
 from .signals import (
     mcpserver_called,
@@ -54,7 +55,8 @@ def handle_mcpserver_tool_called(
 
 @receiver(mcpserver_repository_indexed, dispatch_uid="mcpserver_repository_indexed")
 def handle_mcpserver_repository_indexed(sender, index: RepositoryIndex, **kwargs):
-    """Log a repository that was indexed."""
+    """Log a repository that was indexed, and make the cached tool results stale, since its files changed."""
+    invalidate_cached_tool_results()
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.handle_mcpserver_repository_indexed()"
     logger.info(
         "%s %s indexed at %s: %s files, %s bytes",
