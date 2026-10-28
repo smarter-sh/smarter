@@ -31,7 +31,10 @@ from typing import Callable, Union
 from cache_results import cache_results
 from pydantic import BaseModel, JsonValue
 
-from smarter.lib import json
+from smarter.lib import json, logging
+
+logger = logging.getLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 ERROR_TEXT_PREFIX = "Error:"
 """How a tool's result that is text begins when it is an error, e.g. an MCP tool's."""
@@ -143,7 +146,15 @@ def cached_tool_call(
     def get_cached_tool_call_result(namespace: str, key: tuple, arguments: str) -> JsonValue:
         nonlocal executed
         executed = True
+        logger.debug(
+            "%s.cached_tool_call() cache miss, running the tool. namespace=%s key=%s arguments=%s",
+            logger_prefix,
+            namespace,
+            key,
+            arguments,
+        )
         value = call()
+
         if is_error(value):
             # raised, rather than returned, so that @cache_results stores nothing.
             raise _ErrorResult(value)

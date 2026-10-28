@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.37.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.37.1...v0.37.2-alpha.1) (2026-10-28)
+
+### Bug Fixes
+
+* **llmclient:** resolve a deployed host by its whole label ([98b7fdd](https://github.com/smarter-sh/smarter/commit/98b7fdd906ceb3b114fce3b06aafdfc67b6d4b43))
+
+### Refactoring
+
+* **cache:** log the tool call cache's misses ([89856d5](https://github.com/smarter-sh/smarter/commit/89856d58f5af340d8271e163d4914b19b28363dd))
+
+### Performance
+
+* drop per-request debug logging and redundant work ([406c571](https://github.com/smarter-sh/smarter/commit/406c571da9bac75ec41ba398f2267cc7a14a397b))
+
 ## [0.37.1](https://github.com/smarter-sh/smarter/compare/v0.37.0...v0.37.1) (2026-10-28)
 
 ### Bug Fixes

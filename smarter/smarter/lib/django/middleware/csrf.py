@@ -151,6 +151,12 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
+CSRF_SAFE_METHODS = frozenset(("GET", "HEAD", "OPTIONS", "TRACE"))
+"""The methods whose requests Django's CSRF check always accepts."""
+
+LLMCLIENT_REQUEST_KIND_ATTRIBUTE = "_smarter_csrf_llmclient_request_kind"
+"""The request attribute that holds :meth:`SmarterCsrfViewMiddleware.llmclient_request_kind`."""
+
 
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
     logger.debug(
@@ -192,8 +198,12 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             return self.get_response(request)
         return super().__call__(request)
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging.
+
+        It names the instance, not a request.
+        """
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -212,7 +222,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         origins = list(settings.CSRF_TRUSTED_ORIGINS)
 
         try:
-            if self.is_llmclient or self.is_config:
+            is_llmclient, is_config = self.llmclient_request_kind(request)
+            if is_llmclient or is_config:
                 origin = request.build_absolute_uri("/").rstrip("/")
 
                 if origin not in origins:
@@ -226,6 +237,30 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             )
 
         return origins
+
+    def llmclient_request_kind(self, request: ASGIRequest) -> tuple[bool, bool]:
+        """
+        Return whether the request is for an LLMClient, and whether it is for a configuration api.
+
+        The middleware is one instance shared by every request, so the request is classified by its
+        own :class:`SmarterRequestMixin`, never by this instance's, and the result is kept on the
+        request, never on the middleware. A request that can't be classified is neither, so it gets
+        the full CSRF check.
+
+        :param request: The request.
+        :returns: ``(is_llmclient, is_config)``.
+        """
+        kind = getattr(request, LLMCLIENT_REQUEST_KIND_ATTRIBUTE, None)
+        if kind is None:
+            try:
+                srm = SmarterRequestMixin(request)
+                kind = (bool(srm.is_llmclient), bool(srm.is_config))
+            # pylint: disable=broad-except
+            except Exception as exc:
+                logger.warning("%s could not classify %s: %s", self.formatted_class_name, request.path, exc)
+                kind = (False, False)
+            setattr(request, LLMCLIENT_REQUEST_KIND_ATTRIBUTE, kind)
+        return kind
 
     @cached_property
     def csrf_trusted_origins_hosts(self):
@@ -269,46 +304,33 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         if self.deserves_amnesty(request.path):
             return None
 
-        logger.debug(
-            "%s.process_view() path=%s",
-            self.formatted_class_name,
-            request.path,
-        )
-
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
             return None
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            logger.debug(
-                "%s local environment bypass",
-                self.formatted_class_name,
-            )
             return None
 
         path = request.path.strip("/")
 
         if path in getattr(self, "amnesty_urls", []):
-            logger.debug(
-                "%s health check bypass: %s",
-                self.formatted_class_name,
-                request.path,
-            )
+            # health check bypass
             return None
 
         host = request.get_host()
 
-        if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
-            logger.debug(
-                "%s internal IP bypass: %s",
-                self.formatted_class_name,
-                host,
-            )
+        if host.startswith(tuple(smarter_settings.internal_ip_prefixes)):
+            # internal IP bypass
             return None
+
+        if request.method in CSRF_SAFE_METHODS:
+            # Django never checks the origin of a safe request, so it needs no classification.
+            return super().process_view(request, callback, callback_args, callback_kwargs)
 
         #
         # LLMClient bypass
         #
-        if self.is_llmclient and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_LLM_CLIENTS):
+        is_llmclient, _ = self.llmclient_request_kind(request)
+        if is_llmclient and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_LLM_CLIENTS):
             logger.info(
                 "%s llmclient CSRF bypass: %s",
                 self.formatted_class_name,
