@@ -23,7 +23,6 @@ Key Points:
 """
 
 from typing import (
-    Any,
     List,
     Optional,
     Protocol,

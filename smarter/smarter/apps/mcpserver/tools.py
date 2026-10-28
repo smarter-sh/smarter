@@ -40,10 +40,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from smarter.apps.api.v1.contract.const import SAM_SCHEMA_SUFFIX
 from smarter.common.const import VERSION
 from smarter.lib import json, logging
+from smarter.lib.cache.tool_results import cached_tool_call
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 from . import manifests
+from .caching import TOOL_CACHE_NAMESPACE, TOOL_RESULT_CACHE_TTL, index_generation
 from .exceptions import SmarterMCPServerToolError
 from .models import RepositoryFile, RepositoryFileKind, RepositoryIndex
 from .repositories import (
@@ -317,6 +319,9 @@ class SmarterProjectTool(ABC):
         """
         Validate a tool call's arguments, and run the tool.
 
+        The result is cached for an hour, until an index changes. See
+        :mod:`smarter.apps.mcpserver.caching`.
+
         :param arguments: The tool call's arguments.
         :returns: The result, as Markdown.
         :raises SmarterMCPServerToolError: If the arguments are not valid, or the tool fails.
@@ -331,7 +336,13 @@ class SmarterProjectTool(ABC):
                 f"{'.'.join(str(part) for part in error['loc']) or 'arguments'}: {error['msg']}" for error in e.errors()
             )
             raise SmarterMCPServerToolError(f"invalid arguments for {self.name}: {problems}") from e
-        return self.run(validated)
+        scope = self.scope.repository.name if self.scope.repository else "*"
+        # the index generation changes whenever an index does, so new files are found at once.
+        key = (str(VERSION.get("__version__", "0.0.0")), index_generation(), scope, self.name)
+        result = cached_tool_call(
+            TOOL_CACHE_NAMESPACE, key, validated, TOOL_RESULT_CACHE_TTL, lambda: self.run(validated)
+        )
+        return str(result.value)
 
     @abstractmethod
     def run(self, arguments: ToolArguments) -> str:
