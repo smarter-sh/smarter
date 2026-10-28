@@ -545,7 +545,7 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
     return smarter_cached_objects.smarter_admin_user_profile
 
 
-def account_number_from_url(invalidate: Optional[bool] = False, url: Optional[str] = None) -> Optional[str]:
+def account_number_from_url(url: Optional[str] = None, invalidate: Optional[bool] = False) -> Optional[str]:
     """
     Extract the account number from a Smarter platform URL, using caching for performance.
 

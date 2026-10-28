@@ -2,6 +2,7 @@
 
 import re
 import traceback
+from functools import cached_property
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
@@ -36,11 +37,7 @@ from smarter.common.exceptions import (
     SmarterInvalidApiKeyError,
     SmarterValueError,
 )
-from smarter.common.utils import (
-    is_authenticated_request,
-    mask_string,
-    smarter_build_absolute_uri,
-)
+from smarter.common.utils import is_authenticated_request, mask_string
 from smarter.lib import json, logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
@@ -118,6 +115,8 @@ CLIENT_ERRORS: tuple[Type[BaseException], ...] = (
     APIV1CLIViewBadRequestError,
 )
 MAX_INPUT_LENGTH = 80
+CLI_COMMAND_PATTERN = re.compile(r"/cli/([^/]+)/")
+"""Finds the command in a cli api url, e.g. ``apply`` in ``/api/v1/cli/apply/``."""
 
 
 def exception_chain(e: BaseException) -> list[BaseException]:
@@ -277,7 +276,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _prompt: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
-        logger.debug("%s.__init__() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
 
         # extract user, account, user_profile, and request from kwargs
@@ -297,7 +295,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
 
-    @property
+    @cached_property
     def logger_prefix(self) -> str:
         """
         Get the logger prefix for this class.
@@ -527,10 +525,12 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # - http://testserver/api/v1/cli/apply/
         return self._manifest_kind
 
-    @property
+    @cached_property
     def command(self) -> SmarterJournalCliCommands:
         """
         Translate the request route into a SmarterJournalCliCommands enum instance.
+
+        It is cached until the request changes: setting ``smarter_request`` clears it.
 
         For example, if the route is '/api/v1/cli/apply/', then the corresponding command will be
         SmarterJournalCliCommands.APPLY.
@@ -542,7 +542,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: SmarterJournalCliCommands enum instance
         :rtype: SmarterJournalCliCommands
         """
-        match = re.search(r"/cli/([^/]+)/", self.url or "")
+        match = CLI_COMMAND_PATTERN.search(self.url or "")
         if match:
             _command = match.group(1)
             _command = self.to_snake_case(_command)
@@ -596,15 +596,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         super().setup(request, *args, **kwargs)
         SmarterRequestMixin.setup(self, request=request, *args, **kwargs)
-        logger.debug(
-            "%s.setup() called for request: %s with args %s and kwargs %s auth header: %s, is_internal_api_request: %s",
-            self.logger_prefix,
-            smarter_build_absolute_uri(request),
-            args,
-            kwargs,
-            request.headers.get("Authorization"),
-            self.is_internal_api_request(request),
-        )
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
@@ -668,26 +659,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         https://www.django-rest-framework.org/api-guide/views/#view-initialization
             DRF documentation on the view initialization process.
         """
-        logger.debug(
-            "%s.initial() - called for request: %s with args %s and kwargs %s authorization %s, is_internal_api_request: %s",
-            self.logger_prefix,
-            request,
-            args,
-            kwargs,
-            request.headers.get("Authorization"),
-            self.is_internal_api_request(request),
-        )
         # there are cases where the requests lifecycle begins with a ASGIRequest that is
         # eventually wrapped into a DRF Request object. So we need to ensure that
         # the smarter_request is always set to the DRF Request object.
-        if isinstance(request, Request) and not isinstance(self.smarter_request, Request):
-            logger.debug(
-                "%s.initial() - re-initializing smarter_request to DRF Request object: %s (was %s - %s)",
-                self.logger_prefix,
-                request,
-                self.smarter_request,
-                self.smarter_request.user if self.smarter_request and hasattr(self.smarter_request, "user") else "N/A",
-            )
         try:
             self.smarter_request = request
         except Exception as e:
@@ -708,15 +682,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # The token is passed in the Authorization header as a Bearer token
         # of the form: 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY'
         try:
-            logger.debug(
-                "%s.initial() - authenticating request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
-                self.logger_prefix,
-                request,
-                request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
-                self.user_profile,
-                is_authenticated_request(request),
-                mask_string(str(request.META.get("HTTP_AUTHORIZATION"))),
-            )
             super().initial(request, *args, **kwargs)
 
             # super().initial() just ran DRF's real authentication pipeline
@@ -729,18 +694,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             # SmarterRequestMixin/AccountMixin (self.user, self.user_profile,
             # self.account) reflect the now-authenticated request.user,
             # rather than staying stuck on the pre-auth Anonymous state for
-            # session-authenticated requests.
-            self.smarter_request = request
-
-            logger.debug(
-                "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
-                self.logger_prefix,
-                request,
-                request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
-                self.user_profile,
-                is_authenticated_request(request),
-                mask_string(str(request.META.get("HTTP_AUTHORIZATION"))),
-            )
+            # session-authenticated requests. When the mixin already has the
+            # request's user, e.g. from token auth, nothing would change, and
+            # re-assigning would only rebuild every cached property.
+            if self.user is None or self.user != request.user:
+                self.smarter_request = request
         except NotAuthenticated as e:
             logger.warning(
                 "%s.initial() - authenticated failed for url: %s, user: %s, self.user: %s is_authenticated: %s",
@@ -765,7 +723,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     logger.error(
                         "%s.initial() - Authorization header '%s' seems to be invalid. The following exception was raised: %s",
                         self.logger_prefix,
-                        auth_header,
+                        mask_string(auth_header),
                         e,
                     )
                 else:
@@ -794,11 +752,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
-        if not self.ready:
-            # Expected for anonymous/unauthenticated requests (e.g. OPTIONS
-            # preflight probes), which never carry account context.
-            logger.debug("%s.initial() is not in a ready state. This might affect some operations.", self.logger_prefix)
-
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
         # from the request body, and then we'll leave it to the child views to
@@ -817,20 +770,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None) if self.params else kwargs.get("name", None)
 
-        user_agent = request.headers.get("User-Agent", "unknown")
-        logger.debug("%s.initial() processing request from %s user-agent.", self.logger_prefix, user_agent)
-
         kind = kwargs.get("kind", None)
         if kind:
             self._manifest_kind = Brokers.get_broker_kind(kind)
-            if self.manifest_kind:
-                logger.debug(
-                    "%s.initial() - determined manifest kind from url kwargs: %s -> %s",
-                    self.logger_prefix,
-                    kind,
-                    self._manifest_kind,
-                )
-            else:
+            if not self.manifest_kind:
                 return SmarterJournaledJsonErrorResponse(
                     request=request,
                     thing=self.manifest_kind,
@@ -891,38 +834,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             DRF documentation on view methods and the dispatch process.
         """
         if self.is_internal_api_request(request):
-            logger.debug(
-                "%s.dispatch() - internal api request. Disabling CSRF checks: %s",
-                self.logger_prefix,
-                request,
-            )
             setattr(request, "_dont_enforce_csrf_checks", True)
 
-        self.smarter_request = request
+        # setup() has usually set this same request already. Setting it again would only
+        # rebuild every cached property.
+        if self.smarter_request is not request:
+            self.smarter_request = request
         response = None
-        # note: `is_cli_base_api_view_ready_state` reflects only `cba_ready`
-        # (currently a hardcoded no-op), not the combined readiness that
-        # `self.ready` checks, so it's not used here to avoid a misleading
-        # "is READY" message on requests that are actually not ready (e.g.
-        # anonymous OPTIONS preflight probes, which are expected to be
-        # "not ready" since they carry no account context).
-        ready_state = self.formatted_state_ready if self.ready else self.formatted_state_not_ready
-        msg = f"{self.logger_prefix}.dispatch() - is {ready_state} - {self.smarter_request} - {self.user_profile if self.user_profile else "Anonymous"}"
-        logger.debug(msg)
         try:
-            logger.debug(
-                "%s.dispatch() - called for request: %s and authorization: %s",
-                self.logger_prefix,
-                request,
-                request.headers.get("Authorization"),
-            )
             response = super().dispatch(request, *args, **kwargs)
-            logger.debug(
-                "%s.dispatch() - finished processing request: %s, user_profile: %s",
-                self.logger_prefix,
-                request,
-                self.user_profile,
-            )
             api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
             return response
         # pylint: disable=broad-except

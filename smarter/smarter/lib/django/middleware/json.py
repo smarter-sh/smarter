@@ -151,9 +151,9 @@ status codes during normalization.
 from __future__ import annotations
 
 from collections.abc import Awaitable
+from functools import cached_property
 from http import HTTPStatus
 
-from asgiref.sync import sync_to_async
 from django.http import JsonResponse
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
@@ -200,25 +200,25 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
             return super().__call__(request)
 
-        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = super().__call__(request)
-        response = self.process_response(request, response)  # type: ignore
-
-        return response
+        # the switch was checked above, so skip process_response(), which would check it again.
+        return self.normalize_json_error_response(request=request, response=response)  # type: ignore
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
             return await super().__acall__(request)
 
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = await super().__acall__(request)
-        response = await self.async_process_response(request, response)  # type: ignore
+        # the switch was checked above, so skip async_process_response(), which would check it again.
+        return self.normalize_json_error_response(request=request, response=response)
 
-        return response
-
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging.
+
+        It names the instance, not a request.
+        """
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -234,25 +234,22 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
             return response
 
-        return await sync_to_async(self.normalize_json_error_response)(request=request, response=response)
+        # normalize_json_error_response() only reads headers and builds a dict: no I/O, so it
+        # doesn't need a worker thread.
+        return self.normalize_json_error_response(request=request, response=response)
 
     def normalize_json_error_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
         """Convert non-JSON error responses into JsonResponse objects."""
 
-        if not self.client_accepts_json(request):
+        # the status code is the cheapest check, and most responses aren't errors.
+        if response.status_code < HTTPStatus.BAD_REQUEST:
             return response
 
-        if response.status_code < HTTPStatus.BAD_REQUEST:
+        if not self.client_accepts_json(request):
             return response
 
         if self.response_is_json(response):
             return response
-
-        logger.debug(
-            "%s converting non-json error response status=%d",
-            self.formatted_class_name,
-            response.status_code,
-        )
 
         payload = self.build_error_payload(response)
 

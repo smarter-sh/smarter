@@ -96,6 +96,7 @@ without introducing custom async wrappers or coroutine adaptation.
 from __future__ import annotations
 
 from collections.abc import Awaitable
+from functools import cached_property
 from inspect import isawaitable, iscoroutinefunction
 
 from asgiref.sync import markcoroutinefunction
@@ -188,9 +189,12 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         if self.async_mode:
             markcoroutinefunction(self)
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
-        """Return the formatted class name for logging purposes."""
+        """Return the formatted class name for logging purposes.
+
+        It names the instance, not a request.
+        """
         class_name = f"{__name__}.{SmarterCorsMiddleware.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -204,8 +208,6 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
             return self.get_response(request)
 
-        logger.debug("%s.__call__() called for %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
-
         return super().__call__(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
@@ -215,9 +217,5 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             if isawaitable(result):
                 return await result
             return result
-
-        logger.debug(
-            "%s.__acall__() called for %s", self.formatted_class_name, self.smarter_build_absolute_uri(request)
-        )
 
         return await super().__acall__(request)

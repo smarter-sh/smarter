@@ -1,7 +1,4 @@
-"""
-Abstract helper class to map a manifest model's metadata.kindClass to an
-instance of the the correct Python subclass.
-"""
+"""Abstract helper class that maps a manifest model's metadata.kindClass to an instance of the correct Python subclass."""
 
 import abc
 from typing import Any
@@ -55,19 +52,18 @@ class AbstractController(abc.ABC, AccountMixin):
 
         Attempting to instantiate this controller with unsaved ``account`` or ``user`` objects will raise a ``ValueError``.
         Subclasses must implement all abstract properties, or a ``NotImplementedError`` will be raised.
-
     """
 
     def __init__(self, user_profile: UserProfile, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = kwargs.pop("request", None)
-        AccountMixin.__init__(
-            self,
-            account=user_profile.account,
-            user=user_profile.user,
-            user_profile=user_profile,
-            request=request,
+        # One AccountMixin initialization. (abc.ABC has no __init__, so super() is AccountMixin.)
+        # It used to run twice: once without the user profile, and then again with it, which
+        # resets and resolves everything the first run did. The cached accessors read the
+        # profile's account and user from the cache rather than with a query.
+        super().__init__(
             *args,
+            account=user_profile.cached_account,
+            user=user_profile.cached_user,
+            user_profile=user_profile,
             **kwargs,
         )
 

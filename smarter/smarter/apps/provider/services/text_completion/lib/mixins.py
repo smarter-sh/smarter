@@ -124,17 +124,8 @@ class ChatDbMixin(AccountMixin):
         if session_key:
             self._chat = Prompt.get_cached_object(session_key=session_key)  # type: ignore
         else:
-            self._chat = kwargs.get("prompt", None)
-
-        if self.ready:
-            logger.debug(
-                "%s.__init__() initialized with prompt session key: %s",
-                self.formatted_class_name,
-                self.prompt.session_key if self.prompt else "None",
-            )
-        else:
             # normal: a provider is created before its prompt, which it is given per request.
-            logger.debug("%s.__init__() initialized without a prompt, so not ready yet.", self.formatted_class_name)
+            self._chat = kwargs.get("prompt", None)
 
     @property
     def ready(self) -> bool:
@@ -164,11 +155,8 @@ class ChatDbMixin(AccountMixin):
         if not super_ready:
             logger.warning("%s.ready() is not ready because the superclass is not ready.", self.formatted_class_name)
             return False
-        chat_ready = True if isinstance(self.prompt, Prompt) else False
-        self._ready = chat_ready and super_ready
-        if self._ready:
-            logger.debug("%s.ready() is now ready for use.", self.formatted_class_name)
-        else:
+        self._ready = isinstance(self.prompt, Prompt)
+        if not self._ready:
             logger.warning("%s.ready() is not ready because prompt is not set.", self.formatted_class_name)
         return self._ready
 
@@ -231,15 +219,10 @@ class ChatDbMixin(AccountMixin):
         if not isinstance(value, Prompt) and value is not None:
             raise SmarterValueError("Prompt must be an instance of Prompt or None")
         self._chat = value
-        if isinstance(value, Prompt):
-            logger.debug(
-                "%s.prompt setter updated prompt session key to: %s", self.formatted_class_name, value.session_key
-            )
         self._chat_tool_call = None  # type: ignore
         self._chat_plugin_usage = None  # type: ignore
         self._chat_history = None
         self._message_history = None
-        logger.debug("%s.prompt setter reset lazy attributes due to prompt change.", self.formatted_class_name)
 
     @property
     def prompt_history(self) -> Optional[QuerySet[PromptHistory]]:
@@ -266,10 +249,6 @@ class ChatDbMixin(AccountMixin):
         """
         if self._chat_history is None and self.prompt is not None:
             self._chat_history = PromptHistory.objects.filter(prompt=self.prompt)
-            logger.debug(
-                "%s.prompt_history property loaded prompt history queryset.",
-                self.formatted_class_name,
-            )
         return self._chat_history
 
     @property
@@ -297,20 +276,17 @@ class ChatDbMixin(AccountMixin):
         """
         if isinstance(self._message_history, list):
             return self._message_history
-        if self.prompt_history and self.prompt_history.exists():
-            newest_record = self.prompt_history.latest("created_at")
-            if newest_record.messages:
-                self._message_history = newest_record.messages
-                if not isinstance(self._message_history, list):
-                    logger.warning(
-                        "%s.db_message_history expected messages to be a list but got %s.",
-                        self.formatted_class_name,
-                        type(self._message_history).__name__,
-                    )
-                logger.debug(
-                    "%s.db_message_history property loaded %d messages from the latest prompt history record.",
+        prompt_history = self.prompt_history
+        # one query for the newest record. Testing the queryset's truth would fetch every record
+        # and its messages, and exists() and latest() would each be another query.
+        newest_record = prompt_history.order_by("-created_at").first() if prompt_history is not None else None
+        if newest_record is not None and newest_record.messages:
+            self._message_history = newest_record.messages
+            if not isinstance(self._message_history, list):
+                logger.warning(
+                    "%s.db_message_history expected messages to be a list but got %s.",
                     self.formatted_class_name,
-                    len(self._message_history) if isinstance(self._message_history, list) else 0,
+                    type(self._message_history).__name__,
                 )
         return self._message_history
 
@@ -336,13 +312,9 @@ class ChatDbMixin(AccountMixin):
             for tool_call in tool_calls:
                 print(tool_call.function_name, tool_call.created_at)
         """
-
         if self._chat_tool_call is None and self.prompt is not None:
             self._chat_tool_call = PromptToolCall.objects.filter(prompt=self.prompt)
-            logger.debug(
-                "%s.db_chat_tool_call() loaded prompt tool call queryset.",
-                self.formatted_class_name,
-            )
+        if self._chat_tool_call is not None:
             return self._chat_tool_call
         return PromptToolCall.objects.none()
 
@@ -368,13 +340,9 @@ class ChatDbMixin(AccountMixin):
             if plugin_usage is not None:
                 print(plugin_usage.plugin, plugin_usage.input_text)
         """
-
         if self._chat_plugin_usage is None and self.prompt is not None:
             self._chat_plugin_usage = PromptPluginUsage.objects.filter(prompt=self.prompt)
-            logger.debug(
-                "%s.db_chat_plugin_usage() loaded prompt plugin usage queryset.",
-                self.formatted_class_name,
-            )
+        if self._chat_plugin_usage is not None:
             return self._chat_plugin_usage
         return PromptPluginUsage.objects.none()
 
@@ -425,14 +393,7 @@ class ChatDbMixin(AccountMixin):
         """
         if self._provider is None and self._provider_name is not None:
             self._provider = get_cached_active_provider_for_user(self._provider_name, self.user_profile.user.username)  # type: ignore[union-attr]
-            if self._provider:
-                logger.debug(
-                    "%s.provider property loaded provider '%s' for user %s.",
-                    self.formatted_class_name,
-                    self._provider.name,
-                    self.user_profile.user.username if self.user_profile and self.user_profile.user else "Unknown",
-                )
-            else:
+            if not self._provider:
                 logger.warning(
                     "%s.provider property could not find an active provider with name '%s' for user %s.",
                     self.formatted_class_name,
@@ -456,7 +417,6 @@ class ChatDbMixin(AccountMixin):
             provider.db_refresh()
             # Now provider.db_chat_tool_call and related properties are up to date
         """
-        logger.debug("%s.db_refresh() called.", self.formatted_class_name)
         if self.prompt:
             # resets all lazy attributes to force reload on next access
             self.prompt = self.prompt
@@ -495,9 +455,6 @@ class ChatDbMixin(AccountMixin):
                 response={"output": "bar"}
             )
         """
-        logger.debug(
-            "%s.db_insert_chat_tool_call() called with args: %s kwargs: %s", self.formatted_class_name, args, kwargs
-        )
         if not self.prompt:
             return
         prompt_id = self.prompt.id  # type: ignore
@@ -536,12 +493,12 @@ class ChatDbMixin(AccountMixin):
                 input_text="search for weather"
             )
         """
-        logger.debug(
-            "%s.db_insert_chat_plugin_usage() called with args: %s kwargs: %s", self.formatted_class_name, args, kwargs
-        )
         prompt = kwargs.get("prompt", None)
         if not prompt:
-            logger.warning("db_insert_chat_plugin_usage() Prompt is required to create a prompt plugin usage record.")
+            logger.warning(
+                "%s.db_insert_chat_plugin_usage() Prompt is required to create a prompt plugin usage record.",
+                self.formatted_class_name,
+            )
             return
         prompt_id = prompt.id  # type: ignore
         plugin = kwargs.get("plugin", None)
@@ -598,15 +555,6 @@ class ChatDbMixin(AccountMixin):
                 reference="req-12345"
             )
         """
-        logger.debug(
-            "%s.db_insert_charge() called with resource_locators: %s, charge_type: %s, completion_tokens: %d, prompt_tokens: %d, total_tokens: %d",
-            self.formatted_class_name,
-            resource_locators,
-            charge_type,
-            completion_tokens,
-            prompt_tokens,
-            total_tokens,
-        )
         if not isinstance(self.user_profile, UserProfile):
             raise SmarterValueError("Account is required to create a charge record.")
         if not resource_locators:
@@ -617,6 +565,9 @@ class ChatDbMixin(AccountMixin):
         resource_locators.append(self.user_profile.record_locator)
         resource_locators.append(self.user_profile.account.record_locator)
 
+        # the same for every charge, so read once rather than per resource locator.
+        provider_name = getattr(self, "provider_name", None)
+        model = getattr(self, "model", None)
         for resource_locator in resource_locators:
             create_charge.delay(
                 resource_locator=resource_locator,
@@ -624,8 +575,8 @@ class ChatDbMixin(AccountMixin):
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 total_tokens=total_tokens,
-                provider=getattr(self, "provider_name", None),
-                model=getattr(self, "model", None),
+                provider=provider_name,
+                model=model,
             )
 
 
