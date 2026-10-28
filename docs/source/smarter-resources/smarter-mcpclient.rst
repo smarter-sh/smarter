@@ -79,7 +79,10 @@ On each prompt, for each of the LLMClient's active MCPClients, in order of ``pri
 3. If ``includeInstructions`` is true, the server's instructions are added to the system prompt.
 4. When the LLM calls a tool, Smarter calls it on the MCP server, and returns the result to
    the LLM. Errors, including an unreachable server, are returned to the LLM as text, so that
-   it can recover.
+   it can recover. The results of tools that the server marks read-only (``readOnlyHint``), and
+   of resource reads, are cached for ``cacheTtl`` seconds too, by the tool and its arguments, so
+   the same call from any LLMClient is answered without contacting the server. Other tools may
+   change something, so they are called every time, and errors are never cached.
 
 An MCP server that cannot be reached is skipped, and reported in the prompt's Smarter
 messages. It does not fail the prompt, and the failure is remembered for a minute, so that

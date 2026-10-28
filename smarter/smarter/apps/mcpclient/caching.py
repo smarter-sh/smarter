@@ -30,6 +30,11 @@ how the MCPClient connects, or what it allows, invalidates its catalog. A failur
 connect is cached for :data:`FAILURE_CACHE_TTL` seconds, so that an unreachable server
 does not delay every prompt by its timeout.
 
+The results of tool calls that the MCP server marks read-only (its ``readOnlyHint``), and
+of resource reads, are cached for ``cache_ttl`` seconds too, by the call and its arguments,
+with :func:`smarter.lib.cache.tool_results.cached_tool_call`. Other tools may change
+something on every call, so their calls are never cached.
+
 Dependencies:
 
     - Django ORM

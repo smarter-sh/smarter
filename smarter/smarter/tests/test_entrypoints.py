@@ -11,6 +11,7 @@ with the live settings, so every test restores it.
 import importlib
 import logging
 import os
+import re
 import sys
 from unittest.mock import patch
 
@@ -111,7 +112,16 @@ class TestEnvironmentSettings(SmarterTestBase):
         self._assert_environment(SmarterEnvironments.NEXT, r"\.next\.")
 
     def test_prod(self):
-        self._assert_environment(SmarterEnvironments.PROD, r"\.platform\.smarter\.sh")
+        """Prod allows its own deployed llmclient hosts, and none of another environment's."""
+        module = self._assert_environment(SmarterEnvironments.PROD, r"\.platform\.smarter\.sh")
+        for environment in (r"\.alpha\.", r"\.beta\.", r"\.next\."):
+            self.assertFalse(any(environment in regex for regex in module.CORS_ALLOWED_ORIGIN_REGEXES))
+        self.assertTrue(
+            any(
+                re.match(regex, "https://example.3141-5926-5359.api.smarter.sh")
+                for regex in module.CORS_ALLOWED_ORIGIN_REGEXES
+            )
+        )
 
 
 class TestBaseSettings(SmarterTestBase):

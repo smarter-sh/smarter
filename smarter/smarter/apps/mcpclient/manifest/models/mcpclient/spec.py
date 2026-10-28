@@ -192,7 +192,7 @@ class SAMMCPClientSpecConfig(AbstractSAMSpecBase):
         le=MAX_CACHE_TTL,
         description=(
             f"{class_identifier}.cacheTtl[int]: seconds to cache the MCP server's tools, instructions and "
-            "capabilities. 0 disables caching."
+            "capabilities, and the results of its read-only tools and resource reads. 0 disables caching."
         ),
     )
 

@@ -23,8 +23,10 @@ Most of the codebase already avoids this with shared base classes and helpers, f
   (:doc:`ADR-013 <013-testing>`);
 - the ``Smarter...Type`` aliases in ``smarter.lib.typing`` for repeated annotations
   (:doc:`ADR-027 <027-annotations>`);
-- ``@cache_results`` for caching (:doc:`ADR-018 <018-caching>`), and the ``<App>ReverseNames`` classes
-  for url names (:doc:`ADR-032 <032-url-names>`);
+- ``@cache_results`` for caching (:doc:`ADR-018 <018-caching>`), and
+  :func:`smarter.lib.cache.tool_results.cached_tool_call` for the results of every kind of LLM tool
+  call, MCP servers' and Extensions' alike;
+- the ``<App>ReverseNames`` classes for url names (:doc:`ADR-032 <032-url-names>`);
 - the ``smarter-common`` package for what the web console's React apps share.
 
 This ADR states the rule that those decisions have in common.
