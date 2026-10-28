@@ -28,11 +28,29 @@ from smarter.apps.provider.services.text_completion.lib.internal_keys import (
     _InternalKeys,
 )
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (
-    MAX_TOOL_ROUNDS,
     OpenAISmarterClient,
 )
+from smarter.common.conf import smarter_settings
 
+PROVIDER_SETTINGS_PATCH = (
+    "smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.smarter_settings"
+)
 SYSTEM_ROLE = "You are a helpful assistant."
+
+
+class SettingsWithMaxToolRounds:
+    """Smarter_settings, with another max_tool_rounds.
+
+    The settings are frozen, so they can't be patched in place.
+    """
+
+    def __init__(self, max_tool_rounds: int):
+        self.max_tool_rounds = max_tool_rounds
+
+    def __getattr__(self, name: str):
+        return getattr(smarter_settings, name)
+
+
 CREATE_PATCH = (
     "smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.openai.chat.completions.create"
 )
@@ -175,18 +193,34 @@ class TestExtensionPromptIntegration(ExtensionTestMixin):
         self.assertEqual(len(charges), 3)
 
     def test_tool_rounds_are_limited(self):
-        """After MAX_TOOL_ROUNDS requests with tools, the LLM is sent the results without tools, so that it answers."""
+        """After max_tool_rounds requests with tools, the LLM is sent the results without tools, so that it answers."""
+        rounds = smarter_settings.max_tool_rounds
+        self.assertEqual(rounds, 5)
         extension = self.enable_echo()
         LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
         provider = self.provider()
-        responses = [completion(tool_calls=[self.echo_call(n)]) for n in range(MAX_TOOL_ROUNDS)] + [completion("done")]
+        responses = [completion(tool_calls=[self.echo_call(n)]) for n in range(rounds)] + [completion("done")]
         with mock.patch(CREATE_PATCH, side_effect=responses) as create:
             provider.handler(self.user_profile, self.prompt, self.data("Echo forever."))
-        self.assertEqual(create.call_count, MAX_TOOL_ROUNDS + 1)
-        for call in create.call_args_list[:MAX_TOOL_ROUNDS]:
+        self.assertEqual(create.call_count, rounds + 1)
+        for call in create.call_args_list[:rounds]:
             self.assertIn("tools", call.kwargs)
         self.assertNotIn("tools", create.call_args_list[-1].kwargs)
         self.assertEqual(provider.second_response.choices[0].message.content, "done")  # type: ignore[union-attr]
+
+    def test_tool_rounds_follow_the_setting(self):
+        """The limit is smarter_settings.max_tool_rounds, so a platform can allow longer chains of tool calls."""
+        extension = self.enable_echo()
+        LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
+        provider = self.provider()
+        responses = [completion(tool_calls=[self.echo_call(n)]) for n in range(2)] + [completion("done")]
+        with (
+            mock.patch(CREATE_PATCH, side_effect=responses) as create,
+            mock.patch(PROVIDER_SETTINGS_PATCH, SettingsWithMaxToolRounds(2)),
+        ):
+            provider.handler(self.user_profile, self.prompt, self.data("Echo twice."))
+        self.assertEqual(create.call_count, 3)
+        self.assertNotIn("tools", create.call_args_list[-1].kwargs)
 
     def test_disabled_extension_is_reported(self):
         """A disabled extension's tools are not offered, and the user is told why."""

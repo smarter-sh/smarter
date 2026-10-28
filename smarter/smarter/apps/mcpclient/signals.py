@@ -77,11 +77,13 @@ Arguments:
     tool_name (str): The name of the tool.
     is_error (bool): True if the tool reported an error.
     characters (int): The length of the result returned to the LLM.
+    cached (bool): True if the result came from the cache, without calling the tool. Only
+        read-only tools are cached, and errors never are.
 
 Example::
 
     mcpclient_tool_responded.send(
-        sender=self.__class__, mcpclient=mcpclient, tool_name=name, is_error=False, characters=1234
+        sender=self.__class__, mcpclient=mcpclient, tool_name=name, is_error=False, characters=1234, cached=False
     )
 """
 
@@ -107,8 +109,9 @@ Arguments:
     mcpclient (MCPClient): The MCPClient.
     uri (str): The URI of the resource.
     characters (int): The length of the content returned to the LLM.
+    cached (bool): True if the content came from the cache, without reading the resource.
 
 Example::
 
-    mcpclient_resource_read.send(sender=self.__class__, mcpclient=mcpclient, uri=uri, characters=1234)
+    mcpclient_resource_read.send(sender=self.__class__, mcpclient=mcpclient, uri=uri, characters=1234, cached=False)
 """

@@ -34,8 +34,46 @@ The web console's resource lists build on it: each list api caches its pages per
 lists keep the pages they showed in the browser, and saving or deleting a resource makes its list's
 cached pages stale at once. See :doc:`django/listview`.
 
+Tool Calls and Prompts
+----------------------
+
+A prompt that calls tools spends most of its time waiting for them: an MCP server, a web search,
+a database. So Smarter caches the result of every tool call that can be cached, for about an hour,
+by the tool and its arguments, whichever LLMClient or conversation makes the call. Every kind of
+tool caches through one function, :func:`smarter.lib.cache.tool_results.cached_tool_call`, which
+owns the rules: the key is the kind of tool, what identifies it, and its arguments as canonical
+JSON; a result is JSON, so it can be shared; an error is never stored, whether the tool raises it
+or returns it (``Error: ...`` text, or an object with an ``error`` key); and a timeout of 0 skips
+the cache. Each kind decides only what
+may be cached and for how long:
+
+- **MCP servers.** The results of the tools that an MCP server marks read-only (``readOnlyHint``),
+  and of resource reads, are cached for the MCPClient's ``cacheTtl``, an hour by default. Other
+  tools may change something, so they are called every time.
+- **Plugins.** Each plugin caches its remote calls: an ApiPlugin's GET requests and a SqlPlugin's
+  queries for an hour, web searches for their manifest's ``cacheTtl``. See
+  :class:`smarter.apps.llmtool.const.PluginCacheTtl`.
+- **Extensions.** A tool that sets
+  :attr:`~smarter.apps.llmtool.extension.protocol.SmarterExtensionTool.cache_ttl` has its results
+  cached, by its arguments and the Extension's settings. Extension tools can depend on who calls
+  them, so the default is no caching.
+- **The Smarter Project MCP server** caches its own tool results for an hour, until a repository is
+  indexed again. See :mod:`smarter.apps.mcpserver.caching`.
+
+The LLM's answer to the first message of a conversation is cached too, for
+``smarter_settings.prompt_response_cache_expiration`` seconds (``SMARTER_PROMPT_RESPONSE_CACHE_EXPIRATION``,
+an hour by default, 0 to disable). A first message has no conversation before it, so the same
+message, sent to the same LLMClient, gets the same answer, and the LLMClient's
+``appExamplePrompts`` arrive word for word. The key is a hash of the message, normalized for case,
+whitespace and trailing punctuation, with the LLMClient, when it last changed, its provider, model
+and settings. A cached answer is returned without calling the LLM or its tools, and costs no tokens.
+Later messages are never cached, because their answers depend on the conversation, and a first
+message whose LLM called a tool that can't be cached, or failed, isn't either. See
+:mod:`smarter.apps.provider.services.text_completion.lib.prompt_cache`.
+
 .. toctree::
    :maxdepth: 1
    :caption: Technical References
 
    caching/hooks
+   caching/tool-results

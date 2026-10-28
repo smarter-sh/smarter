@@ -15858,7 +15858,7 @@
           },
           "cacheTtl": {
             "default": 3600,
-            "description": "MCPClient.spec.config.cacheTtl[int]: seconds to cache the MCP server's tools, instructions and capabilities. 0 disables caching.",
+            "description": "MCPClient.spec.config.cacheTtl[int]: seconds to cache the MCP server's tools, instructions and capabilities, and the results of its read-only tools and resource reads. 0 disables caching.",
             "maximum": 86400,
             "minimum": 0,
             "title": "Cachettl",

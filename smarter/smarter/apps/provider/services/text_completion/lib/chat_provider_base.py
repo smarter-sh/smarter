@@ -275,7 +275,7 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         llm_provider_initialized.send(sender=self)
 
-    def prune_empty_values(self, data: SmarterDictType) -> Optional[SmarterDictType]:
+    def prune_empty_values(self, data: SmarterDictType) -> SmarterDictType:
         """
         Remove empty values from a dictionary.
 
@@ -283,19 +283,22 @@ class SmarterChatProviderBase(ChatDbMixin):
         LLM providers, including MetaAI and GoogleAI
         will break if empty values are present in the
         completion request body.
+
+        :param data: The completion request body.
+        :returns: A copy of ``data`` without its ``None`` values, at every depth.
+        :raises SmarterValueError: If ``data`` is not a dictionary.
         """
         if not isinstance(data, dict):
             raise SmarterValueError(f"{self.formatted_class_name}: data must be a dictionary")
 
-        def _prune(obj: Optional[SmarterDictType]) -> Optional[SmarterDictType]:
+        def _prune(obj: object) -> object:
             if isinstance(obj, dict):
                 return {k: _prune(v) for k, v in obj.items() if v is not None}
-            elif isinstance(obj, list):
+            if isinstance(obj, list):
                 return [_prune(item) for item in obj if item is not None]
-            else:
-                return obj
+            return obj
 
-        return _prune(data)
+        return {k: _prune(v) for k, v in data.items() if v is not None}
 
     def validate(self):
         """
