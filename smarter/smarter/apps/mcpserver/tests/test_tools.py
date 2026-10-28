@@ -4,18 +4,24 @@ from unittest import mock
 
 from smarter.apps.mcpserver import tools
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
+from smarter.apps.mcpserver.models import RepositoryIndex, RepositoryIndexStatus
 from smarter.apps.mcpserver.tools import (
     TOOL_CLASSES,
+    GetManifestSchemaTool,
     GetRepositoryOverviewTool,
     ListFilesTool,
+    ReadBlogPostTool,
     ReadFileTool,
+    SearchBlogTool,
     SearchCodeTool,
     SearchDocumentationTool,
     SmarterProjectScope,
     simplify_schema,
 )
 
-from .base_classes import COMMIT_SHA, DOCS_URL, MCPServerTestBase
+from .base_classes import BLOG_URL, COMMIT_SHA, DOCS_URL, MCPServerTestBase
+
+SECRETS_POST = "2026/10/20/keeping-secrets-out-of-the-logs"
 
 
 class TestTools(MCPServerTestBase):
@@ -51,6 +57,9 @@ class TestTools(MCPServerTestBase):
         for tool_class in TOOL_CLASSES:
             with self.subTest(tool=tool_class.name):
                 schema = tool_class(self.all()).input_schema()
+                if not tool_class.uses_repository:
+                    self.assertNotIn("repository", schema["properties"])
+                    continue
                 self.assertEqual(schema["properties"]["repository"]["enum"], names)
                 self.assertEqual("repository" in schema.get("required", []), tool_class.requires_repository)
         self.assertEqual(ReadFileTool(self.all()).input_schema()["required"], ["repository", "path"])
@@ -242,3 +251,117 @@ class TestTools(MCPServerTestBase):
         """A folder without indexed files is an error."""
         with self.assertRaisesRegex(SmarterMCPServerToolError, "is not a folder"):
             ListFilesTool(self.single()).call({"path": "no/such/folder"})
+
+    # -------------------------------------------------------------------------
+    # search_blog, read_blog_post
+    # -------------------------------------------------------------------------
+    def test_blog_tools_are_project_wide(self):
+        """Only the MCP server of all of the repositories serves the blog's tools."""
+        self.assertTrue(SearchBlogTool.serves(self.all()))
+        self.assertFalse(SearchBlogTool.serves(self.single()))
+        self.assertFalse(ReadBlogPostTool.serves(self.single()))
+        self.assertTrue(SearchCodeTool.serves(self.single()))
+
+    def test_search_blog(self):
+        """Blog hits link to the post, and show a passage of it."""
+        text = SearchBlogTool(self.all()).call({"query": "leaked passwords logs", "repository": "ignored"})
+        self.assertIn("posts of the blog", text)
+        self.assertIn(f"1. **Keeping Secrets Out of the Logs – a Review** `{SECRETS_POST}`", text)
+        self.assertIn(f"Post: {BLOG_URL}/{SECRETS_POST}/", text)
+        self.assertIn("leaked credentials", text)
+
+    def test_search_blog_without_results(self):
+        """A search of the blog without results suggests search_documentation."""
+        self.assertIn("No post of the blog", SearchBlogTool(self.all()).call({"query": "zzzyyyxxx"}))
+
+    def test_overview_mentions_the_blog(self):
+        """The overview of all of the repositories names the blog's search tool."""
+        self.assertIn(
+            f"The blog, {BLOG_URL}, is searched with search_blog", GetRepositoryOverviewTool(self.all()).call({})
+        )
+
+    def test_read_blog_post(self):
+        """A post is read by its path or its url, with line numbers."""
+        for path in (SECRETS_POST, f"{BLOG_URL}/{SECRETS_POST}/", f"/{SECRETS_POST}/#how"):
+            with self.subTest(path=path):
+                text = ReadBlogPostTool(self.all()).call({"path": path})
+                self.assertIn(f"{BLOG_URL}/{SECRETS_POST}/, lines 1-", text)
+                self.assertIn("1  # Keeping Secrets Out of the Logs", text)
+                self.assertIn("Published 2026-10-20, updated 2026-10-22", text)
+                self.assertNotIn("The post continues", text)
+
+    def test_read_blog_post_range(self):
+        """A range of a post's lines is read, and the result says where it continues."""
+        text = ReadBlogPostTool(self.all()).call({"path": SECRETS_POST, "start_line": 1, "end_line": 2})
+        self.assertIn("lines 1-2 of", text)
+        self.assertIn("call read_blog_post with start_line=3", text)
+
+    def test_read_blog_post_not_found(self):
+        """A post that does not exist is an error that suggests the posts the LLM may have meant."""
+        with self.assertRaisesRegex(SmarterMCPServerToolError, f"Did you mean: {SECRETS_POST}"):
+            ReadBlogPostTool(self.all()).call({"path": "2025/01/01/keeping-secrets"})
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "Use search_blog"):
+            ReadBlogPostTool(self.all()).call({"path": "no-such-post"})
+
+    def test_unindexed_blog(self):
+        """A blog that is not indexed is an error, and is queued for indexing once."""
+        RepositoryIndex.objects.filter(pk=self.blog_index.pk).update(status=RepositoryIndexStatus.PENDING)
+        self.addCleanup(
+            RepositoryIndex.objects.filter(pk=self.blog_index.pk).update, status=RepositoryIndexStatus.READY
+        )
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "has not been indexed yet"):
+            SearchBlogTool(self.all()).call({"query": "logs"})
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "has not been indexed yet"):
+            ReadBlogPostTool(self.all()).call({"path": SECRETS_POST})
+        self.mock_index_blog_task.delay.assert_called_once_with()
+        self.mock_index_task.delay.assert_not_called()
+
+    # -------------------------------------------------------------------------
+    # get_manifest_schema
+    # -------------------------------------------------------------------------
+    def test_manifest_schema_is_served_everywhere(self):
+        """Every MCP server serves get_manifest_schema, without a repository argument."""
+        self.assertTrue(GetManifestSchemaTool.serves(self.single()))
+        self.assertTrue(GetManifestSchemaTool.serves(self.all()))
+        self.assertNotIn("repository", GetManifestSchemaTool(self.all()).input_schema()["properties"])
+
+    def test_manifest_kinds(self):
+        """Without a kind, the kinds are listed."""
+        text = GetManifestSchemaTool(self.single()).call({})
+        self.assertIn("# Smarter resource kinds", text)
+        self.assertIn("- LLMClient", text)
+        self.assertIn("- Secret", text)
+
+    def test_manifest_schema(self):
+        """A kind's result has its example in YAML, its schema's url and its fields, without status."""
+        text = GetManifestSchemaTool(self.all()).call({"kind": "secret", "repository": "ignored"})
+        self.assertIn("# Secret manifest", text)
+        self.assertIn("```yaml\napiVersion: smarter.sh/v1\nkind: Secret\n", text)
+        self.assertIn(
+            "Full JSON Schema: https://github.com/smarter-sh/smarter/blob/main/"
+            "smarter/smarter/apps/api/v1/contract/sam/Secret.schema.json",
+            text,
+        )
+        self.assertIn("- `spec.config.value` (string, required): The unencrypted value of the Secret.", text)
+        self.assertNotIn("`status", text)
+        self.assertNotIn("more fields", text)
+
+    def test_manifest_schema_defaults(self):
+        """A field's default is shown, as JSON."""
+        text = GetManifestSchemaTool(self.single()).call({"kind": "MCPClient"})
+        self.assertRegex(text, r"`spec\.config\.timeout` \(integer, optional, default \d+\)")
+
+    def test_manifest_schema_is_truncated(self):
+        """Fields beyond MAX_READ_CHARACTERS are left out, and the result says where they are."""
+        with mock.patch.object(tools, "MAX_READ_CHARACTERS", 3000):
+            text = GetManifestSchemaTool(self.single()).call({"kind": "LLMClient"})
+        self.assertRegex(text, r"\[\d+ more fields: see the full JSON Schema, https://github\.com/")
+
+    def test_manifest_schema_url_without_the_smarter_repository(self):
+        """The schema's url is the smarter repository's, even when the tests replace the repositories."""
+        self.assertTrue(GetManifestSchemaTool.schema_url("Secret").startswith("https://github.com/smarter-sh/smarter/"))
+
+    def test_unknown_kind(self):
+        """An unknown kind is an error that lists the kinds."""
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "is not a resource kind. It is one of: .*LLMClient"):
+            GetManifestSchemaTool(self.single()).call({"kind": "Chatbot"})

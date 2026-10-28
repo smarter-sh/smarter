@@ -28,21 +28,46 @@ class TestIndexSmarterProjectCommand(MCPServerTestBase):
             return RepositoryIndex(repository=name, status=RepositoryIndexStatus.FAILED, error="GitHub is down")
         return RepositoryIndex(repository=name, status=RepositoryIndexStatus.READY, commit_sha=COMMIT_SHA, file_count=3)
 
+    def fake_blog_index(self, force=False):
+        return RepositoryIndex(repository=self.blog.name, status=RepositoryIndexStatus.READY, file_count=2)
+
     def test_index_every_repository(self):
-        """Every repository is indexed, and the failures are reported."""
-        with mock.patch(f"{COMMAND}.index_repository", side_effect=self.fake_index) as index_repository:
+        """Every repository, and the blog, is indexed, and the failures are reported."""
+        with (
+            mock.patch(f"{COMMAND}.index_repository", side_effect=self.fake_index) as index_repository,
+            mock.patch(f"{COMMAND}.index_blog", side_effect=self.fake_blog_index) as index_blog,
+        ):
             output = self.run_command()
         self.assertEqual(index_repository.call_count, len(self.repositories))
+        index_blog.assert_called_once_with(force=False)
+        self.assertIn(f"{self.blog.name}: ready, 2 posts.", output)
         self.assertIn(f"{self.docs_repository.name}: ready at {COMMIT_SHA}, 3 files.", output)
         self.assertIn(f"{self.unindexed_repository.name}: failed, GitHub is down", output)
         self.assertIn(f"Could not be indexed: {self.unindexed_repository.name}.", output)
 
     def test_index_one_repository(self):
-        """--repository and --force index one repository again."""
-        with mock.patch(f"{COMMAND}.index_repository", side_effect=self.fake_index) as index_repository:
+        """--repository and --force index one repository again, and not the blog."""
+        with (
+            mock.patch(f"{COMMAND}.index_repository", side_effect=self.fake_index) as index_repository,
+            mock.patch(f"{COMMAND}.index_blog") as index_blog,
+        ):
             output = self.run_command("--repository", self.code_repository.name, "--force")
         index_repository.assert_called_once_with(self.code_repository.name, force=True)
+        index_blog.assert_not_called()
         self.assertNotIn("Could not be indexed", output)
+
+    def test_index_the_blog(self):
+        """--blog indexes only the blog, and a failure is reported."""
+        failed = RepositoryIndex(repository=self.blog.name, status=RepositoryIndexStatus.FAILED, error="HTTP 503")
+        with (
+            mock.patch(f"{COMMAND}.index_repository") as index_repository,
+            mock.patch(f"{COMMAND}.index_blog", return_value=failed) as index_blog,
+        ):
+            output = self.run_command("--blog", "--force")
+        index_repository.assert_not_called()
+        index_blog.assert_called_once_with(force=True)
+        self.assertIn(f"{self.blog.name}: failed, HTTP 503", output)
+        self.assertIn(f"Could not be indexed: {self.blog.name}.", output)
 
     def test_unknown_repository(self):
         """Only The Smarter Project's repositories may be named."""
@@ -58,3 +83,11 @@ class TestIndexSmarterProjectCommand(MCPServerTestBase):
         with mock.patch(f"{COMMAND}.index_repository_task") as index_repository_task:
             self.run_command("--queue", "--repository", self.code_repository.name)
         index_repository_task.delay.assert_called_once_with(self.code_repository.name, force=False)
+        with (
+            mock.patch(f"{COMMAND}.index_repository_task") as index_repository_task,
+            mock.patch(f"{COMMAND}.index_blog_task") as index_blog_task,
+        ):
+            output = self.run_command("--queue", "--blog")
+        index_repository_task.delay.assert_not_called()
+        index_blog_task.delay.assert_called_once_with(force=False)
+        self.assertIn("Queued the indexing of the blog.", output)
