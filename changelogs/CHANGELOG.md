@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.37.1](https://github.com/smarter-sh/smarter/compare/v0.37.0...v0.37.1) (2026-10-28)
+
+### Bug Fixes
+
+* **settings:** let prod's cors allow its own llmclient hosts ([e3c86ff](https://github.com/smarter-sh/smarter/commit/e3c86ff2aa2f02fc640d9a03a576f622eb00a21b))
+
+### Performance
+
+* **provider:** cache tool call results and first-message answers ([a504666](https://github.com/smarter-sh/smarter/commit/a504666eedbdde00873ebf357d65a8f9ecba369b))
+
+## [0.37.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.37.0...v0.37.1-alpha.1) (2026-10-28)
+
+### Bug Fixes
+
+* **settings:** let prod's cors allow its own llmclient hosts ([e3c86ff](https://github.com/smarter-sh/smarter/commit/e3c86ff2aa2f02fc640d9a03a576f622eb00a21b))
+
+### Performance
+
+* **provider:** cache tool call results and first-message answers ([a504666](https://github.com/smarter-sh/smarter/commit/a504666eedbdde00873ebf357d65a8f9ecba369b))
+
 ## [0.37.0](https://github.com/smarter-sh/smarter/compare/v0.36.28...v0.37.0) (2026-10-28)
 
 ### Features

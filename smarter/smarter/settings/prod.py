@@ -22,7 +22,7 @@ if environment_name != SmarterEnvironments.PROD:
 
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https?://[\w-]+\.(\d+-\d+-\d+)\.next\.api\.smarter\.sh$",
+    r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.smarter\.sh$",
     r"^https?://[\w-]+\.platform\.smarter\.sh$",
     r"^https?://[\w-]+\.api\.smarter\.sh$",
 ]
