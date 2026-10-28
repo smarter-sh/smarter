@@ -226,7 +226,12 @@ which bypasses the cache and shows you a page that visitors don't get.
 3. **Write each post** with `blog.smarter.sh-release-announcement`. List
    every version in the group in its changelog links. Its "What's next" can
    name what the next post covers, which is a fact, not a guess.
-4. **Upload a draft**, then check the rendered HTML, which `wp.py` can read
+4. **Check the colons**, before every upload, including an edit to a
+   published post:
+   `skills/blog.smarter.sh-blog-post/scripts/check-colons.py <post.md>` must
+   pass. To check a post that is already on the blog, run it on the post's
+   block markup (`wp.py get <id> --raw <scratchpad>/<id>.html`).
+5. **Upload a draft**, then check the rendered HTML, which `wp.py` can read
    while the post is a draft:
 
    ```bash
@@ -243,10 +248,10 @@ which bypasses the cache and shows you a page that visitors don't get.
    Every code fence must appear as a `brush:`. A code block that renders as a
    plain `<div>` has an unknown language.
 
-5. **Publish** with `--status publish --id <id>`, if the user asked you to.
-6. **Verify the public page.** `curl -sL -o /dev/null -w '%{http_code}' <link>`
+6. **Publish** with `--status publish --id <id>`, if the user asked you to.
+7. **Verify the public page.** `curl -sL -o /dev/null -w '%{http_code}' <link>`
    gives 200, and the page's `<title>` is the post's title.
-7. **Report** each post's link, which releases it covers, and the claims to
+8. **Report** each post's link, which releases it covers, and the claims to
    review (see the release announcement skill's last section).
 
 ## Pitfalls
