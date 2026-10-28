@@ -28,6 +28,7 @@ from smarter.apps.mcpserver.blog import (
     post_file,
     posts_fingerprint,
 )
+from smarter.apps.mcpserver.caching import invalidate_cached_tool_results
 from smarter.apps.mcpserver.indexer import ArchiveFile, file_kind, store_files
 from smarter.apps.mcpserver.models import RepositoryIndex
 from smarter.apps.mcpserver.repositories import ProjectBlog, ProjectRepository
@@ -113,7 +114,8 @@ class MCPServerTestBase(SmarterTestBase):
     - ``blog``: a blog, whose posts are indexed.
 
     ``mock_index_task`` replaces the Celery task that indexes a repository, and
-    ``mock_index_blog_task`` the one that indexes the blog.
+    ``mock_index_blog_task`` the one that indexes the blog. Each test starts a new index
+    generation, so that it sees none of the cached tool results of the tests before it.
     """
 
     docs_repository: ProjectRepository
@@ -186,3 +188,5 @@ class MCPServerTestBase(SmarterTestBase):
         self.addCleanup(blog_patcher.stop)
         for name in [repository.name for repository in self.repositories] + [self.blog.name]:
             lazy_cache.delete(queue_indexing_key(name))
+        # tests change the indexes without indexing them, so no test sees another's cached tool results.
+        invalidate_cached_tool_results()

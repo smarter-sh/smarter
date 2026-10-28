@@ -134,6 +134,12 @@ after fixing staticfiles.
   kind of change (prefer the newest: `guardrail`, `secret`, the llmclient
   Custom Domain), read them in full, and copy their structure, naming,
   docstrings, logging and error handling.
+- **Copy conventions, not code (ADR-033, DRY).** When the same logic is needed
+  in more than one place, reuse its helper, or extract one. The third copy is
+  the signal: move the shared part into `smarter/lib` (or the app that owns
+  the concept) and change every copy to use it, in the same change. Before
+  writing a helper, search for one that already exists. See
+  `docs/source/adr/033-dry.rst`.
 - **Migrations:** when an app's models change, prefer regenerating a single
   `0001_initial.py` over adding `0002_...`. Ask first for released apps that
   hold production data. See `smarter-migrations`.

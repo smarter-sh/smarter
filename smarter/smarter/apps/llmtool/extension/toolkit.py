@@ -8,7 +8,8 @@ chat completion needs:
   the tool's description and its arguments model's JSON schema;
 - **tool calls**: :meth:`ExtensionToolkit.call` validates the LLM's arguments, runs the
   tool with a timeout, and returns its result. Errors are returned to the LLM as
-  ``{"error": ...}``, so that it can recover, rather than failing the prompt.
+  ``{"error": ...}``, so that it can recover, rather than failing the prompt. A tool that
+  sets :attr:`~.protocol.SmarterExtensionTool.cache_ttl` has its results cached.
 
 An extension that is disabled, not available to the LLMClient's account, or whose code does
 not load, is skipped and reported in :attr:`ExtensionToolkit.errors`, so that one broken
@@ -25,9 +26,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Union
 
 from django.db import connections
-from pydantic import JsonValue, TypeAdapter, ValidationError
+from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
 
 from smarter.lib import json, logging
+from smarter.lib.cache.tool_results import cached_tool_call
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
@@ -53,6 +55,8 @@ MAX_FUNCTION_NAME_LENGTH = 64
 """The maximum length of an OpenAI function name."""
 FUNCTION_NAME_PREFIX = "ext_"
 JSON_VALUE = TypeAdapter(JsonValue)
+TOOL_CACHE_NAMESPACE = "extension"
+"""The namespace of extension tool results in :func:`~smarter.lib.cache.tool_results.cached_tool_call`."""
 
 
 class ExtensionToolCallError(Exception):
@@ -251,6 +255,37 @@ class ExtensionToolkit:
             user_profile=self.user_profile,
             llmclient=self.llmclient,
         )
+        # a hash of the settings, so that changing one invalidates the tool's cached results. A
+        # secret setting is hashed as SecretStr dumps it, masked, so no secret is part of the key.
+        settings = hashlib.sha256(context.settings.model_dump_json().encode()).hexdigest()[:16]
+        result = cached_tool_call(
+            TOOL_CACHE_NAMESPACE,
+            (function.extension.pk, version, tool_name, settings),
+            validated,
+            function.tool.cache_ttl,
+            lambda: self.execute(function, validated, context),
+        )
+        extension_tool_responded.send(
+            sender=self.__class__,
+            slug=slug,
+            version=version,
+            tool_name=tool_name,
+            characters=len(json.dumps(result.value)),
+            cached=result.cached,
+        )
+        return result.value
+
+    def execute(self, function: ExtensionFunction, validated: BaseModel, context: ExtensionContext) -> JsonValue:
+        """
+        Run a tool with its validated arguments, in a thread, with the manifest's timeout.
+
+        :param function: The function that the LLM called.
+        :param validated: The tool's validated arguments.
+        :param context: The tool's context.
+        :returns: The tool's result.
+        :raises ExtensionToolCallError: If the tool fails, times out, or returns a result that is not JSON.
+        """
+        slug, version, tool_name = function.extension.slug, function.loaded.version, function.tool.name
         timeout = function.loaded.manifest.smarter.timeout
 
         def run_tool() -> JsonValue:
@@ -271,19 +306,14 @@ class ExtensionToolkit:
         # a tool is the extension's code, which can fail in any way at all.
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.exception("%s.run() %s %s %s raised: %s", self.formatted_class_name, slug, version, tool_name, e)
+            logger.exception("%s.execute() %s %s %s raised: %s", self.formatted_class_name, slug, version, tool_name, e)
             raise ExtensionToolCallError(f"The tool failed: {type(e).__name__}: {e}") from e
         finally:
             executor.shutdown(wait=False)
         try:
-            result = JSON_VALUE.validate_python(result)
+            return JSON_VALUE.validate_python(result)
         except ValidationError as e:
             raise ExtensionToolCallError(f"The tool returned a result that is not JSON: {e.errors()[0]['msg']}") from e
-        characters = len(json.dumps(result))
-        extension_tool_responded.send(
-            sender=self.__class__, slug=slug, version=version, tool_name=tool_name, characters=characters
-        )
-        return result
 
     def failed(self, function: ExtensionFunction, error: str) -> SmarterDictType:
         """Report a failed tool call, and return the error for the LLM."""

@@ -22,13 +22,16 @@ class PluginCacheTtl(IntEnum):
     Websearch values are the defaults of the manifest's ``cacheTtl``, which a plugin may override.
     """
 
-    DEFAULT = 10 * ONE_MINUTE
+    DEFAULT = ONE_HOUR
     """The default TTL for a plugin's remote calls to safe_http.py, if the plugin does not specify a cacheTtl in its manifest."""
 
-    API = 10 * ONE_MINUTE
-    """An ApiPlugin's GET responses."""
+    API = ONE_HOUR
+    """An ApiPlugin's GET responses.
 
-    SQL = 10 * ONE_MINUTE
+    Other methods may change something, so they are never cached.
+    """
+
+    SQL = ONE_HOUR
     """A SqlPlugin's query results."""
 
     SKILL = 3 * ONE_DAY

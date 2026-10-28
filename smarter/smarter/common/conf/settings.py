@@ -1402,6 +1402,92 @@ class Settings(BaseSettings):
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
 
+    max_tool_rounds: int = Field(
+        settings_defaults.MAX_TOOL_ROUNDS,
+        ge=1,
+        description="The most requests of one prompt that offer the LLM its tools.",
+        title="Max Tool Rounds",
+    )
+    """
+    The most requests of one prompt that offer the LLM its tools.
+
+    An LLM often needs more than one round of tool calls, e.g. a forecast, and then an image
+    search with the forecast's place, or a chain of MCP tool calls, each using the last one's
+    result. One round can hold several tool calls. After this many requests with tools, the LLM
+    is sent the tool results without tools, so that it answers with what it has.
+
+    :type: int
+    :default: Value from ``settings_defaults.MAX_TOOL_ROUNDS``, 5
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+
+    see: :meth:`smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.OpenAISmarterClient.handler`
+    """
+
+    @before_field_validator("max_tool_rounds")
+    def parse_max_tool_rounds(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'max_tool_rounds' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the max_tool_rounds value to validate
+        Returns:
+            int: The validated max_tool_rounds.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.MAX_TOOL_ROUNDS
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 1:
+                raise SmarterConfigurationError(f"max_tool_rounds {int_value} must be a positive integer.")
+            return int_value
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError("could not validate max_tool_rounds") from e
+
+    prompt_response_cache_expiration: int = Field(
+        settings_defaults.PROMPT_RESPONSE_CACHE_EXPIRATION,
+        ge=0,
+        description="Seconds to cache the LLM's answer to the first message of a conversation. 0 disables the cache.",
+        title="Prompt Response Cache Expiration",
+    )
+    """
+    Seconds to cache the LLM's answer to the first message of a conversation.
+
+    0 disables the cache.
+
+    A first message has no conversation before it, so the same message, sent to the same
+    LLMClient, gets the same answer, e.g. one of the LLMClient's ``appExamplePrompts``. Later
+    messages are never cached, because their answers depend on the conversation. See
+    :mod:`smarter.apps.provider.services.text_completion.lib.prompt_cache`.
+
+    :type: int
+    :default: Value from ``settings_defaults.PROMPT_RESPONSE_CACHE_EXPIRATION``, one hour
+    :raises SmarterConfigurationError: If the value is not a non-negative integer.
+    """
+
+    @before_field_validator("prompt_response_cache_expiration")
+    def parse_prompt_response_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'prompt_response_cache_expiration' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the prompt_response_cache_expiration value to validate
+        Returns:
+            int: The validated prompt_response_cache_expiration.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.PROMPT_RESPONSE_CACHE_EXPIRATION
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError(
+                    f"prompt_response_cache_expiration {int_value} must be a non-negative integer."
+                )
+            return int_value
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError("could not validate prompt_response_cache_expiration") from e
+
     listview_cache_expiration: int = Field(
         settings_defaults.LISTVIEW_CACHE_EXPIRATION,
         gt=0,
