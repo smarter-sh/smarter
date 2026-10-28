@@ -191,6 +191,12 @@ class TestAccountNumberFromUrl(SmarterTestBase):
     def test_none_url(self):
         self.assertIsNone(utils.account_number_from_url(url=None))
 
+    def test_the_url_is_the_first_positional_argument(self):
+        """Callers pass the url positionally; it used to land in ``invalidate``, so they always got None."""
+        self.assertEqual(
+            utils.account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/"), "3141-5926-5359"
+        )
+
 
 class TestGetUsersForAccount(TestAccountMixin):
     """Test that get_users_for_account returns the expected list of users for a given account and handles edge cases."""
