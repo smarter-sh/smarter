@@ -29,7 +29,7 @@ import math
 import re
 from functools import reduce
 from operator import or_
-from typing import Optional
+from typing import Optional, Sequence
 
 from django.db.models import (
     Case,
@@ -46,7 +46,7 @@ from django.db.models.functions import Cast, Least, Length, Lower, Replace
 from pydantic import BaseModel, ConfigDict, Field
 
 from .models import RepositoryFile, RepositoryFileKind, RepositoryIndexStatus
-from .repositories import ProjectRepository
+from .repositories import ProjectSource
 
 MAX_TERMS = 8
 MIN_TERM_LENGTH = 2
@@ -196,7 +196,7 @@ def matching_lines(content: str, terms: list[str], kind: str) -> list[SearchLine
 
 
 def search_files(
-    repositories: list[ProjectRepository],
+    repositories: Sequence[ProjectSource],
     query: str,
     kind: Optional[str] = None,
     path: Optional[str] = None,
@@ -205,7 +205,7 @@ def search_files(
     """
     Search the indexed files of one or more repositories.
 
-    :param repositories: The repositories to search.
+    :param repositories: The repositories to search, or the blog.
     :param query: The query.
     :param kind: Only documentation, or only code. Defaults to both.
     :param path: Only files under this folder, or with this path prefix, e.g. ``smarter/smarter/apps/llmclient``.
