@@ -64,7 +64,7 @@ class TestSmarterProjectMCPServerView(MCPServerTestBase):
             url(), data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}), content_type="application/json"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()["result"]["tools"]), 5)
+        self.assertEqual(len(response.json()["result"]["tools"]), 8)
 
     def test_notification(self):
         """A notification is accepted, with no body."""
