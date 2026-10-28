@@ -145,6 +145,7 @@ timeout period.
 from __future__ import annotations
 
 from collections.abc import Awaitable
+from functools import cached_property
 from http import HTTPStatus
 
 from cache_results import lazy_cache as cache
@@ -202,8 +203,6 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         if self.async_mode:
             return self.__acall__(request)
 
-        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-
         response = super().__call__(request)
 
         # process_response() returns a 403 for a client that has exceeded the limit.
@@ -214,12 +213,15 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return await super().__acall__(request)
 
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         response = await super().__acall__(request)
         return await self.async_process_response(request, response)
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging.
+
+        It names the instance, not a request.
+        """
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -252,10 +254,6 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         client_ip = self.get_client_ip(request)
 
         if not client_ip:
-            logger.debug(
-                "%s unable to determine client IP",
-                self.formatted_class_name,
-            )
             return response
 
         throttle_key = self.get_throttle_key(client_ip)
@@ -337,5 +335,5 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
             self.formatted_class_name,
             client_ip,
             blocked_count,
-            self.smarter_build_absolute_uri(request),
+            request.path,
         )

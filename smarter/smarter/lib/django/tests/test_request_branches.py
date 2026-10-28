@@ -8,6 +8,7 @@ string, unreadable request bodies, and properties whose inputs (parsed_url,
 url, url_path_parts) are missing or malformed.
 """
 
+from functools import cached_property
 from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import urlparse, urlsplit
 
@@ -19,7 +20,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.request import SmarterRequestMixin, cached_property_names
 
 SESSION_KEY = "9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126"
 MODULE = "smarter.lib.django.request"
@@ -48,13 +49,13 @@ class TestSmarterRequestBranches(TestAccountMixin):
     # -------------------------------------------------------------------------
     # account numbers in named urls
     # -------------------------------------------------------------------------
-    def test_named_url_for_another_account_is_rejected(self):
-        """A named url for a different account than the caller's raises."""
+    def test_named_url_for_another_account_keeps_the_callers_account(self):
+        """A deployed LLMClient's host is public: a caller signed in to another account keeps its own account."""
         with patch.object(
             SmarterRequestMixin, "url_account_number", new_callable=PropertyMock, return_value="9999-8888-7777"
         ):
-            with self.assertRaises(SmarterValueError):
-                SmarterRequestMixin(self.request(self.named_url("9999-8888-7777")), account=self.account)
+            srm = SmarterRequestMixin(self.request(self.named_url("9999-8888-7777")), account=self.account)
+        self.assertEqual(srm.account, self.account)
 
     def test_named_url_lazy_loads_account_and_user(self):
         """A named url's account, and its admin, are loaded from the url's account number."""
@@ -72,6 +73,12 @@ class TestSmarterRequestBranches(TestAccountMixin):
             srm.eval_llmclient_url()
             self.assertEqual(srm.account, self.account)
             self.assertIsNotNone(srm.user)
+
+    def test_named_url_account_number_from_the_url(self):
+        """Without patching, a named url's account number is read from the url, and loads its account."""
+        srm = self.srm(self.named_url(self.account.account_number), user=AnonymousUser())
+        self.assertEqual(srm.url_account_number, self.account.account_number)
+        self.assertEqual(srm.account, self.account)
 
     def test_cached_url_account_number(self):
         srm = self.srm("http://localhost:9357/dashboard/")
@@ -186,7 +193,7 @@ class TestSmarterRequestBranches(TestAccountMixin):
         """Every classification is False, and every url part is None, without a parsed url."""
         srm = self.srm("http://localhost:9357/dashboard/")
         with patch.object(SmarterRequestMixin, "parsed_url", new_callable=PropertyMock, return_value=None):
-            self.assertFalse(SmarterRequestMixin.qualified_request.fget(srm))
+            self.assertFalse(SmarterRequestMixin.qualified_request.func(srm))
             self.assertFalse(srm.is_environment_root_domain)
             self.assertIsNone(srm.domain)
             self.assertIsNone(srm.path)
@@ -216,7 +223,33 @@ class TestSmarterRequestBranches(TestAccountMixin):
         with patch.object(
             SmarterRequestMixin, "amnesty_urls", new_callable=PropertyMock, return_value=["/dashboard/"], create=True
         ):
-            self.assertFalse(SmarterRequestMixin.qualified_request.fget(srm))
+            self.assertFalse(SmarterRequestMixin.qualified_request.func(srm))
+
+    def test_cached_property_names(self):
+        """A subclass's cached properties are found along with the mixin's, and each class is inspected once."""
+
+        class Child(SmarterRequestMixin):
+            @cached_property
+            def child_value(self):
+                return 1
+
+        names = cached_property_names(Child)
+        self.assertIn("child_value", names)
+        self.assertIn("qualified_request", names)
+        self.assertIn("is_llmclient", names)
+        self.assertNotIn("url", names)
+        self.assertIs(cached_property_names(Child), names)
+
+    def test_new_request_clears_cached_properties(self):
+        """Setting a new request forgets what was cached for the previous one."""
+        srm = self.srm("http://localhost:9357/admin/")
+        self.assertFalse(srm.qualified_request)
+        srm.smarter_request = self.request("http://localhost:9357/dashboard/")
+        self.assertTrue(srm.qualified_request)
+
+    def test_static_file_is_not_qualified(self):
+        srm = self.srm("http://localhost:9357/static/app.js")
+        self.assertFalse(srm.qualified_request)
 
     def test_empty_path(self):
         srm = self.srm("http://localhost:9357/dashboard/")
