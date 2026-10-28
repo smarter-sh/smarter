@@ -11,7 +11,8 @@ completion needs:
 - **instructions**: the servers' instructions, for the system prompt.
 - **tool calls**: :meth:`MCPToolkit.call` runs a tool call on the right server, and
   returns the result as text for the LLM. Errors are returned to the LLM as text, so
-  that it can recover, rather than failing the prompt.
+  that it can recover, rather than failing the prompt. The results of read-only tools
+  and resource reads are cached for the MCPClient's ``cacheTtl``.
 
 An MCP server that cannot be reached is skipped, and reported in :attr:`MCPToolkit.errors`,
 so that one unavailable server does not fail the prompt.
@@ -29,6 +30,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from smarter.lib import logging
+from smarter.lib.cache.tool_results import cached_tool_call
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
@@ -40,7 +42,7 @@ from .connection import (
     is_tool_allowed,
     truncate,
 )
-from .exceptions import SmarterMCPClientException
+from .exceptions import SmarterMCPClientException, SmarterMCPClientToolError
 from .models import MCPClient
 from .signals import (
     mcpclient_resource_read,
@@ -64,6 +66,8 @@ MAX_DESCRIPTION_LENGTH = 1024
 """The maximum length of a tool description offered to the LLM."""
 READ_RESOURCE = "read_resource"
 TOOL = "tool"
+TOOL_CACHE_NAMESPACE = "mcpclient"
+"""The namespace of MCP tool results in :func:`~smarter.lib.cache.tool_results.cached_tool_call`."""
 
 
 @dataclass(frozen=True)
@@ -74,6 +78,11 @@ class MCPFunction:
     mcpclient: MCPClient
     kind: str
     tool_name: Optional[str] = None
+    read_only: bool = False
+    """Whether the call only reads: a resource read, or a tool that the server marks ``readOnlyHint``.
+
+    Its results are cached.
+    """
 
 
 def input_schema(tool: MCPToolInfo) -> SmarterDictType:
@@ -167,14 +176,21 @@ class MCPToolkit:
                 if not is_tool_allowed(mcpclient, tool.name):
                     continue
                 function = MCPFunction(
-                    name=self.function_name(mcpclient, tool.name), mcpclient=mcpclient, kind=TOOL, tool_name=tool.name
+                    name=self.function_name(mcpclient, tool.name),
+                    mcpclient=mcpclient,
+                    kind=TOOL,
+                    tool_name=tool.name,
+                    read_only=tool.read_only is True,
                 )
                 label = tool.title or tool.name
                 description = f"{label}, from the {mcpclient.name} MCP server. {tool.description}".strip()
                 self.add_function(function, description, input_schema(tool))
             if catalog.has_resources and mcpclient.allowed_resources:
                 function = MCPFunction(
-                    name=self.function_name(mcpclient, READ_RESOURCE), mcpclient=mcpclient, kind=READ_RESOURCE
+                    name=self.function_name(mcpclient, READ_RESOURCE),
+                    mcpclient=mcpclient,
+                    kind=READ_RESOURCE,
+                    read_only=True,
                 )
                 patterns = ", ".join(mcpclient.allowed_resources)
                 description = (
@@ -221,6 +237,11 @@ class MCPToolkit:
         Errors, including an unreachable server and errors that the tool reports, are
         returned as text that begins with ``Error:``, so that the LLM can recover.
 
+        A read-only call (see :attr:`MCPFunction.read_only`) is cached for the MCPClient's
+        ``cache_ttl`` seconds, by :func:`~smarter.lib.cache.tool_results.cached_tool_call`.
+        Errors are never cached. A cached result sends ``mcpclient_tool_responded``, or
+        ``mcpclient_resource_read``, with ``cached=True``.
+
         :param function_name: The function name that the LLM called.
         :param arguments: The function's arguments.
         :returns: The result, or a description of the error.
@@ -230,27 +251,57 @@ class MCPToolkit:
             return f"Error: {function_name} is not an MCP tool."
         mcpclient = function.mcpclient
         arguments = arguments if isinstance(arguments, dict) else {}
-        connection = MCPServerConnection(mcpclient)
         target = function.tool_name or READ_RESOURCE
         mcpclient_tool_called.send(sender=self.__class__, mcpclient=mcpclient, tool_name=target, arguments=arguments)
-        try:
+
+        def run() -> str:
+            connection = MCPServerConnection(mcpclient)
             if function.kind == READ_RESOURCE:
-                uri = str(arguments.get("uri", ""))
-                text = connection.read_resource(uri)
-                mcpclient_resource_read.send(sender=self.__class__, mcpclient=mcpclient, uri=uri, characters=len(text))
-            else:
-                result = connection.call_tool(function.tool_name or "", arguments)
-                text = f"Error: {result.text}" if result.is_error else result.text
-                mcpclient_tool_responded.send(
-                    sender=self.__class__,
-                    mcpclient=mcpclient,
-                    tool_name=target,
-                    is_error=result.is_error,
-                    characters=len(text),
-                )
+                return connection.read_resource(str(arguments.get("uri", "")))
+            result = connection.call_tool(function.tool_name or "", arguments)
+            if result.is_error:
+                # raised, rather than returned, so that an error is never cached.
+                raise SmarterMCPClientToolError(result.text)
+            return result.text
+
+        # a call that may change something is never cached. Changing how the MCPClient connects
+        # changes its fingerprint, and so the key.
+        timeout = mcpclient.cache_ttl if function.read_only else 0
+        key = (mcpclient.pk, mcpclient.fingerprint, function.kind, target)
+        try:
+            result = cached_tool_call(TOOL_CACHE_NAMESPACE, key, arguments, timeout, run)
+        except SmarterMCPClientToolError as e:
+            text = f"Error: {e.message}"
+            mcpclient_tool_responded.send(
+                sender=self.__class__,
+                mcpclient=mcpclient,
+                tool_name=target,
+                is_error=True,
+                characters=len(text),
+                cached=False,
+            )
+            return text
         except SmarterMCPClientException as e:
             mcpclient_tool_failed.send(sender=self.__class__, mcpclient=mcpclient, tool_name=target, error=e.message)
             return f"Error: {e.message}"
+        text = str(result.value)
+        if function.kind == READ_RESOURCE:
+            mcpclient_resource_read.send(
+                sender=self.__class__,
+                mcpclient=mcpclient,
+                uri=str(arguments.get("uri", "")),
+                characters=len(text),
+                cached=result.cached,
+            )
+        else:
+            mcpclient_tool_responded.send(
+                sender=self.__class__,
+                mcpclient=mcpclient,
+                tool_name=target,
+                is_error=False,
+                characters=len(text),
+                cached=result.cached,
+            )
         return text or "(the tool returned no content)"
 
 
