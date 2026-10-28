@@ -110,6 +110,12 @@ Separate the major sections with `---`.
 - Use headings, not bold lines, as section labels. The user's editor flags
   bold-as-heading (MD036) and lists without blank lines around them (MD032).
 - No emoji except the 📖 docs link.
+- **Colons are rare**, once or twice in a post. Don't use them to join
+  clauses, lead into a list or manifest, label a bullet ("Budgets: a cap on
+  ..."), or in headings and table cells. Write two sentences, or end the
+  lead-in with a period. The table of rewrites is in
+  `blog.smarter.sh-blog-post` (Voice). The title's `vX.Y Release: <theme>` is
+  the one fixed exception.
 
 ## 4. Public-repo hygiene
 
@@ -127,6 +133,8 @@ instead of naming a customer's database.
   tell the user so they can correct it.
 - Every docs link's `.rst` file exists under `docs/source/`. You can't check
   that the published URL works, so say so.
+- `skills/blog.smarter.sh-blog-post/scripts/check-colons.py ~/desktop/blog-vX.Y.md`
+  passes.
 - Save the post to `~/desktop/blog-vX.Y.md` (e.g. `~/desktop/blog-v0.17.md`),
   unless the user names another place. Never save it inside the repository
   or only in your scratchpad.

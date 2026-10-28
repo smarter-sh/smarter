@@ -102,16 +102,17 @@ def handle_mcpclient_tool_called(sender, mcpclient: MCPClient, tool_name: str, a
 
 @receiver(mcpclient_tool_responded, dispatch_uid="mcpclient_tool_responded")
 def handle_mcpclient_tool_responded(
-    sender, mcpclient: MCPClient, tool_name: str, is_error: bool, characters: int, **kwargs
+    sender, mcpclient: MCPClient, tool_name: str, is_error: bool, characters: int, cached: bool = False, **kwargs
 ):
     """Log a tool's result."""
     logger.info(
-        "%s %s %s is_error: %s characters: %s",
+        "%s %s %s is_error: %s characters: %s cached: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_tool_responded",
         mcpclient.name,
         tool_name,
         is_error,
         characters,
+        cached,
     )
 
 
@@ -128,14 +129,17 @@ def handle_mcpclient_tool_failed(sender, mcpclient: MCPClient, tool_name: str, e
 
 
 @receiver(mcpclient_resource_read, dispatch_uid="mcpclient_resource_read")
-def handle_mcpclient_resource_read(sender, mcpclient: MCPClient, uri: str, characters: int, **kwargs):
+def handle_mcpclient_resource_read(
+    sender, mcpclient: MCPClient, uri: str, characters: int, cached: bool = False, **kwargs
+):
     """Log a resource read."""
     logger.info(
-        "%s %s %s characters: %s",
+        "%s %s %s characters: %s cached: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_resource_read",
         mcpclient.name,
         uri,
         characters,
+        cached,
     )
 
 

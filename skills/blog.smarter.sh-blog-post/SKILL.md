@@ -211,10 +211,26 @@ The posts are written in the voice of Lawrence McDaniel, Smarter's creator.
   blank lines (MD032).
 - **Colons are rare.** A colon is a special device for emphasis, used once or
   twice in a post at most, not a way to join clauses, introduce lists, label
-  bullets or lead into code. Write two sentences, or end the lead-in with a
-  period. This applies to diagram titles and labels too. Count them before
-  handing over (prose outside code blocks and links). The user rejected a post
-  that used colons throughout.
+  bullets or lead into code. This applies to headings, table cells, diagram
+  titles and labels too. The user rejected a post that used colons
+  throughout, and a review on October 28, 2026 found 589 clause-joining colons
+  across 64 published posts, so this is a habit to check for, not an
+  occasional slip. Rewrite each one:
+
+  | Colon                                              | Rewrite                                             |
+  | -------------------------------------------------- | --------------------------------------------------- |
+  | A QuerySet is lazy: it describes a query.          | A QuerySet is lazy. It describes a query.           |
+  | The result: every cache hit costs one query.       | As a result, every cache hit costs one query.       |
+  | Save this as `hello.py`:                           | Save this as `hello.py`.                            |
+  | The design has four pieces:                        | The design has four pieces.                         |
+  | - Hello, Smarter: connect and prompt an LLMClient. | - Hello, Smarter connects and prompts an LLMClient. |
+  | ## Challenge 1: Expensive queries                  | ## Expensive queries                                |
+  | You can't delete it: an LLMClient uses it.         | You can't delete it, because an LLMClient uses it.  |
+
+  Run [scripts/check-colons.py](scripts/check-colons.py) on the draft. It
+  lists every colon in the prose with its line and kind, and exits 1 when
+  there are more than two.
+
 - **Only data that serves the point.** Having a number, a file count, a run
   time or a configuration detail is not a reason to print it. Each fact must
   help the reader follow the argument; cut the rest, however true.
@@ -263,6 +279,9 @@ but describe what was exposed, not how to exploit an unpatched deployment.
   path exists at `HEAD`, and every docs link's `.rst` exists under
   `docs/source/`. You can't check that the published URLs work, so say so.
 - The reading time is measured, not guessed.
+- `skills/blog.smarter.sh-blog-post/scripts/check-colons.py ~/desktop/blog-<slug>.md`
+  passes (two colons or fewer in the prose), and each one left is there for
+  emphasis.
 - Save the post to `~/desktop/blog-<slug>.md`, unless the user names another
   place. Never save it inside the repository or only in your scratchpad.
 - In your reply, list what to review before publishing: estimates and how

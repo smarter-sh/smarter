@@ -20,6 +20,7 @@ from typing import Any, Optional
 from unittest import mock
 
 from mcp.server import MCPServer
+from mcp.types import ToolAnnotations
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.connection.tests.factories import secret_factory
@@ -63,7 +64,7 @@ def build_test_server(instructions: Optional[str] = TEST_SERVER_INSTRUCTIONS) ->
     """
     Build an in-process MCP server with tools and a resource.
 
-    - ``echo(text)``: returns the text.
+    - ``echo(text)``: returns the text. It is annotated read-only, so its results are cached.
     - ``add_numbers(a, b)``: returns a + b.
     - ``fail()``: raises, so the tool call returns an error result.
     - ``secret_admin_tool()``: a tool that the test MCPClient does not allow.
@@ -74,7 +75,7 @@ def build_test_server(instructions: Optional[str] = TEST_SERVER_INSTRUCTIONS) ->
     """
     server = MCPServer(name=TEST_SERVER_NAME, version=TEST_SERVER_VERSION, instructions=instructions)
 
-    @server.tool(description="Repeat the text.")
+    @server.tool(description="Repeat the text.", annotations=ToolAnnotations(readOnlyHint=True))
     def echo(text: str) -> str:
         return text
 

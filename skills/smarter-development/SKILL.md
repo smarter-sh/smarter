@@ -94,9 +94,18 @@ Smarter is large and highly consistent. Almost every change has a precedent.
    reference SAM resources.
 3. Read them in full and copy their structure, naming, docstrings, logging and
    error handling. Don't introduce a new pattern when one exists.
-4. Make the change, then add or update its tests, docstrings and Sphinx page.
-5. Run the hooks and the tests, and fix what they find.
-6. When in doubt, refer to [docs.smarter.sh](https://docs.smarter.sh), which
+4. **Copy conventions, not code** ([ADR-033](../../docs/source/adr/033-dry.rst)).
+   When the logic itself is the same, call the existing helper instead of
+   writing it again, and search for one before writing your own. If you are
+   about to write the third copy of something, in this change or across the
+   codebase, extract it into `smarter/lib` (or the app that owns the concept)
+   and switch every copy to it in the same change. An agent once wrote the same
+   tool-result cache in three apps, each modeled on its app's nearest example,
+   and one copy had a bug the others didn't. Don't merge code that only looks
+   alike but answers to different rules (ADR-033, rule 7).
+5. Make the change, then add or update its tests, docstrings and Sphinx page.
+6. Run the hooks and the tests, and fix what they find.
+7. When in doubt, refer to [docs.smarter.sh](https://docs.smarter.sh), which
    is a searchable ReadTheDocs site built from the Sphinx documentation in this repo.
 
 When existing code disagrees with these skills, the code that is newest and
@@ -169,6 +178,19 @@ and only inside functions.
   `from cache_results import lazy_cache`, never `django.core.cache`.
 - In tests, `SmarterTestBase` clears the cache. To drop one entry, call the
   decorated function's `.invalidate()` with the same arguments.
+- **Tool calls go through `cached_tool_call()`** in
+  `smarter/lib/cache/tool_results.py`, the one cache of tool results. It owns
+  the key (a namespace, the tool's identity, its arguments as canonical JSON),
+  never stores an error, and skips the cache at timeout 0. MCP tools, extension
+  tools and the Smarter Project MCP server use it; each caller decides only
+  what may be cached and for how long. Don't write another one. Never cache a
+  tool that writes, or whose result depends on who calls it.
+- **A conversation's first message** has its answer cached by
+  `provider/services/text_completion/lib/prompt_cache.py`, only when every tool
+  it called is cacheable, as `OpenAISmarterClient.tool_call_is_cacheable()`
+  decides. A new kind of tool must be added there.
+- A test that calls the same tool twice with the same arguments gets the cached
+  result the second time: give each test its own arguments, or invalidate.
 
 ## Pydantic over JSON
 

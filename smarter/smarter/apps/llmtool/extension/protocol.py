@@ -153,6 +153,17 @@ class SmarterExtensionTool:
     Defaults to the class docstring.
     """
 
+    cache_ttl: ClassVar[int] = 0
+    """Seconds to cache the tool's results, by its arguments and the extension's settings.
+
+    0, the default, caches nothing.
+
+    Set it only for a tool that changes nothing, and whose result depends only on its arguments
+    and settings, not on who calls it (``context.account``, ``context.user_profile`` and
+    ``context.llmclient``): a cached result is returned to every LLMClient and user. For example,
+    a weather forecast, ``cache_ttl = 3600``. An error is never cached.
+    """
+
     def call(self, arguments: BaseModel, context: ExtensionContext) -> JsonValue:
         """
         Do what the LLM asked.
