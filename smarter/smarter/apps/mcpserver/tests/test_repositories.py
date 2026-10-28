@@ -29,6 +29,19 @@ class TestProjectRepositories(SmarterTestBase):
             "smarter-vscode-yaml",
             "smarter-infrastructure",
             "smarter-deploy",
+            "example-manifests",
+            "stackademy",
+            "smarter-wordpress",
+            "smarter-drupal",
+            "smarter-shopify",
+            "smarter-gtm-template",
+            "smarter-docs-site-generators",
+            "extensions-registry",
+            "smarter-extension-calculator",
+            "smarter-extension-date-calculator",
+            "smarter-extension-weather",
+            "cache-results",
+            "smarter-types",
         ):
             with self.subTest(name=name):
                 repository = get_repository(name)
@@ -39,13 +52,19 @@ class TestProjectRepositories(SmarterTestBase):
         self.assertEqual(project_repositories(), SMARTER_PROJECT_REPOSITORIES)
         self.assertIsNone(get_repository("not-a-repository"))
 
-    def test_only_smarter_publishes_documentation(self):
-        """The smarter repository's docs/source is the published documentation."""
+    def test_published_documentation(self):
+        """The smarter and cache-results repositories publish their docs/source."""
         smarter = get_repository("smarter")
         self.assertEqual(smarter.docs_root, "docs/source")
         self.assertEqual(smarter.docs_url, SMARTER_PROJECT_DOCS_LATEST_URL)
         self.assertEqual(SMARTER_PROJECT_DOCS_LATEST_URL, "https://docs.smarter.sh/en/latest/")
         self.assertIsNone(get_repository("smarter-cli").docs_url)
+        cache_results = get_repository("cache-results")
+        self.assertEqual(cache_results.docs_root, "docs/source")
+        self.assertEqual(
+            cache_results.documentation_url("docs/source/quickstart.rst"),
+            "https://docs.cache-results.smarter.sh/quickstart.html",
+        )
 
     def test_github_urls(self):
         """The GitHub, api and archive urls of a repository."""

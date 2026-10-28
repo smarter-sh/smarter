@@ -10,10 +10,15 @@ which returns its result as Markdown text for the LLM. Every tool is read-only.
 - ``search_code``: ranked files of source code, with their matching lines.
 - ``read_file``: a file, or a range of its lines, with line numbers.
 - ``list_files``: the folders and files under a folder.
+- ``search_blog``: ranked passages of the posts of the blog, blog.smarter.sh.
+- ``read_blog_post``: a post of the blog, with line numbers.
+- ``get_manifest_schema``: a resource kind's example manifest, and its fields.
 
 A tool works on the repositories of its :class:`SmarterProjectScope`. The MCP server of
 one repository serves the tools without a ``repository`` argument, and the MCP server of
-all of the repositories adds one, whose values are the repositories' names.
+all of the repositories adds one, whose values are the repositories' names. The blog's
+tools have no ``repository`` argument, and only the MCP server of all of the repositories
+serves them.
 
 .. note::
 
@@ -25,22 +30,29 @@ all of the repositories adds one, whose values are the repositories' names.
 import copy
 import posixpath
 from abc import ABC, abstractmethod
-from typing import ClassVar, Optional, cast
+from typing import ClassVar, Optional, Sequence, cast
 
 import mcp_types
+import yaml
 from cache_results import lazy_cache
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from smarter.lib import logging
+from smarter.apps.api.v1.contract.const import SAM_SCHEMA_SUFFIX
+from smarter.common.const import VERSION
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
+from . import manifests
 from .exceptions import SmarterMCPServerToolError
 from .models import RepositoryFile, RepositoryFileKind, RepositoryIndex
 from .repositories import (
     SMARTER_PROJECT_DOCS_LATEST_URL,
+    ProjectBlog,
     ProjectRepository,
+    ProjectSource,
     get_repository,
+    project_blog,
 )
 from .search import SearchHit, search_files
 
@@ -130,24 +142,27 @@ def queue_indexing_key(name: str) -> str:
     return f"smarter.apps.mcpserver.tools.queue_indexing.{name}"
 
 
-def queue_indexing(repository: ProjectRepository) -> None:
+def queue_indexing(repository: ProjectSource) -> None:
     """
-    Queue a repository that is not indexed for indexing, at most once every :data:`INDEX_QUEUE_TIMEOUT` seconds.
+    Queue a repository, or the blog, that is not indexed for indexing, at most once every :data:`INDEX_QUEUE_TIMEOUT` seconds.
 
-    :param repository: The repository.
+    :param repository: The repository, or the blog.
     """
     # pylint: disable=import-outside-toplevel
-    from .tasks import index_repository
+    from .tasks import index_blog, index_repository
 
     if lazy_cache.add(queue_indexing_key(repository.name), True, timeout=INDEX_QUEUE_TIMEOUT):
-        index_repository.delay(repository.name)
+        if isinstance(repository, ProjectBlog):
+            index_blog.delay()
+        else:
+            index_repository.delay(repository.name)
 
 
-def ready_indexes(repositories: list[ProjectRepository]) -> dict[str, RepositoryIndex]:
+def ready_indexes(repositories: Sequence[ProjectSource]) -> dict[str, RepositoryIndex]:
     """
     Return the indexes of the repositories that are ready to search, and queue the others for indexing.
 
-    :param repositories: The repositories.
+    :param repositories: The repositories, or the blog.
     :returns: The ready indexes, by repository name.
     """
     indexes = {
@@ -239,9 +254,18 @@ class SmarterProjectTool(ABC):
     arguments_model: ClassVar[type[ToolArguments]] = ToolArguments
     requires_repository: ClassVar[bool] = False
     """Whether a call to the MCP server of all of the repositories must name one."""
+    uses_repository: ClassVar[bool] = True
+    """Whether the tool takes a ``repository`` argument on the MCP server of all of the repositories."""
+    project_wide: ClassVar[bool] = False
+    """Whether only the MCP server of all of the repositories serves the tool."""
 
     def __init__(self, scope: SmarterProjectScope):
         self.scope = scope
+
+    @classmethod
+    def serves(cls, scope: SmarterProjectScope) -> bool:
+        """Whether the MCP server of a scope serves the tool."""
+        return not (cls.project_wide and scope.is_single)
 
     def input_schema(self) -> SmarterDictType:
         """
@@ -252,7 +276,7 @@ class SmarterProjectTool(ABC):
         """
         schema = simplify_schema(self.arguments_model.model_json_schema())
         properties = schema.setdefault("properties", {})
-        if self.scope.is_single:
+        if self.scope.is_single or not self.uses_repository:
             properties.pop("repository", None)
         else:
             properties["repository"] = {
@@ -298,7 +322,7 @@ class SmarterProjectTool(ABC):
         :raises SmarterMCPServerToolError: If the arguments are not valid, or the tool fails.
         """
         arguments = dict(arguments or {})
-        if self.scope.is_single:
+        if self.scope.is_single or not self.uses_repository:
             arguments.pop("repository", None)
         try:
             validated = self.arguments_model.model_validate(arguments)
@@ -379,7 +403,8 @@ class GetRepositoryOverviewTool(SmarterProjectTool):
             "# The Smarter Project's repositories\n\n"
             + "\n".join(rows)
             + f"\n\nThe documentation, {SMARTER_PROJECT_DOCS_LATEST_URL}, is built from the smarter "
-            "repository's docs/source. Name a repository to see its layout and README."
+            f"repository's docs/source. The blog, {project_blog().url}, is searched with search_blog. "
+            "Name a repository to see its layout and README."
         )
 
 
@@ -501,6 +526,43 @@ class SearchCodeTool(SearchTool):
 # -----------------------------------------------------------------------------
 # read_file
 # -----------------------------------------------------------------------------
+class ReadLines(BaseModel):
+    """The lines of a file that :func:`read_lines` selected."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    start: int = Field(description="The first line, from 1.")
+    end: int = Field(description="The last line.")
+    total: int = Field(description="The file's number of lines.")
+    text: str = Field(description="The lines, each prefixed with its number.")
+
+
+def read_lines(content: str, start_line: int, end_line: Optional[int]) -> ReadLines:
+    """
+    Return a range of a file's lines, with line numbers, within :data:`MAX_READ_LINES` and :data:`MAX_READ_CHARACTERS`.
+
+    :param content: The file's content.
+    :param start_line: The first line to read, from 1.
+    :param end_line: The last line to read, or None to read as many as allowed.
+    :returns: The lines.
+    """
+    lines = content.splitlines()
+    total = len(lines)
+    start = min(start_line, max(total, 1))
+    end = min(end_line or start + MAX_READ_LINES - 1, start + MAX_READ_LINES - 1, total)
+    width = len(str(end))
+    selected: list[str] = []
+    characters = 0
+    for number in range(start, end + 1):
+        text = f"{number:>{width}}  {lines[number - 1]}"
+        characters += len(text) + 1
+        if characters > MAX_READ_CHARACTERS and selected:
+            end = number - 1
+            break
+        selected.append(text)
+    return ReadLines(start=start, end=end, total=total, text="\n".join(selected))
+
+
 class ReadFileArguments(ToolArguments):
     """The arguments of read_file."""
 
@@ -532,26 +594,17 @@ class ReadFileTool(SmarterProjectTool):
         row = RepositoryFile.objects.filter(index=index, path=path).values("content", "line_count").first()
         if row is None:
             raise SmarterMCPServerToolError(self.not_found(index, repository, path))
-        lines = row["content"].splitlines()
-        total = len(lines)
-        start = min(arguments.start_line, max(total, 1))
-        end = min(arguments.end_line or start + MAX_READ_LINES - 1, start + MAX_READ_LINES - 1, total)
-        width = len(str(end))
-        selected, characters = [], 0
-        for number in range(start, end + 1):
-            text = f"{number:>{width}}  {lines[number - 1]}"
-            characters += len(text) + 1
-            if characters > MAX_READ_CHARACTERS and selected:
-                end = number - 1
-                break
-            selected.append(text)
-        header = f"{repository.name}/{path}, lines {start}-{end} of {total}\n{repository.file_url(index.commit_sha, path, start, end)}"
+        lines = read_lines(row["content"], arguments.start_line, arguments.end_line)
+        header = f"{repository.name}/{path}, lines {lines.start}-{lines.end} of {lines.total}\n{repository.file_url(index.commit_sha, path, lines.start, lines.end)}"
         documentation_url = repository.documentation_url(path)
         if documentation_url:
             header += f"\nPublished at {documentation_url}"
-        body = "\n".join(selected)
-        footer = f"\n\nThe file continues: call read_file with start_line={end + 1}." if end < total else ""
-        return f"{header}\n\n```{code_fence_language(path)}\n{body}\n```{footer}"
+        footer = (
+            f"\n\nThe file continues: call read_file with start_line={lines.end + 1}."
+            if lines.end < lines.total
+            else ""
+        )
+        return f"{header}\n\n```{code_fence_language(path)}\n{lines.text}\n```{footer}"
 
     def not_found(self, index: RepositoryIndex, repository: ProjectRepository, path: str) -> str:
         """Return an error message that suggests the files that the LLM may have meant."""
@@ -641,20 +694,221 @@ class ListFilesTool(SmarterProjectTool):
         return f"{location}\n{repository.github_url}/tree/{index.commit_sha}/{folder}\n\n" + "\n".join(items)
 
 
+# -----------------------------------------------------------------------------
+# search_blog, read_blog_post
+# -----------------------------------------------------------------------------
+def require_blog_index(blog: ProjectBlog) -> RepositoryIndex:
+    """
+    Return the blog's index.
+
+    :param blog: The blog.
+    :returns: Its index.
+    :raises SmarterMCPServerToolError: If the blog is not indexed yet. It is then queued for indexing.
+    """
+    index = ready_indexes([blog]).get(blog.name)
+    if index is None:
+        raise SmarterMCPServerToolError(
+            f"The blog, {blog.url}, has not been indexed yet. Indexing has started: try again in a few minutes."
+        )
+    return index
+
+
+class SearchBlogTool(SmarterProjectTool):
+    """Search the blog's posts."""
+
+    name = "search_blog"
+    title = "Search blog"
+    description = (
+        "Search the posts of The Smarter Project's blog, blog.smarter.sh: release announcements, with what "
+        "changed in each version and how to upgrade, and articles about how and why Smarter was built, e.g. "
+        "its security, logging, testing, caching and use of AI coding agents. Returns the best passages, with "
+        "links to the posts. Use it, together with search_documentation, for why and how questions, design "
+        "decisions, what changed in a release, and the project's history."
+    )
+    arguments_model = SearchArguments
+    uses_repository = False
+    project_wide = True
+
+    def run(self, arguments: ToolArguments) -> str:
+        arguments = cast(SearchArguments, arguments)
+        blog = project_blog()
+        require_blog_index(blog)
+        hits = search_files([blog], arguments.query, kind=RepositoryFileKind.DOCUMENTATION, limit=arguments.limit)
+        if not hits:
+            return (
+                f'No post of the blog, {blog.url}, matches "{arguments.query}". Try other keywords, or '
+                "search_documentation."
+            )
+        results = "\n\n".join(self.format_hit(number, hit) for number, hit in enumerate(hits, start=1))
+        return (
+            f'{len(hits)} posts of the blog, {blog.url}, for "{arguments.query}", best first. '
+            f"Read a post with read_blog_post to see more of it.\n\n{results}"
+        )
+
+    @staticmethod
+    def format_hit(number: int, hit: SearchHit) -> str:
+        """Return one hit, as Markdown."""
+        width = len(str(hit.lines[-1].number)) if hit.lines else 1
+        excerpt = "\n".join(f"{line.number:>{width}}  {line.text}" for line in hit.lines)
+        return f"{number}. **{hit.title or hit.path}** `{hit.path}`\n   Post: {hit.url}\n\n```text\n{excerpt}\n```"
+
+
+class ReadBlogPostArguments(ToolArguments):
+    """The arguments of read_blog_post."""
+
+    path: str = Field(
+        min_length=1,
+        max_length=512,
+        description="The post's path, e.g. 2026/10/26/release-smarter-api-v0-6, or its url.",
+    )
+    start_line: int = Field(default=1, ge=1, description="The first line to read.")
+    end_line: Optional[int] = Field(
+        default=None, ge=1, description=f"The last line to read. At most {MAX_READ_LINES} lines are read at once."
+    )
+
+
+class ReadBlogPostTool(SmarterProjectTool):
+    """Read a post of the blog."""
+
+    name = "read_blog_post"
+    title = "Read blog post"
+    description = (
+        "Read a post of The Smarter Project's blog, blog.smarter.sh, as text with line numbers, from the "
+        f"paths or urls that search_blog returns. Long posts are read {MAX_READ_LINES} lines at a time: use "
+        "start_line and end_line to read more."
+    )
+    arguments_model = ReadBlogPostArguments
+    uses_repository = False
+    project_wide = True
+
+    def run(self, arguments: ToolArguments) -> str:
+        arguments = cast(ReadBlogPostArguments, arguments)
+        blog = project_blog()
+        index = require_blog_index(blog)
+        path = blog.post_path(arguments.path)
+        row = RepositoryFile.objects.filter(index=index, path=path).values("content").first()
+        if row is None:
+            slug = path.rsplit("/", 1)[-1]
+            suggestions = list(
+                RepositoryFile.objects.filter(index=index, path__icontains=slug)
+                .order_by("-path")
+                .values_list("path", flat=True)[:8]
+            )
+            message = f"{path} is not a post of the blog, {blog.url}."
+            if suggestions and slug:
+                message += " Did you mean: " + ", ".join(suggestions) + "?"
+            else:
+                message += " Use search_blog to find it."
+            raise SmarterMCPServerToolError(message)
+        lines = read_lines(row["content"], arguments.start_line, arguments.end_line)
+        header = f"{blog.post_url(path)}, lines {lines.start}-{lines.end} of {lines.total}"
+        footer = (
+            f"\n\nThe post continues: call read_blog_post with start_line={lines.end + 1}."
+            if lines.end < lines.total
+            else ""
+        )
+        return f"{header}\n\n```markdown\n{lines.text}\n```{footer}"
+
+
+# -----------------------------------------------------------------------------
+# get_manifest_schema
+# -----------------------------------------------------------------------------
+class GetManifestSchemaArguments(ToolArguments):
+    """The arguments of get_manifest_schema."""
+
+    kind: Optional[str] = Field(
+        default=None,
+        max_length=64,
+        description="The resource kind, e.g. LLMClient, Guardrail or MCPClient. Omit it to list the kinds.",
+    )
+
+
+class GetManifestSchemaTool(SmarterProjectTool):
+    """A resource kind's example manifest, and the fields of its JSON Schema."""
+
+    name = "get_manifest_schema"
+    title = "Get manifest schema"
+    description = (
+        "Return a Smarter resource kind's example manifest, in YAML, and every field that its manifest may "
+        "have: its path, type, whether it is required, its default and its description, from the JSON "
+        "Schema that this platform validates manifests with. Use it before writing, fixing or explaining a "
+        "manifest, rather than guessing its fields. Omit kind to list the kinds."
+    )
+    arguments_model = GetManifestSchemaArguments
+    uses_repository = False
+
+    def run(self, arguments: ToolArguments) -> str:
+        arguments = cast(GetManifestSchemaArguments, arguments)
+        kinds = manifests.manifest_kinds()
+        if not arguments.kind:
+            return (
+                "# Smarter resource kinds\n\nEach kind's manifest is a YAML file with apiVersion, kind, metadata "
+                "and spec. Call get_manifest_schema with one of these kinds for its example and fields:\n\n"
+                + "\n".join(f"- {kind}" for kind in kinds)
+            )
+        kind = manifests.find_kind(arguments.kind)
+        if kind is None:
+            raise SmarterMCPServerToolError(
+                f"{arguments.kind} is not a resource kind. It is one of: {', '.join(kinds)}."
+            )
+        schema = manifests.manifest_schema(kind)
+        example = yaml.safe_dump(manifests.manifest_example(kind), sort_keys=False, allow_unicode=True).rstrip()
+        schema_url = self.schema_url(kind)
+        header = (
+            f"# {kind} manifest\n\n{schema.get('description', '')} The example and fields are this platform's, "
+            f"version {VERSION.get('__version__', '0.0.0')}. Apply a manifest with `smarter apply -f <file>.yaml`.\n"
+            f"Full JSON Schema: {schema_url}\n\n## Example\n\n```yaml\n{example}\n```\n\n## Fields\n\n"
+            "The read-only status, which the platform writes, is left out. `[]` is an item of a list, and "
+            "`<key>` a key of a map.\n"
+        )
+        lines, characters, fields = [], len(header), manifests.manifest_fields(schema)
+        for number, field in enumerate(fields):
+            line = self.format_field(field)
+            if characters + len(line) + 1 > MAX_READ_CHARACTERS:
+                lines.append(f"\n[{len(fields) - number} more fields: see the full JSON Schema, {schema_url}]")
+                break
+            lines.append(line)
+            characters += len(line) + 1
+        return header + "\n".join(lines)
+
+    @staticmethod
+    def schema_url(kind: str) -> str:
+        """Return the GitHub url of a kind's JSON Schema, in the smarter repository."""
+        repository = get_repository("smarter") or ProjectRepository(
+            name="smarter", title="the Smarter platform", description="The Smarter platform."
+        )
+        return repository.file_url(None, f"{manifests.SAM_SCHEMA_REPOSITORY_PATH}/{kind}{SAM_SCHEMA_SUFFIX}")
+
+    @staticmethod
+    def format_field(field: manifests.ManifestField) -> str:
+        """Return one field, as a Markdown list item."""
+        details = [field.type, "required" if field.required else "optional"]
+        if field.default is not None:
+            details.append(f"default {json.dumps(field.default)}")
+        text = f"- `{field.path}` ({', '.join(details)})"
+        return f"{text}: {field.description}" if field.description else text
+
+
 TOOL_CLASSES: tuple[type[SmarterProjectTool], ...] = (
     GetRepositoryOverviewTool,
     SearchDocumentationTool,
     SearchCodeTool,
     ReadFileTool,
     ListFilesTool,
+    GetManifestSchemaTool,
+    SearchBlogTool,
+    ReadBlogPostTool,
 )
 """Every tool of the Smarter Project MCP server, in the order that tools/list lists them."""
 
 __all__ = [
     "TOOL_CLASSES",
+    "GetManifestSchemaTool",
     "GetRepositoryOverviewTool",
     "ListFilesTool",
+    "ReadBlogPostTool",
     "ReadFileTool",
+    "SearchBlogTool",
     "SearchCodeTool",
     "SearchDocumentationTool",
     "SmarterProjectScope",
