@@ -91,7 +91,11 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 5
      - **Authentication across the stack.** Sessions, CSRF, cookies and ``SameSite``, API keys,
-       and CORS for embedded apps, limited to each LLMClient's ``allowedOrigins``.
+       and CORS for embedded apps, limited to each LLMClient's ``allowedOrigins``. Pre-reading:
+       "One session, one chatbot" and "CORS and CSRF: who may call a chatbot from a page" in the
+       case study `One Platform, Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__,
+       whose "Lab 2: Probe the edges of a live chatbot" runs the preflights and carries a session
+       key from one chatbot to another.
    * - 2
      - Lecture 6
      - **The list page API contract.** List, clone, rename and delete; ``fetchDjangoUrl`` and
@@ -102,14 +106,19 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 7
      - **Typed contracts.** Pydantic models, JSON Schema and generated TypeScript types
-       (:doc:`/smarter-framework/smarter-chat/api-contract`).
+       (:doc:`/smarter-framework/smarter-chat/api-contract`). Pre-reading: "Six clients, one
+       document" in the case study `One Contract, Five Clients
+       <https://smarter.sh/case-studies/api-contract>`__, where the React chat is one of the
+       clients.
    * - 3
      - Lecture 8
      - **Testing the back end.** Django API tests, scoping tests, fixtures, and the shared
        ``ResourceViewsTestMixin`` that tests every list page's views.
    * - 3
      - Lecture 9
-     - **Testing the front end.** Vitest, Testing Library and MSW, and keeping mocks honest.
+     - **Testing the front end.** Vitest, Testing Library and MSW, and keeping mocks honest. "Real
+       responses are checked" in the contract case study shows the platform's tests validating
+       real responses against the document.
    * - 3
      - Live session 3
      - Review of Assignment 2. Live addition of a field from model to pixel. Capstone proposals

@@ -21,4 +21,8 @@
   refactoring, log reviews, translations and front-end design done with an agent; `Part 1:
   Maintaining Long-Term Code Quality With Agentic AI
   <https://blog.smarter.sh/2026/10/10/claude-code-large-django-codebase/>`__, on what an agent
-  multiplies in a large codebase, and what kept Smarter's code converging.
+  multiplies in a large codebase, and what kept Smarter's code converging. The case studies
+  `Converge or Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on
+  the series that Part 1 begins, and `One Contract, Five Clients
+  <https://smarter.sh/case-studies/api-contract>`__, on how the CLI, SDKs and VS Code extension
+  depend on the platform, turn these posts into lessons with labs and discussion questions.

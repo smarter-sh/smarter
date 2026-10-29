@@ -370,7 +370,9 @@ Recommended Texts
 
 - **Pre-reading:** the three parts of *Converge or Diverge* on blog.smarter.sh, listed under
   Further Study, and :doc:`/smarter-framework/developer-reference/agentic-development`, before
-  week 1.
+  week 1. The case study `Converge or Diverge: AI Coding Agents
+  <https://smarter.sh/case-studies/ai-coding-agents>`__ condenses the series, with labs and
+  discussion questions that the modules use.
 - **Required:** Michael C. Feathers, *Working Effectively with Legacy Code* (Prentice Hall,
   2004): getting code under test in week 3, and breaking dependencies in week 5.
 - **Reference:** Adam Tornhill, *Your Code as a Crime Scene*, 2nd edition (Pragmatic Bookshelf,

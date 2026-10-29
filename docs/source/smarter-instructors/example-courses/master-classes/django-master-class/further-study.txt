@@ -45,4 +45,9 @@
   Application Code and Tests <https://blog.smarter.sh/2026/09/03/cloud-out-of-reach-of-tests/>`__,
   on the service layer and guard that keep AWS and Kubernetes out of the tests; `Django-React
   Integration <https://blog.smarter.sh/2026/05/29/react-integration/>`__, on how Django hosts the
-  console's React apps.
+  console's React apps. The case studies `One Platform, Many Tenants
+  <https://smarter.sh/case-studies/multi-tenancy>`__, on queryset rules, sessions, CORS and API
+  keys, `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__, on hosts,
+  Celery tasks and tests that never reach the cloud, and `One Contract, Five Clients
+  <https://smarter.sh/case-studies/api-contract>`__, on a contract generated from Pydantic models,
+  turn these posts into lessons with labs and discussion questions.
