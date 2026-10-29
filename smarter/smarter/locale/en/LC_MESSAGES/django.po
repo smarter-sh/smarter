@@ -1969,3 +1969,19 @@ msgstr ""
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr ""
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Cookie notice"
+msgstr ""
+
+#: smarter/templates/common/cookie-notice.html
+msgid "We use cookies to improve your experience."
+msgstr ""
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Privacy policy"
+msgstr ""
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Close"
+msgstr ""
