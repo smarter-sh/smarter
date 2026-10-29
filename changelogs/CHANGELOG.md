@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.37.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.37.2...v0.37.3-alpha.1) (2026-10-29)
+
+### Bug Fixes
+
+* **console:** add a cookie notice with a link to the privacy policy ([0c5474e](https://github.com/smarter-sh/smarter/commit/0c5474e0ba5db00a24003d06734c693b49fc26ae))
+
 ## [0.37.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.37.1...v0.37.2-alpha.1) (2026-10-28)
 
 ### Bug Fixes
