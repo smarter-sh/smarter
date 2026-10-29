@@ -2205,6 +2205,22 @@ msgstr "Schémas JSON SAM"
 msgid "About the contract"
 msgstr "À propos du contrat"
 
+#: smarter/templates/common/cookie-notice.html
+msgid "Cookie notice"
+msgstr "Avis relatif aux cookies"
+
+#: smarter/templates/common/cookie-notice.html
+msgid "We use cookies to improve your experience."
+msgstr "Nous utilisons des cookies pour améliorer votre expérience."
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Privacy policy"
+msgstr "Politique de confidentialité"
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Close"
+msgstr "Fermer"
+
 #~ msgid "Swagger"
 #~ msgstr "Swagger"
 
