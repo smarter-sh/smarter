@@ -170,10 +170,10 @@ class TestSettingsReadyMessage(SmarterTestBase):
             make_settings()
             make_settings()
         first.assert_called_with("settings-ready")
-        ready = [c for c in logger.warning.call_args_list if "Settings are" in c.args[0]]
+        ready = [c for c in logger.warning.call_args_list if "smarter_settings are" in c.args[0]]
         self.assertEqual(len(ready), 1)
         self.assertIn("READY", ready[0].args[2])
-        self.assertEqual(len([c for c in logger.debug.call_args_list if "Settings are" in str(c.args[0])]), 1)
+        self.assertEqual(len([c for c in logger.debug.call_args_list if "smarter_settings are" in str(c.args[0])]), 1)
 
     def test_not_ready_is_logged_by_every_process(self):
         """NOT_READY is always a warning, whichever worker logs it."""
