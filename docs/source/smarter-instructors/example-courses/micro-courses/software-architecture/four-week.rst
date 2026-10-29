@@ -131,7 +131,9 @@ The file references in the lectures are listed in full under `Principles in the 
      - **Data and contracts.** The :doc:`database </adr/017-database>`, Django models for storage
        and :doc:`Pydantic models for contracts </adr/031-pydantic-over-json>`, the ownership base
        class that makes every resource belong to an account, and API
-       :doc:`versioning </adr/023-api-versioning>`.
+       :doc:`versioning </adr/023-api-versioning>`. Pre-reading: "Where to put the seam",
+       "Generated, never written" and "Breaking changes and versions" in the case study
+       `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__.
    * - 3
      - Live session 3
      - Review of Assignment 2, and the class's twelve-factor scorecard. A trade-off analysis
@@ -141,7 +143,9 @@ The file references in the lectures are listed in full under `Principles in the 
      - **Infrastructure as code and cloud-native architecture.** Terraform and Terragrunt in
        `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__, a Helm
        chart validated by a JSON schema, and Smarter itself as a declarative system that turns
-       manifests into DNS records, certificates and ingresses. Observability with logs and the
+       manifests into DNS records, certificates and ingresses, followed in "One deploy, end to
+       end" and "Waiting without blocking" in the case study `What Happens When You Click Deploy
+       <https://smarter.sh/case-studies/deploy>`__. Observability with logs and the
        :doc:`journal </smarter-platform/smarter-journal>`.
    * - 4
      - Lecture 11
@@ -155,7 +159,10 @@ The file references in the lectures are listed in full under `Principles in the 
      - **Evolving architecture.** Technical debt, fitness functions in CI (tests, coverage and
        pre-commit hooks), strangler migrations, :doc:`feature flags </adr/022-feature-flags>`, and
        architecture when coding agents write much of the code and the conventions live in
-       ``CLAUDE.md`` and ``skills/``.
+       ``CLAUDE.md`` and ``skills/``. Pre-reading: "Five success factors", "The antipattern" and
+       "Fixing it" in the case study `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__, whose "Lab 2: Measure the series"
+       measures a spreading pattern across release tags with git.
    * - 4
      - Live session 4
      - Capstone presentations (about 6 minutes each, with 2 minutes of questions), and a course
@@ -283,7 +290,10 @@ Assignment 4: An ADR of Your Own
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Students write an ADR for a real decision in their own work, with context, alternatives and
-consequences, and a fitness function that would detect if the decision were violated.
+consequences, and a fitness function that would detect if the decision were violated. The step
+"Add a mechanical guard where you can" in `the AI coding agents case study
+<https://smarter.sh/case-studies/ai-coding-agents>`__ is a worked example: a test, proposed but
+not yet written, that would catch a second way of caching.
 
 **Turn in:** the ADR in the format of :doc:`/adr`.
 

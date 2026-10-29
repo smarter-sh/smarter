@@ -91,7 +91,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 2: APIs with Django REST Framework.** Serializers, views and viewsets,
        authentication and permissions. Smarter's :doc:`REST API </smarter-framework/smarter-api>`,
-       its API key authentication and its error format.
+       its API key authentication and its error format. Pre-reading: "Making the safe path the
+       default path" in the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__, on the permission-aware querysets that
+       views, brokers and the Django admin inherit.
    * - 4
      - 45
      - **Lab 2: Trace a request.** Send an ``apply`` request with ``curl`` and an API key, then
@@ -102,7 +105,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lecture 3: Pydantic and manifests.** Data validation, models, field validators, and why
        Smarter models every manifest and API contract with Pydantic
        (:doc:`ADR 031 </adr/031-pydantic-over-json>`). The
-       :doc:`broker model </smarter-framework/smarter-broker-model>`.
+       :doc:`broker model </smarter-framework/smarter-broker-model>`. "One object, two uses" in the
+       case study `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__
+       shows a view's response and the OpenAPI document built from the same Pydantic model.
    * - 6
      - 45
      - **Lecture 4: Models and migrations.** Fields, relationships, ``Meta`` options, and how
@@ -118,7 +123,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 5: Testing Django.** Django's test runner, Smarter's ``SmarterTestBase``, fixtures
        created once per class, cleaning up without transaction rollback, and running tests in the
-       container.
+       container. "Keeping the cloud out of the tests" in the case study `What Happens When You
+       Click Deploy <https://smarter.sh/case-studies/deploy>`__ shows why the containers' real
+       credentials make fakes and a guard necessary.
    * - 9
      - 45
      - **Lab 4: Test what you built.** Write tests for the new field: manifest validation, broker
@@ -127,7 +134,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 6: Beyond the request.** Management commands, Celery tasks and the beat
        scheduler, caching with ``@cache_results``, and signals. Reading
-       ``smarter/smarter/apps/account/management/commands/``.
+       ``smarter/smarter/apps/account/management/commands/``. "Waiting without blocking, and
+       without racing" in the deploy case study is a Celery task that reschedules itself instead
+       of sleeping, and survives a deploy and an undeploy that run at once.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone, create a branch, and write a plan of the

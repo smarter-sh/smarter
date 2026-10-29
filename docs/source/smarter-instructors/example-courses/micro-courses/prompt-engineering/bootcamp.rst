@@ -120,7 +120,11 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lecture 5: When prompts are not enough.** Prompt injection and jailbreaks, shown live.
        Why a rule in a system prompt is a request, while a
        :doc:`Guardrail </smarter-resources/smarter-guardrail>` is enforced. Adding the built-in
-       ``off_topic_input`` and ``pii_redaction_input`` guardrails.
+       ``off_topic_input`` and ``pii_redaction_input`` guardrails. Show it with "Lab 1: Talk to Sam"
+       in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__: a keyword guardrail stops an injection and
+       misses the same request respelled. Its first discussion question asks why a prompt obeyed 99
+       times in 100 isn't good enough.
    * - 9
      - 45
      - **Lab 4: Break it, then fix it.** Swap assistants with a neighbor, try to make theirs go off

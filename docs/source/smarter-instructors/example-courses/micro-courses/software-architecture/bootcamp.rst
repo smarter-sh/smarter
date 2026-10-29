@@ -111,7 +111,8 @@ The file references in the lectures are listed in full under `Principles in the 
        layered architecture; ports and adapters, in
        the infrastructure service layer that hides AWS behind
        ``infrastructure.dns``, ``.certificates``, ``.kubernetes`` and ``.email`` and swaps in an
-       in-memory provider for tests; the
+       in-memory provider for tests ("Keeping the cloud out of tests" in the case study
+       `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__); the
        :doc:`broker model </smarter-framework/smarter-broker-model>` and its registry of kinds;
        extension points for new plugin types, installable Extensions and new LLM providers. Data models: Django models
        for storage, Pydantic models for manifests and contracts
@@ -126,9 +127,11 @@ The file references in the lectures are listed in full under `Principles in the 
      - 45
      - **Lecture 5: Architecture for the cloud and for AI.** Infrastructure as code: Terraform for
        the AWS foundation, a Helm chart for the platform, and Smarter itself as a declarative
-       system that turns YAML manifests into DNS records, certificates and Kubernetes ingresses.
-       Horizontal scalability: stateless pods, Horizontal Pod Autoscalers, a shared Redis cache
-       (:doc:`ADR 018 </adr/018-caching>`) and Celery queues
+       system that turns YAML manifests into DNS records, certificates and Kubernetes ingresses,
+       followed in "One deploy, end to end" and "Costs and trade-offs" in `the deploy case study
+       <https://smarter.sh/case-studies/deploy>`__, with its question on a wildcard certificate
+       against one certificate per host. Horizontal scalability: stateless pods, Horizontal Pod
+       Autoscalers, a shared Redis cache (:doc:`ADR 018 </adr/018-caching>`) and Celery queues
        (:doc:`ADR 030 </adr/030-task-queues>`). Zero trust: every API call authenticated, every
        query filtered by owner, secrets encrypted at rest, network policies between pods,
        server-side request forgery blocked, and the model itself treated as untrusted, with
@@ -141,11 +144,15 @@ The file references in the lectures are listed in full under `Principles in the 
    * - 10
      - 45
      - **Lecture 6: Evolving architecture.** Technical debt, migrations, API versioning
-       (:doc:`ADR 023 </adr/023-api-versioning>`), feature flags
-       (:doc:`ADR 022 </adr/022-feature-flags>`), fitness functions in CI (tests, coverage and
-       pre-commit hooks), the audit journal as a record of change, and how architecture changes
-       when coding agents write much of the code and the conventions live in ``CLAUDE.md`` and
-       ``skills/``.
+       (:doc:`ADR 023 </adr/023-api-versioning>`, and "Breaking changes and versions" in the case
+       study `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__),
+       feature flags (:doc:`ADR 022 </adr/022-feature-flags>`), fitness functions in CI (tests,
+       coverage and pre-commit hooks), the audit journal as a record of change, and how
+       architecture changes when coding agents write much of the code and the conventions live in
+       ``CLAUDE.md`` and ``skills/``. Pre-reading: "Five success factors", "The antipattern" and
+       "Fixing it" in the case study `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__, whose "Lab 2: Measure the series"
+       measures a spreading pattern across release tags with git.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and its scope.

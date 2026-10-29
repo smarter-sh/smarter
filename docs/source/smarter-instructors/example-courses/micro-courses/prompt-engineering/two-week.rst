@@ -105,7 +105,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **When prompts are not enough.** Prompt injection and jailbreaks. Why a
        :doc:`Guardrail </smarter-resources/smarter-guardrail>` is enforced while a system prompt
        is only a request. Branding with :doc:`styles </smarter-resources/llmclient/styles>`, and
-       deploying an assistant.
+       deploying an assistant. Show it with "Lab 1: Talk to Sam" in the case study `Guardrails: Can
+       You Trust the Model? <https://smarter.sh/case-studies/guardrails>`__: a keyword guardrail
+       stops an injection and misses the same request respelled. Its first discussion question asks
+       why a prompt obeyed 99 times in 100 isn't good enough.
    * - 2
      - Live session 2 (90 min)
      - Capstone presentations (about 5 minutes each, with 2 minutes of questions), then a

@@ -84,13 +84,18 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        `smarter-sh/example-manifests <https://github.com/smarter-sh/example-manifests>`__.
    * - 1
      - Live session 1 (90 min)
-     - Teams attack an assistant with a rule in its system prompt, then with a guardrail. Debrief
-       on what worked. Start Assignment 1.
+     - Teams attack an assistant with a rule in its system prompt, then with a guardrail, starting
+       from "Lab 1: Talk to Sam" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__. Debrief on what worked. Start
+       Assignment 1.
    * - 2
      - Lecture 4 (30 min)
      - **Money and access.** :doc:`Budgets </smarter-resources/smarter-budget>`,
        :doc:`cost accounting </smarter-platform/cost-accounting>`, accounts, roles, API keys and
-       :doc:`Secrets </smarter-resources/smarter-secret>`.
+       :doc:`Secrets </smarter-resources/smarter-secret>`. Pre-reading: "Governing it with git" in
+       the case study `Stackademy Online Coding Academy
+       <https://smarter.sh/case-studies/stackademy>`__, on history, review and undo for an
+       assistant's manifests, and on why only a platform administrator may apply a Budget.
    * - 2
      - Lecture 5 (30 min)
      - **Audit and accountability.** The :doc:`journal </smarter-platform/smarter-journal>` and

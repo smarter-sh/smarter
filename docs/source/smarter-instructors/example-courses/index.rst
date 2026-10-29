@@ -24,7 +24,9 @@ The course designs come in two kinds:
   three-day classroom course or a six-week online course.
 
 The :doc:`Smarter Instructor Guide </smarter-instructor>` explains how to get Smarter running and
-how to set it up for a class before you teach any of them.
+how to set it up for a class before you teach any of them. Many of the courses draw on the
+`Smarter case studies <https://smarter.sh/case-studies>`__, teaching cases with labs and
+discussion questions, built on projects that run on Smarter today.
 
 .. toctree::
    :maxdepth: 1

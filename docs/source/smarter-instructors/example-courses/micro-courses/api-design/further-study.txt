@@ -21,4 +21,8 @@
   <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__, on applying, prompting and
   deploying a chatbot from its manifest; `Django and httpx: An LLM Proxy That Keeps Provider API
   Keys Away From Callers <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, on
-  keeping the credential that spends money at a provider in one place.
+  keeping the credential that spends money at a provider in one place. The case studies `One
+  Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__, on one generated
+  OpenAPI document shared by six clients in four languages, and `One Platform, Many Tenants
+  <https://smarter.sh/case-studies/multi-tenancy>`__, on object-level authorization, CORS and API
+  keys, turn these posts into lessons with labs and discussion questions.

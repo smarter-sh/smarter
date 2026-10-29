@@ -94,7 +94,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lab 2: Blue team.** Teams add the built-in guardrails ``prompt_injection_llm_judge_input``,
        ``secrets_leak_output`` and ``script_injection_output`` to their LLMClient, and the
-       attackers try again. Produces Assignment 2.
+       attackers try again. "Lab 1: Talk to Sam" in the case study `Guardrails: Can You Trust
+       the Model? <https://smarter.sh/case-studies/guardrails>`__ shows the same guardrails on a
+       live assistant, and its lab "Add a phrase" asks whether a keyword list is a race that
+       defenders can win. Produces Assignment 2.
    * - 5
      - 45
      - **Lecture 3: Secrets.** How Smarter stores provider and plugin credentials as encrypted
@@ -106,7 +109,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lecture 4: Outbound requests and SSRF.** Server-side request forgery, cloud metadata
        addresses, DNS rebinding, and a reading of
        ``smarter/smarter/apps/llmtool/plugin/safe_http.py``: public https only, fresh DNS resolution,
-       and why that check must never be cached.
+       and why that check must never be cached. Pre-reading: "URLs a model chooses" in
+       `the guardrails case study <https://smarter.sh/case-studies/guardrails>`__, and its
+       discussion question on why ``safe_http`` documents the DNS rebinding window instead of
+       hiding it.
    * - 7
      - 45
      - **Lab 3: Map the defenses.** In groups, map each Smarter defense to a category of the two

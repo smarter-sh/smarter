@@ -70,7 +70,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 2 (30 min)
      - **Authentication and errors.** API keys, tokens and sessions, Smarter's
-       :doc:`error format </smarter-framework/smarter-api/error-handling>`, and RFC 9457.
+       :doc:`error format </smarter-framework/smarter-api/error-handling>`, and RFC 9457. The
+       section "API keys: stored as digests, named by a UUID" of the case study `One Platform,
+       Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__ explains why an API key is
+       hashed differently from a password.
    * - 1
      - Lecture 3 (30 min)
      - **Writing a client.** Configuration, retries, timeouts, pagination and typed responses, and
@@ -82,11 +85,15 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4 (30 min)
      - **Describing an API.** OpenAPI and Swagger, schemas, and generating clients and
-       documentation.
+       documentation. Students work through "Lab 2: Read the contract yourself" in the case
+       study `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__, which
+       reads Smarter's OpenAPI document with ``curl`` and Python and generates a typed client
+       from it.
    * - 2
      - Lecture 5 (30 min)
      - **Evolving an API.** Versioning strategies, deprecation, breaking changes, and
-       :doc:`ADR 023 </adr/023-api-versioning>`.
+       :doc:`ADR 023 </adr/023-api-versioning>`. Pre-reading: "A change, end to end" and
+       "Breaking changes, and versions" in the same case study.
    * - 2
      - Lecture 6 (30 min)
      - **Operating an API.** Rate limiting, and why Smarter relies on Budgets and middleware
