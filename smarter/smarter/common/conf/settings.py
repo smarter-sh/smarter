@@ -195,18 +195,24 @@ class Settings(BaseSettings):
         # look like an error. READY is logged by one uvicorn worker per server, and
         # NOT_READY by every process.
         prefix = SmarterFormattedText.text(__name__, SmarterFormattedText.LIGHT_GRAY)
-        msg = f"{prefix} Pydantic version: {pydantic_version} pydantic_settings.BaseSettings."
+        msg = f"{prefix} Pydantic version: {pydantic_version}"
         if not self.ready():
             logger.warning(
-                "%s Settings are %s.", msg, SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED)
+                "%s smarter_settings are %s.",
+                msg,
+                SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED),
             )
         elif is_first_worker("settings-ready"):
             logger.warning(
-                "%s Settings are %s.", msg, SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)
+                "%s smarter_settings are %s.",
+                msg,
+                SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
             )
         else:
             logger.debug(
-                "%s Settings are %s.", msg, SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)
+                "%s smarter_settings are %s.",
+                msg,
+                SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
             )
 
     init_info: Optional[str] = Field(
