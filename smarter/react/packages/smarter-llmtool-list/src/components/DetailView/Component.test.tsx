@@ -45,8 +45,8 @@ describe("DetailView", () => {
     expect(screen.getByText("Not ready")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "SQL query" })).toBeInTheDocument();
     expect(screen.getByText("example_sql_connection")).toBeInTheDocument();
-    expect(screen.getByText("SELECT 1")).toBeInTheDocument();
-    expect(screen.getByText(/"additionalProperties": false/)).toBeInTheDocument();
+    expect(screen.getByLabelText("SQL")).toHaveTextContent("SELECT 1");
+    expect(screen.getAllByLabelText("JSON")[0]).toHaveTextContent(/"additionalProperties": false/);
   });
 
   it("shows an API plugin's request", () => {

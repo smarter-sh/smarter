@@ -230,6 +230,8 @@ gettext("Yes");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("No");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx
+gettext("Code");
+// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx
 gettext("No description.");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx
 gettext("Metadata");

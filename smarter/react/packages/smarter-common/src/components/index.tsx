@@ -63,6 +63,7 @@ export type {
   DetailFieldProps,
   DetailOverviewProps,
   DetailSectionProps,
+  DetailTone,
   DetailValueType,
   ResourceDetailData,
   ResourceDetailProps,

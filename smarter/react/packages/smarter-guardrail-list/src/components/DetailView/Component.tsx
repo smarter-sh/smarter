@@ -67,7 +67,7 @@ function DetailView({ sessionContext, object: guardrail, onRequery, filtering }:
       <DetailSection title={gettext("Detection")} icon="scan-barcode">
         <DetailField label={gettext("Strategy")} value={guardrail.strategy} />
         <DetailField label={gettext("Threshold")} value={guardrail.threshold} type="number" />
-        <DetailField label={gettext("Pattern")} value={guardrail.pattern} type="code" wide />
+        <DetailField label={gettext("Pattern")} value={guardrail.pattern} type="source" wide />
         <DetailField label={gettext("Configuration")} wide>
           {guardrail.config && Object.keys(guardrail.config).length ? (
             <DetailValue value={guardrail.config} type="json" />

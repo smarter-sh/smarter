@@ -80,13 +80,7 @@ function SqlDataSection({ data }: { data: SqlData }) {
         help={gettext("The most rows that the query returns.")}
       />
       <DetailField label={gettext("Description")} value={data.description} wide />
-      <DetailField label={gettext("Query")} wide>
-        {data.sqlQuery ? (
-          <pre className="smarter-detail-json">{formatSql(data.sqlQuery)}</pre>
-        ) : (
-          <DetailValue value={null} />
-        )}
-      </DetailField>
+      <DetailField label={gettext("Query")} value={data.sqlQuery ? formatSql(data.sqlQuery) : null} type="sql" wide />
       <JsonField
         label={gettext("Parameters")}
         value={data.parameters}

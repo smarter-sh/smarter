@@ -8,7 +8,7 @@
  *   </DetailOverview>
  *   <DetailSection title={gettext("Detection")} icon="scan-barcode">
  *     <DetailField label={gettext("Strategy")} value={guardrail.strategy} />
- *     <DetailField label={gettext("Pattern")} value={guardrail.pattern} type="code" wide />
+ *     <DetailField label={gettext("Pattern")} value={guardrail.pattern} type="source" wide />
  *   </DetailSection>
  *   <ResourceMetadataSection resource={guardrail} filtering={filtering} />
  *
@@ -25,14 +25,25 @@ import type { Annotations, Filtering, Tags, UserProfile } from "../../lib/Types"
 import { formatDateTime } from "../../lib/formatDateTime";
 import { gettext } from "../../lib/i18n";
 import { AnnotationChips, TagChips } from "../MetadataChips";
+import { CodeBlock, highlightCss, highlightJson, highlightSql, plainLines } from "./code";
 import { highlightYaml } from "./yaml";
 
 /** The reference of formatDateTime()'s relative format, which says how long ago a date was. */
 const EPOCH = new Date(0).toISOString();
 
-/** How a DetailField formats its value. */
+/**
+ * How a DetailField formats its value. code is a short value inline, e.g. a name; json, yaml, css, sql and source are
+ * blocks of source code, highlighted but for source, e.g. a regular expression or a shell command. sql is already
+ * formatted, e.g. by a SqlPlugin's formatSql().
+ */
 export type DetailValueType =
-  "text" | "code" | "url" | "dateTime" | "number" | "bool" | "json" | "yaml" | "list" | "css";
+  "text" | "code" | "url" | "dateTime" | "number" | "bool" | "json" | "yaml" | "css" | "sql" | "source" | "list";
+
+/** The class of a code block in a field, which keeps it shorter than the Manifest tab's. */
+const CODE_FIELD = "smarter-code-block-field";
+
+/** The color of a boolean's "yes": green, or amber or red for a flag that warns, e.g. Suspended. */
+export type DetailTone = "success" | "warning" | "danger";
 
 /** The width that Prettier formats to, its printWidth. */
 const PRINT_WIDTH = 80;
@@ -148,17 +159,24 @@ export function NoValue() {
 }
 
 /** A value, formatted by its type. */
-export function DetailValue({ value, type = "text" }: { value: unknown; type?: DetailValueType }) {
+export function DetailValue({
+  value,
+  type = "text",
+  tone = "success",
+}: {
+  value: unknown;
+  type?: DetailValueType;
+  tone?: DetailTone;
+}) {
   if (type === "bool") {
     // a boolean is never "empty": false is a value.
     if (value === null || value === undefined) return <NoValue />;
-    return value ? (
-      <span className="badge badge-light-success fw-semibold">
-        <i className="ki-outline ki-check fs-7 text-success me-1" aria-hidden="true" />
-        {gettext("Yes")}
+    // a dot and a word, rather than a badge: a section of flags stays quiet, and a "yes" stands out.
+    return (
+      <span className={`smarter-detail-bool smarter-detail-bool-${value ? `yes smarter-detail-tone-${tone}` : "no"}`}>
+        <span className="smarter-detail-bool-dot" aria-hidden="true" />
+        {value ? gettext("Yes") : gettext("No")}
       </span>
-    ) : (
-      <span className="badge badge-light fw-semibold text-gray-700">{gettext("No")}</span>
     );
   }
   if (isEmpty(value)) return <NoValue />;
@@ -192,37 +210,34 @@ export function DetailValue({ value, type = "text" }: { value: unknown; type?: D
         try {
           json = prettyJson(JSON.parse(value));
         } catch {
-          json = value;
+          return <CodeBlock lines={plainLines(value)} label="JSON" className={CODE_FIELD} />;
         }
       } else {
         json = prettyJson(value);
       }
-      return <pre className="smarter-detail-json">{json}</pre>;
+      return <CodeBlock lines={highlightJson(json)} label="JSON" className={CODE_FIELD} />;
     }
     case "yaml":
-      return (
-        <pre className="smarter-detail-json smarter-detail-yaml">
-          {highlightYaml(asYaml(value)).map((tokens, index) => (
-            <span key={index} className="d-block">
-              {tokens}
-            </span>
-          ))}
-        </pre>
-      );
+      return <CodeBlock lines={highlightYaml(asYaml(value))} label="YAML" className={CODE_FIELD} />;
     case "css": {
       let styles: unknown = value;
       if (typeof value === "string") {
         try {
           styles = JSON.parse(value);
         } catch {
-          return <pre className="smarter-detail-json">{value}</pre>;
+          return <CodeBlock lines={plainLines(value)} label="CSS" className={CODE_FIELD} />;
         }
       }
       if (typeof styles !== "object" || styles === null || Array.isArray(styles)) {
-        return <pre className="smarter-detail-json">{asText(value)}</pre>;
+        return <CodeBlock lines={plainLines(asText(value))} label="CSS" className={CODE_FIELD} />;
       }
-      return <pre className="smarter-detail-json">{styleObjectAsCss(styles as Record<string, unknown>)}</pre>;
+      const css = styleObjectAsCss(styles as Record<string, unknown>);
+      return <CodeBlock lines={highlightCss(css)} label="CSS" className={CODE_FIELD} />;
     }
+    case "sql":
+      return <CodeBlock lines={highlightSql(asText(value))} label="SQL" className={CODE_FIELD} />;
+    case "source":
+      return <CodeBlock lines={plainLines(asText(value))} label={gettext("Code")} className={CODE_FIELD} />;
     case "list": {
       const items = Array.isArray(value) ? value : [value];
       return (
@@ -247,6 +262,8 @@ export interface DetailFieldProps {
   value?: unknown;
   /** How to format the value. Defaults to text. */
   type?: DetailValueType;
+  /** The color of a bool's "yes": success by default, warning or danger for a flag that warns. */
+  tone?: DetailTone;
   /** A short explanation of the field, shown by an icon beside its label. */
   help?: string;
   /** Whether the field spans the whole width of its section, e.g. for a long text or a list. */
@@ -256,7 +273,7 @@ export interface DetailFieldProps {
 }
 
 /** One labeled value of a DetailSection. */
-export function DetailField({ label, value, type, help, wide = false, children }: DetailFieldProps) {
+export function DetailField({ label, value, type, tone, help, wide = false, children }: DetailFieldProps) {
   return (
     <div className={`smarter-detail-field${wide ? " smarter-detail-field-wide" : ""}`}>
       <dt>
@@ -268,7 +285,7 @@ export function DetailField({ label, value, type, help, wide = false, children }
           </span>
         )}
       </dt>
-      <dd>{children ?? <DetailValue value={value} type={type} />}</dd>
+      <dd>{children ?? <DetailValue value={value} type={type} tone={tone} />}</dd>
     </div>
   );
 }
@@ -287,7 +304,11 @@ export function DetailSection({ title, icon, children }: DetailSectionProps) {
   return (
     <section className="smarter-detail-section">
       <h3 className="smarter-detail-section-title">
-        {icon && <i className={`ki-outline ki-${icon} fs-5`} aria-hidden="true" />}
+        {icon && (
+          <span className="smarter-detail-section-icon" aria-hidden="true">
+            <i className={`ki-outline ki-${icon}`} />
+          </span>
+        )}
         {title}
       </h3>
       <dl className="smarter-detail-grid">{children}</dl>

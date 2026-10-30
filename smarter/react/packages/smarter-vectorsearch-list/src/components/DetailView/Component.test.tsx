@@ -41,7 +41,7 @@ describe("DetailView", () => {
     expect(screen.getByText("Maximal marginal relevance (MMR)")).toBeInTheDocument();
     expect(screen.getByText("20")).toBeInTheDocument();
     expect(screen.getByText("0.5")).toBeInTheDocument();
-    expect(screen.getByText(/"source": "faq"/)).toBeInTheDocument();
+    expect(screen.getByLabelText("JSON")).toHaveTextContent(/"source": "faq"/);
     expect(screen.getByText("vectorstore_credentials")).toBeInTheDocument();
   });
 

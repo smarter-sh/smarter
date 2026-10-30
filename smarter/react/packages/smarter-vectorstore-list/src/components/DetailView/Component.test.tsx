@@ -41,7 +41,7 @@ describe("DetailView", () => {
     expect(screen.getAllByText("Failed").length).toBeGreaterThan(0);
     expect(screen.getByText("Quota exceeded.")).toBeInTheDocument();
     expect(screen.getByText("pinecone_api_key")).toBeInTheDocument();
-    expect(screen.getByText(/"namespaces": 1/)).toBeInTheDocument();
+    expect(screen.getByLabelText("JSON")).toHaveTextContent(/"namespaces": 1/);
   });
 
   it("narrows the list by a tag that is clicked", async () => {
