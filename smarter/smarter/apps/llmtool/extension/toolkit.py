@@ -25,11 +25,11 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Union
 
-from django.db import connections
 from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
 
 from smarter.lib import json, logging
 from smarter.lib.cache.tool_results import cached_tool_call
+from smarter.lib.django.connections import close_thread_connections
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
@@ -293,7 +293,7 @@ class ExtensionToolkit:
                 return function.tool().call(validated, context)
             finally:
                 # the tool runs in its own thread, which has its own database connection.
-                connections.close_all()
+                close_thread_connections()
 
         executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"extension-{slug}")
         future = executor.submit(run_tool)
