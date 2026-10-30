@@ -1,0 +1,127 @@
+###############################################################################
+# Smarter Slack bot Deployment
+#
+# A single pod that answers questions in a Slack workspace with a deployed Smarter
+# LLMClient (values.agentUrl). See files/bot.py.
+#
+# - Socket Mode: the bot opens its own connection to Slack, so nothing connects to
+#   it. There is no Service, Ingress, DNS record or certificate.
+# - One replica, replaced with Recreate: the bot keeps each Slack thread's chat
+#   session in memory, and two pods would each receive part of the thread's messages.
+# - Runs on a stock Python image, as a non-root user with a read-only root file
+#   system. It installs Slack Bolt into an emptyDir when it starts, and runs the
+#   program from the ConfigMap in configmap.yaml.
+# - Receives only the two Slack tokens, from the smarter chart's environment
+#   Secret, <global.appName>-env, and mounts no Kubernetes service account token.
+#
+# Read its log with:
+#
+#   kubectl logs -n <namespace> deploy/smarter-slack-bot
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+###############################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.global.appName }}-slack-bot"
+  namespace: "{{ .Release.Namespace }}"
+  annotations:
+    meta.helm.sh/release-name: "{{ .Release.Name }}"
+    meta.helm.sh/release-namespace: "{{ .Release.Namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-slack-bot"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ .Values.global.appName }}-slack-bot"
+  template:
+    metadata:
+      annotations:
+        checksum/code: "{{ .Files.Get "files/bot.py" | sha256sum }}"
+      labels:
+        app.kubernetes.io/name: "{{ .Values.global.appName }}-slack-bot"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+        meta.helm.sh/application-version: "{{ .Chart.Version }}"
+    spec:
+      {{- with .Values.global.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: code
+          configMap:
+            name: "{{ .Values.global.appName }}-slack-bot"
+        - name: deps
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+      containers:
+        - name: slack-bot
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+                set -e
+                pip install --no-cache-dir --disable-pip-version-check --quiet \
+                  --target /opt/deps "slack_bolt=={{ .Values.slackBoltVersion }}"
+                exec python -u /app/bot.py
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: code
+              mountPath: /app
+              readOnly: true
+            - name: deps
+              mountPath: /opt/deps
+            - name: tmp
+              mountPath: /tmp
+          env:
+            - name: HOME
+              value: /tmp
+            - name: PYTHONPATH
+              value: /opt/deps
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: SMARTER_SLACK_BOT_AGENT_URL
+              value: {{ required "slackBot.agentUrl is required" .Values.agentUrl | quote }}
+            - name: SMARTER_SLACK_BOT_TIMEOUT
+              value: {{ .Values.timeout | quote }}
+            - name: SMARTER_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.global.appName }}-env"
+                  key: SMARTER_SLACK_BOT_TOKEN
+            - name: SMARTER_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.global.appName }}-env"
+                  key: SMARTER_SLACK_APP_TOKEN

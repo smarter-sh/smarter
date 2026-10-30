@@ -124,6 +124,9 @@ env:
   SMARTER_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS: "^/dashboard/account/password-reset-link/[^/]+/[^/]+/$,^/api(/.*)?$,^/admin(/.*)?$,^/plugin(/.*)?$,^/docs/manifest(/.*)?$,^/docs/json-schema(/.*)?$,.*stackademy.*,^/\\.well-known/acme-challenge(/.*)?$"
   SMARTER_SETTINGS_OUTPUT: "false"
+  # The Slack app's tokens, which only the optional Slack bot reads (slackBot.enabled).
+  SMARTER_SLACK_APP_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SLACK_BOT_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SMTP_FROM_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SMTP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SMTP_SENDER: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -336,6 +339,23 @@ databaseScheduledBackup:
   # serves static assets is often public-read, so don't rely on the default there.
   s3Uri: ""
   awsCliVersion: ""      # the AWS CLI release to install. Empty: the version pinned in configmap-debian-setup.yaml
+
+# -----------------------------------------------------------------------------
+# Optional Slack bot (the slack-bot subchart, helm/charts/slack-bot)
+# -----------------------------------------------------------------------------
+# A single pod that answers questions in a Slack workspace with a deployed
+# LLMClient, through its chat api. It connects to Slack with Socket Mode, so it
+# needs no Ingress. It reads env.SMARTER_SLACK_BOT_TOKEN and
+# env.SMARTER_SLACK_APP_TOKEN. Enable it in one environment only: two bots with
+# the same Slack app would each receive part of the messages. The deploy workflow
+# enables it when the GitHub environment's secrets SLACK_BOT_TOKEN and
+# SLACK_APP_TOKEN and its variable SLACK_BOT_AGENT_URL are set.
+# See helm/charts/slack-bot/values.yaml for the other values.
+slackBot:
+  enabled: false
+  # The deployed LLMClient that answers, e.g.
+  # https://smarter-developer.<account-number>.api.<root-domain>/. Required when enabled.
+  agentUrl: ""
 
 externalDatabase:
   host: ""        # Will use .Values.env.SMARTER_MYSQL_HOST if empty
