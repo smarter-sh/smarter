@@ -16,7 +16,9 @@
  * and Enter is pressed. A click on a row's links, buttons or chips does what they do instead. The detail's tabs are
  * the list's DetailView, the resource's manifest, the hierarchy of the resources that it uses, and the resources
  * that use it. Its Previous and Next buttons, and the arrow keys, browse the list from the detail, from one page to
- * the next. The detail closes when the tab, the search, the sort or what narrows the list changes.
+ * the next. The detail closes when the tab, the search, the sort or what narrows the list changes. The page's url
+ * names the open detail, ?detail=<record locator>, and a page opened with one, e.g. from a result of the
+ * dashboard's search, opens that resource's detail once its tab loads.
  *
  * Features:
  * - Loads owned and shared llmclient lists from the backend using session context.
@@ -79,6 +81,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
 
 import type {
+  DetailObject,
   DetailViewBaseProps,
   Filtering,
   ListViewBaseProps,
@@ -170,6 +173,17 @@ const ROW_CONTROLS =
 /** The rows of a list view's table that are objects: not its loading skeleton's ghost rows. */
 const OBJECT_ROWS = "tbody > tr:not(.ghost)";
 
+/** The record locator of an object's detail, e.g. guardrail-rMTAwx: the last part of its detailUrl, or "". */
+export function detailLocator(object: unknown): string {
+  const url = (object as DetailObject | null | undefined)?.detailUrl ?? "";
+  return url.split("/").filter(Boolean).pop() ?? "";
+}
+
+/** What a list shows, as a key: its search, its sort, and what narrows it. A detail is open for one of these. */
+function shownOf(search: string, ordering: string, narrowing: Narrowing): string {
+  return JSON.stringify([search, ordering, narrowing]);
+}
+
 /** How long to wait after the last keystroke of a search before it is requested, in milliseconds. */
 export const SEARCH_DELAY_MS = 300;
 
@@ -228,6 +242,12 @@ export default function TabbedListView<TObject>({
   const [search, setSearch] = useState(() => searchInput.trim());
   // the column that sorts both tabs, as the list api names it, e.g. "-name". Empty for its default order.
   const [ordering, setOrdering] = useState("");
+  // the detail that the page's url asks for, ?detail=<record locator>, e.g. from a result of the dashboard's
+  // search. It opens once a tab that has the resource loads, and only while the list shows what it did then.
+  const [deepLink, setDeepLink] = useState(() => {
+    const locator = valuesOfPageUrl("detail")[0];
+    return locator ? { locator, shown: shownOf(searchInput.trim(), "", { filter, tags, annotations }) } : null;
+  });
 
   // only the latest request of a tab is shown, when several are in flight, e.g. when the user
   // pages quickly, or a requery and a page change overlap.
@@ -242,6 +262,7 @@ export default function TabbedListView<TObject>({
   const [selection, setSelection] = useState<Selection | null>(null);
   const setActiveTab = (tab: TabKey) => {
     setSelection(null);
+    setDeepLink(null);
     _setActiveTab(tab);
   };
   // the list view's table, whose rows open their details.
@@ -407,8 +428,17 @@ export default function TabbedListView<TObject>({
   }, [loadTab, tabKeys, pages, search, ordering, narrowing]);
 
   // the detail that is open. It closes when what the list shows changes: its search, its sort, or what narrows it.
-  const shown = JSON.stringify([search, ordering, narrowing]);
-  const current = selection && selection.shown === shown ? selection : null;
+  const shown = shownOf(search, ordering, narrowing);
+  // the detail of the page's url, until a row is chosen: the row of any tab whose detail is the url's.
+  const linked: Selection | null = (() => {
+    if (selection || !deepLink || deepLink.shown !== shown) return null;
+    for (const key of tabKeys) {
+      const index = lists[key].objects.findIndex((object) => detailLocator(object) === deepLink.locator);
+      if (index >= 0) return { tab: key, index, shown };
+    }
+    return null;
+  })();
+  const current = selection && selection.shown === shown ? selection : linked;
   const selectedList = current ? lists[current.tab] : null;
   // the detail that moved to another page shows the row that it left, until that page loads, and then that page's
   // first or last row. A detail whose row is gone, e.g. deleted from the detail, shows the page's last row, and
@@ -426,6 +456,14 @@ export default function TabbedListView<TObject>({
     if (current.pending && pageLoaded) return current.pending === "last" ? count - 1 : 0;
     return Math.min(current.index, count - 1);
   })();
+
+  // the page's url names the detail that is open, ?detail=<record locator>, so that it can be bookmarked, shared,
+  // and opened again on a reload. It keeps the url's detail until that resource's tab has loaded.
+  const openLocator = selectedList && selectedIndex !== null ? detailLocator(selectedList.objects[selectedIndex]) : "";
+  const awaitingLink = !current && !!deepLink && deepLink.shown === shown;
+  useEffect(() => {
+    if (!awaitingLink) setPageUrlValues("detail", openLocator ? [openLocator] : []);
+  }, [openLocator, awaitingLink]);
 
   // each row of the list view can have the focus, and the row whose detail is open stands out. The list view
   // renders its rows a few at a time, so this follows its table as it changes.
@@ -544,7 +582,10 @@ export default function TabbedListView<TObject>({
         onPrevious={onPrevious}
         onNext={onNext}
         isNavigating={isNavigating}
-        onClose={() => setSelection(null)}
+        onClose={() => {
+          setSelection(null);
+          setDeepLink(null);
+        }}
       />
     );
   })();

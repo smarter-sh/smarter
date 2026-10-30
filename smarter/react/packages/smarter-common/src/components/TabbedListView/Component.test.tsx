@@ -700,6 +700,42 @@ describe("TabbedListView's resource detail", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
+  it("opens the detail that the page's url names, and keeps the url in step with the open detail", async () => {
+    server.use(...listHandlers(), detailHandler());
+    window.history.replaceState(null, "", "/examples/?detail=example-r2");
+    const user = setup();
+    expect(await dialog("second_example")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    expect(await dialog("first_example")).toBeInTheDocument();
+    await waitFor(() => expect(window.location.search).toBe("?detail=example-r1"));
+
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(window.location.search).toBe(""));
+  });
+
+  it("opens the url's detail from the tab that has it, and nothing for a resource that no tab has", async () => {
+    server.use(
+      ...listHandlers(ownedExamples, [
+        { id: 3, name: "shared_example", detailUrl: "/dashboard/api/resource/Example/example-r3/" },
+      ]),
+      detailHandler(),
+    );
+    window.history.replaceState(null, "", "/examples/?detail=example-r3");
+    setup();
+    expect(await dialog("shared_example")).toBeInTheDocument();
+  });
+
+  it("keeps the url's detail while no tab has it", async () => {
+    server.use(...listHandlers(), detailHandler());
+    window.history.replaceState(null, "", "/examples/?detail=example-r99");
+    setup();
+    await screen.findByText("first_example");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(window.location.search).toBe("?detail=example-r99");
+  });
+
   it("leaves a row's text selected rather than open its detail", async () => {
     server.use(...listHandlers(), detailHandler());
     const user = setup();

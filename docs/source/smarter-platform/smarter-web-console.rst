@@ -32,7 +32,9 @@ text to find resources whose name or description contains it, or that have that 
 ``tag:production`` to find the resources tagged ``production``; or an
 :ref:`annotation selector <sam-annotations>` requirement, such as ``acme.com/crm-account-id=A-10042``
 or ``!acme.com/archived``. The results are grouped by kind, a few of each, and each group links to its
-list page, narrowed by the same search.
+list page, narrowed by the same search. A result opens the resource's detail, described below, in its
+list page. A list page's address names the detail that is open, as ``?detail=`` and the resource's record
+locator, so a detail can be bookmarked or shared too.
 
 Below the console's title, on every page, a **Did you know?** note shows a fact of the day about The
 Smarter Project, with a link to learn more. Everyone sees the same fact from midnight to midnight UTC.

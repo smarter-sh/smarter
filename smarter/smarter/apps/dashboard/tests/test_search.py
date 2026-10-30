@@ -13,6 +13,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.search import (
     MAX_RESULTS_PER_LIST,
     GlobalSearchResponse,
+    detail_page_url,
     global_search,
     list_url,
     parse_query,
@@ -94,7 +95,10 @@ class TestGlobalSearch(TestAccountMixin):
         self.assertEqual((response.mode, group.count), ("text", MAX_RESULTS_PER_LIST + 1))
         self.assertEqual(len(group.results), MAX_RESULTS_PER_LIST)
         self.assertEqual(group.url, f"/guardrail/?search=test_search_{self.hash_suffix}")
-        self.assertTrue(all(result.url.startswith("/guardrail/guardrails/") for result in group.results))
+        # each result opens its detail in the Guardrails list, narrowed by its name.
+        for result in group.results:
+            guardrail = next(g for g in self.guardrails if g.name == result.name)
+            self.assertEqual(result.url, f"/guardrail/?search={result.name}&detail={guardrail.record_locator}")
         self.assertEqual(response.count, sum(group.count for group in response.groups))
 
     def test_text_matches_a_tag(self):
@@ -137,6 +141,14 @@ class TestGlobalSearch(TestAccountMixin):
         with patch.object(broken.view_class, "get_queryset", side_effect=RuntimeError("broken")):
             response = global_search(self.admin_user, f"tag:{self.tag}", entries=(broken, guardrails))
         self.assertEqual([group.label for group in response.groups], ["Guardrails"])
+
+    def test_detail_page_url(self):
+        """A result's list, narrowed by its name, with its detail open, when the row has a detail."""
+        entry = next(entry for entry in listview_registry() if entry.page_url == "/guardrail/")
+        row = {"name": "pii guard", "detailUrl": "/dashboard/api/resource/Guardrail/guardrail-rMQx/"}
+        self.assertEqual(detail_page_url(entry, row), "/guardrail/?search=pii+guard&detail=guardrail-rMQx")
+        self.assertIsNone(detail_page_url(entry, {"name": "a", "detailUrl": None}))
+        self.assertEqual(result_of({"name": "a", "manifestUrl": "/b/"}, "/list/", "/detail/").url, "/detail/")
 
     def test_result_of(self):
         """A result links to the serializer's manifest url, in either case, or else to its list."""
