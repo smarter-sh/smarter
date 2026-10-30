@@ -84,6 +84,7 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
+from smarter.lib.django.http import error_handlers
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 from smarter.lib.drf import urls as drf_urls
 from smarter.lib.drf.const import namespace as drf_namespace
@@ -308,4 +309,10 @@ if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_setting
     )
 
 
-__all__ = ["urlpatterns"]
+# Error pages that close their database connections. See smarter.lib.django.http.error_handlers.
+handler400 = error_handlers.bad_request
+handler403 = error_handlers.permission_denied
+handler404 = error_handlers.page_not_found
+handler500 = error_handlers.server_error
+
+__all__ = ["urlpatterns", "handler400", "handler403", "handler404", "handler500"]
