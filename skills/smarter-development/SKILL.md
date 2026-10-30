@@ -252,6 +252,7 @@ reference implementations.
 | Logger calls: prefixes, levels, waffle switches, secrets         | `smarter-logging`                      |
 | Reviewing a log: init job, backups, workers, dev server          | `smarter-log-review`                   |
 | Reviewing a deployed environment's app, worker and beat pod logs | `smarter-pod-log-review`               |
+| A failed GitHub Actions run, job or shard (a run url)            | `smarter-ci-failures`                  |
 | kubectl against a deployed environment: pods, logs, events       | `smarter-kubectl`                      |
 | Url patterns, url names, `reverse()`, `*_url` properties         | `smarter-url-names`                    |
 | Text the web console shows, .po catalogs, adding a language      | `smarter-translations`                 |
