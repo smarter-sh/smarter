@@ -4,7 +4,7 @@
  *
  * Central type definitions for the LLMTool List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * llmtool, and API response layers. It provides strong typing for user, llmtool,
  * llmtool, API response, and session context data structures.
  *
@@ -76,6 +76,8 @@ export type LLMTool = {
   createdAt: string;
   updatedAt: string;
   manifestUrl: string;
+  /** The url of the plugin's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   name: string;
   kind: string;
@@ -96,9 +98,9 @@ export type LLMTool = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface LLMToolCardViewProps {
+export interface LLMToolDetailViewProps {
   sessionContext: SessionContext;
-  objects: LLMTool[];
+  object: LLMTool;
   onRequery: () => void;
   filtering?: Filtering;
 }
@@ -123,10 +125,11 @@ export interface LLMToolListViewProps {
 export type { ExtensionListItem as Extension, ExtensionListPage } from "@/contract.gen";
 import type { ExtensionListItem as Extension } from "@/contract.gen";
 
-export interface ExtensionCardViewProps {
+export interface ExtensionDetailViewProps {
   sessionContext: SessionContext;
-  objects: Extension[];
+  object: Extension;
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface ExtensionListViewProps {

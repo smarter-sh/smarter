@@ -1,0 +1,503 @@
+/*
+ * The resource detail dialog of the web console's lists. It is styled with the Keen theme's Bootstrap variables,
+ * so that it follows the console's light and dark modes.
+ */
+
+/* ---- dialog ---------------------------------------------------------------------------------------------------- */
+
+.smarter-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1055;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6vh 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  animation: smarter-detail-fade 120ms ease-out;
+}
+
+.smarter-detail-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1080px, 100%);
+  max-height: 88vh;
+  background: var(--bs-body-bg, #fff);
+  border-radius: 0.85rem;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+  outline: none;
+  animation: smarter-detail-rise 160ms ease-out;
+}
+
+@keyframes smarter-detail-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes smarter-detail-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smarter-detail-backdrop,
+  .smarter-detail-dialog {
+    animation: none;
+  }
+}
+
+/* ---- header ---------------------------------------------------------------------------------------------------- */
+
+/* the header and the tab bar keep their height, and the body scrolls. */
+.smarter-detail-header,
+.smarter-detail-tabs {
+  flex-shrink: 0;
+}
+
+.smarter-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 1rem;
+}
+
+.smarter-detail-kind-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  font-size: 1.6rem;
+}
+
+.smarter-detail-heading {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.smarter-detail-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--bs-gray-600);
+}
+
+.smarter-detail-title {
+  margin: 0.15rem 0 0;
+  overflow: hidden;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--bs-gray-900);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smarter-detail-pager {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.smarter-detail-position {
+  min-width: 4.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--bs-gray-700);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.smarter-detail-divider {
+  width: 1px;
+  height: 1.5rem;
+  margin: 0 0.25rem;
+  background: var(--bs-gray-300);
+}
+
+/* ---- tabs ------------------------------------------------------------------------------------------------------ */
+
+.smarter-detail-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1.5rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--bs-gray-200);
+}
+
+.smarter-detail-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: -1px;
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--bs-gray-600);
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  transition:
+    color 120ms,
+    border-color 120ms;
+}
+
+.smarter-detail-tab:hover {
+  color: var(--bs-gray-900);
+}
+
+.smarter-detail-tab:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: -2px;
+  border-radius: 0.35rem 0.35rem 0 0;
+}
+
+.smarter-detail-tab.active {
+  color: var(--bs-primary);
+  border-bottom-color: var(--bs-primary);
+}
+
+.smarter-detail-tab-count {
+  min-width: 1.4rem;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1.2rem;
+  color: var(--bs-gray-700);
+  text-align: center;
+  background: var(--bs-gray-100);
+  border-radius: 1rem;
+}
+
+.smarter-detail-tab.active .smarter-detail-tab-count {
+  color: var(--bs-primary);
+  background: var(--bs-primary-light, rgba(27, 132, 255, 0.1));
+}
+
+/* ---- body ------------------------------------------------------------------------------------------------------ */
+
+.smarter-detail-body {
+  flex: 1 1 auto;
+  min-height: 18rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: var(--bs-gray-100);
+}
+
+.smarter-detail-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.smarter-detail-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.smarter-detail-tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ---- details: overview, sections and fields -------------------------------------------------------------------- */
+
+.smarter-detail-overview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.smarter-detail-description {
+  flex: 1 1 22rem;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--bs-gray-800);
+}
+
+.smarter-detail-overview-aside {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.smarter-detail-section {
+  padding: 1.25rem 1.5rem;
+  background: var(--bs-body-bg, #fff);
+  border: 1px solid var(--bs-gray-200);
+  border-radius: 0.75rem;
+}
+
+.smarter-detail-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--bs-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.smarter-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin: 0;
+}
+
+@media (max-width: 767.98px) {
+  .smarter-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .smarter-detail-header {
+    flex-wrap: wrap;
+  }
+}
+
+.smarter-detail-field {
+  min-width: 0;
+}
+
+.smarter-detail-field-wide {
+  grid-column: 1 / -1;
+}
+
+.smarter-detail-field dt {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--bs-gray-600);
+}
+
+.smarter-detail-field dd {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--bs-gray-900);
+  overflow-wrap: anywhere;
+}
+
+.smarter-detail-help {
+  display: inline-flex;
+  color: var(--bs-gray-500);
+  cursor: help;
+}
+
+.smarter-detail-empty {
+  color: var(--bs-gray-400);
+}
+
+.smarter-detail-secondary {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--bs-gray-500);
+}
+
+.smarter-detail-code {
+  padding: 0.1rem 0.4rem;
+  font-size: 0.85rem;
+  color: var(--bs-gray-800);
+  background: var(--bs-gray-100);
+  border-radius: 0.3rem;
+}
+
+.smarter-detail-json {
+  max-height: 16rem;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  overflow: auto;
+  font-size: 0.82rem;
+  color: var(--bs-gray-800);
+  white-space: pre-wrap;
+  background: var(--bs-gray-100);
+  border-radius: 0.5rem;
+}
+
+/* YAML in a field, highlighted in the light colors of the page. */
+.smarter-detail-yaml .yaml-key {
+  color: var(--bs-primary);
+}
+
+.smarter-detail-yaml .yaml-string {
+  color: var(--bs-success);
+}
+
+.smarter-detail-yaml .yaml-number,
+.smarter-detail-yaml .yaml-literal {
+  color: var(--bs-warning);
+}
+
+.smarter-detail-yaml .yaml-comment,
+.smarter-detail-yaml .yaml-punctuation {
+  color: var(--bs-gray-500);
+}
+
+.smarter-detail-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.smarter-detail-link {
+  color: var(--bs-primary);
+  text-decoration: none;
+}
+
+.smarter-detail-link:hover {
+  text-decoration: underline;
+}
+
+/* ---- empty states ---------------------------------------------------------------------------------------------- */
+
+.smarter-detail-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 32rem;
+  padding: 3rem 1rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.smarter-detail-empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.75rem;
+  color: var(--bs-gray-500);
+  background: var(--bs-body-bg, #fff);
+  border: 1px solid var(--bs-gray-200);
+  border-radius: 50%;
+}
+
+/* ---- manifest -------------------------------------------------------------------------------------------------- */
+
+.smarter-manifest-code {
+  max-height: 60vh;
+  padding: 1rem 0;
+  margin: 0;
+  overflow: auto;
+  font-family: var(--bs-font-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #d4d4d8;
+  counter-reset: manifest-line;
+  background: #1e1e2e;
+  border-radius: 0.6rem;
+}
+
+.smarter-manifest-code:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.smarter-manifest-line {
+  display: block;
+  padding-right: 1.25rem;
+  white-space: pre;
+}
+
+.smarter-manifest-line::before {
+  display: inline-block;
+  width: 3.25rem;
+  padding-right: 1rem;
+  margin-right: 1rem;
+  color: #6b6b80;
+  text-align: right;
+  content: counter(manifest-line);
+  counter-increment: manifest-line;
+  border-right: 1px solid #2f2f42;
+  user-select: none;
+}
+
+.smarter-manifest-code .yaml-key {
+  color: #89b4fa;
+}
+
+.smarter-manifest-code .yaml-string {
+  color: #a6e3a1;
+}
+
+.smarter-manifest-code .yaml-number {
+  color: #fab387;
+}
+
+.smarter-manifest-code .yaml-literal {
+  color: #cba6f7;
+}
+
+.smarter-manifest-code .yaml-comment {
+  font-style: italic;
+  color: #7f849c;
+}
+
+.smarter-manifest-code .yaml-punctuation {
+  color: #9399b2;
+}
+
+/* ---- hierarchy and dependencies -------------------------------------------------------------------------------- */
+
+.smarter-detail-tree {
+  padding: 1.25rem;
+  overflow-x: auto;
+  background: var(--bs-body-bg, #fff);
+  border: 1px solid var(--bs-gray-200);
+  border-radius: 0.75rem;
+}
+
+.smarter-detail-dependents {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* ---- the list's rows, which open the detail -------------------------------------------------------------------- */
+
+.smarter-selectable-rows tbody tr:not(.ghost) {
+  cursor: pointer;
+}
+
+.smarter-selectable-rows tbody tr:not(.ghost):focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: -2px;
+}
+
+.smarter-selectable-rows tbody tr.smarter-row-selected > * {
+  --bs-table-accent-bg: var(--bs-primary-light, rgba(27, 132, 255, 0.08));
+}

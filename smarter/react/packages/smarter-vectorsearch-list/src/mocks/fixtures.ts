@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<Vectorsearch> = {}): V
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/vectorsearch/vectorsearches/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/Vectorsearch/vectorsearch-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

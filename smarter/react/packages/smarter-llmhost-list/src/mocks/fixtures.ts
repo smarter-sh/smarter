@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<LLMHost> = {}): LLMHos
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/llmhost/llmhosts/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/LLMHost/llmhost-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

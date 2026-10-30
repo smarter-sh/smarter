@@ -4,7 +4,9 @@ LLMClient List React Component
 The LLMClient List React component offers users a flexible and interactive way to
 browse, view, and manage available llmclients or prompts. By fetching data
 directly from a live API, it ensures that the list is always up-to-date, and
-provides intuitive controls for toggling between list and thumbnail views. The
+opens an llmclient's detail when one of its rows is chosen: its settings, its manifest, the
+resources that it is built from, and those that use it (see
+:doc:`../smarter-dashboard/resource_detail`). The
 API pages and searches the llmclients, so the list shows one page at a time,
 with previous and next page buttons and a page number box. Its search finds
 matching llmclients on every page, not only the page shown, and clicking a column

@@ -1,5 +1,5 @@
 /**
- * Formatting of Proxy attributes, shared by ListView, CardView, StatusBar and Toolbar.
+ * Formatting of Proxy attributes, shared by ListView, DetailView, StatusBar and Toolbar.
  */
 import type { Proxy } from "@/lib/Types";
 import { gettext, interpolate, ngettext } from "@smarter/common";

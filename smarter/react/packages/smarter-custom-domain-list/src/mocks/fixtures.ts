@@ -39,6 +39,7 @@ export function makeObject(id: number, overrides: Partial<CustomDomain> = {}): C
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/llmclient/custom-domains/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/CustomDomain/llmclientcustomdomain-r${id}/`,
     canDelete: true,
     domainName: `example-${id}.example.com`,
     awsHostedZoneId: `Z0000000000000${id}`,

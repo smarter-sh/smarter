@@ -1535,7 +1535,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return None
         return self.dependency_tree_node(str(self.kind), instance, ancestors=frozenset())
 
-    def dependency_tree_node(self, kind: str, instance: models.Model, ancestors: frozenset) -> SAMDependencyTreeNode:
+    def dependency_tree_node(
+        self, kind: str, instance: models.Model, ancestors: frozenset, recursive: bool = True
+    ) -> SAMDependencyTreeNode:
         """Return one resource's node of :meth:`dependency_tree`, with the nodes of the resources that it uses.
 
         :param kind: The SAM kind of the resource, e.g. ``SAMKinds.LLM_CLIENT.value``.
@@ -1544,6 +1546,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :type instance: models.Model
         :param ancestors: The record locators of the resource's ancestors in the tree.
         :type ancestors: frozenset
+        :param recursive: Whether the node has the nodes of the resources that it uses. A node without them
+            describes the resource alone, e.g. one of the resources that depend on another, in a list.
+        :type recursive: bool
         :return: The node.
         :rtype: SAMDependencyTreeNode
         """
@@ -1557,7 +1562,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return SAMDependencyTreeNode(kind=kind, icon=icon, recordLocator=record_locator, readable=False)
         children: List[SAMDependencyTreeNode] = []
         broker_class = Brokers.get_broker(kind)
-        if broker_class is not None and record_locator not in ancestors:
+        if recursive and broker_class is not None and record_locator not in ancestors:
             path = ancestors | {record_locator}
             for child_kind, rows in broker_class.references(instance):
                 unique = {row.pk: row for row in rows}

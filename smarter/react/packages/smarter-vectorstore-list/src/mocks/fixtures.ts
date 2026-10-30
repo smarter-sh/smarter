@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<Vectorstore> = {}): Ve
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/vectorstore/vectorstores/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/Vectorstore/vectorstoremeta-r${id}/`,
     canDelete: true,
     spec: {},
     backend: "qdrant",

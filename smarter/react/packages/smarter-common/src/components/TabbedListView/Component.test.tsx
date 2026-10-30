@@ -14,12 +14,26 @@ import {
   sessionContext,
   sharedExamples,
 } from "../../mocks/example";
-import { examplePage, listErrorHandlers, listHandlers, manyExamples, otherHandler } from "../../mocks/handlers";
+import {
+  detailHandler,
+  examplePage,
+  listErrorHandlers,
+  listHandlers,
+  manyExamples,
+  otherHandler,
+} from "../../mocks/handlers";
 import TabbedListView from "./Component";
 
-/** The rows of the example list view. */
+/** The rows of the example list view's table, but its header. */
 function rows() {
-  return within(screen.getByRole("list", { name: "Examples" })).getAllByRole("listitem");
+  return within(screen.getByRole("table", { name: "Examples" }))
+    .getAllByRole("row")
+    .slice(1);
+}
+
+/** The names of the rows: the text of their first cells. */
+function rowNames() {
+  return rows().map((row) => (row as HTMLTableRowElement).cells[0].textContent);
 }
 
 /** The cache key of a page of a tab, as the list writes it. */
@@ -50,10 +64,7 @@ describe("TabbedListView", () => {
 
     expect(screen.getByText("Showing: Even examples")).toBeInTheDocument();
     expect(await screen.findByText("example_2")).toBeInTheDocument();
-    const names = () =>
-      rows()
-        .map((row) => row.textContent)
-        .filter((text) => text?.startsWith("example_"));
+    const names = () => rowNames().filter((text) => text?.startsWith("example_"));
     expect(names()).toEqual(["example_2", "example_4", "example_6"]);
     await vi.waitFor(() => expect(filters).toEqual(["even", "even"]));
 
@@ -104,16 +115,6 @@ describe("TabbedListView", () => {
     await user.click(screen.getByRole("button", { name: "Shared Examples" }));
     expect(await screen.findByText("shared_example")).toBeInTheDocument();
     expect(screen.queryByText("first_example")).not.toBeInTheDocument();
-  });
-
-  it("switches to the card view, and remembers it", async () => {
-    server.use(...listHandlers());
-    const user = setup();
-    await screen.findByText("first_example");
-
-    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
-    expect(screen.getByLabelText("Example cards")).toHaveTextContent("first_example");
-    expect(sessionStorage.getItem("viewMode")).toBe("thumbnail");
   });
 
   it("shows cached objects at once, refreshing them", async () => {
@@ -378,12 +379,19 @@ describe("TabbedListView", () => {
       expect(screen.getByRole("searchbox", { name: "Search" })).toHaveAttribute("placeholder", "Search examples");
 
       await user.click(screen.getByRole("button", { name: "Others" }));
-      expect(within(screen.getByRole("list", { name: "Others" })).getByText("An other object")).toBeInTheDocument();
+      expect(within(screen.getByRole("table", { name: "Others" })).getByText("An other object")).toBeInTheDocument();
       expect(screen.queryByText("first_example")).not.toBeInTheDocument();
       expect(screen.getByRole("searchbox", { name: "Search" })).toHaveAttribute("placeholder", "Search others");
 
-      await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
-      expect(screen.getByLabelText("Other cards")).toHaveTextContent("An other object");
+      // the tab's rows open its own DetailView, which has no other tabs: its objects have no detailUrl.
+      await user.click(screen.getByText("An other object"));
+      const dialog = await screen.findByRole("dialog", { name: "An other object" });
+      expect(within(dialog).getByText("Title")).toBeInTheDocument();
+      expect(
+        within(dialog)
+          .getAllByRole("tab")
+          .map((tab) => tab.textContent),
+      ).toEqual(["Details"]);
     });
 
     it("searches the tab too", async () => {
@@ -411,9 +419,12 @@ describe("TabbedListView narrowing by tags and annotations", () => {
 
   /** The names of the example rows that the list view shows. */
   function names() {
-    return rows()
-      .map((row) => row.textContent)
-      .filter((text) => text?.endsWith("_example"));
+    return rowNames().filter((text) => text?.endsWith("_example"));
+  }
+
+  /** A row of the list view, by its example's name. */
+  function row(name: string) {
+    return within(rows().find((item) => (item as HTMLTableRowElement).cells[0].textContent === name)!);
   }
 
   /** The tag and annotation parameters of the list api's requests. */
@@ -433,36 +444,45 @@ describe("TabbedListView narrowing by tags and annotations", () => {
     return requests;
   }
 
-  it("narrows by a tag clicked in a card, shows it as a chip, keeps it in the url, and removes it", async () => {
+  it("narrows by a tag clicked in a row, shows it as a chip, keeps it in the url, and removes it", async () => {
     const requests = recordRequests();
     const user = setup();
-    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
-    const first = within(await screen.findByRole("article", { name: "first_example" }));
+    await screen.findByText("first_example");
 
-    await user.click(first.getByRole("button", { name: "red" }));
+    await user.click(row("first_example").getByRole("button", { name: "red" }));
     expect(await screen.findByText("Tag: red")).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole("article", { name: "second_example" })).not.toBeInTheDocument());
+    // the chip narrows the list, rather than open the row's detail.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(names()).toEqual(["first_example"]));
     expect(new URLSearchParams(window.location.search).getAll("tag")).toEqual(["red"]);
     // the tag that narrows the list shows as pressed.
-    expect(
-      within(screen.getByRole("article", { name: "first_example" })).getByRole("button", { name: "red" }),
-    ).toHaveAttribute("aria-pressed", "true");
+    expect(row("first_example").getByRole("button", { name: "red" })).toHaveAttribute("aria-pressed", "true");
     expect(requests).toContain(JSON.stringify([["red"], []]));
 
     await user.click(screen.getByRole("button", { name: "Remove Tag: red" }));
-    expect(await screen.findByRole("article", { name: "second_example" })).toBeInTheDocument();
+    await waitFor(() => expect(names()).toEqual(["first_example", "second_example"]));
     expect(window.location.search).toBe("");
   });
 
-  it("narrows by an annotation clicked in a card", async () => {
+  it("narrows by an annotation clicked in a row", async () => {
     recordRequests();
     const user = setup();
-    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
-    const second = within(await screen.findByRole("article", { name: "second_example" }));
-    await user.click(second.getByRole("button", { name: "example.com/team: b" }));
+    await screen.findByText("second_example");
+    await user.click(row("second_example").getByRole("button", { name: "example.com/team: b" }));
     expect(await screen.findByText("Annotation: example.com/team=b")).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole("article", { name: "first_example" })).not.toBeInTheDocument());
+    await waitFor(() => expect(names()).toEqual(["second_example"]));
     expect(new URLSearchParams(window.location.search).getAll("annotation")).toEqual(["example.com/team=b"]);
+  });
+
+  it("narrows by a tag clicked in a row's detail, and closes the detail", async () => {
+    recordRequests();
+    server.use(detailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    const dialog = await screen.findByRole("dialog", { name: "first_example" });
+    await user.click(within(dialog).getByRole("button", { name: "red" }));
+    expect(await screen.findByText("Tag: red")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("opens narrowed by the tags, annotations and search of the page's url", async () => {
@@ -510,5 +530,183 @@ describe("TabbedListView narrowing by tags and annotations", () => {
       readCache(makeCacheKey(API_URL, "owned", { tags: ["blue"] }, sessionScope(sessionContext)))?.objects,
     ).toEqual([ownedExamples[1]]);
     expect(readCache(key("owned"))).toBeNull();
+  });
+});
+
+describe("TabbedListView's resource detail", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", "/");
+  });
+
+  /** The detail dialog, by the name of its resource. */
+  const dialog = (name: string) => screen.findByRole("dialog", { name });
+
+  it("opens a row's detail when the row is clicked, with its DetailView, and closes it", async () => {
+    server.use(...listHandlers(), detailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+
+    const detail = within(await dialog("first_example"));
+    expect(detail.getByText("The first example.")).toBeInTheDocument();
+    expect(detail.getAllByRole("tab").map((tab) => tab.textContent?.replace(/\d+$/, ""))).toEqual([
+      "Details",
+      "Manifest",
+      "Hierarchy",
+      "Dependencies",
+    ]);
+    expect(detail.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    expect(detail.getByText("1 of 2")).toBeInTheDocument();
+    // the row whose detail is open stands out.
+    expect(rows()[0]).toHaveClass("smarter-row-selected");
+    // the kind, once the detail is loaded.
+    expect(await detail.findByText("Guardrail")).toBeInTheDocument();
+
+    await user.click(detail.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("opens a focused row's detail with Enter, and closes it with Escape", async () => {
+    server.use(...listHandlers(), detailHandler());
+    const user = setup();
+    await screen.findByText("second_example");
+    await waitFor(() => expect(rows()[1]).toHaveAttribute("tabindex", "0"));
+    rows()[1].focus();
+    await user.keyboard("{Enter}");
+    expect(await dialog("second_example")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows the manifest, the hierarchy and the dependencies", async () => {
+    server.use(...listHandlers(), detailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    const detail = within(await dialog("first_example"));
+
+    await user.click(detail.getByRole("tab", { name: /Manifest/ }));
+    const manifest = await detail.findByLabelText("Manifest YAML");
+    expect(manifest).toHaveTextContent("apiVersion: smarter.sh/v1");
+    expect(within(manifest).getByText("apiVersion")).toHaveClass("yaml-key");
+    expect(detail.getByRole("link", { name: "Edit manifest" })).toHaveAttribute("href", "/guardrail/guardrails/r1/");
+
+    await user.click(detail.getByRole("tab", { name: /Hierarchy/ }));
+    expect(detail.getByText("first_example uses 2 resources, 2 levels deep.")).toBeInTheDocument();
+    expect(detail.getByRole("tab", { name: /Hierarchy/ })).toHaveTextContent("2");
+    await user.click(detail.getByRole("button", { name: "Collapse all" }));
+    expect(detail.getByRole("button", { name: "Expand all" })).toBeEnabled();
+
+    await user.click(detail.getByRole("tab", { name: /Dependencies/ }));
+    expect(detail.getByText(/2 resources use first_example/)).toBeInTheDocument();
+    const dependents = detail.getByRole("list", { name: "What uses first_example" });
+    expect(within(dependents).getByText("stackademy_sql")).toBeInTheDocument();
+    expect(within(dependents).getByText("You can't read this resource")).toBeInTheDocument();
+  });
+
+  it("says when nothing depends on the resource", async () => {
+    server.use(...listHandlers(), detailHandler([]));
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    const detail = within(await dialog("first_example"));
+    await user.click(detail.getByRole("tab", { name: /Dependencies/ }));
+    expect(await detail.findByText("No other resource uses first_example.")).toBeInTheDocument();
+  });
+
+  it("reports a detail that fails to load, and tries again", async () => {
+    let calls = 0;
+    server.use(
+      ...listHandlers(),
+      http.post("/dashboard/api/resource/Example/:locator/", () => {
+        calls += 1;
+        return HttpResponse.json({ error: "Guardrail not found." }, { status: 404 });
+      }),
+    );
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    const detail = within(await dialog("first_example"));
+    await user.click(detail.getByRole("tab", { name: /Manifest/ }));
+    expect(await detail.findByRole("alert")).toHaveTextContent("Guardrail not found.");
+    await user.click(detail.getByRole("button", { name: "Try again" }));
+    await vi.waitFor(() => expect(calls).toBe(2));
+  });
+
+  it("browses the page with Previous and Next, and the arrow keys, keeping the tab that is open", async () => {
+    server.use(...listHandlers(), detailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    let detail = within(await dialog("first_example"));
+    expect(detail.getByRole("button", { name: "Previous" })).toBeDisabled();
+    await user.click(detail.getByRole("tab", { name: /Manifest/ }));
+
+    await user.click(detail.getByRole("button", { name: "Next" }));
+    detail = within(await dialog("second_example"));
+    expect(detail.getByText("2 of 2")).toBeInTheDocument();
+    expect(detail.getByRole("tab", { name: /Manifest/ })).toHaveAttribute("aria-selected", "true");
+    expect(await detail.findByLabelText("Manifest YAML")).toHaveTextContent("name: second_example");
+    expect(detail.getByRole("button", { name: "Next" })).toBeDisabled();
+
+    await user.keyboard("{ArrowLeft}");
+    expect(await dialog("first_example")).toBeInTheDocument();
+    await user.keyboard("{ArrowRight}");
+    expect(await dialog("second_example")).toBeInTheDocument();
+  });
+
+  it("moves between the tabs of the detail with the arrow keys of its tab list", async () => {
+    server.use(...listHandlers(), detailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    const detail = within(await dialog("first_example"));
+    detail.getByRole("tab", { name: "Details" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(detail.getByRole("tab", { name: /Manifest/ })).toHaveAttribute("aria-selected", "true");
+    // the arrow keys of the tab list don't browse the list.
+    expect(screen.getByRole("dialog", { name: "first_example" })).toBeInTheDocument();
+    await user.keyboard("{ArrowLeft}{ArrowLeft}");
+    expect(detail.getByRole("tab", { name: /Dependencies/ })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("browses on to the next page, and back to the previous one", async () => {
+    server.use(...listHandlers(manyExamples(12), [], 10), detailHandler());
+    const user = setup();
+    await screen.findByText("example_10");
+    await user.click(rows()[9]);
+    let detail = within(await dialog("example_10"));
+    expect(detail.getByText("10 of 12")).toBeInTheDocument();
+
+    await user.click(detail.getByRole("button", { name: "Next" }));
+    detail = within(await dialog("example_11"));
+    expect(detail.getByText("11 of 12")).toBeInTheDocument();
+    expect(screen.getByText("example_12")).toBeInTheDocument();
+
+    await user.click(detail.getByRole("button", { name: "Previous" }));
+    expect(await dialog("example_10")).toBeInTheDocument();
+    expect(screen.getByText("example_1")).toBeInTheDocument();
+  });
+
+  it("closes the detail when the tab or the search changes", async () => {
+    server.use(...listHandlers(), detailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    expect(await dialog("first_example")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByText("second_example"));
+    expect(await dialog("second_example")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await user.type(screen.getByRole("searchbox", { name: "Search" }), "first");
+    await waitFor(() => expect(rowNames()).toEqual(["first_example"]));
+    await user.click(screen.getByText("first_example"));
+    expect(await dialog("first_example")).toBeInTheDocument();
+    await user.clear(screen.getByRole("searchbox", { name: "Search" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("leaves a row's text selected rather than open its detail", async () => {
+    server.use(...listHandlers(), detailHandler());
+    const user = setup();
+    const cell = await screen.findByText("first_example");
+    const selection = vi.spyOn(window, "getSelection").mockReturnValue({ toString: () => "first" } as Selection);
+    await user.click(cell);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    selection.mockRestore();
   });
 });

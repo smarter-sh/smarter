@@ -77,9 +77,23 @@ Every Smarter AI resource type has a dedicated list page that provides a compreh
 of all resources of that type, along with their real-time state. Create, view, edit, clone, and delete
 any resource directly from the console.
 
-A list can be searched, sorted by a column, and narrowed by tags and annotations. In the card view, a
-resource's tags and annotations are chips: click one to show only the resources that have the same
-tag, or the same annotation key and value. The annotation box next to the search box takes an
+Choose a row, by clicking it or by pressing Enter on it, to open the resource's detail. Its tabs are:
+
+- **Details**: the resource's settings, grouped into sections, with its owner, dates, tags and
+  annotations, and the same actions as its row.
+- **Manifest**: the resource's manifest, as ``smarter describe`` returns it, which you can copy,
+  download, or open in the manifest editor to change it.
+- **Hierarchy**: every resource that it uses, and what those use in turn, as a tree of cards, each of
+  which opens that resource's manifest.
+- **Dependencies**: the resources that use it. A resource can't be deleted while others use it.
+
+The detail's Previous and Next buttons, or the left and right arrow keys, move through the list, on
+to the next or previous page, and keep the same tab open, so that two resources' manifests, say, can
+be compared. Escape closes it.
+
+A list can be searched, sorted by a column, and narrowed by tags and annotations. A resource's tags
+and annotations are chips, in its row and in its detail: click one to show only the resources that
+have the same tag, or the same annotation key and value. The annotation box next to the search box takes an
 :ref:`annotation selector <sam-annotations>` requirement: ``key``, ``!key``, ``key=value`` or
 ``key!=value``, added with Enter. Each tag and requirement narrows the list further, and shows as a
 chip above it, which removes it when its button is clicked. They are kept in the page's address, as

@@ -9,12 +9,14 @@
  * - Shared LLMClients
  *
  * The tabs are those of the tabbedListViewContext, whose keys are the slugs of the list api that
- * loads them, e.g. "owned" and "shared". A tab may also have its own ListView, CardView and object
+ * loads them, e.g. "owned" and "shared". A tab may also have its own ListView, DetailView and object
  * type name, e.g. the read-only Extensions tab of the LLMTool list, whose objects are not LLMTools.
  *
- * View Modes:
- * - List
- * - Thumbnail card
+ * Each row of the list opens the resource's detail, ResourceDetail, when it is clicked, or when it has the focus
+ * and Enter is pressed. A click on a row's links, buttons or chips does what they do instead. The detail's tabs are
+ * the list's DetailView, the resource's manifest, the hierarchy of the resources that it uses, and the resources
+ * that use it. Its Previous and Next buttons, and the arrow keys, browse the list from the detail, from one page to
+ * the next. The detail closes when the tab, the search, the sort or what narrows the list changes.
  *
  * Features:
  * - Loads owned and shared llmclient lists from the backend using session context.
@@ -40,8 +42,6 @@
  * - Shows a page from the cache at once, when it holds it, while the page is fetched again, with a
  *   small spinner that says it is refreshing.
  * - Shows loading and error states during fetches.
- * - Allows switching between list and card views.
- * - Persists the selected view mode in sessionStorage.
  * - Uses cookie-backed counts (owned/shared) to size loading skeleton rows.
  * - Supports requery with cache invalidation, from the Refresh button at the top of the list, and
  *   from the list and card views after a clone, rename or delete.
@@ -55,8 +55,9 @@
  * - searchInput: The search as typed; search: the search requested, once typing pauses.
  * - ordering: The column that sorts both tabs, e.g. "name", or "-name" in descending order. Empty for the default order.
  * - errorMessage: Error text for failed requests.
- * - viewMode: Current display mode ("list" or "thumbnail").
  * - activeTab: Current tab, the key of one of the tabbedListViewContext's tabs, e.g. "owned".
+ * - selection: The row whose detail is open, by its tab and index on the tab's page, or null. While the detail
+ *   moves to another page, pending says whether it shows that page's first or last row, once it loads.
  *
  * Internal Helpers:
  * - getCookie: Reads cookie values used for skeleton sizing.
@@ -75,9 +76,10 @@
  * <TabbedListView sessionContext={sessionContext} />
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
 
 import type {
-  CardViewBaseProps,
+  DetailViewBaseProps,
   Filtering,
   ListViewBaseProps,
   Pagination,
@@ -90,8 +92,7 @@ import { load } from "../../lib/load";
 import { loggerPrefix } from "../../lib/const";
 import { makeCacheKey, readCache, sessionScope, writeCache } from "../../lib/cache";
 
-import ToggleButton from "../ToggleButton";
-import type { ViewMode } from "../ToggleButton";
+import ResourceDetail from "../ResourceDetail";
 
 import { getCookieForUrl } from "./cookie";
 import { PaginationControls } from "./PaginationControls";
@@ -148,6 +149,26 @@ type Narrowing = {
   tags: string[];
   annotations: string[];
 };
+
+/** The row whose detail is open: its tab, and its index on the tab's page. See TabbedListView's selection. */
+type Selection = {
+  tab: TabKey;
+  index: number;
+  /** After the detail moved to another page: whether it shows that page's first or last row, once it loads. */
+  pending?: "first" | "last";
+  /** What the list showed when the detail opened: its search, sort and narrowing. See TabbedListView's shown. */
+  shown: string;
+};
+
+/**
+ * What a click on a row does itself, rather than open the row's detail: its links, buttons, form fields, chips,
+ * menus, and the dialogs that its Toolbar opens.
+ */
+const ROW_CONTROLS =
+  "a, button, input, select, textarea, label, summary, [role='button'], [role='menu'], [role='menuitem'], [role='dialog'], .dropdown-menu";
+
+/** The rows of a list view's table that are objects: not its loading skeleton's ghost rows. */
+const OBJECT_ROWS = "tbody > tr:not(.ghost)";
 
 /** How long to wait after the last keystroke of a search before it is requested, in milliseconds. */
 export const SEARCH_DELAY_MS = 300;
@@ -217,15 +238,14 @@ export default function TabbedListView<TObject>({
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
   const ghostCount = (tab: TabKey) => clamp(getCookieForUrl(sessionContext.ApiUrl + tab + "/") || 6, 0, maxGhostRows);
 
-  const [activeTab, setActiveTab] = useState<TabKey>(() => tabKeys[0]);
-  const [viewMode, _setViewMode] = useState<ViewMode>(() => {
-    const saved = sessionStorage.getItem("viewMode");
-    return saved === "thumbnail" ? "thumbnail" : "list";
-  });
-  const setViewMode = (mode: ViewMode) => {
-    _setViewMode(mode);
-    sessionStorage.setItem("viewMode", mode);
+  const [activeTab, _setActiveTab] = useState<TabKey>(() => tabKeys[0]);
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const setActiveTab = (tab: TabKey) => {
+    setSelection(null);
+    _setActiveTab(tab);
   };
+  // the list view's table, whose rows open their details.
+  const listRef = useRef<HTMLDivElement>(null);
 
   const requeryRef = useRef<number | null>(null);
 
@@ -386,6 +406,45 @@ export default function TabbedListView<TObject>({
     });
   }, [loadTab, tabKeys, pages, search, ordering, narrowing]);
 
+  // the detail that is open. It closes when what the list shows changes: its search, its sort, or what narrows it.
+  const shown = JSON.stringify([search, ordering, narrowing]);
+  const current = selection && selection.shown === shown ? selection : null;
+  const selectedList = current ? lists[current.tab] : null;
+  // the detail that moved to another page shows the row that it left, until that page loads, and then that page's
+  // first or last row. A detail whose row is gone, e.g. deleted from the detail, shows the page's last row, and
+  // closes if the page has none.
+  const pageLoaded =
+    !!current &&
+    !!selectedList &&
+    !selectedList.isLoading &&
+    (!selectedList.pagination || selectedList.pagination.page === (pages[current.tab] ?? 1));
+  const isNavigating = !!current?.pending && !pageLoaded;
+  const selectedIndex: number | null = (() => {
+    if (!current || !selectedList) return null;
+    const count = selectedList.objects.length;
+    if (count === 0) return null;
+    if (current.pending && pageLoaded) return current.pending === "last" ? count - 1 : 0;
+    return Math.min(current.index, count - 1);
+  })();
+
+  // each row of the list view can have the focus, and the row whose detail is open stands out. The list view
+  // renders its rows a few at a time, so this follows its table as it changes.
+  const highlighted = current?.tab === activeTab && !isNavigating ? selectedIndex : null;
+  useEffect(() => {
+    const container = listRef.current;
+    if (!container) return;
+    const sync = () => {
+      container.querySelectorAll<HTMLTableRowElement>(OBJECT_ROWS).forEach((row, index) => {
+        if (!row.hasAttribute("tabindex")) row.tabIndex = 0;
+        row.classList.toggle("smarter-row-selected", index === highlighted);
+      });
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(container, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [highlighted, activeTab]);
+
   if (errorMessage) {
     return (
       <div className="alert alert-danger" role="alert">
@@ -400,9 +459,6 @@ export default function TabbedListView<TObject>({
   // the active tab's views: its own, or the list's. A tab's objects are those that its views show.
   const listViewOf = (key: TabKey) => tabs.find((item) => item.key === key)?.ListView ?? tabbedListViewContext.ListView;
   const ListView = listViewOf(tab.key) as React.ComponentType<ListViewBaseProps<unknown, SessionContext>>;
-  const CardView = (tab.CardView ?? tabbedListViewContext.CardView) as React.ComponentType<
-    CardViewBaseProps<unknown, SessionContext>
-  >;
   const objectTypeName = tab.objectTypeName ?? tabbedListViewContext.objectTypeName;
   // the columns that the list api can sort by. The response of any tab with the same list view
   // says, so that the headers of a tab are sortable even before its own first response.
@@ -415,6 +471,84 @@ export default function TabbedListView<TObject>({
   const filterLabel = tabbedListViewContext.filters?.[appliedFilter] ?? appliedFilter;
   const annotationError = list.pagination?.annotationError ?? "";
 
+  /** The index of the row of the list view's table that an event happened in, or null for a row's own controls. */
+  const rowIndexOf = (target: EventTarget | null): number | null => {
+    if (!(target instanceof Element) || target.closest(ROW_CONTROLS)) return null;
+    const row = target.closest("tr");
+    if (!row || !listRef.current?.contains(row)) return null;
+    const index = Array.from(listRef.current.querySelectorAll(OBJECT_ROWS)).indexOf(row);
+    return index >= 0 && index < list.objects.length ? index : null;
+  };
+  const openRow = (index: number | null) => {
+    if (index === null) return;
+    console.debug(`${loggerPrefix} openRow() opening the detail of row ${index} of the ${tab.key} objects`);
+    setSelection({ tab: tab.key, index, shown });
+  };
+  const onRowClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    // a click that ends a selection of the row's text leaves the text selected, so that it can be copied.
+    if (window.getSelection()?.toString()) return;
+    openRow(rowIndexOf(e.target));
+  };
+  const onRowKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if ((e.key !== "Enter" && e.key !== " ") || !(e.target instanceof HTMLTableRowElement)) return;
+    const index = rowIndexOf(e.target);
+    if (index === null) return;
+    e.preventDefault();
+    openRow(index);
+  };
+
+  // the detail that is open, and how it browses the list: within the page, and on to the previous or next page.
+  const detail = (() => {
+    if (!current || !selectedList || selectedIndex === null) return null;
+    const objects = selectedList.objects;
+    const index = selectedIndex;
+    const object = objects[index];
+    const selectedTab = tabs.find((item) => item.key === current.tab) ?? tab;
+    const page = pages[current.tab] ?? 1;
+    const tabPagination = selectedList.pagination;
+    const numPages = tabPagination?.numPages ?? 1;
+    const goTo = (next: Omit<Selection, "shown">) => {
+      if (next.pending) {
+        setPages((prev) => ({ ...prev, [next.tab]: page + (next.pending === "first" ? 1 : -1) }));
+      }
+      setSelection({ ...next, shown });
+    };
+    const onPrevious =
+      index > 0
+        ? () => goTo({ tab: current.tab, index: index - 1 })
+        : page > 1
+          ? () => goTo({ tab: current.tab, index: 0, pending: "last" })
+          : undefined;
+    const onNext =
+      index < objects.length - 1
+        ? () => goTo({ tab: current.tab, index: index + 1 })
+        : page < numPages
+          ? () => goTo({ tab: current.tab, index: 0, pending: "first" })
+          : undefined;
+    const position = tabPagination
+      ? { index: (tabPagination.page - 1) * tabPagination.pageSize + index + 1, count: tabPagination.count }
+      : { index: index + 1, count: objects.length };
+    return (
+      <ResourceDetail
+        sessionContext={sessionContext}
+        object={object}
+        objectTypeName={selectedTab.objectTypeName ?? tabbedListViewContext.objectTypeName}
+        DetailView={
+          (selectedTab.DetailView ?? tabbedListViewContext.DetailView) as React.ComponentType<
+            DetailViewBaseProps<unknown, SessionContext>
+          >
+        }
+        onRequery={onRequery}
+        filtering={filtering}
+        position={position}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        isNavigating={isNavigating}
+        onClose={() => setSelection(null)}
+      />
+    );
+  })();
+
   return (
     <div className="pt-5 pb-5 card card-flush h-xl-100">
       <div className="card-header rounded align-items-start ps-3" data-bs-theme="light">
@@ -422,8 +556,7 @@ export default function TabbedListView<TObject>({
       </div>
       <div className="m-0 p-0 card-body list-view">
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pe-3">
-          <div className="d-flex flex-wrap align-items-center gap-3">
-            <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+          <div className="d-flex flex-wrap align-items-center gap-3 ps-3">
             {list.isRefreshing && (
               <span
                 className="spinner-border spinner-border-sm text-primary opacity-75"
@@ -480,7 +613,10 @@ export default function TabbedListView<TObject>({
           </div>
         </div>
 
-        {viewMode === "list" ? (
+        {/* a row opens its detail, when it is clicked, or when it has the focus and Enter is pressed. Each row
+            is focusable (see above), so the keyboard reaches it, and its own controls keep their behavior. */}
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+        <div ref={listRef} className="smarter-selectable-rows" onClick={onRowClick} onKeyDown={onRowKeyDown}>
           <ListView
             key={tab.key}
             isLoading={list.isLoading}
@@ -491,20 +627,13 @@ export default function TabbedListView<TObject>({
             sorting={sorting}
             filtering={filtering}
           />
-        ) : (
-          <CardView
-            key={tab.key}
-            sessionContext={sessionContext}
-            objects={list.objects}
-            onRequery={onRequery}
-            filtering={filtering}
-          />
-        )}
+        </div>
 
         {list.pagination && list.pagination.count > 0 && (
           <PaginationControls pagination={list.pagination} disabled={list.isLoading} onPage={onPage} />
         )}
       </div>
+      {detail}
     </div>
   );
 }

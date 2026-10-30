@@ -117,7 +117,8 @@ const VectorsearchRow = React.memo(function VectorsearchRow({
     <tr className="" key={vectorsearch.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={vectorsearch.manifestUrl}>{vectorsearch.name}</a>
+        {/* the row opens the vectorsearch's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{vectorsearch.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

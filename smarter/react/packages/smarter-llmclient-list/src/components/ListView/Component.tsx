@@ -123,9 +123,10 @@ const LLMClientRow = React.memo(function LLMClientRow({
     <tr className="" key={llmclient.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={llmclient.urlChatapp} {...weatherTargetAttribute(llmclient.name)}>
+        {/* the row opens the llmclient's detail: see TabbedListView. Its chat is the Toolbar's Chat button. */}
+        <span className="fw-semibold text-gray-900" {...weatherTargetAttribute(llmclient.name)}>
           {llmclient.name}
-        </a>
+        </span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

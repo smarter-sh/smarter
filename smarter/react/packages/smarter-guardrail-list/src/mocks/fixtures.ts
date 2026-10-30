@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<Guardrail> = {}): Guar
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/guardrail/guardrails/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/Guardrail/guardrail-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

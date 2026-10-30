@@ -30,6 +30,8 @@ export type Proxy = {
   userProfile: UserProfile;
   /** The URL of the Proxy's detail view in the web console, which renders its manifest. */
   manifestUrl: string;
+  /** The url of the Proxy's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
 
   // --- Where it forwards to ---
@@ -66,9 +68,9 @@ export type Proxy = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface ProxyCardViewProps {
+export interface ProxyDetailViewProps {
   sessionContext: SessionContext;
-  objects: Proxy[];
+  object: Proxy;
   onRequery: () => void;
   filtering?: Filtering;
 }

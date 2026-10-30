@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the Custom Domain List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * ListView, and API response layers.
  *
  * Exports:
@@ -49,6 +49,8 @@ export type CustomDomain = {
   annotations: Annotations;
   userProfile: UserProfile;
   manifestUrl: string;
+  /** The url of the custom domain's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if an LLMClient uses it, or you may not delete it
   domainName: string;
   awsHostedZoneId: string;
@@ -62,9 +64,9 @@ export type CustomDomain = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface CustomDomainCardViewProps {
+export interface CustomDomainDetailViewProps {
   sessionContext: SessionContext;
-  objects: CustomDomain[];
+  object: CustomDomain;
   onRequery: () => void;
   filtering?: Filtering;
 }
