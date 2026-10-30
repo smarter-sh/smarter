@@ -185,6 +185,22 @@ selectors (see :doc:`/smarter-platform/smarter-web-console`):
     curl -X POST -H "Authorization: Token $SMARTER_API_KEY" \
       "https://platform.example.com/api/v1/cli/get/LLMClient/?annotation=acme.com/crm/account-id=A-10042&annotation=!acme.com/archived"
 
+Smarter uses annotations to record where its own example resources come from. ``manage.py load_from_github``,
+which applies the manifests of a GitHub repository such as
+`smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__, adds three annotations to each resource, as
+Flux and Argo CD do to the Kubernetes objects that they apply from git:
+
+=================================  ===================================================================
+Annotation                         Value
+=================================  ===================================================================
+``smarter.sh/source-repository``   The repository, e.g. ``https://github.com/smarter-sh/stackademy``
+``smarter.sh/source-path``         The manifest's file in it, e.g. ``llm-clients/stackademy.yaml``
+``smarter.sh/source-commit``       The commit that was applied
+=================================  ===================================================================
+
+So ``smarter.sh/source-repository=https://github.com/smarter-sh/stackademy`` selects everything that Stackademy
+installed, and ``!smarter.sh/source-repository`` selects everything that people created themselves.
+
 Smarter itself never interprets annotation values. That is what makes them safe to extend: an annotation means
 whatever the software that reads it decides it means, and no future Smarter release will change that.
 
