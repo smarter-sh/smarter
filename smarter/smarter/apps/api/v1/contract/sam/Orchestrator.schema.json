@@ -65,6 +65,7 @@
         },
         "isActive": {
           "default": true,
+          "description": "Whether this LLMClient's membership in the Orchestrator is active.",
           "title": "Isactive",
           "type": "boolean"
         },
@@ -75,7 +76,8 @@
         },
         "role": {
           "$ref": "#/$defs/HarnessRole",
-          "default": "executor"
+          "default": "executor",
+          "description": "The part this LLMClient plays in the Orchestrator: planner, executor, critic, router, summarizer or tool_caller. The supervisor strategy needs a planner, and the router strategy a router."
         }
       },
       "required": [
@@ -223,6 +225,7 @@
         },
         "isActive": {
           "default": true,
+          "description": "Whether the Orchestrator is active.",
           "title": "Isactive",
           "type": "boolean"
         },
@@ -235,7 +238,8 @@
         },
         "strategy": {
           "$ref": "#/$defs/OrchestrationStrategy",
-          "default": "sequential"
+          "default": "sequential",
+          "description": "How the Orchestrator coordinates its LLMClients: sequential, parallel, supervisor, router, voting or debate. Supervisor needs a harness with role planner, router one with role router, and voting and debate at least two harnesses."
         }
       },
       "required": [
