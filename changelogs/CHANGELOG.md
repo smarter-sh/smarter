@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.39.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.38.2...v0.39.0-alpha.1) (2026-10-30)
+
+### Features
+
+* **helm:** add an optional Slack bot that answers with an LLMClient ([fbd1ef7](https://github.com/smarter-sh/smarter/commit/fbd1ef76cd0da1b05e1d332098a63d207ee9d4bd))
+
 ## [0.38.2](https://github.com/smarter-sh/smarter/compare/v0.38.1...v0.38.2) (2026-10-30)
 
 ### Bug Fixes
