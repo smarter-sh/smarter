@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the Secret List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * secret, and API response layers. It provides strong typing for user, secret,
  * secret, API response, and session context data structures.
  *
@@ -32,6 +32,8 @@ export type Secret = {
   lastAccessed: string | null;
   expiresAt: string | null;
   manifestUrl: string;
+  /** The url of the secret's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
 };
@@ -39,9 +41,9 @@ export type Secret = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface SecretCardViewProps {
+export interface SecretDetailViewProps {
   sessionContext: SessionContext;
-  objects: Secret[];
+  object: Secret;
   onRequery: () => void;
   filtering?: Filtering;
 }

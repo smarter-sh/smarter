@@ -1,7 +1,7 @@
 /**
  * Toolbar React Component
  *
- * This component provides a toolbar for managing LLMHostCompute resources, used in both ListView and CardView displays.
+ * This component provides a toolbar for managing LLMHostCompute resources, used in ListView and in the DetailView of a resource's detail.
  * It offers actions for viewing the manifest, cloning, renaming, and deleting an LLMHostCompute, with modal dialogs
  * for confirmation and error handling.
  *

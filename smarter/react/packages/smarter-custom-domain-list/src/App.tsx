@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { CustomDomain, CustomDomainListViewProps, CustomDomainCardViewProps } from "@/lib/Types";
+import type { CustomDomain, CustomDomainListViewProps, CustomDomainDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Custom Domains") },
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to CustomDomain,
-// then omit the two abstract attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type CustomDomainTabbedViewContext = Omit<TabbedViewContext<CustomDomain>, "ListView" | "CardView"> & {
+export type CustomDomainTabbedViewContext = Omit<TabbedViewContext<CustomDomain>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<CustomDomainListViewProps>;
-  CardView: React.ComponentType<CustomDomainCardViewProps>;
+  DetailView: React.ComponentType<CustomDomainDetailViewProps>;
 };
 
 const customDomainTabbedListViewContext: CustomDomainTabbedViewContext = {
@@ -30,7 +30,7 @@ const customDomainTabbedListViewContext: CustomDomainTabbedViewContext = {
   objectTypeName: "custom domain",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

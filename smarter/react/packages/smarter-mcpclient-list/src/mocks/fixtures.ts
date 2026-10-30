@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<MCPClient> = {}): MCPC
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/mcpclient/mcpclients/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/MCPClient/mcpclient-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

@@ -1,7 +1,7 @@
 /**
  * Toolbar React Component
  *
- * This component provides a toolbar for managing llmhost resources, used in both ListView and CardView displays.
+ * This component provides a toolbar for managing llmhost resources, used in ListView and in the DetailView of a resource's detail.
  * It offers actions for opening, editing, cloning, renaming, and deleting a llmhost, with modal dialogs for confirmation and error handling.
  *
  * Features:
@@ -22,7 +22,7 @@
  * Usage:
  * <Toolbar sessionContext={sessionContext} llmhost={llmhost} onRequery={onRequery} />
  *
- * This component is intended to be embedded in each llmhost row or card in ListView and CardView.
+ * This component is intended to be embedded in each llmhost row of ListView, and in its DetailView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";

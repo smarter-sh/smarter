@@ -95,9 +95,10 @@ const ProxyRow = React.memo(function ProxyRow({
     <tr className="" key={proxy.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={proxy.manifestUrl} title={proxy.description}>
+        {/* the row opens the proxy's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900" title={proxy.description}>
           {proxy.name}
-        </a>
+        </span>
       </td>
       {/* Provider */}
       <td className="">{proxy.providerName}</td>

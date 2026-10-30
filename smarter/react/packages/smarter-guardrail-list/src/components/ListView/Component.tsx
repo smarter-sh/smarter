@@ -117,7 +117,8 @@ const GuardrailRow = React.memo(function GuardrailRow({
     <tr className="" key={guardrail.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={guardrail.manifestUrl}>{guardrail.name}</a>
+        {/* the row opens the guardrail's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{guardrail.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

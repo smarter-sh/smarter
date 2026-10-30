@@ -11,6 +11,7 @@ Smarter Dashboard App
    smarter-dashboard/management
    smarter-dashboard/models
    smarter-dashboard/receivers
+   smarter-dashboard/resource_detail
    smarter-dashboard/search
    smarter-dashboard/signals
    smarter-dashboard/templatetags

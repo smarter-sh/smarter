@@ -1,7 +1,7 @@
 /**
  * Toolbar React Component
  *
- * This component provides a toolbar for managing vectorsearch resources, used in both ListView and CardView displays.
+ * This component provides a toolbar for managing vectorsearch resources, used in the ListView's rows and in the DetailView of a vectorsearch's detail.
  * It offers actions for opening, editing, cloning, renaming, and deleting a vectorsearch, with modal dialogs for confirmation and error handling.
  *
  * Features:
@@ -22,7 +22,7 @@
  * Usage:
  * <Toolbar sessionContext={sessionContext} vectorsearch={vectorsearch} onRequery={onRequery} />
  *
- * This component is intended to be embedded in each vectorsearch row or card in ListView and CardView.
+ * This component is intended to be embedded in each vectorsearch row of the ListView, and in the DetailView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";

@@ -4,7 +4,7 @@
  *
  * Central type definitions for the LLMClient List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * llmclient, and API response layers. It provides strong typing for user, plugin,
  * llmclient, API response, and session context data structures.
  *
@@ -13,6 +13,7 @@
  *   - Plugin: Type for plugin objects.
  *   - MCPClient, Guardrail: Types for an llmclient's MCPClients and guardrails.
  *   - Tool: Type for one of an llmclient's functions, plugins, MCPClients or guardrails.
+ *   - LLMClientCustomDomain, LLMClientAPIKey: Types for an llmclient's custom domain and api keys.
  *   - User, UserProfile: Types for user and profile data.
  *   - LLMClient: Type for llmclient configuration and metadata.
  *   - SessionContext: Type for session and authentication context.
@@ -45,6 +46,22 @@ export type Tool = {
   kind: "Function" | "Plugin" | "MCPClient";
 };
 
+/** The custom domain of an llmclient. See smarter.apps.llmclient.serializers.LLMClientCustomDomainSerializer. */
+export type LLMClientCustomDomain = {
+  domainName?: string;
+  verificationStatus?: string;
+  [field: string]: unknown;
+};
+
+/**
+ * An api key of an llmclient: its SmarterAuthToken's public key_id, never the key itself.
+ * See smarter.apps.llmclient.serializers.LLMClientAPIKeySerializer.
+ */
+export type LLMClientAPIKey = {
+  apiKey?: string;
+  [field: string]: unknown;
+};
+
 export type Function = {
   llmclient: number;
   createdAt: string;
@@ -70,8 +87,8 @@ export type LLMClient = {
   mcpclients: MCPClient[];
   guardrails: Guardrail[];
   tools: Tool[]; // functions, plugins, mcpclients and guardrails, in that order
-  customDomains: unknown[];
-  apiKeys: unknown[];
+  customDomains: LLMClientCustomDomain[];
+  apiKeys: LLMClientAPIKey[];
   rfc1034CompliantName: string;
   defaultSystemRole: string;
   baseApiDomain: string;
@@ -88,6 +105,8 @@ export type LLMClient = {
   urlChatConfig: string;
   urlChatapp: string;
   manifestUrl: string; // the web console page that renders the llmclient's manifest
+  /** The url of the llmclient's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   ready: boolean;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   deployed: boolean;
@@ -122,9 +141,9 @@ export interface LLMClientStyles {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface LLMClientCardViewProps {
+export interface LLMClientDetailViewProps {
   sessionContext: SessionContext;
-  objects: LLMClient[];
+  object: LLMClient;
   onRequery: () => void;
   filtering?: Filtering;
 }

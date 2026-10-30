@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<Orchestrator> = {}): O
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/orchestrator/orchestrators/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/Orchestrator/orchestrator-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

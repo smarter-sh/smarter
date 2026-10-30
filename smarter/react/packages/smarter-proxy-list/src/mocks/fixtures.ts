@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<Proxy> = {}): Proxy {
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/proxy/proxies/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/Proxy/proxy-r${id}/`,
     canDelete: true,
     provider: 1,
     providerName: "openai",

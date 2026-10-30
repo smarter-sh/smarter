@@ -2764,6 +2764,19 @@
             "description": "MetaDataModel.description.",
             "title": "Description"
           },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the Guardrail's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
+          },
           "failClosed": {
             "description": "Whether an error of the Guardrail blocks the text.",
             "title": "Failclosed",
@@ -3834,6 +3847,19 @@
             "default": null,
             "description": "MetaDataModel.description.",
             "title": "Description"
+          },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the LLMClient's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
           },
           "dnsVerificationStatus": {
             "anyOf": [
@@ -6688,6 +6714,19 @@
             "default": null,
             "description": "MetaDataModel.description.",
             "title": "Description"
+          },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the plugin's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
           },
           "id": {
             "description": "The row's primary key.",

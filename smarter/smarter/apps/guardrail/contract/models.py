@@ -103,6 +103,11 @@ class GuardrailApiGuardrail(AccountApiModel):
         description="Whether the requesting user may delete the Guardrail now: they own it, and no LLMClient uses it.",
     )
     manifest_url: str = Field(..., description="The url of the Guardrail's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the Guardrail's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
     ready: bool = Field(..., description="Whether the Guardrail is configured completely.")
     rfc1034_compliant_name: Optional[str] = Field(None, description="The name, as a DNS label.")
     stage: GuardrailApiStage = Field(
@@ -137,6 +142,7 @@ class GuardrailApiGuardrail(AccountApiModel):
         # pylint: disable=import-outside-toplevel
         from django.urls import reverse
 
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.guardrail.manifest.models.guardrail.const import (
             MANIFEST_KIND as GUARDRAIL_KIND,
         )
@@ -154,6 +160,7 @@ class GuardrailApiGuardrail(AccountApiModel):
             annotations=guardrail.annotations,
             user_profile=AccountApiUserProfile.from_model(guardrail.user_profile),
             can_delete=user_can_delete(guardrail, GUARDRAIL_KIND, user),
+            detail_url=resource_detail_url(GUARDRAIL_KIND, guardrail.record_locator),
             manifest_url=reverse(
                 f"{GuardrailReverseNames.namespace}:{GuardrailReverseNames.detailview}",
                 kwargs={"hashed_id": guardrail.hashed_id},

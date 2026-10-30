@@ -28,6 +28,7 @@ const USER_PROFILE: UserProfile = {
 };
 
 export function makeObject(id: number, overrides: Partial<LLMTool> = {}): LLMTool {
+  const kind = overrides.kind ?? "Plugin";
   return {
     id,
     createdAt: "2026-06-01T12:00:00Z",
@@ -39,9 +40,10 @@ export function makeObject(id: number, overrides: Partial<LLMTool> = {}): LLMToo
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/llm-tools/plugins/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/${kind}/pluginmeta-r${id}/`,
     canDelete: true,
     ready: true,
-    kind: "Plugin",
+    kind,
     pluginClass: "static",
     selector: { directive: "search_terms", searchTerms: ["example", "gobstopper"] },
     prompt: {

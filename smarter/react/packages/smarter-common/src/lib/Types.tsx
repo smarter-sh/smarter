@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the Prompt List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * llmclient, and API response layers. It provides strong typing for user, plugin,
  * llmclient, API response, and session context data structures.
  *
@@ -123,11 +123,34 @@ export type ListViewBaseProps<TObject, TSessionContext> = {
   filtering?: Filtering;
 };
 
-export type CardViewBaseProps<TObject, TSessionContext> = {
+/**
+ * The props of a list's DetailView: the Details tab of the resource detail that opens when a row of the list is
+ * chosen. It shows one object, with the building blocks of components/ResourceDetail (DetailSection, DetailField,
+ * ResourceMetadataSection).
+ */
+export type DetailViewBaseProps<TObject, TSessionContext> = {
   sessionContext: TSessionContext;
-  objects: TObject[];
+  object: TObject;
   onRequery: () => void;
   filtering?: Filtering;
+};
+
+/**
+ * The fields of a list's object that its resource detail reads, besides those that its DetailView shows. Every list
+ * api's serializer sends them (smarter.apps.account.serializers.MetaDataWithOwnershipModelSerializer).
+ *
+ * - name: the title of the detail. An object without a name, e.g. an Extension, is called by its display name,
+ *   title or slug.
+ * - detailUrl: the url of the detail's Manifest, Hierarchy and Dependencies tabs. A row without one, e.g. an
+ *   Extension's, has only the Details tab.
+ */
+export type DetailObject = {
+  id?: number | string;
+  name?: string | null;
+  displayName?: string | null;
+  title?: string | null;
+  slug?: string | null;
+  detailUrl?: string | null;
 };
 
 export type SessionContext = {
@@ -144,8 +167,8 @@ export type SessionContext = {
 
 /**
  * A tab of a TabbedListView. A tab whose objects are of another type than the list's, e.g. the
- * read-only Extensions tab of the LLMTool list, supplies its own ListView, CardView, and the name
- * of its object type, for the search box. Its ListView and CardView are typed with `never`
+ * read-only Extensions tab of the LLMTool list, supplies its own ListView, DetailView, and the name
+ * of its object type, for the search box. Its ListView and DetailView are typed with `never`
  * objects, so that a component of any object type may be given.
  */
 export type Tab = {
@@ -153,7 +176,7 @@ export type Tab = {
   label: string;
   objectTypeName?: string;
   ListView?: React.ComponentType<ListViewBaseProps<never, SessionContext>>;
-  CardView?: React.ComponentType<CardViewBaseProps<never, SessionContext>>;
+  DetailView?: React.ComponentType<DetailViewBaseProps<never, SessionContext>>;
 };
 
 export type Tabs = Tab[];
@@ -168,5 +191,6 @@ export type TabbedViewContext<TObject> = {
    */
   filters?: Record<string, string>;
   ListView: React.ComponentType<ListViewBaseProps<TObject, SessionContext>>;
-  CardView: React.ComponentType<CardViewBaseProps<TObject, SessionContext>>;
+  /** The Details tab of the resource detail that opens when a row of the list is chosen. */
+  DetailView: React.ComponentType<DetailViewBaseProps<TObject, SessionContext>>;
 };

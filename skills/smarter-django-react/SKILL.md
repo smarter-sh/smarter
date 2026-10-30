@@ -18,7 +18,7 @@ sidebar link (context_processors.py)
       plus <div id="smarter-<kind>-list-root" django-csrf-cookie-name=... smarter-<kind>-list-api-url=...>
       → main.tsx reads those attributes into a SessionContext and renders <App>
         → App POSTs to the list API with fetchDjangoUrl (CSRF + X-Smarter-* headers)
-          → views/listview/api.py returns {"objects": [...]} serialized with can_delete, manifest_url
+          → views/listview/api.py returns {"objects": [...]} serialized with can_delete, manifest_url, detail_url
 ```
 
 ## The Django side
@@ -84,13 +84,31 @@ sidebar link (context_processors.py)
   never searches) at once, with a "Refreshing" spinner, while it loads.
 - **`actionUrl(sessionContext, "clone/12/new_name/")`** turns the list URL into
   its sibling action URL.
-- **`TabbedListView`** (`@smarter/common`) gives the owned/shared tabs. Lists
-  are a `ListView` (table) plus a `CardView`, with a `Toolbar` and a
-  `StatusBar`.
-- **Tags and annotations**: a `CardView` renders them with `TagsRow` and
-  `AnnotationsRow` from `@smarter/common`, passing the `filtering` prop that
-  `TabbedListView` gives it, so that clicking a chip narrows the list. Its props
-  interface declares `filtering?: Filtering`. `TabbedListView` sends `?tag=` and
+- **`TabbedListView`** (`@smarter/common`) gives the owned/shared tabs. A list
+  is a `ListView` (table) and a `DetailView`, with a `Toolbar` and a
+  `StatusBar`. There is no card view.
+- **Choosing a row opens its detail.** `TabbedListView` listens for clicks and
+  Enter on the ListView's rows, and opens `ResourceDetail`, a dialog whose tabs
+  are the list's `DetailView` (one object), the resource's manifest, the
+  hierarchy of what it uses, and what uses it. The last three come from the
+  row's `detailUrl`, which `MetaDataWithOwnershipModelSerializer` adds
+  (`smarter.apps.dashboard.resource_detail`); a row without one, e.g. an
+  Extension's, has the Details tab only. The rules for a ListView: exactly one
+  `<tr>` per object, directly in `<tbody>`, loading rows with class `ghost`
+  (the row's index among `tbody > tr:not(.ghost)` is its object's), and the Name
+  cell is plain text, not a link. Clicks on a row's links, buttons and chips do
+  what they do instead.
+- **A `DetailView`** is built from `DetailOverview` (description, status,
+  Toolbar), `DetailSection`s of `DetailField`s (typed: `text`, `code`, `url`,
+  `dateTime`, `number`, `bool`, `json`, `list`), and `ResourceMetadataSection`
+  (owner, account, version, ids, dates, tags, annotations), all from
+  `@smarter/common`. Never copy a `renderDetail` helper into a package.
+  See `smarter-guardrail-list/src/components/DetailView/`.
+- **Tags and annotations**: a `DetailView` gets them from
+  `ResourceMetadataSection`, and a ListView may render `TagChips` and
+  `AnnotationChips`, passing the `filtering` prop that `TabbedListView` gives
+  it, so that clicking a chip narrows the list. Its props interface declares
+  `filtering?: Filtering`. `TabbedListView` sends `?tag=` and
   `?annotation=` (each repeatable), and `SmarterListApiView` applies them, so a
   new list api needs nothing for them. A new list api is also searched by the
   dashboard's global search (`smarter.apps.dashboard.search`), through
@@ -117,8 +135,8 @@ Copy the closest existing list package, then rename it everywhere.
 2. Rename it in `package.json` (`name` and `description`; keep `"private": true`),
    `index.html`, `main.tsx` (the root id, the API URL attribute, and its error
    messages), `lib/const.tsx`, and `README.md`.
-3. Replace the `Types.tsx` object type, and the table columns and card fields,
-   with the new serializer's fields.
+3. Replace the `Types.tsx` object type, and the table columns and the
+   DetailView's sections, with the new serializer's fields.
 4. Update the stories, the MSW fixtures and handlers, and the tests. See
    `smarter-react-testing`.
 5. `make react-install`, then build: `cd smarter/react && npm run build -w @smarter/<kind>-list`.

@@ -115,7 +115,8 @@ const ProviderRow = React.memo(function ProviderRow({
     <tr className="" key={provider.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={provider.manifestUrl}>{provider.name}</a>
+        {/* the row opens the provider's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{provider.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

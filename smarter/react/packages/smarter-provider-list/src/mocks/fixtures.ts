@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<Provider> = {}): Provi
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/provider/providers/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/Provider/provider-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

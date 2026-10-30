@@ -40,6 +40,7 @@ export function makeObject(id: number, overrides: Partial<Secret> = {}): Secret 
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/secret/secrets/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/Secret/secret-r${id}/`,
     canDelete: true,
     ready: true,
     lastAccessed: "2026-06-20T12:00:00Z",
