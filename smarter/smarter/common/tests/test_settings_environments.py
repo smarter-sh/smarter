@@ -102,13 +102,6 @@ class TestSettingsValidators(SmarterTestBase):
             with self.assertRaises(CONFIG_ERRORS):
                 make_settings(sensitive_files_amnesty_patterns=bad)
 
-    def test_openai_endpoint_image_n(self):
-        """The image count accepts int strings and rejects anything else."""
-        self.assertEqual(make_settings(openai_endpoint_image_n="3").openai_endpoint_image_n, 3)
-        for bad in ("three", 2.5):
-            with self.assertRaises(CONFIG_ERRORS):
-                make_settings(openai_endpoint_image_n=bad)
-
     def test_secret_key(self):
         """A plain string secret key is wrapped in a SecretStr."""
         settings = make_settings(secret_key="a-test-secret-key")

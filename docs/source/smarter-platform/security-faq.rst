@@ -81,13 +81,10 @@ Following are commonly asked questions about Smarter security.
     Environment variable GOOGLE_SERVICE_ACCOUNT_B64 found: GOOGLE_SERVICE_ACCOUNT_B64='****'
     Environment variable GEMINI_API_KEY found: GEMINI_API_KEY='****'
     Environment variable INTERNAL_IP_PREFIXES found: INTERNAL_IP_PREFIXES=['192.168.']
-    Environment variable LANGCHAIN_MEMORY_KEY found: LANGCHAIN_MEMORY_KEY='prompt_history'
     Environment variable LLAMA_API_KEY found: LLAMA_API_KEY='****'
     Environment variable DEBUG_MODE found: DEBUG_MODE=False
     Environment variable MAILCHIMP_API_KEY found: MAILCHIMP_API_KEY='****'
     Environment variable MARKETING_SITE_URL found: MARKETING_SITE_URL='https://smarter.sh'
-    Environment variable MYSQL_TEST_DATABASE_SECRET_NAME found: MYSQL_TEST_DATABASE_SECRET_NAME='smarter_test_db'
-    Environment variable MYSQL_TEST_DATABASE_PASSWORD found: MYSQL_TEST_DATABASE_PASSWORD='****'
     Environment variable OPENAI_API_KEY found: OPENAI_API_KEY='****'
     Environment variable PINECONE_API_KEY found: PINECONE_API_KEY='****'
     Environment variable SECRET_KEY found: SECRET_KEY='****'

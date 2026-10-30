@@ -135,9 +135,6 @@ class TestSettings(SmarterTestBase):
     def test_llmclient_cache_expiration(self):
         self.assertIsNotNone(smarter_settings.llmclient_cache_expiration)
 
-    def test_llmclient_max_returned_history(self):
-        self.assertIsNotNone(smarter_settings.llmclient_max_returned_history)
-
     def test_llmclient_tasks_create_dns_record(self):
         self.assertIsNotNone(smarter_settings.llmclient_tasks_create_dns_record)
 
@@ -206,14 +203,8 @@ class TestSettings(SmarterTestBase):
     def test_local_hosts(self):
         self.assertIsNotNone(smarter_settings.local_hosts)
 
-    def test_langchain_memory_key(self):
-        self.assertIsNotNone(smarter_settings.langchain_memory_key)
-
     def test_llm_default_provider(self):
         self.assertIsNotNone(smarter_settings.llm_default_provider)
-
-    def test_llm_default_model(self):
-        self.assertIsNotNone(smarter_settings.llm_default_model)
 
     def test_llm_default_system_role(self):
         self.assertIsNotNone(smarter_settings.llm_default_system_role)
@@ -236,15 +227,6 @@ class TestSettings(SmarterTestBase):
     def test_marketing_site_url(self):
         self.assertIsNotNone(smarter_settings.marketing_site_url)
 
-    def test_openai_api_organization(self):
-        self.assertIsNotNone(smarter_settings.openai_api_organization)
-
-    def test_openai_endpoint_image_n(self):
-        self.assertIsNotNone(smarter_settings.openai_endpoint_image_n)
-
-    def test_openai_endpoint_image_size(self):
-        self.assertIsNotNone(smarter_settings.openai_endpoint_image_size)
-
     def test_root_domain(self):
         self.assertIsNotNone(smarter_settings.root_domain)
 
@@ -256,12 +238,6 @@ class TestSettings(SmarterTestBase):
 
     def test_shared_resource_identifier(self):
         self.assertIsNotNone(smarter_settings.shared_resource_identifier)
-
-    def test_smarter_mysql_test_database_secret_name(self):
-        self.assertIsNotNone(smarter_settings.smarter_mysql_test_database_secret_name)
-
-    def test_smarter_mysql_test_database_password(self):
-        self.assertIsNotNone(smarter_settings.smarter_mysql_test_database_password)
 
     def test_social_auth_google_oauth2_key(self):
         self.assertIsNotNone(smarter_settings.social_auth_google_oauth2_key)
