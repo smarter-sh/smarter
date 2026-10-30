@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.37.3](https://github.com/smarter-sh/smarter/compare/v0.37.2...v0.37.3) (2026-10-30)
+
+### Bug Fixes
+
+* **django:** close the db connections that error pages leave open ([7559232](https://github.com/smarter-sh/smarter/commit/755923239019e32067c2dabaa76a1acdd6928f76))
+
 ## [0.37.2](https://github.com/smarter-sh/smarter/compare/v0.37.1...v0.37.2) (2026-10-28)
 
 ### Bug Fixes
