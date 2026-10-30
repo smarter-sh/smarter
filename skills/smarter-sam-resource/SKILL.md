@@ -79,7 +79,13 @@ summary:
 3. **Broker**: `<app>/manifest/brokers/<kind>.py`, registered in
    `smarter/smarter/apps/api/v1/cli/brokers.py`. Add the kind to the user
    broker's dependency list in `smarter/smarter/apps/account/manifest/brokers/user.py`,
-   so that deleting a user accounts for it.
+   so that deleting a user accounts for it. Its `get()` passes its queryset
+   through `self.filter_by_annotation_selector(queryset, kwargs)`, before it
+   slices it, so that `?annotation=` works for the kind
+   (`test_every_kind_applies_the_selector` checks every kind). Annotations are
+   a map of strings (`MetaDataModel.annotations`, rows of
+   `smarter.lib.annotation.models.Annotation`): pass the model's map to the
+   metadata model as is, with no list handling.
 4. **Model and migration**: a `MetaDataWithOwnershipModel` subclass, plus a
    migration (see `smarter-migrations`).
 5. **Serializer**: a `MetaDataWithOwnershipModelSerializer` subclass with
