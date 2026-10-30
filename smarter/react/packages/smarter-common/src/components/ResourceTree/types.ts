@@ -16,6 +16,11 @@ export interface ResourceTreeNode {
   recordLocator: string | null;
   /** Its page in the web console, where its manifest can be edited, or null. A public page leaves urls out. */
   url: string | null;
+  /**
+   * The api of its detail: its manifest, what it uses and what uses it, which a resource's detail dialog shows when
+   * its card is chosen. Null, or absent, if the user may not read it, or on a public page.
+   */
+  detailUrl?: string | null;
   /** Whether the user may read it. A resource that they may not read shows its kind and record locator only. */
   readable: boolean;
   /** The resources that it uses. */

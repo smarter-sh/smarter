@@ -176,8 +176,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* a card that shows the resource's detail has a button for its name, which looks like the link of the others. */
+button.architecture-card-name {
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
 a.architecture-card-name:hover,
-a.architecture-card-name:focus {
+a.architecture-card-name:focus,
+button.architecture-card-name:hover,
+button.architecture-card-name:focus {
   color: var(--architecture-tone);
 }
 .architecture-card-root .architecture-card-name {
