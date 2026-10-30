@@ -48,6 +48,16 @@ from smarter.apps.llmclient.tasks import deploy_default_api
 from smarter.apps.llmtool.models import Extension
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
+from smarter.lib.annotation.const import (
+    SOURCE_COMMIT_ANNOTATION,
+    SOURCE_PATH_ANNOTATION,
+    SOURCE_REPOSITORY_ANNOTATION,
+)
+from smarter.lib.annotation.validation import (
+    AnnotationsMap,
+    SmarterAnnotationError,
+    normalize_annotations,
+)
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
@@ -122,6 +132,11 @@ class Command(SmarterCommand):
       later load, once the resource exists. ``manage.py initialize_platform`` and ``manage.py
       initialize_account`` pass it for the example manifests, some of which need a Secret of a
       third-party service, and not for Stackademy, which brings its own Secrets.
+    - Each resource is annotated with where it came from: the repository
+      (``smarter.sh/source-repository``), the manifest's file in it (``smarter.sh/source-path``) and
+      the commit (``smarter.sh/source-commit``), added to the manifest's own annotations. An annotation
+      selector then finds every resource of a repository, e.g.
+      ``smarter.sh/source-repository=https://github.com/smarter-sh/stackademy``.
     - One manifest or script that fails doesn't stop the rest. The command fails at the end, with the
       list of what failed, and also when the repository holds no manifest at all, or its
       ``scripts/scripts.yaml`` is not valid.
@@ -145,6 +160,8 @@ class Command(SmarterCommand):
     user_profile: Optional[UserProfile] = None
     verbose: bool = False
     skip_missing_references: bool = False
+    commit: Optional[str] = None
+    """The commit of the clone, from :meth:`head_commit`, or None if it is not known."""
     skipped: set[str]
     """The manifests, by file, that :meth:`apply` skipped, because they name a resource that doesn't exist."""
 
@@ -221,6 +238,73 @@ class Command(SmarterCommand):
         if result != 0:
             raise subprocess.CalledProcessError(returncode=result, cmd=f"git clone {self.url} {local_path}")
         logger.debug("%s.clone_repo() cloned %s to %s", logger_prefix, self.url, local_path)
+
+    def head_commit(self, local_path: str) -> Optional[str]:
+        """
+        Return the commit that the clone checked out.
+
+        :param local_path: The repository's clone.
+        :returns: The commit's full SHA, or None if git can't tell, in which case the resources are
+            annotated without it.
+        :rtype: Optional[str]
+        """
+        try:
+            result = subprocess.run(
+                ["git", "-C", local_path, "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=30,
+            )
+        except (OSError, subprocess.SubprocessError) as e:
+            logger.warning("%s.head_commit() could not read the commit of %s: %s", logger_prefix, self.url, e)
+            return None
+        return result.stdout.strip() or None
+
+    @property
+    def source_repository(self) -> str:
+        """The repository's url, without a trailing slash or ``.git``, as resources are annotated with it."""
+        url = self.url.rstrip("/")
+        return url[: -len(".git")] if url.endswith(".git") else url
+
+    def source_annotations(self, path: str) -> AnnotationsMap:
+        """
+        Return the annotations that say where a resource came from.
+
+        :param path: The manifest's file, relative to the repository's root.
+        :returns: The repository, the file and, if it is known, the commit.
+        :rtype: AnnotationsMap
+        """
+        retval: AnnotationsMap = {SOURCE_REPOSITORY_ANNOTATION: self.source_repository, SOURCE_PATH_ANNOTATION: path}
+        if self.commit:
+            retval[SOURCE_COMMIT_ANNOTATION] = self.commit
+        return retval
+
+    def add_source_annotations(self, manifest: SmarterDictType, path: str) -> SmarterDictType:
+        """
+        Return a copy of a manifest whose annotations also say where it came from.
+
+        The manifest's own annotations are kept, in either form that SAM accepts, and returned as a
+        map. A manifest whose annotations are invalid is returned unchanged, so that applying it
+        reports them.
+
+        :param manifest: The manifest.
+        :param path: Its file, relative to the repository's root.
+        :returns: The manifest, with :meth:`source_annotations` added to ``metadata.annotations``.
+        :rtype: SmarterDictType
+        """
+        manifest = copy.deepcopy(manifest)
+        metadata = manifest.get("metadata")
+        if not isinstance(metadata, dict):
+            return manifest
+        try:
+            annotations = normalize_annotations(metadata.get("annotations"))
+        except SmarterAnnotationError as e:
+            logger.debug("%s.add_source_annotations() left %s as it is: %s", logger_prefix, path, e)
+            return manifest
+        annotations.update(self.source_annotations(path))
+        metadata["annotations"] = annotations
+        return manifest
 
     def run_scripts(
         self, local_path: str, config: Optional[RepositoryScriptsConfig], stage: ScriptStage, user_profile: UserProfile
@@ -489,6 +573,7 @@ class Command(SmarterCommand):
                     )
                     continue
                 manifest = self.keep_deployed(manifest, user_profile)
+            manifest = self.add_source_annotations(manifest, item.path)
             error = self.apply(item.filespec, user_profile, manifest=json.dumps(manifest))
             if error:
                 failed.append(f"{item.path}: {error}")
@@ -547,6 +632,7 @@ class Command(SmarterCommand):
         local_path = tempfile.mkdtemp(prefix="load_from_github-")
         try:
             self.clone_repo(local_path)
+            self.commit = self.head_commit(local_path)
             scripts_config: Optional[RepositoryScriptsConfig] = None
             if options.get("run_scripts"):
                 scripts_config = load_scripts_config(local_path)
