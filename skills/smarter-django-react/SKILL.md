@@ -87,6 +87,16 @@ sidebar link (context_processors.py)
 - **`TabbedListView`** (`@smarter/common`) gives the owned/shared tabs. Lists
   are a `ListView` (table) plus a `CardView`, with a `Toolbar` and a
   `StatusBar`.
+- **Tags and annotations**: a `CardView` renders them with `TagsRow` and
+  `AnnotationsRow` from `@smarter/common`, passing the `filtering` prop that
+  `TabbedListView` gives it, so that clicking a chip narrows the list. Its props
+  interface declares `filtering?: Filtering`. `TabbedListView` sends `?tag=` and
+  `?annotation=` (each repeatable), and `SmarterListApiView` applies them, so a
+  new list api needs nothing for them. A new list api is also searched by the
+  dashboard's global search (`smarter.apps.dashboard.search`), through
+  `listview_registry()`, which pairs it with the `<Kind>ListView` page of the same
+  urlconf: keep that naming, or `test_every_list_api_has_its_page` fails. Set
+  `listview_label` when the model's plural verbose name is a poor label.
 - The list API's serializer sends `can_delete`, which arrives camel-cased as
   `canDelete`. The Toolbar disables its Delete button when `canDelete === false`,
   with a title that explains why (see
