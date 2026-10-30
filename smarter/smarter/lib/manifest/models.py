@@ -328,7 +328,11 @@ class SAMDependencyTreeNode(SmarterBasePydanticModel):
     Connections' Secrets. See :meth:`smarter.lib.manifest.broker.AbstractBroker.dependency_tree`.
 
     A resource that the user may not read keeps its kind and record locator, so that the tree still
-    shows that something is there, but not its name, owner or url, or what it uses in turn.
+    shows that something is there, but not its name, owner or urls, or what it uses in turn.
+
+    Each readable resource has two urls: ``url``, its manifest page in the web console, where its
+    manifest can be edited, and ``detailUrl``, the api of its detail (its manifest, what it uses and
+    what uses it), which a resource's detail dialog in the web console shows when its card is chosen.
 
     Example:
 
@@ -341,6 +345,7 @@ class SAMDependencyTreeNode(SmarterBasePydanticModel):
           "owner": "Ada Lovelace (ada)",
           "recordLocator": "llmclient-rMTAwMDAxMwx",
           "url": "/workbench/llm-clients/rMTAwMDAxMwx/manifest/",
+          "detailUrl": "/dashboard/api/resource/LLMClient/llmclient-rMTAwMDAxMwx/",
           "readable": true,
           "children": [
             {
@@ -350,6 +355,7 @@ class SAMDependencyTreeNode(SmarterBasePydanticModel):
               "owner": "Ada Lovelace (ada)",
               "recordLocator": "pluginmeta-rMTEx",
               "url": "/llm-tools/plugins/rMTEx/",
+              "detailUrl": "/dashboard/api/resource/SqlPlugin/pluginmeta-rMTEx/",
               "readable": true,
               "children": []
             }
@@ -404,6 +410,16 @@ class SAMDependencyTreeNode(SmarterBasePydanticModel):
             "url[String]: The path of the resource's manifest page in the web console, where its manifest can be "
             "edited, derived from its record locator. None if it has no page, or if the user may not read it. "
             "Read only."
+        ),
+    )
+
+    detailUrl: Optional[str] = Field(
+        default=None,
+        description=(
+            "detailUrl[String]: The path of the api of the resource's detail in the web console: its manifest, "
+            "the resources that it uses and those that use it. See "
+            "smarter.apps.dashboard.resource_detail.resource_detail_url(). None if the user may not read it, "
+            "or on a public page. Read only."
         ),
     )
 

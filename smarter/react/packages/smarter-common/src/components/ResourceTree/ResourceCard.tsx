@@ -1,23 +1,29 @@
 /**
- * One resource of the tree, as a card: its kind, its name and its owner. The card opens the resource's manifest
- * page, where its manifest can be edited, in a new tab. A resource that the user may not read is a locked card,
- * with its kind and record locator only.
+ * One resource of the tree, as a card: its kind, its name and its owner. A resource that the user may not read is a
+ * locked card, with its kind and record locator only.
+ *
+ * With onOpen, e.g. in a resource's detail dialog, the card shows the resource's own detail, where its manifest can
+ * be read, and edited from there. Without it, e.g. in the Prompt Engineer's Workbench's Architecture tab, the card
+ * opens the resource's manifest page, where its manifest can be edited, in a new tab.
  */
 import { gettext, interpolate } from "../../lib/i18n";
 
 import { kindInfo } from "./kinds";
 import type { ResourceTreeNode } from "./types";
 
-interface ResourceCardProps {
+export interface ResourceCardProps {
   node: ResourceTreeNode;
   /** The LLMClient itself, at the root of the tree, whose card stands out. */
   isRoot?: boolean;
+  /** Shows a resource's detail. A card that has it opens a readable resource that has a detailUrl. */
+  onOpen?: (node: ResourceTreeNode) => void;
 }
 
-export default function ResourceCard({ node, isRoot = false }: ResourceCardProps) {
+export default function ResourceCard({ node, isRoot = false, onOpen }: ResourceCardProps) {
   const info = kindInfo(node.kind);
   const locked = !node.readable;
-  const opens = !locked && !!node.url;
+  const showsDetail = !locked && !!onOpen && !!node.detailUrl;
+  const opens = showsDetail || (!locked && !!node.url);
   const name = node.name ?? node.recordLocator ?? node.kind;
   const classes = [
     "architecture-card",
@@ -60,7 +66,16 @@ export default function ResourceCard({ node, isRoot = false }: ResourceCardProps
           </>
         ) : (
           <>
-            {opens ? (
+            {showsDetail ? (
+              <button
+                type="button"
+                className="architecture-card-name stretched-link"
+                title={interpolate(gettext("Show the detail of %(name)s"), { name })}
+                onClick={() => onOpen?.(node)}
+              >
+                {name}
+              </button>
+            ) : opens ? (
               <a
                 href={node.url ?? undefined}
                 target="_blank"
@@ -88,7 +103,7 @@ export default function ResourceCard({ node, isRoot = false }: ResourceCardProps
       </div>
       {opens && (
         <span className="architecture-card-open text-gray-400" aria-hidden="true">
-          <i className="ki-outline ki-arrow-up-right" />
+          <i className={`ki-outline ki-${showsDetail ? "right" : "arrow-up-right"}`} />
         </span>
       )}
     </article>
