@@ -39,7 +39,7 @@ describe("DetailView", () => {
       expect(screen.getByText(name).tagName).toBe("LI");
     }
     expect(screen.getByText("What is an Everlasting Gobstopper?")).toBeInTheDocument();
-    expect(screen.getByText(/app-logo-url: url\(/)).toBeInTheDocument();
+    expect(screen.getByLabelText("CSS")).toHaveTextContent(/app-logo-url: url\(/);
     expect(screen.getByText("https://example.com")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: llmclient.urlChatapp })).toHaveAttribute("href", llmclient.urlChatapp);
     expect(screen.getByText("Not Verified")).toBeInTheDocument();

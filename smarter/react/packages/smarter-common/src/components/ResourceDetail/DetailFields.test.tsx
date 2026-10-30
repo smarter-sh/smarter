@@ -45,9 +45,9 @@ describe("DetailValue", () => {
     expect(screen.getByText("1,234")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "https://example.com/a" })).toHaveAttribute("target", "_blank");
     expect(screen.getByText("abc").tagName).toBe("CODE");
-    expect(screen.getByText(/"a": 1/)).toBeInTheDocument();
-    expect(screen.getByText(/"b": 2/)).toBeInTheDocument();
-    expect(screen.getByText("not json")).toBeInTheDocument();
+    // json is a block of source code, whose text is split into highlighted tokens.
+    const json = screen.getAllByLabelText("JSON").map((block) => block.textContent);
+    expect(json).toEqual(['{ "a": 1 }\n', '{ "b": 2 }\n', "not json\n"]);
     expect(screen.getByText("x")).toBeInTheDocument();
     expect(screen.getByText("z")).toBeInTheDocument();
     expect(screen.getByText(/ago$/)).toBeInTheDocument();
@@ -77,6 +77,21 @@ describe("DetailSection, DetailField and DetailOverview", () => {
     expect(screen.getAllByRole("term").map((term) => term.textContent)).toEqual(["StrategyHow it detects.", "Chips"]);
     expect(screen.getByTitle("How it detects.")).toBeInTheDocument();
     expect(screen.getByText("custom")).toBeInTheDocument();
+  });
+
+  it("colors a flag's yes by its tone, and leaves a no muted", () => {
+    render(
+      <dl>
+        <DetailField label="Active" value={true} type="bool" />
+        <DetailField label="Suspended" value={true} type="bool" tone="danger" />
+        <DetailField label="Deprecated" value={false} type="bool" tone="warning" />
+      </dl>,
+    );
+    const [active, suspended] = screen.getAllByText("Yes");
+    expect(active).toHaveClass("smarter-detail-bool-yes", "smarter-detail-tone-success");
+    expect(suspended).toHaveClass("smarter-detail-bool-yes", "smarter-detail-tone-danger");
+    expect(screen.getByText("No")).toHaveClass("smarter-detail-bool-no");
+    expect(screen.getByText("No")).not.toHaveClass("smarter-detail-tone-warning");
   });
 
   it("says when there is no description", () => {
@@ -154,10 +169,8 @@ describe("styleObjectAsCss", () => {
         <DetailValue value={[1]} type="css" />
       </>,
     );
-    expect(screen.getByText(/color: red;/)).toBeInTheDocument();
-    expect(screen.getByText(/font: "x";/)).toBeInTheDocument();
-    expect(screen.getByText("not json")).toBeInTheDocument();
-    expect(screen.getByText("[1]")).toBeInTheDocument();
+    const css = screen.getAllByLabelText("CSS").map((block) => block.textContent);
+    expect(css).toEqual([":root {\n  color: red;\n}\n", ':root {\n  font: "x";\n}\n', "not json\n", "[1]\n"]);
   });
 });
 

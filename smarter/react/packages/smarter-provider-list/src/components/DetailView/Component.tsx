@@ -99,9 +99,9 @@ function DetailView({ sessionContext, object: provider, onRequery, filtering }: 
           help={gettext("Whether the provider belongs to the platform's administrator, rather than to an account.")}
         />
         <DetailField label={gettext("Featured")} value={provider.isFeatured} type="bool" />
-        <DetailField label={gettext("Deprecated")} value={provider.isDeprecated} type="bool" />
-        <DetailField label={gettext("Flagged")} value={provider.isFlagged} type="bool" />
-        <DetailField label={gettext("Suspended")} value={provider.isSuspended} type="bool" />
+        <DetailField label={gettext("Deprecated")} value={provider.isDeprecated} type="bool" tone="warning" />
+        <DetailField label={gettext("Flagged")} value={provider.isFlagged} type="bool" tone="danger" />
+        <DetailField label={gettext("Suspended")} value={provider.isSuspended} type="bool" tone="danger" />
       </DetailSection>
 
       <DetailSection title={gettext("Publisher")} icon="book-open">

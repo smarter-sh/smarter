@@ -41,7 +41,7 @@ describe("DetailView", () => {
     );
     expect(screen.getByText("anthropic_api_key")).toBeInTheDocument();
     expect(screen.getByText("x-api-key")).toBeInTheDocument();
-    expect(screen.getByText(/"anthropic-version": "2023-06-01"/)).toBeInTheDocument();
+    expect(screen.getByLabelText("JSON")).toHaveTextContent(/"anthropic-version": "2023-06-01"/);
     expect(screen.getByText("/messages")).toBeInTheDocument();
     expect(screen.getByText("/models/*")).toBeInTheDocument();
   });

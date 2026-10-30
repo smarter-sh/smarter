@@ -9,6 +9,7 @@ import ResourceTree from "../ResourceTree/Component";
 import ResourceCard from "../ResourceTree/ResourceCard";
 import { branchIds, countResources, depth, type NodeId } from "../ResourceTree/tree";
 import type { ResourceDetailData } from "./api";
+import { CodeBlock } from "./code";
 import { highlightYaml } from "./yaml";
 
 /** How long the Copy button says "Copied", in milliseconds. */
@@ -85,18 +86,7 @@ export function ManifestTab({ detail }: { detail: ResourceDetailData }) {
           </a>
         )}
       </div>
-      {/* a region that scrolls has the focus, so that the keyboard can scroll it. */}
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
-      <pre className="smarter-manifest-code" aria-label={gettext("Manifest YAML")} tabIndex={0}>
-        <code>
-          {lines.map((tokens, index) => (
-            <span key={index} className="smarter-manifest-line">
-              {tokens}
-              {"\n"}
-            </span>
-          ))}
-        </code>
-      </pre>
+      <CodeBlock lines={lines} label={gettext("Manifest YAML")} className="smarter-code-block-manifest" />
     </div>
   );
 }

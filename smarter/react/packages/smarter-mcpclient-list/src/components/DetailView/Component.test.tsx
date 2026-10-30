@@ -47,7 +47,7 @@ describe("DetailView", () => {
     expect(screen.queryByText("example_mcp_api_key")).not.toBeInTheDocument();
     expect(screen.queryByText("API key header")).not.toBeInTheDocument();
     expect(screen.getByText("npx example-server")).toBeInTheDocument();
-    expect(screen.getByText(/"X-Client": "smarter"/)).toBeInTheDocument();
+    expect(screen.getByLabelText("JSON")).toHaveTextContent('{ "X-Client": "smarter" }');
     expect(screen.getByText("search_*")).toBeInTheDocument();
     expect(screen.getByText("docs://*")).toBeInTheDocument();
     expect(screen.getByText("Connection refused")).toBeInTheDocument();

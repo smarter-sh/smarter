@@ -12,6 +12,7 @@ export type {
   DetailFieldProps,
   DetailOverviewProps,
   DetailSectionProps,
+  DetailTone,
   DetailValueType,
   ResourceMetadata,
   ResourceMetadataSectionProps,

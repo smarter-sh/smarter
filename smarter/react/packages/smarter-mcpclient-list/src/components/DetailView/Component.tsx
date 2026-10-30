@@ -69,7 +69,7 @@ function DetailView({ sessionContext, object: mcpclient, onRequery, filtering }:
           wide
           help={gettext("The https URL of the MCP server's endpoint.")}
         />
-        {mcpclient.command && <DetailField label={gettext("Command")} value={mcpclient.command} type="code" wide />}
+        {mcpclient.command && <DetailField label={gettext("Command")} value={mcpclient.command} type="source" wide />}
         <DetailField
           label={gettext("Headers")}
           wide
