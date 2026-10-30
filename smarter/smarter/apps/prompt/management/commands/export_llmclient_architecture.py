@@ -24,11 +24,16 @@ def public_tree(node: SAMDependencyTreeNode) -> SAMDependencyTreeNode:
 
     :param node: The tree's root.
     :type node: SAMDependencyTreeNode
-    :returns: The tree, with every node's owner and url set to ``None``.
+    :returns: The tree, with every node's owner, url and detailUrl set to ``None``.
     :rtype: SAMDependencyTreeNode
     """
     return node.model_copy(
-        update={"owner": None, "url": None, "children": [public_tree(child) for child in node.children]}
+        update={
+            "owner": None,
+            "url": None,
+            "detailUrl": None,
+            "children": [public_tree(child) for child in node.children],
+        }
     )
 
 

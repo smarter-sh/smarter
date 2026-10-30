@@ -13,6 +13,10 @@
  * The last three are fetched once, from the object's detailUrl, when the object is shown. An object without a
  * detailUrl, e.g. an Extension, has the Details tab only.
  *
+ * The cards of the Hierarchy and Dependencies tabs show the detail of their resource in the same dialog, with its
+ * Manifest, Hierarchy and Dependencies tabs, and a Back button that returns to the resource that it was opened from.
+ * Its Manifest tab's Edit manifest opens its manifest page. Showing another resource of the list closes them all.
+ *
  * Its header has the resource's kind and name, its position in the list, and buttons that show the previous and
  * next resources of the list, which the arrow keys press too. The tab that is open stays open from one resource to
  * the next, so that their manifests, say, can be compared. Escape, the close button, and a click outside the dialog
@@ -39,6 +43,7 @@ import { gettext, interpolate } from "../../lib/i18n";
 import { Loading } from "../Loading";
 import { kindInfo } from "../ResourceTree/kinds";
 import { countResources } from "../ResourceTree/tree";
+import type { ResourceTreeNode } from "../ResourceTree/types";
 import { fetchResourceDetail, type ResourceDetailData } from "./api";
 import { DependenciesTab, HierarchyTab, ManifestTab } from "./tabs";
 import "./styles.css";
@@ -76,6 +81,12 @@ type DetailState =
   | { status: "loaded"; data: ResourceDetailData }
   | { status: "error"; message: string };
 
+/** A resource whose detail was opened from a card of another's, and the tab that the card was on. */
+type Opened = { kind: string; name: string | null; detailUrl: string; fromTab: ResourceDetailTab };
+
+/** The resources opened from the list's object, whose detailUrl is from, the last one shown. */
+type Trail = { from: string | null; opened: Opened[] };
+
 /** Whether a key press is typing, which the arrow keys must not interrupt. */
 function isTyping(target: EventTarget | null): boolean {
   return (
@@ -103,10 +114,23 @@ export default function ResourceDetail({
   const titleId = useId();
   const tabsId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
-  const { name: ownName, displayName, title: ownTitle, slug, detailUrl } = (object ?? {}) as DetailObject;
-  // an object that has no name, e.g. an Extension, is called by its display name, title or slug.
-  const name = ownName ?? displayName ?? ownTitle ?? slug;
+  const {
+    name: ownName,
+    displayName,
+    title: ownTitle,
+    slug,
+    detailUrl: objectDetailUrl,
+  } = (object ?? {}) as DetailObject;
   const [activeTab, setActiveTab] = useState<ResourceDetailTab>("details");
+  // the resources opened from the cards of the object's tabs. They belong to the object: another one has none.
+  const [trail, setTrail] = useState<Trail>({ from: null, opened: [] });
+  const opened = objectDetailUrl && trail.from === objectDetailUrl ? trail.opened : [];
+  const current = opened.at(-1);
+  const detailUrl = current?.detailUrl ?? objectDetailUrl;
+  // an object that has no name, e.g. an Extension, is called by its display name, title or slug.
+  const name = current ? current.name : (ownName ?? displayName ?? ownTitle ?? slug);
+  const previousName =
+    opened.length > 1 ? opened[opened.length - 2].name : (ownName ?? displayName ?? ownTitle ?? slug);
   const [fetched, setFetched] = useState<Fetched | null>(null);
   const [reloads, setReloads] = useState(0);
 
@@ -131,8 +155,25 @@ export default function ResourceDetail({
         ? { status: "loaded", data: fetched.data }
         : { status: "error", message: fetched.message };
 
-  // an object without a detail has the Details tab only.
-  const tab: ResourceDetailTab = detailUrl ? activeTab : "details";
+  // an object without a detail has the Details tab only, and a resource opened from a card has all but it.
+  const tab: ResourceDetailTab = !detailUrl ? "details" : current && activeTab === "details" ? "manifest" : activeTab;
+
+  /** Show the detail of a card's resource, on its Manifest tab. */
+  const openResource = (node: ResourceTreeNode) => {
+    if (!objectDetailUrl || !node.detailUrl) return;
+    const next: Opened = { kind: node.kind, name: node.name, detailUrl: node.detailUrl, fromTab: tab };
+    setTrail({ from: objectDetailUrl, opened: [...opened, next] });
+    setActiveTab("manifest");
+    dialogRef.current?.focus();
+  };
+
+  /** Return to the resource that the one shown was opened from, on the tab that it was opened from. */
+  const goBack = () => {
+    if (!current) return;
+    setTrail({ from: objectDetailUrl ?? null, opened: opened.slice(0, -1) });
+    setActiveTab(current.fromTab);
+    dialogRef.current?.focus();
+  };
 
   // the dialog has the focus while it is open, and gives it back to the row that opened it when it closes.
   useEffect(() => {
@@ -168,15 +209,15 @@ export default function ResourceDetail({
   }, [onClose, onPrevious, onNext, isNavigating]);
 
   const data = detail.status === "loaded" ? detail.data : null;
-  const kind = data?.kind ?? titleCase(objectTypeName);
+  const kind = data?.kind ?? current?.kind ?? titleCase(objectTypeName);
   const info = kindInfo(kind);
   const icon = data?.tree.icon ?? "abstract-26";
   const owner = data?.tree.owner;
   const title = name ?? data?.name ?? kind;
 
-  const tabs: { key: ResourceDetailTab; label: string; icon: string; count?: number }[] = [
-    { key: "details", label: gettext("Details"), icon: "information-4" },
-  ];
+  const tabs: { key: ResourceDetailTab; label: string; icon: string; count?: number }[] = current
+    ? []
+    : [{ key: "details", label: gettext("Details"), icon: "information-4" }];
   if (detailUrl) {
     tabs.push(
       { key: "manifest", label: gettext("Manifest"), icon: "code" },
@@ -274,6 +315,20 @@ export default function ResourceDetail({
             </h2>
           </div>
           <nav className="smarter-detail-pager" aria-label={gettext("Browse the list")}>
+            {current && (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-light-primary text-nowrap"
+                  onClick={goBack}
+                  title={interpolate(gettext("Back to %(name)s"), { name: previousName ?? "" })}
+                >
+                  <i className="ki-outline ki-arrow-left fs-4" aria-hidden="true" />
+                  {interpolate(gettext("Back to %(name)s"), { name: previousName ?? "" })}
+                </button>
+                <span className="smarter-detail-divider" aria-hidden="true" />
+              </>
+            )}
             {isNavigating && (
               <span className="spinner-border spinner-border-sm text-primary" role="status">
                 <span className="visually-hidden">{gettext("Loading...")}</span>
@@ -358,8 +413,9 @@ export default function ResourceDetail({
             </div>
           )}
           {tab === "manifest" && remote((loaded) => <ManifestTab key={loaded.recordLocator} detail={loaded} />)}
-          {tab === "hierarchy" && remote((loaded) => <HierarchyTab key={loaded.recordLocator} detail={loaded} />)}
-          {tab === "dependencies" && remote((loaded) => <DependenciesTab detail={loaded} />)}
+          {tab === "hierarchy" &&
+            remote((loaded) => <HierarchyTab key={loaded.recordLocator} detail={loaded} onOpen={openResource} />)}
+          {tab === "dependencies" && remote((loaded) => <DependenciesTab detail={loaded} onOpen={openResource} />)}
         </div>
       </div>
     </div>

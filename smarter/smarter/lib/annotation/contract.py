@@ -41,14 +41,14 @@ class AnnotationRequirement(BaseModel):
     """
     One requirement of an annotation selector, in the syntax of Kubernetes label selectors.
 
-    ===========================  ==============================================
-    Selector                     Matches resources whose annotation
-    ===========================  ==============================================
-    ``acme.com/crm-id``          ``acme.com/crm-id`` exists, with any value
-    ``!acme.com/crm-id``         ``acme.com/crm-id`` doesn't exist
-    ``acme.com/crm-id=A-10042``  ``acme.com/crm-id`` is ``A-10042``
-    ``acme.com/crm-id!=A-10042`` ``acme.com/crm-id`` is missing, or isn't ``A-10042``
-    ===========================  ==============================================
+    ============================  ====================================================
+    Selector                      Matches resources whose annotation
+    ============================  ====================================================
+    ``acme.com/crm-id``           ``acme.com/crm-id`` exists, with any value
+    ``!acme.com/crm-id``          ``acme.com/crm-id`` doesn't exist
+    ``acme.com/crm-id=A-10042``   ``acme.com/crm-id`` is ``A-10042``
+    ``acme.com/crm-id!=A-10042``  ``acme.com/crm-id`` is missing, or isn't ``A-10042``
+    ============================  ====================================================
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")

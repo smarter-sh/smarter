@@ -16,12 +16,14 @@ import {
 } from "../../mocks/example";
 import {
   detailHandler,
+  exampleDetail,
   examplePage,
   listErrorHandlers,
   listHandlers,
   manyExamples,
   otherHandler,
 } from "../../mocks/handlers";
+import { guardrailDependents, guardrailTree } from "../../mocks/resourceTree";
 import TabbedListView from "./Component";
 
 /** The rows of the example list view's table, but its header. */
@@ -600,6 +602,75 @@ describe("TabbedListView's resource detail", () => {
     const dependents = detail.getByRole("list", { name: "What uses first_example" });
     expect(within(dependents).getByText("stackademy_sql")).toBeInTheDocument();
     expect(within(dependents).getByText("You can't read this resource")).toBeInTheDocument();
+  });
+
+  /** The detail api of the LLMClients that use the examples: see guardrailDependents. */
+  const llmclientDetailHandler = () =>
+    http.post("/dashboard/api/resource/LLMClient/:locator/", ({ params }) =>
+      HttpResponse.json({
+        ...exampleDetail(22, "stackademy_sql", []),
+        kind: "LLMClient",
+        recordLocator: String(params.locator),
+        url: "/workbench/llm-clients/rMTAwMDAyMgx/manifest/",
+        tree: { ...guardrailDependents[0], children: [guardrailTree] },
+      }),
+    );
+
+  it("shows the detail of a resource that uses it, in the same dialog, and goes back", async () => {
+    server.use(...listHandlers(), detailHandler(), llmclientDetailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    let detail = within(await dialog("first_example"));
+    await user.click(detail.getByRole("tab", { name: /Dependencies/ }));
+    // a card shows the resource's detail, rather than open its manifest page.
+    const dependents = within(detail.getByRole("list", { name: "What uses first_example" }));
+    expect(dependents.queryByRole("link", { name: "stackademy_sql" })).not.toBeInTheDocument();
+    await user.click(dependents.getByRole("button", { name: "stackademy_sql" }));
+
+    detail = within(await dialog("stackademy_sql"));
+    expect(await detail.findByText("LLMClient")).toBeInTheDocument();
+    // its Manifest tab, without the list's Details, which are another kind's.
+    expect(detail.getAllByRole("tab").map((tab) => tab.textContent?.replace(/\d+$/, ""))).toEqual([
+      "Manifest",
+      "Hierarchy",
+      "Dependencies",
+    ]);
+    expect(detail.getByRole("tab", { name: /Manifest/ })).toHaveAttribute("aria-selected", "true");
+    expect(await detail.findByRole("link", { name: "Edit manifest" })).toHaveAttribute(
+      "href",
+      "/workbench/llm-clients/rMTAwMDAyMgx/manifest/",
+    );
+
+    // and on, to a resource that it uses.
+    await user.click(detail.getByRole("tab", { name: /Hierarchy/ }));
+    await user.click(detail.getByRole("button", { name: "no_pii" }));
+    detail = within(await dialog("no_pii"));
+    expect(detail.getByRole("button", { name: "Back to stackademy_sql" })).toBeInTheDocument();
+
+    // back, to the tab that each was opened from.
+    await user.click(detail.getByRole("button", { name: "Back to stackademy_sql" }));
+    detail = within(await dialog("stackademy_sql"));
+    expect(detail.getByRole("tab", { name: /Hierarchy/ })).toHaveAttribute("aria-selected", "true");
+    await user.click(detail.getByRole("button", { name: "Back to first_example" }));
+    detail = within(await dialog("first_example"));
+    expect(detail.getByRole("tab", { name: /Details/ })).toBeInTheDocument();
+    expect(detail.getByRole("tab", { name: /Dependencies/ })).toHaveAttribute("aria-selected", "true");
+    expect(detail.queryByRole("button", { name: /Back to/ })).not.toBeInTheDocument();
+  });
+
+  it("forgets the resources opened from a card when it shows another resource of the list", async () => {
+    server.use(...listHandlers(), detailHandler(), llmclientDetailHandler());
+    const user = setup();
+    await user.click(await screen.findByText("first_example"));
+    let detail = within(await dialog("first_example"));
+    await user.click(detail.getByRole("tab", { name: /Dependencies/ }));
+    await user.click(await detail.findByRole("button", { name: "stackademy_sql" }));
+    detail = within(await dialog("stackademy_sql"));
+
+    await user.click(detail.getByRole("button", { name: "Next" }));
+    detail = within(await dialog("second_example"));
+    expect(detail.queryByRole("button", { name: /Back to/ })).not.toBeInTheDocument();
+    expect(detail.getByRole("tab", { name: /Details/ })).toBeInTheDocument();
   });
 
   it("says when nothing depends on the resource", async () => {

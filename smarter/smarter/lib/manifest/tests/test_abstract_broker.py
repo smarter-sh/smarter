@@ -18,6 +18,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds, sam_kind_icon
 from smarter.apps.connection.models import ApiConnection, SqlConnection
+from smarter.apps.dashboard.resource_detail import resource_detail_url
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
@@ -309,6 +310,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         self.assertEqual(guardrail.name, self.name)
         self.assertTrue(guardrail.recordLocator.startswith("guardrail-"))
         self.assertEqual(guardrail.url, console_url(guardrail.recordLocator))
+        self.assertEqual(guardrail.detailUrl, resource_detail_url(guardrail.kind, guardrail.recordLocator))
         self.assertTrue(guardrail.url.startswith("/guardrail/"))
         self.assertEqual(guardrail.children, [])
 
@@ -319,7 +321,9 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         self.assertEqual(secret.children, [])
 
         data = tree.model_dump(mode="json")
-        self.assertEqual(set(data), {"kind", "icon", "name", "owner", "recordLocator", "url", "readable", "children"})
+        self.assertEqual(
+            set(data), {"kind", "icon", "name", "owner", "recordLocator", "url", "detailUrl", "readable", "children"}
+        )
         self.assertEqual(tree.icon, sam_kind_icon(SAMKinds.LLM_CLIENT))
         self.assertEqual(guardrail.icon, "shield-tick")
         self.assertEqual(tree.owner, AbstractBroker.dependency_tree_owner(llmclient))
@@ -366,6 +370,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         self.assertEqual(node.recordLocator, guardrail.record_locator)
         self.assertIsNone(node.name)
         self.assertIsNone(node.url)
+        self.assertIsNone(node.detailUrl)
         self.assertEqual(node.children, [])
 
     def test_dependency_tree_ends_a_cycle(self):
