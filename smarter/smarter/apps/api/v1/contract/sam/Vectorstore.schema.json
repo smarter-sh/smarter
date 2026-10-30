@@ -480,6 +480,7 @@
             }
           ],
           "default": null,
+          "description": "Vectorstore.status.deployedAt: when it was deployed. Read only.",
           "title": "Deployedat"
         },
         "documentCount": {
@@ -525,6 +526,7 @@
             }
           ],
           "default": null,
+          "description": "Vectorstore.status.lastCheckedAt: when its status was last checked. Read only.",
           "title": "Lastcheckedat"
         },
         "lastMaintenanceAt": {
@@ -538,6 +540,7 @@
             }
           ],
           "default": null,
+          "description": "Vectorstore.status.lastMaintenanceAt: when its maintenance last ran. Read only.",
           "title": "Lastmaintenanceat"
         },
         "lastSnapshotAt": {
@@ -551,6 +554,7 @@
             }
           ],
           "default": null,
+          "description": "Vectorstore.status.lastSnapshotAt: when its last snapshot was taken. Read only.",
           "title": "Lastsnapshotat"
         },
         "message": {
