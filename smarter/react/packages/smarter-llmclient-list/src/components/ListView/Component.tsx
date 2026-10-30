@@ -28,7 +28,7 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { formatDateTime, gettext, Loading, LoadingText, SortableHeader } from "@smarter/common";
+import { formatDateTime, gettext, interpolate, Loading, LoadingText, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
 import type { LLMClient } from "@/lib/Types";
@@ -123,10 +123,21 @@ const LLMClientRow = React.memo(function LLMClientRow({
     <tr className="" key={llmclient.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        {/* the row opens the llmclient's detail: see TabbedListView. Its chat is the Toolbar's Chat button. */}
-        <span className="fw-semibold text-gray-900" {...weatherTargetAttribute(llmclient.name)}>
-          {llmclient.name}
-        </span>
+        {/* the row opens the llmclient's detail: see TabbedListView. Its Workbench button opens its chat, which is
+            what the user usually came to the list for. */}
+        <div className="d-flex flex-column align-items-start gap-2">
+          <span className="fw-semibold text-gray-900" {...weatherTargetAttribute(llmclient.name)}>
+            {llmclient.name}
+          </span>
+          <a
+            href={llmclient.urlChatapp}
+            className="btn btn-sm btn-primary text-nowrap"
+            title={interpolate(gettext("Open the prompt workbench of %(name)s"), { name: llmclient.name })}
+          >
+            <i className="bi bi-chat-dots" aria-hidden="true" />
+            {gettext("Workbench")}
+          </a>
+        </div>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

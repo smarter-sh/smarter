@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
 import ResourceCard from "./ResourceCard";
 import { leafTree, lockedTree, stackademyTree } from "../../mocks/resourceTree";
@@ -46,5 +47,28 @@ describe("ResourceCard", () => {
     expect(screen.queryByRole("link", { name: "hello_world" })).not.toBeInTheDocument();
     expect(screen.getByText("hello_world")).toBeInTheDocument();
     expect(screen.getByRole("article")).not.toHaveTextContent("Owner");
+  });
+
+  it("shows the resource's detail, with onOpen, rather than open its manifest page", async () => {
+    const secret = stackademyTree.children[2].children[0];
+    const onOpen = vi.fn();
+    render(<ResourceCard node={secret} onOpen={onOpen} />);
+    expect(screen.queryByRole("link", { name: "openai_api_key" })).not.toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "openai_api_key" });
+    expect(button).toHaveAttribute("title", "Show the detail of openai_api_key");
+    await userEvent.setup().click(button);
+    expect(onOpen).toHaveBeenCalledWith(secret);
+    expect(screen.getByRole("article")).toHaveClass("architecture-card-link");
+  });
+
+  it("opens nothing with onOpen for a resource that the user can't read", () => {
+    render(<ResourceCard node={lockedTree.children[0]} onOpen={vi.fn()} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("opens the manifest page with onOpen for a resource that has no detail, e.g. on a public page", () => {
+    render(<ResourceCard node={{ ...leafTree, detailUrl: null }} onOpen={vi.fn()} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "hello_world" })).toHaveAttribute("target", "_blank");
   });
 });

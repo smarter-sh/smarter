@@ -1508,7 +1508,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         Each node has the kind's icon, from :func:`smarter.apps.api.v1.manifests.enum.sam_kind_icon`, the
         resource's owner, its record locator, and the path of its manifest page in the web console, derived
-        from the record locator by :func:`smarter.lib.manifest.record_locator.console_url`, so that a web
+        from the record locator by :func:`smarter.lib.manifest.record_locator.console_url`, and the url of
+        its detail, by :func:`smarter.apps.dashboard.resource_detail.resource_detail_url`, so that a web
         console page can draw the tree with a card for each resource. A resource that the authenticated user may not read has only
         its kind and record locator, and no children.
 
@@ -1555,6 +1556,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.brokers import Brokers
         from smarter.apps.api.v1.manifests.enum import sam_kind_icon
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
 
         record_locator: Optional[str] = getattr(instance, "record_locator", None)
         icon = sam_kind_icon(kind)
@@ -1579,6 +1581,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             owner=self.dependency_tree_owner(instance),
             recordLocator=record_locator,
             url=console_url(record_locator),
+            detailUrl=resource_detail_url(kind, record_locator),
             children=sorted(children, key=lambda node: (node.kind, node.name or "")),
         )
 
