@@ -8,6 +8,7 @@ import { gettext, interpolate, ngettext } from "../../lib/i18n";
 import ResourceTree from "../ResourceTree/Component";
 import ResourceCard from "../ResourceTree/ResourceCard";
 import { branchIds, countResources, depth, type NodeId } from "../ResourceTree/tree";
+import type { ResourceTreeNode } from "../ResourceTree/types";
 import type { ResourceDetailData } from "./api";
 import { CodeBlock } from "./code";
 import { highlightYaml } from "./yaml";
@@ -91,8 +92,11 @@ export function ManifestTab({ detail }: { detail: ResourceDetailData }) {
   );
 }
 
-/** The Hierarchy tab: the tree of the resources that the resource uses, recursively. */
-export function HierarchyTab({ detail }: { detail: ResourceDetailData }) {
+/** Shows another resource's detail, in place of this one's: see ResourceDetail. */
+type OnOpen = (node: ResourceTreeNode) => void;
+
+/** The Hierarchy tab: the tree of the resources that the resource uses, recursively. Their cards show their detail. */
+export function HierarchyTab({ detail, onOpen }: { detail: ResourceDetailData; onOpen?: OnOpen }) {
   const { tree } = detail;
   const [collapsed, setCollapsed] = useState<ReadonlySet<NodeId>>(() => new Set());
   const branches = branchIds(tree);
@@ -152,14 +156,16 @@ export function HierarchyTab({ detail }: { detail: ResourceDetailData }) {
           collapsed={collapsed}
           onToggle={toggle}
           label={interpolate(gettext("The resources that %(name)s uses"), { name })}
+          onOpen={onOpen}
         />
       </div>
     </div>
   );
 }
 
-/** The Dependencies tab: the resources that use this one, and that keep it from being deleted. */
-export function DependenciesTab({ detail }: { detail: ResourceDetailData }) {
+/** The Dependencies tab: the resources that use this one, and that keep it from being deleted. Their cards show their
+ * detail. */
+export function DependenciesTab({ detail, onOpen }: { detail: ResourceDetailData; onOpen?: OnOpen }) {
   const name = detail.name ?? detail.kind;
   if (detail.dependents.length === 0) {
     return (
@@ -185,7 +191,7 @@ export function DependenciesTab({ detail }: { detail: ResourceDetailData }) {
       <ul className="smarter-detail-dependents" aria-label={interpolate(gettext("What uses %(name)s"), { name })}>
         {detail.dependents.map((node, index) => (
           <li key={node.recordLocator ?? index}>
-            <ResourceCard node={node} />
+            <ResourceCard node={node} onOpen={onOpen} />
           </li>
         ))}
       </ul>

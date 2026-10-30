@@ -36,6 +36,17 @@ describe("ListView", () => {
     expect(row.getByTitle("Chat: Open the prompt workbench")).toHaveAttribute("href", ownedObjects[0].urlChatapp);
   });
 
+  it("has a Workbench button in each row, which opens the llmclient's prompt workbench", async () => {
+    render(<ListView isLoading={false} sessionContext={sessionContext} objects={ownedObjects} onRequery={() => {}} />);
+    for (const object of ownedObjects) {
+      const row = within(await screen.findByRole("row", { name: new RegExp(object.name) }));
+      const button = row.getByRole("link", { name: "Workbench" });
+      expect(button).toHaveAttribute("href", object.urlChatapp);
+      expect(button).toHaveAttribute("title", `Open the prompt workbench of ${object.name}`);
+      expect(button).toHaveClass("btn-primary");
+    }
+  });
+
   it("shows skeleton rows while loading", () => {
     render(<ListView isLoading sessionContext={sessionContext} objects={[]} onRequery={() => {}} />);
     // the header row, and a skeleton row for each of the ghostRows.

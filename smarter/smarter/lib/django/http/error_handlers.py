@@ -34,7 +34,9 @@ def closing_connections(view: Callable[..., HttpResponse]) -> Callable[..., Http
 
     The view's response is rendered by the time it returns, so nothing it does needs the
     connection afterwards. :func:`functools.wraps` keeps the view's signature, which Django's
-    system check of custom error handlers reads.
+    system check of custom error handlers reads. The wrapper gets its own docstring, because
+    Django's error views use the ``:template:`` role of ``django.contrib.admindocs``, which
+    crashes Sphinx when autodoc renders it.
 
     :param view: An error view, e.g. :func:`django.views.defaults.page_not_found`.
     :type view: Callable[..., HttpResponse]
@@ -49,6 +51,10 @@ def closing_connections(view: Callable[..., HttpResponse]) -> Callable[..., Http
         finally:
             close_thread_connections()
 
+    wrapper.__doc__ = (
+        f":func:`{view.__module__}.{view.__qualname__}`, closing the current thread's database "
+        "connections when it returns."
+    )
     return wrapper
 
 
