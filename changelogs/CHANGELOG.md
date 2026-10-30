@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.38.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.38.0-alpha.3...v0.38.0-alpha.4) (2026-10-30)
+
+### Bug Fixes
+
+* **api:** add detailUrl to the remaining REST api contract models ([4ca5156](https://github.com/smarter-sh/smarter/commit/4ca5156f3cbe9859383f34ce8c3c9f0511de5a71))
+* **dashboard:** open global search results in the resource's detail ([a125477](https://github.com/smarter-sh/smarter/commit/a125477103fa4c96e2b632ecb600ec33632cdf55))
+* **react:** redesign the resource detail's fields and its source code ([9e5992d](https://github.com/smarter-sh/smarter/commit/9e5992d4b9c3e6fc15a8eaca234bea2ff4e73ddb))
+
 ## [0.38.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.38.0-alpha.2...v0.38.0-alpha.3) (2026-10-30)
 
 ### Bug Fixes
