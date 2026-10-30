@@ -4650,6 +4650,19 @@
             "description": "MetaDataModel.description.",
             "title": "Description"
           },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the LLMHost's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
+          },
           "embeddingDimensions": {
             "anyOf": [
               {
@@ -5713,6 +5726,19 @@
             "description": "MetaDataModel.description.",
             "title": "Description"
           },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the MCPClient's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
+          },
           "endpointUrl": {
             "anyOf": [
               {
@@ -6469,6 +6495,19 @@
             "default": null,
             "description": "MetaDataModel.description.",
             "title": "Description"
+          },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the Orchestrator's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
           },
           "hashedId": {
             "description": "The Orchestrator's hashed id, e.g. rMTAwMDAwMQx, which its urls use.",
@@ -9886,6 +9925,19 @@
             "default": null,
             "description": "MetaDataModel.description.",
             "title": "Description"
+          },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the Provider's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
           },
           "docsUrl": {
             "anyOf": [
@@ -19353,6 +19405,19 @@
             "description": "MetaDataModel.description.",
             "title": "Description"
           },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the Secret's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
+          },
           "expiresAt": {
             "anyOf": [
               {
@@ -19467,6 +19532,19 @@
             "description": "Whether the requesting user may delete the Secret now.",
             "title": "Candelete",
             "type": "boolean"
+          },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the Secret's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
           },
           "id": {
             "description": "The Secret's primary key.",
@@ -19755,6 +19833,19 @@
             "default": null,
             "description": "MetaDataModel.description.",
             "title": "Description"
+          },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the Vectorsearch's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
           },
           "fetchK": {
             "anyOf": [
@@ -20676,6 +20767,19 @@
             "default": null,
             "description": "MetaDataModel.description.",
             "title": "Description"
+          },
+          "detailUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The url of the vectorstore's detail in the web console: its manifest, the resources that it uses, and those that use it.",
+            "title": "Detailurl"
           },
           "dimension": {
             "description": "The dimension of its vectors.",
