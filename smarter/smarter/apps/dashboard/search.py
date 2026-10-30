@@ -166,17 +166,39 @@ def list_url(entry: ListviewEntry, mode: SearchMode, value: str) -> str:
     return f"{entry.page_url}?{urlencode({parameter: value})}"
 
 
-def result_of(row: dict, fallback_url: str) -> GlobalSearchResult:
+def detail_page_url(entry: ListviewEntry, row: dict) -> Optional[str]:
+    """
+    Return the url of a resource's list, narrowed by its name, with the resource's detail open.
+
+    The list's TabbedListView opens the detail of ``?detail=<record locator>``: the resource's manifest, what it
+    uses and what uses it, beside its own fields. The record locator is the last part of the row's
+    ``detailUrl``, which :class:`smarter.apps.account.serializers.MetaDataWithOwnershipModelSerializer` adds.
+
+    :param entry: The resource's list.
+    :param row: The serialized resource.
+    :returns: The url, e.g. ``/secret/?search=openai_api_key&detail=secret-rMTAwx``, or None if the row has no
+        detail.
+    """
+    detail_url = row.get("detail_url") or row.get("detailUrl")
+    record_locator = str(detail_url or "").rstrip("/").rsplit("/", 1)[-1]
+    if not record_locator:
+        return None
+    return f"{entry.page_url}?{urlencode({'search': str(row.get('name') or ''), 'detail': record_locator})}"
+
+
+def result_of(row: dict, fallback_url: str, detail_url: Optional[str] = None) -> GlobalSearchResult:
     """
     Return a search result from a resource as its list api's serializer dumps it.
 
-    Serializers name the resource's page ``manifest_url``, or ``manifestUrl`` when they camel-case.
+    A result opens the resource's detail in its list (see :func:`detail_page_url`). A resource that has no
+    detail opens its page, which serializers name ``manifest_url``, or ``manifestUrl`` when they camel-case.
 
     :param row: The serialized resource.
-    :param fallback_url: The url to link to when the serializer gives none: its list, narrowed by its name.
+    :param fallback_url: The url to link to when the serializer gives neither: its list, narrowed by its name.
+    :param detail_url: Its list, with its detail open.
     :returns: The result.
     """
-    url = row.get("manifest_url") or row.get("manifestUrl") or fallback_url
+    url = detail_url or row.get("manifest_url") or row.get("manifestUrl") or fallback_url
     return GlobalSearchResult(
         name=str(row.get("name") or ""),
         description=str(row.get("description") or ""),
@@ -219,7 +241,14 @@ def global_search(user, query: str, entries: Optional[tuple[ListviewEntry, ...]]
                 label=entry.label,
                 count=count,
                 url=url,
-                results=[result_of(dict(row), list_url(entry, "text", str(row.get("name") or ""))) for row in rows],
+                results=[
+                    result_of(
+                        dict(row),
+                        list_url(entry, "text", str(row.get("name") or "")),
+                        detail_page_url(entry, dict(row)),
+                    )
+                    for row in rows
+                ],
             )
         )
         response.count += count
@@ -228,6 +257,7 @@ def global_search(user, query: str, entries: Optional[tuple[ListviewEntry, ...]]
 
 
 __all__ = [
+    "detail_page_url",
     "GlobalSearchGroup",
     "GlobalSearchResponse",
     "GlobalSearchResult",
