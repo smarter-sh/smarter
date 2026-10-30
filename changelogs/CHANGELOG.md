@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.38.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.37.4-alpha.2...v0.38.0-alpha.1) (2026-10-30)
+
+### Features
+
+* **annotation:** store SAM annotations as Kubernetes-style rows ([cf82960](https://github.com/smarter-sh/smarter/commit/cf829605a2a7e5c6c747d4ea7b5cc3bb0283b3a5))
+
 ## [0.37.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.37.4-alpha.1...v0.37.4-alpha.2) (2026-10-30)
 
 ### Bug Fixes
