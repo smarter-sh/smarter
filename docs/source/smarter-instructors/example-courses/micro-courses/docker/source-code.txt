@@ -58,7 +58,9 @@ Compose and the Makefile
    * - Six services
      - ``smarter-mariadb``, ``smarter-redis``, ``smarter-app`` (uvicorn, restarted by watchmedo
        when a Python file changes), ``smarter-worker`` and ``smarter-worker-infrastructure`` (two
-       Celery workers on separate queues) and ``smarter-beat`` (the Celery scheduler).
+       Celery workers on separate queues) and ``smarter-beat`` (the Celery scheduler). How the
+       infrastructure worker waits for DNS and certificates: "Waiting without blocking" in `What
+       Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
      - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__
    * - One image, four roles
      - The web server, both workers and the scheduler run the same ``smarter`` image with
@@ -77,12 +79,16 @@ Compose and the Makefile
    * - No bind mount
      - The source is copied into the image, not mounted, so the containers run exactly what was
        built. The trade-off: every edit needs a rebuild or a copy, which is what the sync scripts
-       are for.
+       are for, and how an AI coding agent runs the tests itself ("5. An environment the agent can
+       run" in `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__).
      - `sync-changed-files.sh <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/scripts/sync-changed-files.sh>`__,
        `smarter-docker-environment/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-docker-environment/SKILL.md>`__
    * - First start
      - ``make docker-init`` starts the services, waits for MariaDB, creates the database, migrates,
-       and initializes the platform with its built-in resources, including a sample database.
+       and initializes the platform with its built-in resources, including a sample database,
+       the one that `Stackademy Online Coding Academy
+       <https://smarter.sh/case-studies/stackademy>`__ queries with tool calls.
      - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``docker-init``),
        `scripts/smarter_test_db.sql <https://github.com/smarter-sh/stackademy/blob/main/scripts/smarter_test_db.sql>`__
        in the Stackademy project

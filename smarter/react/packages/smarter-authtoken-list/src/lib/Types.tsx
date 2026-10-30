@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the AuthToken List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * authtoken, and API response layers. It provides strong typing for user, authtoken,
  * authtoken, API response, and session context data structures.
  *
@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // AuthToken Definition
@@ -27,11 +27,15 @@ export type AuthToken = {
   description: string;
   version: string;
   tags: string[];
-  annotations: Annotations[];
+  annotations: Annotations;
   userProfile: UserProfile;
-  lastAccessed: string | null;
-  expiresAt: string | null;
+  /** Whether the key may be used: an inactive key is refused. */
+  isActive: boolean;
+  /** When the key was last used, or null if it never was. */
+  lastUsedAt: string | null;
   manifestUrl: string;
+  /** The url of the authtoken's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
 };
@@ -39,10 +43,11 @@ export type AuthToken = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface AuthTokenCardViewProps {
+export interface AuthTokenDetailViewProps {
   sessionContext: SessionContext;
-  objects: AuthToken[];
+  object: AuthToken;
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface AuthTokenListViewProps {

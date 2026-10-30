@@ -79,7 +79,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 3
      - **Authentication and errors.** API keys and sessions,
        :doc:`authentication </smarter-framework/smarter-api/authentication>`, the
-       :doc:`error format </smarter-framework/smarter-api/error-handling>`, and RFC 9457.
+       :doc:`error format </smarter-framework/smarter-api/error-handling>`, and RFC 9457. The
+       section "API keys: stored as digests, named by a UUID" of the case study `One Platform,
+       Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__ explains why an API key is
+       hashed differently from a password, and where a key can still leak.
    * - 1
      - Live session 1
      - Live ``curl`` session through a resource's lifecycle, and an error hunt in pairs. Start
@@ -107,10 +110,15 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 8
      - **Contracts.** Pydantic request and response models, OpenAPI generation, and contract tests.
+       Pre-reading: the case study `One Contract, Five Clients
+       <https://smarter.sh/case-studies/api-contract>`__, whose four rules run from "One object,
+       two uses" and "Generated, then committed" to "Every route is documented" and "Real
+       responses are checked".
    * - 3
      - Lecture 9
      - **Describing an API.** Writing OpenAPI by hand, generating clients, and documentation that
-       developers enjoy.
+       developers enjoy. The case study's "Lab 2: Read the contract yourself" reads Smarter's
+       document with ``curl`` and Python, and generates a typed client from it.
    * - 3
      - Live session 3
      - Review of Assignment 2. Live addition of an endpoint, with tests. Capstone proposals
@@ -118,11 +126,15 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 4
      - Lecture 10
      - **Evolving an API.** Versioning strategies, deprecation, breaking changes, and
-       :doc:`ADR 023 </adr/023-api-versioning>`.
+       :doc:`ADR 023 </adr/023-api-versioning>`. Pre-reading: "A change, end to end" and
+       "Breaking changes, and versions" in the contract case study, whose discussion question on
+       versioning by path or by header opens the lecture.
    * - 4
      - Lecture 11
      - **Securing an API.** The OWASP API Security Top 10: object-level authorization, excessive
-       data exposure, mass assignment and rate limiting.
+       data exposure, mass assignment and rate limiting. "The rules, as querysets" in the
+       multi-tenancy case study is a worked defense against broken object-level authorization;
+       its discussion question on answering 404 rather than 403 sets up the debate.
    * - 4
      - Lecture 12
      - **Operating an API.** Rate limiting: DRF's throttling classes

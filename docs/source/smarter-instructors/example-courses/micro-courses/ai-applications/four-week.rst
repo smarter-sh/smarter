@@ -58,7 +58,9 @@ Technical Prerequisites
   <https://learnxinyminutes.com/docs/yaml/>`__) and reading JSON.
 - **Required:** a general idea of what a database table and a web API are.
 - **Required by week 2:** a GitHub account, and enough Git to commit files through the web
-  interface or `GitHub Desktop <https://desktop.github.com/>`__.
+  interface or `GitHub Desktop <https://desktop.github.com/>`__. The section "Governing it with
+  git" of the case study `Stackademy Online Coding Academy
+  <https://smarter.sh/case-studies/stackademy>`__ explains why manifests belong in a repository.
 - **Helpful:** experience writing system prompts, basic SQL, and a spreadsheet program.
 - **Not needed:** programming.
 
@@ -96,7 +98,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 5
      - **Retrieval, part 2.** Chunking, top-k, metadata, stale documents, and measuring retrieval
-       quality separately from answer quality.
+       quality separately from answer quality. The section "Searching without embeddings" of the
+       case study `The Smarter Project MCP Server
+       <https://smarter.sh/case-studies/mcp-server>`__ shows when keyword search beats
+       embeddings.
    * - 2
      - Lecture 6
      - **Structured data.** Two safe patterns, both shipped with Smarter: a :doc:`SQL Plugin
@@ -107,6 +112,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
        with a read-only database user, its password in a :doc:`Secret
        </smarter-resources/smarter-secret>`, and how wrong answers still happen.
+       Pre-reading: the case study `Stackademy Online Coding Academy
+       <https://smarter.sh/case-studies/stackademy>`__, whose "Lab 1: Talk to Stanley" asks the
+       same questions of a SQL Plugin advisor and an API Plugin advisor.
    * - 2
      - Live session 2
      - Review of Assignment 1. Diagnose retrieval failures as a class. Start Assignment 2.
@@ -123,12 +131,18 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 8
      - **MCP.** The `Model Context Protocol <https://modelcontextprotocol.io/>`__ and
        :doc:`MCP clients </smarter-resources/smarter-mcpclient>`: authentication, tool selection,
-       and trusting a server.
+       and trusting a server. In `the MCP server case study
+       <https://smarter.sh/case-studies/mcp-server>`__, "Lab 1: Talk to Sam" and "Lab 3: The
+       MCPClient" show an assistant grounded in a server's tools, and "Stateless and public" what
+       a server without authentication must guard against.
    * - 3
      - Lecture 9
      - **Tool safety.** What a tool can do if the model is tricked. Prompt injection through
        retrieved content, least privilege, and :doc:`Guardrails
-       </smarter-resources/smarter-guardrail>`.
+       </smarter-resources/smarter-guardrail>`. Pre-reading: the section "URLs a model chooses" of
+       the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__, and its question on why guardrails don't
+       scan tool results.
    * - 3
      - Live session 3
      - Review of Assignment 2. Students attack each other's tool-using assistants with injected
@@ -235,7 +249,9 @@ Assignment 3: Data Assistant with a Risk Review
 
 Students build an assistant over the sample database, check ten answers against the truth, and
 write a risk review of what could go wrong if managers relied on it, with mitigations they
-implement.
+implement. The discussion questions of `the Stackademy case study
+<https://smarter.sh/case-studies/stackademy>`__, on what its enum of keywords prevents and costs,
+and on governing Budgets apart from the assistants, are a good place to start.
 
 **Turn in:** manifests, the questions, answers, the SQL behind each one and checks, and a two-page
 risk review.

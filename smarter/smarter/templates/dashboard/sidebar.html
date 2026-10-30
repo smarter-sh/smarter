@@ -86,8 +86,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "dashboard" %} active{% endif %}"
                 href="{{ sidebar.dashboard }}"
+                {% if sidebar_active == "dashboard" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -107,8 +108,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "prompt_passthrough" %} active{% endif %}"
                 href="{{ sidebar.prompt_passthrough }}"
+                {% if sidebar_active == "prompt_passthrough" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -128,8 +130,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "manifest_drop_zone" %} active{% endif %}"
                 href="{{ sidebar.manifest_drop_zone }}"
+                {% if sidebar_active == "manifest_drop_zone" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -150,8 +153,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "terminal" %} active{% endif %}"
                 href="{{ sidebar.terminal }}"
+                {% if sidebar_active == "terminal" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -185,8 +189,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "providers" %} active{% endif %}"
                 href="{{ sidebar.providers }}"
+                {% if sidebar_active == "providers" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -207,8 +212,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "proxies" %} active{% endif %}"
                 href="{{ sidebar.proxies }}"
+                {% if sidebar_active == "proxies" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -229,8 +235,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "llmhost" %} active{% endif %}"
                 href="{{ sidebar.llmhost }}"
+                {% if sidebar_active == "llmhost" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -250,8 +257,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "llmhostcompute" %} active{% endif %}"
                 href="{{ sidebar.llmhostcompute }}"
+                {% if sidebar_active == "llmhostcompute" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -282,8 +290,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "workbench" %} active{% endif %}"
                 href="{{ sidebar.workbench }}"
+                {% if sidebar_active == "workbench" %}aria-current="page"{% endif %}
                 target="_self"
                 data-smarter-onboarding="sidebar-llmclients"
               >
@@ -304,8 +313,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "orchestrators" %} active{% endif %}"
                 href="{{ sidebar.orchestrators }}"
+                {% if sidebar_active == "orchestrators" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -325,8 +335,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "api_keys" %} active{% endif %}"
                 href="{{ sidebar.api_keys }}"
+                {% if sidebar_active == "api_keys" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -346,8 +357,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "custom_domains" %} active{% endif %}"
                 href="{{ sidebar.custom_domains }}"
+                {% if sidebar_active == "custom_domains" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -379,8 +391,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "extensions" %} active{% endif %}"
                 href="{{ sidebar.extensions }}"
+                {% if sidebar_active == "extensions" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -405,8 +418,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
-                href="{% url 'llmtool:plugin_list_view' %}"
+                class="menu-link{% if sidebar_active == "plugins" %} active{% endif %}"
+                href="{{ sidebar.plugins }}"
+                {% if sidebar_active == "plugins" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -433,8 +447,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "mcpclients" %} active{% endif %}"
                 href="{{ sidebar.mcpclients }}"
+                {% if sidebar_active == "mcpclients" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -454,8 +469,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "connections" %} active{% endif %}"
                 href="{{ sidebar.connections }}"
+                {% if sidebar_active == "connections" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -487,8 +503,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "vectorsearches" %} active{% endif %}"
                 href="{{ sidebar.vectorsearches }}"
+                {% if sidebar_active == "vectorsearches" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -509,8 +526,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "vectorstores" %} active{% endif %}"
                 href="{{ sidebar.vectorstores }}"
+                {% if sidebar_active == "vectorstores" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -543,8 +561,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "budgets" %} active{% endif %}"
                 href="{{ sidebar.budgets }}"
+                {% if sidebar_active == "budgets" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -564,8 +583,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "guardrails" %} active{% endif %}"
                 href="{{ sidebar.guardrails }}"
+                {% if sidebar_active == "guardrails" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -585,8 +605,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "secrets" %} active{% endif %}"
                 href="{{ sidebar.secrets }}"
+                {% if sidebar_active == "secrets" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-icon">
@@ -654,8 +675,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "example_manifests" %} active{% endif %}"
                 href="{{ sidebar.example_manifests }}"
+                {% if sidebar_active == "example_manifests" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-bullet">
@@ -670,7 +692,7 @@
             <!--begin:Menu item OpenAPI Contract-->
             <div class="menu-item">
               <!--begin:Menu link-->
-              <a class="menu-link" href="{{ sidebar.openapi }}" target="_self">
+              <a class="menu-link{% if sidebar_active == "openapi" %} active{% endif %}" href="{{ sidebar.openapi }}" {% if sidebar_active == "openapi" %}aria-current="page"{% endif %} target="_self">
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
                 </span>
@@ -684,8 +706,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "json_schemas" %} active{% endif %}"
                 href="{{ sidebar.json_schemas }}"
+                {% if sidebar_active == "json_schemas" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-bullet">
@@ -734,8 +757,9 @@
             <div class="menu-item">
               <!--begin:Menu link-->
               <a
-                class="menu-link"
+                class="menu-link{% if sidebar_active == "infrastructure_resources" %} active{% endif %}"
                 href="{{ sidebar.infrastructure_resources }}"
+                {% if sidebar_active == "infrastructure_resources" %}aria-current="page"{% endif %}
                 target="_self"
               >
                 <span class="menu-bullet">

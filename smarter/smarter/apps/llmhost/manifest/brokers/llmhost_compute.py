@@ -205,7 +205,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             description=compute.description,
             version=compute.version,
             tags=compute.tags_list,
-            annotations=compute.annotations if isinstance(compute.annotations, list) else [],
+            annotations=compute.annotations,
         )
         status = SAMLLMHostComputeStatus(
             accountNumber=self.account.account_number,
@@ -282,7 +282,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             description="One NVIDIA L4 with 24 GB, 8 vCPUs and 32 GiB.",
             version="1.0.0",
             tags=["example", "gpu", "l4"],
-            annotations=[{"smarter.sh/llmhostcompute/purpose": "example"}],
+            annotations={"smarter.sh/llmhostcompute/purpose": "example"},
         )
         spec = SAMLLMHostComputeSpec(
             node=SAMLLMHostComputeNode(
@@ -320,6 +320,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
         computes = LLMHostCompute.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
             computes = computes.filter(name=name)
+        computes = self.filter_by_annotation_selector(computes, kwargs)
         data = [
             self.to_camel_case(LLMHostComputeSerializer(compute).data)
             for compute in computes.order_by("name")[:MAX_RESULTS]

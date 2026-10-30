@@ -117,7 +117,8 @@ const LLMToolRow = React.memo(function LLMToolRow({
     <tr className="" key={llmtool.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={llmtool.manifestUrl}>{llmtool.name}</a>
+        {/* the row opens the plugin's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{llmtool.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

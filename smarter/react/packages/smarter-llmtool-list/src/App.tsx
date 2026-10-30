@@ -7,11 +7,11 @@
  */
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
-import type { LLMTool, LLMToolListViewProps, LLMToolCardViewProps } from "@/lib/Types";
+import type { LLMTool, LLMToolListViewProps, LLMToolDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 import ExtensionListView from "@/components/ExtensionListView";
-import ExtensionCardView from "@/components/ExtensionCardView";
+import ExtensionDetailView from "@/components/ExtensionDetailView";
 
 // The Extensions tab is read-only for every user, superusers included: superusers manage
 // extensions in the Extensions console. Its objects are Extensions, not LLMTools, so it has
@@ -24,17 +24,17 @@ const tabs: Tabs = [
     label: gettext("Extensions"),
     objectTypeName: "Extension",
     ListView: ExtensionListView,
-    CardView: ExtensionCardView,
+    DetailView: ExtensionDetailView,
   },
 ];
 
 // Set the TabbedViewContext generic object type to LLMTool,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type LLMToolTabbedViewContext = Omit<TabbedViewContext<LLMTool>, "ListView" | "CardView"> & {
+export type LLMToolTabbedViewContext = Omit<TabbedViewContext<LLMTool>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<LLMToolListViewProps>;
-  CardView: React.ComponentType<LLMToolCardViewProps>;
+  DetailView: React.ComponentType<LLMToolDetailViewProps>;
 };
 
 const llmtoolTabbedListViewContext: LLMToolTabbedViewContext = {
@@ -42,7 +42,7 @@ const llmtoolTabbedListViewContext: LLMToolTabbedViewContext = {
   objectTypeName: "LLMTool",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

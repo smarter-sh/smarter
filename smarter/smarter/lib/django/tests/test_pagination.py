@@ -1,15 +1,20 @@
 """Test the pagination, search and sorting of the list apis, :mod:`smarter.lib.django.pagination`."""
 
+from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.test import RequestFactory
 from django.utils import timezone
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.guardrail.models import Guardrail
 from smarter.lib.django.pagination import (
     DEFAULT_PAGE_SIZE,
     DEFAULT_SORT_FIELDS,
+    MAX_LIST_TAGS,
     MAX_PAGE_SIZE,
     MAX_SEARCH_LENGTH,
+    annotate_queryset,
+    clean_query_values,
     filter_queryset,
     has_field,
     paginate_listview,
@@ -17,6 +22,8 @@ from smarter.lib.django.pagination import (
     search_queryset,
     sort_queryset,
     sortable_fields,
+    tag_condition,
+    tag_queryset,
 )
 from smarter.lib.drf.models import SmarterAuthToken
 
@@ -102,6 +109,9 @@ class TestPagination(TestAccountMixin):
             "sortFields": DEFAULT_SORT_COLUMNS,
             "filter": filter_,
             "filters": list(filters),
+            "tags": [],
+            "annotations": [],
+            "annotationError": "",
         }
 
     def test_search_matches_name_or_description_ignoring_case(self):
@@ -258,3 +268,71 @@ class TestPagination(TestAccountMixin):
     def test_unknown_filter_is_reported_empty(self):
         _, pagination = self.paginate(filters={"first": Q(name="test_pagination_0")}, filter="nope")
         self.assertEqual(pagination, self.description(filters=["first"]))
+
+
+class TestTagsAndAnnotations(TestAccountMixin):
+    """Test tag_queryset(), annotate_queryset() and their query parameters, with the user's auth tokens."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.tokens = []
+        for index, tags in enumerate((["red", "blue"], ["red"], [])):
+            token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+                user_profile=cls.user_profile,
+                name=f"test_tags_{index}",
+                user=cls.admin_user,
+                description="",
+            )
+            SmarterAuthToken.objects.filter(pk=token.pk).update(tags=tags)
+            cls.tokens.append(token)
+        cls.tokens[2].set_annotation("example.com/team", "a")
+
+    @classmethod
+    def tearDownClass(cls):
+        SmarterAuthToken.objects.filter(name__startswith="test_tags_").delete()
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        self.queryset = SmarterAuthToken.objects.filter(name__startswith="test_tags_").order_by("name")
+
+    def names(self, queryset) -> list[str]:
+        return [token.name for token in queryset]
+
+    def test_clean_query_values(self):
+        """Repeated values are stripped, deduplicated and capped, in order."""
+        self.assertEqual(clean_query_values([" a ", "", "b", "a", None], 10), ("a", "b"))  # type: ignore[list-item]
+        self.assertEqual(clean_query_values(None, 10), ())
+        self.assertEqual(len(clean_query_values([str(i) for i in range(20)], MAX_LIST_TAGS)), MAX_LIST_TAGS)
+
+    def test_tag_condition(self):
+        """A taggit relation matches a tag's name, a JSON list contains it, and a model without tags has none."""
+        self.assertEqual(tag_condition(SmarterAuthToken, "red"), Q(tags__contains=["red"]))
+        self.assertEqual(tag_condition(Guardrail, "red"), Q(tags__name="red"))
+        self.assertIsNone(tag_condition(Group, "red"))
+
+    def test_tags_narrow_every_tag(self):
+        """Every tag must match, in a JSON list of tags too."""
+        queryset, applied = tag_queryset(self.queryset, ["red"])
+        self.assertEqual(self.names(queryset), ["test_tags_0", "test_tags_1"])
+        self.assertEqual(applied, ["red"])
+        self.assertEqual(self.names(tag_queryset(self.queryset, ["red", "blue"])[0]), ["test_tags_0"])
+        self.assertEqual(self.names(tag_queryset(self.queryset, [])[0]), self.names(self.queryset))
+        self.assertEqual(list(tag_queryset(Group.objects.all(), ["red"])[0]), [])
+
+    def test_annotations_narrow(self):
+        """An annotation selector narrows the resources, and an invalid one is reported, not applied."""
+        queryset, applied, error = annotate_queryset(self.queryset, ["example.com/team=a"])
+        self.assertEqual((self.names(queryset), applied, error), (["test_tags_2"], ["example.com/team=a"], ""))
+        queryset, applied, error = annotate_queryset(self.queryset, ["Bad Key"])
+        self.assertEqual((len(queryset), applied), (3, []))
+        self.assertIn("Bad Key", error)
+
+    def test_query_parameters(self):
+        """?tag= and ?annotation= are read from the request, repeated, and described."""
+        request = RequestFactory().post("/", QUERY_STRING="tag=red&tag=blue&annotation=!example.com/team")
+        page, pagination = paginate_listview(request, self.queryset)
+        self.assertEqual(self.names(page), ["test_tags_0"])
+        self.assertEqual(pagination["tags"], ["red", "blue"])
+        self.assertEqual(pagination["annotations"], ["!example.com/team"])

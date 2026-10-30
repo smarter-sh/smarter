@@ -119,6 +119,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        the toolkit does with every other failure. The LLM's arguments as untrusted input: the
        calculator's ``evaluator.py`` and its exponent cap. Testing with ``call_tool()`` and
        ``tool_context()``, and mocking the services. :doc:`/smarter-framework/extensions/testing`.
+       The same principles in another protocol: "Tools for an LLM" in the case study `The Smarter
+       Project MCP Server <https://smarter.sh/case-studies/mcp-server>`__ ("Errors teach",
+       "Arguments can't be wrong"), and "Make a mistake on purpose" in its "Lab 2: Call the
+       server".
    * - 7
      - 45
      - **Lab 3: Tests.** Students test their tool with ``call_tool()``: a success, invalid

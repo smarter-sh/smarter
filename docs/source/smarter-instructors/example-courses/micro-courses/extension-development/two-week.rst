@@ -93,6 +93,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        failure; results that name their units and timezone (`commit 51ec052a5
        <https://github.com/smarter-sh/smarter-extension-weather/commit/51ec052a5ffb8515b0ceff337d744b1ad5cd0e10>`__);
        and the LLM's arguments as untrusted input, in the calculator's ``evaluator.py``.
+       The same principles in another protocol: "Tools for an LLM" in the case study `The Smarter
+       Project MCP Server <https://smarter.sh/case-studies/mcp-server>`__ ("Errors teach",
+       "Arguments can't be wrong"), and "Make a mistake on purpose" in its "Lab 2: Call the
+       server".
    * - 1
      - Live session 1 (90 min)
      - Enabling the weather Extension in the web console and tracing a tool call live. Then each

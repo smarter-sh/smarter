@@ -388,7 +388,7 @@ class SAMVectorsearchBroker(AbstractBroker):
             description=self.vectorsearch.description,
             version=self.vectorsearch.version,
             tags=self.vectorsearch.tags_list,
-            annotations=self.vectorsearch.annotations if isinstance(self.vectorsearch.annotations, list) else [],
+            annotations=self.vectorsearch.annotations,
         )
         spec_config = SAMVectorsearchSpecConfig(**vectorsearch_dict)
         spec = SAMVectorsearchSpec(config=spec_config)
@@ -562,10 +562,10 @@ class SAMVectorsearchBroker(AbstractBroker):
             ),
             version="1.0.0",
             tags=["example", "template", "rag"],
-            annotations=[
-                {"color": "blue"},
-                {"purpose": "rag-retrieval"},
-            ],
+            annotations={
+                "color": "blue",
+                "purpose": "rag-retrieval",
+            },
         )
         config = SAMVectorsearchSpecConfig(
             vectorstore_name="netflix_writers_embeddings",
@@ -610,6 +610,7 @@ class SAMVectorsearchBroker(AbstractBroker):
             vectorsearches = Vectorsearch.objects.filter(user_profile__account=self.account, name=name)
         else:
             vectorsearches = Vectorsearch.objects.filter(user_profile__account=self.account)
+        vectorsearches = self.filter_by_annotation_selector(vectorsearches, kwargs)
         vectorsearches = vectorsearches.with_ownership_permission_for(self.user_profile.user).order_by("name")[
             :MAX_RESULTS
         ]

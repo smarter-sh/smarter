@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { AuthToken, AuthTokenListViewProps, AuthTokenCardViewProps } from "@/lib/Types";
+import type { AuthToken, AuthTokenListViewProps, AuthTokenDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your AuthTokens") },
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to AuthToken,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type AuthTokenTabbedViewContext = Omit<TabbedViewContext<AuthToken>, "ListView" | "CardView"> & {
+export type AuthTokenTabbedViewContext = Omit<TabbedViewContext<AuthToken>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<AuthTokenListViewProps>;
-  CardView: React.ComponentType<AuthTokenCardViewProps>;
+  DetailView: React.ComponentType<AuthTokenDetailViewProps>;
 };
 
 const authtokenTabbedListViewContext: AuthTokenTabbedViewContext = {
@@ -30,7 +30,7 @@ const authtokenTabbedListViewContext: AuthTokenTabbedViewContext = {
   objectTypeName: "authtoken",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

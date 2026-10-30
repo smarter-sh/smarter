@@ -272,10 +272,10 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
             self.fail(f"account.tags is of unexpected type: {type(self.broker.brokered_account.tags)}")
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
-        # verify that account.annotations (JSONField) contains the same annotations.
+        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # verify that account.annotations holds the same annotations.
         def sort_annotations(annotations):
-            return sorted(annotations, key=lambda d: sorted(d.items()))
+            return dict(sorted((annotations or {}).items()))
 
         manifest_annotations = json.dumps(sort_annotations(self.broker.manifest.metadata.annotations or []))
         account_annotations = json.dumps(sort_annotations(self.broker.brokered_account.annotations or []))

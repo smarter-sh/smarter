@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { makeObject, ownedObjects, sessionContext } from "@/mocks/fixtures";
@@ -23,11 +23,17 @@ describe("ListView", () => {
         onRequery={() => {}}
       />,
     );
-    expect(await screen.findByRole("link", { name: "weather" })).toHaveAttribute(
-      "data-smarter-onboarding",
-      "llmclient-weather",
-    );
-    expect(screen.getByRole("link", { name: ownedObjects[0].name })).not.toHaveAttribute("data-smarter-onboarding");
+    expect(await screen.findByText("weather")).toHaveAttribute("data-smarter-onboarding", "llmclient-weather");
+    expect(screen.getByText(ownedObjects[0].name)).not.toHaveAttribute("data-smarter-onboarding");
+  });
+
+  it("shows the name as text, since the row opens the llmclient's detail", async () => {
+    render(<ListView isLoading={false} sessionContext={sessionContext} objects={ownedObjects} onRequery={() => {}} />);
+    const name = await screen.findByText(ownedObjects[0].name);
+    expect(name.tagName).toBe("SPAN");
+    // the Toolbar's Chat button still opens its chat.
+    const row = within(screen.getByRole("row", { name: new RegExp(ownedObjects[0].name) }));
+    expect(row.getByTitle("Chat: Open the prompt workbench")).toHaveAttribute("href", ownedObjects[0].urlChatapp);
   });
 
   it("shows skeleton rows while loading", () => {

@@ -112,6 +112,9 @@ class LLMClientAPIKeySerializer(SmarterCamelCaseSerializer):
 
 class LLMClientCustomDomainSerializer(SmarterCamelCaseSerializer):
 
+    # annotations is a property of MetaDataModel, not a column, so "__all__" leaves it out.
+    annotations = serializers.JSONField(required=False)
+
     class Meta:
         model = LLMClientCustomDomain
         fields = "__all__"

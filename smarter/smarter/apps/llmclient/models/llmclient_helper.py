@@ -164,8 +164,11 @@ class LLMClientHelper(SmarterRequestMixin):
                     self.user_profile,
                 )
 
+        # a helper that finds no LLMClient is a lookup that found nothing, e.g. the security middleware asking
+        # whether a scanner's /wp-json/ on an LLMClient's host is the LLMClient's. The caller decides whether that
+        # is an error.
         if not self.ready:
-            llmclient_helper_logger.error(
+            llmclient_helper_logger.debug(
                 "%s.__init__() is %s - %s - %s",
                 self.formatted_class_name,
                 self.llmclienthelper_ready_state,

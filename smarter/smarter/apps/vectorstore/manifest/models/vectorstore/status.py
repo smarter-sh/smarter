@@ -38,10 +38,18 @@ class SAMVectorstoreStatus(AbstractSAMStatusBase):
     vectorCount: int = Field(default=0, description=f"{class_identifier}.vectorCount: as of lastCheckedAt.")
     documentCount: int = Field(default=0, description=f"{class_identifier}.documentCount: its documents.")
     snapshotCount: int = Field(default=0, description=f"{class_identifier}.snapshotCount: its snapshots, or backups.")
-    deployedAt: Optional[datetime.datetime] = Field(default=None)
-    lastCheckedAt: Optional[datetime.datetime] = Field(default=None)
-    lastSnapshotAt: Optional[datetime.datetime] = Field(default=None)
-    lastMaintenanceAt: Optional[datetime.datetime] = Field(default=None)
+    deployedAt: Optional[datetime.datetime] = Field(
+        default=None, description=f"{class_identifier}.deployedAt: when it was deployed. Read only."
+    )
+    lastCheckedAt: Optional[datetime.datetime] = Field(
+        default=None, description=f"{class_identifier}.lastCheckedAt: when its status was last checked. Read only."
+    )
+    lastSnapshotAt: Optional[datetime.datetime] = Field(
+        default=None, description=f"{class_identifier}.lastSnapshotAt: when its last snapshot was taken. Read only."
+    )
+    lastMaintenanceAt: Optional[datetime.datetime] = Field(
+        default=None, description=f"{class_identifier}.lastMaintenanceAt: when its maintenance last ran. Read only."
+    )
 
 
 __all__ = ["SAMVectorstoreStatus"]

@@ -38,7 +38,7 @@ export function makeObject(id: number, overrides: Partial<LLMClient> = {}): LLMC
     description: "An example llmclient with tool calling and Smarter Plugins.",
     version: "0.1.0",
     tags: ["gibberish", "jabberwocky"],
-    annotations: [{ "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling." }],
+    annotations: { "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling." },
     userProfile: USER_PROFILE,
     functions: [
       {
@@ -79,6 +79,7 @@ export function makeObject(id: number, overrides: Partial<LLMClient> = {}): LLMC
     urlChatConfig: `http://localhost:9357/api/v1/llm-clients/hashed${id}/config/`,
     urlChatapp: `http://localhost:9357/workbench/llm-clients/hashed${id}/chat/`,
     manifestUrl: `http://localhost:9357/workbench/llm-clients/hashed${id}/manifest/`,
+    detailUrl: `/dashboard/api/resource/LLMClient/llmclient-r${id}/`,
     ready: true,
     canDelete: true,
     deployed: false,

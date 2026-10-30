@@ -2,14 +2,10 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "WebsearchPlugin",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/created_by": "smarter_websearch_plugin_broker"
-      },
-      {
-        "smarter.sh/plugin": "research_assistant"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/created_by": "smarter_websearch_plugin_broker",
+      "smarter.sh/plugin": "research_assistant"
+    },
     "description": "Researches any topic on the open web, and cites its sources.",
     "name": "research_assistant",
     "pluginClass": "websearch",

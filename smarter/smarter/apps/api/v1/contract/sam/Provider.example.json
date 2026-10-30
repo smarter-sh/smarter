@@ -2,14 +2,10 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "Provider",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/provider": "example_provider"
-      },
-      {
-        "smarter.sh/created_by": "smarter_provider_broker"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/created_by": "smarter_provider_broker",
+      "smarter.sh/provider": "example_provider"
+    },
     "description": "an example provider manifest for the Smarter API Provider",
     "name": "acme_llm_company",
     "tags": [

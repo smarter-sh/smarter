@@ -43,7 +43,7 @@ class TestSecretTransformerBranches(TestAccountMixin):
         secret = Secret.objects.get(user_profile=self.user_profile, name=transformer.name)
         self.assertEqual(transformer.id, secret.id)
         self.assertEqual(transformer.tags, {"alpha", "beta"})
-        self.assertEqual(transformer.annotations, [{"smarter.sh/owner": "tests"}])
+        self.assertEqual(transformer.annotations, {"smarter.sh/owner": "tests"})
         self.assertEqual(transformer.version, "0.1.0")
         self.assertIn(transformer.name, str(transformer))
         self.assertEqual(repr(transformer), str(transformer))
@@ -104,7 +104,7 @@ class TestSecretTransformerBranches(TestAccountMixin):
         self.assertIsNone(transformer.expires_at)
         self.assertEqual(transformer.version, "1.0.0")
         self.assertEqual(transformer.tags, set())
-        self.assertEqual(transformer.annotations, [])
+        self.assertEqual(transformer.annotations, {})
         self.assertIsNone(transformer.manifest_to_django_orm())
 
     def test_not_ready(self):

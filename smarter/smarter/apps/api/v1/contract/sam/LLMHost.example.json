@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "LLMHost",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/llmhost/purpose": "example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/llmhost/purpose": "example"
+    },
     "description": "Meta Llama 3.1 8B Instruct, served by vLLM on one NVIDIA A10G GPU, with tool calling.",
     "name": "example_llmhost",
     "tags": [

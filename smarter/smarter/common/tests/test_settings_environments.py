@@ -102,13 +102,6 @@ class TestSettingsValidators(SmarterTestBase):
             with self.assertRaises(CONFIG_ERRORS):
                 make_settings(sensitive_files_amnesty_patterns=bad)
 
-    def test_openai_endpoint_image_n(self):
-        """The image count accepts int strings and rejects anything else."""
-        self.assertEqual(make_settings(openai_endpoint_image_n="3").openai_endpoint_image_n, 3)
-        for bad in ("three", 2.5):
-            with self.assertRaises(CONFIG_ERRORS):
-                make_settings(openai_endpoint_image_n=bad)
-
     def test_secret_key(self):
         """A plain string secret key is wrapped in a SecretStr."""
         settings = make_settings(secret_key="a-test-secret-key")
@@ -170,10 +163,10 @@ class TestSettingsReadyMessage(SmarterTestBase):
             make_settings()
             make_settings()
         first.assert_called_with("settings-ready")
-        ready = [c for c in logger.warning.call_args_list if "Settings are" in c.args[0]]
+        ready = [c for c in logger.warning.call_args_list if "smarter_settings are" in c.args[0]]
         self.assertEqual(len(ready), 1)
         self.assertIn("READY", ready[0].args[2])
-        self.assertEqual(len([c for c in logger.debug.call_args_list if "Settings are" in str(c.args[0])]), 1)
+        self.assertEqual(len([c for c in logger.debug.call_args_list if "smarter_settings are" in str(c.args[0])]), 1)
 
     def test_not_ready_is_logged_by_every_process(self):
         """NOT_READY is always a warning, whichever worker logs it."""

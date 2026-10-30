@@ -84,8 +84,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        allow lists, least privilege for tools, and measuring false positives.
    * - 1
      - Live session 1 (90 min)
-     - Red team exercise: teams attack each other's prompt-only LLMClients, live. Start
-       Assignment 1.
+     - Red team exercise: teams attack each other's prompt-only LLMClients, live, then try the
+       same techniques in "Lab 1: Talk to Sam" in the case study `Guardrails: Can You Trust the
+       Model? <https://smarter.sh/case-studies/guardrails>`__, whose assistant has guardrails.
+       Start Assignment 1.
    * - 2
      - Lecture 4 (30 min)
      - **Secrets.** Encrypted :doc:`Secrets </smarter-resources/smarter-secret>`, credentials kept
@@ -93,7 +95,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 5 (30 min)
      - **SSRF and outbound requests.** Metadata addresses, DNS rebinding, and
-       ``smarter/smarter/apps/llmtool/plugin/safe_http.py``.
+       ``smarter/smarter/apps/llmtool/plugin/safe_http.py``. Pre-reading for Assignment 2:
+       "URLs a model chooses" in `the guardrails case study
+       <https://smarter.sh/case-studies/guardrails>`__.
    * - 2
      - Lecture 6 (30 min)
      - **Secure development and disclosure.** ``bandit``, dependency scanning, code review,

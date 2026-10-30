@@ -261,7 +261,7 @@ class SecretTransformer(SmarterHelperMixin):
                 description=self.secret.description,
                 version=self.secret.version,
                 tags=self.secret.tags_list,
-                annotations=self.secret.annotations if self.secret.annotations else [],
+                annotations=self.secret.annotations,
             )
             spec_config = SAMSecretSpecConfig(
                 value=self.secret.get_secret(update_last_accessed=False) or "",
@@ -334,11 +334,11 @@ class SecretTransformer(SmarterHelperMixin):
         return set()
 
     @property
-    def annotations(self) -> list[SmarterDictType]:
+    def annotations(self) -> dict[str, str]:
         """Return the secret annotations."""
         if self._manifest and self._manifest.metadata and self._manifest.metadata.annotations:
             return self._manifest.metadata.annotations
-        return []
+        return {}
 
     @property
     def created_at(self) -> Optional[str]:
