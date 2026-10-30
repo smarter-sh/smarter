@@ -44,6 +44,11 @@ class VectorsearchApiVectorsearch(AccountApiModel):
         description="Whether the requesting user may delete the Vectorsearch now: they own it, and nothing uses it.",
     )
     manifest_url: str = Field(..., description="The url of the Vectorsearch's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the Vectorsearch's detail in the web console: its manifest, the resources that it "
+        "uses, and those that use it.",
+    )
     search_type: VectorsearchApiSearchType = Field(..., description="Vectorsearch.search_type.")
     k: int = Field(..., ge=0, description="Vectorsearch.k: the number of chunks to return.")
     score_threshold: Optional[float] = Field(None, description="Vectorsearch.score_threshold.")
@@ -67,6 +72,7 @@ class VectorsearchApiVectorsearch(AccountApiModel):
         :rtype: VectorsearchApiVectorsearch
         """
         # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import (
             MANIFEST_KIND,
         )
@@ -85,6 +91,7 @@ class VectorsearchApiVectorsearch(AccountApiModel):
             user_profile=AccountApiUserProfile.from_model(row.user_profile),
             can_delete=user_can_delete(row, MANIFEST_KIND, user),
             manifest_url=VectorsearchSerializer().get_manifest_url(row),
+            detail_url=resource_detail_url(MANIFEST_KIND, row.record_locator),
             search_type=row.search_type,  # type: ignore[arg-type]
             k=row.k,
             score_threshold=row.score_threshold,
