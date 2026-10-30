@@ -55,7 +55,7 @@
       "type": "object"
     },
     "SAMDependencyTreeNode": {
-      "description": "A resource in a dependency tree: the resource, and, recursively, every resource that it uses.\n\nIt is the opposite direction of :class:`SAMDependency`, which lists the resources that depend\non a resource. An LLMClient's tree has its Provider, its plugins, their Connections, and those\nConnections' Secrets. See :meth:`smarter.lib.manifest.broker.AbstractBroker.dependency_tree`.\n\nA resource that the user may not read keeps its kind and record locator, so that the tree still\nshows that something is there, but not its name, owner or url, or what it uses in turn.\n\nExample:\n\n.. code-block:: json\n\n    {\n      \"kind\": \"LLMClient\",\n      \"icon\": \"artificial-intelligence\",\n      \"name\": \"stackademy_sql\",\n      \"owner\": \"Ada Lovelace (ada)\",\n      \"recordLocator\": \"llmclient-rMTAwMDAxMwx\",\n      \"url\": \"/workbench/llm-clients/rMTAwMDAxMwx/manifest/\",\n      \"readable\": true,\n      \"children\": [\n        {\n          \"kind\": \"SqlPlugin\",\n          \"icon\": \"file-sheet\",\n          \"name\": \"stackademy_sql\",\n          \"owner\": \"Ada Lovelace (ada)\",\n          \"recordLocator\": \"pluginmeta-rMTEx\",\n          \"url\": \"/llm-tools/plugins/rMTEx/\",\n          \"readable\": true,\n          \"children\": []\n        }\n      ]\n    }",
+      "description": "A resource in a dependency tree: the resource, and, recursively, every resource that it uses.\n\nIt is the opposite direction of :class:`SAMDependency`, which lists the resources that depend\non a resource. An LLMClient's tree has its Provider, its plugins, their Connections, and those\nConnections' Secrets. See :meth:`smarter.lib.manifest.broker.AbstractBroker.dependency_tree`.\n\nA resource that the user may not read keeps its kind and record locator, so that the tree still\nshows that something is there, but not its name, owner or urls, or what it uses in turn.\n\nEach readable resource has two urls: ``url``, its manifest page in the web console, where its\nmanifest can be edited, and ``detailUrl``, the api of its detail (its manifest, what it uses and\nwhat uses it), which a resource's detail dialog in the web console shows when its card is chosen.\n\nExample:\n\n.. code-block:: json\n\n    {\n      \"kind\": \"LLMClient\",\n      \"icon\": \"artificial-intelligence\",\n      \"name\": \"stackademy_sql\",\n      \"owner\": \"Ada Lovelace (ada)\",\n      \"recordLocator\": \"llmclient-rMTAwMDAxMwx\",\n      \"url\": \"/workbench/llm-clients/rMTAwMDAxMwx/manifest/\",\n      \"detailUrl\": \"/dashboard/api/resource/LLMClient/llmclient-rMTAwMDAxMwx/\",\n      \"readable\": true,\n      \"children\": [\n        {\n          \"kind\": \"SqlPlugin\",\n          \"icon\": \"file-sheet\",\n          \"name\": \"stackademy_sql\",\n          \"owner\": \"Ada Lovelace (ada)\",\n          \"recordLocator\": \"pluginmeta-rMTEx\",\n          \"url\": \"/llm-tools/plugins/rMTEx/\",\n          \"detailUrl\": \"/dashboard/api/resource/SqlPlugin/pluginmeta-rMTEx/\",\n          \"readable\": true,\n          \"children\": []\n        }\n      ]\n    }",
       "properties": {
         "children": {
           "description": "children[List]: The resources that this resource uses, each with its own tree. Read only.",
@@ -64,6 +64,19 @@
           },
           "title": "Children",
           "type": "array"
+        },
+        "detailUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "detailUrl[String]: The path of the api of the resource's detail in the web console: its manifest, the resources that it uses and those that use it. See smarter.apps.dashboard.resource_detail.resource_detail_url(). None if the user may not read it, or on a public page. Read only.",
+          "title": "Detailurl"
         },
         "icon": {
           "description": "icon[String]: The kind's icon in the web console, a Keen Icons name without its ki- prefix, e.g. lock-2 for a Secret. See sam_kind_icon(). Read only.",
@@ -134,7 +147,7 @@
           "title": "Url"
         }
       },
-      "required": ["kind", "icon", "name", "owner", "recordLocator", "url", "readable", "children"],
+      "required": ["kind", "icon", "name", "owner", "recordLocator", "url", "detailUrl", "readable", "children"],
       "title": "SAMDependencyTreeNode",
       "type": "object"
     }
