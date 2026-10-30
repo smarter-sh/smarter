@@ -20,7 +20,8 @@
     "@smarter/common": "^0.2.0",
     "date-fns": "^4.4.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "sql-formatter": "^15.9.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -84,11 +84,15 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4
      - **Test doubles.** Mocks, fakes, stubs and spies; where to patch; the in-memory
-       infrastructure provider.
+       infrastructure provider. Pre-reading: the section "Keeping the cloud out of tests" of the
+       case study `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
    * - 2
      - Lecture 5
      - **Integration tests.** API tests, database state, Celery tasks that are not eager in tests,
-       and the ``infrastructure`` test tag in Smarter's custom test runner.
+       and the ``infrastructure`` test tag in Smarter's custom test runner. Contract tests, from
+       the case study `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__:
+       its rules "Every route is documented" and "Real responses are checked", and the exercises
+       "Break an enum" and "Break a range" from its "Lab 3: The schemas".
    * - 2
      - Lecture 6
      - **Front end tests.** Vitest, Testing Library, Storybook stories and MSW in the React
@@ -103,7 +107,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 8
      - **Code review.** What to look for, how to comment, review checklists, and reviewing code
-       written by AI agents.
+       written by AI agents, with the sections "Five success factors" and "Fixing it" of the
+       case study `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__.
    * - 3
      - Lecture 9
      - **Documentation as quality.** Docstrings, :doc:`ADR 029 </adr/029-docstrings>`, and docs

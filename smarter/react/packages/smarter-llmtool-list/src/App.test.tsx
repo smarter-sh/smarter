@@ -1,9 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { extensionObjects, ownedObjects, sessionContext, sharedObjects } from "@/mocks/fixtures";
 import { listErrorHandlers, listHandlers } from "@/mocks/handlers";
+import { resourceDetailHandler } from "@test/resourceDetail";
 import { server } from "@test/server";
 
 import App from "@/App";
@@ -36,21 +37,33 @@ describe("App", () => {
     // read-only: no operations, for any user.
     expect(screen.queryByRole("columnheader", { name: "Operations" })).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Actions" })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
-    expect(screen.getByRole("heading", { name: extensionObjects[0].displayName })).toBeInTheDocument();
-    expect(screen.queryByRole("group", { name: "Actions" })).not.toBeInTheDocument();
   });
 
-  it("shows cards in the thumbnail view", async () => {
-    server.use(...listHandlers());
+  it("opens a plugin's detail when its row is chosen", async () => {
+    server.use(...listHandlers(), resourceDetailHandler());
     const user = userEvent.setup();
     render(<App sessionContext={sessionContext} />);
 
+    await user.click(await screen.findByText(ownedObjects[0].name));
+    const detail = within(await screen.findByRole("dialog", { name: ownedObjects[0].name }));
+    expect(detail.getByRole("heading", { name: "Selector" })).toBeInTheDocument();
+    await user.click(detail.getByRole("tab", { name: /Dependencies/ }));
+    expect(await detail.findByText("stackademy")).toBeInTheDocument();
+  });
+
+  it("opens an extension's read-only detail, which has only its Details tab, when its row is chosen", async () => {
+    server.use(...listHandlers());
+    const user = userEvent.setup();
+    render(<App sessionContext={sessionContext} />);
     await screen.findByRole("row", { name: new RegExp(ownedObjects[0].name) });
-    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
-    expect(screen.queryByRole("columnheader", { name: "Operations" })).not.toBeInTheDocument();
-    expect(screen.getAllByText(ownedObjects[0].name).length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole("button", { name: "Extensions" }));
+    await user.click(await screen.findByText(extensionObjects[0].displayName));
+    // an extension has no name: its detail is called by its display name.
+    const detail = within(await screen.findByRole("dialog", { name: extensionObjects[0].displayName }));
+    expect(detail.getByRole("heading", { name: "Installation" })).toBeInTheDocument();
+    expect(detail.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["Details"]);
+    expect(detail.queryByRole("group", { name: "Actions" })).not.toBeInTheDocument();
   });
 
   it("shows the api's error", async () => {

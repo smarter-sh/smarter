@@ -76,8 +76,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lab 1: Read the instructions.** Read ``CLAUDE.md``, ``skills/README.md``,
        ``skills/smarter-development/SKILL.md`` and one narrower skill, such as
        ``smarter-infrastructure-safety`` or ``smarter-docker-environment``, and list what they
-       tell an agent to do and never do, and why. Produces
-       Assignment 1.
+       tell an agent to do and never do, and why. Check the list against the five scenarios,
+       each answered with its source, in "Lab 1: Read the rules" of the case study
+       `Converge or Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__.
+       Produces Assignment 1.
    * - 3
      - 45
      - **Lecture 2: How you ask.** Outcomes, not steps; giving the evidence for narrow problems;

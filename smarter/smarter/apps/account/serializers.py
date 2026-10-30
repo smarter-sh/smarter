@@ -329,11 +329,16 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
     It also adds ``can_delete``, which is True if the authenticated user may delete the resource
     now: they have ownership permission for it, and no other resource depends on it. Subclasses
     set ``Meta.kind`` to the resource's SAM kind, which ``can_delete`` needs to find its broker.
-    Every subclass includes it, whatever its ``Meta.fields``.
+
+    It also adds ``detail_url``, the url of the resource's detail
+    (:class:`smarter.apps.dashboard.views.views.api.resource_detail.ResourceDetailView`): its manifest,
+    the resources that it uses, and those that use it, which a web console list shows when one of its
+    rows is chosen. Every subclass includes both, whatever its ``Meta.fields``.
     """
 
     user_profile = UserProfileSerializer(read_only=True)
     can_delete = serializers.SerializerMethodField()
+    detail_url = serializers.SerializerMethodField()
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataModelSerializer.Meta):
@@ -349,15 +354,44 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
 
     def get_field_names(self, declared_fields, info) -> List[str]:
         """
-        Return the field names to serialize, always including ``can_delete``.
+        Return the field names to serialize, always including ``can_delete`` and ``detail_url``.
 
         DRF omits an inherited declared field from a subclass whose ``Meta.fields`` is a list
-        that does not name it, so ``can_delete`` is added here for every subclass.
+        that does not name it, so they are added here for every subclass.
         """
         field_names = list(super().get_field_names(declared_fields, info))
-        if "can_delete" not in field_names:
-            field_names.append("can_delete")
+        for name in ("can_delete", "detail_url"):
+            if name not in field_names:
+                field_names.append(name)
         return field_names
+
+    def kind_of(self, obj) -> Optional[str]:
+        """
+        Return the resource's SAM kind: the serializer's ``Meta.kind``, or the resource's own ``kind``, as a plugin has.
+
+        :param obj: The resource.
+        :type obj: MetaDataWithOwnershipModel
+        :return: The kind, e.g. ``Guardrail``, or None if neither says.
+        :rtype: Optional[str]
+        """
+        obj_kind = getattr(obj, "kind", None)
+        return getattr(self.Meta, "kind", None) or getattr(obj_kind, "value", obj_kind)
+
+    def get_detail_url(self, obj) -> Optional[str]:
+        """
+        Return the url of the resource's detail, from its kind and record locator.
+
+        :param obj: The resource.
+        :type obj: MetaDataWithOwnershipModel
+        :return: The url, e.g. ``/dashboard/api/resource/Guardrail/guardrail-rMTAwx/``, or None if the
+            serializer does not know the resource's kind, or the resource has no record locator.
+        :rtype: Optional[str]
+        """
+        # the dashboard's resource detail imports the brokers, which import this module.
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
+
+        return resource_detail_url(self.kind_of(obj), getattr(obj, "record_locator", None))
 
     def get_can_delete(self, obj) -> bool:
         """
@@ -379,9 +413,7 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
         """
         request = self.context.get("request")
         user = getattr(request, "user", None) if request is not None else None
-        obj_kind = getattr(obj, "kind", None)
-        kind = getattr(self.Meta, "kind", None) or getattr(obj_kind, "value", obj_kind)
-        return user_can_delete(obj, kind, user, owned_pks=self._owned_pks_of_page(obj, user))
+        return user_can_delete(obj, self.kind_of(obj), user, owned_pks=self._owned_pks_of_page(obj, user))
 
     def _owned_pks_of_page(self, obj, user) -> Optional[Set]:
         """

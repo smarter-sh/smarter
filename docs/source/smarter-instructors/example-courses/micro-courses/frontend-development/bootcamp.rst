@@ -107,13 +107,19 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lab 4: Embed a chat.** Create a plain Vite app and embed a deployed LLMClient with the
        `@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ package.
-       Ungraded.
+       Ungraded. "Lab 3: allowedOrigins" in the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__ adds ``http://localhost:5173`` to a
+       chatbot's ``allowedOrigins``, and its "CORS and CSRF: who may call a chatbot from a page"
+       explains why the chat fails without it.
    * - 10
      - 45
      - **Lecture 6: Quality and performance.** ESLint and Prettier, bundle size, rendering
        performance, and a tour of the ``smarter.sh-chat`` package: the chatscope UI kit,
        Markdown with math and diagrams, Server-Sent Events for a prompt's progress, branding from
-       ``spec.config.styles``, and accessibility.
+       ``spec.config.styles``, and accessibility. Pre-reading: "The second line: the reply is
+       untrusted HTML" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__, on how the chat renders a model's reply
+       safely, from "Raw HTML is text" to "DOMPurify runs last, over everything".
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone, create a branch, and sketch their
@@ -286,7 +292,8 @@ and design a responsive, accessible page around it.
 
 Students build a small website with Vite and React for a fictional business or club, with a home
 page and an "Ask us" page that embeds a deployed LLMClient using ``@smarter.sh/ui-chat``, styled to
-match the site.
+match the site. "Lab 3: allowedOrigins" in the multi-tenancy case study shows how to let the site's
+origin call the chatbot.
 
 **What students turn in:**
 

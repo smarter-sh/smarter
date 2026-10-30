@@ -389,8 +389,8 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
-        # verify that user_profile.annotations (JSONField) contains the same annotations.
+        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # verify that user_profile.annotations holds the same annotations.
         def normalize_annotation_value(val):
             if isinstance(val, datetime.datetime):
                 # Always output in UTC ISO format with 'Z' if tzinfo is set
@@ -402,10 +402,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
             return val
 
         def normalize_annotations(annotations):
-            normed = []
-            for d in annotations or []:
-                normed.append({k: normalize_annotation_value(v) for k, v in d.items()})
-            return sorted(normed, key=lambda d: sorted(d.items()))
+            return {k: normalize_annotation_value(v) for k, v in sorted((annotations or {}).items())}
 
         manifest_annotations = normalize_annotations(self.broker.manifest.metadata.annotations)
         orm_annotations = normalize_annotations(self.broker.brokered_user_profile.annotations)

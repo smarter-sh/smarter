@@ -222,10 +222,10 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         django_orm_tags = set(self.broker.secret.tags_list) if self.broker.secret.tags else set()
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
-        # verify that user_profile.annotations (JSONField) contains the same annotations.
+        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # verify that user_profile.annotations holds the same annotations.
         def sort_annotations(annotations):
-            return sorted(annotations, key=lambda d: sorted(d.items()))
+            return dict(sorted((annotations or {}).items()))
 
         manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
         account_annotations = sort_annotations(self.broker.secret.annotations or [])

@@ -102,6 +102,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
        with a read-only database user, its password in a :doc:`Secret
        </smarter-resources/smarter-secret>`, and how wrong answers still happen.
+       Pre-reading: the case study `Stackademy Online Coding Academy
+       <https://smarter.sh/case-studies/stackademy>`__, whose "Lab 1: Talk to Stanley" asks the
+       same questions of a SQL Plugin advisor and an API Plugin advisor.
    * - 6
      - 45
      - **Lecture 4: Tools and MCP.** Function calling, :doc:`API
@@ -109,7 +112,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        </smarter-resources/llmtool/plugin/websearch>` plugins, :doc:`Extensions
        </smarter-framework/extensibility>` such as the official weather and calculator tools,
        and the `Model Context Protocol <https://modelcontextprotocol.io/>`__. :doc:`MCP clients
-       </smarter-resources/smarter-mcpclient>` in Smarter.
+       </smarter-resources/smarter-mcpclient>` in Smarter. Pre-reading: the case study `The
+       Smarter Project MCP Server <https://smarter.sh/case-studies/mcp-server>`__, whose "Lab 1:
+       Talk to Sam" shows an assistant grounded in an MCP server's tools.
    * - 7
      - 45
      - **Lab 3: A data assistant.** Build an assistant that answers five business questions in

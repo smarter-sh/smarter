@@ -80,7 +80,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Agent-friendly code bases.** Consistent structure, tests that run, and documented
        patterns, using Smarter as the example: the identical layout of the ``guardrail`` and
        ``secret`` apps, more than five thousand unit tests, the pre-commit hooks, typed aliases in
-       ``lib/typing.py``, and logs that name the code that wrote them.
+       ``lib/typing.py``, and logs that name the code that wrote them. The section "Five success
+       factors" of the case study `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__ says what each gives the agent.
    * - 1
      - Live session 1
      - Setup triage, then a first delegated task, live. Start Assignment 1.
@@ -115,8 +117,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Automation.** Hooks, subagents, and running agents in CI.
    * - 3
      - Live session 3
-     - Review of Assignment 2. Skill writing workshop. Capstone proposals discussed. Start
-       Assignment 3.
+     - Review of Assignment 2. Skill writing workshop, opened with the case study's discussion
+       questions on the nearest example, on ADRs against skills, and on an agent writing the
+       rules it will follow. Capstone proposals discussed. Start Assignment 3.
    * - 4
      - Lecture 10
      - **Safety.** Permissions, sandboxes, live credentials, secrets, and prompt injection through

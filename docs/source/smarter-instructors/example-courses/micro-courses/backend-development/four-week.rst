@@ -99,7 +99,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 5
      - **Authentication and permissions.** Sessions, API keys, and how Smarter scopes every
-       request to an account. :doc:`/smarter-framework/smarter-api/authentication`.
+       request to an account. :doc:`/smarter-framework/smarter-api/authentication`. Pre-reading:
+       "The rules, as querysets" and "Making the safe path the default path" in the case study
+       `One Platform, Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__, whose "Lab
+       1: Apply the rules" can open Live session 2.
    * - 2
      - Lecture 6
      - **Errors, versioning and documentation.** Smarter's
@@ -113,7 +116,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 7
      - **Pydantic.** Models, validators, serialization, and
-       :doc:`ADR 031 </adr/031-pydantic-over-json>` on Pydantic over raw JSON.
+       :doc:`ADR 031 </adr/031-pydantic-over-json>` on Pydantic over raw JSON. "One object, two
+       uses" in the case study `One Contract, Five Clients
+       <https://smarter.sh/case-studies/api-contract>`__ shows a view's response and the OpenAPI
+       document built from the same model.
    * - 3
      - Lecture 8
      - **Manifests and brokers.** The :doc:`broker model </smarter-framework/smarter-broker-model>`,
@@ -121,7 +127,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 9
      - **Testing.** Django's test runner, ``SmarterTestBase``, fixtures, cleanup without
-       transaction rollback, mocking external calls, and coverage.
+       transaction rollback, mocking external calls, and coverage. "Keeping the cloud out of the
+       tests" in the case study `What Happens When You Click Deploy
+       <https://smarter.sh/case-studies/deploy>`__ shows why the containers' real credentials make
+       fakes and a guard necessary.
    * - 3
      - Live session 3
      - Review of Assignment 2. Live addition of a field, with tests. Capstone proposals discussed.
@@ -133,7 +142,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 11
      - **Background work.** Celery tasks, named queues, the beat schedule in
        ``workers/celerybeat.py``, retries, and why tasks must be idempotent.
-       :doc:`ADR 030 </adr/030-task-queues>`.
+       :doc:`ADR 030 </adr/030-task-queues>`. Pre-reading: "Waiting without blocking, and without
+       racing" in the deploy case study, a Celery task that reschedules itself instead of
+       sleeping; its discussion question on a hundred people deploying at once opens the lecture.
    * - 4
      - Lecture 12
      - **Caching and performance.** Redis, ``@cache_results``, what to cache and what never to

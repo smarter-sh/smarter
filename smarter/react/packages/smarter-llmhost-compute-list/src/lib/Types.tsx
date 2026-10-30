@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // LLMHostCompute Definition
@@ -39,6 +39,8 @@ export type LLMHostCompute = {
   tags: Tags;
   annotations: Annotations;
   manifestUrl: string;
+  /** The url of the LLMHostCompute's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
   rfc1034CompliantName: string | null;
@@ -78,10 +80,11 @@ export type LLMHostCompute = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface LLMHostComputeCardViewProps {
+export interface LLMHostComputeDetailViewProps {
   sessionContext: SessionContext;
-  objects: LLMHostCompute[];
+  object: LLMHostCompute;
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface LLMHostComputeListViewProps {

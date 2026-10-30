@@ -65,6 +65,15 @@ healthy deploy train people to ignore warnings. Known cases, as of this writing:
 | `A record for <host> points at <alias>, not at the A record of ...`            | `apps/api/management/commands/verify_dns_configuration.py` | By design: CDN-fronted hosts are left alone (CLAUDE.md, DNS). INFO. It is also written to stdout, so it appears twice. |
 | `skipped built-in Vectorstore/Proxy <name>: ApiConnection ... does not exist.` | `apps/vectorstore/builtins.py`, `apps/proxy/builtins.py`   | Expected when an optional vendor key is unset (the command also prints `Skipped ...`). INFO.                           |
 
+A rejected request is the client's error, never an ERROR. The app server's log is full of scanners
+probing deployed LLMClients' hosts for other software's paths (`/wp-json/`, `/press/`, `/api/v1/.env`,
+`/metrics`): the security middleware (`apps/llmclient/middleware/security.py`) can't match the host and
+path to an LLMClient, and answers 400, which is right. It logs `... failed security tests.` as a
+WARNING, as Django logs `Bad Request: ...` after it. `LLMClientHelper().__init__() is Not Ready - LLMClient
+not initialized ...` (`apps/llmclient/models/llmclient_helper.py`) is a lookup that found nothing, and is
+DEBUG: the caller decides whether that is an error. Report them as one count of scanner traffic, by host,
+not as errors.
+
 A warning is real when an operator must act: a failed provider call, an expired certificate, a missing
 required secret, a DNS record that should exist and doesn't.
 

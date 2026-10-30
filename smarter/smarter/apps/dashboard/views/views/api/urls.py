@@ -12,6 +12,8 @@ from smarter.apps.dashboard.views.views.api.getting_started import GettingStarte
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.onboarding import OnboardingSeenView
 from smarter.apps.dashboard.views.views.api.quick_actions import QuickActionsView
+from smarter.apps.dashboard.views.views.api.resource_detail import ResourceDetailView
+from smarter.apps.dashboard.views.views.api.search import GlobalSearchView
 from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.apps.dashboard.views.views.api.welcome import (
     WelcomeDismissView,
@@ -40,6 +42,8 @@ class DashboardApiReverseNames:
     activity = to_snake_case(ActivityView.__name__)
     getting_started = to_snake_case(GettingStartedView.__name__)
     quick_actions = to_snake_case(QuickActionsView.__name__)
+    global_search = to_snake_case(GlobalSearchView.__name__)
+    resource_detail = to_snake_case(ResourceDetailView.__name__)
     welcome = to_snake_case(WelcomeView.__name__)
     welcome_dismiss = to_snake_case(WelcomeDismissView.__name__)
     onboarding_seen = to_snake_case(OnboardingSeenView.__name__)
@@ -58,6 +62,12 @@ urlpatterns = [
     path("activity/", ActivityView.as_view(), name=DashboardApiReverseNames.activity),
     path("getting-started/", GettingStartedView.as_view(), name=DashboardApiReverseNames.getting_started),
     path("quick-actions/", QuickActionsView.as_view(), name=DashboardApiReverseNames.quick_actions),
+    path("search/", GlobalSearchView.as_view(), name=DashboardApiReverseNames.global_search),
+    path(
+        "resource/<str:kind>/<str:record_locator>/",
+        ResourceDetailView.as_view(),
+        name=DashboardApiReverseNames.resource_detail,
+    ),
     path("welcome/", WelcomeView.as_view(), name=DashboardApiReverseNames.welcome),
     path("welcome/dismiss/", WelcomeDismissView.as_view(), name=DashboardApiReverseNames.welcome_dismiss),
     path("onboarding/seen/", OnboardingSeenView.as_view(), name=DashboardApiReverseNames.onboarding_seen),

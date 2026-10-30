@@ -34,4 +34,9 @@
   service layer and guard that keep AWS and Kubernetes out of the tests; `Smarter's OpenAPI
   Contract: One Extensibility Model for Python, Go, React and VS Code
   <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
-  OpenAPI document that every client depends on.
+  OpenAPI document that every client depends on. The case studies `One Platform, Many Tenants
+  <https://smarter.sh/case-studies/multi-tenancy>`__, on tenant isolation as queryset rules, `What
+  Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__, on Celery tasks that
+  wait on DNS and certificates and on tests that never reach the cloud, and `One Contract, Five
+  Clients <https://smarter.sh/case-studies/api-contract>`__, on the generated OpenAPI contract,
+  turn these posts into lessons with labs and discussion questions.

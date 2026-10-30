@@ -285,6 +285,9 @@ Recommended Texts
 
 - **Pre-reading:** the three parts of *Converge or Diverge* on blog.smarter.sh, listed under
   Further Study, before day 1, and :doc:`/smarter-framework/developer-reference/agentic-development`.
+  The case study `Converge or Diverge: AI Coding Agents
+  <https://smarter.sh/case-studies/ai-coding-agents>`__ condenses the series, with labs and
+  discussion questions that the modules use.
 - **Required:** Michael C. Feathers, *Working Effectively with Legacy Code* (Prentice Hall,
   2004), on getting a large codebase under test, which is where every convergence campaign
   starts.

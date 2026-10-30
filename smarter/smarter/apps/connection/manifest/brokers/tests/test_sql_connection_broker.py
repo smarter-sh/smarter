@@ -266,10 +266,10 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
             )
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
-        # verify that annotations (JSONField) contains the same annotations.
+        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # verify that the ORM instance holds the same annotations.
         def sort_annotations(annotations):
-            return sorted(annotations, key=lambda d: sorted(d.items()))
+            return dict(sorted((annotations or {}).items()))
 
         manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
         orm_annotations = sort_annotations(self.broker.connection.annotations or [])

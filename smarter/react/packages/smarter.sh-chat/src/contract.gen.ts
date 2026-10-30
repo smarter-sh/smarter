@@ -715,16 +715,11 @@ export interface PromptChatApiLLMClientPlugin {
  */
 export interface PromptChatApiPluginMeta {
   /**
-   * MetaDataModel.annotations: a list of key-value pairs, or, in legacy rows, an object.
+   * MetaDataModel.annotations: a map of keys to string values, as in Kubernetes.
    */
-  annotations?:
-    | {
-        [k: string]: JsonValue;
-      }[]
-    | {
-        [k: string]: JsonValue;
-      }
-    | null;
+  annotations?: {
+    [k: string]: string;
+  } | null;
   /**
    * TimestampedModel.created_at.
    */
@@ -977,16 +972,11 @@ export interface PromptChatApiLLMClientPluginV1 {
  */
 export interface PromptChatApiPluginMeta1 {
   /**
-   * MetaDataModel.annotations: a list of key-value pairs, or, in legacy rows, an object.
+   * MetaDataModel.annotations: a map of keys to string values, as in Kubernetes.
    */
-  annotations?:
-    | {
-        [k: string]: JsonValue;
-      }[]
-    | {
-        [k: string]: JsonValue;
-      }
-    | null;
+  annotations?: {
+    [k: string]: string;
+  } | null;
   /**
    * TimestampedModel.created_at.
    */

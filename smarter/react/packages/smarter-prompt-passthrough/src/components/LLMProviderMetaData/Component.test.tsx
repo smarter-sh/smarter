@@ -135,13 +135,9 @@ describe("LLMProviderMetaData", () => {
     expect(within(section("Connection")).queryByRole("link")).not.toBeInTheDocument();
   });
 
-  it("shows an annotation whose value isn't a string as JSON, and an invalid date as none", () => {
-    render(
-      <LLMProviderMetaData
-        provider={makeProvider(6, "oddai", { annotations: [{ list: [1, 2] }], updatedAt: "not a date" })}
-      />,
-    );
-    expect(screen.getByText("list: [1,2]")).toBeInTheDocument();
+  it("shows annotations that are null as none, and an invalid date as none", () => {
+    render(<LLMProviderMetaData provider={makeProvider(6, "oddai", { annotations: null, updatedAt: "not a date" })} />);
+    expect(screen.queryByRole("list", { name: "Annotations" })).not.toBeInTheDocument();
     expect(detail(section("Ownership"), "Updated")).toHaveTextContent("None");
   });
 });

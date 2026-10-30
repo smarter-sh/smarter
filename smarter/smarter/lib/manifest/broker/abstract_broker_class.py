@@ -46,6 +46,8 @@ from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
+from smarter.lib.annotation.const import ANNOTATION_SELECTOR_PARAM
+from smarter.lib.annotation.selectors import QuerySetType, filter_by_annotations
 from smarter.lib.django import waffle
 from smarter.lib.django.models.utils import assign_changed_fields, tags_changed
 from smarter.lib.django.request import SmarterRequestMixin
@@ -1533,7 +1535,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return None
         return self.dependency_tree_node(str(self.kind), instance, ancestors=frozenset())
 
-    def dependency_tree_node(self, kind: str, instance: models.Model, ancestors: frozenset) -> SAMDependencyTreeNode:
+    def dependency_tree_node(
+        self, kind: str, instance: models.Model, ancestors: frozenset, recursive: bool = True
+    ) -> SAMDependencyTreeNode:
         """Return one resource's node of :meth:`dependency_tree`, with the nodes of the resources that it uses.
 
         :param kind: The SAM kind of the resource, e.g. ``SAMKinds.LLM_CLIENT.value``.
@@ -1542,6 +1546,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :type instance: models.Model
         :param ancestors: The record locators of the resource's ancestors in the tree.
         :type ancestors: frozenset
+        :param recursive: Whether the node has the nodes of the resources that it uses. A node without them
+            describes the resource alone, e.g. one of the resources that depend on another, in a list.
+        :type recursive: bool
         :return: The node.
         :rtype: SAMDependencyTreeNode
         """
@@ -1555,7 +1562,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return SAMDependencyTreeNode(kind=kind, icon=icon, recordLocator=record_locator, readable=False)
         children: List[SAMDependencyTreeNode] = []
         broker_class = Brokers.get_broker(kind)
-        if broker_class is not None and record_locator not in ancestors:
+        if recursive and broker_class is not None and record_locator not in ancestors:
             path = ancestors | {record_locator}
             for child_kind, rows in broker_class.references(instance):
                 unique = {row.pk: row for row in rows}
@@ -2273,6 +2280,24 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                     item,
                 )
         return fields_and_types
+
+    def filter_by_annotation_selector(self, queryset: QuerySetType, kwargs: SmarterDictType) -> QuerySetType:
+        """
+        Filter a ``get`` command's resources by the annotation selector in its query parameters.
+
+        The selector is the ``annotation`` query parameter, which may be repeated, e.g.
+        ``?annotation=acme.com/crm-account-id=A-10042&annotation=!acme.com/archived``. Every
+        requirement must match. See :mod:`smarter.lib.annotation.selectors`.
+
+        :param queryset: The resources that the requester may read.
+        :type queryset: QuerySet
+        :param kwargs: The ``get`` command's keyword arguments, which hold the query parameters.
+        :type kwargs: SmarterDictType
+        :raises smarter.lib.annotation.validation.SmarterAnnotationError: If the selector is invalid, which is a 400.
+        :returns: The resources that match the selector.
+        :rtype: QuerySet
+        """
+        return filter_by_annotations(queryset, kwargs.get(ANNOTATION_SELECTOR_PARAM))
 
     def clean_cli_param(self, param, param_name: str = "unknown", url: Optional[str] = None) -> Optional[str]:
         """

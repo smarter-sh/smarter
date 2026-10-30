@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Connection, ConnectionListViewProps, ConnectionCardViewProps } from "@/lib/Types";
+import type { Connection, ConnectionListViewProps, ConnectionDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Connections") },
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to Connection,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type ConnectionTabbedViewContext = Omit<TabbedViewContext<Connection>, "ListView" | "CardView"> & {
+export type ConnectionTabbedViewContext = Omit<TabbedViewContext<Connection>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<ConnectionListViewProps>;
-  CardView: React.ComponentType<ConnectionCardViewProps>;
+  DetailView: React.ComponentType<ConnectionDetailViewProps>;
 };
 
 const connectionTabbedListViewContext: ConnectionTabbedViewContext = {
@@ -30,7 +30,7 @@ const connectionTabbedListViewContext: ConnectionTabbedViewContext = {
   objectTypeName: "connection",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

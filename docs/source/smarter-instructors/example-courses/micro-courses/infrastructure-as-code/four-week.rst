@@ -137,7 +137,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Infrastructure inside the application.** Smarter's infrastructure service layer
        (``smarter/smarter/apps/infrastructure/``): DNS, certificates, Kubernetes ingresses and EKS
        node groups for self-hosted models managed at run time, an AWS provider in production and
-       an in-memory provider in tests.
+       an in-memory provider in tests. Pre-reading: "One deploy, end to end" and "Waiting
+       without blocking" in the case study `What Happens When You Click Deploy
+       <https://smarter.sh/case-studies/deploy>`__.
    * - 4
      - Live session 4
      - Capstone presentations (about 6 minutes each, with 2 minutes of questions), and a course
@@ -261,7 +263,9 @@ Assignment 4: Infrastructure in Code, Tested Without the Cloud
 
 Students read Smarter's infrastructure service layer, explain how a DNS record is created for a
 deployed LLMClient, and explain how the in-memory provider lets the tests run without AWS. They
-compare this run-time management with Terraform's.
+compare this run-time management with Terraform's. Required reading: "Keeping the cloud out of
+tests" in `the deploy case study <https://smarter.sh/case-studies/deploy>`__, and its discussion
+question on why the crude ``sys.argv`` check in ``refuse_in_unit_tests()`` is a feature.
 
 **Turn in:** a two-page explanation with code references and a diagram.
 

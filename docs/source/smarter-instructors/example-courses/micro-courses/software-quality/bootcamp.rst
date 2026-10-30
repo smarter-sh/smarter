@@ -90,6 +90,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 3: Test doubles.** Mocks, fakes and stubs; patching external services; Smarter's
        in-memory infrastructure provider; and why tests must never touch real cloud resources.
+       Pre-reading: the section "Keeping the cloud out of tests" of the case study `What Happens
+       When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
    * - 6
      - 45
      - **Lecture 4: Automated checks before the commit.** black, isort, flake8, autoflake,
@@ -114,7 +116,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 10
      - 45
      - **Lecture 6: Beyond the tests.** Code review, mutation testing, flaky tests, testing code
-       written by AI agents, and the delivery metrics from the DORA research.
+       written by AI agents, and the delivery metrics from the DORA research. The case study
+       `Converge or Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__
+       shows tests and guards as an agent's feedback, in its sections "Five success factors" and
+       "Fixing it".
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and a target module or workflow.
