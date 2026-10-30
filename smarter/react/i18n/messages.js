@@ -210,6 +210,8 @@ gettext("Try again");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
 gettext("Browse the list");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
+gettext("Back to %(name)s");
+// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
 gettext("Previous (←)");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 gettext("Previous");
@@ -329,6 +331,8 @@ gettext("A SAM resource");
 gettext("About %(kind)s, in the documentation");
 // Translators: used in react/packages/smarter-common/src/components/ResourceTree/ResourceCard.tsx
 gettext("You can't read this resource");
+// Translators: used in react/packages/smarter-common/src/components/ResourceTree/ResourceCard.tsx
+gettext("Show the detail of %(name)s");
 // Translators: used in react/packages/smarter-common/src/components/ResourceTree/ResourceCard.tsx
 gettext("Open the manifest of %(name)s in a new tab");
 // Translators: used in react/packages/smarter-common/src/components/TabbedListView/AnnotationSelectorBox.tsx
@@ -1956,6 +1960,10 @@ gettext("TLS certificate");
 gettext("Custom domains");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx
 gettext("RFC 1034 compliant name derived from the llmclient name, used for subdomain generation.");
+// Translators: used in react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
+gettext("Open the prompt workbench of %(name)s");
+// Translators: used in react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
+gettext("Workbench");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/StatusBar/Component.tsx
 gettext("Ready: LLMClient is ready to serve requests");
 // Translators: used in react/packages/smarter-llmclient-list/src/components/StatusBar/Component.tsx

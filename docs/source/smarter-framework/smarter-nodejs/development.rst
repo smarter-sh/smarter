@@ -38,12 +38,14 @@ Releases
 --------
 
 The SDK is released as the `Smarter Chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__
-component is. semantic-release versions it from its conventional commits on each push to ``main``,
-and as a prerelease on each push to ``alpha`` or ``beta``: it writes the version to ``package.json``
-and ``src/version.ts``, adds the release notes to ``CHANGELOG.md``, tags the commit and creates a
-GitHub release. It does not publish to npm. A maintainer publishes a release on ``main`` to the
-``@smarter.sh`` scope of the public npm registry with ``make release``, which runs the tests, builds
-the package and runs ``npm publish --access public``.
+component is. On each push to ``main``, and to ``alpha`` or ``beta``, the release workflow runs the
+tests and the build, and if they pass, semantic-release versions the SDK from its conventional
+commits, as a prerelease on ``alpha`` and ``beta``: it writes the version to ``package.json`` and
+``src/version.ts``, adds the release notes to ``CHANGELOG.md``, tags the commit and creates a GitHub
+release. The workflow then builds the tag and publishes it to the ``@smarter.sh`` scope of the
+public npm registry, with npm's trusted publishing and a provenance statement: a release from
+``main`` with the ``latest`` dist-tag, and a prerelease with ``alpha`` or ``beta``. ``make release``
+publishes by hand, for when the workflow can't.
 
 Keeping in step with the platform
 ---------------------------------

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 19:19+0000\n"
+"POT-Creation-Date: 2026-10-30 20:56+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -487,6 +487,10 @@ msgid "Browse the list"
 msgstr "Parcourir la liste"
 
 #. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
+msgid "Back to %(name)s"
+msgstr "Retour à %(name)s"
+
+#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
 msgid "Previous (←)"
 msgstr "Précédent (←)"
 
@@ -743,6 +747,10 @@ msgstr "À propos de %(kind)s, dans la documentation"
 #. Translators: used in react/packages/smarter-common/src/components/ResourceTree/ResourceCard.tsx
 msgid "You can't read this resource"
 msgstr "Vous ne pouvez pas lire cette ressource"
+
+#. Translators: used in react/packages/smarter-common/src/components/ResourceTree/ResourceCard.tsx
+msgid "Show the detail of %(name)s"
+msgstr "Afficher le détail de %(name)s"
 
 #. Translators: used in react/packages/smarter-common/src/components/ResourceTree/ResourceCard.tsx
 msgid "Open the manifest of %(name)s in a new tab"
@@ -5036,6 +5044,14 @@ msgid ""
 msgstr ""
 "Nom conforme à la RFC 1034 dérivé du nom du LLMClient, utilisé pour générer "
 "le sous-domaine."
+
+#. Translators: used in react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
+msgid "Open the prompt workbench of %(name)s"
+msgstr "Ouvrir l'atelier de prompts de %(name)s"
+
+#. Translators: used in react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
+msgid "Workbench"
+msgstr "Atelier"
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/StatusBar/Component.tsx
 msgid "Ready: LLMClient is ready to serve requests"
