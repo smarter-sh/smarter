@@ -50,4 +50,15 @@ describe("ResourceTree", () => {
     await user.click(screen.getAllByRole("button", { name: /^Show what / })[0]);
     expect(screen.getAllByRole("article").length).toBeGreaterThan(1 + direct);
   });
+
+  it("shows a resource's detail with onOpen, but the root's, which is the resource whose tree it is", async () => {
+    const onOpen = vi.fn();
+    render(<ResourceTree tree={stackademyTree} onOpen={onOpen} />);
+    const root = screen.getByRole("article", { name: `LLMClient ${stackademyTree.name}` });
+    expect(within(root).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(root).getByText(stackademyTree.name!).tagName).toBe("A");
+    const child = stackademyTree.children[0];
+    await userEvent.setup().click(screen.getByRole("button", { name: child.name! }));
+    expect(onOpen).toHaveBeenCalledWith(child);
+  });
 });

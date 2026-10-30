@@ -65,6 +65,7 @@ class TestExportLLMClientArchitecture(TestAccountMixin):
         self.assertTrue(tree.readable)
         self.assertIn(self.admin_user.username, tree.owner)
         self.assertTrue(tree.url)
+        self.assertTrue(tree.detailUrl)
         guardrails = [child for child in tree.children if child.kind == "Guardrail"]
         self.assertEqual([child.name for child in guardrails], [self.guardrail.name])
         self.assertTrue(guardrails[0].owner)
@@ -79,6 +80,7 @@ class TestExportLLMClientArchitecture(TestAccountMixin):
         for node in nodes:
             self.assertIsNone(node.owner, node.kind)
             self.assertIsNone(node.url, node.kind)
+            self.assertIsNone(node.detailUrl, node.kind)
         self.assertIn(self.guardrail.name, [child.name for child in tree.children])
 
     def test_stdout(self):
