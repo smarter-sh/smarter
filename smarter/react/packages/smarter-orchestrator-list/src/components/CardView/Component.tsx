@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: OrchestratorCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: OrchestratorCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -65,8 +65,8 @@ function CardView({ sessionContext, objects, onRequery }: OrchestratorCardViewPr
                     {renderDetailRow(gettext("Last Updated"), orchestrator.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), orchestrator.version)}
                     {renderDetailRow(gettext("Description"), orchestrator.description)}
-                    {renderDetailRow(gettext("Tags"), orchestrator.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), orchestrator.annotations, "json")}
+                    <TagsRow tags={orchestrator.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={orchestrator.annotations} filtering={filtering} />
                     {renderDetailRow(gettext("Ready"), orchestrator.ready, "bool")}
                     {renderDetailRow(gettext("RFC 1034 Compliant Name"), orchestrator.rfc1034CompliantName)}
                   </tbody>

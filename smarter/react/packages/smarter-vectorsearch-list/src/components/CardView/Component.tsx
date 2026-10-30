@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: VectorsearchCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: VectorsearchCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -66,8 +66,8 @@ function CardView({ sessionContext, objects, onRequery }: VectorsearchCardViewPr
                     {renderDetailRow(gettext("Last Updated"), vectorsearch.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), vectorsearch.version)}
                     {renderDetailRow(gettext("Description"), vectorsearch.description)}
-                    {renderDetailRow(gettext("Tags"), vectorsearch.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), vectorsearch.annotations, "json")}
+                    <TagsRow tags={vectorsearch.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={vectorsearch.annotations} filtering={filtering} />
                     {renderDetailRow(gettext("Ready"), vectorsearch.ready, "bool")}
                     {renderDetailRow(gettext("RFC 1034 Compliant Name"), vectorsearch.rfc1034CompliantName)}
                   </tbody>

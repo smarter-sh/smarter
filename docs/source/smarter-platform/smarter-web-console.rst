@@ -27,6 +27,13 @@ shown as alerts at the top of the dashboard, and new users see a getting started
 they have created and deployed their first LLM Client. It also provides quick access to the complete
 suite of The Smarter Project tools, resources, online tutorials, and documentation.
 
+The dashboard's search box finds resources of every kind at once, among those that you may read. Type
+text to find resources whose name or description contains it, or that have that tag;
+``tag:production`` to find the resources tagged ``production``; or an
+:ref:`annotation selector <sam-annotations>` requirement, such as ``acme.com/crm-account-id=A-10042``
+or ``!acme.com/archived``. The results are grouped by kind, a few of each, and each group links to its
+list page, narrowed by the same search.
+
 Below the console's title, on every page, a **Did you know?** note shows a fact of the day about The
 Smarter Project, with a link to learn more. Everyone sees the same fact from midnight to midnight UTC.
 A platform administrator can turn it off with the ``enable_web_console_did_you_know`` waffle switch.
@@ -69,6 +76,14 @@ AI Resource Lists
 Every Smarter AI resource type has a dedicated list page that provides a comprehensive role-based view
 of all resources of that type, along with their real-time state. Create, view, edit, clone, and delete
 any resource directly from the console.
+
+A list can be searched, sorted by a column, and narrowed by tags and annotations. In the card view, a
+resource's tags and annotations are chips: click one to show only the resources that have the same
+tag, or the same annotation key and value. The annotation box next to the search box takes an
+:ref:`annotation selector <sam-annotations>` requirement: ``key``, ``!key``, ``key=value`` or
+``key!=value``, added with Enter. Each tag and requirement narrows the list further, and shows as a
+chip above it, which removes it when its button is clicked. They are kept in the page's address, as
+``?tag=`` and ``?annotation=``, so a narrowed list can be bookmarked or shared.
 
 .. raw:: html
 

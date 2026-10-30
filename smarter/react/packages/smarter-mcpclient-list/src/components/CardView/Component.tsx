@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: MCPClientCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: MCPClientCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -65,8 +65,8 @@ function CardView({ sessionContext, objects, onRequery }: MCPClientCardViewProps
                     {renderDetailRow(gettext("Last Updated"), mcpclient.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), mcpclient.version)}
                     {renderDetailRow(gettext("Description"), mcpclient.description)}
-                    {renderDetailRow(gettext("Tags"), mcpclient.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), mcpclient.annotations, "json")}
+                    <TagsRow tags={mcpclient.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={mcpclient.annotations} filtering={filtering} />
                     {renderDetailRow(gettext("Ready"), mcpclient.ready, "bool")}
                     {renderDetailRow(gettext("RFC 1034 Compliant Name"), mcpclient.rfc1034CompliantName)}
                   </tbody>

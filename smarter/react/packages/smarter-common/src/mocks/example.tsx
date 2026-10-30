@@ -2,10 +2,11 @@
  * An example object type, with a minimal ListView and CardView, for the stories and tests of the
  * generic TabbedListView. Each list app supplies its own object type, ListView and CardView.
  */
+import { AnnotationsRow, TagsRow } from "../components/MetadataChips";
 import SortableHeader from "../components/SortableHeader";
-import type { SessionContext, Sorting, TabbedViewContext, TabKey } from "../lib/Types";
+import type { Filtering, SessionContext, Sorting, TabbedViewContext, TabKey } from "../lib/Types";
 
-export type Example = { id: number; name: string };
+export type Example = { id: number; name: string; tags?: string[]; annotations?: Record<string, string> };
 
 export const API_URL = "/example/react-integration/api/listview/";
 
@@ -21,8 +22,8 @@ export const sessionContext: SessionContext = {
 };
 
 export const ownedExamples: Example[] = [
-  { id: 1, name: "first_example" },
-  { id: 2, name: "second_example" },
+  { id: 1, name: "first_example", tags: ["red"], annotations: { "example.com/team": "a" } },
+  { id: 2, name: "second_example", tags: ["blue"], annotations: { "example.com/team": "b" } },
 ];
 export const sharedExamples: Example[] = [{ id: 3, name: "shared_example" }];
 
@@ -73,11 +74,19 @@ function ExampleListView({ isLoading, ghostRows, objects, onRequery, sorting }: 
   );
 }
 
-function ExampleCardView({ objects }: { objects: Example[] }) {
+function ExampleCardView({ objects, filtering }: { objects: Example[]; filtering?: Filtering }) {
   return (
     <div aria-label="Example cards">
       {objects.map((example) => (
-        <article key={example.id}>{example.name}</article>
+        <article key={example.id} aria-label={example.name}>
+          {example.name}
+          <table>
+            <tbody>
+              <TagsRow tags={example.tags} filtering={filtering} />
+              <AnnotationsRow annotations={example.annotations} filtering={filtering} />
+            </tbody>
+          </table>
+        </article>
       ))}
     </div>
   );

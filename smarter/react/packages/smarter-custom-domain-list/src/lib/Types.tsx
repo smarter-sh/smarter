@@ -14,7 +14,7 @@
  *
  * See smarter.apps.llmclient.serializers.LLMClientCustomDomainListSerializer.
  */
-import type { SessionContext, Sorting, Annotations, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Custom Domain Definition
@@ -66,6 +66,7 @@ export interface CustomDomainCardViewProps {
   sessionContext: SessionContext;
   objects: CustomDomain[];
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface CustomDomainListViewProps {

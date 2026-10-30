@@ -5453,6 +5453,20 @@
         "additionalProperties": false,
         "description": "The description of one page of a list api's resources, as :func:`paginate_listview` returns it.\n\nIts JSON is camelCase, e.g. ``pageSize``.",
         "properties": {
+          "annotationError": {
+            "default": "",
+            "description": "Why the annotation selector is invalid, in which case it is not applied, or an empty string.",
+            "title": "Annotationerror",
+            "type": "string"
+          },
+          "annotations": {
+            "description": "The annotation selector's requirements that every resource matches, e.g. acme.com/crm-id=A-1.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Annotations",
+            "type": "array"
+          },
           "count": {
             "description": "The number of resources that match the search, on every page.",
             "minimum": 0,
@@ -5510,6 +5524,14 @@
               "type": "string"
             },
             "title": "Sortfields",
+            "type": "array"
+          },
+          "tags": {
+            "description": "The tags that every resource of the list has, e.g. production.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
             "type": "array"
           }
         },

@@ -3,8 +3,8 @@ Pagination and search for the list apis of the React list views in the Smarter w
 
 Every resource list, e.g. the Guardrail or Secret list, is a ``TabbedListView`` of
 ``@smarter/common``, which asks its Django list api for one page of the resources at a time,
-optionally narrowed by a search and by one of the list's named filters, and sorted by one of its
-columns. :func:`paginate_listview`
+optionally narrowed by a search, by one of the list's named filters, by tags and by an annotation
+selector, and sorted by one of its columns. :func:`paginate_listview`
 reads those query parameters, filters, sorts and paginates the queryset, and describes the page,
 so that every list api behaves alike.
 
@@ -30,7 +30,7 @@ from typing import Any, Mapping, Optional, Sequence
 
 from django.core.exceptions import FieldDoesNotExist
 from django.core.paginator import Page, Paginator
-from django.db.models import F, Model, Q, QuerySet
+from django.db.models import F, JSONField, Model, Q, QuerySet
 from django.http import HttpRequest
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -99,6 +99,16 @@ class ListViewPagination(BaseModel):
         "", description="The named filter that narrows the list, e.g. pending, or an empty string for none."
     )
     filters: list[str] = Field(default_factory=list, description="The named filters that the list offers.")
+    tags: list[str] = Field(
+        default_factory=list, description="The tags that every resource of the list has, e.g. production."
+    )
+    annotations: list[str] = Field(
+        default_factory=list,
+        description="The annotation selector's requirements that every resource matches, e.g. acme.com/crm-id=A-1.",
+    )
+    annotation_error: str = Field(
+        "", description="Why the annotation selector is invalid, in which case it is not applied, or an empty string."
+    )
 
 
 def positive_int(value: Any, default: int, maximum: Optional[int] = None) -> int:
@@ -166,6 +176,100 @@ def filter_queryset(queryset: QuerySet, name: str, filters: Mapping[str, Q]) -> 
     if condition is None:
         return queryset, ""
     return queryset.filter(condition), name
+
+
+MAX_LIST_TAGS = 10
+"""The most tags that a list may be narrowed by.
+
+More are ignored.
+"""
+
+MAX_LIST_ANNOTATIONS = 10
+"""The most annotation selector requirements that a list may be narrowed by.
+
+More are ignored.
+"""
+
+
+def clean_query_values(values: Optional[Sequence[str]], maximum: int) -> tuple[str, ...]:
+    """
+    The distinct, non-empty values of a repeated query parameter, e.g. ``?tag=a&tag=b``, in order.
+
+    :param values: The parameter's values, as ``QueryDict.getlist()`` returns them, or None.
+    :param maximum: The most values to keep. More are ignored.
+    :returns: The values, stripped, without duplicates.
+    """
+    retval: list[str] = []
+    for value in values or ():
+        value = (value or "").strip()[:MAX_SEARCH_LENGTH]
+        if value and value not in retval:
+            retval.append(value)
+    return tuple(retval[:maximum])
+
+
+def tag_condition(model: type[Model], tag: str) -> Optional[Q]:
+    """
+    The condition that a resource of ``model`` has the tag ``tag``, or None if the model has no tags.
+
+    Most resources' tags are a django-taggit relation, whose tag names are matched exactly. A few,
+    e.g. SmarterAuthToken's, are a JSON list of strings, which must contain the tag.
+
+    :param model: The resources' model.
+    :param tag: The tag, e.g. ``production``.
+    :returns: The condition, or None.
+    """
+    # pylint: disable=protected-access
+    try:
+        field = model._meta.get_field("tags")
+    except FieldDoesNotExist:
+        return None
+    if field.is_relation:
+        return Q(tags__name=tag)
+    if isinstance(field, JSONField):
+        return Q(tags__contains=[tag])
+    return None
+
+
+def tag_queryset(queryset: QuerySet, tags: Sequence[str]) -> tuple[QuerySet, list[str]]:
+    """
+    The resources of ``queryset`` that have every tag of ``tags``, e.g. ``["production"]``.
+
+    See :func:`tag_condition`. A model without tags has no resource with a tag.
+
+    :param queryset: The resources to filter.
+    :param tags: The tags.
+    :returns: The matching resources, and the tags that applied.
+    """
+    if not tags:
+        return queryset, []
+    for tag in tags:
+        condition = tag_condition(queryset.model, tag)
+        queryset = queryset.filter(condition) if condition is not None else queryset.none()
+    return queryset, list(tags)
+
+
+def annotate_queryset(queryset: QuerySet, annotations: Sequence[str]) -> tuple[QuerySet, list[str], str]:
+    """
+    The resources of ``queryset`` that match every requirement of an annotation selector.
+
+    See :mod:`smarter.lib.annotation.selectors`. An invalid selector is reported, not raised, so
+    that the list still shows its resources while the user corrects it.
+
+    :param queryset: The resources to filter.
+    :param annotations: The selector's requirements, e.g. ``["acme.com/crm-id=A-1", "!acme.com/archived"]``.
+    :returns: The matching resources, the requirements that applied, and why the selector is
+        invalid, or an empty string.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.lib.annotation.selectors import filter_by_annotations
+    from smarter.lib.annotation.validation import SmarterAnnotationError
+
+    if not annotations:
+        return queryset, [], ""
+    try:
+        return filter_by_annotations(queryset, list(annotations)), list(annotations), ""
+    except SmarterAnnotationError as e:
+        return queryset, [], e.message
 
 
 def has_field(model: type[Model], lookup: str) -> bool:
@@ -243,6 +347,8 @@ def paginate_queryset(
     search_fields: Sequence[str] = DEFAULT_SEARCH_FIELDS,
     sort_fields: Mapping[str, str] = DEFAULT_SORT_FIELDS,
     filters: Optional[Mapping[str, Q]] = None,
+    tags: Sequence[str] = (),
+    annotations: Sequence[str] = (),
 ) -> tuple[Page, SmarterDictType]:
     """
     One page of a list api's resources, which match its search, and a description of the page.
@@ -259,12 +365,18 @@ def paginate_queryset(
     :param search_fields: The names of the fields that a search matches.
     :param sort_fields: The columns that the list may be sorted by, and the fields that sort them.
     :param filters: The list's named filters, and the conditions that they apply. None offers none.
+    :param tags: Tags that every resource must have. See :func:`tag_queryset`.
+    :param annotations: An annotation selector's requirements. See :func:`annotate_queryset`.
     :returns: The page, and its description, a dumped :class:`ListViewPagination`.
     """
     search = (search or "").strip()[:MAX_SEARCH_LENGTH]
     size = positive_int(page_size, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
     filters = filters or {}
     queryset, applied_filter = filter_queryset(queryset, list_filter or "", filters)
+    queryset, applied_tags = tag_queryset(queryset, clean_query_values(tags, MAX_LIST_TAGS))
+    queryset, applied_annotations, annotation_error = annotate_queryset(
+        queryset, clean_query_values(annotations, MAX_LIST_ANNOTATIONS)
+    )
     queryset, applied_ordering = sort_queryset(queryset, ordering or "", sort_fields)
     paginator = Paginator(search_queryset(queryset, search, search_fields), size)
     # get_page() returns the last page for a page past it, and the first for an invalid one.
@@ -279,6 +391,9 @@ def paginate_queryset(
         sort_fields=sorted(sortable_fields(queryset, sort_fields)),
         filter=applied_filter,
         filters=sorted(filters),
+        tags=applied_tags,
+        annotations=applied_annotations,
+        annotation_error=annotation_error,
     )
     return result, pagination.model_dump(mode="json")
 
@@ -302,6 +417,9 @@ def paginate_listview(
       it in descending order. Without one, the resources keep the queryset's order. See
       :func:`sort_queryset`.
     - ``filter``: the name of one of ``filters``, e.g. ``pending``. See :func:`filter_queryset`.
+    - ``tag``, repeatable: a tag that every resource must have. See :func:`tag_queryset`.
+    - ``annotation``, repeatable: an annotation selector's requirement, e.g. ``acme.com/crm-id=A-1``.
+      See :func:`annotate_queryset`.
 
     :param request: The list api's request.
     :param queryset: The resources that the user may list, in their default order.
@@ -326,6 +444,8 @@ def paginate_listview(
         search_fields=search_fields,
         sort_fields=sort_fields,
         filters=filters,
+        tags=request.GET.getlist("tag"),
+        annotations=request.GET.getlist("annotation"),
     )
 
 
@@ -334,8 +454,12 @@ __all__ = [
     "DEFAULT_SEARCH_FIELDS",
     "DEFAULT_SORT_FIELDS",
     "ListViewPagination",
+    "MAX_LIST_ANNOTATIONS",
+    "MAX_LIST_TAGS",
     "MAX_PAGE_SIZE",
     "MAX_SEARCH_LENGTH",
+    "annotate_queryset",
+    "clean_query_values",
     "filter_queryset",
     "has_field",
     "paginate_listview",
@@ -344,4 +468,6 @@ __all__ = [
     "search_queryset",
     "sort_queryset",
     "sortable_fields",
+    "tag_condition",
+    "tag_queryset",
 ]

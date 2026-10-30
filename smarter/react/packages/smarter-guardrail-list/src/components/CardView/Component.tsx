@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: GuardrailCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: GuardrailCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -63,8 +63,8 @@ function CardView({ sessionContext, objects, onRequery }: GuardrailCardViewProps
                     {renderDetailRow(gettext("Last Updated"), guardrail.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), guardrail.version)}
                     {renderDetailRow(gettext("Description"), guardrail.description)}
-                    {renderDetailRow(gettext("Tags"), guardrail.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), guardrail.annotations, "json")}
+                    <TagsRow tags={guardrail.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={guardrail.annotations} filtering={filtering} />
                     {renderDetailRow(gettext("Ready"), guardrail.ready, "bool")}
                     {renderDetailRow(gettext("RFC 1034 Compliant Name"), guardrail.rfc1034CompliantName)}
                   </tbody>

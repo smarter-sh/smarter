@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // LLMHost Definition
@@ -114,6 +114,7 @@ export interface LLMHostCardViewProps {
   sessionContext: SessionContext;
   objects: LLMHost[];
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface LLMHostListViewProps {

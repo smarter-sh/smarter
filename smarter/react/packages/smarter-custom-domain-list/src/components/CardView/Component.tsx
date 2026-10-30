@@ -21,9 +21,9 @@ import { StatusBar, VerificationBadge } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: CustomDomainCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: CustomDomainCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -64,8 +64,8 @@ function CardView({ sessionContext, objects, onRequery }: CustomDomainCardViewPr
                     {renderDetailRow(gettext("Last Updated"), customDomain.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), customDomain.version)}
                     {renderDetailRow(gettext("Description"), customDomain.description)}
-                    {renderDetailRow(gettext("Tags"), customDomain.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), customDomain.annotations, "json")}
+                    <TagsRow tags={customDomain.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={customDomain.annotations} filtering={filtering} />
                     {renderDetailRow(
                       gettext("DNS Records"),
                       customDomain.dnsRecords?.map(

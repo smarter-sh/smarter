@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: ConnectionCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: ConnectionCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -63,8 +63,8 @@ function CardView({ sessionContext, objects, onRequery }: ConnectionCardViewProp
                     {renderDetailRow(gettext("Last Updated"), connection.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), connection.version)}
                     {renderDetailRow(gettext("Description"), connection.description)}
-                    {renderDetailRow(gettext("Tags"), connection.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), connection.annotations, "json")}
+                    <TagsRow tags={connection.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={connection.annotations} filtering={filtering} />
                   </tbody>
                 </table>
               </div>

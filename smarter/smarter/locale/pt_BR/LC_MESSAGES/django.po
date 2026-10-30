@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 17:23+0000\n"
+"POT-Creation-Date: 2026-10-30 16:45+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -1750,6 +1750,22 @@ msgstr "Uma solução corporativa de chat com IA baseada em plugins"
 msgid "Notify Me"
 msgstr "Avise-me"
 
+#: smarter/templates/common/cookie-notice.html
+msgid "Cookie notice"
+msgstr "Aviso de cookies"
+
+#: smarter/templates/common/cookie-notice.html
+msgid "We use cookies to improve your experience."
+msgstr "Usamos cookies para melhorar sua experiência."
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Privacy policy"
+msgstr "Política de privacidade"
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Close"
+msgstr "Fechar"
+
 #: smarter/templates/dashboard/email-added.html
 #, python-format
 msgid "We added %(email)s to our mailing list."
@@ -2187,22 +2203,6 @@ msgstr "JSON Schemas do SAM"
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr "Sobre o contrato"
-
-#: smarter/templates/common/cookie-notice.html
-msgid "Cookie notice"
-msgstr "Aviso de cookies"
-
-#: smarter/templates/common/cookie-notice.html
-msgid "We use cookies to improve your experience."
-msgstr "Usamos cookies para melhorar sua experiência."
-
-#: smarter/templates/common/cookie-notice.html
-msgid "Privacy policy"
-msgstr "Política de privacidade"
-
-#: smarter/templates/common/cookie-notice.html
-msgid "Close"
-msgstr "Fechar"
 
 #~ msgid "Swagger"
 #~ msgstr "Swagger"

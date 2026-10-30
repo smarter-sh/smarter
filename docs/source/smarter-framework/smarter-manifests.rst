@@ -177,7 +177,8 @@ Requirement                        Matches the resources whose annotation
 =================================  ========================================================
 
 The ``api/v1/cli/get/<kind>/`` endpoint takes a selector as its ``annotation`` query parameter, which may be
-repeated. Every requirement must match:
+repeated. Every requirement must match. The web console's list pages and dashboard search take the same
+selectors (see :doc:`/smarter-platform/smarter-web-console`):
 
 .. code-block:: console
 

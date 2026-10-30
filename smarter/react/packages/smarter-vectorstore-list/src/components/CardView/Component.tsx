@@ -30,9 +30,9 @@ import { renderDetailRow } from "@/components/CardView/renderDetail";
 import { databaseLabel, formatCount } from "@/lib/format";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: VectorstoreCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: VectorstoreCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -86,8 +86,8 @@ function CardView({ sessionContext, objects, onRequery }: VectorstoreCardViewPro
                     {renderDetailRow(gettext("Created"), vectorstore.createdAt, "dateTime")}
                     {renderDetailRow(gettext("Last Updated"), vectorstore.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), vectorstore.version)}
-                    {renderDetailRow(gettext("Tags"), vectorstore.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), vectorstore.annotations, "json")}
+                    <TagsRow tags={vectorstore.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={vectorstore.annotations} filtering={filtering} />
                   </tbody>
                 </table>
               </div>

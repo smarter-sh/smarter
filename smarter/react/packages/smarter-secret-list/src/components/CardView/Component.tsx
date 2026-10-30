@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: SecretCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: SecretCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -63,8 +63,8 @@ function CardView({ sessionContext, objects, onRequery }: SecretCardViewProps) {
                     {renderDetailRow(gettext("Last Updated"), secret.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), secret.version)}
                     {renderDetailRow(gettext("Description"), secret.description)}
-                    {renderDetailRow(gettext("Tags"), secret.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), secret.annotations, "json")}
+                    <TagsRow tags={secret.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={secret.annotations} filtering={filtering} />
                   </tbody>
                 </table>
               </div>

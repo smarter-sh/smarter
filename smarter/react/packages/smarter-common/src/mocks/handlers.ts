@@ -19,8 +19,23 @@ export function examplePage(examples: Example[], requestUrl: string, defaultPage
   const ordering = EXAMPLE_SORT_FIELDS.includes(requested.replace(/^-/, "")) ? requested : "";
   // the list api's one named filter, "even": the examples with an even id. It ignores any other.
   const filter = params.get("filter") === "even" ? "even" : "";
+  // tags, and an annotation selector of "key=value" requirements. A requirement with a space is
+  // invalid, and reported, not applied, as the list api does.
+  const tags = params.getAll("tag");
+  const requestedAnnotations = params.getAll("annotation");
+  const invalid = requestedAnnotations.find((requirement) => requirement.includes(" "));
+  const annotations = invalid ? [] : requestedAnnotations;
+  const annotationError = invalid ? `Annotation key '${invalid}' is invalid.` : "";
+  const annotated = (example: Example, requirement: string) => {
+    const [key, value] = requirement.split("=", 2);
+    return value === undefined ? key in (example.annotations ?? {}) : example.annotations?.[key] === value;
+  };
   const matches = examples.filter(
-    (example) => example.name.toLowerCase().includes(search) && (!filter || example.id % 2 === 0),
+    (example) =>
+      example.name.toLowerCase().includes(search) &&
+      (!filter || example.id % 2 === 0) &&
+      tags.every((tag) => example.tags?.includes(tag)) &&
+      annotations.every((requirement) => annotated(example, requirement)),
   );
   if (ordering) {
     const direction = ordering.startsWith("-") ? -1 : 1;
@@ -40,6 +55,9 @@ export function examplePage(examples: Example[], requestUrl: string, defaultPage
       sortFields: EXAMPLE_SORT_FIELDS,
       filter,
       filters: ["even"],
+      tags,
+      annotations,
+      annotationError,
     },
   };
 }

@@ -10,6 +10,7 @@
  *   - Tab, Tabs: A TabbedListView's tabs, each of which may have its own object type and views.
  *   - Pagination, ListQuery, ListPage: Types for a page of a list api, and the request for it.
  *   - Sorting: The sort of a list view's columns, which the list api sorts by.
+ *   - Filtering: How a list view narrows its list by a tag or annotation that is clicked.
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
  *   - LLMClient: Type for llmclient configuration and metadata.
@@ -41,6 +42,12 @@ export type Pagination = {
   filter?: string;
   /** The named filters that the list api offers. */
   filters?: string[];
+  /** The tags that every object has, e.g. ["production"]. */
+  tags?: string[];
+  /** The annotation selector's requirements that every object matches, e.g. ["acme.com/crm-id=A-1"]. */
+  annotations?: string[];
+  /** Why the annotation selector is invalid, in which case the list api didn't apply it, or empty. */
+  annotationError?: string;
 };
 
 /** The page of a list api's objects to request, the search and named filter that they match, and their order. All are optional. */
@@ -50,6 +57,25 @@ export type ListQuery = {
   search?: string;
   ordering?: string;
   filter?: string;
+  /** Tags that every object must have. */
+  tags?: string[];
+  /** An annotation selector's requirements, e.g. "acme.com/crm-id=A-1" or "!acme.com/archived". */
+  annotations?: string[];
+};
+
+/**
+ * How a list view narrows its list by an object's tag or annotation, when one is clicked. The list
+ * api filters all of the objects, not only those of the page shown, so TabbedListView requests them.
+ *
+ * - tags, annotations: the tags and annotation requirements that narrow the list now.
+ * - onTag: narrows the list to the objects with a tag.
+ * - onAnnotation: narrows the list by an annotation requirement, e.g. "acme.com/crm-id=A-1".
+ */
+export type Filtering = {
+  tags: string[];
+  annotations: string[];
+  onTag: (tag: string) => void;
+  onAnnotation: (requirement: string) => void;
 };
 
 /**
@@ -94,12 +120,14 @@ export type ListViewBaseProps<TObject, TSessionContext> = {
   objects: TObject[];
   onRequery: () => void;
   sorting?: Sorting;
+  filtering?: Filtering;
 };
 
 export type CardViewBaseProps<TObject, TSessionContext> = {
   sessionContext: TSessionContext;
   objects: TObject[];
   onRequery: () => void;
+  filtering?: Filtering;
 };
 
 export type SessionContext = {

@@ -30,9 +30,9 @@ import { renderDetailRow } from "@/components/CardView/renderDetail";
 import { formatApiKey, formatAuth, proxyUrl } from "@/lib/format";
 
 import "@/components/CardView/styles.css";
-import { gettext, interpolate } from "@smarter/common";
+import { AnnotationsRow, gettext, interpolate, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: ProxyCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: ProxyCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -87,8 +87,8 @@ function CardView({ sessionContext, objects, onRequery }: ProxyCardViewProps) {
                     {renderDetailRow(gettext("Last Updated"), proxy.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), proxy.version)}
                     {renderDetailRow(gettext("Description"), proxy.description)}
-                    {renderDetailRow(gettext("Tags"), proxy.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), proxy.annotations, "json")}
+                    <TagsRow tags={proxy.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={proxy.annotations} filtering={filtering} />
                   </tbody>
                 </table>
               </div>
