@@ -27,7 +27,7 @@ export type AuthToken = {
   description: string;
   version: string;
   tags: string[];
-  annotations: Annotations[];
+  annotations: Annotations;
   userProfile: UserProfile;
   lastAccessed: string | null;
   expiresAt: string | null;

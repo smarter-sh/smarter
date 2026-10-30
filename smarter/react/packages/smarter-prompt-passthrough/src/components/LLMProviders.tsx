@@ -43,8 +43,8 @@ export interface LLMProvider {
   name: string;
   description: string;
   version: string;
-  /** The manifest's annotations: a list of one-key objects, such as { "smarter.sh/purpose": "testing" }. */
-  annotations: Record<string, unknown>[];
+  /** The provider's annotations, as in Kubernetes: a map of keys to string values, such as { "smarter.sh/purpose": "testing" }. */
+  annotations: Record<string, string> | null;
   status: string;
   isDefault: boolean;
   isActive: boolean;

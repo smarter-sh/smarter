@@ -633,10 +633,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             description=f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all()}",
             version="0.1.0",
             tags=["example", "api", "connection"],
-            annotations=[
-                {"smarter.sh/connection": "example_connection"},
-                {"smarter.sh/created_by": "smarter_api_connection_broker"},
-            ],
+            annotations={
+                "smarter.sh/connection": "example_connection",
+                "smarter.sh/created_by": "smarter_api_connection_broker",
+            },
         )
         connection = PydanticApiConnection(
             baseUrl="http://localhost:9357/",
@@ -730,6 +730,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             api_connections = ApiConnection.objects.filter(name=name).with_read_permission_for(user=self.user)  # type: ignore
         else:
             api_connections = ApiConnection.objects.with_read_permission_for(user=self.user)  # type: ignore
+        api_connections = self.filter_by_annotation_selector(api_connections, kwargs)
 
         model_titles = self.get_model_titles(serializer=self.SerializerClass())
 

@@ -799,7 +799,7 @@ class PluginBase(ABC, AccountMixin):
                     "description": self.manifest.metadata.description,
                     "plugin_class": self.manifest.metadata.pluginClass,
                     "version": self.manifest.metadata.version,
-                    "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
+                    "annotations": dict(self.manifest.metadata.annotations or {}),
                 }
             else:
                 logger.warning(

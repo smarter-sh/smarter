@@ -46,7 +46,7 @@ export type CustomDomain = {
   description: string;
   version: string;
   tags: string[];
-  annotations: Annotations[];
+  annotations: Annotations;
   userProfile: UserProfile;
   manifestUrl: string;
   canDelete: boolean; // false if an LLMClient uses it, or you may not delete it

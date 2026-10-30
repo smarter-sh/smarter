@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "Guardrail",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/guardrail/purpose": "example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/guardrail/purpose": "example"
+    },
     "description": "Redacts credit card numbers and social security numbers from the user's message.",
     "name": "example_guardrail",
     "tags": [

@@ -258,7 +258,7 @@ class SAMVectorstoreBroker(AbstractBroker):
             description=vectorstore.description,
             version=vectorstore.version,
             tags=vectorstore.tags_list,
-            annotations=vectorstore.annotations if isinstance(vectorstore.annotations, list) else [],
+            annotations=vectorstore.annotations,
         )
         status = SAMVectorstoreStatus(
             accountNumber=vectorstore.user_profile.account.account_number,
@@ -348,7 +348,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 description="A self-hosted Qdrant vector database of a company's product documentation.",
                 version="1.0.0",
                 tags=["example", "rag", "qdrant"],
-                annotations=[{"smarter.sh/vectorstore/purpose": "example"}],
+                annotations={"smarter.sh/vectorstore/purpose": "example"},
             ),
             spec=SAMVectorstoreSpec(
                 backend="qdrant",
@@ -382,6 +382,7 @@ class SAMVectorstoreBroker(AbstractBroker):
         vectorstores = VectorstoreMeta.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
             vectorstores = vectorstores.filter(name=name)
+        vectorstores = self.filter_by_annotation_selector(vectorstores, kwargs)
         items = [
             self.to_camel_case(VectorstoreSerializer(vectorstore).data)
             for vectorstore in vectorstores.order_by("name")[:MAX_RESULTS]

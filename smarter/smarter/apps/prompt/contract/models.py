@@ -375,8 +375,8 @@ class PromptChatApiPluginMeta(PromptChatApiOrmModel):
     description: Optional[str] = Field(default=None, description="MetaDataModel.description.")
     version: Optional[str] = Field(default=None, max_length=255, description="MetaDataModel.version, e.g. 1.0.0.")
     tags: list[str] = Field(default_factory=list, description="MetaDataModel.tags, by name.")
-    annotations: Optional[Union[list[dict[str, PromptChatApiJson]], dict[str, PromptChatApiJson]]] = Field(
-        default=None, description="MetaDataModel.annotations: a list of key-value pairs, or, in legacy rows, an object."
+    annotations: Optional[dict[str, str]] = Field(
+        default=None, description="MetaDataModel.annotations: a map of keys to string values, as in Kubernetes."
     )
     plugin_class: PromptChatApiPluginClass = Field(..., description="PluginMeta.plugin_class.")
 

@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "Vectorstore",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/vectorstore/purpose": "example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/vectorstore/purpose": "example"
+    },
     "description": "A self-hosted Qdrant vector database of a company's product documentation.",
     "name": "example_knowledge_base",
     "tags": [

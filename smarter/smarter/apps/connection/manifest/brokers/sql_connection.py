@@ -795,10 +795,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             description="Example database connection",
             version="0.1.0",
             tags=["example", "sql", "connection"],
-            annotations=[
-                {"smarter.sh/connection": "example_connection"},
-                {"smarter.sh/created_by": "smarter_sql_connection_broker"},
-            ],
+            annotations={
+                "smarter.sh/connection": "example_connection",
+                "smarter.sh/created_by": "smarter_sql_connection_broker",
+            },
         )
         connection = PydanticSqlConnection(
             dbEngine=DbEngines.MYSQL.value,
@@ -888,6 +888,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             sql_connections = SqlConnection.objects.filter(name=name).with_read_permission_for(self.user)  # type: ignore
         else:
             sql_connections = SqlConnection.objects.with_read_permission_for(self.user)  # type: ignore
+        sql_connections = self.filter_by_annotation_selector(sql_connections, kwargs)
 
         model_titles = self.get_model_titles(serializer=self.SerializerClass())
 

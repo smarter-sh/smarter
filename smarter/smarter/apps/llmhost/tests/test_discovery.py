@@ -60,17 +60,17 @@ class TestBuiltinCatalog(BuiltinFixturesMixin):
         self.assertEqual(metadata["description"], llmhost.description)
         self.assertEqual(metadata["version"], llmhost.version)
         self.assertEqual(sorted(metadata["tags"]), sorted(llmhost.tags_list))
-        self.assertIn({"smarter.sh/llmhost/builtin": "true"}, metadata["annotations"])
+        self.assertEqual(metadata["annotations"]["smarter.sh/llmhost/builtin"], "true")
         self.assertIs(manifest["spec"], llmhost.spec)
         self.assertEqual(manifest["spec"]["model"]["repository"], "BAAI/bge-m3")
         # the manifest is valid, and ready to apply again.
         self.assertEqual(SAMLLMHost(**manifest).spec.engine.name, "tei")
 
     def test_to_manifest_annotations(self):
-        """Test that annotations that are not a list are left out."""
-        llmhost = LLMHost(name="x", description="", version="1.0.0", annotations={"not": "a list"}, spec={})
+        """Test that the manifest's annotations are the LLMHost's map of strings."""
+        llmhost = LLMHost(name="x", description="", version="1.0.0", annotations=[{"example.com/a": 1}], spec={})
         llmhost.__dict__["tags_list"] = []  # an unsaved LLMHost has no tags to fetch.
-        self.assertEqual(BuiltinCatalog.to_manifest(llmhost)["metadata"]["annotations"], [])
+        self.assertEqual(BuiltinCatalog.to_manifest(llmhost)["metadata"]["annotations"], {"example.com/a": "1"})
 
     def test_manifests(self):
         """Test that the manifests include the fixtures, are sorted by name, and skip LLMHosts without a spec."""

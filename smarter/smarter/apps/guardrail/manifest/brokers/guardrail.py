@@ -221,7 +221,7 @@ class SAMGuardrailBroker(AbstractBroker):
             description=guardrail.description,
             version=guardrail.version,
             tags=guardrail.tags_list,
-            annotations=guardrail.annotations if isinstance(guardrail.annotations, list) else [],
+            annotations=guardrail.annotations,
         )
         spec = SAMGuardrailSpec(config=SAMGuardrailSpecConfig(**config_data))
         status = SAMGuardrailStatus(
@@ -292,7 +292,7 @@ class SAMGuardrailBroker(AbstractBroker):
             description="Redacts credit card numbers and social security numbers from the user's message.",
             version="1.0.0",
             tags=["example", "pii"],
-            annotations=[{"smarter.sh/guardrail/purpose": "example"}],
+            annotations={"smarter.sh/guardrail/purpose": "example"},
         )
         config = SAMGuardrailSpecConfig(
             stage=SAMGuardrailStage.INPUT.value,
@@ -333,6 +333,7 @@ class SAMGuardrailBroker(AbstractBroker):
         guardrails = Guardrail.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
             guardrails = guardrails.filter(name=name)
+        guardrails = self.filter_by_annotation_selector(guardrails, kwargs)
         data = [
             self.to_camel_case(GuardrailSerializer(guardrail).data)
             for guardrail in guardrails.order_by("priority", "name")[:MAX_RESULTS]

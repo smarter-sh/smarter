@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "MCPClient",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/mcpclient/documentation": "https://github.com/github/github-mcp-server"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/mcpclient/documentation": "https://github.com/github/github-mcp-server"
+    },
     "description": "An example MCPClient, for GitHub's MCP server. It offers the LLM the server's read-only tools.",
     "name": "example_mcpclient",
     "tags": [

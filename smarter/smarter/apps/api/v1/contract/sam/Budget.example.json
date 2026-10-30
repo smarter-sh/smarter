@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "Budget",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/budget/purpose": "example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/budget/purpose": "example"
+    },
     "description": "Each student may spend $10 a month on AI, and $100 in total.",
     "name": "student_monthly_allowance",
     "tags": [

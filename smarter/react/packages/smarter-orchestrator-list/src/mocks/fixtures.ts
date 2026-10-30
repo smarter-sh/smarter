@@ -37,7 +37,7 @@ export function makeObject(id: number, overrides: Partial<Orchestrator> = {}): O
     description: `An example, number ${id}.`,
     version: "1.0.0",
     tags: ["example"],
-    annotations: [],
+    annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/orchestrator/orchestrators/hashed${id}/`,
     canDelete: true,

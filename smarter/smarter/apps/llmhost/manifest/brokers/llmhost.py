@@ -230,7 +230,7 @@ class SAMLLMHostBroker(AbstractBroker):
             description=llmhost.description,
             version=llmhost.version,
             tags=llmhost.tags_list,
-            annotations=llmhost.annotations if isinstance(llmhost.annotations, list) else [],
+            annotations=llmhost.annotations,
         )
         status = SAMLLMHostStatus(
             accountNumber=self.account.account_number,
@@ -306,7 +306,7 @@ class SAMLLMHostBroker(AbstractBroker):
             description="Meta Llama 3.1 8B Instruct, served by vLLM on one NVIDIA A10G GPU, with tool calling.",
             version="1.0.0",
             tags=["example", "llama", "vllm"],
-            annotations=[{"smarter.sh/llmhost/purpose": "example"}],
+            annotations={"smarter.sh/llmhost/purpose": "example"},
         )
         spec = SAMLLMHostSpec(
             model=SAMLLMHostModel(
@@ -354,6 +354,7 @@ class SAMLLMHostBroker(AbstractBroker):
         llmhosts = LLMHost.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
             llmhosts = llmhosts.filter(name=name)
+        llmhosts = self.filter_by_annotation_selector(llmhosts, kwargs)
         data = [
             self.to_camel_case(LLMHostSerializer(llmhost).data) for llmhost in llmhosts.order_by("name")[:MAX_RESULTS]
         ]

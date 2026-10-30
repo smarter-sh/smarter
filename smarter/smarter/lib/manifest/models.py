@@ -2,13 +2,11 @@
 
 import abc
 import datetime
-import decimal
 import re
-import uuid
 from contextlib import contextmanager
 from contextvars import ContextVar
 from logging import getLogger
-from typing import Iterator, List, Optional, Union
+from typing import Iterator, List, Optional
 
 from django.utils.text import slugify
 from pydantic import (
@@ -30,7 +28,10 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import to_snake_case
-from smarter.lib import json
+from smarter.lib.annotation.validation import (
+    SmarterAnnotationError,
+    normalize_annotations,
+)
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
@@ -76,25 +77,6 @@ def is_client_manifest() -> bool:
     :rtype: bool
     """
     return _CLIENT_MANIFEST.get()
-
-
-VALID_ANNOTATION_VALUE_TYPES_SET = (
-    str,
-    int,
-    float,
-    bool,
-    datetime.date,
-    datetime.datetime,
-    decimal.Decimal,
-    uuid.UUID,
-    bytes,
-    list,
-    dict,
-)
-"""Types allowed for annotation values in manifest metadata."""
-AnnotationValueType = Union[
-    str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict
-]
 
 
 class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
@@ -175,14 +157,19 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         default_factory=list,
         description="The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
     )
-    annotations: Optional[List[dict[str, AnnotationValueType]]] = Field(
-        default_factory=list,
-        description="""The manifest annotations. Used for storing arbitrary metadata as
-            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The
-            key should be a valid url-friendly string. The value accepts
-            multi-line string values (YAML block scalars) and various scalar types including
-            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.
-            """,
+    annotations: Optional[dict[str, str]] = Field(
+        default_factory=dict,
+        description=(
+            "Annotations, as in Kubernetes: a map of keys to string values that clients and integrations "
+            "attach to a resource for their own purposes, e.g. to associate it with a resource in another "
+            "system. A key is an optional DNS-subdomain prefix that names its owner, then a slash and a "
+            "name of one or more slash-separated segments, e.g. 'acme.com/crm-account-id'. The prefix "
+            "'smarter.sh' and its subdomains are reserved for the Smarter platform. Values are strings: "
+            "unquoted YAML scalars such as true, 42 or dates are converted to strings, and structured data "
+            "belongs in a JSON string. All annotations together are limited to 256 KiB. The list of "
+            "one-key maps of older manifests, e.g. [{'acme.com/crm-account-id': 'A-10042'}], is also accepted."
+        ),
+        examples=[{"acme.com/crm-account-id": "A-10042", "smarter.sh/llmclient/use-case": "customer support"}],
     )
 
     @field_validator("name")
@@ -290,73 +277,25 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         return v
 
     @field_validator("annotations", mode="before")
-    def coerce_annotations_to_list(cls, v):
+    def normalize_annotations(cls, v) -> Optional[dict[str, str]]:
         """
-        Pre-validator to coerce stringified JSON lists to Python lists for annotations.
+        Validate the ``annotations`` field, and return it as a map of strings to strings.
 
-        This ensures that if the input is a string (e.g., '[{"key": "value"}]'),
-        it is parsed as a list before type validation.
-        """
-        if v is None:
-            return v
-        if isinstance(v, str):
-            try:
-                v = json.loads(v)
-            except Exception as e:
-                raise SAMValidationError(f"Annotations field could not be parsed as JSON: {e}") from e
-        return v
+        Accepts a map, the list of one-key maps of older manifests, or either as a JSON string. See
+        :func:`smarter.lib.annotation.validation.normalize_annotations`.
 
-    @field_validator("annotations")
-    def validate_annotations(cls, v) -> Optional[List[dict[str, AnnotationValueType]]]:
-        """
-        Validates the ``annotations`` field for a manifest.
-
-        Accepts a list of dicts, where each dict can be a single key-value pair or a flat dict with multiple key-value pairs.
-        Supports multi-line string values (YAML block scalars).
-        Ensures each annotation key is URL-friendly and each value is a string or scalar (including multi-line strings).
-        Raises SAMValidationError if invalid.
-
-        :param v: The value of the ``annotations`` field to validate.
-        :type v: Optional[List[SmarterDictType]]
-        :raises smarter.lib.manifest.exceptions.SAMValidationError: If any annotation is invalid.
-        :return: The validated list of annotations.
-        :rtype: Optional[List[SmarterDictType]]
+        :param v: The value of the ``annotations`` field.
+        :type v: AnnotationsInput
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If a key or value is invalid.
+        :return: The annotations.
+        :rtype: Optional[dict[str, str]]
         """
         if v is None:
             return v
-
-        if isinstance(v, str):
-            try:
-                v = json.loads(v)
-            except Exception as e:
-                raise SAMValidationError(f"Annotations {v} could not be parsed as JSON: {e}") from e
-        if not isinstance(v, list):
-            raise SAMValidationError(f"Annotations {v} must be a list of dictionaries.")
-        for annotation in v:
-            if not isinstance(annotation, dict):
-                raise SAMValidationError(
-                    f"Each annotation must be a dictionary, got {type(annotation)}: {annotation} in {v}"
-                )
-            for key, value in annotation.items():
-                # Key must be URL-friendly
-                if not re.match(SmarterValidator.VALID_URL_FRIENDLY_STRING, str(key)):
-                    raise SAMValidationError(
-                        f"Invalid annotation key: {key} found in {v}. Ensure that you do not include characters that are not URL friendly."
-                    )
-                # Accept string, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict, or None as value
-                allowed_types = VALID_ANNOTATION_VALUE_TYPES_SET
-                if not isinstance(value, allowed_types) and value is not None:
-                    raise SAMValidationError(
-                        f"Invalid annotation value type for key '{key}': {type(value)} found in {v}. Must be a string, int, float, bool, date, datetime, Decimal, UUID, bytes, list, dict, or None."
-                    )
-                # If string, allow multi-line (YAML block scalar) and comma-separated values
-                if isinstance(value, str):
-                    # Allow any string, but optionally check for length or forbidden characters
-                    if len(value) > 2048:
-                        raise SAMValidationError(
-                            f"Annotation value for key '{key}' is too long (max 2048 chars) found in {v}."
-                        )
-        return v
+        try:
+            return normalize_annotations(v)
+        except SmarterAnnotationError as e:
+            raise SAMValidationError(str(e)) from e
 
 
 class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):

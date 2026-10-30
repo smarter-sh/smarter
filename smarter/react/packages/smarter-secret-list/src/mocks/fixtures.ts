@@ -37,7 +37,7 @@ export function makeObject(id: number, overrides: Partial<Secret> = {}): Secret 
     description: `An example, number ${id}.`,
     version: "1.0.0",
     tags: ["example"],
-    annotations: [],
+    annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/secret/secrets/hashed${id}/`,
     canDelete: true,

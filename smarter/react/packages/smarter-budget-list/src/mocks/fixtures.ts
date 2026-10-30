@@ -57,7 +57,7 @@ export function makeBudget(id: number, overrides: Partial<Budget> = {}): Budget 
     description: `An example budget, number ${id}.`,
     version: "1.0.0",
     tags: ["example"],
-    annotations: [],
+    annotations: {},
     manifestUrl: `/budget/budgets/hashed${id}/`,
     unit: "cost",
     period: "month",
