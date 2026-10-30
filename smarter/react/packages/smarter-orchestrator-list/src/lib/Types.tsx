@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the Orchestrator List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * orchestrator, and API response layers. It provides strong typing for user, orchestrator,
  * orchestrator, API response, and session context data structures.
  *
@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Orchestrator Definition
@@ -44,6 +44,8 @@ export type Orchestrator = {
   tags: Tags;
   annotations: Annotations;
   manifestUrl: string;
+  /** The url of the 's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
   rfc1034CompliantName: string | null;
@@ -56,10 +58,11 @@ export type Orchestrator = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface OrchestratorCardViewProps {
+export interface OrchestratorDetailViewProps {
   sessionContext: SessionContext;
-  objects: Orchestrator[];
+  object: Orchestrator;
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface OrchestratorListViewProps {

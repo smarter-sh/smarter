@@ -67,7 +67,8 @@ Code*.
 Certificates, One Issuer per Delegated Zone
 <https://blog.smarter.sh/2026/10/01/cert-manager-dns01-route53/>`__, `Amazon SES, DKIM and DMARC:
 Email Authentication for Every Smarter Environment
-<https://blog.smarter.sh/2026/08/09/amazon-ses-dkim-dmarc/>`__.
+<https://blog.smarter.sh/2026/08/09/amazon-ses-dkim-dmarc/>`__, and the case study `What Happens
+When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
 
 **Exercises.**
 

@@ -114,12 +114,17 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lecture 5: Networking.** Services, Ingress, DNS inside the cluster, and network policies.
        Server-side request forgery and the cloud metadata address. How Smarter
        :doc:`deploys an LLMClient </smarter-framework/smarter-on-kubernetes/llmclient-deploy>` with
-       its own ingress.
+       its own ingress. Pre-reading: "One deploy, end to end", "One record, no wildcard", "One
+       certificate per host" and "Four checks of the host" in the case study `What Happens When
+       You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
    * - 9
      - 45
      - **Lab 4: Fence it in.** Write a network policy that stops Smarter's pods from reaching
        ``169.254.169.254`` while still reaching the database, Redis and the internet, and test it
-       (on a cluster whose network plugin enforces policies). Ungraded.
+       (on a cluster whose network plugin enforces policies). Then compare it with "URLs a model
+       chooses" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__, where the application's HTTP client
+       refuses any address that is not public. Ungraded.
    * - 10
      - 45
      - **Lecture 6: Operating a cluster.** Logs, events, ``kubectl describe``, upgrades, backups

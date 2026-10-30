@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "Proxy",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/proxy/documentation": "https://docs.claude.com/en/api/messages"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/proxy/documentation": "https://docs.claude.com/en/api/messages"
+    },
     "description": "Passthrough access to Anthropic's Messages API, with an API key that Smarter keeps.",
     "name": "example_anthropic",
     "tags": [

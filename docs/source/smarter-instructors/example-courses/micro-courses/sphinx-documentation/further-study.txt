@@ -21,4 +21,8 @@
   refactoring, log reviews, translations and front-end design done with an agent; `Smarter's OpenAPI
   Contract: One Extensibility Model for Python, Go, React and VS Code
   <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
-  OpenAPI document that every client depends on.
+  OpenAPI document that every client depends on. The case studies `Converge or Diverge: AI Coding
+  Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on documentation whose reader is an
+  agent, and `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__, on
+  reference generated from the code, turn these posts into lessons with labs and discussion
+  questions.

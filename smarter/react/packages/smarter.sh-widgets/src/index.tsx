@@ -19,14 +19,25 @@ export { default as McpServer } from "./components/McpServer/Component";
 export type { McpServerProps } from "./components/McpServer/Component";
 export { default as Sdk } from "./components/Sdk/Component";
 export type { SdkProps } from "./components/Sdk/Component";
-export { default as ResourceTree } from "./components/ResourceTree/Component";
-export type { ResourceTreeProps } from "./components/ResourceTree/Component";
-export { default as ResourceCard } from "./components/ResourceTree/ResourceCard";
-export type { ResourceTreeNode } from "./components/ResourceTree/types";
-export { branchIds, childId, countResources, depth, ROOT_ID } from "./components/ResourceTree/tree";
-export type { NodeId } from "./components/ResourceTree/tree";
-export { kindInfo, PLUGIN_KINDS } from "./components/ResourceTree/kinds";
-export type { KindInfo, Tone } from "./components/ResourceTree/kinds";
+export {
+  branchIds,
+  childId,
+  countResources,
+  depth,
+  kindInfo,
+  PLUGIN_KINDS,
+  ResourceCard,
+  ResourceTree,
+  ROOT_ID,
+} from "./components/ResourceTree";
+export type {
+  KindInfo,
+  NodeId,
+  ResourceCardProps,
+  ResourceTreeNode,
+  ResourceTreeProps,
+  Tone,
+} from "./components/ResourceTree";
 export { default as SelfHost } from "./components/SelfHost/Component";
 export { default as VSCodeExtension } from "./components/VSCodeExtension/Component";
 export { default as WhatsNew } from "./components/WhatsNew/Component";

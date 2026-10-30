@@ -100,6 +100,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 6 (30 min)
      - **Infrastructure in the application, and teamwork.** Smarter's infrastructure service
        layer and its in-memory test provider; reviewing plans, CI, drift and imports.
+       Pre-reading: "One deploy, end to end" and "Waiting without blocking" in the case study
+       `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
    * - 2
      - Live session 2 (90 min)
      - Capstone presentations (about 5 minutes each, with 2 minutes of questions).

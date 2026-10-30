@@ -175,3 +175,93 @@ class TestApplyResult(ApiV1CliTestBase):
         self.assertEqual(response["data"], {"apiVersion": "smarter.sh/v1", "kind": "Secret", "name": name})
         for leaked in ("api_token", "auth_header", "cache_key", "loader", "ip_address", "orm_instance"):
             self.assertNotIn(leaked, str(response))
+
+
+class TestAnnotationSelectors(ApiV1CliTestBase):
+    """Test annotations through the cli api: the Kubernetes map, legacy lists, and the get command's ?annotation= selector."""
+
+    def url(self, view: str, kind: Optional[str] = None, **params) -> str:
+        """The url of a cli view, with its query parameters.
+
+        A list value repeats the parameter.
+        """
+        path = reverse(self.namespace + view, kwargs={SAMKeys.KIND.value: kind} if kind else None)
+        return f"{path}?{urlencode(params, doseq=True)}" if params else path
+
+    def apply(self, manifest: SmarterDictType) -> None:
+        """Apply a Secret manifest, and delete the Secret after the test."""
+        name = manifest["metadata"]["name"]
+        self.addCleanup(lambda: Secret.objects.filter(name=name, user_profile=self.user_profile).delete())
+        response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)  # type: ignore[arg-type]
+        self.assertEqual(status, HTTPStatus.OK, response)
+
+    def names(self, kind: str, *selector: str) -> list[str]:
+        """The names that get returns for a selector."""
+        response, status = self.get_response(self.url(ApiV1CliReverseViews.get, kind, annotation=list(selector)))
+        self.assertEqual(status, HTTPStatus.OK, response)
+        return [item.get(SAMMetadataKeys.NAME.value, "") for item in TestGetAndDescribeEveryKind.items(response)]
+
+    def describe(self, name: str) -> SmarterDictType:
+        """The annotations that describe returns for a Secret."""
+        response, status = self.get_response(self.url(ApiV1CliReverseViews.describe, SAMKinds.SECRET.value, name=name))
+        self.assertEqual(status, HTTPStatus.OK, response)
+        return response[SCLIResponseGet.DATA.value][SAMKeys.METADATA.value]["annotations"]
+
+    def test_every_kind_applies_the_selector(self):
+        """Test that get of every kind filters by annotation, so a key that nothing has returns nothing."""
+        for kind in Brokers.all_brokers():
+            with self.subTest(kind=kind):
+                self.assertEqual(self.names(kind, "example.com/no-such-key"), [])
+                everything, _ = self.get_response(self.url(ApiV1CliReverseViews.get, kind))
+                count = everything[SCLIResponseGet.DATA.value][SAMKeys.METADATA.value]["count"]
+                self.assertEqual(len(self.names(kind, "!example.com/no-such-key")), count)
+
+    def test_invalid_selector_is_a_bad_request(self):
+        """Test that an invalid selector answers 400."""
+        response, status = self.get_response(
+            self.url(ApiV1CliReverseViews.get, SAMKinds.SECRET.value, annotation="Bad Key=x")
+        )
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST, response)
+
+    def test_apply_select_describe(self):
+        """Test that a map of annotations is applied, selected, described as strings, and replaced by the next apply."""
+        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "annotated-secret.yaml"))
+        self.apply(manifest)  # type: ignore[arg-type]
+        self.assertEqual(
+            self.describe("annotated_secret"),
+            {
+                "example.com/crm-account-id": "A-10042",
+                "example.com/active": "true",
+                "example.com/renewed": "2026-10-28",
+                "smarter.sh/tests/purpose": "annotation selectors",
+            },
+        )
+        secret = SAMKinds.SECRET.value
+        self.assertEqual(self.names(secret, "example.com/crm-account-id=A-10042"), ["annotated_secret"])
+        self.assertEqual(
+            self.names(secret, "example.com/crm-account-id", "example.com/active=true"), ["annotated_secret"]
+        )
+        self.assertNotIn("annotated_secret", self.names(secret, "example.com/crm-account-id!=A-10042"))
+        self.assertNotIn("annotated_secret", self.names(secret, "!example.com/active"))
+
+        manifest["metadata"]["annotations"] = {"example.com/crm-account-id": "A-20000"}  # type: ignore[index]
+        self.apply(manifest)  # type: ignore[arg-type]
+        self.assertEqual(self.describe("annotated_secret"), {"example.com/crm-account-id": "A-20000"})
+        self.assertEqual(self.names(secret, "example.com/crm-account-id=A-10042"), [])
+
+    def test_apply_legacy_list(self):
+        """Test that the list of one-key maps of older manifests still applies, and is described as a map."""
+        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-secret.yaml"))
+        self.apply(manifest)  # type: ignore[arg-type]
+        annotations = self.describe(manifest["metadata"]["name"])  # type: ignore[index]
+        self.assertEqual(annotations["smarter.sh/tests/owner"], "test bank")
+        self.assertEqual(annotations["smarter.sh/tests/last-updated"], "2025-12-31")
+
+    def test_invalid_annotations_are_a_bad_request(self):
+        """Test that a manifest with an invalid key or a structured value answers 400."""
+        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "annotated-secret.yaml"))
+        for annotations in ({"Bad Key": "x"}, {"example.com/list": ["a", "b"]}):
+            with self.subTest(annotations=annotations):
+                manifest["metadata"]["annotations"] = annotations  # type: ignore[index]
+                response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)  # type: ignore[arg-type]
+                self.assertEqual(status, HTTPStatus.BAD_REQUEST, response)

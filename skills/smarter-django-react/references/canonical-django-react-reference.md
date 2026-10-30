@@ -3,22 +3,22 @@
 The Guardrail list page is the reference. Read these files together. Each one
 names the others' identifiers, so read them as a set.
 
-| Layer                                     | File                                                                                                                                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sidebar URL                               | `smarter/smarter/apps/dashboard/context_processors.py` (`"guardrails": reverse(...)`)                                                                 |
-| Sidebar link                              | `smarter/smarter/templates/dashboard/sidebar.html` (`{{ sidebar.guardrails }}`)                                                                       |
-| URL names and routes                      | `smarter/smarter/apps/guardrail/urls.py` (`GuardrailReverseNames`)                                                                                    |
-| Page view                                 | `smarter/smarter/apps/guardrail/views/listview/view.py`                                                                                               |
-| List, clone, rename, delete api           | `smarter/smarter/apps/guardrail/views/listview/api.py`                                                                                                |
-| Serializer (`can_delete`, `manifest_url`) | `smarter/smarter/apps/guardrail/serializers.py` and its base, `MetaDataWithOwnershipModelSerializer` in `smarter/smarter/apps/account/serializers.py` |
-| Template tag                              | `smarter/smarter/apps/guardrail/templatetags/react_guardrail_list.py`                                                                                 |
-| Template tag manager                      | `smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py`                                                                        |
-| Template                                  | `smarter/smarter/templates/react/guardrail-list.html`                                                                                                 |
-| React entry                               | `smarter/react/packages/smarter-guardrail-list/src/main.tsx`                                                                                          |
-| React app                                 | `smarter/react/packages/smarter-guardrail-list/src/App.tsx` and `src/components/`                                                                     |
-| Vite build and manifest                   | `smarter/react/packages/smarter-guardrail-list/vite.config.ts`                                                                                        |
-| Shared React code                         | `smarter/react/packages/smarter-common/src/lib/{django,load,actionUrl,Types}.tsx` and `src/components/TabbedListView`                                 |
-| Python tests                              | `smarter/smarter/apps/llmclient/tests/test_custom_domain_views.py` (`ResourceViewsTestMixin`)                                                         |
+| Layer                                                   | File                                                                                                                                                  |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sidebar URL                                             | `smarter/smarter/apps/dashboard/context_processors.py` (`"guardrails": reverse(...)`)                                                                 |
+| Sidebar link                                            | `smarter/smarter/templates/dashboard/sidebar.html` (`{{ sidebar.guardrails }}`)                                                                       |
+| URL names and routes                                    | `smarter/smarter/apps/guardrail/urls.py` (`GuardrailReverseNames`)                                                                                    |
+| Page view                                               | `smarter/smarter/apps/guardrail/views/listview/view.py`                                                                                               |
+| List, clone, rename, delete api                         | `smarter/smarter/apps/guardrail/views/listview/api.py`                                                                                                |
+| Serializer (`can_delete`, `manifest_url`, `detail_url`) | `smarter/smarter/apps/guardrail/serializers.py` and its base, `MetaDataWithOwnershipModelSerializer` in `smarter/smarter/apps/account/serializers.py` |
+| Template tag                                            | `smarter/smarter/apps/guardrail/templatetags/react_guardrail_list.py`                                                                                 |
+| Template tag manager                                    | `smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py`                                                                        |
+| Template                                                | `smarter/smarter/templates/react/guardrail-list.html`                                                                                                 |
+| React entry                                             | `smarter/react/packages/smarter-guardrail-list/src/main.tsx`                                                                                          |
+| React app                                               | `smarter/react/packages/smarter-guardrail-list/src/App.tsx` and `src/components/`                                                                     |
+| Vite build and manifest                                 | `smarter/react/packages/smarter-guardrail-list/vite.config.ts`                                                                                        |
+| Shared React code                                       | `smarter/react/packages/smarter-common/src/lib/{django,load,actionUrl,Types}.tsx` and `src/components/TabbedListView`                                 |
+| Python tests                                            | `smarter/smarter/apps/llmclient/tests/test_custom_domain_views.py` (`ResourceViewsTestMixin`)                                                         |
 
 ## The names that must agree
 

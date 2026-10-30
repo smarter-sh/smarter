@@ -3,7 +3,7 @@
   "kind": "Account",
   "metadata": {
     "accountNumber": "123456789",
-    "annotations": [],
+    "annotations": {},
     "description": "An example Smarter API manifest for an Account",
     "name": "example_account",
     "tags": [

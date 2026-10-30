@@ -52,6 +52,11 @@ class PluginApiPluginMeta(AccountApiModel):
         ...,
         description="Whether the requesting user may delete the plugin now: they own it, and nothing depends on it.",
     )
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the plugin's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
 
     @classmethod
     def from_model(cls, plugin_meta: "PluginMeta", user: object = None) -> "PluginApiPluginMeta":
@@ -65,6 +70,10 @@ class PluginApiPluginMeta(AccountApiModel):
         :returns: The model.
         :rtype: PluginApiPluginMeta
         """
+        # the dashboard's resource detail imports the brokers, which import this module.
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
+
         kind = plugin_meta.kind.value
         return cls(
             id=plugin_meta.pk,
@@ -81,6 +90,7 @@ class PluginApiPluginMeta(AccountApiModel):
             ready=plugin_meta.ready,
             kind=kind,
             can_delete=user_can_delete(plugin_meta, kind, user),
+            detail_url=resource_detail_url(kind, plugin_meta.record_locator),
         )
 
 

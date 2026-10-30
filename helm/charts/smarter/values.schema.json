@@ -136,7 +136,6 @@
         "SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": { "type": "string" },
         "SMARTER_MYSQL_BACKUP_PASSWORD": { "type": "string" },
         "SMARTER_MYSQL_BACKUP_USERNAME": { "type": "string" },
-        "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": { "type": "string" },
         "SMARTER_LOGIN_URL": { "type": "string" },
         "SMARTER_ADMIN_USERNAME": { "type": "string" },
         "SMARTER_ADMIN_PASSWORD": { "type": "string" },

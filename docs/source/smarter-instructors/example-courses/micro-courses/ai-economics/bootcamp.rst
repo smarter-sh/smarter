@@ -85,7 +85,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 2: Quality costs money, sometimes.** Model tiers, reasoning models, tools and
        retrieval as cost multipliers. Latency as a cost. Why the cheapest model is sometimes the
-       most expensive choice.
+       most expensive choice. Safety checks cost money too: the lab "Compare the costs" and the
+       note "Ordering is a cost control" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__ show a cheap keyword check sparing the
+       price of an LLM judge.
    * - 4
      - 45
      - **Lab 2: The model comparison.** Run the same ten tasks on three models from different
@@ -99,7 +102,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 4: The business case.** Benefits that can be measured (time saved, tickets
        deflected, revenue), adoption curves, and sensitivity analysis. Productivity research and
-       its limits.
+       its limits, with one claim students can check in git: the case study `Converge or
+       Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, about
+       25 times the author's long-run pace, and its question of what to measure instead of
+       lines of code.
    * - 7
      - 45
      - **Lab 3: A business case.** Build a one-year cost and benefit model for an AI application

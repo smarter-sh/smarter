@@ -161,7 +161,7 @@ class TestSAMProxy(unittest.TestCase):
                 self.assertTrue(model.allowedPaths, "an example Proxy must restrict its paths.")
                 self.assertTrue(model.apiKey)
                 self.assertTrue(model.baseUrl and model.baseUrl.startswith("https://"))
-                self.assertIn({"smarter.sh/proxy/builtin": "true"}, metadata.annotations)
+                self.assertEqual(metadata.annotations["smarter.sh/proxy/builtin"], "true")
                 names.add(metadata.name)
         self.assertEqual(len(names), len(files), "example Proxy names must be unique.")
         self.assertTrue({"openai", "anthropic", "googleai", "mistral"} <= names)

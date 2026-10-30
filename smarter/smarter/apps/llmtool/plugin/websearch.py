@@ -431,10 +431,10 @@ class WebsearchPlugin(PluginBase):
             description="Researches any topic on the open web, and cites its sources.",
             version="0.1.0",
             tags=["websearch", "research"],
-            annotations=[
-                {"smarter.sh/created_by": "smarter_websearch_plugin_broker"},
-                {"smarter.sh/plugin": "research_assistant"},
-            ],
+            annotations={
+                "smarter.sh/created_by": "smarter_websearch_plugin_broker",
+                "smarter.sh/plugin": "research_assistant",
+            },
             pluginClass=SAMPluginCommonMetadataClassValues.WEBSEARCH.value,
         )
         selector = SAMPluginCommonSpecSelector(

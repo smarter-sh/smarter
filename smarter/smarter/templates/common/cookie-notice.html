@@ -1,0 +1,50 @@
+{% load i18n %}
+{% comment %}
+The cookie notice, on every page of the web console (base.html). It stays at the bottom left, away from
+Keen's scroll-to-top button, and under modals and toasts (z-index 1050 and up). Once closed, it stays closed in this browser (localStorage). Without
+localStorage, e.g. in a private window, it shows on every page until closed there.
+{% endcomment %}
+<div id="smarter-cookie-notice" class="smarter-cookie-notice card shadow border border-gray-300"
+  role="region" aria-label="{% translate 'Cookie notice' %}" hidden>
+  <div class="card-body d-flex align-items-center gap-5 py-5 px-6">
+    <p class="mb-0 fs-6 text-gray-800">
+      {% translate "We use cookies to improve your experience." %}
+      <a href="{% firstof branding.smarter_project_website_url 'https://smarter.sh' %}/privacy"
+        target="_blank" rel="noopener" class="text-gray-900 text-decoration-underline">{% translate "Privacy policy" %}</a>
+    </p>
+    <button type="button" class="btn btn-sm btn-dark text-uppercase fw-semibold flex-shrink-0"
+      data-smarter-cookie-notice-close>{% translate "Close" %}</button>
+  </div>
+</div>
+<style>
+  .smarter-cookie-notice {
+    position: fixed;
+    inset-inline: 1rem;
+    bottom: 1rem;
+    z-index: 1040;
+  }
+  @media (min-width: 576px) {
+    .smarter-cookie-notice {
+      inset-inline: 1.25rem auto;
+      bottom: 1.25rem;
+      max-width: 30rem;
+    }
+  }
+</style>
+<script>
+  (function () {
+    var KEY = "smarter-cookie-notice-dismissed";
+    var notice = document.getElementById("smarter-cookie-notice");
+    if (!notice) return;
+    try {
+      if (window.localStorage.getItem(KEY) === "1") return;
+    } catch (e) {}
+    notice.hidden = false;
+    notice.querySelector("[data-smarter-cookie-notice-close]").addEventListener("click", function () {
+      notice.hidden = true;
+      try {
+        window.localStorage.setItem(KEY, "1");
+      } catch (e) {}
+    });
+  })();
+</script>

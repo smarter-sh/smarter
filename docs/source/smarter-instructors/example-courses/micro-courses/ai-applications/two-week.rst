@@ -89,6 +89,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        (the ``data_analyst`` LLMClient). A :doc:`Connection </smarter-resources/smarter-connection>`
        with a read-only database user, its password in a :doc:`Secret
        </smarter-resources/smarter-secret>`, and how wrong answers still happen.
+       Pre-reading: the case study `Stackademy Online Coding Academy
+       <https://smarter.sh/case-studies/stackademy>`__, whose "Lab 1: Talk to Stanley" asks the
+       same questions of a SQL Plugin advisor and an API Plugin advisor.
    * - 1
      - Live session 1 (90 min)
      - Live build of a teaching assistant over a syllabus. In groups, students find questions that
@@ -106,6 +109,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 5 (30 min)
      - **MCP.** The `Model Context Protocol <https://modelcontextprotocol.io/>`__, its servers and
        tools, and :doc:`MCP clients </smarter-resources/smarter-mcpclient>` in Smarter.
+       Pre-reading: the case study `The Smarter Project MCP Server
+       <https://smarter.sh/case-studies/mcp-server>`__, whose "Lab 1: Talk to Sam"
+       and "Lab 3: The MCPClient" show an assistant grounded in an MCP server's tools, and its
+       manifest.
    * - 2
      - Lecture 6 (30 min)
      - **Orchestration and production.** Workflows versus agents, the

@@ -114,7 +114,8 @@ const LLMHostRow = React.memo(function LLMHostRow({
     <tr className="" key={llmhost.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={llmhost.manifestUrl}>{llmhost.name}</a>
+        {/* the row opens the LLMHost's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{llmhost.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

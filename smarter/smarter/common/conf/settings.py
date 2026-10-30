@@ -195,18 +195,24 @@ class Settings(BaseSettings):
         # look like an error. READY is logged by one uvicorn worker per server, and
         # NOT_READY by every process.
         prefix = SmarterFormattedText.text(__name__, SmarterFormattedText.LIGHT_GRAY)
-        msg = f"{prefix} Pydantic version: {pydantic_version} pydantic_settings.BaseSettings."
+        msg = f"{prefix} Pydantic version: {pydantic_version}"
         if not self.ready():
             logger.warning(
-                "%s Settings are %s.", msg, SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED)
+                "%s smarter_settings are %s.",
+                msg,
+                SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED),
             )
         elif is_first_worker("settings-ready"):
             logger.warning(
-                "%s Settings are %s.", msg, SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)
+                "%s smarter_settings are %s.",
+                msg,
+                SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
             )
         else:
             logger.debug(
-                "%s Settings are %s.", msg, SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)
+                "%s smarter_settings are %s.",
+                msg,
+                SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
             )
 
     init_info: Optional[str] = Field(
@@ -1568,46 +1574,6 @@ class Settings(BaseSettings):
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError("could not validate llmclient_cache_expiration") from e
 
-    llmclient_max_returned_history: int = Field(
-        settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY,
-        gt=0,
-        description="The maximum number of prompt history messages to return from the llmclient.",
-        title="LLMClient Max Returned History",
-    )
-    """
-    The maximum number of prompt history messages to return from the llmclient.
-
-    This setting defines the maximum number of previous prompt messages that the llmclient
-    will include in its responses. Limiting the number of returned messages can help
-    improve performance and reduce response times.
-    :type: int
-    :default: Value from ``settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY``
-    :raises SmarterConfigurationError: If the value is not a positive integer.
-    """
-
-    @before_field_validator("llmclient_max_returned_history")
-    def parse_llmclient_max_returned_history(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'llmclient_max_returned_history' field.
-
-        Args:
-            v (Optional[Union[int, str]]): the llmclient_max_returned_history value to validate
-        Returns:
-            int: The validated llmclient_max_returned_history.
-        """
-        if isinstance(v, int):
-            return v
-        if v in THE_EMPTY_SET:
-            return settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY
-        try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
-            if int_value < 0:
-                raise SmarterConfigurationError(
-                    f"llmclient_max_returned_history {int_value} must be a positive integer."
-                )
-            return int_value
-        except (TypeError, ValueError) as e:
-            raise SmarterConfigurationError("could not validate llmclient_max_returned_history") from e
-
     llmclient_tasks_create_dns_record: bool = Field(
         settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD,
         description="True if DNS records should be created for llmclient tasks.",
@@ -2439,17 +2405,6 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid Fernet key.
     """
 
-    file_drop_zone_enabled: bool = Field(
-        settings_defaults.FILE_DROP_ZONE_ENABLED,
-        description="True if the file drop zone feature is enabled based on the current environment.",
-        title="File Drop Zone Enabled",
-    )
-    """Determines if the file drop zone feature is enabled based on the current environment.
-
-    Returns:
-        bool: True if the file drop zone is enabled, False otherwise.
-    """
-
     @before_field_validator("fernet_encryption_key")
     def validate_fernet_encryption_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `fernet_encryption_key` field.
@@ -2609,41 +2564,6 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"local_hosts of type {type(v)} is not a list: {v}")
         return v
 
-    langchain_memory_key: Optional[str] = Field(
-        settings_defaults.LANGCHAIN_MEMORY_KEY,
-        description="The key used for LangChain memory storage.",
-        examples=["langchain_memory"],
-        title="LangChain Memory Key",
-    )
-    """
-    The key used for LangChain memory storage.
-
-    This setting specifies the key under which LangChain memory data is stored.
-    It is used to manage and retrieve memory data within LangChain applications.
-
-    .. note::
-
-        LangChain is not currently in use in Smarter and might be deprecated
-        in a future release.
-
-    :type: Optional[str]
-    :default: Value from ``settings_defaults.LANGCHAIN_MEMORY_KEY``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    @before_field_validator("langchain_memory_key")
-    def validate_langchain_memory_key(cls, v: Optional[str]) -> str:
-        """Validates the `langchain_memory_key` field.
-
-        Args:
-            v (Optional[str]): The Langchain memory key value to validate.
-        Returns:
-            str: The validated Langchain memory key.
-        """
-        if str(v) in THE_EMPTY_SET and settings_defaults.LANGCHAIN_MEMORY_KEY is not None:
-            return settings_defaults.LANGCHAIN_MEMORY_KEY
-        return str(v)
-
     llm_default_provider: str = Field(
         settings_defaults.LLM_DEFAULT_PROVIDER,
         description="The default LLM provider to use for language model interactions.",
@@ -2677,41 +2597,6 @@ class Settings(BaseSettings):
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"llm_default_provider of type {type(v)} is not a str: {v}")
-        return v
-
-    llm_default_model: str = Field(
-        settings_defaults.LLM_DEFAULT_MODEL,
-        description="The default LLM model to use for language model interactions.",
-        examples=["gpt-6-luna", "claude-2", "gemini"],
-        title="Default LLM Model",
-    )
-    """
-    The default LLM model to use for language model interactions.
-
-    This setting specifies which specific language model should be used by default
-    for processing natural language tasks. It determines the model variant that
-    will handle requests for language generation, understanding, and other related functions.
-
-    :type: str
-    :default: Value from ``settings_defaults.LLM_DEFAULT_MODEL``
-    :raises SmarterConfigurationError: If the value is not a valid LLM model name
-    """
-
-    @before_field_validator("llm_default_model")
-    def validate_llm_default_model(cls, v: Optional[str]) -> Optional[str]:
-        """Validates the `llm_default_model` field.
-
-        Args:
-            v (Optional[str]): The LLM default model value to validate.
-
-        Returns:
-            Optional[str]: The validated LLM default model.
-        """
-        if str(v) in THE_EMPTY_SET and settings_defaults.LLM_DEFAULT_MODEL is not None:
-            return settings_defaults.LLM_DEFAULT_MODEL
-
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"llm_default_model of type {type(v)} is not a str: {v}")
         return v
 
     llm_default_system_role: str = Field(
@@ -2955,122 +2840,12 @@ class Settings(BaseSettings):
             return settings_defaults.MARKETING_SITE_URL
         return v  # type: ignore
 
-    openai_api_organization: Optional[str] = Field(
-        settings_defaults.OPENAI_API_ORGANIZATION,
-        description="The OpenAI API organization ID.",
-        examples=["org-xxxxxxxxxxxxxxxx"],
-        title="OpenAI API Organization ID",
-    )
-    """
-    The OpenAI API organization ID.
-
-    This setting specifies the organization ID used when making requests to the OpenAI API.
-    It is used to associate API requests with a specific organization account.
-
-    :type: Optional[str]
-    :default: Value from ``settings_defaults.OPENAI_API_ORGANIZATION``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    @before_field_validator("openai_api_organization")
-    def validate_openai_api_organization(cls, v: Optional[str]) -> Optional[str]:
-        """Validates the `openai_api_organization` field.
-
-        Args:
-            v (Optional[str]): The OpenAI API organization value to validate.
-
-        Returns:
-            Optional[str]: The validated OpenAI API organization.
-        """
-        if str(v) in THE_EMPTY_SET and settings_defaults.OPENAI_API_ORGANIZATION is not None:
-            return settings_defaults.OPENAI_API_ORGANIZATION
-
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"openai_api_organization of type {type(v)} is not a str: {v}")
-        return v
-
-    openai_endpoint_image_n: Optional[int] = Field(
-        settings_defaults.OPENAI_ENDPOINT_IMAGE_N,
-        description="The number of images to generate per request to the OpenAI image endpoint.",
-        examples=[1, 2, 4],
-        title="OpenAI Endpoint Image Number",
-    )
-    """
-    The number of images to generate per request to the OpenAI image endpoint.
-
-    This setting specifies how many images should be generated in response to
-    a single request to the OpenAI image generation API.
-
-    :type: Optional[int]
-    :default: Value from ``settings_defaults.OPENAI_ENDPOINT_IMAGE_N``
-    :raises SmarterConfigurationError: If the value is not a positive integer.
-    """
-
-    @before_field_validator("openai_endpoint_image_n")
-    def validate_openai_endpoint_image_n(cls, v: Optional[int]) -> int:
-        """Validates the `openai_endpoint_image_n` field.
-
-        Args:
-            v (Optional[int]): The OpenAI endpoint image number value to validate.
-        Returns:
-            int: The validated OpenAI endpoint image number.
-        """
-        if isinstance(v, int):
-            return v
-        if str(v) in THE_EMPTY_SET and settings_defaults.OPENAI_ENDPOINT_IMAGE_N is not None:
-            return settings_defaults.OPENAI_ENDPOINT_IMAGE_N
-        if isinstance(v, str):
-            try:
-                v = int(v)
-                return v
-            except (TypeError, ValueError) as e:
-                raise SmarterConfigurationError(f"openai_endpoint_image_n of type {type(v)} is not an int: {v}") from e
-        if not isinstance(v, int):
-            raise SmarterConfigurationError(f"openai_endpoint_image_n of type {type(v)} is not an int: {v}")
-
-        return int(v)
-
-    openai_endpoint_image_size: Optional[str] = Field(
-        settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE,
-        description="The size of images to generate from the OpenAI image endpoint.",
-        examples=["256x256", "512x512", "1024x768"],
-        title="OpenAI Endpoint Image Size",
-    )
-    """
-    The size of images to generate from the OpenAI image endpoint.
-
-    This setting specifies the dimensions of the images to be generated
-    by the OpenAI image generation API.
-
-    :type: Optional[str]
-    :default: Value from ``settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE``
-    :raises SmarterConfigurationError: If the value is not a valid image size string.
-    """
-
     platform_subdomain: Optional[str] = Field(
         settings_defaults.PLATFORM_SUBDOMAIN,
         description="The subdomain for the platform, used in constructing URLs and email addresses.",
         examples=["platform", "ubc"],
         title="Platform Subdomain",
     )
-
-    @before_field_validator("openai_endpoint_image_size")
-    def validate_openai_endpoint_image_size(cls, v: Optional[str]) -> str:
-        """Validates the `openai_endpoint_image_size` field.
-
-        Args:
-            v (Optional[str]): The OpenAI endpoint image size value to validate.
-
-        Returns:
-            str: The validated OpenAI endpoint image size.
-        """
-        if str(v) in THE_EMPTY_SET and settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE is not None:
-            return settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE
-
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"openai_endpoint_image_size of type {type(v)} is not a str: {v}")
-
-        return v
 
     root_domain: str = Field(
         settings_defaults.ROOT_DOMAIN,
@@ -3238,43 +3013,6 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"shared_resource_identifier of type {type(v)} is not a str: {v}")
 
         return v
-
-    smarter_mysql_test_database_secret_name: Optional[str] = Field(
-        settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME,
-        description="The secret name for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
-        examples=["smarter-mariadb-test-db-secret"],
-        title="Smarter MariaDB Test Database Secret Name",
-    )
-    """
-    The secret name for the Smarter MariaDB test database.
-
-    Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting specifies the name of the secret in AWS Secrets Manager
-    that contains the credentials for the Smarter MariaDB test database.
-    It is used by example Smarter Plugins that require access to a test database.
-
-    :type: Optional[str]
-    :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_SECRET_NAME``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    smarter_mysql_test_database_password: Optional[SecretStr] = Field(
-        settings_defaults.MYSQL_TEST_DATABASE_PASSWORD,
-        description="The password for the Smarter MariaDB test database. Used for example Smarter Plugins that are pre-installed on new installations.",
-        examples=["your_password_here"],
-        title="Smarter MariaDB Test Database Password",
-    )
-    """
-    The password for the Smarter MariaDB test database.
-
-    Used for example Smarter Plugins that are pre-installed on new installations.
-    This setting provides the password used to connect to the Smarter MariaDB test database.
-    It is used by example Smarter Plugins that require access to a test database.
-
-    :type: Optional[str]
-    :default: Value from ``settings_defaults.MYSQL_TEST_DATABASE_PASSWORD``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
 
     mysql_root_username: str = Field(
         settings_defaults.MYSQL_ROOT_USERNAME,
@@ -3556,6 +3294,45 @@ class Settings(BaseSettings):
             return int(v)  # type: ignore[reportArgumentType]
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate database_read_timeout: {v}") from e
+
+    prompt_threads: int = Field(
+        settings_defaults.PROMPT_THREADS,
+        ge=1,
+        description="The threads in each web server process that run streamed chat prompts.",
+        title="Prompt Threads",
+    )
+    """
+    The threads in each web server process that run streamed chat prompts, at most.
+
+    A prompt holds its thread for as long as it runs, mostly waiting on the LLM and its tools, so
+    the threads are cheap. A process runs this many prompts at once, and queues the next ones. The
+    pool is the prompts' own, apart from the event loop's default executor, where Django renders
+    error pages and asyncio resolves host names. See :func:`smarter.apps.prompt.progress.prompt_executor`.
+
+    Set it with ``SMARTER_PROMPT_THREADS``.
+
+    :type: int
+    :default: Value from ``settings_defaults.PROMPT_THREADS``, 32 if it is not set.
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
+    @before_field_validator("prompt_threads")
+    def parse_prompt_threads(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'prompt_threads' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the prompt_threads value to validate
+        Returns:
+            int: The validated prompt_threads.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.PROMPT_THREADS
+        try:
+            return int(v)  # type: ignore[reportArgumentType]
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError(f"could not validate prompt_threads: {v}") from e
 
     social_auth_google_oauth2_key: SecretStr = Field(
         settings_defaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
@@ -4834,8 +4611,6 @@ class Settings(BaseSettings):
                 'PAT',
                 'SECRET_KEY',
                 'FERNET_ENCRYPTION_KEY',
-                'MYSQL_TEST_DATABASE_SECRET_NAME',
-                'MYSQL_TEST_DATABASE_PASSWORD',
                 'ENVIRONMENT',
                 'PYTHONPATH',
                 'DEVELOPER_MODE',

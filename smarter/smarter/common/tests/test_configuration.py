@@ -61,24 +61,8 @@ class TestConfiguration(SmarterTestBase):
         mock_settings = Settings(init_info="test_conf_defaults()")
 
         self.assertEqual(mock_settings.aws_region, settings_defaults.AWS_REGION)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, settings_defaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE)
 
         self.assertEqual(mock_settings.debug_mode, settings_defaults.DEBUG_MODE)
-        self.assertEqual(mock_settings.langchain_memory_key, settings_defaults.LANGCHAIN_MEMORY_KEY)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, settings_defaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE)
-        self.assertEqual(mock_settings.openai_api_organization, settings_defaults.OPENAI_API_ORGANIZATION)
-
-    def test_conf_defaults_secrets(self):
-        """Test that settings == settings_defaults when no .env is in use."""
-        if not Services.enabled(Services.AWS_LAMBDA):
-            return
-
-        os.environ.clear()
-        mock_settings = Settings(init_info="test_conf_defaults_secrets()")
-
-        self.assertEqual(mock_settings.openai_api_organization, None)
 
     def test_env_legal_nulls(self):
         """Test that settings handles missing .env values."""
@@ -90,9 +74,6 @@ class TestConfiguration(SmarterTestBase):
         mock_settings = Settings(init_info="test_env_legal_nulls()")
 
         self.assertEqual(mock_settings.aws_region, settings_defaults.AWS_REGION)
-        self.assertEqual(mock_settings.langchain_memory_key, settings_defaults.LANGCHAIN_MEMORY_KEY)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, settings_defaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE)
 
     def test_env_illegal_nulls(self):
         """Test that settings handles certain missing .env values."""
@@ -115,9 +96,6 @@ class TestConfiguration(SmarterTestBase):
 
         self.assertEqual(mock_settings.aws_region, "us-west-1")
         self.assertEqual(mock_settings.debug_mode, True)
-        self.assertEqual(mock_settings.langchain_memory_key, "TEST_langchain_memory_key")
-        self.assertEqual(mock_settings.openai_endpoint_image_n, 100)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, "TEST_image_size")
 
     def test_configure_with_class_constructor(self):
         """Test that we can set values with the class constructor."""
@@ -178,10 +156,6 @@ class TestConfiguration(SmarterTestBase):
             aws_regions=["eu-west-1"],
             aws_region="eu-west-1",
             root_domain="test-domain.com",
-            langchain_memory_key="TEST_langchain_memory_key",
-            openai_api_organization="TEST_openai_api_organization",
-            openai_endpoint_image_n=100,
-            openai_endpoint_image_size="TEST_image_size",
             shared_resource_identifier="TEST_shared_resource_identifier",
             init_info="test_initialize_with_values()",
         )
@@ -190,10 +164,6 @@ class TestConfiguration(SmarterTestBase):
         self.assertEqual(mock_settings.aws_profile, "test-profile")
         self.assertEqual(mock_settings.aws_region, "eu-west-1")
         self.assertEqual(mock_settings.root_domain, "test-domain.com")
-        self.assertEqual(mock_settings.langchain_memory_key, "TEST_langchain_memory_key")
-        self.assertEqual(mock_settings.openai_api_organization, "TEST_openai_api_organization")
-        self.assertEqual(mock_settings.openai_endpoint_image_n, 100)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, "TEST_image_size")
         self.assertEqual(mock_settings.shared_resource_identifier, "TEST_shared_resource_identifier")
 
     def test_semantic_version(self):
