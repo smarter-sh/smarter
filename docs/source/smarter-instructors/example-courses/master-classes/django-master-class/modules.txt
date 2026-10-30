@@ -43,27 +43,34 @@ listed in full under `The Modules in the Source Code`_.
      - **Writing middleware.** Function and class middleware, ``process_view`` and
        ``process_exception``, sync and async capable middleware, and short-circuiting with a
        response. Smarter's replacements for Django's CORS, CSRF and security middleware, and
-       why each one was needed.
+       why each one was needed. "CORS and CSRF: who may call a chatbot from a page" in the case
+       study `One Platform, Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__
+       shows a middleware that is scoped, exact, fails closed and runs early.
      - Write a middleware that adds a request id to the request and the response, and logs it.
        Test it with Django's ``RequestFactory``.
    * - 6
      - **Many hosts in one site; Waffle.** ``django-hosts`` and ``ROOT_HOSTCONF``: the console,
        the API and every chatbot's host routed to their own URLconfs, and ``reverse()`` across
        hosts. Feature flags, switches and samples with Waffle, and Smarter's switch registry.
-       :doc:`ADR 022 </adr/022-feature-flags>`.
+       :doc:`ADR 022 </adr/022-feature-flags>`. Pre-reading: "Many hosts, one parent domain" in
+       the multi-tenancy case study, and "Four checks of the Host header" in `What Happens When
+       You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
      - Add a host pattern for a new subdomain with its own URLconf, and gate one of its views
        with a new Waffle switch.
    * - 7
      - **Customizing the ORM.** Abstract base models, custom managers and querysets, chaining
        queryset methods, typing generic managers, ``select_related`` and ``prefetch_related``,
-       and the N+1 problem. :doc:`ADR 017 </adr/017-database>`.
+       and the N+1 problem. :doc:`ADR 017 </adr/017-database>`. Pre-reading: "The rules, as
+       querysets" and "Making the safe path the default path" in the multi-tenancy case study,
+       on rules that are inherited, survive chaining and reach the Django admin.
      - Add a queryset method to a model's manager that chains with ``filter()``, and use the
        Django Debug Toolbar to remove an N+1 query from a list page.
    * - 8
      - **The user and resource ownership.** A custom ``AUTH_USER_MODEL`` against a profile model,
        and why Smarter keeps Django's ``User`` and adds ``UserProfile``. Accounts, owners and
        shared resources in ``MetaDataWithOwnershipModelManager``: what a user owns, what is
-       shared with them, and what they may change.
+       shared with them, and what they may change. The multi-tenancy case study's discussion
+       question on catching an endpoint that forgets the rules opens the lab.
      - Create a model on ``MetaDataWithOwnershipModel``, and write tests that one account's user
        cannot read another account's rows until they are shared.
    * - 9
@@ -83,6 +90,8 @@ listed in full under `The Modules in the Source Code`_.
      - **Celery and Celery Beat.** Brokers, workers, queues and routing; retries and idempotency;
        a Beat schedule; why ``.delay()`` is not eager in tests; and passing ids, not model
        instances. :doc:`ADR 009 </adr/009-async-tasks>`, :doc:`ADR 030 </adr/030-task-queues>`.
+       Pre-reading: "Waiting without blocking, and without racing" and "Cleaning up: a daily
+       sweep for orphans" in the deploy case study.
      - Write a task that aggregates rows for an account, route it to the right queue, schedule it
        in Beat, and watch it run in the worker's logs.
    * - 12
@@ -97,6 +106,9 @@ listed in full under `The Modules in the Source Code`_.
        the API contract, a published JSON Schema, versioning, and custom authentication with
        hashed API keys in an authentication class and a middleware.
        :doc:`ADR 023 </adr/023-api-versioning>`, :doc:`ADR 031 </adr/031-pydantic-over-json>`.
+       Pre-reading: "One object, two uses" and "Generated, then committed" in `One Contract, Five
+       Clients <https://smarter.sh/case-studies/api-contract>`__, and "API keys: stored as
+       digests, named by a UUID" in the multi-tenancy case study.
      - Add an endpoint whose response is built from a Pydantic model and dumped to JSON,
        authenticated by API key. Call it with ``curl`` and a throwaway key.
    * - 14
@@ -124,7 +136,9 @@ listed in full under `The Modules in the Source Code`_.
      - **Testing, pre-commit and coverage.** Test base classes, fixtures built once, cleanup
        without transaction rollback, mocking Celery and outside services, the pre-commit hooks
        (black, isort, flake8, bandit and more), and coverage targets per app.
-       :doc:`ADR 013 </adr/013-testing>`, :doc:`ADR 028 </adr/028-code-quality>`.
+       :doc:`ADR 013 </adr/013-testing>`, :doc:`ADR 028 </adr/028-code-quality>`. "Keeping the
+       cloud out of the tests" in the deploy case study shows the fakes and the guard that keep
+       tests away from real credentials.
      - Install the pre-commit hooks, run them on the course branch and fix what they find, then
        raise the coverage of the Module 8 model and validator to 90%.
    * - 18

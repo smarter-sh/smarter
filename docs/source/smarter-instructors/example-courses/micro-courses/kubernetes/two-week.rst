@@ -95,7 +95,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 5 (30 min)
      - **Networking.** Services, Ingress, cluster DNS, network policies, and the metadata address.
        How Smarter :doc:`deploys an LLMClient
-       </smarter-framework/smarter-on-kubernetes/llmclient-deploy>`.
+       </smarter-framework/smarter-on-kubernetes/llmclient-deploy>`. Students then run "Read the
+       chatbot's certificate" and "Knock on the door with a made-up host", from "Lab 2: Inspect
+       it" in the case study `What Happens When You Click Deploy
+       <https://smarter.sh/case-studies/deploy>`__, against a live chatbot.
    * - 2
      - Lecture 6 (30 min)
      - **Operations.** Logs, events, upgrades, backups and managed clusters
@@ -181,7 +184,8 @@ Assignment 3: Network Policy
 
 Students write network policies that stop Smarter's pods from reaching ``169.254.169.254`` while
 keeping the application working, on a cluster whose network plugin enforces policies (for example
-kind with Calico).
+kind with Calico). "URLs a model chooses", in the case study `Guardrails: Can You Trust the Model?
+<https://smarter.sh/case-studies/guardrails>`__, shows the same defense in the application.
 
 **Turn in:** the policies, and evidence of a blocked and an allowed connection.
 

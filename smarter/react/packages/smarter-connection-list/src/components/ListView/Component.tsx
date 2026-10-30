@@ -111,7 +111,8 @@ const ConnectionRow = React.memo(function ConnectionRow({
     <tr className="" key={connection.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={connection.manifestUrl}>{connection.name}</a>
+        {/* the row opens the connection's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{connection.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

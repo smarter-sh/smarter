@@ -88,14 +88,21 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4 (30 min)
      - **Talking to the API.** Sessions, CSRF, ``fetchDjangoUrl``, ``SessionContext``, and the list
-       page API contract.
+       page API contract. Pre-reading: "One session, one chatbot" and "CORS and CSRF: who may call
+       a chatbot from a page" in the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__.
    * - 2
      - Lecture 5 (30 min)
      - **Typed contracts.** Pydantic models, JSON Schema and generated TypeScript types
-       (:doc:`/smarter-framework/smarter-chat/api-contract`).
+       (:doc:`/smarter-framework/smarter-chat/api-contract`). Pre-reading: "Six clients, one
+       document" in the case study `One Contract, Five Clients
+       <https://smarter.sh/case-studies/api-contract>`__, where the React chat is one of the
+       clients.
    * - 2
      - Lecture 6 (30 min)
-     - **Testing both sides.** Django API tests, Vitest and MSW, and keeping mocks honest.
+     - **Testing both sides.** Django API tests, Vitest and MSW, and keeping mocks honest. "Real
+       responses are checked" in the contract case study shows the platform's tests validating
+       real responses against the document.
    * - 2
      - Live session 2 (90 min)
      - Capstone demonstrations (about 5 minutes each, with 2 minutes of review questions).

@@ -76,7 +76,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 2 (30 min)
      - **Quality, latency and cost.** Model tiers, reasoning models, tools and retrieval as cost
-       multipliers, and comparing models fairly.
+       multipliers, and comparing models fairly. The lab "Compare the costs" in the case study
+       `Guardrails: Can You Trust the Model? <https://smarter.sh/case-studies/guardrails>`__
+       shows safety checks as a cost too.
    * - 1
      - Lecture 3 (30 min)
      - **Infrastructure.** Fixed and variable costs, the baseline cost of a cluster (about $350
@@ -88,7 +90,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4 (30 min)
      - **The business case.** Measurable benefits, adoption curves, scenarios, sensitivity, and
-       what productivity research does and does not show.
+       what productivity research does and does not show, tested on the case study `Converge or
+       Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__ and its
+       claim of about 25 times the author's long-run pace.
    * - 2
      - Lecture 5 (30 min)
      - **Controlling spending.** :doc:`Budgets </smarter-resources/smarter-budget>`, warnings and

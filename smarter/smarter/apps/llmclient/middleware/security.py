@@ -222,7 +222,9 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         # End of the road. Reject the request with a 400 Bad Request response.
         # ---------------------------------------------------------------------
-        logger.error("%s %s failed security tests.", logger_prefix, url)
+        # a rejected request is the client's error, a 4xx, which Django logs as a warning too ("Bad Request: ...").
+        # Most are scanners probing an LLMClient's host for other paths, e.g. /wp-json/ or /.env.
+        logger.warning("%s %s failed security tests.", logger_prefix, url)
         return SmarterHttpResponseBadRequest(
             request=request, error_message="SecurityMiddleware() Bad Request (400) - Invalid Hostname."
         )

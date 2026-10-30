@@ -100,9 +100,10 @@ const LLMHostComputeRow = React.memo(function LLMHostComputeRow({
     <tr className="" key={compute.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={compute.manifestUrl} title={compute.description}>
+        {/* the row opens the LLMHostCompute's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900" title={compute.description}>
           {compute.name}
-        </a>
+        </span>
       </td>
       {/* Instance Type */}
       <td className="d-none d-lg-table-cell">{compute.instanceType}</td>

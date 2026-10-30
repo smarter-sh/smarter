@@ -43,7 +43,8 @@ The React side is shared by every list, in the ``@smarter/common`` package
   cache miss, never an error. ``pruneCache()`` runs on each write: it removes entries older than a
   week, and keeps only the most recent hundred.
 - ``TabbedListView`` (``src/components/TabbedListView``), the tabs, toolbar and pagination of every
-  list, reads the cache whenever a tab's page, ordering or filter changes, and marks the tab
+  list, opens a row's detail when the row is chosen (see
+  :doc:`../../smarter-dashboard/resource_detail`), reads the cache whenever a tab's page, ordering or filter changes, and marks the tab
   ``isRefreshing`` while it shows a cached page. Its Refresh button asks the api for a fresh page
   with ``?invalidate_cache=true``, which also makes the user's cached pages on the server stale.
 

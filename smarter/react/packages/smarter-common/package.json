@@ -5,6 +5,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -17,7 +20,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc -p tsconfig.build.json && rsync -a --prune-empty-dirs --include='/' --include='.css' --exclude='*' src/ dist/",
+    "build": "npm run clean && tsc -p tsconfig.build.json && rsync -a --prune-empty-dirs --include='*/' --include='*.css' --exclude='*' src/ dist/",
     "build:dist-manifest": "node --input-type=module -e \"import fs from 'node:fs'; const pkg = JSON.parse(fs.readFileSync('package.json','utf8')); const out = { name: pkg.name, version: pkg.version, type: pkg.type, main: './index.js', types: './index.d.ts', peerDependencies: pkg.peerDependencies ?? {}, dependencies: pkg.dependencies ?? {} }; fs.writeFileSync('dist/package.json', JSON.stringify(out, null, 2) + '\\n');\"",
     "pack:tgz": "npm pack --ignore-scripts",
     "lint": "eslint .",
@@ -32,7 +35,8 @@
     "react-dom": "^19"
   },
   "dependencies": {
-    "date-fns": "^4.4.0"
+    "date-fns": "^4.4.0",
+    "js-yaml": "^5.4.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

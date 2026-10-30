@@ -740,7 +740,7 @@ class SAMUserBroker(AbstractBroker):
                 description="An example Smarter API manifest for a User",
                 version="1.0.0",
                 tags=["example"],
-                annotations=[],
+                annotations={},
                 username="example_user",
             ),
             spec=SAMUserSpec(
@@ -806,6 +806,7 @@ class SAMUserBroker(AbstractBroker):
             user_profiles = UserProfile.objects.filter(account=self.account, user__username=name)
         else:
             user_profiles = UserProfile.objects.filter(account=self.account)
+        user_profiles = self.filter_by_annotation_selector(user_profiles, kwargs)
         users = [user_profile.cached_user for user_profile in user_profiles]
 
         model_titles = self.get_model_titles(serializer=UserSerializer())

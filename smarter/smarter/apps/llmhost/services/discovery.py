@@ -130,7 +130,7 @@ class BuiltinCatalog(ModelCatalog):
                 "description": llmhost.description,
                 "version": llmhost.version,
                 "tags": llmhost.tags_list,
-                "annotations": llmhost.annotations if isinstance(llmhost.annotations, list) else [],
+                "annotations": llmhost.annotations,
             },
             "spec": llmhost.spec,
         }

@@ -2,14 +2,10 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "ApiPlugin",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/created_by": "smarter_api_plugin_broker"
-      },
-      {
-        "smarter.sh/plugin": "api_example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/created_by": "smarter_api_plugin_broker",
+      "smarter.sh/plugin": "api_example"
+    },
     "description": "Get additional information about courses available at Stackademy.",
     "name": "api_example",
     "pluginClass": "api",

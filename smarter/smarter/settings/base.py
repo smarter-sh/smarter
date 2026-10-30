@@ -800,6 +800,7 @@ INSTALLED_APPS = [
     "storages",
     # smarter apps
     # -------------------------------
+    "smarter.lib.annotation",
     "smarter.lib.drf",
     "smarter.lib.journal",
     "smarter.apps.account",

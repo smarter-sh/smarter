@@ -20,4 +20,8 @@
   <https://blog.smarter.sh/2026/05/02/why-smarter-abandoned-mysql-nginx/>`__, on what production
   taught about MariaDB, Traefik and cost; `Why LLMs Love Code, and What That Means for Everyone Else
   <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
-  on why LLMs do better at code than at other work.
+  on why LLMs do better at code than at other work. The case studies `Converge or Diverge: AI
+  Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on what an AI coding agent
+  did to a codebase's pace, and `Guardrails: Can You Trust the Model?
+  <https://smarter.sh/case-studies/guardrails>`__, on what each kind of guardrail costs, turn
+  these ideas into lessons with labs and discussion questions.

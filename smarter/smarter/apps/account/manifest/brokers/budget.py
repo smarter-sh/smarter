@@ -315,7 +315,7 @@ class SAMBudgetBroker(AbstractBroker):
             description=budget.description,
             version=budget.version,
             tags=budget.tags_list,
-            annotations=budget.annotations if isinstance(budget.annotations, list) else [],
+            annotations=budget.annotations,
         )
         status = SAMBudgetStatus(
             recordLocator=budget.record_locator,
@@ -380,7 +380,7 @@ class SAMBudgetBroker(AbstractBroker):
             description="Each student may spend $10 a month on AI, and $100 in total.",
             version="1.0.0",
             tags=["example", "education"],
-            annotations=[{"smarter.sh/budget/purpose": "example"}],
+            annotations={"smarter.sh/budget/purpose": "example"},
         )
         config = SAMBudgetSpecConfig(
             unit="cost",
@@ -422,6 +422,7 @@ class SAMBudgetBroker(AbstractBroker):
         budgets = Budget.objects.all()
         if name:
             budgets = budgets.filter(name=name)
+        budgets = self.filter_by_annotation_selector(budgets, kwargs)
         data = [
             self.to_camel_case(BudgetSerializer(budget).data)
             for budget in budgets.order_by("name")[:MAX_RESULTS]

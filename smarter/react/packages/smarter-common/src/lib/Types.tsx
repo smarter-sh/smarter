@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the Prompt List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * llmclient, and API response layers. It provides strong typing for user, plugin,
  * llmclient, API response, and session context data structures.
  *
@@ -10,6 +10,7 @@
  *   - Tab, Tabs: A TabbedListView's tabs, each of which may have its own object type and views.
  *   - Pagination, ListQuery, ListPage: Types for a page of a list api, and the request for it.
  *   - Sorting: The sort of a list view's columns, which the list api sorts by.
+ *   - Filtering: How a list view narrows its list by a tag or annotation that is clicked.
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
  *   - LLMClient: Type for llmclient configuration and metadata.
@@ -41,6 +42,12 @@ export type Pagination = {
   filter?: string;
   /** The named filters that the list api offers. */
   filters?: string[];
+  /** The tags that every object has, e.g. ["production"]. */
+  tags?: string[];
+  /** The annotation selector's requirements that every object matches, e.g. ["acme.com/crm-id=A-1"]. */
+  annotations?: string[];
+  /** Why the annotation selector is invalid, in which case the list api didn't apply it, or empty. */
+  annotationError?: string;
 };
 
 /** The page of a list api's objects to request, the search and named filter that they match, and their order. All are optional. */
@@ -50,6 +57,25 @@ export type ListQuery = {
   search?: string;
   ordering?: string;
   filter?: string;
+  /** Tags that every object must have. */
+  tags?: string[];
+  /** An annotation selector's requirements, e.g. "acme.com/crm-id=A-1" or "!acme.com/archived". */
+  annotations?: string[];
+};
+
+/**
+ * How a list view narrows its list by an object's tag or annotation, when one is clicked. The list
+ * api filters all of the objects, not only those of the page shown, so TabbedListView requests them.
+ *
+ * - tags, annotations: the tags and annotation requirements that narrow the list now.
+ * - onTag: narrows the list to the objects with a tag.
+ * - onAnnotation: narrows the list by an annotation requirement, e.g. "acme.com/crm-id=A-1".
+ */
+export type Filtering = {
+  tags: string[];
+  annotations: string[];
+  onTag: (tag: string) => void;
+  onAnnotation: (requirement: string) => void;
 };
 
 /**
@@ -72,8 +98,8 @@ export type ListPage<TObject> = {
   pagination: Pagination | null;
 };
 
-type AnnotationValue = string | number | boolean | null;
-export type Annotations = Array<Record<string, AnnotationValue>> | null;
+/** A resource's annotations, as in Kubernetes: a map of keys to string values. */
+export type Annotations = Record<string, string> | null;
 export type Tags = string[] | null;
 
 export type User = {
@@ -94,12 +120,37 @@ export type ListViewBaseProps<TObject, TSessionContext> = {
   objects: TObject[];
   onRequery: () => void;
   sorting?: Sorting;
+  filtering?: Filtering;
 };
 
-export type CardViewBaseProps<TObject, TSessionContext> = {
+/**
+ * The props of a list's DetailView: the Details tab of the resource detail that opens when a row of the list is
+ * chosen. It shows one object, with the building blocks of components/ResourceDetail (DetailSection, DetailField,
+ * ResourceMetadataSection).
+ */
+export type DetailViewBaseProps<TObject, TSessionContext> = {
   sessionContext: TSessionContext;
-  objects: TObject[];
+  object: TObject;
   onRequery: () => void;
+  filtering?: Filtering;
+};
+
+/**
+ * The fields of a list's object that its resource detail reads, besides those that its DetailView shows. Every list
+ * api's serializer sends them (smarter.apps.account.serializers.MetaDataWithOwnershipModelSerializer).
+ *
+ * - name: the title of the detail. An object without a name, e.g. an Extension, is called by its display name,
+ *   title or slug.
+ * - detailUrl: the url of the detail's Manifest, Hierarchy and Dependencies tabs. A row without one, e.g. an
+ *   Extension's, has only the Details tab.
+ */
+export type DetailObject = {
+  id?: number | string;
+  name?: string | null;
+  displayName?: string | null;
+  title?: string | null;
+  slug?: string | null;
+  detailUrl?: string | null;
 };
 
 export type SessionContext = {
@@ -116,8 +167,8 @@ export type SessionContext = {
 
 /**
  * A tab of a TabbedListView. A tab whose objects are of another type than the list's, e.g. the
- * read-only Extensions tab of the LLMTool list, supplies its own ListView, CardView, and the name
- * of its object type, for the search box. Its ListView and CardView are typed with `never`
+ * read-only Extensions tab of the LLMTool list, supplies its own ListView, DetailView, and the name
+ * of its object type, for the search box. Its ListView and DetailView are typed with `never`
  * objects, so that a component of any object type may be given.
  */
 export type Tab = {
@@ -125,7 +176,7 @@ export type Tab = {
   label: string;
   objectTypeName?: string;
   ListView?: React.ComponentType<ListViewBaseProps<never, SessionContext>>;
-  CardView?: React.ComponentType<CardViewBaseProps<never, SessionContext>>;
+  DetailView?: React.ComponentType<DetailViewBaseProps<never, SessionContext>>;
 };
 
 export type Tabs = Tab[];
@@ -140,5 +191,6 @@ export type TabbedViewContext<TObject> = {
    */
   filters?: Record<string, string>;
   ListView: React.ComponentType<ListViewBaseProps<TObject, SessionContext>>;
-  CardView: React.ComponentType<CardViewBaseProps<TObject, SessionContext>>;
+  /** The Details tab of the resource detail that opens when a row of the list is chosen. */
+  DetailView: React.ComponentType<DetailViewBaseProps<TObject, SessionContext>>;
 };

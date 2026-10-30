@@ -2,14 +2,10 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "ApiConnection",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/connection": "example_connection"
-      },
-      {
-        "smarter.sh/created_by": "smarter_api_connection_broker"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/connection": "example_connection",
+      "smarter.sh/created_by": "smarter_api_connection_broker"
+    },
     "description": "Example ApiConnection using any of the following authentication methods: ['none', 'basic', 'token', 'oauth']",
     "name": "example_connection",
     "tags": [

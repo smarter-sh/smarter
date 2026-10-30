@@ -512,6 +512,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             smarter_auth_tokens = SmarterAuthToken.get_cached_objects(user=self.user, name=name)  # type: ignore
         else:
             smarter_auth_tokens = SmarterAuthToken.get_cached_objects(user=self.user)  # type: ignore
+        smarter_auth_tokens = self.filter_by_annotation_selector(smarter_auth_tokens, kwargs)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:

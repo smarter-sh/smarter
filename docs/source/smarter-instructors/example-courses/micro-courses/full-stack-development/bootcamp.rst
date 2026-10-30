@@ -97,12 +97,17 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 3: Talking to the API.** Session authentication, CSRF tokens, ``fetchDjangoUrl``
        and ``SessionContext`` in ``smarter-common``, and the list, clone, rename and delete API
-       contract that every list page uses.
+       contract that every list page uses. Pre-reading: "One session, one chatbot" and "CORS and
+       CSRF: who may call a chatbot from a page" in the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__.
    * - 6
      - 45
      - **Lecture 4: Typed contracts.** How the chat API contract is defined as Pydantic models,
        published as a JSON Schema, and turned into TypeScript types
-       (:doc:`/smarter-framework/smarter-chat/api-contract`). What this prevents.
+       (:doc:`/smarter-framework/smarter-chat/api-contract`). What this prevents. Pre-reading:
+       "Six clients, one document" in the case study `One Contract, Five Clients
+       <https://smarter.sh/case-studies/api-contract>`__, where the React chat is one of the
+       clients.
    * - 7
      - 45
      - **Lab 3: Database to pixel.** Add a field that already exists on a model to a list page:
@@ -110,7 +115,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 8
      - 45
      - **Lecture 5: Testing both sides.** Django tests for the API, Vitest and MSW for the
-       component, and keeping mocks honest.
+       component, and keeping mocks honest. "Real responses are checked" in the contract case
+       study shows the platform's tests validating real responses against the document.
    * - 9
      - 45
      - **Lab 4: Rebuild and verify.** Run ``make react-build``, restart the app, and verify the new

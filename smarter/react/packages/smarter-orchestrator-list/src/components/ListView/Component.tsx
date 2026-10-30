@@ -117,7 +117,8 @@ const OrchestratorRow = React.memo(function OrchestratorRow({
     <tr className="" key={orchestrator.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={orchestrator.manifestUrl}>{orchestrator.name}</a>
+        {/* the row opens the orchestrator's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{orchestrator.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

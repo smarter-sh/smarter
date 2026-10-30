@@ -120,7 +120,8 @@ const CustomDomainRow = React.memo(function CustomDomainRow({
     <tr className="" key={customDomain.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={customDomain.manifestUrl}>{customDomain.name}</a>
+        {/* the row opens the custom domain's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{customDomain.name}</span>
       </td>
       {/* Domain */}
       <td className="">{customDomain.domainName}</td>

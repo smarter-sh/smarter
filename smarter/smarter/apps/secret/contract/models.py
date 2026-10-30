@@ -38,6 +38,11 @@ class SecretApiSecret(AccountApiModel):
     annotations: MetaDataApiAnnotations = Field(None, description="MetaDataModel.annotations.")
     tags: list[str] = Field(default_factory=list, description="MetaDataModel.tags, by name.")
     manifest_url: Optional[str] = Field(None, description="The url of the Secret's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the Secret's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
     ready: bool = Field(..., description="Whether the Secret has a value that can be decrypted.")
     expires_at: Optional[datetime] = Field(None, description="When the Secret expires, if it does.")
     last_accessed: Optional[datetime] = Field(None, description="When the platform last read its value.")
@@ -58,6 +63,7 @@ class SecretApiSecret(AccountApiModel):
         :rtype: SecretApiSecret
         """
         # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.secret.manifest.models.secret.const import (
             MANIFEST_KIND as SECRET_KIND,
         )
@@ -73,6 +79,7 @@ class SecretApiSecret(AccountApiModel):
             annotations=secret.annotations,
             tags=[tag.name for tag in secret.tags.all()],
             manifest_url=secret.manifest_url,
+            detail_url=resource_detail_url(SECRET_KIND, secret.record_locator),
             ready=secret.ready,
             expires_at=secret.expires_at,
             last_accessed=secret.last_accessed,
@@ -86,6 +93,11 @@ class SecretApiSecretRef(AccountApiModel):
     id: int = Field(..., description="The Secret's primary key.")
     name: str = Field(..., description="The Secret's name.")
     manifest_url: Optional[str] = Field(None, description="The url of the Secret's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the Secret's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
     ready: bool = Field(..., description="Whether the Secret has a value that can be decrypted.")
     can_delete: bool = Field(..., description="Whether the requesting user may delete the Secret now.")
 
@@ -102,6 +114,7 @@ class SecretApiSecretRef(AccountApiModel):
         :rtype: SecretApiSecretRef
         """
         # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.secret.manifest.models.secret.const import (
             MANIFEST_KIND as SECRET_KIND,
         )
@@ -110,6 +123,7 @@ class SecretApiSecretRef(AccountApiModel):
             id=secret.pk,
             name=secret.name,
             manifest_url=secret.manifest_url,
+            detail_url=resource_detail_url(SECRET_KIND, secret.record_locator),
             ready=secret.ready,
             can_delete=user_can_delete(secret, SECRET_KIND, user),
         )
