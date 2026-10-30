@@ -79,20 +79,6 @@ const TableHeader = ({ sorting }: { sorting?: Sorting }) => {
 };
 
 /**
- * ExtensionName
- *
- * The extension's name, linked to its homepage when it has one.
- */
-const ExtensionName = ({ extension }: { extension: Extension }) => {
-  if (!extension.homepage) return <span>{extension.displayName}</span>;
-  return (
-    <a href={extension.homepage} target="_blank" rel="noopener noreferrer">
-      {extension.displayName}
-    </a>
-  );
-};
-
-/**
  * ExtensionRow
  *
  * Renders a single Extension as a table row.
@@ -104,7 +90,8 @@ const ExtensionRow = React.memo(function ExtensionRow({ extension }: { extension
     <tr className="" key={extension.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <ExtensionName extension={extension} />
+        {/* the row opens the extension's detail, which links to its homepage: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{extension.displayName}</span>
       </td>
       {/* Slug */}
       <td className="">

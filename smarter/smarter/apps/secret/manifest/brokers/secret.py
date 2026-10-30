@@ -563,10 +563,10 @@ class SAMSecretBroker(AbstractBroker):
             description="an example secret manifest for the Smarter API Secret",
             version="1.0.0",
             tags=["example", "secret"],
-            annotations=[
-                {"smarter.sh/created-by": "smarter-admin"},
-                {"smarter.sh/purpose": "demonstration only"},
-            ],
+            annotations={
+                "smarter.sh/created-by": "smarter-admin",
+                "smarter.sh/purpose": "demonstration only",
+            },
         )
         config = SAMSecretSpecConfig(value="<** your unencrypted credential value **>", expiration_date=expiration_date)  # type: ignore
         spec = SAMSecretSpec(config=config)
@@ -622,6 +622,7 @@ class SAMSecretBroker(AbstractBroker):
             secrets = Secret.objects.filter(user_profile=self.user_profile, name=name)
         else:
             secrets = Secret.objects.filter(user_profile=self.user_profile)
+        secrets = self.filter_by_annotation_selector(secrets, kwargs)
 
         # iterate over the QuerySet and serialize each Secret. Its items must match the titles
         # from the same serializer, and must never include the secret's value.

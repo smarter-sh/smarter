@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 17:23+0000\n"
+"POT-Creation-Date: 2026-10-30 16:45+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -1765,6 +1765,22 @@ msgstr "Une solution de chat IA à base de plugins, de classe entreprise"
 #: smarter/templates/coming-soon.html
 msgid "Notify Me"
 msgstr "Me prévenir"
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Cookie notice"
+msgstr "Avis relatif aux cookies"
+
+#: smarter/templates/common/cookie-notice.html
+msgid "We use cookies to improve your experience."
+msgstr "Nous utilisons des cookies pour améliorer votre expérience."
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Privacy policy"
+msgstr "Politique de confidentialité"
+
+#: smarter/templates/common/cookie-notice.html
+msgid "Close"
+msgstr "Fermer"
 
 #: smarter/templates/dashboard/email-added.html
 #, python-format

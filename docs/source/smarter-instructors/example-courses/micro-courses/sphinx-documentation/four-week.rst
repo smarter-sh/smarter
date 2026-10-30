@@ -101,7 +101,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 8
      - **Generated reference.** Autodoc for Django models with ``sphinxcontrib_django``, Pydantic
        models with ``autodoc_pydantic``, type hints with ``sphinx_autodoc_typehints``, and OpenAPI
-       for APIs.
+       for APIs, with the section "Generated, never written" and the exercise "Hover to read the
+       platform's docstring" of the case study `One Contract, Five Clients
+       <https://smarter.sh/case-studies/api-contract>`__.
    * - 3
      - Lecture 9
      - **Architecture Decision Records.** Nygard's format, and Smarter's :doc:`ADRs </adr>`.
@@ -119,7 +121,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 12
      - **Writing for agents.** ``CLAUDE.md`` and the Agent Skills in ``skills/``: documentation
        whose reader is a coding agent, and what it shares with documentation for people.
-       :doc:`/smarter-framework/developer-reference/agentic-development`.
+       :doc:`/smarter-framework/developer-reference/agentic-development`. The case study
+       `Converge or Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__
+       measures which sources the agent reads, in its section "What the agent reads", and its
+       "Lab 1: Read the rules" asks what an agent will do with ``CLAUDE.md`` and the skills.
    * - 4
      - Live session 4
      - Capstone presentations (about 6 minutes each, with 2 minutes of questions), and a course

@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Proxy, ProxyListViewProps, ProxyCardViewProps } from "@/lib/Types";
+import type { Proxy, ProxyListViewProps, ProxyDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Proxies") },
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to Proxy,
-// then omit the two abstract attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type ProxyTabbedViewContext = Omit<TabbedViewContext<Proxy>, "ListView" | "CardView"> & {
+export type ProxyTabbedViewContext = Omit<TabbedViewContext<Proxy>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<ProxyListViewProps>;
-  CardView: React.ComponentType<ProxyCardViewProps>;
+  DetailView: React.ComponentType<ProxyDetailViewProps>;
 };
 
 const proxyTabbedListViewContext: ProxyTabbedViewContext = {
@@ -30,7 +30,7 @@ const proxyTabbedListViewContext: ProxyTabbedViewContext = {
   objectTypeName: "proxy",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

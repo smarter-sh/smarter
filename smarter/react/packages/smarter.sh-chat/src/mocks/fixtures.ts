@@ -87,7 +87,7 @@ export function makeConfig(overrides: Partial<Contract.PromptChatApiConfig> = {}
             description: "Query the Stackademy course catalogue.",
             version: "0.1.0",
             tags: ["db", "sql"],
-            annotations: [],
+            annotations: {},
             plugin_class: "sql",
           },
         },

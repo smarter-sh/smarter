@@ -60,8 +60,8 @@ The basic structure of a Smarter API Manifest (SAM) YAML document includes the f
         - stackademy
         - sql
       annotations:
-        - acme.com/finance/cost-center: "4410"
-        - acme.com/support/owner: data-platform-team
+        acme.com/finance/cost-center: "4410"
+        acme.com/support/owner: data-platform-team
     spec:
       # the LLMClient's configuration
 
@@ -91,7 +91,7 @@ Every kind's metadata is validated by
 - **version**: a `semantic version <https://semver.org/>`__, for example ``1.0.0``. The key is required, but its
   value may be empty.
 - **tags** (optional): a list of short labels. See `Tags`_.
-- **annotations** (optional): a list of key-value pairs. See `Annotations`_.
+- **annotations** (optional): a map of keys to string values, as in Kubernetes. See `Annotations`_.
 
 Tags
 ~~~~
@@ -118,40 +118,75 @@ can find the resources that carry a tag:
 Tags answer the question "which resources belong to this group?". They hold no values. Use annotations when you
 need to attach data to a resource.
 
+.. _sam-annotations:
+
 Annotations
 ~~~~~~~~~~~
 
-Annotations attach arbitrary, structured data to a resource, as a list of key-value pairs:
+Annotations attach your own data to a resource, as a map of keys to string values. They work as
+`annotations do in Kubernetes <https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/>`__,
+and serve the same purpose: they let other software associate a resource with something it knows about, for
+example the record that mirrors it in a CRM or a CMDB, or a setting that a legacy system should apply to it.
 
 .. code-block:: yaml
 
     metadata:
       annotations:
-        - acme.com/finance/cost-center: "4410"
-        - acme.com/support/owner: data-platform-team
-        - acme.com/compliance/reviewed: true
-        - acme.com/compliance/review-date: 2026-06-15
-        - acme.com/support/runbook: |
-            Page the data platform on-call engineer.
-            Escalate to the vendor after 30 minutes.
+        acme.com/crm/account-id: A-10042
+        acme.com/finance/cost-center: "4410"
+        acme.com/compliance/reviewed: "true"
+        acme.com/support/runbook: |
+          Page the data platform on-call engineer.
+          Escalate to the vendor after 30 minutes.
 
-The rules are:
+The rules are those of Kubernetes, with one extension:
 
-- **Keys** must be URL-friendly: letters, digits, ``.``, ``_``, ``/`` and ``-``. Smarter keeps the case of
-  annotation keys, unlike the rest of the manifest, which it converts between ``camelCase`` and ``snake_case``.
-- **Values** may be strings, including multi-line YAML block scalars, integers, floats, booleans, dates, datetimes,
-  decimals, UUIDs, bytes, lists, dicts, or null. String values are limited to 2,048 characters.
-- An annotation list item may hold one key-value pair, as above, or several.
+- **Keys** are ``prefix/name``. The prefix is optional, and is a lowercase DNS subdomain of at most 253
+  characters, such as ``acme.com``, that names who owns the key. The name is one or more segments separated by
+  slashes, such as ``crm/account-id``. Kubernetes allows only one segment. Each segment is at most 63 characters,
+  begins and ends with a letter or digit, and may contain ``-``, ``_`` and ``.`` in between. Every valid
+  Kubernetes key is a valid Smarter key. Smarter keeps the case of keys, unlike the rest of the manifest, which
+  it converts between ``camelCase`` and ``snake_case``.
+- **Values** are strings, including multi-line YAML block scalars. Quote values that YAML would read as another
+  type, as Kubernetes requires. Smarter is more forgiving: it converts unquoted booleans, numbers and dates to the
+  strings that were written, so ``reviewed: true`` is stored as ``"true"``. Lists and maps are rejected. To store
+  structured data, write it as a JSON string.
+- A key may appear only once. All of a resource's annotations together, keys and values, are limited to 256 KiB.
+- The prefix ``smarter.sh``, and its subdomains, belong to the Smarter platform, as ``kubernetes.io`` belongs to
+  Kubernetes. Smarter's own manifests use it. Manifests may carry these keys, but use a domain that your
+  organization controls for your own.
 
-Smarter stores annotations, unchanged, in the ``annotations`` JSON field of the resource's model, and returns them
-from ``smarter describe`` and the ``api/v1/cli/describe/`` endpoint. Values that JSON has no type for, such as
-dates, are returned as strings.
+Older manifests write annotations as a list of one-key maps, ``- acme.com/crm/account-id: A-10042``. Smarter
+still accepts that form, and returns annotations as a map.
+
+``apply`` makes a resource's annotations exactly those of its manifest, as ``kubectl apply`` does: keys that the
+manifest no longer has are removed. ``smarter describe`` and the ``api/v1/cli/describe/`` endpoint return them.
+
+Smarter stores each annotation as a row of :class:`~smarter.lib.annotation.models.Annotation`, so that it can
+find resources by their annotations quickly, with an annotation selector. Its syntax is that of
+`Kubernetes label selectors <https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors>`__,
+one requirement at a time:
+
+=================================  ========================================================
+Requirement                        Matches the resources whose annotation
+=================================  ========================================================
+``acme.com/crm/account-id``        exists, with any value
+``!acme.com/crm/account-id``       doesn't exist
+``acme.com/crm/account-id=A-1``    has the value ``A-1``
+``acme.com/crm/account-id!=A-1``   doesn't exist, or has another value
+=================================  ========================================================
+
+The ``api/v1/cli/get/<kind>/`` endpoint takes a selector as its ``annotation`` query parameter, which may be
+repeated. Every requirement must match. The web console's list pages and dashboard search take the same
+selectors (see :doc:`/smarter-platform/smarter-web-console`):
+
+.. code-block:: console
+
+    curl -X POST -H "Authorization: Token $SMARTER_API_KEY" \
+      "https://platform.example.com/api/v1/cli/get/LLMClient/?annotation=acme.com/crm/account-id=A-10042&annotation=!acme.com/archived"
 
 Smarter itself never interprets annotation values. That is what makes them safe to extend: an annotation means
-whatever the software that reads it decides it means, and no future Smarter release will change that. By
-convention, prefix each key with a domain that your organization controls, as Kubernetes does, for example
-``acme.com/finance/cost-center``. Smarter's own example manifests use the ``smarter.sh/`` prefix, so don't use
-it for your own keys.
+whatever the software that reads it decides it means, and no future Smarter release will change that.
 
 Annotations are stored as plain text, and anyone who can describe the resource can read them. Don't put
 credentials in annotations. Store them in a :doc:`Secret </smarter-resources/smarter-secret>`, and annotate the
@@ -168,16 +203,97 @@ resources and act on it, without forking Smarter, changing its database schema, 
   resource, how your systems should treat it, for example its cost center, its owning team, its data classification,
   or the identifier of the record that mirrors it in your CMDB. The data travels with the resource through
   ``apply``, ``describe``, version control and code review, like the rest of the manifest.
+- **Annotation handlers tell you when your data changes.** A handler is a function that your Django app registers
+  for a key prefix that it owns, such as ``acme.com``. Smarter calls it whenever an annotation with that prefix,
+  or one of its subdomains, is added, changed or removed on any resource, including when the resource is deleted.
+  This is what a controller that watches an annotation does in Kubernetes.
 - **Signals tell you when to act.** Smarter sends a `Django signal <https://docs.djangoproject.com/en/stable/topics/signals/>`__
   at each significant event in a resource's life. A receiver, a function that your Django app connects to a signal,
   runs whenever the signal is sent, and receives the resource, from which it reads the annotations.
+- **Queries find the resources.** Your code can ask which Smarter resources, of any kind, are associated with a
+  record of yours, and your users can ask the same with an annotation selector.
 
-Because Smarter never interprets annotations, and because receivers connect to Smarter's signals rather than
+Because Smarter never interprets annotations, and because handlers and receivers connect to Smarter rather than
 change its code, your integration and the Smarter platform can each evolve independently.
+
+Reading and Querying Annotations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Every resource's model has an ``annotations`` property, a ``dict`` of strings, and the methods below. See
+:doc:`/smarter-framework/developer-reference/lib/annotation` for the complete API.
+
+.. code-block:: python
+
+    from smarter.apps.llmclient.models import LLMClient
+    from smarter.lib.annotation.models import Annotation
+    from smarter.lib.annotation.selectors import filter_by_annotations
+
+    llmclient.annotations.get("acme.com/crm/account-id")      # "A-10042", or None
+
+    # assign the whole map, as apply does; save() adds, changes and removes rows to match.
+    llmclient.annotations = {**llmclient.annotations, "acme.com/crm/account-id": "A-20000"}
+    llmclient.save()
+
+    # or change one key, immediately, without saving the resource's other fields.
+    llmclient.set_annotation("acme.com/crm/synced", "true")
+    llmclient.remove_annotation("acme.com/crm/synced")
+
+    # the LLMClients that map to CRM account A-10042.
+    LLMClient.with_annotation("acme.com/crm/account-id", "A-10042")
+
+    # the same, with a selector, applied to the LLMClients that a user may read.
+    filter_by_annotations(LLMClient.objects.with_read_permission_for(user), ["acme.com/crm/account-id=A-10042"])
+
+    # every Smarter resource, of any kind, that maps to CRM account A-10042.
+    Annotation.objects.with_key("acme.com/crm/account-id", "A-10042").resources()
+
+    # every annotation that your integration owns.
+    Annotation.objects.with_prefix("acme.com")
+
+``with_annotation()``, ``Annotation.objects`` and ``resources()`` don't check anyone's permissions. When you
+answer a user, filter a queryset that does, as ``filter_by_annotations()`` above does.
+
+Annotation Handlers
+~~~~~~~~~~~~~~~~~~~
+
+Register a handler for your prefix in your app's ``AppConfig.ready()`` method:
+
+.. code-block:: python
+
+    # acme_integration/handlers.py
+    from smarter.lib.annotation.handlers import AnnotationEvent, annotation_handler
+
+    from .tasks import link_crm_account, unlink_crm_account
+
+
+    @annotation_handler("acme.com")
+    def crm_account(event: AnnotationEvent) -> None:
+        if event.change.key != "acme.com/crm/account-id":
+            return
+        if event.change.action == "removed":
+            unlink_crm_account.delay(event.model_label, event.object_id, event.change.old_value)
+        else:
+            link_crm_account.delay(event.model_label, event.object_id, event.change.new_value)
+
+A handler is called once for each changed annotation, with an
+:class:`~smarter.lib.annotation.handlers.AnnotationEvent`: the resource (``instance``), its model
+(``model_label``, e.g. ``llmclient.LLMClient``) and primary key (``object_id``), and the change
+(``change.key``, ``change.action``, which is ``added``, ``changed`` or ``removed``, ``change.old_value`` and
+``change.new_value``). ``resource_deleted`` is true when the resource itself was deleted. Handlers run after the
+database transaction commits, so they never see a change that was rolled back. An exception in a handler is
+logged, and affects neither the resource nor the other handlers.
+
+Only Smarter's own code may register a handler for ``smarter.sh`` or its subdomains.
+
+To see every change to every resource's annotations, whatever its prefix, connect a receiver to the
+:data:`~smarter.lib.annotation.signals.annotations_changed` signal instead. It is sent once per resource, with
+the list of its changes.
 
 Which Signals to Use
 ~~~~~~~~~~~~~~~~~~~~
 
+- **Annotation handlers and** ``annotations_changed`` are sent when annotations change, and only then. See
+  `Annotation Handlers`_.
 - **Django's model signals**, ``post_save`` and ``post_delete``, are sent for every resource kind, because every
   resource is a Django model. ``post_save`` is sent when ``smarter apply`` creates or updates a resource, and
   ``post_delete`` when ``smarter delete`` deletes it. The receiver gets the model instance as ``instance``.
@@ -194,8 +310,9 @@ infrastructure services send.
 Example
 ~~~~~~~
 
-This receiver opens a ticket in the owning team's queue each time an LLMClient is deployed, and posts its cost
-center to a finance system each time one is applied:
+These receivers open a ticket in the owning team's queue each time an LLMClient is deployed, and post its cost
+center to a finance system each time one is applied. An annotation handler for ``acme.com`` would post the cost
+center only when it changes:
 
 .. code-block:: python
 
@@ -209,17 +326,9 @@ center to a finance system each time one is applied:
     from .tasks import open_ticket, sync_cost_center
 
 
-    def get_annotation(resource, key, default=None):
-        """Return the value of an annotation key, or default."""
-        for annotation in resource.annotations or []:
-            if key in annotation:
-                return annotation[key]
-        return default
-
-
     @receiver(post_save, sender=LLMClient, dispatch_uid="acme_llmclient_saved")
     def handle_llmclient_saved(sender, instance, created, **kwargs):
-        cost_center = get_annotation(instance, "acme.com/finance/cost-center")
+        cost_center = instance.annotations.get("acme.com/finance/cost-center")
         if cost_center is None:
             return
         # apply saves inside a database transaction. Act after it commits.
@@ -228,7 +337,7 @@ center to a finance system each time one is applied:
 
     @receiver(llmclient_deployed, dispatch_uid="acme_llmclient_deployed")
     def handle_llmclient_deployed(sender, llmclient, **kwargs):
-        owner = get_annotation(llmclient, "acme.com/support/owner")
+        owner = llmclient.annotations.get("acme.com/support/owner")
         if owner:
             open_ticket.delay(queue=owner, subject=f"LLMClient {llmclient.name} was deployed")
 
@@ -245,8 +354,9 @@ Writing Robust Django Receivers
 - **Act after the transaction commits.** ``apply`` saves a resource inside a database transaction. Use
   ``transaction.on_commit()``, as above, so that your integration never acts on a change that is rolled back.
 - **Read tags after the save.** ``apply`` sets a resource's tags after it saves the resource, so a ``post_save``
-  receiver can see the previous tags. Annotations are saved with the resource, so ``post_save`` always sees the
-  new ones. To react to tag changes, connect to Django's ``m2m_changed`` signal.
+  receiver can see the previous tags. To react to tag changes, connect to Django's ``m2m_changed`` signal.
+  ``instance.annotations`` already holds the new annotations in a ``post_save`` receiver, but their rows are
+  written just after it, so query ``Annotation.objects`` from an annotation handler, not from ``post_save``.
 - **Be idempotent.** ``apply`` works like an upsert, so the same manifest can be applied many times, and
   ``post_save`` is sent each time. Use ``dispatch_uid`` so that each receiver is connected only once.
 - **Treat missing annotations as normal.** Not every resource will carry your keys. Ignore resources that don't,

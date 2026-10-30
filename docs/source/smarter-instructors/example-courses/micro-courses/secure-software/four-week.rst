@@ -79,15 +79,23 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 2
      - **Injection and cross-site scripting.** SQL injection, XSS, and how Django's ORM and
-       templates defend against them.
+       templates defend against them. Pre-reading: "The reply is untrusted HTML" in the case
+       study `Guardrails: Can You Trust the Model? <https://smarter.sh/case-studies/guardrails>`__,
+       on a model's reply rendered as HTML on someone else's site, sanitized by DOMPurify, with
+       tests named after attacks.
    * - 1
      - Lecture 3
      - **Authentication and access control.** Sessions, CSRF, hashed API keys, broken
        object-level authorization, and account scoping in Smarter's ownership base model.
+       Pre-reading: the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__, and its questions on answering 404
+       rather than 403, and on hashing API keys with SHA-512 but passwords with bcrypt.
    * - 1
      - Live session 1
      - Live exercises from PortSwigger's Web Security Academy, then a look at Smarter's defenses
-       for each. Start Assignment 1.
+       for each, and "Lab 2: Probe the edges" in `the multi-tenancy case study
+       <https://smarter.sh/case-studies/multi-tenancy>`__, which tests CORS and session keys
+       with ``curl``. Start Assignment 1.
    * - 2
      - Lecture 4
      - **The OWASP Top 10 for LLM Applications.** New attack surfaces: prompts, retrieved content
@@ -101,8 +109,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        least privilege for tools, budgets, and measuring false positives.
    * - 2
      - Live session 2
-     - Review of Assignment 1. Red team exercise against prompt-only LLMClients. Start
-       Assignment 2.
+     - Review of Assignment 1. Red team exercise against prompt-only LLMClients, then against
+       the guarded assistant in "Lab 1: Talk to Sam" in `the guardrails case study
+       <https://smarter.sh/case-studies/guardrails>`__. Start Assignment 2.
    * - 3
      - Lecture 7
      - **Secrets.** Encryption at rest, :doc:`Secrets </smarter-resources/smarter-secret>`,
@@ -110,7 +119,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 8
      - **SSRF and outbound requests.** Metadata addresses, DNS rebinding, and
-       ``smarter/smarter/apps/llmtool/plugin/safe_http.py``.
+       ``smarter/smarter/apps/llmtool/plugin/safe_http.py``. Pre-reading: "URLs a model chooses"
+       in `the guardrails case study <https://smarter.sh/case-studies/guardrails>`__.
    * - 3
      - Lecture 9
      - **Infrastructure security.** Containers as non-root users with read-only application

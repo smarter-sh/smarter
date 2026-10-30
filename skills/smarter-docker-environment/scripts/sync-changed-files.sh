@@ -22,7 +22,7 @@ trap 'rm -f "$LIST"' EXIT
 {
   git diff --name-only HEAD -- "$HOST_ROOT"
   git ls-files --others --exclude-standard -- "$HOST_ROOT"
-} | grep -E '\.(py|yaml|yml|json|toml|md|rst|svg|html|txt|css|js|xml)$' | sort -u >"$LIST" || true
+} | grep -E '\.(py|yaml|yml|json|toml|md|rst|svg|html|txt|css|js|xml|po)$' | sort -u >"$LIST" || true
 
 count=$(wc -l <"$LIST" | tr -d ' ')
 echo "$count changed file(s)"

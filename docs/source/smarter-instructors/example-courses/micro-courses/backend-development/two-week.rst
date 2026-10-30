@@ -85,7 +85,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 3 (30 min)
      - **Django REST Framework.** Serializers, views, authentication, permissions, and Smarter's
-       :doc:`REST API </smarter-framework/smarter-api>` and error format.
+       :doc:`REST API </smarter-framework/smarter-api>` and error format. Pre-reading: "Making the
+       safe path the default path" in the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__, on the permission-aware querysets that
+       views, brokers and the Django admin inherit.
    * - 1
      - Live session 1 (90 min)
      - Installation triage, then a live trace of a ``smarter apply`` request with a debugger. Pairs
@@ -93,15 +96,20 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4 (30 min)
      - **Pydantic, manifests and brokers.** Validation, models and the
-       :doc:`broker model </smarter-framework/smarter-broker-model>`.
+       :doc:`broker model </smarter-framework/smarter-broker-model>`. "One object, two uses" in the
+       case study `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__
+       shows a view's response and the OpenAPI document built from the same Pydantic model.
    * - 2
      - Lecture 5 (30 min)
      - **Models, migrations and tests.** Adding a field, migrations, ``SmarterTestBase``, and
-       running tests in the container.
+       running tests in the container. "Keeping the cloud out of the tests" in the case study
+       `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__ shows why
+       the containers' real credentials make fakes and a guard necessary.
    * - 2
      - Lecture 6 (30 min)
      - **Beyond the request.** Management commands, Celery tasks, the beat scheduler, caching with
-       ``@cache_results``, and signals.
+       ``@cache_results``, and signals. "Waiting without blocking, and without racing" in the
+       deploy case study is a Celery task that reschedules itself instead of sleeping.
    * - 2
      - Live session 2 (90 min)
      - Capstone presentations: each student walks through their pull request for 5 minutes, with

@@ -129,6 +129,11 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.quick_actions,
                     ),
+                    "global_search_api_url": reverse(
+                        DashboardReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.global_search,
+                    ),
                     "charges_api_url": reverse(
                         DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,

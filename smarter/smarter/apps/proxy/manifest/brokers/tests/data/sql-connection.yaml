@@ -21,7 +21,7 @@ metadata:
     - smarter.sh/test-sql-connection/requires-authentication: true
     - smarter.sh/test-sql-connection/supported-environments: docker, kubernetes
     - smarter.sh/test-sql-connection/maintainer: Lawrence McDaniel
-    - smarter.sh/test-sql-connection/maintainer-email: support@smarter.sh
+    - smarter.sh/test-sql-connection/maintainer-email: lawrence@smarter.sh
     - smarter.sh/test-sql-connection/usage: |
         This SQL connection configuration is intended for testing purposes only. It
         connects to a local Docker MariaDB development database with default credentials.

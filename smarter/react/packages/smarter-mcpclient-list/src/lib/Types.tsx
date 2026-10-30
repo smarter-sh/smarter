@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the MCPClient List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * mcpclient, and API response layers. It provides strong typing for user, mcpclient,
  * mcpclient, API response, and session context data structures.
  *
@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // MCPClient Definition
@@ -37,6 +37,8 @@ export type MCPClient = {
   tags: Tags;
   annotations: Annotations;
   manifestUrl: string;
+  /** The url of the 's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
   rfc1034CompliantName: string | null;
@@ -75,10 +77,11 @@ export type MCPClient = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface MCPClientCardViewProps {
+export interface MCPClientDetailViewProps {
   sessionContext: SessionContext;
-  objects: MCPClient[];
+  object: MCPClient;
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface MCPClientListViewProps {

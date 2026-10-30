@@ -29,4 +29,8 @@
   Python SDK <https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__, on the typed
   Python client for the same API; `Getting Started with Smarter's CLI
   <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__, on applying, prompting and
-  deploying a chatbot from its manifest.
+  deploying a chatbot from its manifest. The case studies `One Contract, Five Clients
+  <https://smarter.sh/case-studies/api-contract>`__, on that contract, its code generation and
+  semantic versions, and `The Smarter Project MCP Server
+  <https://smarter.sh/case-studies/mcp-server>`__, on designing tools, results and errors for an
+  LLM, are lessons with labs and discussion questions.

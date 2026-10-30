@@ -39,6 +39,8 @@ export type CacheQuery = {
   page?: number;
   ordering?: string;
   filter?: string;
+  tags?: string[];
+  annotations?: string[];
 };
 
 /** A 32-bit FNV-1a hash, in hex, so that a key names a session without holding its token. */
@@ -71,13 +73,18 @@ export const sessionScope = (sessionContext: Pick<SessionContext, "csrfCookieNam
  *
  * @param apiUrl Base API URL used to scope cache entries by backend.
  * @param slug Tab or list identifier to isolate cached objects per view.
- * @param query The page's page number, ordering and filter. The first page, in the default order, unfiltered, if omitted.
+ * @param query The page's page number, ordering, filter, tags and annotation selector. The first page, in the default order, unfiltered, if omitted.
  * @param scope The session's scope, from sessionScope().
  * @returns A deterministic localStorage key.
  */
 export const makeCacheKey = (apiUrl: string, slug: string, query: CacheQuery = {}, scope: string = "") => {
   const page = query.page ?? 1;
-  return `${CACHE_PREFIX}:${scope}:${apiUrl}${slug}?page=${page}&ordering=${query.ordering ?? ""}&filter=${query.filter ?? ""}`;
+  // tags and annotations are added only when there are some, so that the keys of unnarrowed pages don't change.
+  const narrowed = new URLSearchParams();
+  query.tags?.forEach((tag) => narrowed.append("tag", tag));
+  query.annotations?.forEach((requirement) => narrowed.append("annotation", requirement));
+  const extra = narrowed.toString() ? `&${narrowed.toString()}` : "";
+  return `${CACHE_PREFIX}:${scope}:${apiUrl}${slug}?page=${page}&ordering=${query.ordering ?? ""}&filter=${query.filter ?? ""}${extra}`;
 };
 
 const storage = (): Storage | null => {

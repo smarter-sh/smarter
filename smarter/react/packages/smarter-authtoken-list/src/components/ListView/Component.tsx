@@ -112,7 +112,8 @@ const AuthTokenRow = React.memo(function AuthTokenRow({
     <tr className="" key={authtoken.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={authtoken.manifestUrl}>{authtoken.name}</a>
+        {/* the row opens the authtoken's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{authtoken.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

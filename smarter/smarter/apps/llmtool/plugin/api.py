@@ -599,10 +599,10 @@ class ApiPlugin(PluginBase):
             description="Get additional information about courses available at Stackademy.",
             version="0.1.0",
             tags=["api", "rest"],
-            annotations=[
-                {"smarter.sh/created_by": "smarter_api_plugin_broker"},
-                {"smarter.sh/plugin": "api_example"},
-            ],
+            annotations={
+                "smarter.sh/created_by": "smarter_api_plugin_broker",
+                "smarter.sh/plugin": "api_example",
+            },
         )
         selector = SAMPluginCommonSpecSelector(
             directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,

@@ -2,7 +2,7 @@
 
 import re
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Optional, Union, cast
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 import yaml
 from django.utils.functional import classproperty

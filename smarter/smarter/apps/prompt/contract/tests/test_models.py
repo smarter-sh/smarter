@@ -238,7 +238,7 @@ class TestOrmModels(SmarterTestBase):
             description="Query the catalogue.",
             version="0.1.0",
             tags=tags,
-            annotations=[],
+            annotations={},
             plugin_class="sql",
         )
         plugin_meta.name = "stackademy_sql"

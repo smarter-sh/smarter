@@ -117,7 +117,8 @@ const MCPClientRow = React.memo(function MCPClientRow({
     <tr className="" key={mcpclient.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={mcpclient.manifestUrl}>{mcpclient.name}</a>
+        {/* the row opens the mcpclient's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{mcpclient.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

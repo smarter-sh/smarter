@@ -1,7 +1,7 @@
 /**
  * Toolbar React Component
  *
- * This component provides a toolbar for managing custom domain resources, used in both ListView and CardView displays.
+ * This component provides a toolbar for managing custom domain resources, used in the ListView, and in the DetailView of the detail that opens when a row is chosen.
  * It offers actions for opening, editing, cloning, renaming, and deleting a custom domain, with modal dialogs for confirmation and error handling.
  *
  * Features:
@@ -23,7 +23,7 @@
  * Usage:
  * <Toolbar sessionContext={sessionContext} customDomain={customDomain} onRequery={onRequery} />
  *
- * This component is intended to be embedded in each custom domain row or card in ListView and CardView.
+ * This component is intended to be embedded in each custom domain row of the ListView, and in its DetailView.
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";

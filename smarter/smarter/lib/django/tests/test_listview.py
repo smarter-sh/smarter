@@ -3,12 +3,13 @@
 import copy
 from http import HTTPStatus
 from unittest.mock import patch
+from urllib.parse import urlencode
 
 from django.db import connection, transaction
 from django.db.models.signals import m2m_changed, post_save
 from django.test import Client, RequestFactory
 from django.test.utils import CaptureQueriesContext
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -21,10 +22,13 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django.listview import (
     LISTVIEW_CACHE_ALL,
+    LISTVIEW_PAGE_SUFFIX,
     ListviewPageRequest,
+    SmarterListApiView,
     connect_listview_cache,
     invalidate_listview_cache,
     listview_cache_generation,
+    listview_registry,
 )
 from smarter.lib.drf.views.listview.api import AuthTokenListApiView
 
@@ -123,7 +127,8 @@ class TestSmarterListApiView(TestAccountMixin):
             kwargs={"ownership_filter": ownership_filter},
         )
         if params:
-            url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
+            # a list value repeats its parameter, e.g. tag=["a", "b"] is ?tag=a&tag=b.
+            url += "?" + urlencode(params, doseq=True)
         response = self.client.post(url)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
         return json.loads(response.content)
@@ -220,3 +225,74 @@ class TestSmarterListApiView(TestAccountMixin):
             self.listed(page_size="6", invalidate_cache="true")
         # each owned guardrail still asks once whether an LLMClient uses it (see user_can_delete).
         self.assertLessEqual(len(many.captured_queries) - len(few.captured_queries), 4)
+
+    def test_tags_and_annotations_narrow_the_page(self):
+        """?tag= and ?annotation=, each repeatable, narrow the page, which says which applied."""
+        tag = f"listview_tag_{self.hash_suffix}"
+        key = f"listview-{self.hash_suffix}.example.com/team"
+        self.guardrail.tags.add(tag)
+        self.guardrail.set_annotation(key, "a")
+
+        data = self.listed(tag=[tag, tag], annotation=f"{key}=a")
+        self.assertEqual(self.names(data), [self.guardrail.name])
+        self.assertEqual(data["pagination"]["tags"], [tag])
+        self.assertEqual(data["pagination"]["annotations"], [f"{key}=a"])
+        self.assertEqual(data["pagination"]["annotationError"], "")
+        self.assertEqual(self.names(self.listed(tag=[tag, "no_such_tag"])), [])
+        self.assertEqual(self.names(self.listed(annotation=f"{key}!=a")), [])
+
+    def test_invalid_annotation_is_reported_not_applied(self):
+        """An invalid annotation selector leaves the page unfiltered, and says why."""
+        data = self.listed(annotation="Bad Key=x")
+        self.assertIn(self.guardrail.name, self.names(data))
+        self.assertEqual(data["pagination"]["annotations"], [])
+        self.assertIn("Bad Key", data["pagination"]["annotationError"])
+
+    def test_tags_and_annotations_are_cached_apart(self):
+        """Each tag and annotation selector is a page of its own in the cache."""
+        with patch.object(GuardrailListApiView, "build_page", wraps=GuardrailListApiView.build_page) as build:
+            self.listed()
+            self.listed(tag="a")
+            self.listed(annotation="example.com/a")
+            self.listed(tag="a")
+        self.assertEqual(build.call_count, 3)
+
+    def test_annotation_change_makes_the_page_stale(self):
+        """Changing an annotation without saving the resource still makes every list's pages stale."""
+        key = f"listview-{self.hash_suffix}.example.com/stale"
+        self.assertEqual(self.names(self.listed(annotation=key)), [])
+        self.guardrail.set_annotation(key, "x")
+        self.assertEqual(self.names(self.listed(annotation=key)), [self.guardrail.name])
+
+
+class TestListviewRegistry(TestAccountMixin):
+    """Test listview_registry(), every list of the web console and its page."""
+
+    def test_every_list_api_has_its_page(self):
+        """Every list api in the code is in the registry, with the url of its own console page."""
+
+        def subclasses(cls):
+            for subclass in cls.__subclasses__():
+                yield subclass
+                yield from subclasses(subclass)
+
+        registry = {entry.view_class: entry for entry in listview_registry()}
+        for view_class in subclasses(SmarterListApiView):
+            if view_class.__module__.endswith("tests") or ".tests." in view_class.__module__:
+                continue
+            with self.subTest(view=view_class.__name__):
+                self.assertIn(view_class, registry)
+                page = resolve(registry[view_class].page_url).func.view_class  # type: ignore[attr-defined]
+                self.assertTrue(page.__name__.endswith(LISTVIEW_PAGE_SUFFIX), page)
+                self.assertEqual(page.__name__, view_class.__name__.replace("ListApiView", LISTVIEW_PAGE_SUFFIX))
+
+    def test_labels(self):
+        """A list is labeled by its listview_label, or else its model's plural verbose name."""
+        labels = {entry.view_class.__name__: entry.label for entry in listview_registry()}
+        self.assertEqual(labels["GuardrailListApiView"], "Guardrails")
+        self.assertEqual(labels["ConnectionListApiView"], "Connections")
+
+    def test_plugins_page_is_the_sidebars(self):
+        """A urlconf included twice gives the page of its shallowest inclusion, which the sidebar links to."""
+        pages = {entry.view_class.__name__: entry.page_url for entry in listview_registry()}
+        self.assertEqual(pages["PluginListApiView"], "/llm-tools/")

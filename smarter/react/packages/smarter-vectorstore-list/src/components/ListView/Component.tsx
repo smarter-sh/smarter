@@ -109,7 +109,8 @@ const VectorstoreRow = React.memo(function VectorstoreRow({
     <tr className="" key={vectorstore.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={vectorstore.manifestUrl}>{vectorstore.name}</a>
+        {/* the row opens the vectorstore's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{vectorstore.name}</span>
         <div className="text-muted fs-8">{vectorstore.description}</div>
       </td>
       {/* Database */}

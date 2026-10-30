@@ -6,6 +6,7 @@ import os
 from pydantic_core import ValidationError
 
 from smarter.apps.account.manifest.models.user.model import SAMUser
+from smarter.apps.account.manifest.models.user.spec import SAMUserSpecConfig
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib import json
 from smarter.lib.manifest.loader import SAMLoader
@@ -14,9 +15,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestSmarterUserPydanticModel(TestAccountMixin):
-    """
-    Test the Smarter SAMUser Pydantic Model.
-    """
+    """Test the Smarter SAMUser Pydantic Model."""
 
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)
@@ -55,11 +54,14 @@ class TestSmarterUserPydanticModel(TestAccountMixin):
         }
 
     def test_config_missing_required_fields(self):
-        """Test missing required fields in spec.config."""
+        """Test that a missing required field of spec.config is rejected, and a missing optional one isn't."""
         for field in self.get_good_config_data():
             bad = self.get_good_manifest_data()
             del bad["spec"]["config"][field]
-            with self.assertRaises(ValidationError, msg=f"Missing field: {field}"):
+            if SAMUserSpecConfig.model_fields[field].is_required():
+                with self.assertRaises(ValidationError, msg=f"Missing field: {field}"):
+                    SAMUser(**bad)
+            else:
                 SAMUser(**bad)
 
     def test_config_invalid_field_types(self):
@@ -95,9 +97,7 @@ class TestSmarterUserPydanticModel(TestAccountMixin):
             pass  # If model is strict, this is expected
 
     def test_manifest_initalization_good(self):
-        """
-        Test the manifest initialization with a good user manifest file.
-        """
+        """Test the manifest initialization with a good user manifest file."""
         filespec = self.get_data_full_filepath("user-good.yaml")
         loader = SAMLoader(file_path=filespec)
         self.assertTrue(loader.ready, msg="loader is not ready")

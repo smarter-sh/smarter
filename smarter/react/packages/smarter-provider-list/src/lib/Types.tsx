@@ -1,7 +1,7 @@
 /**
  * Central type definitions for the Provider List React application.
  *
- * This module exports TypeScript types and interfaces used throughout the CardView,
+ * This module exports TypeScript types and interfaces used throughout the DetailView,
  * provider, and API response layers. It provides strong typing for user, provider,
  * provider, API response, and session context data structures.
  *
@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, Tags, User, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, User, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Provider Definition
@@ -37,6 +37,8 @@ export type Provider = {
   tags: Tags;
   annotations: Annotations;
   manifestUrl: string;
+  /** The url of the provider's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
   ready: boolean;
   isDefault: boolean;
@@ -72,10 +74,11 @@ export type Provider = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface ProviderCardViewProps {
+export interface ProviderDetailViewProps {
   sessionContext: SessionContext;
-  objects: Provider[];
+  object: Provider;
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface ProviderListViewProps {

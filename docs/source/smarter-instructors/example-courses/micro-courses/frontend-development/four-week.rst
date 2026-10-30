@@ -120,7 +120,11 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **The chat interface.** A tour of ``smarter.sh-chat``: Server-Sent Events for a prompt's
        progress, Markdown with math and diagrams, branding from ``spec.config.styles``, the API
        contract and its generated types, and embedding with `@smarter.sh/ui-chat
-       <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__.
+       <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__. Pre-reading: "The second line: the
+       reply is untrusted HTML" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__, on how the chat renders a model's reply
+       safely, and "Lab 3: allowedOrigins" in the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__, on letting a page embed a chatbot.
    * - 4
      - Live session 4
      - Capstone demonstrations (about 6 minutes each, with 2 minutes of code review questions),
@@ -335,7 +339,9 @@ with tests and deployment.
 
 Students build a website with Vite, React and Bootstrap for a fictional business or club, with
 routing, at least four pages, a contact form with validation, and an assistant page that embeds a
-deployed LLMClient with ``@smarter.sh/ui-chat``, styled to match, and deploy it.
+deployed LLMClient with ``@smarter.sh/ui-chat``, styled to match, and deploy it. "Lab 3:
+allowedOrigins" in the multi-tenancy case study shows how to let the site's origin call the
+chatbot.
 
 **What students turn in:**
 
