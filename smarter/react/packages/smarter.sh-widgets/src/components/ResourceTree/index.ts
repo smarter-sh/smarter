@@ -36,6 +36,11 @@ export interface ResourceTreeNode {
   recordLocator: string | null;
   /** Its page in the web console, where its manifest can be edited, or null. A public page leaves urls out. */
   url: string | null;
+  /**
+   * The api of its detail: its manifest, what it uses and what uses it, which a resource's detail dialog shows when
+   * its card is chosen. Null, or absent, if the user may not read it, or on a public page.
+   */
+  detailUrl?: string | null;
   /** Whether the user may read it. A resource that they may not read shows its kind and record locator only. */
   readable: boolean;
   /** The resources that it uses. */
@@ -67,12 +72,16 @@ export interface ResourceTreeProps {
   label?: string;
   /** For a tree that isn't controlled: whether it opens with every resource's children hidden, but the root's. */
   defaultCollapsed?: boolean;
+  /** Shows a resource's detail. Without it, a card opens the resource's manifest page in a new tab. */
+  onOpen?: (node: ResourceTreeNode) => void;
 }
 
 export interface ResourceCardProps {
   node: ResourceTreeNode;
   /** The resource at the root of the tree, whose card stands out. */
   isRoot?: boolean;
+  /** Shows a resource's detail. A card that has it opens a readable resource that has a detailUrl. */
+  onOpen?: (node: ResourceTreeNode) => void;
 }
 
 export const ResourceTree: ComponentType<ResourceTreeProps> = CommonResourceTree;

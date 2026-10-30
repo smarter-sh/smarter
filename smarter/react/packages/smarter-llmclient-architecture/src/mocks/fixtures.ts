@@ -15,7 +15,8 @@ function leaf(
   recordLocator: string,
   url: string | null,
 ): SAMDependencyTreeNode {
-  return { kind, icon, name, owner: OWNER, recordLocator, url, readable: true, children: [] };
+  const detailUrl = `/dashboard/api/resource/${kind}/${recordLocator}/`;
+  return { kind, icon, name, owner: OWNER, recordLocator, url, detailUrl, readable: true, children: [] };
 }
 
 const openaiKey = leaf("Secret", "lock-2", "openai_api_key", "secret-rMTAwMDAxMQx", "/secret/secrets/rMTAwMDAxMQx/");
@@ -95,6 +96,7 @@ export const lockedTree: SAMDependencyTreeNode = {
       owner: null,
       recordLocator: "guardrail-rMTAwMDA5OQx",
       url: null,
+      detailUrl: null,
       readable: false,
       children: [],
     },

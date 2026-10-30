@@ -82,6 +82,9 @@ class TestResourceDetail(TestAccountMixin):
         self.assertEqual([(node.kind, node.name) for node in detail.dependents], [("LLMClient", self.llmclient.name)])
         # a dependent has no children of its own.
         self.assertEqual(detail.dependents[0].children, [])
+        # each card has the url of its own detail, which its detail dialog shows when the card is chosen.
+        self.assertEqual(detail.tree.detailUrl, detail_url("Guardrail", self.guardrail.record_locator))
+        self.assertEqual(detail.dependents[0].detailUrl, detail_url("LLMClient", self.llmclient.record_locator))
         data = detail.model_dump(mode="json")
         self.assertEqual(
             set(data), {"kind", "name", "recordLocator", "url", "manifest", "manifestError", "tree", "dependents"}
@@ -157,6 +160,10 @@ class TestResourceDetail(TestAccountMixin):
             data = json.loads(response.content)
             self.assertEqual(data["recordLocator"], self.guardrail.record_locator)
             self.assertEqual(data["dependents"][0]["name"], self.llmclient.name)
+        # a dependent's detailUrl answers with its own detail.
+        response = client.get(data["dependents"][0]["detailUrl"])
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(json.loads(response.content)["recordLocator"], self.llmclient.record_locator)
         client.force_login(self.other_user)
         response = client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)

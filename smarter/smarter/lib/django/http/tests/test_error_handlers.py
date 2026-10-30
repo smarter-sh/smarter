@@ -86,6 +86,13 @@ class TestErrorHandlers(SmarterTestBase):
                 with self.subTest(urlconf=urlconf, status=status):
                     self.assertIs(get_resolver(urlconf).resolve_error_handler(status), view)
 
+    def test_docstrings_avoid_admindocs_roles(self):
+        """Their docstrings aren't Django's, whose ``:template:`` role crashes the Sphinx build."""
+        for status, (view, _) in HANDLERS.items():
+            with self.subTest(status=status):
+                self.assertNotIn(":template:", view.__doc__)
+                self.assertIn(f"django.views.defaults.{view.__name__}", view.__doc__)
+
     def test_django_accepts_their_signatures(self):
         """Django's system check of custom error handlers finds nothing wrong."""
         errors = [e for e in run_checks(tags=["urls"]) if e.id == "urls.E007"]
