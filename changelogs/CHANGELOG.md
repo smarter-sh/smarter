@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.38.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.38.0-alpha.2...v0.38.0-alpha.3) (2026-10-30)
+
+### Bug Fixes
+
+* **dashboard:** highlight the sidebar item of the page on the server ([13d3b8f](https://github.com/smarter-sh/smarter/commit/13d3b8f3e3f5a56669e4fe76afdf57df437b9d6d))
+* **llmclient:** log rejected scanner requests as warnings, not errors ([3c7c246](https://github.com/smarter-sh/smarter/commit/3c7c24662356c641c95e5b23110253e49a045d34))
+* **react:** open a tabbed resource detail when a list row is chosen ([0a347f3](https://github.com/smarter-sh/smarter/commit/0a347f3e3d05c10d01f6a38fedb311fd225295a4))
+
 ## [0.38.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.38.0-alpha.1...v0.38.0-alpha.2) (2026-10-30)
 
 ### Features
