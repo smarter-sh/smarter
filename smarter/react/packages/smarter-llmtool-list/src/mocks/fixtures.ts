@@ -36,7 +36,7 @@ export function makeObject(id: number, overrides: Partial<LLMTool> = {}): LLMToo
     description: `An example, number ${id}.`,
     version: "1.0.0",
     tags: ["example"],
-    annotations: [],
+    annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/llm-tools/plugins/hashed${id}/`,
     canDelete: true,

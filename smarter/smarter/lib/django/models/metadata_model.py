@@ -16,8 +16,12 @@ from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import rfc1034_compliant_str
+from smarter.lib.annotation.validation import (
+    AnnotationsInput,
+    AnnotationsMap,
+    normalize_annotations,
+)
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .timestamped_model import TimestampedModel
@@ -92,13 +96,108 @@ class MetaDataModel(TimestampedModel):
         blank=True,
         help_text="Tags for categorizing and organizing this resource.",
     )
-    annotations = models.JSONField(
-        default=list,
-        blank=True,
-        null=True,
-        help_text="Key-value pairs for annotating this resource.",
-        encoder=SmarterJSONEncoder,
-    )
+
+    _pending_annotations: Optional[AnnotationsMap] = None
+    """Annotations assigned to the instance, and written to the database by the next ``save()``."""
+
+    @property
+    def annotations(self) -> AnnotationsMap:
+        """
+        The resource's annotations: a map of string keys to string values, as in Kubernetes.
+
+        Assigning to it validates the new annotations, and the next ``save()`` makes the stored
+        annotations exactly these, adding, changing and removing rows of
+        :class:`smarter.lib.annotation.models.Annotation`. Assignment accepts a map, or the list of
+        one-key maps of older manifests, and converts scalar values to strings.
+
+        **Example:**
+
+        .. code-block:: python
+
+            llmclient.annotations = {**llmclient.annotations, "acme.com/crm-account-id": "A-10042"}
+            llmclient.save()
+
+        :returns: A copy of the annotations. Changing it doesn't change the resource.
+        :rtype: AnnotationsMap
+        """
+        if self._pending_annotations is not None:
+            return dict(self._pending_annotations)
+        if self.pk is None:
+            return {}
+        # pylint: disable=import-outside-toplevel
+        from smarter.lib.annotation.models import (
+            annotation_content_type,
+            get_cached_annotations,
+        )
+
+        return dict(get_cached_annotations(annotation_content_type(self).pk, str(self.pk)))
+
+    @annotations.setter
+    def annotations(self, value: AnnotationsInput) -> None:
+        """Validate the annotations, and keep them for the next ``save()``."""
+        self._pending_annotations = normalize_annotations(value)
+
+    def set_annotation(self, key: str, value: object) -> None:
+        """
+        Add or change one annotation of a saved resource, immediately.
+
+        :param key: The annotation key, e.g. ``acme.com/crm-account-id``.
+        :type key: str
+        :param value: The value. Scalars are converted to strings.
+        :type value: object
+        :raises SmarterAnnotationError: If the key or value is invalid.
+        """
+        self.annotations = {**self.annotations, key: value}
+        self.save_annotations()
+
+    def remove_annotation(self, key: str) -> None:
+        """
+        Remove one annotation of a saved resource, immediately.
+
+        Does nothing if it doesn't exist.
+
+        :param key: The annotation key.
+        :type key: str
+        """
+        annotations = self.annotations
+        if key in annotations:
+            annotations.pop(key)
+            self.annotations = annotations
+            self.save_annotations()
+
+    def save_annotations(self) -> None:
+        """Write annotations assigned since the last ``save()`` to the database, without saving the resource's other fields."""
+        if self._pending_annotations is None or self.pk is None:
+            return
+        # pylint: disable=import-outside-toplevel
+        from smarter.lib.annotation.models import Annotation
+
+        pending = self._pending_annotations
+        self._pending_annotations = None
+        Annotation.objects.sync(self, pending)
+
+    @classmethod
+    def with_annotation(cls, key: str, value: Optional[str] = None) -> QuerySet:
+        """
+        Return the resources of this model that have the annotation ``key``, with ``value`` if given.
+
+        **Example:**
+
+        .. code-block:: python
+
+            LLMClient.with_annotation("acme.com/crm-account-id", "A-10042")
+
+        :param key: The annotation key.
+        :type key: str
+        :param value: The value to match, or ``None`` for any value.
+        :type value: Optional[str]
+        :returns: The resources, not filtered by any user's permissions.
+        :rtype: QuerySet
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.lib.annotation.selectors import model_with_annotation
+
+        return model_with_annotation(cls, key, value)
 
     def validate(self):
         """Validate the model."""
@@ -344,6 +443,7 @@ class MetaDataModel(TimestampedModel):
         """
         is_new = self.pk is None
         super().save(*args, **kwargs)
+        self.save_annotations()
         if not is_new and type(self).__bases__[0] == MetaDataModel:
             self.__class__.get_cached_object(invalidate=True, pk=self.pk)  # type: ignore
             # a blank name, e.g. a UserProfile created by the oauth pipeline, was never cached by name,
@@ -367,5 +467,7 @@ __all__ = ["MetaDataModel"]
 def tags_changed(sender, instance, action, **kwargs):
     """Invalidate tags_list when the tags of a MetaDataModel instance change."""
     if action in ("post_add", "post_remove", "post_clear") and isinstance(instance, MetaDataModel) and instance.pk:
-        instance.__dict__.pop("tags_list", None)
+        # the instance's own dict, where cached_property stores tags_list. vars() is typed as a dict.
+        vars(instance).pop("tags_list", None)
+        # pylint: disable=W0212
         _get_tags_by_model_and_pk.invalidate(instance._meta.label, instance.pk)

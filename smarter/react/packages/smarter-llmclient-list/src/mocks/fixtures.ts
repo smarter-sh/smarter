@@ -38,7 +38,7 @@ export function makeObject(id: number, overrides: Partial<LLMClient> = {}): LLMC
     description: "An example llmclient with tool calling and Smarter Plugins.",
     version: "0.1.0",
     tags: ["gibberish", "jabberwocky"],
-    annotations: [{ "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling." }],
+    annotations: { "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling." },
     userProfile: USER_PROFILE,
     functions: [
       {

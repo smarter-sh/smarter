@@ -156,7 +156,7 @@ class SAMCustomDomainBroker(AbstractBroker):
             description=custom_domain.description,
             version=custom_domain.version,
             tags=custom_domain.tags_list,
-            annotations=custom_domain.annotations if isinstance(custom_domain.annotations, list) else [],
+            annotations=custom_domain.annotations,
         )
         spec = SAMCustomDomainSpec(config=SAMCustomDomainSpecConfig(domainName=custom_domain.domain_name))
         dns_records = [
@@ -234,7 +234,7 @@ class SAMCustomDomainBroker(AbstractBroker):
             description="Serves the company's LLMClients from llmclients.example.com.",
             version="1.0.0",
             tags=["example"],
-            annotations=[{"smarter.sh/custom-domain/purpose": "example"}],
+            annotations={"smarter.sh/custom-domain/purpose": "example"},
         )
         status = SAMCustomDomainStatus(
             accountNumber=smarter_cached_objects.smarter_account.account_number,
@@ -269,6 +269,7 @@ class SAMCustomDomainBroker(AbstractBroker):
         custom_domains = LLMClientCustomDomain.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
             custom_domains = custom_domains.filter(name=name)
+        custom_domains = self.filter_by_annotation_selector(custom_domains, kwargs)
         data = [
             self.to_camel_case(LLMClientCustomDomainListSerializer(custom_domain).data)
             for custom_domain in custom_domains.order_by("name")[:MAX_RESULTS]

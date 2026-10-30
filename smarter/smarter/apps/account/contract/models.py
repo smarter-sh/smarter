@@ -16,22 +16,21 @@ The models forbid extra fields: the api returns exactly what they declare.
 """
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 if TYPE_CHECKING:
-    from smarter.apps.account.models import Account, AccountContact
+    from smarter.apps.account.models import Account, AccountContact, UserProfile
     from smarter.apps.account.models import User as UserModel
-    from smarter.apps.account.models import UserProfile
 
 
-MetaDataApiAnnotations = Optional[Union[list[dict[str, JsonValue]], dict[str, JsonValue]]]
+MetaDataApiAnnotations = Optional[dict[str, str]]
 """
-``MetaDataModel.annotations``: a list of key-value pairs, e.g. ``[{"smarter.sh/purpose": "example"}]``, or,.
+``MetaDataModel.annotations``: a map of keys to string values, as in Kubernetes, e.g.
 
-in legacy rows, an object.
+``{"acme.com/crm-account-id": "A-10042"}``.
 """
 
 

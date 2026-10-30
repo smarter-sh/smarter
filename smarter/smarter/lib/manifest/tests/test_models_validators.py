@@ -75,22 +75,19 @@ class TestMetadataValidators(TestAccountMixin):
             validate(["<bad tag>"])
 
     def test_annotations(self):
-        coerce = AbstractSAMMetadataBase.coerce_annotations_to_list
-        validate = AbstractSAMMetadataBase.validate_annotations
-        self.assertIsNone(coerce(None))
-        self.assertEqual(coerce('[{"a": "b"}]'), [{"a": "b"}])
-        with self.assertRaises(SAMValidationError):
-            coerce("not json")
+        """Test that annotations are a map of strings, from a map, a legacy list, or JSON."""
+        validate = AbstractSAMMetadataBase.normalize_annotations
         self.assertIsNone(validate(None))
-        self.assertEqual(validate('[{"a": 1}]'), [{"a": 1}])
-        self.assertEqual(validate([{"smarter.sh/a": "b", "c": None}]), [{"smarter.sh/a": "b", "c": None}])
+        self.assertEqual(validate('[{"a": 1}]'), {"a": "1"})
+        self.assertEqual(validate({"smarter.sh/a": "b", "c": None}), {"smarter.sh/a": "b", "c": ""})
+        self.assertEqual(validate([{"smarter.sh/a": True}]), {"smarter.sh/a": "true"})
         for value in (
             "not json",
-            {"a": "b"},
             ["not a dict"],
             [{"bad key!": "b"}],
             [{"a": object()}],
-            [{"a": "x" * 3000}],
+            {"a": ["a", "list"]},
+            {"a": "x" * 300 * 1024},
         ):
             with self.subTest(value=value):
                 with self.assertRaises(SAMValidationError):

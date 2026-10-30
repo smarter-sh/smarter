@@ -278,6 +278,7 @@ class SAMPromptBroker(AbstractBroker):
             chats = Prompt.objects.with_read_permission_for(self.user)  # type: ignore
             if name:
                 chats = chats.filter(name=name)
+            chats = self.filter_by_annotation_selector(chats, kwargs)
             chats = chats.order_by("-created_at")[:MAX_RESULTS]
         chats = chats or Prompt.objects.none()
 

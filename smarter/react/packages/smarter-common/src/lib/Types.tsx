@@ -72,8 +72,8 @@ export type ListPage<TObject> = {
   pagination: Pagination | null;
 };
 
-type AnnotationValue = string | number | boolean | null;
-export type Annotations = Array<Record<string, AnnotationValue>> | null;
+/** A resource's annotations, as in Kubernetes: a map of keys to string values. */
+export type Annotations = Record<string, string> | null;
 export type Tags = string[] | null;
 
 export type User = {
