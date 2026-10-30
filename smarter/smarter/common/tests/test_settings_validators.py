@@ -129,6 +129,15 @@ class TestSettingsValidators(SmarterTestBase):
         with self.assertRaises(SmarterConfigurationError):
             call(validator, "a minute", {})
 
+    def test_prompt_threads(self):
+        """Test that the prompt threads parse a count, default to 32, and reject text."""
+        validator = Settings.parse_prompt_threads
+        self.assertEqual(call(validator, "8", {}), 8)
+        self.assertEqual(call(validator, 16, {}), 16)
+        self.assertEqual(call(validator, "", {}), 32)
+        with self.assertRaises(SmarterConfigurationError):
+            call(validator, "many", {})
+
     def test_mysql_port(self):
         """Test that the database port parses an environment variable's string, defaults, and rejects non-ports."""
         validator = Settings.validate_mysql_port

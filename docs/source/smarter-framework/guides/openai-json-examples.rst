@@ -9,9 +9,6 @@ Variable                   Example value
 ========================== ============================
 DEBUG_MODE                 true
 OPENAI_API_KEY             sk-7DoB4YOUR-OPENAI-API-KEY
-OPENAI_API_ORGANIZATION    org-YJz82abcdefthijklmnophcy
-OPENAI_ENDPOINT_IMAGE_N    4
-OPENAI_ENDPOINT_IMAGE_SIZE 1024x768
 ========================== ============================
 
 Logging

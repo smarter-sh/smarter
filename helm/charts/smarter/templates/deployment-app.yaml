@@ -95,6 +95,11 @@ spec:
             - name: SMARTER_DATABASE_READ_TIMEOUT
               value: {{ .Values.app.databaseReadTimeout | quote }}
             {{- end }}
+            {{- /* Web server only: see app.promptThreads in values.yaml. */}}
+            {{- if .Values.app.promptThreads }}
+            - name: SMARTER_PROMPT_THREADS
+              value: {{ .Values.app.promptThreads | quote }}
+            {{- end }}
           volumeMounts:
             {{- toYaml .Values.app.extraVolumeMounts | nindent 12 }}
           # The probes, tuned for a server that loads in about 10 seconds:
