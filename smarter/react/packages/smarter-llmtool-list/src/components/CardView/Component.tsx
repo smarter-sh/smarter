@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: LLMToolCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: LLMToolCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -64,8 +64,8 @@ function CardView({ sessionContext, objects, onRequery }: LLMToolCardViewProps) 
                     {renderDetailRow(gettext("Version"), llmtool.version)}
                     {renderDetailRow(gettext("Description"), llmtool.description)}
                     {renderDetailRow(gettext("LLMTool Class"), llmtool.pluginClass)}
-                    {renderDetailRow(gettext("Tags"), llmtool.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), llmtool.annotations, "json")}
+                    <TagsRow tags={llmtool.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={llmtool.annotations} filtering={filtering} />
 
                     {renderDetailRow(gettext("Selector Directive"), llmtool.selector.directive)}
                     {renderDetailRow(gettext("Selector Search Terms"), llmtool.selector.searchTerms ?? [], "str[]")}

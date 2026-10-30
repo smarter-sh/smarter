@@ -22,7 +22,7 @@
  *
  * This component is intended for use in views where objects are presented in a card/grid format.
  */
-import type { SessionContext } from "@smarter/common";
+import type { Filtering, SessionContext } from "@smarter/common";
 import type { LLMClient } from "@/lib/Types";
 import { loggerPrefix } from "@/const";
 import { Toolbar } from "@/components/Toolbar";
@@ -31,7 +31,7 @@ import { renderDetailRow } from "@/components/CardView/renderDetail";
 import { weatherTargetAttribute } from "@/components/WeatherHint/const";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
 /** A comma-separated list of the names of an llmclient's plugins, MCPClients or guardrails. */
 const names = (items?: Array<{ name: string }>) =>
@@ -46,9 +46,10 @@ interface CardViewProps {
   sessionContext: SessionContext;
   objects: LLMClient[];
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
-export function CardView({ sessionContext, objects, onRequery }: CardViewProps) {
+export function CardView({ sessionContext, objects, onRequery, filtering }: CardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -103,20 +104,8 @@ export function CardView({ sessionContext, objects, onRequery }: CardViewProps) 
                     {renderDetailRow(gettext("Last updated"), llmclient.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), llmclient.version)}
                     {renderDetailRow(gettext("Description"), llmclient.description)}
-                    {renderDetailRow(
-                      gettext("Tags"),
-                      llmclient.tags,
-                      "str[]",
-                      gettext("User-defined list of search tags for categorizing the llmclient."),
-                    )}
-                    {renderDetailRow(
-                      gettext("Annotations"),
-                      llmclient.annotations,
-                      "json",
-                      gettext(
-                        "User-defined list of key-value pairs for informational or platform extensibility purposes.",
-                      ),
-                    )}
+                    <TagsRow tags={llmclient.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={llmclient.annotations} filtering={filtering} />
                     {renderDetailRow(
                       gettext("Functions"),
                       Array.isArray(llmclient.functions)

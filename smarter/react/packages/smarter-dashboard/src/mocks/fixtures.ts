@@ -5,6 +5,7 @@
 import type { SessionContext } from "@smarter/common";
 
 import type { BudgetSeries, BudgetStatus } from "@/components/BudgetVsActual/types";
+import type { GlobalSearchResponse } from "@/components/GlobalSearch/Component";
 import type { TokenUsageSeries } from "@/components/TokenUsage/types";
 import type { AppContextInterface } from "@/main";
 
@@ -28,6 +29,42 @@ export const appContext: AppContextInterface = {
   activityApiUrl: "/dashboard/api/activity/",
   gettingStartedApiUrl: "/dashboard/api/getting-started/",
   quickActionsApiUrl: "/dashboard/api/quick-actions/",
+  globalSearchApiUrl: "/dashboard/api/search/",
+};
+
+/** The global search's response to "tag:production", in two lists. */
+export const globalSearchResponse: GlobalSearchResponse = {
+  query: "production",
+  mode: "tag",
+  error: "",
+  count: 7,
+  groups: [
+    {
+      label: "Guardrails",
+      count: 6,
+      url: "/guardrail/?tag=production",
+      results: [1, 2, 3, 4, 5].map((n) => ({
+        name: `guardrail_${n}`,
+        description: `Guardrail ${n}`,
+        url: `/guardrail/guardrails/r${n}x/`,
+      })),
+    },
+    {
+      label: "Secrets",
+      count: 1,
+      url: "/secret/?tag=production",
+      results: [{ name: "openai_api_key", description: "", url: "/secret/secrets/r9x/" }],
+    },
+  ],
+};
+
+/** The global search's response to an invalid annotation selector requirement. */
+export const globalSearchErrorResponse: GlobalSearchResponse = {
+  query: "Bad Key=x",
+  mode: "annotation",
+  error: "Annotation key 'Bad Key' has an invalid name segment 'Bad Key'.",
+  count: 0,
+  groups: [],
 };
 
 export const myResources = {

@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: ProviderCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: ProviderCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -67,8 +67,8 @@ function CardView({ sessionContext, objects, onRequery }: ProviderCardViewProps)
                     {renderDetailRow(gettext("Default Model"), provider.defaultModel)}
                     {renderDetailRow(gettext("Connectivity Test Path"), provider.connectivityTestPath)}
                     {renderDetailRow(gettext("Description"), provider.description)}
-                    {renderDetailRow(gettext("Tags"), provider.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), provider.annotations, "json")}
+                    <TagsRow tags={provider.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={provider.annotations} filtering={filtering} />
                     {renderDetailRow(gettext("Ready"), provider.ready, "bool")}
                     {renderDetailRow(gettext("Is Default"), provider.isDefault, "bool")}
                     {renderDetailRow(gettext("Is Active"), provider.isActive, "bool")}

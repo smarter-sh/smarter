@@ -30,6 +30,13 @@
  * - Narrows both tabs by a named filter of the list api, when the page is opened with
  *   ?filter=<name>, e.g. the dashboard's pending deployments link, ?filter=pending. A chip shows the
  *   filter's label, from the tabbedListViewContext's filters, and a button that removes it.
+ * - Narrows both tabs by tags and by an annotation selector, ?tag=<name> and
+ *   ?annotation=<requirement>, each repeatable: when the page is opened with them, e.g. from the
+ *   dashboard's search, when a tag or annotation of an object is clicked (see Filtering), and when a
+ *   requirement is typed in the annotation selector box. Each shows as a chip with a button that
+ *   removes it, and the page's url follows them, so that it can be bookmarked or shared. The list
+ *   api reports an invalid selector, which is shown under the box, and not applied.
+ * - Opens searching, when the page is opened with ?search=<text>, which also follows the search.
  * - Shows a page from the cache at once, when it holds it, while the page is fetched again, with a
  *   small spinner that says it is refreshing.
  * - Shows loading and error states during fetches.
@@ -71,6 +78,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   CardViewBaseProps,
+  Filtering,
   ListViewBaseProps,
   Pagination,
   SessionContext,
@@ -87,6 +95,8 @@ import type { ViewMode } from "../ToggleButton";
 
 import { getCookieForUrl } from "./cookie";
 import { PaginationControls } from "./PaginationControls";
+import { AnnotationSelectorBox } from "./AnnotationSelectorBox";
+import { FilterChip } from "./FilterChip";
 import { SearchBox } from "./SearchBox";
 import { TabNav } from "./TabNavigation";
 import { gettext, interpolate } from "../../lib/i18n";
@@ -118,6 +128,27 @@ function filterOfPageUrl(): string {
   return new URLSearchParams(window.location.search).get("filter")?.trim() ?? "";
 }
 
+/** The distinct, non-empty values of a repeated parameter of the page's url, e.g. ["a", "b"] for ?tag=a&tag=b. */
+function valuesOfPageUrl(name: string): string[] {
+  const values = new URLSearchParams(window.location.search).getAll(name).map((value) => value.trim());
+  return values.filter((value, index) => value && values.indexOf(value) === index);
+}
+
+/** Make a parameter of the page's url these values, or remove it, without a new history entry. */
+function setPageUrlValues(name: string, values: string[]): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete(name);
+  values.forEach((value) => url.searchParams.append(name, value));
+  if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url);
+}
+
+/** What narrows both tabs, besides the search: the named filter, tags, and an annotation selector. */
+type Narrowing = {
+  filter: string;
+  tags: string[];
+  annotations: string[];
+};
+
 /** How long to wait after the last keystroke of a search before it is requested, in milliseconds. */
 export const SEARCH_DELAY_MS = 300;
 
@@ -147,15 +178,19 @@ export default function TabbedListView<TObject>({
   // browser tab, and when paging back. See ../../lib/cache.
   // the named filter of both tabs, from the page's url.
   const [filter, setFilter] = useState(filterOfPageUrl);
+  // the tags and annotation selector of both tabs, from the page's url, then from the chips and the selector box.
+  const [tags, setTags] = useState(() => valuesOfPageUrl("tag"));
+  const [annotations, setAnnotations] = useState(() => valuesOfPageUrl("annotation"));
+  const narrowing = useMemo<Narrowing>(() => ({ filter, tags, annotations }), [filter, tags, annotations]);
   const scope = useMemo(() => sessionScope(sessionContext), [sessionContext]);
   const cacheKey = useCallback(
-    (tab: TabKey, page: number, tabOrdering: string, tabFilter: string) =>
-      makeCacheKey(sessionContext.ApiUrl, tab, { page, ordering: tabOrdering, filter: tabFilter }, scope),
+    (tab: TabKey, page: number, tabOrdering: string, tabNarrowing: Narrowing) =>
+      makeCacheKey(sessionContext.ApiUrl, tab, { page, ordering: tabOrdering, ...tabNarrowing }, scope),
     [sessionContext, scope],
   );
   const [lists, setLists] = useState<TabRecord<TabList>>(() =>
     tabRecord(tabKeys, (tab) => {
-      const cached = readCache<unknown>(cacheKey(tab, 1, "", filter));
+      const cached = readCache<unknown>(cacheKey(tab, 1, "", narrowing));
       return {
         objects: cached?.objects ?? [],
         isLoading: cached === null,
@@ -168,8 +203,8 @@ export default function TabbedListView<TObject>({
   // each tab's requested page, and the search of both tabs. searchInput is the search as it is
   // typed, and search follows it once typing pauses, so that every keystroke is not a request.
   const [pages, setPages] = useState<TabRecord<number>>(() => tabRecord(tabKeys, () => 1));
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState(() => new URLSearchParams(window.location.search).get("search") ?? "");
+  const [search, setSearch] = useState(() => searchInput.trim());
   // the column that sorts both tabs, as the list api names it, e.g. "-name". Empty for its default order.
   const [ordering, setOrdering] = useState("");
 
@@ -205,14 +240,14 @@ export default function TabbedListView<TObject>({
       page: number,
       tabSearch: string,
       tabOrdering: string,
-      tabFilter: string,
+      tabNarrowing: Narrowing,
       invalidateCache: boolean,
       isActive: () => boolean = () => true,
     ): Promise<void> => {
       const request = (latestRequest.current[tab] ?? 0) + 1;
       latestRequest.current[tab] = request;
       // show the page from the cache at once, if it holds it, and its loading skeleton otherwise.
-      const key = cacheKey(tab, page, tabOrdering, tabFilter);
+      const key = cacheKey(tab, page, tabOrdering, tabNarrowing);
       const cached = tabSearch ? null : readCache<unknown>(key);
       setLists((prev) => ({
         ...prev,
@@ -221,13 +256,13 @@ export default function TabbedListView<TObject>({
           : { ...prev[tab], isLoading: true, isRefreshing: false },
       }));
       console.debug(
-        `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", ordering="${tabOrdering}", filter="${tabFilter}", invalidateCache=${invalidateCache}`,
+        `${loggerPrefix} loadTab() Loading ${tab} objects, page=${page}, search="${tabSearch}", ordering="${tabOrdering}", narrowing=${JSON.stringify(tabNarrowing)}, invalidateCache=${invalidateCache}`,
       );
       return load<unknown>(sessionContext, invalidateCache, tab, setErrorMessage, {
         page,
         search: tabSearch,
         ordering: tabOrdering,
-        filter: tabFilter,
+        ...tabNarrowing,
       }).then(({ objects, pagination }) => {
         if (!isActive() || request !== latestRequest.current[tab]) return;
         console.debug(`${loggerPrefix} loadTab() received ${tab} objects:`, objects, pagination);
@@ -264,12 +299,41 @@ export default function TabbedListView<TObject>({
     setFilter("");
   };
 
+  // narrow both tabs by one more tag or annotation requirement, or by one fewer, from their first pages.
+  const narrowBy = (name: "tag" | "annotation", values: string[], setValues: (values: string[]) => void) => {
+    console.debug(`${loggerPrefix} narrowBy() ${name}=${JSON.stringify(values)}, reloading the first page of each tab`);
+    setPageUrlValues(name, values);
+    setPages(tabRecord(tabKeys, () => 1));
+    setValues(values);
+  };
+  const addTag = (tag: string) => {
+    if (tag && !tags.includes(tag)) narrowBy("tag", [...tags, tag], setTags);
+  };
+  const removeTag = (tag: string) =>
+    narrowBy(
+      "tag",
+      tags.filter((item) => item !== tag),
+      setTags,
+    );
+  const addAnnotation = (requirement: string) => {
+    const trimmed = requirement.trim();
+    if (trimmed && !annotations.includes(trimmed)) narrowBy("annotation", [...annotations, trimmed], setAnnotations);
+  };
+  const removeAnnotation = (requirement: string) =>
+    narrowBy(
+      "annotation",
+      annotations.filter((item) => item !== requirement),
+      setAnnotations,
+    );
+  const filtering: Filtering = { tags, annotations, onTag: addTag, onAnnotation: addAnnotation };
+
   // request the search once typing pauses, from the first page of each tab.
   useEffect(() => {
     const timer = setTimeout(() => {
       const requested = searchInput.trim();
       if (requested === search) return;
       console.debug(`${loggerPrefix} search changed to "${requested}", reloading the first page of each tab`);
+      setPageUrlValues("search", requested ? [requested] : []);
       setPages(tabRecord(tabKeys, () => 1));
       setSearch(requested);
     }, SEARCH_DELAY_MS);
@@ -287,7 +351,7 @@ export default function TabbedListView<TObject>({
       return;
     }
     requeryRef.current = now;
-    tabKeys.forEach((tab) => void loadTab(tab, pages[tab], search, ordering, filter, true));
+    tabKeys.forEach((tab) => void loadTab(tab, pages[tab], search, ordering, narrowing, true));
   };
 
   // whether the component is mounted: the results of a load that finishes after it unmounts are ignored.
@@ -315,12 +379,12 @@ export default function TabbedListView<TObject>({
     }
     tabKeys.forEach((tab) => {
       const page = pages[tab] ?? 1;
-      const params = JSON.stringify([page, search, ordering, filter]);
+      const params = JSON.stringify([page, search, ordering, narrowing]);
       if (requested.current.params[tab] === params) return;
       requested.current.params[tab] = params;
-      void loadTab(tab, page, search, ordering, filter, false, () => mounted.current);
+      void loadTab(tab, page, search, ordering, narrowing, false, () => mounted.current);
     });
-  }, [loadTab, tabKeys, pages, search, ordering, filter]);
+  }, [loadTab, tabKeys, pages, search, ordering, narrowing]);
 
   if (errorMessage) {
     return (
@@ -349,6 +413,7 @@ export default function TabbedListView<TObject>({
   // the filter that applies: the api ignores, and reports as "", a filter that it doesn't offer.
   const appliedFilter = list.pagination ? (list.pagination.filter ?? filter) : filter;
   const filterLabel = tabbedListViewContext.filters?.[appliedFilter] ?? appliedFilter;
+  const annotationError = list.pagination?.annotationError ?? "";
 
   return (
     <div className="pt-5 pb-5 card card-flush h-xl-100">
@@ -368,24 +433,32 @@ export default function TabbedListView<TObject>({
               ></span>
             )}
             {appliedFilter && (
-              <span className="badge badge-light-primary fs-7 fw-semibold d-inline-flex align-items-center gap-2 py-2 ps-3 pe-2">
-                {
-                  // Translators: the label of the filter that narrows a list, e.g. "Pending deployment".
-                  interpolate(gettext("Showing: %(filter)s"), { filter: filterLabel })
-                }
-                <button
-                  type="button"
-                  className="btn btn-icon btn-sm h-20px w-20px btn-active-light-primary"
-                  aria-label={gettext("Show all")}
-                  title={gettext("Show all")}
-                  onClick={clearFilter}
-                >
-                  <i className="ki-outline ki-cross fs-6 text-primary"></i>
-                </button>
-              </span>
+              <FilterChip
+                // Translators: the label of the filter that narrows a list, e.g. "Pending deployment".
+                label={interpolate(gettext("Showing: %(filter)s"), { filter: filterLabel })}
+                removeLabel={gettext("Show all")}
+                onRemove={clearFilter}
+              />
             )}
+            {tags.map((tag) => (
+              <FilterChip
+                key={`tag:${tag}`}
+                // Translators: tag is a resource's tag, e.g. production.
+                label={interpolate(gettext("Tag: %(tag)s"), { tag })}
+                onRemove={() => removeTag(tag)}
+              />
+            ))}
+            {annotations.map((requirement) => (
+              <FilterChip
+                key={`annotation:${requirement}`}
+                // Translators: requirement is an annotation selector's requirement, e.g. acme.com/crm-id=A-1.
+                label={interpolate(gettext("Annotation: %(requirement)s"), { requirement })}
+                onRemove={() => removeAnnotation(requirement)}
+              />
+            ))}
           </div>
-          <div className="d-flex flex-wrap align-items-center gap-3">
+          <div className="d-flex flex-wrap align-items-start gap-3">
+            <AnnotationSelectorBox onAdd={addAnnotation} error={annotationError} />
             <SearchBox
               value={searchInput}
               onChange={setSearchInput}
@@ -416,9 +489,16 @@ export default function TabbedListView<TObject>({
             objects={list.objects}
             onRequery={onRequery}
             sorting={sorting}
+            filtering={filtering}
           />
         ) : (
-          <CardView key={tab.key} sessionContext={sessionContext} objects={list.objects} onRequery={onRequery} />
+          <CardView
+            key={tab.key}
+            sessionContext={sessionContext}
+            objects={list.objects}
+            onRequery={onRequery}
+            filtering={filtering}
+          />
         )}
 
         {list.pagination && list.pagination.count > 0 && (

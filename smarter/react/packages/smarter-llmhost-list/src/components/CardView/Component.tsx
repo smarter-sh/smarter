@@ -29,9 +29,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: LLMHostCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: LLMHostCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -64,8 +64,8 @@ function CardView({ sessionContext, objects, onRequery }: LLMHostCardViewProps) 
                     {renderDetailRow(gettext("Last Updated"), llmhost.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), llmhost.version)}
                     {renderDetailRow(gettext("Description"), llmhost.description)}
-                    {renderDetailRow(gettext("Tags"), llmhost.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), llmhost.annotations, "json")}
+                    <TagsRow tags={llmhost.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={llmhost.annotations} filtering={filtering} />
                     {renderDetailRow(gettext("Ready"), llmhost.ready, "bool")}
                     {renderDetailRow(gettext("RFC 1034 Compliant Name"), llmhost.rfc1034CompliantName)}
                   </tbody>

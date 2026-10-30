@@ -25,9 +25,9 @@ import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "@/components/CardView/styles.css";
-import { gettext } from "@smarter/common";
+import { AnnotationsRow, gettext, TagsRow } from "@smarter/common";
 
-function CardView({ sessionContext, objects, onRequery }: LLMHostComputeCardViewProps) {
+function CardView({ sessionContext, objects, onRequery, filtering }: LLMHostComputeCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
@@ -69,8 +69,8 @@ function CardView({ sessionContext, objects, onRequery }: LLMHostComputeCardView
                     {renderDetailRow(gettext("Created"), compute.createdAt, "dateTime")}
                     {renderDetailRow(gettext("Last Updated"), compute.updatedAt, "dateTime")}
                     {renderDetailRow(gettext("Version"), compute.version)}
-                    {renderDetailRow(gettext("Tags"), compute.tags, "str[]")}
-                    {renderDetailRow(gettext("Annotations"), compute.annotations, "json")}
+                    <TagsRow tags={compute.tags} filtering={filtering} />
+                    <AnnotationsRow annotations={compute.annotations} filtering={filtering} />
                   </tbody>
                 </table>
               </div>

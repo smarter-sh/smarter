@@ -18,7 +18,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, UserProfile, Tags, Annotations } from "@smarter/common";
+import type { SessionContext, Sorting, UserProfile, Tags, Annotations, Filtering } from "@smarter/common";
 
 export type TabKey = "user" | "shared";
 
@@ -100,6 +100,7 @@ export interface LLMToolCardViewProps {
   sessionContext: SessionContext;
   objects: LLMTool[];
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface LLMToolListViewProps {

@@ -20,6 +20,7 @@ const budgetsApiUrl = rootEl.getAttribute("smarter-budgets-api-url") || "";
 const activityApiUrl = rootEl.getAttribute("smarter-activity-api-url") || "";
 const gettingStartedApiUrl = rootEl.getAttribute("smarter-getting-started-api-url") || "";
 const quickActionsApiUrl = rootEl.getAttribute("smarter-quick-actions-api-url") || "";
+const globalSearchApiUrl = rootEl.getAttribute("smarter-global-search-api-url") || "";
 
 const smarterClient = projectName;
 const smarterClientVersion = projectVersion;
@@ -53,6 +54,7 @@ export interface AppContextInterface {
   activityApiUrl: string;
   gettingStartedApiUrl: string;
   quickActionsApiUrl: string;
+  globalSearchApiUrl: string;
 }
 
 const appContext: AppContextInterface = {
@@ -64,6 +66,7 @@ const appContext: AppContextInterface = {
   activityApiUrl,
   gettingStartedApiUrl,
   quickActionsApiUrl,
+  globalSearchApiUrl,
 };
 console.debug(loggerPrefix, "appContext initialized with values:", appContext);
 createRoot(rootEl).render(<App appContext={appContext} />);

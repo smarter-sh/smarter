@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 13:25+0000\n"
+"POT-Creation-Date: 2026-10-30 16:48+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -79,15 +79,7 @@ msgstr "Version"
 msgid "Description"
 msgstr "Description"
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
-msgid "Tags"
-msgstr "Étiquettes"
-
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/Component.tsx, react/packages/smarter-guardrail-list/src/components/CardView/Component.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/Component.tsx, react/packages/smarter-llmhost-list/src/components/CardView/Component.tsx, react/packages/smarter-llmtool-list/src/components/CardView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, react/packages/smarter-provider-list/src/components/CardView/Component.tsx, react/packages/smarter-proxy-list/src/components/CardView/Component.tsx, react/packages/smarter-secret-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/Component.tsx
-msgid "Annotations"
-msgstr "Annotations"
-
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-connection-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-guardrail-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmclient-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmhost-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmtool-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-provider-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-proxy-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-secret-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/renderDetail.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-common/src/components/MetadataChips/Component.tsx, react/packages/smarter-connection-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-custom-domain-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-guardrail-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmclient-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmhost-compute-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmhost-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-llmtool-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-mcpclient-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-orchestrator-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-provider-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-proxy-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-secret-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-vectorsearch-list/src/components/CardView/renderDetail.tsx, react/packages/smarter-vectorstore-list/src/components/CardView/renderDetail.tsx
 msgid "No value"
 msgstr "Aucune valeur"
 
@@ -439,6 +431,36 @@ msgstr "Chargement…"
 msgid "Loading"
 msgstr "Chargement"
 
+#. Translators: used in react/packages/smarter-common/src/components/MetadataChips/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+msgid "Tags"
+msgstr "Étiquettes"
+
+#. Translators: tag is a resource's tag, e.g. production.
+#. Translators: used in react/packages/smarter-common/src/components/MetadataChips/Component.tsx
+msgid "Show only the resources tagged %(tag)s"
+msgstr "Afficher uniquement les ressources avec l’étiquette %(tag)s"
+
+#. Translators: used in react/packages/smarter-common/src/components/MetadataChips/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+msgid "Annotations"
+msgstr "Annotations"
+
+#. Translators: requirement is an annotation's key and value, e.g. acme.com/crm-id=A-1.
+#. Translators: used in react/packages/smarter-common/src/components/MetadataChips/Component.tsx
+msgid "Show only the resources annotated %(requirement)s"
+msgstr "Afficher uniquement les ressources avec l’annotation %(requirement)s"
+
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/AnnotationSelectorBox.tsx
+msgid "Annotation, e.g. acme.com/id=42"
+msgstr "Annotation, p. ex. acme.com/id=42"
+
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/AnnotationSelectorBox.tsx
+msgid "Filter by annotation"
+msgstr "Filtrer par annotation"
+
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/AnnotationSelectorBox.tsx
+msgid "key, !key, key=value or key!=value. Press Enter to add it."
+msgstr "key, !key, key=value ou key!=value. Appuyez sur Entrée pour l’ajouter."
+
 #. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx
 msgid "Refreshing"
 msgstr "Actualisation"
@@ -452,10 +474,25 @@ msgstr "Affichage : %(filter)s"
 msgid "Show all"
 msgstr "Tout afficher"
 
+#. Translators: tag is a resource's tag, e.g. production.
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+msgid "Tag: %(tag)s"
+msgstr "Étiquette : %(tag)s"
+
+#. Translators: requirement is an annotation selector's requirement, e.g. acme.com/crm-id=A-1.
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
+msgid "Annotation: %(requirement)s"
+msgstr "Annotation : %(requirement)s"
+
 #. Translators: objects is the plural of a resource kind's name, e.g. secrets.
 #. Translators: used in react/packages/smarter-common/src/components/TabbedListView/Component.tsx
 msgid "Search %(objects)s"
 msgstr "Rechercher des %(objects)s"
+
+#. Translators: label says what narrows a list, e.g. "Tag: production".
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/FilterChip.tsx
+msgid "Remove %(label)s"
+msgstr "Retirer %(label)s"
 
 #. Translators: used in react/packages/smarter-common/src/components/TabbedListView/PaginationControls.tsx
 msgid "Page number"
@@ -485,7 +522,7 @@ msgstr "sur %(numPages)s"
 msgid "Next page"
 msgstr "Page suivante"
 
-#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/SearchBox.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
+#. Translators: used in react/packages/smarter-common/src/components/TabbedListView/SearchBox.tsx, react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx
 msgid "Search"
 msgstr "Rechercher"
 
@@ -1010,6 +1047,47 @@ msgstr "%(doneCount)s étapes terminées sur %(length)s"
 msgid "to do"
 msgstr "à faire"
 
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, react/packages/smarter-dashboard-user-menu/src/lib/api.ts, react/packages/smarter-welcome/src/App.tsx
+msgid "Request failed: %(status)s"
+msgstr "Échec de la requête : %(status)s"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx
+msgid "Search every resource by name, description, tag or annotation"
+msgstr ""
+"Rechercher dans toutes les ressources par nom, description, étiquette ou "
+"annotation"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx
+msgid "Search every resource"
+msgstr "Rechercher dans toutes les ressources"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx
+msgid ""
+"Type text, tag:production, or an annotation such as acme.com/crm-id=A-10042 "
+"or !acme.com/archived."
+msgstr ""
+"Saisissez du texte, tag:production ou une annotation comme acme.com/crm-"
+"id=A-10042 ou !acme.com/archived."
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx
+msgid "Search failed: %(error)s"
+msgstr "La recherche a échoué : %(error)s"
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx
+msgid "Nothing matches %(query)s."
+msgstr "Aucun résultat pour %(query)s."
+
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx
+msgid "%(count)s resource matches."
+msgid_plural "%(count)s resources match."
+msgstr[0] "%(count)s ressource correspond."
+msgstr[1] "%(count)s ressources correspondent."
+
+#. Translators: list is a list's name, e.g. Guardrails.
+#. Translators: used in react/packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx
+msgid "See all %(count)s in %(list)s"
+msgstr "Voir les %(count)s dans %(list)s"
+
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-guardrail-list/src/App.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Guardrails"
 msgstr "Garde-fous"
@@ -1029,10 +1107,6 @@ msgstr "LLMHosts"
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Extensions"
 msgstr "Extensions"
-
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, react/packages/smarter-dashboard-user-menu/src/lib/api.ts, react/packages/smarter-welcome/src/App.tsx
-msgid "Request failed: %(status)s"
-msgstr "Échec de la requête : %(status)s"
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
 msgid "Unknown error"
@@ -4309,20 +4383,6 @@ msgstr ""
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Last updated"
 msgstr "Dernière mise à jour"
-
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-msgid "User-defined list of search tags for categorizing the llmclient."
-msgstr ""
-"Liste d'étiquettes de recherche définies par l'utilisateur pour classer le "
-"LLMClient."
-
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
-msgid ""
-"User-defined list of key-value pairs for informational or platform "
-"extensibility purposes."
-msgstr ""
-"Liste de paires clé-valeur définies par l'utilisateur, à titre informatif ou "
-"pour l'extensibilité de la plateforme."
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/CardView/Component.tsx
 msgid "Functions"
@@ -9109,6 +9169,18 @@ msgstr "La confirmation du mot de passe est obligatoire"
 #. Translators: used in smarter/static/js/coming-soon.js
 msgid "Added"
 msgstr "Ajouté"
+
+#~ msgid "User-defined list of search tags for categorizing the llmclient."
+#~ msgstr ""
+#~ "Liste d'étiquettes de recherche définies par l'utilisateur pour classer "
+#~ "le LLMClient."
+
+#~ msgid ""
+#~ "User-defined list of key-value pairs for informational or platform "
+#~ "extensibility purposes."
+#~ msgstr ""
+#~ "Liste de paires clé-valeur définies par l'utilisateur, à titre informatif "
+#~ "ou pour l'extensibilité de la plateforme."
 
 #~ msgid "Technical references for prompt engineers and software engineers"
 #~ msgstr ""

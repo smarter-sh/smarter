@@ -13,7 +13,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Orchestrator Definition
@@ -60,6 +60,7 @@ export interface OrchestratorCardViewProps {
   sessionContext: SessionContext;
   objects: Orchestrator[];
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface OrchestratorListViewProps {

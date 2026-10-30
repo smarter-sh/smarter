@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -6,7 +6,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { server } from "@test/server";
 
 import { makeCacheKey, readCache, sessionScope, writeCache } from "../../lib/cache";
-import { API_URL, exampleContext, exampleContextWithOtherTab, sessionContext } from "../../mocks/example";
+import {
+  API_URL,
+  exampleContext,
+  exampleContextWithOtherTab,
+  ownedExamples,
+  sessionContext,
+  sharedExamples,
+} from "../../mocks/example";
 import { examplePage, listErrorHandlers, listHandlers, manyExamples, otherHandler } from "../../mocks/handlers";
 import TabbedListView from "./Component";
 
@@ -394,5 +401,114 @@ describe("TabbedListView", () => {
       await user.type(screen.getByRole("searchbox", { name: "Search" }), "other");
       await vi.waitFor(() => expect(searches).toEqual(["", "other"]));
     });
+  });
+});
+
+describe("TabbedListView narrowing by tags and annotations", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", "/");
+  });
+
+  /** The names of the example rows that the list view shows. */
+  function names() {
+    return rows()
+      .map((row) => row.textContent)
+      .filter((text) => text?.endsWith("_example"));
+  }
+
+  /** The tag and annotation parameters of the list api's requests. */
+  function recordRequests() {
+    const requests: string[] = [];
+    server.use(
+      http.post(`${API_URL}:tab/`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        if (request.url.includes("/owned/")) {
+          requests.push(JSON.stringify([params.getAll("tag"), params.getAll("annotation")]));
+        }
+        return HttpResponse.json(
+          examplePage(request.url.includes("/owned/") ? ownedExamples : sharedExamples, request.url),
+        );
+      }),
+    );
+    return requests;
+  }
+
+  it("narrows by a tag clicked in a card, shows it as a chip, keeps it in the url, and removes it", async () => {
+    const requests = recordRequests();
+    const user = setup();
+    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
+    const first = within(await screen.findByRole("article", { name: "first_example" }));
+
+    await user.click(first.getByRole("button", { name: "red" }));
+    expect(await screen.findByText("Tag: red")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("article", { name: "second_example" })).not.toBeInTheDocument());
+    expect(new URLSearchParams(window.location.search).getAll("tag")).toEqual(["red"]);
+    // the tag that narrows the list shows as pressed.
+    expect(
+      within(screen.getByRole("article", { name: "first_example" })).getByRole("button", { name: "red" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(requests).toContain(JSON.stringify([["red"], []]));
+
+    await user.click(screen.getByRole("button", { name: "Remove Tag: red" }));
+    expect(await screen.findByRole("article", { name: "second_example" })).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+  });
+
+  it("narrows by an annotation clicked in a card", async () => {
+    recordRequests();
+    const user = setup();
+    await user.click(screen.getByRole("button", { name: "Thumbnail View" }));
+    const second = within(await screen.findByRole("article", { name: "second_example" }));
+    await user.click(second.getByRole("button", { name: "example.com/team: b" }));
+    expect(await screen.findByText("Annotation: example.com/team=b")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("article", { name: "first_example" })).not.toBeInTheDocument());
+    expect(new URLSearchParams(window.location.search).getAll("annotation")).toEqual(["example.com/team=b"]);
+  });
+
+  it("opens narrowed by the tags, annotations and search of the page's url", async () => {
+    const requests = recordRequests();
+    window.history.replaceState(null, "", "/examples/?annotation=example.com/team%3Da&tag=red&tag=red&search=first");
+    setup();
+    expect(screen.getByText("Tag: red")).toBeInTheDocument();
+    expect(screen.getByText("Annotation: example.com/team=a")).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Search" })).toHaveValue("first");
+    await waitFor(() => expect(names()).toEqual(["first_example"]));
+    expect(requests[0]).toBe(JSON.stringify([["red"], ["example.com/team=a"]]));
+  });
+
+  it("adds a typed annotation requirement with Enter, and shows why the list api rejects one", async () => {
+    recordRequests();
+    const user = setup();
+    await screen.findByText("first_example");
+    const box = screen.getByRole("textbox", { name: "Filter by annotation" });
+
+    await user.type(box, "example.com/team=a{Enter}");
+    expect(box).toHaveValue("");
+    expect(await screen.findByText("Annotation: example.com/team=a")).toBeInTheDocument();
+    await waitFor(() => expect(names()).toEqual(["first_example"]));
+
+    // a blank requirement, and one that is already applied, add nothing.
+    await user.type(box, "   {Enter}");
+    await user.type(box, "example.com/team=a{Enter}");
+    expect(screen.getAllByText(/^Annotation: /)).toHaveLength(1);
+
+    await user.type(box, "bad key{Enter}");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Annotation key 'bad key' is invalid.");
+    expect(box).toHaveAttribute("aria-invalid", "true");
+
+    await user.click(screen.getByRole("button", { name: "Remove Annotation: bad key" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
+    expect(new URLSearchParams(window.location.search).getAll("annotation")).toEqual(["example.com/team=a"]);
+  });
+
+  it("caches a narrowed page under its own key", async () => {
+    recordRequests();
+    window.history.replaceState(null, "", "/examples/?tag=blue");
+    setup();
+    await waitFor(() => expect(names()).toEqual(["second_example"]));
+    expect(
+      readCache(makeCacheKey(API_URL, "owned", { tags: ["blue"] }, sessionScope(sessionContext)))?.objects,
+    ).toEqual([ownedExamples[1]]);
+    expect(readCache(key("owned"))).toBeNull();
   });
 });
