@@ -1,5 +1,5 @@
 /**
- * Formatting of LLMHostCompute attributes, shared by ListView, CardView and StatusBar.
+ * Formatting of LLMHostCompute attributes, shared by ListView, DetailView and StatusBar.
  */
 import type { LLMHostCompute } from "@/lib/Types";
 import { gettext, interpolate } from "@smarter/common";

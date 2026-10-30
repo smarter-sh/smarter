@@ -9,6 +9,7 @@ Ideally, these extensions are thin and otherwise benign to the original library.
    :maxdepth: 1
    :caption: Technical Reference
 
+   lib/annotation
    lib/django
    lib/drf
    lib/caching

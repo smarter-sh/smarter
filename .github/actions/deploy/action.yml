@@ -155,9 +155,6 @@ inputs:
   smarter-mariadb-backup-password:
     description: "The password of the read-only MariaDB account that the nightly backup dumps the database with. Empty: the backup dumps as root"
     required: false
-  smarter-mariadb-test_database_password:
-    description: "The MariaDB test database password"
-    required: true
   smarter-settings-output:
     description: "True to enable verbose console output of the settings at startup."
     required: true
@@ -489,8 +486,6 @@ runs:
             "SMARTER_MYSQL_PORT": ${{ env.MYSQL_PORT && format('"{0}"', env.MYSQL_PORT) || 'null' }},
             "SMARTER_MYSQL_ROOT_PASSWORD": ${{ env.MYSQL_ROOT_PASSWORD && format('"{0}"', env.MYSQL_ROOT_PASSWORD) || 'null' }},
             "SMARTER_MYSQL_ROOT_USERNAME": ${{ env.MYSQL_ROOT_USERNAME && format('"{0}"', env.MYSQL_ROOT_USERNAME) || 'null' }},
-            "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": ${{ inputs.smarter-mariadb-test_database_password && format('"{0}"', inputs.smarter-mariadb-test_database_password) || 'null' }},
-            "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME": "smarter_test_db",
             "SMARTER_MYSQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }},
             "SMARTER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
             "SMARTER_PLATFORM_SUBDOMAIN": ${{ inputs.platform-subdomain && format('"{0}"', inputs.platform-subdomain) || 'null' }},

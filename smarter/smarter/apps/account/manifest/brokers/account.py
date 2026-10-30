@@ -567,7 +567,7 @@ class SAMAccountBroker(AbstractBroker):
             description="An example Smarter API manifest for an Account",
             version="0.1.0",
             tags=["example"],
-            annotations=[],
+            annotations={},
             accountNumber="123456789",
         )
         spec = SAMAccountSpec(
@@ -653,6 +653,7 @@ class SAMAccountBroker(AbstractBroker):
         accounts = Account.objects.all()
         if name:
             accounts = accounts.filter(name=name)
+        accounts = self.filter_by_annotation_selector(accounts, kwargs)
 
         for account in accounts.order_by("name")[:MAX_RESULTS]:
             try:

@@ -242,7 +242,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         )
 
         def sort_annotations(annotations):
-            return sorted(annotations, key=lambda d: sorted(d.items()))
+            return dict(sorted((annotations or {}).items()))
 
         manifest_metadata_annotations = json.dumps(sort_annotations(manifest.metadata.annotations) or {})
         logger.debug("manifest_metadata_annotations=%s", manifest_metadata_annotations)

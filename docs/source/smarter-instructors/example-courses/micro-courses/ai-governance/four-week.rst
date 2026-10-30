@@ -91,7 +91,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4
      - **Instructions versus controls.** Prompt injection and jailbreaks, demonstrated against a
-       system prompt and against a :doc:`Guardrail </smarter-resources/smarter-guardrail>`.
+       system prompt and against a :doc:`Guardrail </smarter-resources/smarter-guardrail>`, using
+       "Lab 1: Talk to Sam" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__.
    * - 2
      - Lecture 5
      - **The guardrail toolbox.** Stages, strategies, modes and actions, and the built-in
@@ -100,7 +102,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 6
      - **Measuring controls.** False positives and false negatives, monitor mode before enforce
        mode (a monitored guardrail records what it would have done), and choosing thresholds
-       from the severity and confidence of guardrail events.
+       from the severity and confidence of guardrail events. Pre-reading: "Shadow mode and audit"
+       in `the guardrails case study <https://smarter.sh/case-studies/guardrails>`__, with its lab
+       "Shadow mode", and its discussion question on ``failClosed`` and the outage it accepts.
    * - 2
      - Live session 2
      - Review of Assignment 1. Red team exercise against a classmate's assistant. Start
@@ -108,7 +112,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 7
      - **Money.** :doc:`Budgets </smarter-resources/smarter-budget>` and
-       :doc:`cost accounting </smarter-platform/cost-accounting>` as controls.
+       :doc:`cost accounting </smarter-platform/cost-accounting>` as controls. Pre-reading:
+       "Governing it with git" in the case study `Stackademy Online Coding Academy
+       <https://smarter.sh/case-studies/stackademy>`__, on history, review and undo for an
+       assistant's manifests, and on why only a platform administrator may apply a Budget.
    * - 3
      - Lecture 8
      - **Access and data.** Accounts, roles, API keys, :doc:`Secrets

@@ -110,6 +110,11 @@ class VectorstoreApiVectorstore(AccountApiModel):
     document_count: int = Field(..., ge=0, description="The number of its documents.")
     snapshot_count: int = Field(..., ge=0, description="The number of its snapshots.")
     manifest_url: str = Field(..., description="The url of the vectorstore's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the vectorstore's detail in the web console: its manifest, the resources that it "
+        "uses, and those that use it.",
+    )
     spec: dict[str, JsonValue] = Field(..., description="The manifest's spec, as it was applied. See SAMVectorstore.")
     backend: VectorstoreApiBackend = Field(..., description="The vector database.")
     hosting: VectorstoreApiHosting = Field(..., description="Who runs the database: the platform, or the vendor.")
@@ -144,6 +149,7 @@ class VectorstoreApiVectorstore(AccountApiModel):
         # pylint: disable=import-outside-toplevel
         from django.urls import reverse
 
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
             MANIFEST_KIND as VECTORSTORE_KIND,
         )
@@ -170,6 +176,7 @@ class VectorstoreApiVectorstore(AccountApiModel):
                 f"{VectorstoreReverseNames.namespace}:{VectorstoreReverseNames.detailview}",
                 kwargs={"hashed_id": vectorstore.hashed_id},
             ),
+            detail_url=resource_detail_url(VECTORSTORE_KIND, vectorstore.record_locator),
             spec=vectorstore.spec,
             backend=vectorstore.backend,  # type: ignore[arg-type]
             hosting=vectorstore.hosting,  # type: ignore[arg-type]

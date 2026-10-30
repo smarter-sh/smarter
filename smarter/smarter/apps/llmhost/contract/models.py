@@ -100,6 +100,11 @@ class LLMHostApiLLMHost(AccountApiModel):
     user_profile: AccountApiUserProfile = Field(..., description="The LLMHost's owner.")
     can_delete: bool = Field(..., description="Whether the requesting user may delete the LLMHost now.")
     manifest_url: str = Field(..., description="The url of the LLMHost's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the LLMHost's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
     spec: dict[str, JsonValue] = Field(..., description="The manifest's spec, as it was applied. See SAMLLMHost.")
     model_source: LLMHostApiModelSource = Field(..., description="Where the model's weights come from.")
     model_repository: str = Field(..., description="The model, e.g. meta-llama/Llama-3.1-8B-Instruct.")
@@ -153,6 +158,7 @@ class LLMHostApiLLMHost(AccountApiModel):
         # pylint: disable=import-outside-toplevel
         from django.urls import reverse
 
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.llmhost.manifest.models.llmhost.const import (
             MANIFEST_KIND as LLMHOST_KIND,
         )
@@ -167,6 +173,7 @@ class LLMHostApiLLMHost(AccountApiModel):
                 f"{LLMHostReverseNames.namespace}:{LLMHostReverseNames.detailview}",
                 kwargs={"hashed_id": llmhost.hashed_id},
             ),
+            "detail_url": resource_detail_url(LLMHOST_KIND, llmhost.record_locator),
             "api_key_secret": llmhost.api_key_secret_id,  # type: ignore[attr-defined]
             "compute": llmhost.compute_id,  # type: ignore[attr-defined]
             "cost_per_hour": money(llmhost.cost_per_hour, llmhost._meta.get_field("cost_per_hour").decimal_places),

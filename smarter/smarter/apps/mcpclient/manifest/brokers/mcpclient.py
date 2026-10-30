@@ -254,7 +254,7 @@ class SAMMCPClientBroker(AbstractBroker):
             description=mcpclient.description,
             version=mcpclient.version,
             tags=mcpclient.tags_list,
-            annotations=mcpclient.annotations if isinstance(mcpclient.annotations, list) else [],
+            annotations=mcpclient.annotations,
         )
         spec = SAMMCPClientSpec(config=SAMMCPClientSpecConfig(**config_data))
         status = SAMMCPClientStatus(
@@ -340,7 +340,7 @@ class SAMMCPClientBroker(AbstractBroker):
             description="An example MCPClient, for GitHub's MCP server. It offers the LLM the server's read-only tools.",
             version="1.0.0",
             tags=["example", "github"],
-            annotations=[{"smarter.sh/mcpclient/documentation": "https://github.com/github/github-mcp-server"}],
+            annotations={"smarter.sh/mcpclient/documentation": "https://github.com/github/github-mcp-server"},
         )
         config = SAMMCPClientSpecConfig(
             transport=SAMMCPClientTransport.HTTP.value,
@@ -385,6 +385,7 @@ class SAMMCPClientBroker(AbstractBroker):
         mcpclients = MCPClient.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
             mcpclients = mcpclients.filter(name=name)
+        mcpclients = self.filter_by_annotation_selector(mcpclients, kwargs)
         mcpclients = mcpclients.order_by("name")[:MAX_RESULTS]
 
         for mcpclient in mcpclients:

@@ -106,11 +106,16 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Scaling.** Requests, limits, probes and the Horizontal Pod Autoscaler.
    * - 3
      - Lecture 8
-     - **Networking.** Services, Ingress, cluster DNS, and certificates.
+     - **Networking.** Services, Ingress, cluster DNS, and certificates. Students then run "Read
+       the chatbot's certificate" and "Knock on the door with a made-up host", from "Lab 2:
+       Inspect it" in the case study `What Happens When You Click Deploy
+       <https://smarter.sh/case-studies/deploy>`__, against a live chatbot.
    * - 3
      - Lecture 9
      - **Network policies.** Default deny, allow rules, and blocking the metadata address, read
-       against the Calico policies in ``smarter-infrastructure``'s ``network_policy.tf``.
+       against the Calico policies in ``smarter-infrastructure``'s ``network_policy.tf``, and
+       against "URLs a model chooses" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__, the same defense in the application.
    * - 3
      - Live session 3
      - Review of Assignment 2. Load testing and autoscaling, live. Capstone proposals discussed.
@@ -252,7 +257,9 @@ Assignment 4: How Smarter Drives Kubernetes
 
 Students read the Kubernetes parts of ``smarter/smarter/apps/infrastructure/`` and the LLMClient
 deployment code, and explain which objects Smarter creates when an LLMClient is deployed, what
-permissions it needs, and how its tests avoid touching a real cluster.
+permissions it needs, and how its tests avoid touching a real cluster. Required reading: "Waiting
+without blocking" and "Keeping the cloud out of tests" in `the deploy case study
+<https://smarter.sh/case-studies/deploy>`__.
 
 **Turn in:** a two-page explanation with a diagram and code references.
 

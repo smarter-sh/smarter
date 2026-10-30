@@ -48,6 +48,7 @@ class ConnectionListApiView(SmarterListApiView):
     model = ConnectionBase
     serializer_class = ConnectionSerializer
     listview_cache_kind = "Connection"
+    listview_label = "Connections"
 
 
 class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):

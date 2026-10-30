@@ -7,10 +7,11 @@ LLMClient's prompt api receives Server-Sent Events (SSE) while the prompt runs, 
 same JSON that a non-streaming client receives. See
 :class:`smarter.apps.llmclient.api.v1.views.base.LLMClientApiBaseViewSet`.
 
-The prompt itself runs synchronously, in a worker thread, exactly as it does for a non-streaming
-client. Its progress comes from the signals that the prompt already sends (``chat_request``,
-``llm_tool_requested``, ``chat_plugin_called``, ``mcpclient_tool_called``, ...). The receivers in
-this module forward them to the sink of the prompt that sent them, which is held in a
+The prompt itself runs synchronously, exactly as it does for a non-streaming client, in a thread
+of the prompts' own pool, :func:`prompt_executor`. Its progress comes from the signals that the
+prompt already sends (``chat_request``, ``llm_tool_requested``, ``chat_plugin_called``,
+``mcpclient_tool_called``, ...). The receivers in this module forward them to the sink of the
+prompt that sent them, which is held in a
 :class:`contextvars.ContextVar`, so that concurrent prompts never see each other's events.
 
 SSE payload format
@@ -25,6 +26,8 @@ SSE payload format
 import asyncio
 import contextvars
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Generator, Optional
@@ -39,6 +42,7 @@ from smarter.apps.mcpclient.signals import (
     mcpclient_tool_failed,
     mcpclient_tool_responded,
 )
+from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.connections import close_thread_connections
 from smarter.lib.logging.redis_log_handler import bind_log_context
@@ -60,6 +64,43 @@ logger = logging.getLogger(__name__)
 EVENT_STREAM_CONTENT_TYPE = "text/event-stream"
 KEEPALIVE_SECONDS = 15.0
 MAX_ARGUMENTS_LENGTH = 500
+
+PROMPT_THREAD_NAME_PREFIX = "smarter-prompt"
+
+_prompt_executor: Optional[ThreadPoolExecutor] = None
+_prompt_executor_lock = threading.Lock()
+
+
+def prompt_executor() -> ThreadPoolExecutor:
+    """
+    Return the thread pool that runs this process's streamed prompts, creating it on first use.
+
+    Prompts don't run in the event loop's default executor, whose size is ``min(32, CPUs + 4)``,
+    6 threads on a 2-vCPU node. A prompt holds its thread for as long as it runs, waiting on the LLM
+    and its tools, so a handful of concurrent prompts filled it, and queued everything else that
+    uses it: Django's error pages, which ``sync_to_async(..., thread_sensitive=False)`` renders
+    there, and asyncio's host name lookups. Sharing its threads also shared their database
+    connections: a connection that an error page left open was reused by the next prompt in the
+    same thread, hours later, after MariaDB had closed it (see
+    :mod:`smarter.lib.django.http.error_handlers`).
+
+    The pool has ``smarter_settings.prompt_threads`` threads, named ``smarter-prompt-<n>``. It is
+    created on first use, so that a process that never streams a prompt, e.g. a Celery worker or a
+    management command, never starts it.
+
+    :returns: The process's prompt thread pool.
+    :rtype: concurrent.futures.ThreadPoolExecutor
+    """
+    global _prompt_executor  # pylint: disable=global-statement
+
+    if _prompt_executor is None:
+        with _prompt_executor_lock:
+            if _prompt_executor is None:
+                _prompt_executor = ThreadPoolExecutor(
+                    max_workers=smarter_settings.prompt_threads, thread_name_prefix=PROMPT_THREAD_NAME_PREFIX
+                )
+    return _prompt_executor
+
 
 ProgressSink = Callable[[SmarterDictType], None]
 _progress_sink: contextvars.ContextVar[Optional[ProgressSink]] = contextvars.ContextVar(
@@ -281,7 +322,7 @@ async def prompt_event_stream(
     complete: Callable[[], HttpResponse], on_error: Callable[[Exception], HttpResponse]
 ) -> AsyncIterator[str]:
     """
-    Run a prompt in a worker thread, and yield its progress, then its result, as SSE frames.
+    Run a prompt in a thread of :func:`prompt_executor`, and yield its progress, then its result, as SSE frames.
 
     :param complete: Runs the prompt synchronously, and returns the prompt api's JSON response.
     :type complete: Callable[[], django.http.HttpResponse]
@@ -311,7 +352,7 @@ async def prompt_event_stream(
             close_thread_connections()
 
     yield "retry: 3000\n\n"
-    task = asyncio.ensure_future(sync_to_async(run, thread_sensitive=False)())
+    task = asyncio.ensure_future(sync_to_async(run, thread_sensitive=False, executor=prompt_executor())())
     try:
         while not task.done() or not queue.empty():
             getter = asyncio.ensure_future(queue.get())
@@ -362,10 +403,12 @@ def prompt_event_stream_response(
 
 
 __all__ = [
+    "PROMPT_THREAD_NAME_PREFIX",
     "PromptProgressEvents",
     "emit",
     "progress_sink",
     "prompt_event_stream",
+    "prompt_executor",
     "prompt_event_stream_response",
     "wants_event_stream",
 ]

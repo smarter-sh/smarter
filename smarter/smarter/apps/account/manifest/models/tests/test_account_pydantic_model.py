@@ -6,6 +6,7 @@ import os
 from pydantic_core import ValidationError
 
 from smarter.apps.account.manifest.models.account.model import SAMAccount
+from smarter.apps.account.manifest.models.account.spec import SAMAccountSpecConfig
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib import json
 from smarter.lib.manifest.loader import SAMLoader
@@ -14,9 +15,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestSmarterAccountPydanticModel(TestAccountMixin):
-    """
-    Test the Smarter SAMAccount Pydantic Model.
-    """
+    """Test the Smarter SAMAccount Pydantic Model."""
 
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)
@@ -48,20 +47,23 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
                 "name": "example_account",
                 "version": "1.0.0",
                 "tags": ["production", "backend", "mcdaniel"],
-                "annotations": [
-                    "smarter.sh/created-by: mcdaniel",
-                    "smarter.sh/project: smarter-sh",
-                ],
+                "annotations": {
+                    "smarter.sh/created-by": "mcdaniel",
+                    "smarter.sh/project": "smarter-sh",
+                },
             },
             "spec": {"config": self.get_good_config_data()},
         }
 
     def test_config_missing_required_fields(self):
-        """Test missing required fields in spec.config."""
+        """Test that a missing required field of spec.config is rejected, and a missing optional one isn't."""
         for field in self.get_good_config_data():
             bad = self.get_good_manifest_data()
             del bad["spec"]["config"][field]
-            with self.assertRaises(ValidationError, msg=f"Missing field: {field}"):
+            if SAMAccountSpecConfig.model_fields[field].is_required():
+                with self.assertRaises(ValidationError, msg=f"Missing field: {field}"):
+                    SAMAccount(**bad)
+            else:
                 SAMAccount(**bad)
 
     def test_config_invalid_field_types(self):
@@ -92,9 +94,7 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
             pass  # If model is strict, this is expected
 
     def test_manifest_initalization_good(self):
-        """
-        Test the manifest initialization with a good manifest file.
-        """
+        """Test the manifest initialization with a good manifest file."""
 
         filespec = self.get_data_full_filepath("account-good.yaml")
         loader = SAMLoader(file_path=filespec)

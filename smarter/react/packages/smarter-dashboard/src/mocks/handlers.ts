@@ -10,6 +10,8 @@ import {
   budgetSeries,
   budgets,
   gettingStarted,
+  globalSearchErrorResponse,
+  globalSearchResponse,
   myResources,
   quickActions,
   serviceHealth,
@@ -23,6 +25,13 @@ export const gettingStartedHandler = http.post(appContext.gettingStartedApiUrl, 
   HttpResponse.json(gettingStarted),
 );
 export const activityHandler = http.post(appContext.activityApiUrl, () => HttpResponse.json(activity));
+/** Answers "Bad Key=x" with its error, any query that has no "production" with no results, and others with two lists. */
+export const globalSearchHandler = http.post(appContext.globalSearchApiUrl, async ({ request }) => {
+  const { query } = (await request.json()) as { query: string };
+  if (query.includes("=")) return HttpResponse.json({ ...globalSearchErrorResponse, query });
+  if (!query.includes("production")) return HttpResponse.json({ ...globalSearchResponse, query, count: 0, groups: [] });
+  return HttpResponse.json(globalSearchResponse);
+});
 export const chargesHandler = http.post(appContext.chargesApiUrl, () => HttpResponse.json(tokenUsage));
 export const budgetsHandlers = [
   http.post(appContext.budgetsApiUrl, () => HttpResponse.json(budgets)),
@@ -34,6 +43,7 @@ export const dashboardHandlers = [
   myResourcesHandler,
   serviceHealthHandler,
   quickActionsHandler,
+  globalSearchHandler,
   gettingStartedHandler,
   activityHandler,
   chargesHandler,

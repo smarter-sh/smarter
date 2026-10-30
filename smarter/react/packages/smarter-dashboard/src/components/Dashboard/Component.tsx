@@ -1,8 +1,8 @@
 /**
  * Dashboard root layout component.
  *
- * This component composes the main dashboard view by arranging budget alerts,
- * resource, service health, quick action, extensions, onboarding, activity,
+ * This component composes the main dashboard view by arranging budget alerts, the
+ * global search, resource, service health, quick action, extensions, onboarding, activity,
  * usage and budget widgets into responsive Bootstrap grid sections, followed
  * by the static informational widgets: new features, instructor resources,
  * SDKs, integrations, the CLI, the VS Code extension, the MCP server, hosting
@@ -41,6 +41,7 @@ import "@/components/Dashboard/styles.css";
 import MyResources from "@/components/MyResources/Component";
 import ServiceHealth from "@/components/ServiceHealth/Component";
 import QuickActions from "@/components/QuickActions/Component";
+import GlobalSearch from "@/components/GlobalSearch/Component";
 import GettingStarted from "@/components/GettingStarted/Component";
 import RecentActivity from "@/components/RecentActivity/Component";
 import BudgetAlerts from "@/components/BudgetAlerts/Component";
@@ -67,6 +68,12 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
         <div id="kt_app_content_container" className="app-container container-xxl">
           {appContext.budgetsApiUrl && (
             <BudgetAlerts sessionContext={appContext.sessionContext} apiUrl={appContext.budgetsApiUrl} />
+          )}
+
+          {appContext.globalSearchApiUrl && (
+            <div className="row g-5 g-xl-10 mt-3">
+              <GlobalSearch sessionContext={appContext.sessionContext} apiUrl={appContext.globalSearchApiUrl} />
+            </div>
           )}
 
           <div className="row g-5 g-xl-10 mt-3">

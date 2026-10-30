@@ -252,10 +252,10 @@ class SAMProviderBroker(AbstractBroker):
             description=self.provider.description,
             version="1.0.0",
             tags=["example", "provider", "smarter-api"],
-            annotations=[
-                {"smarter.sh/provider": self.provider.name},
-                {"smarter.sh/created_by": "smarter_provider_broker"},
-            ],
+            annotations={
+                "smarter.sh/provider": self.provider.name,
+                "smarter.sh/created_by": "smarter_provider_broker",
+            },
         )
         spec_provider = SAMProviderSpecProvider(
             name=self.provider.name,
@@ -445,10 +445,10 @@ class SAMProviderBroker(AbstractBroker):
             description="an example provider manifest for the Smarter API Provider",
             version="1.0.0",
             tags=["example", "provider", "smarter-api"],
-            annotations=[
-                {"smarter.sh/provider": "example_provider"},
-                {"smarter.sh/created_by": "smarter_provider_broker"},
-            ],
+            annotations={
+                "smarter.sh/provider": "example_provider",
+                "smarter.sh/created_by": "smarter_provider_broker",
+            },
         )
         spec_provider = SAMProviderSpecProvider(
             name="acme_llm_company",
@@ -534,7 +534,7 @@ class SAMProviderBroker(AbstractBroker):
             providers = Provider.objects.filter(user_profile__account=self.account, name=name)
         else:
             providers = Provider.objects.filter(user_profile__account=self.account)
-        providers = [*providers]
+        providers = [*self.filter_by_annotation_selector(providers, kwargs)]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for provider in providers:

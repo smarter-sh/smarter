@@ -50,6 +50,11 @@ class ProviderApiProvider(AccountApiModel):
     annotations: MetaDataApiAnnotations = Field(None, description="MetaDataModel.annotations.")
     tags: list[str] = Field(default_factory=list, description="MetaDataModel.tags, by name.")
     manifest_url: Optional[str] = Field(None, description="The url of the Provider's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the Provider's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
     ready: bool = Field(..., description="Whether the Provider can be used.")
     is_default: bool
     is_active: bool
@@ -92,6 +97,7 @@ class ProviderApiProvider(AccountApiModel):
         :rtype: ProviderApiProvider
         """
         # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.provider.manifest.models.provider.const import (
             MANIFEST_KIND as PROVIDER_KIND,
         )
@@ -108,6 +114,7 @@ class ProviderApiProvider(AccountApiModel):
             annotations=provider.annotations,
             tags=[tag.name for tag in provider.tags.all()],
             manifest_url=provider.manifest_url,
+            detail_url=resource_detail_url(PROVIDER_KIND, provider.record_locator),
             ready=provider.ready,
             is_default=provider.is_default,
             is_active=provider.is_active,

@@ -2,14 +2,10 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "SqlPlugin",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/created_by": "smarter_sql_plugin_broker"
-      },
-      {
-        "smarter.sh/plugin": "sql_example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/created_by": "smarter_sql_plugin_broker",
+      "smarter.sh/plugin": "sql_example"
+    },
     "description": "Get additional information about courses available at Stackademy.",
     "name": "sql_example",
     "pluginClass": "sql",

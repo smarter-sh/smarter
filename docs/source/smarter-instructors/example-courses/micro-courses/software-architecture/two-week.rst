@@ -109,10 +109,14 @@ The file references in the lectures are listed in full under `Principles in the 
      - **Zero trust and evolution.** Every API call authenticated, every query filtered by owner,
        secrets encrypted, network policies, server-side request forgery blocked, and the model
        treated as untrusted. Then technical debt, API versioning
-       (:doc:`ADR 023 </adr/023-api-versioning>`), feature flags
-       (:doc:`ADR 022 </adr/022-feature-flags>`), fitness functions in CI, and architecture when
-       coding agents write much of the code and the conventions live in ``CLAUDE.md`` and
-       ``skills/``.
+       (:doc:`ADR 023 </adr/023-api-versioning>`, and "Breaking changes and versions" in the case
+       study `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__),
+       feature flags (:doc:`ADR 022 </adr/022-feature-flags>`), fitness functions in CI, and
+       architecture when coding agents write much of the code and the conventions live in
+       ``CLAUDE.md`` and ``skills/``. Pre-reading: "Five success factors", "The antipattern" and
+       "Fixing it" in the case study `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__, and its question on why skills are
+       read far more often than ADRs.
    * - 2
      - Live session 2 (90 min)
      - Capstone presentations (about 5 minutes each, with 2 minutes of questions).

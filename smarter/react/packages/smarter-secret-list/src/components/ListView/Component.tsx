@@ -111,7 +111,8 @@ const SecretRow = React.memo(function SecretRow({
     <tr className="" key={secret.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={secret.manifestUrl}>{secret.name}</a>
+        {/* the row opens the secret's detail: see TabbedListView. */}
+        <span className="fw-semibold text-gray-900">{secret.name}</span>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">

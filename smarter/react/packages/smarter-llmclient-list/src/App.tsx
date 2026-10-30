@@ -6,9 +6,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 import { useOnboarding, type OnboardingContext } from "@smarter/onboarding";
-import type { LLMClient, LLMClientListViewProps, LLMClientCardViewProps } from "@/lib/Types";
+import type { LLMClient, LLMClientListViewProps, LLMClientDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 import WeatherHint from "@/components/WeatherHint";
 
 const tabs: Tabs = [
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to LLMClient,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type ProviderTabbedViewContext = Omit<TabbedViewContext<LLMClient>, "ListView" | "CardView"> & {
+export type ProviderTabbedViewContext = Omit<TabbedViewContext<LLMClient>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<LLMClientListViewProps>;
-  CardView: React.ComponentType<LLMClientCardViewProps>;
+  DetailView: React.ComponentType<LLMClientDetailViewProps>;
 };
 
 const providerTabbedListViewContext: ProviderTabbedViewContext = {
@@ -32,7 +32,7 @@ const providerTabbedListViewContext: ProviderTabbedViewContext = {
   // the list api's named filters, e.g. ?filter=pending from the dashboard's pending deployments link.
   filters: { pending: gettext("Pending deployment") },
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

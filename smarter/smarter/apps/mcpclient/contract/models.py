@@ -77,6 +77,11 @@ class MCPClientApiMCPClient(AccountApiModel):
         None, description="The name of the Secret that holds the credential, never its value."
     )
     manifest_url: str = Field(..., description="The url of the MCPClient's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the MCPClient's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
     ready: bool = Field(..., description="Whether the MCPClient is configured completely.")
     rfc1034_compliant_name: Optional[str] = Field(None, description="The name, as a DNS label.")
     transport: Optional[MCPClientApiTransport] = Field(None, description="The MCP transport.")
@@ -115,6 +120,7 @@ class MCPClientApiMCPClient(AccountApiModel):
         # pylint: disable=import-outside-toplevel
         from django.urls import reverse
 
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
             MANIFEST_KIND as MCPCLIENT_KIND,
         )
@@ -133,6 +139,7 @@ class MCPClientApiMCPClient(AccountApiModel):
             user_profile=AccountApiUserProfile.from_model(mcpclient.user_profile),
             can_delete=user_can_delete(mcpclient, MCPCLIENT_KIND, user),
             credentials=mcpclient.credentials.name if mcpclient.credentials else None,
+            detail_url=resource_detail_url(MCPCLIENT_KIND, mcpclient.record_locator),
             manifest_url=reverse(
                 f"{MCPClientReverseNames.namespace}:{MCPClientReverseNames.detailview}",
                 kwargs={"hashed_id": mcpclient.hashed_id},

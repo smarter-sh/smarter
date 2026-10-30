@@ -81,7 +81,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lecture 2: Authentication and errors.** API keys, tokens and sessions; Smarter's
        :doc:`authentication </smarter-framework/smarter-api/authentication>` and its
        :doc:`error format </smarter-framework/smarter-api/error-handling>`. Problem details
-       (RFC 9457), and what a client needs from an error.
+       (RFC 9457), and what a client needs from an error. The section "API keys: stored as
+       digests, named by a UUID" of the case study `One Platform, Many Tenants
+       <https://smarter.sh/case-studies/multi-tenancy>`__ explains why an API key is hashed
+       differently from a password, and where a key can still leak.
    * - 4
      - 45
      - **Lab 2: Make it fail.** Trigger at least five different errors (bad key, missing resource,
@@ -109,7 +112,11 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 5: Evolving an API.** Versioning strategies (path, header, media type),
        deprecation, breaking and non-breaking changes, and Smarter's
-       :doc:`ADR 023 on API versioning </adr/023-api-versioning>`.
+       :doc:`ADR 023 on API versioning </adr/023-api-versioning>`. Pre-reading: "A change, end to
+       end" and "Breaking changes, and versions" in the case study `One Contract, Five Clients
+       <https://smarter.sh/case-studies/api-contract>`__, which follow one changed field to a
+       failing test in a client; its discussion question on versioning by path or by header
+       opens the lecture.
    * - 9
      - 45
      - **Lab 4: Style guide review.** In groups, review part of Smarter's API against Google's or

@@ -37,4 +37,9 @@
   on models, harnesses, agents and environments, and where Smarter fits; `Django and AWS: Keeping
   the Cloud Out of Reach of Application Code and Tests
   <https://blog.smarter.sh/2026/09/03/cloud-out-of-reach-of-tests/>`__, on the service layer and
-  guard that keep AWS and Kubernetes out of the tests.
+  guard that keep AWS and Kubernetes out of the tests. The case studies `Converge or Diverge: AI
+  Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on the series itself, `One
+  Platform, Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__, on the ownership
+  subsystem every resource inherits, and `What Happens When You Click Deploy
+  <https://smarter.sh/case-studies/deploy>`__, on the irreversible steps behind a deployment, turn
+  these posts into lessons with labs and discussion questions.
