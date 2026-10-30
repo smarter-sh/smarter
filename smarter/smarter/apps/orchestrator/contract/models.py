@@ -44,6 +44,11 @@ class OrchestratorApiOrchestrator(AccountApiModel):
         description="Whether the requesting user may delete the Orchestrator now: they own it, and nothing uses it.",
     )
     manifest_url: str = Field(..., description="The url of the Orchestrator's manifest in the web console.")
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the Orchestrator's detail in the web console: its manifest, the resources that it "
+        "uses, and those that use it.",
+    )
     strategy: OrchestratorApiStrategy = Field(..., description="Orchestrator.strategy: how its LLMClients collaborate.")
     max_iterations: int = Field(..., ge=0, description="Orchestrator.max_iterations.")
     is_active: bool = Field(..., description="Orchestrator.is_active.")
@@ -62,6 +67,7 @@ class OrchestratorApiOrchestrator(AccountApiModel):
         :rtype: OrchestratorApiOrchestrator
         """
         # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.orchestrator.manifest.models.orchestrator.const import (
             MANIFEST_KIND,
         )
@@ -80,6 +86,7 @@ class OrchestratorApiOrchestrator(AccountApiModel):
             user_profile=AccountApiUserProfile.from_model(row.user_profile),
             can_delete=user_can_delete(row, MANIFEST_KIND, user),
             manifest_url=OrchestratorSerializer().get_manifest_url(row),
+            detail_url=resource_detail_url(MANIFEST_KIND, row.record_locator),
             strategy=row.strategy,  # type: ignore[arg-type]
             max_iterations=row.max_iterations,
             is_active=row.is_active,

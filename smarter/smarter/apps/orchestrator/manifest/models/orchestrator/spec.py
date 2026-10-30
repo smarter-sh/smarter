@@ -25,9 +25,17 @@ class SAMOrchestratorHarnessConfig(BaseModel):
     """
 
     llmClientName: str = Field(description="Name of an existing LLMClient to attach as a Harness.")
-    role: HarnessRole = HarnessRole.EXECUTOR
+    role: HarnessRole = Field(
+        default=HarnessRole.EXECUTOR,
+        description=(
+            "The part this LLMClient plays in the Orchestrator: planner, executor, critic, router, summarizer "
+            "or tool_caller. The supervisor strategy needs a planner, and the router strategy a router."
+        ),
+    )
     executionOrder: int = Field(default=0, ge=0, description="Relative ordering for sequential/supervisor strategies.")
-    isActive: bool = True
+    isActive: bool = Field(
+        default=True, description="Whether this LLMClient's membership in the Orchestrator is active."
+    )
     config: SmarterDictType = Field(
         default_factory=dict,
         description="Per-membership overrides (e.g. temperature, system prompt fragment, tool allowlist).",
@@ -45,9 +53,16 @@ class SAMOrchestratorSpecConfig(BaseModel):
     model instance and its OrchestratorHarness memberships.
     """
 
-    strategy: OrchestrationStrategy = OrchestrationStrategy.SEQUENTIAL
+    strategy: OrchestrationStrategy = Field(
+        default=OrchestrationStrategy.SEQUENTIAL,
+        description=(
+            "How the Orchestrator coordinates its LLMClients: sequential, parallel, supervisor, router, voting or "
+            "debate. Supervisor needs a harness with role planner, router one with role router, and voting and "
+            "debate at least two harnesses."
+        ),
+    )
     maxIterations: int = Field(default=10, ge=1, description="Upper bound on orchestration loop iterations.")
-    isActive: bool = True
+    isActive: bool = Field(default=True, description="Whether the Orchestrator is active.")
     harnesses: list[SAMOrchestratorHarnessConfig] = Field(
         ...,
         min_length=1,

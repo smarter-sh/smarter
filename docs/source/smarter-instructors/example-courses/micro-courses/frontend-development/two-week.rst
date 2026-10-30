@@ -269,7 +269,9 @@ and design a responsive, accessible page around it.
 
 Students build a small Vite and React website for a fictional business or club, with at least
 three pages and an "Ask us" page that embeds a deployed LLMClient with ``@smarter.sh/ui-chat``,
-styled to match.
+styled to match. "Lab 3: allowedOrigins" in the case study `One Platform, Many Tenants
+<https://smarter.sh/case-studies/multi-tenancy>`__ shows how to let the site's origin call the
+chatbot.
 
 **What students turn in:**
 

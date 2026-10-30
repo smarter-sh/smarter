@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Secret, SecretListViewProps, SecretCardViewProps } from "@/lib/Types";
+import type { Secret, SecretListViewProps, SecretDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Secrets") },
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to Secret,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type SecretTabbedViewContext = Omit<TabbedViewContext<Secret>, "ListView" | "CardView"> & {
+export type SecretTabbedViewContext = Omit<TabbedViewContext<Secret>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<SecretListViewProps>;
-  CardView: React.ComponentType<SecretCardViewProps>;
+  DetailView: React.ComponentType<SecretDetailViewProps>;
 };
 
 const secretTabbedListViewContext: SecretTabbedViewContext = {
@@ -30,7 +30,7 @@ const secretTabbedListViewContext: SecretTabbedViewContext = {
   objectTypeName: "secret",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

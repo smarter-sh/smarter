@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "CustomDomain",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/custom-domain/purpose": "example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/custom-domain/purpose": "example"
+    },
     "description": "Serves the company's LLMClients from llmclients.example.com.",
     "name": "example_custom_domain",
     "tags": [

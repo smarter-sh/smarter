@@ -12,7 +12,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Sorting, Annotations, Tags, UserProfile } from "@smarter/common";
+import type { SessionContext, Sorting, Annotations, Tags, UserProfile, Filtering } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Proxy Definition
@@ -30,6 +30,8 @@ export type Proxy = {
   userProfile: UserProfile;
   /** The URL of the Proxy's detail view in the web console, which renders its manifest. */
   manifestUrl: string;
+  /** The url of the Proxy's detail: its manifest, what it uses, and what uses it. See ResourceDetail. */
+  detailUrl: string | null;
   canDelete: boolean; // false if other resources depend on it, or you may not delete it
 
   // --- Where it forwards to ---
@@ -66,10 +68,11 @@ export type Proxy = {
 // ----------------------------------------------------------------------------
 // Component Props Interfaces
 // ----------------------------------------------------------------------------
-export interface ProxyCardViewProps {
+export interface ProxyDetailViewProps {
   sessionContext: SessionContext;
-  objects: Proxy[];
+  object: Proxy;
   onRequery: () => void;
+  filtering?: Filtering;
 }
 
 export interface ProxyListViewProps {

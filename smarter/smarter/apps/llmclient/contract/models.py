@@ -282,6 +282,11 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
         ...,
         description="Whether the requesting user may delete the LLMClient now: they own it, and nothing depends on it.",
     )
+    detail_url: Optional[str] = Field(
+        None,
+        description="The url of the LLMClient's detail in the web console: its manifest, the resources that it uses, "
+        "and those that use it.",
+    )
     extensions: list[LLMClientApiExtension] = Field(..., description="The LLMClient's extensions.")
     plugins: list[LLMClientApiPluginRef] = Field(..., description="The LLMClient's plugins.")
     mcpclients: list[LLMClientApiMCPClientRef] = Field(..., description="The LLMClient's MCPClients.")
@@ -351,6 +356,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
         :rtype: LLMClientApiLLMClient
         """
         # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import resource_detail_url
         from smarter.apps.llmclient.manifest.models.llmclient.const import (
             MANIFEST_KIND as LLMCLIENT_KIND,
         )
@@ -409,6 +415,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             annotations=llmclient.annotations,
             user_profile=AccountApiUserProfile.from_model(llmclient.user_profile),
             can_delete=user_can_delete(llmclient, LLMCLIENT_KIND, user),
+            detail_url=resource_detail_url(LLMCLIENT_KIND, llmclient.record_locator),
             extensions=extensions,
             plugins=plugins,
             mcpclients=mcpclients,

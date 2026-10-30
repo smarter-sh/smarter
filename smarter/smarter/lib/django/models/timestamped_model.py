@@ -5,7 +5,7 @@ import datetime
 import json
 import re
 from functools import cached_property
-from typing import Any, Optional
+from typing import Optional
 
 from cache_results import cache_results
 from django.core.exceptions import ValidationError

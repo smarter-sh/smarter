@@ -590,10 +590,10 @@ class ImageSearchPlugin(PluginBase):
             description="Finds kid-friendly, freely licensed images from Wikimedia Commons.",
             version="0.1.0",
             tags=["imagesearch", "kid-friendly"],
-            annotations=[
-                {"smarter.sh/created_by": "smarter_image_search_plugin_broker"},
-                {"smarter.sh/plugin": "safe_image_search"},
-            ],
+            annotations={
+                "smarter.sh/created_by": "smarter_image_search_plugin_broker",
+                "smarter.sh/plugin": "safe_image_search",
+            },
             pluginClass=SAMPluginCommonMetadataClassValues.IMAGE_SEARCH.value,
         )
         selector = SAMPluginCommonSpecSelector(

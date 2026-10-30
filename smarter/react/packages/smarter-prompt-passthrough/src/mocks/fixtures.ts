@@ -38,7 +38,7 @@ export function makeProvider(id: number, name: string, overrides: Partial<LLMPro
     name,
     description: `The ${name} API.`,
     version: "1.0.0",
-    annotations: [],
+    annotations: {},
     status: "verified",
     isDefault: false,
     isActive: true,
@@ -86,7 +86,7 @@ export const providers: LLMProvider[] = [
     termsOfServiceUrl: "https://openai.example.com/terms/",
     privacyPolicyUrl: "https://openai.example.com/privacy/",
     tags: ["llm", "chat"],
-    annotations: [{ "smarter.sh/purpose": "testing" }, { "smarter.sh/tier": 2 }],
+    annotations: { "smarter.sh/purpose": "testing", "smarter.sh/tier": "2" },
   }),
   makeProvider(2, "anthropic", { defaultModel: "claude-haiku-4-5" }),
 ];

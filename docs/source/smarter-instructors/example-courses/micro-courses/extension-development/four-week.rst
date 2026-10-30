@@ -118,6 +118,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        messages written for the LLM, and what ``toolkit.py`` does with invalid arguments,
        exceptions, timeouts and non-JSON. The LLM's arguments as untrusted input: the
        calculator's ``evaluator.py``.
+       The same principles in another protocol: "Tools for an LLM" in the case study `The Smarter
+       Project MCP Server <https://smarter.sh/case-studies/mcp-server>`__ ("Errors teach",
+       "Arguments can't be wrong"), and "Make a mistake on purpose" in its "Lab 2: Call the
+       server".
    * - 2
      - Live session 2
      - Review of Assignment 1. Designing an arguments model together, and watching the LLM use it.
@@ -390,6 +394,9 @@ registry's CI, the signed index, the download, the installer, the loader, the to
 settings. For each threat they cite the code that addresses it, or show that nothing does, with a
 demonstration Extension installed only on their own platform. They propose two improvements as
 Architecture Decision Records, such as sandboxing tool calls or signing archives by publisher.
+The section "URLs a model chooses" of the case study `Guardrails: Can You Trust the Model?
+<https://smarter.sh/case-studies/guardrails>`__ is a worked threat model of one such path: an HTTP
+client for urls that the LLM's arguments choose.
 
 **What students turn in:**
 

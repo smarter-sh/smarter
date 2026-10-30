@@ -25,4 +25,8 @@
   `Django-React Integration <https://blog.smarter.sh/2026/05/29/react-integration/>`__, on how
   Django hosts the console's React apps; `Smarter's List Views: One Design for Queries, Caching,
   Pagination and Refresh <https://blog.smarter.sh/2026/08/15/smarter-list-views/>`__, on the server
-  and browser caches behind every console list page.
+  and browser caches behind every console list page. The case studies `Guardrails: Can You Trust
+  the Model? <https://smarter.sh/case-studies/guardrails>`__, on rendering a model's reply as
+  untrusted HTML, and `One Platform, Many Tenants
+  <https://smarter.sh/case-studies/multi-tenancy>`__, on CORS and the ``allowedOrigins`` that let a
+  page embed a chatbot, turn these subjects into lessons with labs and discussion questions.

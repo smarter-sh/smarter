@@ -276,10 +276,10 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
         #     self.fail(f"smarter_auth_token.tags is of unexpected type: {type(self.broker.smarter_auth_token.tags)}")
         # self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
-        # verify that smarter_auth_token.annotations (JSONField) contains the same annotations.
+        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # verify that smarter_auth_token.annotations holds the same annotations.
         def sort_annotations(annotations):
-            return sorted(annotations, key=lambda d: sorted(d.items()))
+            return dict(sorted((annotations or {}).items()))
 
         if not self.broker.manifest:
             self.fail("Broker manifest is not set. Cannot compare annotations.")

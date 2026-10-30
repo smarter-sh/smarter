@@ -2,6 +2,7 @@
 """Smarter API command-line interface 'get' view."""
 
 from smarter.lib import logging
+from smarter.lib.annotation.const import ANNOTATION_SELECTOR_PARAM
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import CliBaseApiView
@@ -45,7 +46,9 @@ class ApiV1CliGetApiView(CliBaseApiView):
         if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         # the get criteria, e.g. ?name=..., are the url's query parameters. Brokers read them
-        # from their keyword arguments.
+        # from their keyword arguments. An annotation selector may be repeated, so it is a list.
         params = {key: self.params.get(key) for key in self.params} if self.params else {}
+        if self.params and ANNOTATION_SELECTOR_PARAM in self.params:
+            params[ANNOTATION_SELECTOR_PARAM] = self.params.getlist(ANNOTATION_SELECTOR_PARAM)
         response = self.broker.get(request, *args, **{**kwargs, **params})
         return response

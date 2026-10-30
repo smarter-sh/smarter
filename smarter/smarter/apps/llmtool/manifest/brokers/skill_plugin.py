@@ -673,10 +673,10 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
             description="Turns raw meeting transcripts into structured notes with decisions and action items.",
             version="0.1.0",
             tags=["productivity", "meetings"],
-            annotations=[
-                {"smarter.sh/created_by": "smarter_skill_plugin_broker"},
-                {"smarter.sh/plugin": "meeting_notes"},
-            ],
+            annotations={
+                "smarter.sh/created_by": "smarter_skill_plugin_broker",
+                "smarter.sh/plugin": "meeting_notes",
+            },
             pluginClass=SAMPluginCommonMetadataClassValues.SKILL.value,
         )
         manifest_spec = SAMSkillPluginSpec(

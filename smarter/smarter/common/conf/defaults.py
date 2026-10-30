@@ -135,7 +135,6 @@ class SettingsDefaults:
     CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
     LISTVIEW_CACHE_EXPIRATION: int = int(get_env("LISTVIEW_CACHE_EXPIRATION", 60 * 60))  # 1 hour
     LLM_CLIENT_CACHE_EXPIRATION: int = int(get_env("LLM_CLIENT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
-    LLM_CLIENT_MAX_RETURNED_HISTORY: int = int(get_env("LLM_CLIENT_MAX_RETURNED_HISTORY", 25))
     MAX_TOOL_ROUNDS: int = int(get_env("MAX_TOOL_ROUNDS", 5))
     PROMPT_RESPONSE_CACHE_EXPIRATION: int = int(get_env("PROMPT_RESPONSE_CACHE_EXPIRATION", 60 * 60))  # 1 hour
     LLM_CLIENT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("LLM_CLIENT_TASKS_CREATE_DNS_RECORD", True)
@@ -204,11 +203,9 @@ class SettingsDefaults:
         fernet = generate_fernet_encryption_key()
     FERNET_ENCRYPTION_KEY = SecretStr(fernet)
 
-    FILE_DROP_ZONE_ENABLED = bool_environment_variable("FILE_DROP_ZONE_ENABLED", True)
     GITHUB_API_TOKEN: Optional[SecretStr] = optional_secret_env("GITHUB_API_TOKEN")
 
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
-    LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "prompt_history")
 
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-6-luna"
@@ -252,16 +249,9 @@ class SettingsDefaults:
     )
     DATABASE_READ_TIMEOUT: int = int(get_env("DATABASE_READ_TIMEOUT", 0))  # 0: no timeout
 
-    # the user and password that the Stackademy course database's script creates, scripts/smarter_test_db.sql
-    # in https://github.com/smarter-sh/stackademy.
-    MYSQL_TEST_DATABASE_SECRET_NAME = get_env("MYSQL_TEST_DATABASE_SECRET_NAME", "smarter_test_db")
-    MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(
-        get_env("MYSQL_TEST_DATABASE_PASSWORD", "smarter_test_user", is_secret=True)
-    )
+    # the threads per web server process that run streamed chat prompts, smarter.apps.prompt.progress.
+    PROMPT_THREADS: int = int(get_env("PROMPT_THREADS", 32))
 
-    OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
-    OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
-    OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
     PLATFORM_SUBDOMAIN = get_env("PLATFORM_SUBDOMAIN", SMARTER_PLATFORM_DEFAULT_SUBDOMAIN)
 
     secret = get_env("SECRET_KEY", default=None, is_secret=True)

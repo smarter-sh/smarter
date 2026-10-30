@@ -15,7 +15,7 @@ from :func:`listview_cache_generation` that changes when it is invalidated:
 - the user's generation of the list, which changes when the user asks for a fresh list, with the
   list api's ``invalidate_cache=true``;
 - the generation of every list, :data:`LISTVIEW_CACHE_ALL`, which changes whenever a change can
-  alter what any list shows, such as a user's profile, an account or a resource's tags.
+  alter what any list shows, such as a user's profile, an account, or a resource's tags or annotations.
 
 A new generation leaves the previous pages unread, until they expire after
 ``smarter_settings.listview_cache_expiration`` seconds. So invalidating a list is a single cache
@@ -34,10 +34,20 @@ delete, however many users and pages it has.
         listview_cache_kind = "Guardrail"
 """
 
+import functools
 import json
 import time
 from http import HTTPStatus
-from typing import Callable, ClassVar, Mapping, Optional, Protocol, Sequence, Union
+from typing import (
+    Callable,
+    ClassVar,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Protocol,
+    Sequence,
+    Union,
+)
 from urllib.parse import urlparse
 
 from cache_results import cache_results
@@ -49,6 +59,8 @@ from django.db import models, transaction
 from django.db.models import Prefetch, Q
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.http import HttpRequest, JsonResponse
+from django.urls import NoReverseMatch, URLPattern, URLResolver, get_resolver
+from django.urls import reverse as django_reverse
 from django.utils.module_loading import import_string
 from rest_framework import serializers
 
@@ -58,6 +70,9 @@ from smarter.lib import logging
 from smarter.lib.django.pagination import (
     DEFAULT_SEARCH_FIELDS,
     DEFAULT_SORT_FIELDS,
+    MAX_LIST_ANNOTATIONS,
+    MAX_LIST_TAGS,
+    clean_query_values,
     has_field,
     paginate_queryset,
 )
@@ -82,6 +97,7 @@ LISTVIEW_OWNER_RELATIONS = ("user_profile__user", "user_profile__account")
 """The relations of every owned resource that its serializer reads, joined into the list's query."""
 
 
+# pylint: disable=W2301
 class OwnershipManager(Protocol):
     """
     The manager of a resource that a list api lists: it filters the resources by who may see them.
@@ -221,6 +237,8 @@ def cached_listview_page(  # pylint: disable=W0613,R0913,R0917
     search: str,
     ordering: str,
     list_filter: str,
+    tags: tuple[str, ...] = (),
+    annotations: tuple[str, ...] = (),
 ) -> SmarterDictType:
     """
     Return one page of a list api's response, from the cache when it holds it.
@@ -239,6 +257,8 @@ def cached_listview_page(  # pylint: disable=W0613,R0913,R0917
     :param search: The ``search`` query parameter.
     :param ordering: The ``ordering`` query parameter.
     :param list_filter: The ``filter`` query parameter.
+    :param tags: The ``tag`` query parameters, cleaned with :func:`~smarter.lib.django.pagination.clean_query_values`.
+    :param annotations: The ``annotation`` query parameters, cleaned the same way.
     :returns: The list api's response, as JSON-compatible values.
     """
     # pylint: disable=C0415
@@ -257,6 +277,8 @@ def cached_listview_page(  # pylint: disable=W0613,R0913,R0917
         search=search,
         ordering=ordering,
         list_filter=list_filter,
+        tags=tags,
+        annotations=annotations,
     )
 
 
@@ -295,6 +317,12 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
 
     filters: ClassVar[Optional[Mapping[str, Q]]] = None
     """The list's named filters, if it has any."""
+
+    listview_label: ClassVar[Optional[str]] = None
+    """The list's name, where it is shown outside its page, e.g. by the dashboard's search.
+
+    Its model's plural verbose name, by default.
+    """
 
     select_related: ClassVar[tuple[str, ...]] = ()
     """The forward relations that the serializer reads, besides the owner's."""
@@ -347,6 +375,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         search: str = "",
         ordering: str = "",
         list_filter: str = "",
+        tags: Sequence[str] = (),
+        annotations: Sequence[str] = (),
     ) -> SmarterDictType:
         """
         Build one page of the list api's response, from the database.
@@ -362,6 +392,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         :param search: The ``search`` query parameter.
         :param ordering: The ``ordering`` query parameter.
         :param list_filter: The ``filter`` query parameter.
+        :param tags: Tags that every resource must have.
+        :param annotations: An annotation selector's requirements, e.g. ``acme.com/crm-id=A-1``.
         :returns: ``{"user": ..., "admin": ..., "objects": [...], "pagination": {...}}``.
         """
         # pylint: disable=C0415
@@ -378,6 +410,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
             search_fields=cls.search_fields,
             sort_fields=cls.sort_fields,
             filters=cls.filters,
+            tags=tags,
+            annotations=annotations,
         )
         request = ListviewPageRequest(user_profile.user)
         response = {
@@ -397,7 +431,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         Return one page of the list's resources, which the user owns, are shared with them, or both.
 
         :param request: The request. Its query parameters are ``page``, ``page_size``, ``search``,
-            ``ordering``, ``filter`` and ``invalidate_cache``, all optional.
+            ``ordering``, ``filter``, ``tag`` and ``annotation`` (both repeatable) and
+            ``invalidate_cache``, all optional.
         :param kwargs: ``ownership_filter``, from the url: ``owned``, ``shared`` or ``all`` (the default).
         :returns: The page, or a 400 response for an unknown ownership filter.
         """
@@ -437,16 +472,104 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
             search=request.GET.get("search", ""),
             ordering=request.GET.get("ordering", ""),
             list_filter=request.GET.get("filter", ""),
+            # tuples of plain strings, so that they are part of the page's cache key.
+            tags=clean_query_values(request.GET.getlist("tag"), MAX_LIST_TAGS),
+            annotations=clean_query_values(request.GET.getlist("annotation"), MAX_LIST_ANNOTATIONS),
         )
         return JsonResponse(response)
 
 
+LISTVIEW_PAGE_SUFFIX = "ListView"
+"""The suffix of the class name of a list's console page, e.g. GuardrailListView."""
+
+
+class ListviewEntry(NamedTuple):
+    """A list of the web console: its list api, and the url of its console page."""
+
+    view_class: type["SmarterListApiView"]
+    """The list api, e.g. GuardrailListApiView."""
+
+    page_url: str
+    """The path of the list's console page, e.g. ``/guardrail/``."""
+
+    @property
+    def label(self) -> str:
+        """The list's name: the list api's :attr:`~SmarterListApiView.listview_label`, or its model's plural verbose name."""
+        model = self.view_class.model
+        return self.view_class.listview_label or str(model._meta.verbose_name_plural)  # pylint: disable=W0212
+
+
+def _is_page_view(view_class) -> bool:
+    """Whether a view is a list's console page: a ``...ListView`` that is not a list api."""
+    return (
+        isinstance(view_class, type)
+        and view_class.__name__.endswith(LISTVIEW_PAGE_SUFFIX)
+        and not issubclass(view_class, SmarterListApiView)
+    )
+
+
+def _walk_listviews(patterns, namespaces: tuple[str, ...] = ()):
+    """
+    Yield each list api of ``patterns``, the url name of its console page, and how deeply it is included.
+
+    The page is the ``...ListView`` of the same urlconf whose name matches the api's, e.g.
+    GuardrailListView for GuardrailListApiView, or else the urlconf's first ``...ListView``. Its name
+    is joined with its namespaces, e.g. ``guardrail:guardrail_list_view``.
+    """
+    pages = {
+        view_class.__name__: pattern.name
+        for pattern in patterns
+        if isinstance(pattern, URLPattern)
+        and pattern.name
+        and _is_page_view(view_class := getattr(pattern.callback, "view_class", None))
+    }
+    for pattern in patterns:
+        if isinstance(pattern, URLResolver):
+            namespace = (pattern.namespace,) if pattern.namespace else ()
+            yield from _walk_listviews(pattern.url_patterns, namespaces + namespace)
+        elif isinstance(pattern, URLPattern) and pages:
+            view_class = getattr(pattern.callback, "view_class", None)
+            if isinstance(view_class, type) and issubclass(view_class, SmarterListApiView):
+                page_class = view_class.__name__.replace("ListApiView", LISTVIEW_PAGE_SUFFIX)
+                page = pages.get(page_class) or next(iter(pages.values()))
+                yield view_class, ":".join(namespaces + (page,)), len(namespaces)
+
+
+@functools.cache
+def listview_registry() -> tuple[ListviewEntry, ...]:
+    """
+    Return every list of the web console, found in the root urlconf, once per list api.
+
+    A list is a list api (a :class:`SmarterListApiView`) and the console page whose urlconf
+    routes it, a view whose class name ends with ``ListView``. A urlconf that is included more than
+    once, e.g. the plugins' under ``/llm-tools/`` and under the dashboard, gives the page of its
+    shallowest inclusion, which the sidebar links to too. The urlconf doesn't change while the
+    process runs, so the registry is computed once per process.
+
+    :returns: The lists, in the urlconf's order.
+    """
+    pages: dict[type[SmarterListApiView], tuple[int, str]] = {}
+    for view_class, page_name, depth in _walk_listviews(get_resolver().url_patterns):
+        if view_class not in pages or depth < pages[view_class][0]:
+            pages[view_class] = (depth, page_name)
+    retval: list[ListviewEntry] = []
+    for view_class, (_, page_name) in pages.items():
+        try:
+            retval.append(ListviewEntry(view_class=view_class, page_url=django_reverse(page_name)))
+        except NoReverseMatch:
+            logger.warning("%s.listview_registry() can't reverse %s's page %s", logger_prefix, view_class, page_name)
+    return tuple(retval)
+
+
 __all__ = [
     "LISTVIEW_CACHE_ALL",
+    "LISTVIEW_PAGE_SUFFIX",
+    "ListviewEntry",
     "ListviewPageRequest",
     "SmarterListApiView",
     "cached_listview_page",
     "connect_listview_cache",
     "invalidate_listview_cache",
     "listview_cache_generation",
+    "listview_registry",
 ]

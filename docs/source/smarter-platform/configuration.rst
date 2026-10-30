@@ -142,8 +142,6 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
      - (optional) Pinecone environment name
    * - SMARTER_MYSQL_BACKUP_PASSWORD
      - (optional) Password of the read-only MariaDB account, ``smarter_backup``, that the nightly backup dumps the database with. Unset: the backup dumps as root
-   * - SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-     - Password for MariaDB test database
    * - SMTP_PASSWORD
      - SMTP server password for outgoing email
    * - SMTP_USERNAME

@@ -31,4 +31,6 @@
   on models, harnesses, agents and environments, and where Smarter fits; `Why LLMs Love Code, and
   What That Means for Everyone Else
   <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
-  on why LLMs do better at code than at other work.
+  on why LLMs do better at code than at other work. The case study `Converge or Diverge: AI Coding
+  Agents <https://smarter.sh/case-studies/ai-coding-agents>`__ turns the three-part series into a
+  lesson with labs and discussion questions.

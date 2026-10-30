@@ -2,11 +2,9 @@
   "apiVersion": "smarter.sh/v1",
   "kind": "LLMHostCompute",
   "metadata": {
-    "annotations": [
-      {
-        "smarter.sh/llmhostcompute/purpose": "example"
-      }
-    ],
+    "annotations": {
+      "smarter.sh/llmhostcompute/purpose": "example"
+    },
     "description": "One NVIDIA L4 with 24 GB, 8 vCPUs and 32 GiB.",
     "name": "example_gpu_l4_1x",
     "tags": [

@@ -89,7 +89,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lab 2: Try to get around it.** Teams attack an assistant that has a rule only in its
        system prompt, then the same assistant with a guardrail, and record each attempt and
-       result. Produces Assignment 2.
+       result. "Lab 1: Talk to Sam" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__ is a ready target, and its first
+       discussion question, on a model that obeys a rule 99 times in 100, frames the debrief.
+       Produces Assignment 2.
    * - 5
      - 45
      - **Lecture 3: The guardrail toolbox.** Input and output stages, strategies (keyword, regular
@@ -103,7 +106,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Lecture 4: Money and access.** :doc:`Budgets </smarter-resources/smarter-budget>` per
        user, application and account; :doc:`cost accounting </smarter-platform/cost-accounting>`;
        accounts, roles and API keys; encrypted :doc:`Secrets </smarter-resources/smarter-secret>`.
-       Who should be able to do what.
+       Who should be able to do what. Pre-reading: "Governing it with git" in the case study
+       `Stackademy Online Coding Academy <https://smarter.sh/case-studies/stackademy>`__, on
+       history, review and undo for an assistant's manifests, and on why only a platform
+       administrator may apply a Budget.
    * - 7
      - 45
      - **Lab 3: From policy to manifest.** Write a one-page acceptable use policy for a fictional

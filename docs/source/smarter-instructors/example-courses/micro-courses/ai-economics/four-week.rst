@@ -81,7 +81,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 3
      - **Design choices that cost money.** Tools, retrieval, long system prompts and multi-step
-       workflows as cost multipliers.
+       workflows as cost multipliers. Guardrails are one too: the lab "Compare the costs" and the
+       note "Ordering is a cost control" in the case study `Guardrails: Can You Trust the Model?
+       <https://smarter.sh/case-studies/guardrails>`__ show a cheap keyword check sparing the
+       price of an LLM judge.
    * - 1
      - Live session 1
      - Smarter's cost records and the dashboard, live. Groups price a conversation by hand. Start
@@ -105,7 +108,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 7
      - **Measuring value.** Time saved, deflection, revenue, quality, and the difficulty of
-       measuring productivity.
+       measuring productivity, tested on the case study `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__: about 25 times the author's
+       long-run pace, and the question of what to measure instead of lines of code.
    * - 3
      - Lecture 8
      - **The business case.** Adoption curves, scenarios, sensitivity, net present value, and

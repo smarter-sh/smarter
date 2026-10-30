@@ -214,6 +214,30 @@ def sidebar_context() -> SmarterDictType:
     return context
 
 
+def active_sidebar_item(path: str, links: dict[str, str]) -> Optional[str]:
+    """
+    Return the sidebar item of a page: the one whose url is the longest that begins the page's path.
+
+    A resource's own pages are under its list's url, e.g. a Secret's manifest page,
+    ``/secret/secrets/rMTAwx/``, is under the Secrets list's, ``/secret/``. So the sidebar shows where a page
+    is, however the user reached it: from the sidebar, from a link or card of another page, or from a bookmark.
+
+    .. code-block:: python
+
+        active_sidebar_item("/secret/secrets/rMTAwx/", {"secrets": "/secret/", "dashboard": "/dashboard/"})
+        # 'secrets'
+
+    :param path: The page's path, e.g. ``request.path``.
+    :type path: str
+    :param links: The sidebar's urls, by item, as :func:`sidebar_context` returns them.
+    :type links: dict[str, str]
+    :returns: The item, e.g. ``secrets``, or None for a page of no item.
+    :rtype: Optional[str]
+    """
+    matches = [(len(url), item) for item, url in links.items() if isinstance(url, str) and path.startswith(url)]
+    return max(matches)[1] if matches else None
+
+
 def sidebar(request: "HttpRequest") -> SmarterDictType:
     """
     Resolve and cache the href targets for every dashboard sidebar navigation link.
@@ -229,6 +253,9 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
     ``openapi``, ``json_schemas``, ``admin``.
 
+    ``sidebar_active`` is the item of the request's page, which the sidebar highlights: see
+    :func:`active_sidebar_item`.
+
     For a superuser, ``extension_updates`` is also the number of installed extensions for which
     the registry offers an update, which the Extensions link shows as a badge. It is counted on
     each request, rather than cached with the urls.
@@ -240,6 +267,7 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     :rtype: SmarterDictType
     """
     context = sidebar_context()
+    context = {**context, "sidebar_active": active_sidebar_item(request.path, context["sidebar"])}
     user = getattr(request, "user", None)
     if getattr(user, "is_superuser", False):
         # pylint: disable=import-outside-toplevel

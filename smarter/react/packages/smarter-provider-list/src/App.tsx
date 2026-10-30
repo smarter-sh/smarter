@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Provider, ProviderListViewProps, ProviderCardViewProps } from "@/lib/Types";
+import type { Provider, ProviderListViewProps, ProviderDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Providers") },
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to Provider,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type ProviderTabbedViewContext = Omit<TabbedViewContext<Provider>, "ListView" | "CardView"> & {
+export type ProviderTabbedViewContext = Omit<TabbedViewContext<Provider>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<ProviderListViewProps>;
-  CardView: React.ComponentType<ProviderCardViewProps>;
+  DetailView: React.ComponentType<ProviderDetailViewProps>;
 };
 
 const providerTabbedListViewContext: ProviderTabbedViewContext = {
@@ -30,7 +30,7 @@ const providerTabbedListViewContext: ProviderTabbedViewContext = {
   objectTypeName: "provider",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {
