@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.38.1](https://github.com/smarter-sh/smarter/compare/v0.38.0...v0.38.1) (2026-10-30)
+
+### Bug Fixes
+
+* **llmclient:** add a Workbench button to each LLMClient list row ([bf26865](https://github.com/smarter-sh/smarter/commit/bf2686522616775aba9d4875b2488c4e261a9bad))
+* **react:** open a card's resource detail in the detail dialog ([11bbf62](https://github.com/smarter-sh/smarter/commit/11bbf62924041b3434939b4f517f10e478cc27f7))
+
 ## [0.38.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.38.0...v0.38.1-alpha.1) (2026-10-30)
 
 ### Bug Fixes
