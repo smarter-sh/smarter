@@ -30,7 +30,6 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Generator, Optional
 
 from asgiref.sync import sync_to_async
-from django.db import close_old_connections
 from django.dispatch import receiver
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from pydantic import JsonValue
@@ -41,6 +40,7 @@ from smarter.apps.mcpclient.signals import (
     mcpclient_tool_responded,
 )
 from smarter.lib import logging
+from smarter.lib.django.connections import close_thread_connections
 from smarter.lib.logging.redis_log_handler import bind_log_context
 from smarter.lib.typing import SmarterDictType
 
@@ -308,7 +308,7 @@ async def prompt_event_stream(
                     return on_error(e)
         finally:
             # the worker thread's database connection is its own.
-            close_old_connections()
+            close_thread_connections()
 
     yield "retry: 3000\n\n"
     task = asyncio.ensure_future(sync_to_async(run, thread_sensitive=False)())

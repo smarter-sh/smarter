@@ -35,6 +35,7 @@ from django.views.i18n import JavaScriptCatalog
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.views.endpoints import browser_friendly
 from smarter.apps.prompt.views.detailviews import PromptConfigView
+from smarter.lib.django.http import error_handlers
 
 config_view = browser_friendly(PromptConfigView.as_view())
 
@@ -50,4 +51,10 @@ urlpatterns = [
     path("jsi18n/", JavaScriptCatalog.as_view(domain="djangojs"), name="javascript-catalog"),
 ]
 
-__all__ = ["urlpatterns"]
+# Error pages that close their database connections. See smarter.lib.django.http.error_handlers.
+handler400 = error_handlers.bad_request
+handler403 = error_handlers.permission_denied
+handler404 = error_handlers.page_not_found
+handler500 = error_handlers.server_error
+
+__all__ = ["urlpatterns", "handler400", "handler403", "handler404", "handler500"]
