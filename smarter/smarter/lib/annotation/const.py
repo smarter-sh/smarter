@@ -22,5 +22,17 @@ A prefix's subdomains are reserved too, e.g. ``llmclient.smarter.sh``. Manifests
 these keys, but only Smarter's own code registers handlers for them.
 """
 
+SOURCE_REPOSITORY_ANNOTATION = "smarter.sh/source-repository"
+"""The repository that a resource was applied from, e.g. ``https://github.com/smarter-sh/stackademy``.
+
+``manage.py load_from_github`` sets it, as Flux and Argo CD annotate the Kubernetes objects that they apply from git.
+"""
+
+SOURCE_PATH_ANNOTATION = "smarter.sh/source-path"
+"""The manifest's file, relative to the root of :data:`SOURCE_REPOSITORY_ANNOTATION`, e.g. ``llm-clients/stackademy.yaml``."""
+
+SOURCE_COMMIT_ANNOTATION = "smarter.sh/source-commit"
+"""The commit of :data:`SOURCE_REPOSITORY_ANNOTATION` that the manifest was applied from."""
+
 ANNOTATION_SELECTOR_PARAM = "annotation"
 """The query parameter of the cli ``get`` api that holds an annotation selector, e.g. ``?annotation=acme.com/crm-id=42``."""
