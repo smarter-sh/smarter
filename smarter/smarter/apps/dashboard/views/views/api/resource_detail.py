@@ -26,7 +26,7 @@ class ResourceDetailView(SmarterAuthenticatedNeverCachedWebView):
 
     Response shape, a dumped :class:`~smarter.apps.dashboard.resource_detail.ResourceDetail`:
 
-    .. code-block:: json
+    .. code-block:: javascript
 
         {
             "kind": "Guardrail",
