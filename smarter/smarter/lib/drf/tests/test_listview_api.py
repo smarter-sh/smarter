@@ -85,6 +85,9 @@ class TestAuthTokenListApi(TestAccountMixin):
                 "sortFields": ["createdAt", "description", "name", "updatedAt"],
                 "filter": "",
                 "filters": [],
+                "tags": [],
+                "annotations": [],
+                "annotationError": "",
             },
         )
         self.assertEqual(len(data["objects"]), 1)
