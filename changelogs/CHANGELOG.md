@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.38.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.38.1...v0.38.2-alpha.1) (2026-10-30)
+
+### Bug Fixes
+
+* **account:** annotate resources with the repository they came from ([e75d226](https://github.com/smarter-sh/smarter/commit/e75d2260d6ae2c6bff56ece79ea26b5751833807))
+
 ## [0.38.1](https://github.com/smarter-sh/smarter/compare/v0.38.0...v0.38.1) (2026-10-30)
 
 ### Bug Fixes
