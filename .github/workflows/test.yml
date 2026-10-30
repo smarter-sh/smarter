@@ -297,6 +297,26 @@ jobs:
           key: ${{ needs.fingerprint.outputs.react-key }}
 
   #----------------------------------------------------------------------------
+  # The optional Slack bot of the Helm chart (helm/charts/slack-bot). Its
+  # program runs outside Django, on a stock Python image, so its tests need
+  # only the standard library, and run in a few seconds.
+  #----------------------------------------------------------------------------
+  slack-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests
+        run: python -m unittest discover -v -s helm/charts/slack-bot/tests
+
+  #----------------------------------------------------------------------------
   # One shard of the Python suite. SHARDS must match the length of the shard
   # list. fail-fast is off, so that one failing shard doesn't cancel the
   # others: every failure is reported in one run.
