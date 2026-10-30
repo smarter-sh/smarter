@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.38.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.38.0-alpha.1...v0.38.0-alpha.2) (2026-10-30)
+
+### Features
+
+* **dashboard:** add global search; narrow lists by tag or annotation ([48abc37](https://github.com/smarter-sh/smarter/commit/48abc3722d3f8e14bbcd4f991f6ca88697c3fd99))
+
 ## [0.38.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.37.4-alpha.2...v0.38.0-alpha.1) (2026-10-30)
 
 ### Features
