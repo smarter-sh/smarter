@@ -26,11 +26,18 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.annotation.const import (
+    SOURCE_COMMIT_ANNOTATION,
+    SOURCE_PATH_ANNOTATION,
+    SOURCE_REPOSITORY_ANNOTATION,
+)
+from smarter.lib.annotation.selectors import filter_by_annotations
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
 from smarter.lib.manifest.template import manifest_template_values
 
 MODULE = "smarter.apps.account.management.commands.load_from_github"
 URL = "https://github.com/smarter-sh/no-such-repo"
+COMMIT = "0123456789abcdef0123456789abcdef01234567"
 
 
 def manifest(kind: str, name: str, spec: str = "  config: {}\n") -> str:
@@ -64,6 +71,9 @@ class TestLoadFromGithub(TestAccountMixin):
 
     def use_repo(self, root: str) -> MagicMock:
         """Make the command copy ``root`` in place of cloning the repository."""
+        commit_patcher = patch.object(Command, "head_commit", return_value=COMMIT)
+        commit_patcher.start()
+        self.addCleanup(commit_patcher.stop)
         patcher = patch.object(
             Command, "clone_repo", side_effect=lambda local_path: shutil.copytree(root, local_path, dirs_exist_ok=True)
         )
@@ -148,6 +158,89 @@ class TestLoadFromGithub(TestAccountMixin):
         self.assertTrue(Secret.objects.filter(name=self.secret_name, user_profile=self.user_profile).exists())
         self.run_command()
         self.assertEqual(Secret.objects.filter(name=self.secret_name).count(), 1)
+
+    # -------------------------------------------------------------------------
+    # source annotations
+    # -------------------------------------------------------------------------
+    def test_annotates_where_a_resource_came_from(self):
+        """Test that an applied resource keeps its own annotations, gains its source, and can be selected by it."""
+        spec = "  config:\n    value: x\n"
+        text = manifest("Secret", self.secret_name, spec).replace(
+            "  version: 1.0.0\n", "  version: 1.0.0\n  annotations:\n    acme.com/crm/account-id: A-10042\n"
+        )
+        self.use_repo(self.repo({"secrets/s.yaml": text}))
+        self.run_command()
+        secret = Secret.objects.get(name=self.secret_name, user_profile=self.user_profile)
+        self.assertEqual(
+            secret.annotations,
+            {
+                "acme.com/crm/account-id": "A-10042",
+                SOURCE_REPOSITORY_ANNOTATION: URL,
+                SOURCE_PATH_ANNOTATION: "secrets/s.yaml",
+                SOURCE_COMMIT_ANNOTATION: COMMIT,
+            },
+        )
+        selected = filter_by_annotations(Secret.objects.all(), f"{SOURCE_REPOSITORY_ANNOTATION}={URL}")
+        self.assertIn(secret, selected)
+        unsourced = filter_by_annotations(Secret.objects.filter(pk=secret.pk), f"!{SOURCE_REPOSITORY_ANNOTATION}")
+        self.assertFalse(unsourced.exists())
+
+    def test_add_source_annotations(self):
+        command = Command()
+        command.url = URL + ".git/"
+        command.commit = COMMIT
+        legacy = {"metadata": {"name": "a", "annotations": [{"acme.com/x": "1"}]}}
+        stamped = command.add_source_annotations(legacy, "a.yaml")
+        self.assertEqual(
+            stamped["metadata"]["annotations"],
+            {
+                "acme.com/x": "1",
+                SOURCE_REPOSITORY_ANNOTATION: URL,
+                SOURCE_PATH_ANNOTATION: "a.yaml",
+                SOURCE_COMMIT_ANNOTATION: COMMIT,
+            },
+        )
+        self.assertEqual(legacy["metadata"]["annotations"], [{"acme.com/x": "1"}], "the original is not changed")
+
+    def test_a_source_annotation_in_the_manifest_is_replaced(self):
+        command = Command()
+        command.url = URL
+        stamped = command.add_source_annotations(
+            {"metadata": {"annotations": {SOURCE_PATH_ANNOTATION: "elsewhere.yaml"}}}, "a.yaml"
+        )
+        self.assertEqual(
+            stamped["metadata"]["annotations"], {SOURCE_PATH_ANNOTATION: "a.yaml", SOURCE_REPOSITORY_ANNOTATION: URL}
+        )
+
+    def test_a_manifest_without_metadata_or_with_invalid_annotations_is_unchanged(self):
+        command = Command()
+        command.url = URL
+        self.assertEqual(command.add_source_annotations({"kind": "Secret"}, "a.yaml"), {"kind": "Secret"})
+        invalid = {"metadata": {"annotations": {"Not A Key": "x"}}}
+        self.assertEqual(command.add_source_annotations(invalid, "a.yaml"), invalid)
+
+    def test_head_commit(self):
+        command = Command()
+        command.url = URL
+        with patch(f"{MODULE}.subprocess.run", return_value=MagicMock(stdout=f"{COMMIT}\n")) as run:
+            self.assertEqual(command.head_commit("/a/folder"), COMMIT)
+        self.assertEqual(run.call_args.args[0], ["git", "-C", "/a/folder", "rev-parse", "HEAD"])
+        with patch(f"{MODULE}.subprocess.run", side_effect=subprocess.CalledProcessError(128, "git")):
+            self.assertIsNone(command.head_commit("/a/folder"))
+        with patch(f"{MODULE}.subprocess.run", return_value=MagicMock(stdout="")):
+            self.assertIsNone(command.head_commit("/a/folder"))
+
+    def test_head_commit_of_a_real_clone(self):
+        """Test git itself, on a local repository with one commit."""
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        git = ["git", "-C", root, "-c", "user.name=test", "-c", "user.email=test@example.com"]
+        subprocess.run(["git", "init", "--quiet", root], check=True)
+        subprocess.run([*git, "commit", "--quiet", "--allow-empty", "-m", "test"], check=True)
+        expected = subprocess.run([*git, "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout
+        command = Command()
+        command.url = URL
+        self.assertEqual(command.head_commit(root), expected.strip())
 
     def test_applies_in_dependency_order(self):
         self.use_repo(
