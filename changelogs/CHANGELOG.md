@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.37.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.37.4-alpha.1...v0.37.4-alpha.2) (2026-10-30)
+
+### Bug Fixes
+
+* **prompt:** give prompts their own thread pool; drop unused settings ([ecc5b2d](https://github.com/smarter-sh/smarter/commit/ecc5b2de9311a5e1901afdeb7d12b1d17b18e0e0))
+
 ## [0.37.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.37.3...v0.37.4-alpha.1) (2026-10-30)
 
 ### Bug Fixes
