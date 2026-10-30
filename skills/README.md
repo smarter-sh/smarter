@@ -37,6 +37,8 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-docstrings`                   | You're writing Python docstrings, which Sphinx publishes.                          |
 | `smarter-logging`                      | You're writing or changing a logger call.                                          |
 | `smarter-log-review`                   | You're reviewing or triaging a Smarter log.                                        |
+| `smarter-pod-log-review`               | You're reviewing the logs of a deployed environment's app, worker and beat pods.   |
+| `smarter-kubectl`                      | You're running kubectl against a deployed environment: pods, logs, events, nodes.  |
 | `smarter-url-names`                    | You're adding a url pattern, or code that reverses one.                            |
 | `smarter-python-typing`                | You're writing type annotations, especially with `Any`.                            |
 | `smarter-sphinx-docs`                  | You're editing `docs/source`.                                                      |
