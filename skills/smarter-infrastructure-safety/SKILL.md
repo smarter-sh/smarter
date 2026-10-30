@@ -102,9 +102,10 @@ install the fakes in `setUpClass`, and reset them in `tearDownClass`.
   these records, and don't report the warning as a problem.
 - **Local development uses the `smarter-local` namespace only.** The EKS cluster
   is shared with the deployed environments (`smarter-ubc-alpha`,
-  `smarter-ubc-prod`, ...) and unrelated tenants. Don't run `kubectl` against
-  any other namespace, not even a read. To learn what a deployed namespace holds,
-  read the Helm chart and manifests in the repository, or ask the user.
+  `smarter-ubc-prod`, ...) and unrelated tenants. Against a deployed namespace,
+  run only the read-only commands in `smarter-kubectl`, only when the user asks
+  you to look at that environment, and only in the namespace they named. Never
+  a write; `kubectl exec` only with the user's OK.
 
 - **Custom domain verification is ACM plus Route53, and nothing else.** A custom
   domain is verified when its Route53 hosted zone's NS records are delegated,

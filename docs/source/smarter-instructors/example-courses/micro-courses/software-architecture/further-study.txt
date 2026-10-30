@@ -30,4 +30,10 @@
   MySQL & Nginx <https://blog.smarter.sh/2026/05/02/why-smarter-abandoned-mysql-nginx/>`__, on what
   production taught about MariaDB, Traefik and cost; `Part 2: The Antipattern That Makes a Codebase
   Diverge <https://blog.smarter.sh/2026/10/11/blog-prologue-geometric-series/>`__, on the pattern
-  that makes a series of agent changes diverge, and how to find it.
+  that makes a series of agent changes diverge, and how to find it. The case studies `Converge or
+  Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on the
+  properties of a codebase that keep a coding agent on course, `One Contract, Five Clients
+  <https://smarter.sh/case-studies/api-contract>`__, on a generated API contract and its clients,
+  and `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__, on turning a
+  manifest into DNS records, certificates and ingresses, turn these posts into lessons with labs
+  and discussion questions.

@@ -19,12 +19,11 @@ function Hint({ onboarding }: { onboarding: OnboardingContext }) {
   return <WeatherHint onboarding={useOnboarding(onboarding)} />;
 }
 
-const links: HTMLAnchorElement[] = [];
+const links: HTMLElement[] = [];
 
 /** The Get Weather LLMClient's name, as the list renders it, laid out on the page. */
 function addWeatherLink() {
-  const link = document.createElement("a");
-  link.href = "/workbench/llm-clients/3f2a9c/prompt/";
+  const link = document.createElement("span");
   link.textContent = "weather";
   link.setAttribute("data-smarter-onboarding", "llmclient-weather");
   document.body.append(link);
@@ -62,7 +61,7 @@ describe("WeatherHint", () => {
     const link = addWeatherLink();
     render(<Hint onboarding={context} />);
     const note = await screen.findByRole("dialog", { name: "Start with the weather LLMClient" });
-    expect(note).toHaveAccessibleDescription(/Click its name to chat with it/);
+    expect(note).toHaveAccessibleDescription(/Click its name to see how it's built/);
     fireEvent.click(link);
     await waitFor(() => expect(posted).toEqual([{ hint: "llmclient_weather", outcome: "clicked" }]));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

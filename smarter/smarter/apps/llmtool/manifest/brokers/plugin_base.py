@@ -1126,6 +1126,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             plugins = self.plugin_meta_queryset().filter(user_profile__account=self.account, name=name)
         else:
             plugins = self.plugin_meta_queryset().filter(user_profile__account=self.account)
+        plugins = self.filter_by_annotation_selector(plugins, kwargs)
         logger.debug(
             "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
         )

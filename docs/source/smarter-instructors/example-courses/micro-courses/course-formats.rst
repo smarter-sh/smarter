@@ -113,6 +113,21 @@ Unless a plan says otherwise, each 90-minute live session runs as follows:
 
 The last live session of each online course is given over to capstone presentations.
 
+Teaching Case Studies
+~~~~~~~~~~~~~~~~~~~~~
+
+The `Smarter case studies <https://smarter.sh/case-studies>`__ are teaching cases, each built on a
+project that runs on Smarter today: the Stackademy course advisors, the Smarter Project MCP server,
+guardrails, AI coding agents, multi-tenancy, what happens when you click deploy, and the API
+contract. Each takes 45 to 60 minutes, and has live AI assistants to talk to, labs to work through
+and discussion questions. Many of the plans assign one as pre-reading or use one of its labs, and
+list the relevant ones under further study.
+
+A case study fits the formats above without changing them. Assigned before class, its labs fill a
+bootcamp lab block or the 45-minute demonstration and breakout segment of a live session, and its
+discussion questions make a ready-made seminar or exit ticket. Many of the labs need only a
+browser or a terminal, so students can do them without first running Smarter themselves.
+
 Grading
 -------
 

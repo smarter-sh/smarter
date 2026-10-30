@@ -28,8 +28,10 @@ const USER_PROFILE: UserProfile = {
 };
 
 export function makeObject(id: number, overrides: Partial<AuthToken> = {}): AuthToken {
+  // a token's id is its key_id, a UUID, and its record locator is smarterauthtoken-<key_id>.
+  const keyId = `00000000-0000-0000-0000-00000000000${id}`;
   return {
-    id: `00000000-0000-0000-0000-00000000000${id}`,
+    id: keyId,
     hashedId: `hashed${id}`,
     createdAt: "2026-06-01T12:00:00Z",
     updatedAt: "2026-06-15T12:00:00Z",
@@ -37,13 +39,14 @@ export function makeObject(id: number, overrides: Partial<AuthToken> = {}): Auth
     description: `An example, number ${id}.`,
     version: "1.0.0",
     tags: ["example"],
-    annotations: [],
+    annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/authtoken/authtokens/hashed${id}/`,
+    detailUrl: `/dashboard/api/resource/AuthToken/smarterauthtoken-${keyId}/`,
     canDelete: true,
     ready: true,
-    lastAccessed: "2026-06-20T12:00:00Z",
-    expiresAt: null,
+    isActive: true,
+    lastUsedAt: "2026-06-20T12:00:00Z",
     ...overrides,
   };
 }

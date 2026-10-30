@@ -91,7 +91,6 @@ env:
   SMARTER_LISTVIEW_CACHE_EXPIRATION: "3600"
   SMARTER_LLAMA_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_LLM_CLIENT_CACHE_EXPIRATION: "300"
-  SMARTER_LLM_CLIENT_MAX_RETURNED_HISTORY: "25"
   SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: "3"
   SMARTER_LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: "True"
   SMARTER_LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
@@ -113,8 +112,6 @@ env:
   SMARTER_MYSQL_PORT: "3306"
   SMARTER_MYSQL_ROOT_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_MYSQL_ROOT_USERNAME: "root"
-  SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: "smarter_test_db"
   SMARTER_MCPSERVER_RATE_LIMIT: "1200"
   SMARTER_MYSQL_USER: "smarter_platform_prod"
   SMARTER_NAMESPACE: "smarter-platform-alpha"
@@ -205,6 +202,14 @@ app:
   # migrations, management commands and tasks that can legitimately take longer
   # than a web request. Leave it empty for no timeout.
   databaseReadTimeout: 60
+  # Threads in each uvicorn worker that run streamed chat prompts (env
+  # SMARTER_PROMPT_THREADS). A prompt holds its thread while it waits on the LLM
+  # and its tools, so a worker runs this many prompts at once and queues the next
+  # ones. The pool is the prompts' own, apart from the event loop's default
+  # executor (6 threads on a 2-vCPU node), where Django renders error pages.
+  # Keep it below limitConcurrency. Rendered only into the app Deployment: only
+  # the web server streams prompts. Leave it empty for the default, 32.
+  promptThreads: 32
   resources:
     requests:
       # One core per uvicorn worker (app.workers).

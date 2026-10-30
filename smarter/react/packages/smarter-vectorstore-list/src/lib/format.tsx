@@ -1,5 +1,5 @@
 /**
- * Labels and badges of a Vectorstore's fields, shared by the ListView, CardView and StatusBar.
+ * Labels and badges of a Vectorstore's fields, shared by the ListView, DetailView and StatusBar.
  */
 import type { Vectorstore, VectorstoreStatus } from "@/lib/Types";
 import { gettext } from "@smarter/common";

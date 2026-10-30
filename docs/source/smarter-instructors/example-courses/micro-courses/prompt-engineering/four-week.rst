@@ -135,7 +135,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Lecture 10
      - **Safety.** Prompt injection, jailbreaks and data leakage, shown live.
        :doc:`Guardrails </smarter-resources/smarter-guardrail>` and why they are enforced while a
-       system prompt is only a request.
+       system prompt is only a request. Show it with "Lab 1: Talk to Sam" in the case study
+       `Guardrails: Can You Trust the Model? <https://smarter.sh/case-studies/guardrails>`__: a
+       keyword guardrail stops an injection and misses the same request respelled. Its first
+       discussion question asks why a prompt obeyed 99 times in 100 isn't good enough.
    * - 4
      - Lecture 11
      - **Workflows.** Breaking a job into steps with an
@@ -271,7 +274,9 @@ Assignment 4: Red Team Report
 
 Students attack a classmate's assistant (assigned by the instructor) with at least ten attempts at
 prompt injection, jailbreaking, going off topic or extracting its instructions, then write up the
-results for the owner, who adds guardrails in response.
+results for the owner, who adds guardrails in response. The labs of `the guardrails case study
+<https://smarter.sh/case-studies/guardrails>`__ help the owner: "Shadow mode" tries a guardrail
+without enforcing it, and "Add a phrase" shows why a list of phrases is a race.
 
 **Turn in:** an attack log from the journal, a two-page report with findings ranked by severity,
 and, as the owner, the guardrail manifests that answer the report.

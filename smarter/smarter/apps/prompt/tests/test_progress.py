@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import threading
 import time
 from http import HTTPStatus
 from unittest import TestCase
@@ -17,11 +18,13 @@ from smarter.apps.mcpclient.signals import (
 )
 from smarter.apps.prompt import progress
 from smarter.apps.prompt.progress import (
+    PROMPT_THREAD_NAME_PREFIX,
     PromptProgressEvents,
     emit,
     progress_sink,
     prompt_event_stream,
     prompt_event_stream_response,
+    prompt_executor,
     wants_event_stream,
 )
 from smarter.apps.prompt.signals import (
@@ -288,3 +291,35 @@ class TestPromptEventStream(TestCase):
         with patch.object(progress, "logger"):
             collect(response.streaming_content)
         self.assertEqual(contexts, [("User.a", "abc123"), ("User.a", "abc123")])
+
+    def test_the_prompt_runs_in_the_prompt_thread_pool(self):
+        """The prompt runs in a thread of the prompts' own pool, not the event loop's default executor."""
+        threads = []
+
+        def complete():
+            threads.append(threading.current_thread().name)
+            return JsonResponse({})
+
+        collect(prompt_event_stream(complete, self.on_error))
+        self.assertEqual(len(threads), 1)
+        self.assertTrue(threads[0].startswith(PROMPT_THREAD_NAME_PREFIX), threads[0])
+
+
+class TestPromptExecutor(TestCase):
+    """Test the prompts' thread pool."""
+
+    def test_is_created_once_with_the_configured_size(self):
+        """The pool is created on first use, with smarter_settings.prompt_threads threads, and reused."""
+        with (
+            patch.object(progress, "_prompt_executor", None),
+            patch.object(progress, "smarter_settings", MagicMock(prompt_threads=3)),
+        ):
+            executor = prompt_executor()
+            self.addCleanup(executor.shutdown)
+            self.assertEqual(executor._max_workers, 3)  # pylint: disable=protected-access
+            self.assertIs(prompt_executor(), executor)
+
+    def test_its_threads_are_named(self):
+        """Its threads are named smarter-prompt-<n>, so that they are recognizable in a thread dump."""
+        name = prompt_executor().submit(lambda: threading.current_thread().name).result()
+        self.assertTrue(name.startswith(PROMPT_THREAD_NAME_PREFIX), name)

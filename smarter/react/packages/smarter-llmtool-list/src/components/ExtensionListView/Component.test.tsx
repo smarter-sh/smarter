@@ -6,7 +6,7 @@ import { extensionObjects, makeExtension, sessionContext } from "@/mocks/fixture
 import ExtensionListView from "@/components/ExtensionListView/Component";
 
 describe("ExtensionListView", () => {
-  it("shows a read-only row for each extension, linked to its homepage when it has one", async () => {
+  it("shows a read-only row for each extension", async () => {
     render(
       <ExtensionListView
         isLoading={false}
@@ -17,10 +17,8 @@ describe("ExtensionListView", () => {
       />,
     );
     const weather = await screen.findByRole("row", { name: /Weather/ });
-    expect(within(weather).getByRole("link", { name: "Weather" })).toHaveAttribute(
-      "href",
-      extensionObjects[0].homepage,
-    );
+    expect(within(weather).getByText("Weather")).toBeInTheDocument();
+    expect(within(weather).queryByRole("link")).not.toBeInTheDocument();
     expect(within(weather).getByText("weather")).toBeInTheDocument();
     expect(within(weather).queryByRole("button")).not.toBeInTheDocument();
 

@@ -76,7 +76,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 1
      - Lecture 3 (30 min)
      - **Test doubles.** Mocks, fakes and stubs, patching external services, and the in-memory
-       infrastructure provider.
+       infrastructure provider. Pre-reading: the section "Keeping the cloud out of tests" of the
+       case study `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
    * - 1
      - Live session 1 (90 min)
      - Live coverage run on one app, then pairs write a first test together. Start Assignment 1.

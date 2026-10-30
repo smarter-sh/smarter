@@ -23,7 +23,9 @@ written rule committed to the student's project; together they become the studen
        250,000 of them by the agent, while coverage rose to about 97%. Who built what: the
        *subsystems* that a human designed over years, against the *applications*, the resource
        families, where the agent wrote most of the code. Why the multiplier is neutral: an agent
-       multiplies whatever it finds.
+       multiplies whatever it finds. The case study `Converge or Diverge: AI Coding Agents
+       <https://smarter.sh/case-studies/ai-coding-agents>`__ tabulates who built what, by
+       layer, in its section "Who built what".
      - Install Claude Code against the student's project and against a clone of Smarter. In
        Smarter, count commits, releases and lines by author and by week with ``git log`` and a
        short Python script, and reproduce the lecture's figures. Discuss which measure is
@@ -39,7 +41,9 @@ written rule committed to the student's project; together they become the studen
        which way does it find first?*
      - Pick three recent agent-written or human-written changes in the student's project, and
        for each, name the example it copied, the feedback that checked it, and an error that
-       nothing would have caught. Estimate the project's ratio, and write down why.
+       nothing would have caught. Estimate the project's ratio, and write down why. Close with
+       the case study's first discussion question: which of its five factors could a team
+       improve in a month, and which take years?
    * - 3
      - **Measuring a codebase.** What a clone can tell you, and how to count it reproducibly:
        commits, lines and releases by author over time; tests and coverage per package; the
@@ -56,7 +60,9 @@ written rule committed to the student's project; together they become the studen
        errors, secrets referenced by name, and typed settings. Smarter's
        ``MetaDataWithOwnershipModel``, its journal, its Secrets and its settings layer, and how
        little of them the agent changed while writing whole applications on top. "The agent
-       writes the difference. The foundation cancels the rest."
+       writes the difference. The foundation cancels the rest." The case study `One Platform,
+       Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__ follows the ownership
+       rules into every view, broker and admin page in its section "The safe path by default".
      - Draw the student's project as subsystems and applications. For each subsystem, name its
        canonical module and the question it answers (who owns this? what does an error look
        like?), and mark the ones that are missing, where every feature answers the question
@@ -115,7 +121,8 @@ written rule committed to the student's project; together they become the studen
        Guidance sets the direction of a change, and feedback cancels its errors.
      - Write ``reads.py`` for the convergence kit: a Python script that reads the student's own
        Claude Code transcripts, classifies each tool call by pattern, and prints each source's
-       reach across sessions. Compare the table with Smarter's, and say what surprised you.
+       reach across sessions. Compare the table with Smarter's, in the AI coding agents case
+       study's section "What the agent reads", and say what surprised you.
    * - 11
      - **CLAUDE.md and Skills.** A short, always-loaded file that holds only what applies to
        every task and points to everything else; Agent Skills as folders of know-how loaded on
@@ -144,7 +151,8 @@ written rule committed to the student's project; together they become the studen
        the key-building code; and the search that showed the same cat every time.
      - In a clone of Smarter, count the files that call ``cache.get(`` or ``cache.set(``
        directly at v0.14, v0.15, v0.19 and today, and read each one that is left. Decide which
-       are legitimate exceptions and which are copies, and say why.
+       are legitimate exceptions and which are copies, and say why. The loop in the case
+       study's "Lab 2: Measure the series" counts every minor release tag at once.
    * - 14
      - **Detecting divergence.** The antipattern lives in the comparison between changes, so
        look across the codebase and across time: count both ways at every release tag, grep
@@ -153,14 +161,16 @@ written rule committed to the student's project; together they become the studen
        and treat a recurring bug shape as a symptom of a pattern.
      - Write ``ways.py`` for the convergence kit: for each helper and primitive pair from
        Module 5, it counts both ways at every tag of the student's project and prints the
-       trend. Find the student's project's worst second way.
+       trend, starting from the case study's exercise "Hunt for a second way". Find the
+       student's project's worst second way.
    * - 15
      - **The four-step fix.** Name the pattern, not the instance; fix every copy in one change,
        because a leftover copy is the next feature's template; write the rule, its reasons and
        its exceptions where the agent reads first; and add a mechanical guard that fails on
        the second way. The commit that did all four in Smarter, the mistake it made on the way
        (a cache on a generic transport that overrode every caller's settings), and the
-       ``reverse()`` cache that showed one way must also be the right way.
+       ``reverse()`` cache that showed one way must also be the right way. The case study's
+       section "Fixing it" sets out the four steps, each with its reasons.
      - Write the guard for the student's worst second way: a unit test that walks the
        project's modules with Python's ``ast`` module and fails on any direct use of the
        primitive outside its allowed modules. Run it, and watch it fail.
@@ -169,7 +179,10 @@ written rule committed to the student's project; together they become the studen
        attention span. The one-line DNS change that ran on every Smarter deployment, filled
        the host data it lacked with a plausible guess, and took production offline; the fix;
        and what lasted: a service layer for every cloud call, an in-memory provider for tests,
-       and a skill that hands write commands to the human.
+       and a skill that hands write commands to the human. The AI coding agents case study
+       tells the story in its section "When it went wrong", and `What Happens When You Click
+       Deploy <https://smarter.sh/case-studies/deploy>`__ shows the guard that refuses to reach
+       the cloud from a test, in its section "Keeping the cloud out of tests".
      - Inventory the student's project's irreversible operations: deployments, migrations,
        DNS, payments, email, deletes. For each, decide how a test fakes it and how the agent is
        kept from running it, and add the rule to ``CLAUDE.md``.

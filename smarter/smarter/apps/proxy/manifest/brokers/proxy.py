@@ -257,7 +257,7 @@ class SAMProxyBroker(AbstractBroker):
             description=proxy.description,
             version=proxy.version,
             tags=proxy.tags_list,
-            annotations=proxy.annotations if isinstance(proxy.annotations, list) else [],
+            annotations=proxy.annotations,
         )
         status = SAMProxyStatus(
             accountNumber=proxy.user_profile.account.account_number,
@@ -335,7 +335,7 @@ class SAMProxyBroker(AbstractBroker):
             description="Passthrough access to Anthropic's Messages API, with an API key that Smarter keeps.",
             version="1.0.0",
             tags=["example", "anthropic"],
-            annotations=[{"smarter.sh/proxy/documentation": "https://docs.claude.com/en/api/messages"}],
+            annotations={"smarter.sh/proxy/documentation": "https://docs.claude.com/en/api/messages"},
         )
         spec = SAMProxySpec(
             provider="anthropic",
@@ -375,6 +375,7 @@ class SAMProxyBroker(AbstractBroker):
         )
         if name:
             proxies = proxies.filter(name=name)
+        proxies = self.filter_by_annotation_selector(proxies, kwargs)
         data = []
         for proxy in proxies.order_by("name")[:MAX_RESULTS]:
             try:

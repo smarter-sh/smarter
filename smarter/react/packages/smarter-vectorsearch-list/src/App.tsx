@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Vectorsearch, VectorsearchListViewProps, VectorsearchCardViewProps } from "@/lib/Types";
+import type { Vectorsearch, VectorsearchListViewProps, VectorsearchDetailViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
-import CardView from "@/components/CardView";
+import DetailView from "@/components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Vectorsearch") },
@@ -17,12 +17,12 @@ const tabs: Tabs = [
 ];
 
 // Set the TabbedViewContext generic object type to Vectorsearch,
-// then omit the two abstrasct attributes ListView and CardView
+// then omit the two abstract attributes ListView and DetailView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type VectorsearchTabbedViewContext = Omit<TabbedViewContext<Vectorsearch>, "ListView" | "CardView"> & {
+export type VectorsearchTabbedViewContext = Omit<TabbedViewContext<Vectorsearch>, "ListView" | "DetailView"> & {
   ListView: React.ComponentType<VectorsearchListViewProps>;
-  CardView: React.ComponentType<VectorsearchCardViewProps>;
+  DetailView: React.ComponentType<VectorsearchDetailViewProps>;
 };
 
 const vectorsearchTabbedListViewContext: VectorsearchTabbedViewContext = {
@@ -30,7 +30,7 @@ const vectorsearchTabbedListViewContext: VectorsearchTabbedViewContext = {
   objectTypeName: "vectorsearch",
   tabs: tabs,
   ListView: ListView,
-  CardView: CardView,
+  DetailView: DetailView,
 };
 
 interface AppProps {

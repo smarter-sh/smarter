@@ -13,6 +13,9 @@ from smarter.apps.prompt.models import (
 
 
 class PromptSerializer(serializers.ModelSerializer):
+    # annotations is a property of MetaDataModel, not a column, so "__all__" leaves it out.
+    annotations = serializers.JSONField(required=False)
+
     class Meta:
         model = Prompt
         fields = "__all__"

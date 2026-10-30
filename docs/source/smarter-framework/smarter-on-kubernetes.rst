@@ -45,9 +45,11 @@ differs.
      - Deployment ``smarter``: uvicorn with 2 workers per pod (``app.workers``), on port 8000,
        behind the ClusterIP Service ``smarter``. Each worker accepts at most 100 concurrent
        requests (``app.limitConcurrency``) and answers 503 above that, so an overloaded pod sheds
-       load instead of running out of memory. A HorizontalPodAutoscaler scales it on CPU and
-       memory (3 to 25 pods by default, ``hpa.*``), and a PodDisruptionBudget lets node drains
-       evict only one app pod at a time (``app.podDisruptionBudget``).
+       load instead of running out of memory. Each worker runs at most 32 streamed chat prompts
+       at once, in a thread pool of their own (``app.promptThreads``,
+       ``SMARTER_PROMPT_THREADS``), and queues the next ones. A HorizontalPodAutoscaler scales
+       it on CPU and memory (3 to 25 pods by default, ``hpa.*``), and a PodDisruptionBudget lets
+       node drains evict only one app pod at a time (``app.podDisruptionBudget``).
    * - Operational Celery worker
      - ``smarter-worker``, queue ``default_celery_task_queue``.
      - Deployment ``smarter-worker``, same queue, with its own HorizontalPodAutoscaler.

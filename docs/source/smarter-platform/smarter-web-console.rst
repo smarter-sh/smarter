@@ -27,6 +27,15 @@ shown as alerts at the top of the dashboard, and new users see a getting started
 they have created and deployed their first LLM Client. It also provides quick access to the complete
 suite of The Smarter Project tools, resources, online tutorials, and documentation.
 
+The dashboard's search box finds resources of every kind at once, among those that you may read. Type
+text to find resources whose name or description contains it, or that have that tag;
+``tag:production`` to find the resources tagged ``production``; or an
+:ref:`annotation selector <sam-annotations>` requirement, such as ``acme.com/crm-account-id=A-10042``
+or ``!acme.com/archived``. The results are grouped by kind, a few of each, and each group links to its
+list page, narrowed by the same search. A result opens the resource's detail, described below, in its
+list page. A list page's address names the detail that is open, as ``?detail=`` and the resource's record
+locator, so a detail can be bookmarked or shared too.
+
 Below the console's title, on every page, a **Did you know?** note shows a fact of the day about The
 Smarter Project, with a link to learn more. Everyone sees the same fact from midnight to midnight UTC.
 A platform administrator can turn it off with the ``enable_web_console_did_you_know`` waffle switch.
@@ -69,6 +78,28 @@ AI Resource Lists
 Every Smarter AI resource type has a dedicated list page that provides a comprehensive role-based view
 of all resources of that type, along with their real-time state. Create, view, edit, clone, and delete
 any resource directly from the console.
+
+Choose a row, by clicking it or by pressing Enter on it, to open the resource's detail. Its tabs are:
+
+- **Details**: the resource's settings, grouped into sections, with its owner, dates, tags and
+  annotations, and the same actions as its row.
+- **Manifest**: the resource's manifest, as ``smarter describe`` returns it, which you can copy,
+  download, or open in the manifest editor to change it.
+- **Hierarchy**: every resource that it uses, and what those use in turn, as a tree of cards, each of
+  which opens that resource's manifest.
+- **Dependencies**: the resources that use it. A resource can't be deleted while others use it.
+
+The detail's Previous and Next buttons, or the left and right arrow keys, move through the list, on
+to the next or previous page, and keep the same tab open, so that two resources' manifests, say, can
+be compared. Escape closes it.
+
+A list can be searched, sorted by a column, and narrowed by tags and annotations. A resource's tags
+and annotations are chips, in its row and in its detail: click one to show only the resources that
+have the same tag, or the same annotation key and value. The annotation box next to the search box takes an
+:ref:`annotation selector <sam-annotations>` requirement: ``key``, ``!key``, ``key=value`` or
+``key!=value``, added with Enter. Each tag and requirement narrows the list further, and shows as a
+chip above it, which removes it when its button is clicked. They are kept in the page's address, as
+``?tag=`` and ``?annotation=``, so a narrowed list can be bookmarked or shared.
 
 .. raw:: html
 

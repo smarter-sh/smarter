@@ -69,7 +69,10 @@ are listed in full under `The Modules in the Source Code`_.
        and hashed API keys; parsers; Pydantic models in place of serializers for the request and
        the response; one error envelope with matching status codes; and CORS and CSRF for a chat
        window on another origin. :doc:`ADR 006 </adr/006-rest-api>`,
-       :doc:`ADR 023 </adr/023-api-versioning>`.
+       :doc:`ADR 023 </adr/023-api-versioning>`. Pre-reading: the case study `One Platform,
+       Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__, its sections "CORS and
+       CSRF" and "Lab 2: Probe the edges", and its question on why API keys are hashed with
+       SHA-512 rather than bcrypt.
      - Add a ``/api/v1/chat/`` endpoint to the course app that accepts a list of messages,
        validates it with a Pydantic model, calls the LLM, and returns the reply, authenticated by
        an API key, with tests.
@@ -102,7 +105,10 @@ are listed in full under `The Modules in the Source Code`_.
        context and rules for one request; changing the copy that is sent rather than the history
        that is saved; plugins that add to the system prompt when a prompt matches them; MCP
        servers' instructions; and why text from users and tools must never be trusted as
-       instructions.
+       instructions. The section "Prompting from the server" of the case study `The Smarter
+       Project MCP Server <https://smarter.sh/case-studies/mcp-server>`__ shows an MCP server's
+       instructions beside the assistant's own system prompt, and asks who should own each
+       sentence.
      - Add the signed-in user's name, the date and a formatting rule to the system prompt of
        each request in the course app, and prove with a test that none of it is saved in the
        history.
@@ -110,7 +116,10 @@ are listed in full under `The Modules in the Source Code`_.
      - **Retrieval-augmented generation with LangChain.** Embeddings and similarity; splitting
        documents with ``langchain-text-splitters``; ``OpenAIEmbeddings`` from
        ``langchain-openai``; vector stores behind one interface; and adding what was retrieved
-       to the system prompt, with its sources.
+       to the system prompt, with its sources. The counterpoint: "Searching without embeddings",
+       in `the MCP server case study <https://smarter.sh/case-studies/mcp-server>`__, where
+       keyword search beats embeddings on code's exact identifiers because the searcher is an
+       LLM.
      - Index a folder of Markdown files with LangChain, retrieve the best passages for each
        prompt, add them to the system prompt, and have the reply cite its sources.
    * - 13
@@ -128,21 +137,28 @@ are listed in full under `The Modules in the Source Code`_.
        LLM's Markdown rendered with ``marked`` and sanitized with ``DOMPurify``, because the
        messages are HTML; and a developer panel that shows each request, response and tool call
        with ``@microlink/react-json-view``. Smarter Chat, which is built from exactly these
-       packages, is the case study.
+       packages, is the case study, and the section "The reply is untrusted HTML" of `Guardrails:
+       Can You Trust the Model? <https://smarter.sh/case-studies/guardrails>`__ walks through its
+       layers of defense, with tests named after attacks.
      - Replace the Module 3 chat page with one built from chatscope's components, with Markdown
        replies and a collapsible JSON panel that shows the last request and response.
    * - 15
      - **A single-page chat web app.** Single-page app design; one typed contract between the
        front end and the back end, from Pydantic models to JSON Schema to generated TypeScript
        types; configuration loaded at startup; sessions, cookies and API keys in a browser;
-       and building and serving the app's static assets.
+       and building and serving the app's static assets. The case study `One Contract, Five
+       Clients <https://smarter.sh/case-studies/api-contract>`__ follows the same idea at scale,
+       in its sections "Generated, never written" and "A change, end to end".
      - Generate TypeScript types from the course app's JSON Schema, use them in its React app,
        and add a test that fails when the back end's contract changes.
    * - 16
      - **Guardrails, prompt injection and cost.** Input and output guardrails; regular
        expressions, detectors for personal data and secrets, moderation, and an LLM judge;
        direct and indirect prompt injection; token budgets and charges per user; and what a
-       guardrail should do when it fails.
+       guardrail should do when it fails. Demonstrate with "Lab 1: Talk to Sam" in `the
+       guardrails case study <https://smarter.sh/case-studies/guardrails>`__, where a keyword
+       guardrail stops an injection and misses the same request respelled, and discuss its
+       question on fail-open and ``failClosed: true``.
      - Add an input guardrail to the course app that blocks a prompt containing an API key or a
        credit card number, and a daily token budget per user.
    * - 17

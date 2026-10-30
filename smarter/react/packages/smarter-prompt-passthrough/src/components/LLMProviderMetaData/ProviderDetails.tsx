@@ -137,13 +137,9 @@ function Chips({ label, values }: { label: string; values: string[] }) {
   );
 }
 
-/** Each annotation, a one-key object, as "key: value". */
+/** Each annotation as "key: value". */
 function annotationLabels(annotations: LLMProvider["annotations"]): string[] {
-  return annotations.flatMap((annotation) =>
-    Object.entries(annotation).map(
-      ([key, value]) => `${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`,
-    ),
-  );
+  return Object.entries(annotations ?? {}).map(([key, value]) => `${key}: ${value}`);
 }
 
 interface ProviderDetailsProps {

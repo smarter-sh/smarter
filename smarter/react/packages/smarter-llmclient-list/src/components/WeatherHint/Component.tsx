@@ -1,8 +1,8 @@
 /**
- * The second onboarding hint: a sparkling spotlight on the Get Weather LLMClient's name, in the list or a
- * card, with a short note, so that a new user starts with the example that the welcome tour suggests. Its
- * name links to the LLMClient's chat in the Prompt Engineer's Workbench, where the workbench's guided tour
- * takes over. It shows until the user clicks the name or Got it.
+ * The second onboarding hint: a sparkling spotlight on the Get Weather LLMClient's name in the list, with a
+ * short note, so that a new user starts with the example that the welcome tour suggests. Its name opens the
+ * LLMClient's detail (see TabbedListView), whose Chat button opens its chat in the Prompt Engineer's
+ * Workbench, where the workbench's guided tour takes over. It shows until the user clicks the name or Got it.
  *
  * The list loads after the page, so the hint waits for the name to appear. A user who doesn't have a Get
  * Weather LLMClient, or doesn't open the tab that lists it, doesn't see the hint.
@@ -38,7 +38,7 @@ function WeatherHint({ onboarding }: { onboarding: Onboarding }) {
       icon="ki-cloud"
       title={gettext("Start with the weather LLMClient")}
       text={gettext(
-        "Click its name to chat with it in the Prompt Engineer's Workbench. Ask it about the weather anywhere in the world, and see how an LLM uses a tool to answer.",
+        "Click its name to see how it's built, then its Chat button to chat with it in the Prompt Engineer's Workbench. Ask it about the weather anywhere in the world, and see how an LLM uses a tool to answer.",
       )}
       onDone={(outcome) => record(HINT, outcome)}
     />

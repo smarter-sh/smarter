@@ -120,6 +120,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        certificates and Kubernetes objects at run time through its infrastructure service layer
        (``smarter/smarter/apps/infrastructure/``), with an AWS provider in production and an
        in-memory provider in tests. :doc:`/smarter-framework/technologies/infrastructure`.
+       Pre-reading: "One deploy, end to end" and "Waiting without blocking" in the case study
+       `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
    * - 9
      - 45
      - **Lab 4: Static analysis.** Run ``tflint`` and Checkov on the repository, and triage the
@@ -127,7 +129,10 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 10
      - 45
      - **Lecture 6: Working as a team.** Code review of plans, CI for infrastructure, drift,
-       importing existing resources, and the ``terraform apply`` safety rules.
+       importing existing resources, and the ``terraform apply`` safety rules. The six guards
+       of the daily DNS sweep, from "Only the exact shape" to "A dry run first", in "Cleaning up"
+       in `the deploy case study <https://smarter.sh/case-studies/deploy>`__, as a worked example
+       of automation that deletes cloud resources safely.
    * - 11
      - 30
      - **Capstone kickoff.** Students choose a capstone and plan it.

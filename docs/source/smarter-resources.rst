@@ -35,11 +35,11 @@ understood and applied by non-developers using the web console.
        - test
        - stackademy
      annotations:
-       - smarter.sh/test-db/host: localhost
-       - smarter.sh/test-db/port: "3306"
-       - smarter.sh/test-db/db: smarter_test_db
-       - smarter.sh/test-db/user: smarter_test_user
-       - smarter.sh/test-db/access: anyone can access this test database
+       smarter.sh/test-db/host: localhost
+       smarter.sh/test-db/port: "3306"
+       smarter.sh/test-db/db: smarter_test_db
+       smarter.sh/test-db/user: smarter_test_user
+       smarter.sh/test-db/access: anyone can access this test database
    spec:
      config:
        value: smarter_test_user
