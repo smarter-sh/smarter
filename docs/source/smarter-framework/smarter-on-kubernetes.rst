@@ -25,6 +25,7 @@ chose Docker and Kubernetes (AWS EKS) in the first place.
 
    smarter-on-kubernetes/llmclient-deploy
    smarter-on-kubernetes/operations
+   smarter-on-kubernetes/slack-bot
 
 
 The Services
@@ -106,6 +107,9 @@ container, which installs only the MariaDB client and a pinned AWS CLI
 PGP signature. The email is sent by a second container, from the Smarter image, which passes that
 summary to ``email_job_log --summary``. A failed backup is retried in a new pod, up to twice, and
 each attempt sends its own email.
+
+An optional Deployment, ``smarter-slack-bot`` (``slackBot.enabled``, ``false`` by default), answers
+questions in a Slack workspace with a deployed LLMClient. See :doc:`smarter-on-kubernetes/slack-bot`.
 
 
 Docker and Kubernetes Compared
