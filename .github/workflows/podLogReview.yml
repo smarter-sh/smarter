@@ -295,6 +295,12 @@ jobs:
             jq -r '"Turns: \(.num_turns // "?"), cost: $\(.total_cost_usd // "?"), error: \(.is_error // false)"' "$result"
           } >> "$GITHUB_STEP_SUMMARY"
           if [ "$(jq -r '.is_error // false' "$result")" = "true" ]; then
+            # why it failed, in the log too. An API error's message comes from the API, not from the pod logs.
+            jq -r '"Claude Code failed: subtype=\(.subtype // "?"), terminal_reason=\(.terminal_reason // "?"), api_error_status=\(.api_error_status // "none"), turns=\(.num_turns // "?"), cost=$\(.total_cost_usd // "?")"' "$result"
+            if [ "$(jq -r '.api_error_status // empty' "$result")" != "" ]; then
+              jq -r '.result // empty' "$result" | head -c 500
+              echo
+            fi
             exit 1
           fi
 
