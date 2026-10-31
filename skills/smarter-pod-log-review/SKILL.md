@@ -125,8 +125,12 @@ The replicas of one deployment run the same code, so their logs should look alik
 any environment: it downloads and redacts the logs with the scripts above, then runs Claude Code,
 which follows `.github/prompts/pod-log-review.md` and turns each actionable finding into a GitHub
 issue, a comment with new evidence, a closed issue, or a draft fix, through the Smarter Project MCP
-server's GitHub tools. Change what the review does in the prompt file, and what it can do in the
-workflow's `--allowedTools`. Both treat the logs as untrusted data. After the review,
+server's GitHub tools. Change what the review does in the prompt file, and what it can do in
+`.github/prompts/pod-log-review.settings.json` (Claude Code's permission rules). Both treat the
+logs as untrusted data. The rules match command text, so they are not the security boundary: the
+workflow also blocks reads outside the repository and the log folder, and Harden-Runner blocks
+every outbound host the job doesn't need. A new host for the job goes into the workflow's
+`allowed-endpoints`. After the review,
 [scripts/slack-notify.py](scripts/slack-notify.py) posts one message to the Slack channel
 `#smarter` that lists each issue the run opened, commented on or closed, and each pull request,
 taken from the MCP server's tool results in Claude's `stream-json` output, never from Claude's own

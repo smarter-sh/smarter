@@ -244,35 +244,38 @@ WORKDIR /home/smarter_user/
 
 ################################# permissions #######################################
 # This stage is for setting file permissions for the smarter_user. We want to approach
-# a no-trust permissions model in which smarter_user only has only the bare minimum
+# a no-trust permissions model in which smarter_user has only the bare minimum
 # permissions needed to run the application.
-FROM application AS permissions
-
-# ensure that smarter_user owns everything and has the minimum
-# permissions needed to run the application and to manage files
-# that the application needs to write to in /home/smarter_user.
-# this is important because by default Debian adds
-# read-only and execute permissions to the group and to public.
-# We don't want either of these.
 #
-# files:                    r-------- so that smarter_user can read them
-# directories:              r-x------ so that smarter_user can cd into them
-# venv/bin/*:               r-x------ so that smarter_user can execute them
-# smarter/**/migrations:    rwx------ so that smarter_user can write django migration files (which is not supposed to happen, actually).
-# data:                     rwx------ so that smarter_user can manage the data directory.
-# .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
+# Outside the local environment, root owns /home/smarter_user, and smarter_user reads
+# it through its group. A file's owner can always chmod it back to writable, so if
+# smarter_user owned the code, anything that runs as smarter_user could change the
+# code, the virtualenv or the migrations. smarter_user owns only the directories that
+# the application writes at runtime. Nobody else can read anything.
+#
+# code, venv, nltk_data:  root:smarter_user  files r--r----- (440), directories r-xr-x--- (550)
+# venv/bin/*, manage.py:  root:smarter_user  r-xr-x--- (550), so that smarter_user can run them
+# data:                   smarter_user       rwx------: the kubeconfig, celery beat's schedule,
+#                                            media, and generated example manifests
+# .cache:                 smarter_user       rwx------: python packages' caches, e.g. tldextract
+# staticfiles:            smarter_user       until collect_assets fills it, then read-only too
+#
+# Python can't write __pycache__ into read-only directories, so the application's
+# bytecode is compiled here, once, instead of in memory by every process at startup.
+# The local environment keeps the files that smarter_user owns, for development.
+FROM application AS permissions
 
 USER root
 
-RUN if [ "$ENVIRONMENT" != "local" ] ; then chown -R smarter_user:smarter_user /home/smarter_user/ && \
-  find /home/smarter_user/ -type f -exec chmod 400 {} + && \
-  find /home/smarter_user/ -type d -exec chmod 500 {} + && \
-  find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
-  find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
-  chmod 700 /home/smarter_user/smarter/staticfiles && \
-  chmod -R 700 /home/smarter_user/data && \
-  chmod -R 700 /home/smarter_user/.cache && \
-  chmod 755 /home/smarter_user/smarter/manage.py ; fi
+RUN if [ "$ENVIRONMENT" != "local" ] ; then \
+  python -m compileall -q /home/smarter_user/smarter/smarter && \
+  chown -R root:smarter_user /home/smarter_user/ && \
+  find /home/smarter_user/ -type f -exec chmod 440 {} + && \
+  find /home/smarter_user/ -type d -exec chmod 550 {} + && \
+  find /home/smarter_user/venv/bin/ -type f -exec chmod 550 {} + && \
+  chmod 550 /home/smarter_user/smarter/manage.py && \
+  chown -R smarter_user:smarter_user /home/smarter_user/data /home/smarter_user/.cache /home/smarter_user/smarter/staticfiles && \
+  chmod -R u=rwX,go= /home/smarter_user/data /home/smarter_user/.cache /home/smarter_user/smarter/staticfiles ; fi
 
 ################################# data #################################
 FROM permissions AS data
@@ -329,6 +332,15 @@ RUN echo "Inspecting /home/smarter_user/smarter/staticfiles" && \
     if [ ! -d "/home/smarter_user/smarter/staticfiles" ] || [ -z "$(ls -A /home/smarter_user/smarter/staticfiles 2>/dev/null)" ]; then \
       echo "Error: /home/smarter_user/smarter/staticfiles is missing or empty" >&2; exit 1; \
     fi
+
+# collectstatic is done, so the static files become read-only, like the code. See the
+# permissions stage.
+USER root
+RUN if [ "$ENVIRONMENT" != "local" ] ; then \
+  chown -R root:smarter_user /home/smarter_user/smarter/staticfiles && \
+  find /home/smarter_user/smarter/staticfiles -type f -exec chmod 440 {} + && \
+  find /home/smarter_user/smarter/staticfiles -type d -exec chmod 550 {} + ; fi
+
 ################################# final #######################################
 # This is the final stage that will be used to run the application.
 # Uvicorn is used as the application server.
