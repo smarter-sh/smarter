@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.0](https://github.com/smarter-sh/smarter/compare/v0.39.2...v0.40.0) (2026-10-31)
+
+### Features
+
+* **mcpserver:** add GitHub issue tools and manifest validation ([5a33702](https://github.com/smarter-sh/smarter/commit/5a33702b058a49fdb42b9b12673c62c2a1a02cc3))
+* **mcpserver:** add pull request, issue reading and closing tools ([b70bd52](https://github.com/smarter-sh/smarter/commit/b70bd52bb5ba69d77aa2e37ab43880a478769277))
+
+### Bug Fixes
+
+* **middleware:** answer blocked paths 404, throttled clients 429 ([411e11b](https://github.com/smarter-sh/smarter/commit/411e11b4164ae78b8e4547316de51c17b6113f85))
+
 ## [0.40.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.40.0-alpha.1...v0.40.0-alpha.2) (2026-10-31)
 
 ### Features
