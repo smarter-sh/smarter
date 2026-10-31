@@ -15,8 +15,13 @@ People talk to the bot in two ways:
   is a conversation of its own.
 
 A message that is only ``new``, ``reset``, ``start over`` or ``new conversation`` starts a new
-conversation in its thread. :doc:`../../slack` is the guide for the workspace's members, to which
-new members can be referred.
+conversation in its thread. :doc:`../../slack` is the guide for the workspace's members.
+
+The bot also onboards people. It sends a welcome, which says what it is, how to talk to it, that an
+answer takes 10 to 30 seconds, and links the guide, in a direct message to each new member of the
+workspace (``team_join``), and to anyone who opens its direct message for the first time
+(``app_home_opened``, when the conversation is still empty), which covers the members who joined
+before the bot. A message that is only ``help`` is answered with the same welcome.
 
 How It Works
 ------------
@@ -54,9 +59,10 @@ Setting It Up
 
    - Under **Socket Mode**, enable Socket Mode and create an app-level token with the
      ``connections:write`` scope. This is the app token, ``xapp-...``.
-   - Under **OAuth & Permissions**, add the bot token scopes ``app_mentions:read``, ``chat:write`` and
-     ``im:history``.
-   - Under **Event Subscriptions**, subscribe to the bot events ``app_mention`` and ``message.im``.
+   - Under **OAuth & Permissions**, add the bot token scopes ``app_mentions:read``, ``chat:write``,
+     ``im:history`` and ``users:read``.
+   - Under **Event Subscriptions**, subscribe to the bot events ``app_mention``, ``message.im``,
+     ``team_join`` and ``app_home_opened``.
    - Under **App Home**, enable the Messages tab, so that people can send the bot direct messages.
    - Install the app to the workspace. This gives the bot token, ``xoxb-...``.
 

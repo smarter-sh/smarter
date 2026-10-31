@@ -5,6 +5,10 @@ Welcome to The Smarter Project's Slack workspace. Besides the people here, the w
 **@Smarter Developer**, that answers questions about Smarter at any hour. This page explains what
 it knows, how to talk to it, and what to expect from it.
 
+.. image:: https://cdn.smarter.sh/images/slack-bot.png
+   :alt: A direct message with @Smarter Developer in Slack, answering the question What is a Smarter Plugin?
+   :width: 100%
+
 If you aren't in the workspace yet, join with this
 `invite link <https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw>`__.
 
@@ -68,6 +72,13 @@ start over in the main conversation, send a message that is only one of these wo
 
 The bot then forgets the conversation, and answers your next question afresh. This works in a
 channel thread too, but there, starting a new message is easier.
+
+Getting help
+~~~~~~~~~~~~
+
+The bot sends you a short welcome in a direct message when you join the workspace, or the first
+time you open its direct message: what it is, how to ask it, how long it takes, and a link to this
+page. To see it again, send a message that is only ``help``.
 
 Waiting for the answer
 ~~~~~~~~~~~~~~~~~~~~~~
