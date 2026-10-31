@@ -111,6 +111,12 @@ Who loads what:
   and `initialize_vectorstore_providers`, and before Stackademy. It deploys the LLMClients
   except in the local environment. The example CustomDomain is applied without starting its
   verification.
+- `load_from_github` never deletes anything. When an example's manifest is removed from its
+  repository, add it to `RETIRED_EXAMPLES` in `delete_retired_examples` (account app), which
+  `initialize_platform` runs right after the example manifests: it deletes the Smarter admin's
+  resource of that model and name, and its LLMClient links cascade. Otherwise the stale resource
+  lives on every platform, e.g. `smarter_project_github_chat`, which failed its hourly refresh for
+  weeks after the server stopped serving `smarter-chat` (issue #882).
 - `initialize_account` gives each account its own copy of the example plugins and LLMClients:
   `load_from_github --include_kind <each plugin kind> --include_kind LLMClient --deploy`
   (`EXAMPLE_KINDS_PER_ACCOUNT`), and loads Stackademy with `--exclude_kind Budget`.
