@@ -100,6 +100,7 @@ class TestSmarterProjectMCPServer(MCPServerTestBase):
                 "get_manifest_schema",
                 "validate_manifest",
                 "search_issues",
+                "read_issue",
             ],
         )
         self.assertNotIn("repository", result.tools[3].input_schema["properties"])
@@ -107,7 +108,14 @@ class TestSmarterProjectMCPServer(MCPServerTestBase):
         self.assertIn("repository", all_tools.tools[3].input_schema["required"])
         self.assertEqual(
             [tool.name for tool in all_tools.tools[5:]],
-            ["get_manifest_schema", "validate_manifest", "search_blog", "read_blog_post", "search_issues"],
+            [
+                "get_manifest_schema",
+                "validate_manifest",
+                "search_blog",
+                "read_blog_post",
+                "search_issues",
+                "read_issue",
+            ],
         )
 
     def test_tools_call(self):
@@ -192,7 +200,7 @@ class TestSmarterProjectMCPServer(MCPServerTestBase):
         """With the caller's GitHub token, create_issue is listed, explained and called, and the token is not sent in the signal."""
         server = SmarterProjectMCPServer(github_token=SecretStr(TOKEN))
         names = [tool["name"] for tool in server.handle(request("tools/list"))["result"]["tools"]]
-        self.assertEqual(names[-2:], ["create_issue", "comment_on_issue"])
+        self.assertEqual(names[-4:], ["create_issue", "comment_on_issue", "close_issue", "create_pull_request"])
         self.assertNotIn(
             "create_issue", [tool["name"] for tool in self.all_server.handle(request("tools/list"))["result"]["tools"]]
         )

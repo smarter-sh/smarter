@@ -87,7 +87,7 @@ or add it to Claude Code:
 Tools
 -----
 
-Every tool but ``create_issue`` and ``comment_on_issue`` is read-only, and returns Markdown, with links to the file on GitHub, at the indexed
+Every tool but ``create_issue``, ``comment_on_issue``, ``close_issue`` and ``create_pull_request`` is read-only, and returns Markdown, with links to the file on GitHub, at the indexed
 commit, and, for a page of the Sphinx documentation, to the page on docs.smarter.sh. The blog's
 tools link to the post.
 
@@ -124,13 +124,24 @@ tools link to the post.
    * - ``search_issues``
      - The GitHub issues of a repository, or of every repository, live from GitHub's search: their
        state, number of comments and url, best match first, optionally only ``open`` or ``closed``.
+   * - ``read_issue``
+     - One issue, or pull request, by its ``issue_number``: its state, labels, body and latest
+       comments, oldest first, and for a pull request whether it was merged. Anyone may call it.
    * - ``create_issue``
-     - Opens a GitHub issue in a repository, with a ``title`` and a Markdown ``body``, under the
-       user's own GitHub account, and returns its url. Served only to a request that carries the
-       user's GitHub token. See `GitHub Issues`_.
+     - Opens a GitHub issue in a repository, with a ``title``, a Markdown ``body`` and optional
+       ``labels``, under the user's own GitHub account, and returns its url. Served only to a
+       request that carries the user's GitHub token. See `GitHub Issues`_.
    * - ``comment_on_issue``
      - Adds a Markdown comment to an issue, by its ``issue_number``, under the user's own GitHub
        account. Served only with the user's GitHub token.
+   * - ``close_issue``
+     - Closes an issue that a merged pull request resolved, with a comment that says why, only if
+       GitHub confirms that the pull request, ``pull_request_number``, was merged. Served only with
+       the user's GitHub token.
+   * - ``create_pull_request``
+     - Proposes a change: one commit, with each changed file's whole new content, on a new
+       ``branch`` from ``base``, and a pull request from it, optionally a draft, and with the
+       commit's ``author``. Served only with the user's GitHub token. See `Pull Requests`_.
 
 ``get_manifest_schema`` reads the platform's own JSON Schemas and example manifests, which are
 committed with the :doc:`api contract </smarter-framework/smarter-api/api-contract>`, so it
@@ -213,7 +224,7 @@ the server, the tool and its arguments, so a repeated search or read costs no qu
 repository or blog that is indexed again starts a new index generation, which is part of every
 cached result's key, so new files and posts are found at once rather than an hour later. Errors are
 never cached. See :mod:`smarter.apps.mcpserver.caching`. The server marks every tool but
-``create_issue`` and ``comment_on_issue`` read-only, so an MCPClient that calls it caches the
+the four that write to GitHub read-only, so an MCPClient that calls it caches the
 results on its side too.
 
 GitHub Issues
@@ -230,9 +241,14 @@ minute. A classic token, when the client sends one, raises that limit to 30 for 
 
 ``create_issue`` lets an LLM report a bug or request a feature in a repository of The Smarter
 Project, e.g. after it has found the cause of a problem in the code, and ``comment_on_issue`` lets it
-add to an existing issue instead, e.g. another way to reproduce a bug. The server's instructions
-tell the LLM to call ``search_issues`` first, and to comment rather than open an issue twice. Both
-write as the user, with the user's own GitHub classic personal access token. The platform holds no
+add to an existing issue instead, e.g. another way to reproduce a bug. ``read_issue`` shows the LLM
+what an issue and its latest comments already say. The server's instructions tell the LLM to call
+``search_issues`` first, to comment rather than open an issue twice, and to comment only with
+something that the issue does not already say. ``create_issue`` takes optional ``labels``, e.g.
+``bug``: GitHub creates a label that the repository does not have, and drops the labels of a user
+who cannot push to the repository. ``close_issue`` closes an issue that a merged pull request
+resolved, with a comment that says why, and refuses unless GitHub says that the pull request was
+merged, so that an LLM never closes an issue on its judgment alone. They write as the user, with the user's own GitHub classic personal access token. The platform holds no
 GitHub credential that can write: the issue or comment is the user's, GitHub decides what the user
 may do, and its own limits apply.
 
@@ -257,15 +273,67 @@ token, so the LLMClients that use them cannot write issues. An MCPClient that is
 issue and comment under the account of its Secret's token.
 
 The server sends the token only to ``api.github.com``, and never logs, caches or stores it, nor
-passes it to the LLM. ``search_issues`` sends only a classic token, so that a secret that is not
-GitHub's never reaches GitHub. ``create_issue`` and ``comment_on_issue`` are annotated as tools that
-write, so MCP clients may ask the user before they call them, and their results are never cached,
+passes it to the LLM. ``search_issues`` and ``read_issue`` send only a classic token, so that a
+secret that is not GitHub's never reaches GitHub. Everything that the tools write is public, so they
+refuse a title, body, comment or file that holds the user's own token, or any credential that the
+:doc:`Guardrail's <../smarter-resources/smarter-guardrail>` secret detectors recognize: api keys, AWS
+access keys, JWTs and private keys. See :func:`smarter.apps.mcpserver.github.client.refuse_secrets`.
+The tools that write are annotated as such, so MCP clients may ask the user before they call them, and their results are never cached,
 by the server or by an MCPClient. The server's instructions tell the LLM to call them only when the
 user asks, after showing them exactly what it will write. Each issue and comment ends with a line
 that says it was written with the Smarter Project MCP server. GitHub's errors, e.g. a token without
 the ``public_repo`` scope, a locked issue, or a repository whose issues are turned off, are
 explained to the LLM. See :mod:`smarter.apps.mcpserver.github.client` and
 :mod:`smarter.apps.mcpserver.github.issues`.
+
+Pull Requests
+-------------
+
+``create_pull_request`` lets an LLM propose a fix that it found, as a pull request under the user's
+own GitHub account, with GitHub's REST api alone, without a clone. The change is one commit on a new
+branch, from the latest commit of ``base``, or of the repository's default branch. Each changed file
+is given whole, its new content or ``delete: true``, rather than as a diff, which an LLM gets wrong
+easily, and keeps its mode, so an executable script stays executable. ``author`` sets the commit's
+author and committer, e.g. ``{"name": "Claude", "email": "noreply@anthropic.com"}``, and otherwise
+GitHub records the token's owner.
+
+It never changes an existing branch, because GitHub refuses to create a branch that exists, so it
+cannot push to ``main`` or to anyone's work. It refuses a file under ``.github/`` or ``.git/``: a
+workflow that a pull request changes may run with the repository's secrets, and GitHub refuses
+workflow changes without the ``workflow`` scope anyway. A pull request changes at most 20 files. If
+GitHub creates the branch but refuses the pull request, the error gives the branch's url and tells
+the LLM not to try again. See :mod:`smarter.apps.mcpserver.github.pulls`.
+
+Daily Pod Log Review
+--------------------
+
+The workflow ``.github/workflows/podLogReview.yml`` uses these tools to keep the smarter
+repository's issues current with what the platform logs. Every day, and on demand for any
+environment, it downloads the logs of the environment's app server, Celery worker and beat pods,
+redacts credentials and personal data from them, and runs Claude Code on them, unattended, with the
+instructions in ``.github/prompts/pod-log-review.md`` and the repository's ``smarter-pod-log-review``
+and ``smarter-log-review`` skills. Claude groups repeated errors into findings, diagnoses each one
+against the code of the deployed release, and then:
+
+- opens an issue for a new problem, labeled ``pod-log-review``, with a severity and a category, and
+  a fingerprint that later runs match against;
+- comments on an existing issue only when it has new evidence, e.g. a new release or a new failure
+  mode, at most once a run, and never only to say that it still happens;
+- closes an open issue whose fix was merged, is in the deployed release, and no longer shows in the
+  logs;
+- opens a draft pull request into ``alpha`` for a small fix whose cause it verified.
+
+Claude Code is the author of each issue, comment and pull request, and of the pull request's commit;
+GitHub shows them under the account of the workflow's ``PAT`` secret. Because anyone can put text
+into a log, the workflow treats the logs as untrusted: Claude holds no credential, its tools are
+read-only except the MCP server's GitHub tools, it has no network or cluster access, each run has
+limits on what it writes and spends, and a dry run writes nothing. Nothing from the logs is printed
+in the workflow's public log, except Claude's summary, which follows the same rules as the issues.
+When a run writes to GitHub, the workflow posts one message to the Slack channel ``#smarter`` that
+lists each issue opened, commented on or closed, and each pull request, with its link, taken from
+the MCP server's results rather than from Claude's summary. Its scripts, ``download-logs.sh``,
+``redact-logs.py`` and ``slack-notify.py``, are in
+``skills/smarter-pod-log-review/scripts/``, and are as useful for a review by hand.
 
 The Built-in MCPClients
 -----------------------
@@ -333,6 +401,7 @@ Technical Reference
 
    smarter-project-mcp-server/github
    smarter-project-mcp-server/issues
+   smarter-project-mcp-server/pulls
    smarter-project-mcp-server/github-tools
 
 .. toctree::

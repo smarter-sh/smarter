@@ -16,9 +16,12 @@ from smarter.apps.mcpserver.github.issues import (
     MAX_EXCERPT_LENGTH,
     GitHubComment,
     GitHubIssue,
+    GitHubIssueClosed,
     GitHubIssueHit,
+    close_issue,
     comment_on_issue,
     create_issue,
+    read_issue,
     search_issues,
     search_query,
 )
@@ -51,17 +54,23 @@ class TestIssues(SmarterTestBase):
         super().setUpClass()
         cls.repository = ProjectRepository(name="smarter-test", title="a test", description="A test repository.")
 
-    def create(self, fake: mock.Mock, token: Optional[str] = TOKEN) -> GitHubIssue:
+    def create(
+        self, fake: mock.Mock, token: Optional[str] = TOKEN, body: str = "It fails.", labels: tuple[str, ...] = ()
+    ) -> GitHubIssue:
         with mock.patch(REQUEST, return_value=fake) as request:
             self.request = request
             return create_issue(
-                self.repository, "smarter apply fails", "It fails.", SecretStr(token) if token is not None else None
+                self.repository,
+                "smarter apply fails",
+                body,
+                SecretStr(token) if token is not None else None,
+                labels=labels,
             )
 
-    def comment(self, fake: mock.Mock) -> GitHubComment:
+    def comment(self, fake: mock.Mock, body: str = "Me too.") -> GitHubComment:
         with mock.patch(REQUEST, return_value=fake) as request:
             self.request = request
-            return comment_on_issue(self.repository, 42, "Me too.", SecretStr(TOKEN))
+            return comment_on_issue(self.repository, 42, body, SecretStr(TOKEN))
 
     def assert_fails(self, call, expected: str) -> None:
         with self.assertRaises(SmarterMCPServerToolError) as context:
@@ -82,6 +91,26 @@ class TestIssues(SmarterTestBase):
         self.assertEqual(args, ("POST", "https://api.github.com/repos/smarter-sh/smarter-test/issues"))
         self.assertEqual(kwargs["headers"]["Authorization"], f"Bearer {TOKEN}")
         self.assertEqual(kwargs["json"], {"title": "smarter apply fails", "body": "It fails." + ISSUE_FOOTER})
+
+    def test_create_issue_with_labels(self):
+        """Labels are sent only when there are some."""
+        self.create(response(201, ISSUE), labels=("bug", "severity: high"))
+        self.assertEqual(self.request.call_args.kwargs["json"]["labels"], ["bug", "severity: high"])
+        self.create(response(201, ISSUE))
+        self.assertNotIn("labels", self.request.call_args.kwargs["json"])
+
+    def test_credentials_are_never_written(self):
+        """An issue or comment that holds the caller's token or another credential is refused before GitHub is contacted."""
+        api_key = "sk-" + "ant-" + "a1B2" * 8
+        for body in (f"token {TOKEN}", f"key {api_key}"):
+            with self.subTest(body=body[:8]):
+                self.assert_fails(lambda body=body: self.create(response(201, ISSUE), body=body), "public")
+                self.request.assert_not_called()
+                self.assert_fails(lambda body=body: self.comment(response(201, COMMENT), body=body), "public")
+                self.request.assert_not_called()
+        with self.assertRaises(SmarterMCPServerToolError) as context:
+            self.create(response(201, ISSUE), labels=(api_key,))
+        self.assertNotIn(api_key, context.exception.message)
 
     def test_create_issue_requires_a_classic_token(self):
         """Without a classic token, GitHub is never contacted."""
@@ -221,3 +250,197 @@ class TestIssueSearch(SmarterTestBase):
         self.assertEqual(len(long), MAX_EXCERPT_LENGTH)
         self.assertTrue(long.endswith("..."))
         self.assertEqual(GitHubIssueHit.model_validate({**hit("x", 1), "body": None}).excerpt, "")
+
+
+ISSUE_DETAIL: SmarterDictType = {
+    "number": 42,
+    "title": "smarter apply fails",
+    "state": "closed",
+    "state_reason": "completed",
+    "html_url": "https://github.com/smarter-sh/smarter-test/issues/42",
+    "user": {"login": "octocat"},
+    "labels": [{"name": "bug"}],
+    "comments": 0,
+    "created_at": "2026-10-01T12:00:00Z",
+    "updated_at": "2026-10-30T12:00:00Z",
+    "closed_at": "2026-10-30T12:00:00Z",
+    "body": "It fails.",
+}
+
+
+def comment_json(number: int) -> SmarterDictType:
+    """Return one comment of GitHub's list of an issue's comments."""
+    return {
+        "user": {"login": f"user{number}"},
+        "created_at": "2026-10-02T12:00:00Z",
+        "html_url": f"https://github.com/smarter-sh/smarter-test/issues/42#issuecomment-{number}",
+        "body": f"comment {number}",
+    }
+
+
+class TestReadIssue(SmarterTestBase):
+    """Test read_issue()."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.repository = ProjectRepository(name="smarter-test", title="a test", description="A test repository.")
+
+    def read(self, *fakes: mock.Mock, token: Optional[SecretStr] = None):
+        with mock.patch(REQUEST, side_effect=list(fakes)) as request:
+            self.request = request
+            return read_issue(self.repository, 42, token)
+
+    def test_issue_without_comments(self):
+        """An issue without comments is read with one anonymous request."""
+        thread = self.read(response(200, ISSUE_DETAIL))
+        self.assertEqual(thread.issue.number, 42)
+        self.assertEqual(thread.issue.state_reason, "completed")
+        self.assertEqual([label.name for label in thread.issue.labels], ["bug"])
+        self.assertEqual(thread.comments, [])
+        self.assertEqual(self.request.call_count, 1)
+        args, kwargs = self.request.call_args
+        self.assertEqual(args, ("GET", "https://api.github.com/repos/smarter-sh/smarter-test/issues/42"))
+        self.assertNotIn("Authorization", kwargs["headers"])
+
+    def test_latest_comments_are_read(self):
+        """The last page of comments is read, with the caller's classic token."""
+        comments = [comment_json(number) for number in range(101, 151)]
+        thread = self.read(
+            response(200, {**ISSUE_DETAIL, "comments": 150}), response(200, comments), token=SecretStr(TOKEN)
+        )
+        self.assertEqual(len(thread.comments), 50)
+        self.assertEqual(thread.comments[0].user.login, "user101")
+        args, kwargs = self.request.call_args
+        self.assertEqual(args, ("GET", "https://api.github.com/repos/smarter-sh/smarter-test/issues/42/comments"))
+        self.assertEqual(kwargs["params"], {"per_page": "100", "page": "2"})
+        self.assertEqual(kwargs["headers"]["Authorization"], f"Bearer {TOKEN}")
+
+    def test_one_page_of_comments(self):
+        """Up to 100 comments are on the first page."""
+        self.read(response(200, {**ISSUE_DETAIL, "comments": 100}), response(200, [comment_json(1)]))
+        self.assertEqual(self.request.call_args.kwargs["params"]["page"], "1")
+
+    def test_issue_not_found(self):
+        """A missing issue is explained."""
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "Issue #42 was not found"):
+            self.read(response(404, {"message": "Not Found"}))
+
+    def test_comments_refused(self):
+        """A refusal to list the comments is explained."""
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "rate limit"):
+            self.read(response(200, {**ISSUE_DETAIL, "comments": 1}), response(429, None))
+
+    def test_unreadable_issue(self):
+        """A response that is not an issue is an error."""
+        for fake in (response(200, None), response(200, {"number": "x"})):
+            with self.subTest(body=fake.json), self.assertRaisesRegex(SmarterMCPServerToolError, "could not be read"):
+                self.read(fake)
+
+    def test_unreadable_comments(self):
+        """A response that is not a list of comments is an error."""
+        for body in (None, {"message": "x"}, [{"user": "not a user"}]):
+            with self.subTest(body=body), self.assertRaisesRegex(SmarterMCPServerToolError, "comments of issue #42"):
+                self.read(response(200, {**ISSUE_DETAIL, "comments": 1}), response(200, body))
+
+
+MERGED_PULL: SmarterDictType = {
+    "number": 43,
+    "html_url": "https://github.com/smarter-sh/smarter-test/pull/43",
+    "merged": True,
+    "merged_at": "2026-10-30T12:00:00Z",
+}
+
+
+class TestCloseIssue(SmarterTestBase):
+    """Test close_issue()."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.repository = ProjectRepository(name="smarter-test", title="a test", description="A test repository.")
+
+    def close(self, *fakes: mock.Mock, comment: str = "Fixed by #43.", pull_request_number: int = 43):
+        with mock.patch(REQUEST, side_effect=list(fakes)) as request:
+            self.request = request
+            return close_issue(self.repository, 42, pull_request_number, comment, SecretStr(TOKEN))
+
+    def calls(self) -> list[tuple]:
+        return [call.args for call in self.request.call_args_list]
+
+    def assert_fails(self, call, expected: str) -> str:
+        with self.assertRaises(SmarterMCPServerToolError) as context:
+            call()
+        self.assertIn(expected, context.exception.message)
+        self.assertNotIn(TOKEN, context.exception.message)
+        return context.exception.message
+
+    def test_close_issue(self):
+        """The merged pull request is checked, the comment added, and the issue closed as completed."""
+        closed = self.close(response(200, MERGED_PULL), response(201, COMMENT), response(200, {"state": "closed"}))
+        self.assertEqual(
+            closed,
+            GitHubIssueClosed(
+                number=42,
+                html_url="https://github.com/smarter-sh/smarter-test/issues/42",
+                comment_url=COMMENT["html_url"],
+                pull_request_url=MERGED_PULL["html_url"],
+                author="octocat",
+            ),
+        )
+        api = "https://api.github.com/repos/smarter-sh/smarter-test"
+        self.assertEqual(
+            self.calls(),
+            [("GET", f"{api}/pulls/43"), ("POST", f"{api}/issues/42/comments"), ("PATCH", f"{api}/issues/42")],
+        )
+        self.assertEqual(self.request.call_args_list[1].kwargs["json"], {"body": "Fixed by #43." + COMMENT_FOOTER})
+        self.assertEqual(self.request.call_args.kwargs["json"], {"state": "closed", "state_reason": "completed"})
+        for call in self.request.call_args_list:
+            self.assertEqual(call.kwargs["headers"]["Authorization"], f"Bearer {TOKEN}")
+
+    def test_unmerged_pull_request(self):
+        """An open or closed but unmerged pull request closes nothing, and adds no comment."""
+        for pull in ({**MERGED_PULL, "merged": False, "merged_at": None}, {"number": 43, "html_url": "x"}):
+            with self.subTest(pull=pull):
+                self.assert_fails(lambda pull=pull: self.close(response(200, pull)), "is not merged")
+                self.assertEqual(len(self.calls()), 1)
+
+    def test_refused_before_github_is_contacted(self):
+        """A credential in the comment, a missing token or an issue that resolves itself are refused without a request."""
+        self.assert_fails(lambda: self.close(response(200, MERGED_PULL), comment=f"x {TOKEN}"), "public")
+        self.request.assert_not_called()
+        self.assert_fails(lambda: self.close(response(200, MERGED_PULL), pull_request_number=42), "by itself")
+        self.request.assert_not_called()
+        with mock.patch(REQUEST) as request, self.assertRaisesRegex(SmarterMCPServerToolError, "personal access token"):
+            close_issue(self.repository, 42, 43, "c", None)
+        request.assert_not_called()
+
+    def test_pull_request_not_found(self):
+        """A pull request that does not exist is explained, and nothing is written."""
+        self.assert_fails(lambda: self.close(response(404, {"message": "Not Found"})), "Pull request #43 was not found")
+        self.assertEqual(len(self.calls()), 1)
+
+    def test_unreadable_pull_request(self):
+        """A response that is not a pull request is an error, and nothing is written."""
+        for body in (None, {"number": "x"}):
+            with self.subTest(body=body):
+                self.assert_fails(lambda body=body: self.close(response(200, body)), "could not be read")
+                self.assertEqual(len(self.calls()), 1)
+
+    def test_comment_refused(self):
+        """When the comment is refused, the issue is not closed."""
+        locked = response(403, {"message": "Unable to create comment because issue is locked."})
+        self.assert_fails(lambda: self.close(response(200, MERGED_PULL), locked), "issue is locked")
+        self.assertNotIn("PATCH", [call[0] for call in self.calls()])
+
+    def test_close_refused_after_the_comment(self):
+        """When the issue cannot be closed, the error says that the comment was added, and not to add it again."""
+        message = self.assert_fails(
+            lambda: self.close(
+                response(200, MERGED_PULL), response(201, COMMENT), response(403, {"message": "Must have admin rights"})
+            ),
+            "The comment was added",
+        )
+        self.assertIn(COMMENT["html_url"], message)
+        self.assertIn("Must have admin rights", message)
+        self.assertIn("Do not add the comment again", message)

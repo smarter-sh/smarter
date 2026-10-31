@@ -8,15 +8,21 @@ GitHub issues of The Smarter Project's repositories: searched, opened and commen
   public, so the result does not depend on who asks. Without the caller's classic token the
   search is anonymous, and GitHub allows anonymous clients 10 searches a minute for each IP
   address, which the platform's users share. A token raises that to 30 for its owner.
-- :func:`create_issue` opens an issue, with ``POST /repos/{owner}/{repo}/issues``.
+- :func:`read_issue` reads an issue and its latest comments, with ``GET /repos/{owner}/{repo}/issues/{number}``
+  and its ``/comments``, so that an LLM can see what an issue already says before it adds to it.
+- :func:`create_issue` opens an issue, optionally with labels, with ``POST /repos/{owner}/{repo}/issues``.
+- :func:`close_issue` closes an issue that a merged pull request resolved, with a comment that says
+  why, after GitHub confirms that the pull request was merged.
 - :func:`comment_on_issue` adds a comment to an existing issue, with
   ``POST /repos/{owner}/{repo}/issues/{number}/comments``.
 
 :func:`create_issue` and :func:`comment_on_issue` write as the caller, with the caller's own
 classic personal access token, so the issue or comment is the caller's, and GitHub decides
 what the caller may do. Both append a footer that says where the text came from. Never cache
-them: every call writes. See :mod:`smarter.apps.mcpserver.github.client` for how the token is
-checked and kept secret, and how GitHub's errors are explained.
+them: every call writes. Neither writes a credential: see
+:func:`~smarter.apps.mcpserver.github.client.refuse_secrets`. See
+:mod:`smarter.apps.mcpserver.github.client` for how the token is checked and kept secret, and how
+GitHub's errors are explained.
 
 .. note::
 
@@ -28,19 +34,21 @@ checked and kept secret, and how GitHub's errors are explained.
 from typing import Literal, Optional
 
 import requests
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, SecretStr, ValidationError
 
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
-from smarter.apps.mcpserver.github.client import (
-    explain_failure,
-    github_request,
-    optional_token,
-    validate_token,
-)
 from smarter.apps.mcpserver.repositories import GITHUB_API_URL, ProjectRepository
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
+
+from .client import (
+    explain_failure,
+    github_request,
+    optional_token,
+    refuse_secrets,
+    validate_token,
+)
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -150,6 +158,128 @@ def search_issues(
     return [hit for hit in result.items if hit.repository in names][:limit]
 
 
+COMMENTS_PER_PAGE = 100
+"""The most comments that GitHub returns in one page, and that :func:`read_issue` reads."""
+
+
+class GitHubUser(BaseModel):
+    """A GitHub account, with the field that the tools report."""
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    login: str = Field(description="The account's login.")
+
+
+class GitHubLabel(BaseModel):
+    """A label of an issue, with the field that the tools report."""
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    name: str = Field(description="The label's name.")
+
+
+class GitHubIssueComment(BaseModel):
+    """
+    A comment on an issue, with the fields that read_issue reports.
+
+    GitHub's response has many more fields, which are ignored.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    user: Optional[GitHubUser] = Field(default=None, description="The comment's author.")
+    created_at: str = Field(default="", description="When the comment was written, in ISO 8601.")
+    html_url: str = Field(default="", description="The comment's url on github.com.")
+    body: Optional[str] = Field(default=None, description="The comment, in Markdown.")
+
+
+class GitHubIssueDetail(BaseModel):
+    """
+    One issue, as ``GET /repos/{owner}/{repo}/issues/{number}`` returns it, with the fields that read_issue reports.
+
+    GitHub's response has many more fields, which are ignored. GitHub returns a pull request
+    from this endpoint too, with a ``pull_request`` field.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    number: int = Field(description="The issue's number in its repository.")
+    title: str = Field(description="The issue's title.")
+    state: str = Field(description="open or closed.")
+    state_reason: Optional[str] = Field(default=None, description="Why it was closed, e.g. completed or not_planned.")
+    html_url: str = Field(description="The issue's url on github.com.")
+    user: Optional[GitHubUser] = Field(default=None, description="Who opened the issue.")
+    labels: list[GitHubLabel] = Field(default_factory=list, description="The issue's labels.")
+    comments: int = Field(default=0, description="The number of comments.")
+    created_at: str = Field(default="", description="When the issue was opened, in ISO 8601.")
+    updated_at: str = Field(default="", description="When the issue last changed, in ISO 8601.")
+    closed_at: Optional[str] = Field(default=None, description="When the issue was closed, in ISO 8601.")
+    body: Optional[str] = Field(default=None, description="The issue's body, in Markdown.")
+    pull_request: Optional[JsonValue] = Field(default=None, description="Present if it is a pull request.")
+
+
+class GitHubIssueThread(BaseModel):
+    """An issue and its latest comments, oldest first."""
+
+    model_config = ConfigDict(frozen=True)
+
+    issue: GitHubIssueDetail
+    comments: list[GitHubIssueComment] = Field(default_factory=list)
+
+
+def read_issue(repository: ProjectRepository, number: int, token: Optional[SecretStr]) -> GitHubIssueThread:
+    """
+    Read an issue of a repository, and its latest :data:`COMMENTS_PER_PAGE` comments.
+
+    Issues are public, so the result does not depend on who asks. Without the caller's classic
+    token the request is anonymous, at GitHub's anonymous rate limit.
+
+    :param repository: The repository.
+    :param number: The issue's number.
+    :param token: The caller's GitHub token, or None. Only a classic personal access token is sent.
+    :returns: The issue and its latest comments, oldest first.
+    :raises SmarterMCPServerToolError: If GitHub could not be reached, the issue was not found,
+        or GitHub's response could not be read.
+    """
+    value = optional_token(token)
+    path = f"/repos/{repository.full_name}/issues/{number}"
+    not_found = f"Issue #{number} was not found in {repository.full_name}. Find it with search_issues."
+    response = github_request("GET", path, value)
+    if response.status_code != 200:
+        logger.info(
+            "%s.read_issue() GitHub did not return %s#%s: HTTP %s",
+            logger_prefix,
+            repository.full_name,
+            number,
+            response.status_code,
+        )
+        raise SmarterMCPServerToolError(
+            explain_failure(response, repository, f"read issue #{number}", not_found=not_found)
+        )
+    try:
+        issue = GitHubIssueDetail.model_validate(response.json())
+    except (ValueError, ValidationError) as e:
+        logger.warning("%s.read_issue() GitHub's response is not an issue: %s", logger_prefix, e)
+        raise SmarterMCPServerToolError(f"GitHub's issue #{number} could not be read. Try again later.") from e
+    if not issue.comments:
+        return GitHubIssueThread(issue=issue)
+    # the last page holds the latest comments, which say what is already known.
+    last_page = (issue.comments - 1) // COMMENTS_PER_PAGE + 1
+    response = github_request(
+        "GET", f"{path}/comments", value, params={"per_page": str(COMMENTS_PER_PAGE), "page": str(last_page)}
+    )
+    if response.status_code != 200:
+        raise SmarterMCPServerToolError(
+            explain_failure(response, repository, f"read the comments of issue #{number}", not_found=not_found)
+        )
+    try:
+        comments = [GitHubIssueComment.model_validate(comment) for comment in response.json()]
+    except (ValueError, TypeError, ValidationError) as e:
+        logger.warning("%s.read_issue() GitHub's response is not a list of comments: %s", logger_prefix, e)
+        raise SmarterMCPServerToolError(f"The comments of issue #{number} could not be read. Try again later.") from e
+    return GitHubIssueThread(issue=issue, comments=comments)
+
+
 MAX_TITLE_LENGTH = 256
 """GitHub's maximum length of an issue's title."""
 MAX_BODY_LENGTH = 20000
@@ -210,7 +340,13 @@ def created(response: requests.Response, repository: ProjectRepository, what: st
         ) from e
 
 
-def create_issue(repository: ProjectRepository, title: str, body: str, token: Optional[SecretStr]) -> GitHubIssue:
+def create_issue(
+    repository: ProjectRepository,
+    title: str,
+    body: str,
+    token: Optional[SecretStr],
+    labels: tuple[str, ...] = (),
+) -> GitHubIssue:
     """
     Open an issue in a repository of The Smarter Project, as the owner of a GitHub token.
 
@@ -218,14 +354,18 @@ def create_issue(repository: ProjectRepository, title: str, body: str, token: Op
     :param title: The issue's title.
     :param body: The issue's body, in Markdown. :data:`ISSUE_FOOTER` is appended.
     :param token: The caller's classic personal access token.
+    :param labels: The issue's labels, e.g. ``bug``. GitHub creates a label that the repository
+        does not have, and silently drops the labels of a caller who cannot push to the repository.
     :returns: The new issue.
-    :raises SmarterMCPServerToolError: If the token is not a classic personal access token, or
-        GitHub could not be reached, or did not create the issue.
+    :raises SmarterMCPServerToolError: If the token is not a classic personal access token, the
+        title or body holds a credential, or GitHub could not be reached, or did not create the issue.
     """
     value = validate_token(token)
-    response = github_request(
-        "POST", f"/repos/{repository.full_name}/issues", value, json={"title": title, "body": body + ISSUE_FOOTER}
-    )
+    refuse_secrets(value, title, body, *labels)
+    data: SmarterDictType = {"title": title, "body": body + ISSUE_FOOTER}
+    if labels:
+        data["labels"] = list(labels)
+    response = github_request("POST", f"/repos/{repository.full_name}/issues", value, json=data)
     if response.status_code != 201:
         logger.info(
             "%s.create_issue() GitHub did not open an issue in %s: HTTP %s",
@@ -257,10 +397,12 @@ def comment_on_issue(
     :param body: The comment, in Markdown. :data:`COMMENT_FOOTER` is appended.
     :param token: The caller's classic personal access token.
     :returns: The new comment.
-    :raises SmarterMCPServerToolError: If the token is not a classic personal access token, or
-        GitHub could not be reached, or did not create the comment, e.g. the issue is locked.
+    :raises SmarterMCPServerToolError: If the token is not a classic personal access token, the
+        body holds a credential, or GitHub could not be reached, or did not create the comment,
+        e.g. the issue is locked.
     """
     value = validate_token(token)
+    refuse_secrets(value, body)
     response = github_request(
         "POST",
         f"/repos/{repository.full_name}/issues/{number}/comments",
@@ -295,12 +437,132 @@ def comment_on_issue(
     return comment
 
 
+class GitHubPullRequestState(BaseModel):
+    """
+    A pull request, as ``GET /repos/{owner}/{repo}/pulls/{number}`` returns it, with the fields that close_issue reads.
+
+    GitHub's response has many more fields, which are ignored.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    number: int = Field(description="The pull request's number.")
+    html_url: str = Field(description="The pull request's url on github.com.")
+    merged: bool = Field(default=False, description="Whether it was merged.")
+    merged_at: Optional[str] = Field(default=None, description="When it was merged, in ISO 8601.")
+
+
+class GitHubIssueClosed(BaseModel):
+    """An issue that close_issue closed, with the comment that says why."""
+
+    model_config = ConfigDict(frozen=True)
+
+    number: int = Field(description="The issue's number.")
+    html_url: str = Field(description="The issue's url on github.com.")
+    comment_url: str = Field(description="The url of the comment that says why it was closed.")
+    pull_request_url: str = Field(description="The url of the merged pull request that resolved it.")
+    author: Optional[str] = Field(default=None, description="The GitHub login of the token's owner.")
+
+
+def close_issue(
+    repository: ProjectRepository,
+    number: int,
+    pull_request_number: int,
+    comment: str,
+    token: Optional[SecretStr],
+) -> GitHubIssueClosed:
+    """
+    Close an issue that a merged pull request resolved, with a comment that says why, as the owner of a GitHub token.
+
+    The issue is closed only if GitHub says that the pull request was merged, so that an LLM
+    cannot close an issue on its own judgment alone, nor because a log or an issue told it to.
+    The comment is added first, and the issue is then closed as ``completed``.
+
+    :param repository: The repository of the issue and the pull request.
+    :param number: The issue's number.
+    :param pull_request_number: The number of the merged pull request that resolved the issue.
+    :param comment: Why the issue is resolved, in Markdown. :data:`COMMENT_FOOTER` is appended.
+    :param token: The caller's classic personal access token.
+    :returns: The closed issue.
+    :raises SmarterMCPServerToolError: If the token is not a classic personal access token, the
+        comment holds a credential, the pull request was not found or not merged, or GitHub could
+        not be reached, or refused the comment or the closing.
+    """
+    value = validate_token(token)
+    refuse_secrets(value, comment)
+    if pull_request_number == number:
+        raise SmarterMCPServerToolError("An issue cannot be resolved by itself: give the merged pull request's number.")
+    response = github_request("GET", f"/repos/{repository.full_name}/pulls/{pull_request_number}", value)
+    if response.status_code != 200:
+        raise SmarterMCPServerToolError(
+            explain_failure(
+                response,
+                repository,
+                f"read pull request #{pull_request_number}",
+                not_found=f"Pull request #{pull_request_number} was not found in {repository.full_name}.",
+            )
+        )
+    try:
+        pull_request = GitHubPullRequestState.model_validate(response.json())
+    except (ValueError, ValidationError) as e:
+        logger.warning("%s.close_issue() GitHub's response is not a pull request: %s", logger_prefix, e)
+        raise SmarterMCPServerToolError(
+            f"Pull request #{pull_request_number} could not be read. Try again later."
+        ) from e
+    if not pull_request.merged:
+        raise SmarterMCPServerToolError(
+            f"Pull request #{pull_request_number} is not merged, so issue #{number} was not closed. Close an issue "
+            "only when the merged pull request that resolved it is known."
+        )
+    posted = comment_on_issue(repository, number, comment, token)
+    response = github_request(
+        "PATCH",
+        f"/repos/{repository.full_name}/issues/{number}",
+        value,
+        json={"state": "closed", "state_reason": "completed"},
+    )
+    if response.status_code != 200:
+        logger.info(
+            "%s.close_issue() GitHub did not close %s#%s: HTTP %s",
+            logger_prefix,
+            repository.full_name,
+            number,
+            response.status_code,
+        )
+        reason = explain_failure(response, repository, f"close issue #{number}")
+        raise SmarterMCPServerToolError(
+            f"The comment was added, at {posted.html_url}, but the issue was not closed: {reason} "
+            "Do not add the comment again."
+        )
+    logger.info(
+        "%s.close_issue() closed %s#%s, resolved by #%s",
+        logger_prefix,
+        repository.full_name,
+        number,
+        pull_request_number,
+    )
+    return GitHubIssueClosed(
+        number=number,
+        html_url=f"{repository.github_url}/issues/{number}",
+        comment_url=posted.html_url,
+        pull_request_url=pull_request.html_url,
+        author=posted.author,
+    )
+
+
 __all__ = [
     "GitHubComment",
     "GitHubIssue",
+    "GitHubIssueClosed",
+    "GitHubIssueComment",
+    "GitHubIssueDetail",
     "GitHubIssueHit",
+    "GitHubIssueThread",
+    "GitHubPullRequestState",
     "IssueState",
+    "close_issue",
     "comment_on_issue",
     "create_issue",
+    "read_issue",
     "search_issues",
 ]
