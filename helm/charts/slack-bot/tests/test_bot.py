@@ -188,6 +188,22 @@ class TestAgentClient(unittest.TestCase):
         api = FakeAgentApi(prompt_response({"role": "assistant", "content": "a"}))
         self.assertEqual(self.client(api).reply("t", "how do I reset my password?"), "a")
 
+    def test_help_is_answered_with_the_welcome(self):
+        api = FakeAgentApi()
+        agent = self.client(api)
+        for word in ("help", "<@U1> Help?", "HELP!"):
+            self.assertEqual(agent.reply("t", word), bot.WELCOME)
+        self.assertEqual(api.calls, [])
+
+    def test_help_inside_a_question_is_a_question(self):
+        api = FakeAgentApi(prompt_response({"role": "assistant", "content": "a"}))
+        self.assertEqual(self.client(api).reply("t", "where can I get help with Plugins?"), "a")
+
+    def test_welcome_links_the_guide_and_sets_expectations(self):
+        self.assertIn(f"<{bot.GUIDE_URL}|", bot.WELCOME)
+        self.assertIn("10 to 30 seconds", bot.WELCOME)
+        self.assertIn("@Smarter Developer", bot.WELCOME)
+
     def test_forget_an_unknown_thread(self):
         self.client(FakeAgentApi()).forget("unknown")
 
@@ -250,6 +266,39 @@ class TestListeners(unittest.TestCase):
             self.app.listeners["message"](event, self.say)
         self.agent.reply.assert_not_called()
         self.say.assert_not_called()
+
+    def test_new_member_is_welcomed(self):
+        client = mock.Mock()
+        with self.assertLogs(bot.logger, "INFO"):
+            self.app.listeners["team_join"]({"user": {"id": "U9"}}, client)
+        client.chat_postMessage.assert_called_once_with(channel="U9", text=bot.WELCOME, unfurl_links=False)
+
+    def test_new_bots_and_deleted_users_are_not_welcomed(self):
+        client = mock.Mock()
+        for event in ({"user": {"id": "U9", "is_bot": True}}, {"user": {"id": "U9", "deleted": True}}, {}):
+            self.app.listeners["team_join"](event, client)
+        client.chat_postMessage.assert_not_called()
+
+    def test_first_visit_to_the_direct_message_is_welcomed(self):
+        client = mock.Mock()
+        client.conversations_history.return_value = {"ok": True, "messages": []}
+        with self.assertLogs(bot.logger, "INFO"):
+            self.app.listeners["app_home_opened"]({"tab": "messages", "channel": "D1", "user": "U9"}, client)
+        client.conversations_history.assert_called_once_with(channel="D1", limit=1)
+        client.chat_postMessage.assert_called_once_with(channel="D1", text=bot.WELCOME, unfurl_links=False)
+
+    def test_later_visits_are_not_welcomed(self):
+        client = mock.Mock()
+        client.conversations_history.return_value = {"ok": True, "messages": [{"text": "hi"}]}
+        self.app.listeners["app_home_opened"]({"tab": "messages", "channel": "D1", "user": "U9"}, client)
+        client.chat_postMessage.assert_not_called()
+
+    def test_home_and_about_tabs_are_ignored(self):
+        client = mock.Mock()
+        for event in ({"tab": "home", "channel": "D1"}, {"tab": "about", "channel": "D1"}, {"tab": "messages"}):
+            self.app.listeners["app_home_opened"](event, client)
+        client.conversations_history.assert_not_called()
+        client.chat_postMessage.assert_not_called()
 
 
 class TestMain(unittest.TestCase):
