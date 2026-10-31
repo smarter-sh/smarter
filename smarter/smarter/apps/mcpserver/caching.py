@@ -7,7 +7,7 @@ the blog, is indexed again. So each tool call's result is cached for
 validated arguments, plus an index generation that changes whenever an index changes. A
 newly indexed repository or post is therefore found at once, and not an hour later.
 
-- :meth:`~smarter.apps.mcpserver.tools.SmarterProjectTool.call` caches each result with
+- :meth:`~smarter.apps.mcpserver.protocol.tools.SmarterProjectTool.call` caches each result with
   :func:`smarter.lib.cache.tool_results.cached_tool_call`, keyed by :func:`index_generation`.
 - :func:`invalidate_cached_tool_results` starts a new index generation, which makes every
   cached result stale. :mod:`~smarter.apps.mcpserver.receivers` calls it when an index changes.

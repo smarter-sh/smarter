@@ -111,6 +111,16 @@ Smarter is large and highly consistent. Almost every change has a precedent.
 When existing code disagrees with these skills, the code that is newest and
 consistent with most of the codebase wins. Say so in your summary.
 
+## Imports
+
+**No parent-relative imports.** Never write `from ..module import x` or `from ...module import x`.
+Import from the absolute path instead, e.g. `from smarter.apps.mcpserver.exceptions import
+SmarterMCPServerToolError`, not `from ..exceptions import SmarterMCPServerToolError`. A
+single-dot import of a sibling module in the same package (`from .base import ...`) is fine.
+When you move a module into a subpackage, convert the imports that would become `..` to
+absolute ones, rather than adding dots. Older code still has some `..` imports; convert the ones
+in a module you change, and don't copy them.
+
 ## Caching
 
 `@cache_results` is the one way to cache results for an hour or longer. It is

@@ -1,5 +1,5 @@
 """
-Tests for smarter.apps.mcpserver.indexer.
+Tests for smarter.apps.mcpserver.index.indexer.
 
 GitHub is never contacted: ``requests.get`` is replaced, and serves archives built by
 :func:`.base_classes.build_archive`.
@@ -11,9 +11,9 @@ from unittest import mock
 
 import requests
 
-from smarter.apps.mcpserver import indexer
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerIndexError
-from smarter.apps.mcpserver.indexer import (
+from smarter.apps.mcpserver.index import indexer
+from smarter.apps.mcpserver.index.indexer import (
     ArchiveFile,
     collect_files,
     decode_text,
@@ -45,7 +45,7 @@ from .base_classes import (
     build_archive,
 )
 
-REQUESTS_PATCH = "smarter.apps.mcpserver.indexer.requests.get"
+REQUESTS_PATCH = "smarter.apps.mcpserver.index.indexer.requests.get"
 
 
 class FakeResponse:

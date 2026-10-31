@@ -42,24 +42,26 @@ from django.db import transaction
 from django.utils import timezone
 from pydantic import BaseModel, ConfigDict
 
-from smarter.common.const import VERSION
-from smarter.lib import logging
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-
-from .exceptions import SmarterMCPServerIndexError
-from .models import (
+from smarter.apps.mcpserver.const import USER_AGENT
+from smarter.apps.mcpserver.exceptions import SmarterMCPServerIndexError
+from smarter.apps.mcpserver.models import (
     RepositoryFile,
     RepositoryFileKind,
     RepositoryIndex,
     RepositoryIndexStatus,
 )
-from .repositories import ProjectRepository, get_repository
+from smarter.apps.mcpserver.repositories import ProjectRepository, get_repository
+from smarter.apps.mcpserver.signals import (
+    mcpserver_repository_index_failed,
+    mcpserver_repository_indexed,
+)
+from smarter.lib import logging
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+
 from .search import MAX_LINE_LENGTH
-from .signals import mcpserver_repository_index_failed, mcpserver_repository_indexed
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
 
-USER_AGENT = f"Smarter/{VERSION.get('__version__', '0.0.0')} MCPServer (+https://smarter.sh)"
 REQUEST_TIMEOUT = 60
 """Seconds to wait for GitHub to respond, and between the chunks of an archive."""
 CHUNK_SIZE = 1024 * 1024

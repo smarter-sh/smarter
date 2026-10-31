@@ -12,6 +12,13 @@ per field, with its dotted path, e.g. ``spec.config.value``, its type, whether i
 required, its default and its description. The read-only ``status`` is left out: it is
 never written in a manifest.
 
+:func:`validate_manifest_text` parses a manifest that the LLM wrote, and validates it with
+:func:`smarter.apps.api.v1.cli.validation.validate_manifest`, the validation of the cli's
+``validate`` command, for the ``validate_manifest`` tool. The text comes from anonymous
+clients, so it is parsed without YAML aliases, whose expansion could make a small document
+enormous, and it is validated without the checks that make requests, e.g. that an image url
+responds.
+
 .. note::
 
     **Experimental.** The MCPServer was designed and coded by Claude Code (Anthropic's
@@ -25,13 +32,17 @@ import os
 import re
 from typing import Optional
 
+import yaml
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
+from yaml.composer import ComposerError
 
 from smarter.apps.api.v1.contract.const import (
     SAM_EXAMPLE_SUFFIX,
     SAM_SCHEMA_DIR,
     SAM_SCHEMA_SUFFIX,
 )
+from smarter.apps.api.v1.contract.models import CliApiValidation
+from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
 from smarter.lib.typing import SmarterDictType
 
 SAM_SCHEMA_REPOSITORY_PATH = "smarter/smarter/apps/api/v1/contract/sam"
@@ -39,6 +50,8 @@ SAM_SCHEMA_REPOSITORY_PATH = "smarter/smarter/apps/api/v1/contract/sam"
 READ_ONLY_SECTIONS = frozenset({"status"})
 """Top-level sections of a manifest that the platform writes, and a manifest never contains."""
 MAX_DEPTH = 8
+MAX_MANIFEST_LENGTH = 50000
+"""The maximum length of a manifest that validate_manifest validates."""
 MAX_DESCRIPTION_LENGTH = 240
 MAX_TYPE_LENGTH = 80
 WHITESPACE = re.compile(r"\s+")
@@ -243,6 +256,48 @@ def manifest_fields(schema: SmarterDictType) -> list[ManifestField]:
     return SchemaFlattener(schema).flatten()
 
 
+class NoAliasSafeLoader(yaml.SafeLoader):  # pylint: disable=too-many-ancestors
+    """A YAML safe loader that refuses aliases, ``*name``, whose expansion could make a small document enormous."""
+
+    def compose_node(self, parent, index):  # type: ignore[no-untyped-def]
+        if self.check_event(yaml.AliasEvent):
+            event = self.peek_event()
+            raise ComposerError(None, None, "YAML aliases are not allowed in a manifest", event.start_mark)
+        return super().compose_node(parent, index)
+
+
+def parse_manifest(text: str) -> JsonValue:
+    """
+    Parse a manifest, in YAML or JSON, which YAML includes.
+
+    :param text: The manifest.
+    :returns: The parsed manifest.
+    :raises SmarterMCPServerToolError: If it is too long, or is not YAML, or has aliases.
+    """
+    if len(text) > MAX_MANIFEST_LENGTH:
+        raise SmarterMCPServerToolError(f"The manifest is longer than {MAX_MANIFEST_LENGTH} characters.")
+    try:
+        return yaml.load(text, Loader=NoAliasSafeLoader)  # nosec B506: a safe loader
+    except yaml.YAMLError as e:
+        raise SmarterMCPServerToolError(f"The manifest is not valid YAML: {clip(str(e), 300)}") from e
+
+
+def validate_manifest_text(text: str) -> CliApiValidation:
+    """
+    Validate a manifest that the LLM wrote, against the Pydantic model of its kind, without saving it.
+
+    The checks that make requests, e.g. that an image url responds, are skipped.
+
+    :param text: The manifest, in YAML or JSON.
+    :returns: Whether it is valid, and its errors.
+    :raises SmarterMCPServerToolError: If it is too long, or is not YAML.
+    """
+    # the brokers import most of the platform's apps. pylint: disable=import-outside-toplevel
+    from smarter.apps.api.v1.cli.validation import validate_manifest
+
+    return validate_manifest(parse_manifest(text), external_checks=False)
+
+
 __all__ = [
     "ManifestField",
     "find_kind",
@@ -250,4 +305,6 @@ __all__ = [
     "manifest_fields",
     "manifest_kinds",
     "manifest_schema",
+    "parse_manifest",
+    "validate_manifest_text",
 ]

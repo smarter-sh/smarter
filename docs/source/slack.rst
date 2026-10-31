@@ -80,6 +80,10 @@ The bot sends you a short welcome in a direct message when you join the workspac
 time you open its direct message: what it is, how to ask it, how long it takes, and a link to this
 page. To see it again, send a message that is only ``help``.
 
+.. image:: https://cdn.smarter.sh/images/slack-bot-help.png
+   :alt: The bot's reply to help in a direct message: how to ask it in a channel and in a direct message, the new and help commands, a note that answers take 10 to 30 seconds, and a link to this page.
+   :width: 100%
+
 Waiting for the answer
 ~~~~~~~~~~~~~~~~~~~~~~
 
