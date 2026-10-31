@@ -103,9 +103,8 @@ class SlackTestReportTestCase(unittest.TestCase):
 class TestVitestReport(SlackTestReportTestCase):
     """Vitest_report() reads Vitest's JSON report and coverage summary."""
 
-    def test_counts_files_tests_and_failures(self):
+    def test_counts_tests_and_failures(self):
         suite = report.vitest_report(self.vitest, self.vitest_coverage)
-        self.assertEqual(suite.files, 3)
         self.assertEqual((suite.passed, suite.failed, suite.skipped), (2, 2, 1))
         self.assertEqual(suite.total, 5)
         self.assertEqual(suite.failures, ["List.test.tsx › List <deletes> & renames", "Broken.test.tsx (did not load)"])
@@ -125,7 +124,6 @@ class TestJunitReport(SlackTestReportTestCase):
 
     def test_counts_every_shard(self):
         suite = report.junit_report(str(self.shards), self.python_coverage)
-        self.assertIsNone(suite.files)
         self.assertEqual((suite.passed, suite.failed, suite.skipped), (2, 2, 1))
         self.assertEqual(suite.failures, ["smarter.apps.a.tests.TestA.test_two", "smarter.apps.b.tests.TestB.test_two"])
         self.assertEqual(suite.coverage, "93%")
@@ -157,6 +155,8 @@ class TestMessage(SlackTestReportTestCase):
             "--python-results",
             str(self.dir / "missing"),
             "--python-passed-before",
+            "--repo",
+            "smarter-sh/smarter",
             "--ref",
             "alpha",
             "--actor",
@@ -165,8 +165,11 @@ class TestMessage(SlackTestReportTestCase):
             "https://github.com/o/r/actions/runs/1",
         )
         lines = text.splitlines()
-        self.assertEqual(lines[0], ":white_check_mark: *Tests #160 passed* · `alpha` · someone")
-        self.assertEqual(lines[1], ":white_check_mark: *React*: 1 files · 1 passed · 1 skipped · coverage 91.2%")
+        self.assertEqual(
+            lines[0],
+            ":white_check_mark: *Tests #160 passed* · <https://github.com/smarter-sh/smarter|smarter-sh/smarter> · `alpha` · someone",
+        )
+        self.assertEqual(lines[1], ":white_check_mark: *React*: 1 passed · 1 skipped · coverage 91.2%")
         self.assertEqual(lines[2], ":white_check_mark: *Python*: unchanged, passed in an earlier run")
         self.assertEqual(lines[3], "<https://github.com/o/r/actions/runs/1|View the run>")
 
@@ -187,7 +190,7 @@ class TestMessage(SlackTestReportTestCase):
         )
         self.assertIn(":x: *Tests #160 failed*", text)
         self.assertIn("<https://github.com/o/r/pull/7|feat: &lt;b&gt;>", text)
-        self.assertIn(":x: *React*: 3 files · 2 passed · *2 failed* · 1 skipped", text)
+        self.assertIn(":x: *React*: 2 passed · *2 failed* · 1 skipped", text)
         self.assertIn("`List.test.tsx › List &lt;deletes&gt; &amp; renames`", text)
         self.assertIn(":x: *Python*: 2 passed · *2 failed* · 1 skipped", text)
         self.assertIn("`smarter.apps.b.tests.TestB.test_two`", text)
@@ -201,7 +204,7 @@ class TestMessage(SlackTestReportTestCase):
     def test_job_failed_although_every_test_passed(self):
         passing = self.write("passing.json", json.dumps({"testResults": [VITEST_RESULTS["testResults"][0]]}))
         text = self.run_dry("--react-result", "failure", "--react-results", passing)
-        self.assertIn(":x: *React*: 1 files · 1 passed · 1 skipped (job failure)", text)
+        self.assertIn(":x: *React*: 1 passed · 1 skipped (job failure)", text)
 
     def test_lists_at_most_max_failures(self):
         many = {

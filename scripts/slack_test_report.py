@@ -8,11 +8,11 @@ Usage::
         --react-coverage coverage-summary.json \\
         --python-result success --python-results shards --python-coverage coverage.json \\
         --slack-bot-result success [--react-passed-before] [--python-passed-before] \\
-        [--ref alpha] [--actor someone] [--pr-title "..."] [--pr-url URL] [--run-url URL] \\
+        [--repo smarter-sh/smarter] [--ref alpha] [--actor someone] [--pr-title "..."] [--pr-url URL] [--run-url URL] \\
         | python3 -I scripts/slack_post.py --channel smarter
 
 The GitHub app for Slack only says whether a run succeeded. This message also gives what the
-run's job summaries show: the React test files and tests (Vitest's JSON report), the Python tests
+run's job summaries show: the React tests (Vitest's JSON report), the Python tests
 (the shards' JUnit XML reports), each suite's coverage, and the names of the tests that failed.
 
 A ``--*-result`` is the job's result as GitHub reports it (``success``, ``failure``, ``cancelled``
@@ -33,13 +33,14 @@ from pathlib import Path
 MAX_FAILURES = 15
 """The most failed tests listed per suite. The rest are counted."""
 MAX_NAME = 150
+GITHUB_URL = "https://github.com"
+"""Where ``--repo`` links to."""
 
 
 @dataclass
 class SuiteReport:
     """What one suite's reports say: its counts, the tests that failed, and its coverage."""
 
-    files: int | None = None
     passed: int = 0
     failed: int = 0
     skipped: int = 0
@@ -87,9 +88,7 @@ def vitest_report(results_path: str | None, coverage_path: str | None) -> SuiteR
     if data is None:
         return None
     report = SuiteReport()
-    files = data.get("testResults") or []
-    report.files = len(files)
-    for test_file in files:
+    for test_file in data.get("testResults") or []:
         name = Path(str(test_file.get("name", ""))).name
         for test in test_file.get("assertionResults") or []:
             status = test.get("status")
@@ -169,10 +168,7 @@ def suite_lines(name: str, result: str, passed_before: bool, report: SuiteReport
         return [f"{icon} *{name}*: unchanged, passed in an earlier run"]
     if report is None:
         return [f"{icon} *{name}*: {result}, no test report"]
-    parts = []
-    if report.files is not None:
-        parts.append(f"{report.files:,} files")
-    parts.append(f"{report.passed:,} passed")
+    parts = [f"{report.passed:,} passed"]
     if report.failed:
         parts.append(f"*{report.failed:,} failed*")
     if report.skipped:
@@ -190,14 +186,18 @@ def suite_lines(name: str, result: str, passed_before: bool, report: SuiteReport
 
 
 def message(args: argparse.Namespace, react: SuiteReport | None, python: SuiteReport | None) -> str:
-    """Return the Slack message: a heading, the pull request, one block per suite, and a link to the run."""
+    """Return the Slack message: a heading with the repository, the pull request, one block per suite, and a link to the run."""
     passed = (
         suite_passed(args.react_result, args.react_passed_before)
         and suite_passed(args.python_result, args.python_passed_before)
         and suite_passed(args.slack_bot_result, False)
     )
     heading = f"{':white_check_mark:' if passed else ':x:'} *{escape(args.title)} {'passed' if passed else 'failed'}*"
-    context = [f"`{escape(args.ref)}`" if args.ref else "", escape(args.actor) if args.actor else ""]
+    context = [
+        f"<{GITHUB_URL}/{args.repo}|{escape(args.repo)}>" if args.repo else "",
+        f"`{escape(args.ref)}`" if args.ref else "",
+        escape(args.actor) if args.actor else "",
+    ]
     context = [part for part in context if part]
     if context:
         heading += " · " + " · ".join(context)
@@ -226,6 +226,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--python-coverage", help="The combined coverage, as coverage json writes it.")
     parser.add_argument("--python-passed-before", action="store_true")
     parser.add_argument("--slack-bot-result", default="success")
+    parser.add_argument("--repo", default="", help="The repository, e.g. 'smarter-sh/smarter'.")
     parser.add_argument("--ref", default="")
     parser.add_argument("--actor", default="")
     parser.add_argument("--pr-title", default="")
