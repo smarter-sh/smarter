@@ -240,6 +240,7 @@
                               <li>{% blocktranslate trimmed %}<strong>Cost accounting</strong> of every LLM request, by account, user and chat session <a href="https://docs.smarter.sh/en/latest/smarter-platform/cost-accounting.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Runs on Kubernetes</strong>, on-premise or in the cloud <a href="https://docs.smarter.sh/en/latest/smarter-framework/technologies/kubernetes.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Developer tools</strong>: a command-line interface, a REST API, and SDKs for Python, Node.js and Go <a href="https://docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                              <li>{% blocktranslate trimmed %}<strong>Slack</strong> - join The Smarter Project's Slack workspace for real-time questions and discussion with other users and contributors <a href="https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw" rel="noopener" target="_blank">[join]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Source code</strong> on GitHub, where contributions are welcome <a href="https://github.com/smarter-sh/" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Deployment guides</strong> for <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/production-deployment.html" rel="noopener" target="_blank">production</a>, a <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/quick-start.html" rel="noopener" target="_blank">Quick Start</a> for evaluation, and <a href="https://docs.smarter.sh/en/latest/smarter-framework/guides/developer-setup.html" rel="noopener" target="_blank">running from source</a> for developers.{% endblocktranslate %}</li>
                             </ul>
@@ -377,6 +378,48 @@
                               {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
                                 Learn more about {{ product_name }} manifests, plugins, extensions, the command-line interface, and
                                 the API.
+                              {% endblocktranslate %}</p>
+                            <!--end::Desc-->
+                          </div>
+                          <!--end::Content-->
+                          <!--begin::Separator-->
+                          <div class="separator separator-dashed" style="margin:17px 0 15px 0"></div>
+                          <!--end::Separator-->
+                        </div>
+                        <!--end::Block-->
+                      </div>
+                      <!--end::Item-->
+                      <!--begin::Item-->
+                      <div style="display:flex">
+                        <!--begin::Media-->
+                        <div class="polygon-icon"
+                          style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
+                          <img alt="Icon Polygon" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.png' %}" />
+                          <span style="position: absolute">
+                            <i class="ki-duotone ki-messages fs-3">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                              <span class="path4"></span>
+                              <span class="path5"></span>
+                            </i>
+                          </span>
+                        </div>
+                        <!--end::Media-->
+                        <!--begin::Block-->
+                        <div>
+                          <!--begin::Content-->
+                          <div>
+                            <!--begin::Title-->
+                            <a href="https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw" target="_blank" rel="noopener"
+                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Slack Community" %}</a>
+                            <!--end::Title-->
+                            <!--begin::Desc-->
+                            <p
+                              style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
+                              {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                                Ask questions and talk with other {{ product_name }} users and contributors in real time,
+                                in The Smarter Project's Slack workspace.
                               {% endblocktranslate %}</p>
                             <!--end::Desc-->
                           </div>
