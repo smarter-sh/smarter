@@ -58,8 +58,8 @@ spec:
               # so that a failed step fails the Job (and the Helm hook) instead of being hidden.
               # The mariadb commands carry passwords, so they don't run through run(), which echoes its command.
               # The steps' output is also written to a log file, which is emailed when the Job completes,
-              # to databaseInit.notifyEmail, or to smarter_settings.email_admin. The steps run in a
-              # subshell (they are piped to tee), so their exit status is passed back in a file.
+              # to databaseInit.notifyEmail, or to smarter_settings.email_admin, and posted to the Slack
+              # channel databaseInit.notifySlackChannel, if any. The steps run in a subshell (they are piped to tee), so their exit status is passed back in a file.
               {
                 status=0
                 run() {
@@ -105,7 +105,7 @@ spec:
                 echo $status > /tmp/job-init.status
               } 2>&1 | tee /tmp/job-init.log
               status=$(cat /tmp/job-init.status 2>/dev/null || echo 1)
-              python manage.py email_job_log --file /tmp/job-init.log --job "{{ .Release.Name }}-smarter-job-init {{ .Chart.Version }}" --status "$status" --to "{{ .Values.databaseInit.notifyEmail | default "" }}" || true
+              python manage.py email_job_log --file /tmp/job-init.log --job "{{ .Release.Name }}-smarter-job-init {{ .Chart.Version }}" --status "$status" --to "{{ .Values.databaseInit.notifyEmail | default "" }}" --slack-channel "{{ .Values.databaseInit.notifySlackChannel | default "" }}" || true
               exit $status
 
           command:
