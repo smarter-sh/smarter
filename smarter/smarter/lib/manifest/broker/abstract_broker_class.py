@@ -1,6 +1,7 @@
 # pylint: disable=C0302
 """Smarter API Manifest Abstract Broker class."""
 
+import contextlib
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -1892,12 +1893,18 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return self.json_response_ok(command=command, data=data)
 
     @classmethod
-    def validation_errors(cls, manifest: SmarterDictType) -> list[SmarterDictType]:
+    def validation_errors(cls, manifest: SmarterDictType, external_checks: bool = True) -> list[SmarterDictType]:
         """Validate a manifest against the broker's Pydantic model, without saving it.
 
         Pydantic's errors keep their ``loc``, the path of the invalid value in the manifest.
         Errors that the model's validators raise as other exceptions, e.g. ``SAMValidationError``,
         have an empty ``loc``.
+
+        By default the manifest is validated as one that a client sent, inside
+        :func:`~smarter.lib.manifest.models.client_manifest_validation`, so validators that check
+        something outside of the manifest also run, e.g. that an image url responds. A caller that
+        must not make requests on a client's behalf, such as an anonymous endpoint, passes
+        ``external_checks=False``.
 
         Example:
 
@@ -1908,11 +1915,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         :param manifest: The manifest, as a dict.
         :type manifest: dict
+        :param external_checks: Whether to run the validators that check something outside of the manifest.
+        :type external_checks: bool
         :return: The manifest's errors, as dicts with a ``loc``, a ``message`` and a ``type``, or an empty list.
         :rtype: list[SmarterDictType]
         """
+        context = client_manifest_validation() if external_checks else contextlib.nullcontext()
         try:
-            with client_manifest_validation():
+            with context:
                 cls._pydantic_model.model_validate(manifest)
         except ValidationError as e:
             return [

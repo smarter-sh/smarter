@@ -1,17 +1,25 @@
 """
-Tests for smarter.apps.mcpserver.manifests.
+Tests for smarter.apps.mcpserver.manifests.schemas.
 
 They read the committed JSON Schemas and examples of the api contract, which a test of
 :mod:`smarter.apps.api.v1.contract` keeps current, and small schemas of their own.
 """
 
-from smarter.apps.mcpserver.manifests import (
+from unittest import mock
+
+import yaml
+
+from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
+from smarter.apps.mcpserver.manifests.schemas import (
+    MAX_MANIFEST_LENGTH,
     field_description,
     find_kind,
     manifest_example,
     manifest_fields,
     manifest_kinds,
     manifest_schema,
+    parse_manifest,
+    validate_manifest_text,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -107,3 +115,40 @@ class TestManifests(SmarterTestBase):
             with self.subTest(description=description):
                 self.assertEqual(field_description(description), expected)
         self.assertTrue(field_description("word " * 100).endswith("…"))
+
+    # -------------------------------------------------------------------------
+    # parse_manifest, validate_manifest_text
+    # -------------------------------------------------------------------------
+    def test_parse_manifest(self):
+        """YAML and JSON are parsed."""
+        self.assertEqual(parse_manifest("kind: Secret\nspec:\n  a: 1\n"), {"kind": "Secret", "spec": {"a": 1}})
+        self.assertEqual(parse_manifest('{"kind": "Secret"}'), {"kind": "Secret"})
+
+    def test_parse_manifest_refuses_aliases(self):
+        """A YAML alias, whose expansion could be enormous, is refused; an anchor alone is not."""
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "aliases are not allowed"):
+            parse_manifest("a: &x [1, 2]\nb: *x\n")
+        self.assertEqual(parse_manifest("a: &x 1\n"), {"a": 1})
+
+    def test_parse_manifest_errors(self):
+        """Text that is not YAML, or is too long, is an error."""
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "not valid YAML"):
+            parse_manifest("a: [1, 2\n")
+        with self.assertRaisesRegex(SmarterMCPServerToolError, "longer than"):
+            parse_manifest("a" * (MAX_MANIFEST_LENGTH + 1))
+
+    def test_validate_manifest_text(self):
+        """Every kind's example is valid, and a missing field is an error with its path."""
+        for kind in ("Secret", "Guardrail", "LLMClient"):
+            with self.subTest(kind=kind):
+                example = manifest_example(kind)
+                self.assertEqual(validate_manifest_text(yaml.safe_dump(example)).errors, [])
+                del example["metadata"]["name"]
+                errors = validate_manifest_text(yaml.safe_dump(example)).errors
+                self.assertIn(["metadata", "name"], [error.loc for error in errors])
+
+    def test_validate_manifest_text_skips_external_checks(self):
+        """The checks that make requests, e.g. that an image url responds, are never run."""
+        with mock.patch("smarter.apps.api.v1.cli.validation.validate_manifest") as validate:
+            validate_manifest_text("kind: Secret\n")
+        validate.assert_called_once_with({"kind": "Secret"}, external_checks=False)
