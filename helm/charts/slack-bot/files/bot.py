@@ -39,18 +39,24 @@ logger_prefix = "smarter.slack_bot"
 NO_ANSWER = "Sorry, I have no answer to that."
 AGENT_ERROR = "Sorry, I couldn't reach the Smarter agent. Please try again in a minute."
 EMPTY_QUESTION = "Hi! Ask me a question about Smarter, and I'll answer in this thread."
+NEW_CONVERSATION = "OK, let's start a new conversation. What would you like to know?"
+
+# A message that is only one of these words starts a new conversation in its thread.
+RESET_WORDS = frozenset({"new", "reset", "start over", "new conversation"})
 
 
 def to_slack(text: str) -> str:
     """
     Convert the Markdown of an LLM's answer to Slack's mrkdwn.
 
-    Converts links, bold text and headings, which Slack would otherwise show literally.
-    Code blocks, inline code and bullet lists are the same in both, and are left as they are.
+    Converts images, links, bold text and headings, which Slack would otherwise show literally.
+    An image becomes a link to it. Code blocks, inline code and bullet lists are the same in
+    both, and are left as they are.
 
     :param text: Markdown.
     :returns: Slack mrkdwn.
     """
+    text = re.sub(r"!\[([^\]]*)\]\((https?://[^)\s]+)\)", lambda m: f"<{m[2]}|{m[1] or 'image'}>", text)
     text = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)", r"<\2|\1>", text)
     text = re.sub(r"\*\*(.+?)\*\*", r"*\1*", text)
     return re.sub(r"(?m)^#{1,6}\s+(.+)$", r"*\1*", text)
@@ -142,9 +148,20 @@ class AgentClient:
         session["messages"] = [*messages, {"role": "assistant", "content": answer}]
         return answer
 
+    def forget(self, thread_id: str) -> None:
+        """
+        Forget a Slack thread's chat session, so that its next question starts a new one.
+
+        :param thread_id: The Slack thread's id.
+        """
+        with self._lock:
+            self._sessions.pop(thread_id, None)
+
     def reply(self, thread_id: str, text: str) -> str:
         """
         The bot's reply to a Slack message: the LLMClient's answer, in Slack mrkdwn.
+
+        A message that is only one of :data:`RESET_WORDS` starts a new conversation instead.
 
         :param thread_id: The Slack thread's id.
         :param text: The Slack message's text.
@@ -153,6 +170,9 @@ class AgentClient:
         question = question_text(text)
         if not question:
             return EMPTY_QUESTION
+        if question.lower().strip(" .!") in RESET_WORDS:
+            self.forget(thread_id)
+            return NEW_CONVERSATION
         try:
             return to_slack(self.ask(thread_id, question))
         except Exception:  # pylint: disable=broad-exception-caught
@@ -164,8 +184,10 @@ def register(app, agent: AgentClient) -> None:
     """
     Register the bot's Slack event listeners.
 
-    - ``app_mention``: answers in the thread of the message that mentions the bot.
-    - ``message`` in a direct message: answers in the conversation.
+    - ``app_mention``: answers in the thread of the message that mentions the bot. Each
+      channel thread is one conversation.
+    - ``message`` in a direct message: answers in the conversation, where the messages outside
+      threads are one conversation, or in the message's thread, which is a conversation of its own.
 
     :param app: The Slack Bolt ``App``.
     :param agent: The LLMClient's client.
@@ -180,7 +202,11 @@ def register(app, agent: AgentClient) -> None:
     def on_message(event, say):
         if event.get("channel_type") != "im" or event.get("bot_id") or event.get("subtype"):
             return
-        say(text=agent.reply(event["channel"], event.get("text", "")))
+        thread = event.get("thread_ts")
+        if thread:
+            say(text=agent.reply(f"{event['channel']}:{thread}", event.get("text", "")), thread_ts=thread)
+        else:
+            say(text=agent.reply(event["channel"], event.get("text", "")))
 
 
 def main() -> None:
