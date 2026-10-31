@@ -982,6 +982,7 @@ jobs:
           SLACK_CHANNEL: smarter
           TITLE: "Tests #${{ github.run_number }}"
           REF: ${{ github.head_ref || github.ref_name }}
+          REPO: ${{ github.repository }}
           ACTOR: ${{ github.actor }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_URL: ${{ github.event.pull_request.html_url }}
@@ -997,6 +998,7 @@ jobs:
           [ "$PYTHON_PASSED_BEFORE" = "true" ] && args+=(--python-passed-before)
           python3 -I scripts/slack_test_report.py \
             --title "$TITLE" \
+            --repo "$REPO" \
             --ref "$REF" \
             --actor "$ACTOR" \
             --pr-title "$PR_TITLE" \
