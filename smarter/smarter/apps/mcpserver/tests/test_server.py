@@ -1,14 +1,21 @@
-"""Tests for smarter.apps.mcpserver.server: the MCP protocol, without HTTP."""
+"""Tests for smarter.apps.mcpserver.protocol.server: the MCP protocol, without HTTP."""
 
 from unittest import mock
 
 import mcp_types
 from mcp_types.version import HANDSHAKE_PROTOCOL_VERSIONS, LATEST_HANDSHAKE_VERSION
+from pydantic import SecretStr
 
-from smarter.apps.mcpserver.server import SmarterProjectMCPServer
+from smarter.apps.mcpserver.github.issues import GitHubIssue
+from smarter.apps.mcpserver.protocol.server import (
+    ISSUE_INSTRUCTIONS,
+    SmarterProjectMCPServer,
+)
 from smarter.apps.mcpserver.signals import mcpserver_tool_called
 
-from .base_classes import MCPServerTestBase
+from .base_classes import TOKEN, MCPServerTestBase
+
+CREATE_ISSUE = "smarter.apps.mcpserver.github.issues.create_issue"
 
 INITIALIZE_PARAMS = {
     "protocolVersion": "2025-06-18",
@@ -91,13 +98,24 @@ class TestSmarterProjectMCPServer(MCPServerTestBase):
                 "read_file",
                 "list_files",
                 "get_manifest_schema",
+                "validate_manifest",
+                "search_issues",
+                "read_issue",
             ],
         )
         self.assertNotIn("repository", result.tools[3].input_schema["properties"])
         all_tools = mcp_types.ListToolsResult.model_validate(self.all_server.handle(request("tools/list"))["result"])
         self.assertIn("repository", all_tools.tools[3].input_schema["required"])
         self.assertEqual(
-            [tool.name for tool in all_tools.tools[5:]], ["get_manifest_schema", "search_blog", "read_blog_post"]
+            [tool.name for tool in all_tools.tools[5:]],
+            [
+                "get_manifest_schema",
+                "validate_manifest",
+                "search_blog",
+                "read_blog_post",
+                "search_issues",
+                "read_issue",
+            ],
         )
 
     def test_tools_call(self):
@@ -177,3 +195,39 @@ class TestSmarterProjectMCPServer(MCPServerTestBase):
         for batch in ([], [request("ping")] * 21):
             with self.subTest(size=len(batch)):
                 self.assertEqual(self.server.handle(batch)["error"]["code"], mcp_types.INVALID_REQUEST)
+
+    def test_create_issue_with_a_github_token(self):
+        """With the caller's GitHub token, create_issue is listed, explained and called, and the token is not sent in the signal."""
+        server = SmarterProjectMCPServer(github_token=SecretStr(TOKEN))
+        names = [tool["name"] for tool in server.handle(request("tools/list"))["result"]["tools"]]
+        self.assertEqual(names[-4:], ["create_issue", "comment_on_issue", "close_issue", "create_pull_request"])
+        self.assertNotIn(
+            "create_issue", [tool["name"] for tool in self.all_server.handle(request("tools/list"))["result"]["tools"]]
+        )
+        self.assertTrue(server.instructions().endswith(ISSUE_INSTRUCTIONS))
+        self.assertNotIn("create_issue", self.all_server.instructions())
+
+        received = []
+
+        def receiver(sender, **kwargs):
+            received.append(kwargs)
+
+        mcpserver_tool_called.connect(receiver)
+        self.addCleanup(mcpserver_tool_called.disconnect, receiver)
+        issue = GitHubIssue(number=7, title="t", html_url="https://github.com/smarter-sh/x/issues/7")
+        params = {
+            "name": "create_issue",
+            "arguments": {"repository": self.docs_repository.name, "title": "t", "body": "b"},
+        }
+        with mock.patch(CREATE_ISSUE, return_value=issue):
+            response = server.handle(request("tools/call", params))
+        self.assertFalse(response["result"]["isError"])
+        self.assertIn(issue.html_url, response["result"]["content"][0]["text"])
+        self.assertEqual(received[0]["tool_name"], "create_issue")
+        self.assertNotIn(TOKEN, str(received))
+
+    def test_create_issue_without_a_github_token(self):
+        """Without a token, create_issue is not a tool."""
+        params = {"name": "create_issue", "arguments": {"title": "t", "body": "b"}}
+        response = self.server.handle(request("tools/call", params))
+        self.assertEqual(response["error"]["code"], mcp_types.METHOD_NOT_FOUND)
