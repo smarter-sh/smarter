@@ -3543,6 +3543,48 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_secret of type {type(v)} is not a SecretStr.")
         return v
 
+    slack_bot_token: Optional[SecretStr] = Field(
+        settings_defaults.SLACK_BOT_TOKEN,
+        description="A Slack app's bot token, xoxb-..., which the platform posts its Kubernetes jobs' logs to Slack with. Masked by pydantic SecretStr.",
+        examples=["xoxb-xxxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx"],
+        title="Slack Bot Token",
+    )
+    """
+    A Slack app's bot token, ``xoxb-...``, for the platform's Slack service.
+
+    The Helm chart's init Job and nightly database backup post their outcome, and their log, to a
+    Slack channel with it, when the chart's ``databaseInit.notifySlackChannel`` or
+    ``databaseScheduledBackup.notifySlackChannel`` names one. The bot needs the scopes
+    ``chat:write`` and ``files:write``, and must be a member of the channel. The optional Slack
+    bot, the Helm chart's ``slack-bot`` subchart, reads the same token from
+    ``SMARTER_SLACK_BOT_TOKEN``.
+
+    The token is sent only to ``slack.com``. See
+    :py:class:`smarter.apps.infrastructure.services.slack.SlackWebApiService`.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``settings_defaults.SLACK_BOT_TOKEN``, None if it is not set.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("slack_bot_token")
+    def validate_slack_bot_token(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `slack_bot_token` field.
+
+        Args:
+            v (Optional[SecretStr]): The Slack bot token to validate.
+        Returns:
+            Optional[SecretStr]: The validated Slack bot token, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.SLACK_BOT_TOKEN
+        if is_missing_value(v):
+            return None
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"slack_bot_token of type {type(v)} is not a SecretStr")
+        return v
+
     smtp_sender: Optional[EmailStr] = Field(
         settings_defaults.SMTP_SENDER,
         description="The sender email address for SMTP emails.",
