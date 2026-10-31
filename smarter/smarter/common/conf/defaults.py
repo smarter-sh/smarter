@@ -270,6 +270,9 @@ class SettingsDefaults:
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
 
+    # Slack is optional: without a bot token, the Kubernetes jobs' logs are not posted to Slack.
+    SLACK_BOT_TOKEN: Optional[SecretStr] = optional_secret_env("SLACK_BOT_TOKEN")
+
     # SMTP is optional: without credentials, email is not sent, and each email that is not sent is logged.
     SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
     # None unless set: smarter_settings derives the from address from the platform domain.

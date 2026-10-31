@@ -13,7 +13,11 @@ from django.dispatch import Signal
 from smarter.apps.infrastructure.models import InfrastructureResource
 from smarter.apps.infrastructure.providers import configure_provider
 from smarter.apps.infrastructure.providers.memory import InMemoryProvider
-from smarter.apps.infrastructure.services import configure_email, configure_kubernetes
+from smarter.apps.infrastructure.services import (
+    configure_email,
+    configure_kubernetes,
+    configure_slack,
+)
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -30,6 +34,7 @@ class InfrastructureTestBase(SmarterTestBase):
         self.addCleanup(configure_provider, None)
         self.addCleanup(configure_kubernetes, None)
         self.addCleanup(configure_email, None)
+        self.addCleanup(configure_slack, None)
 
     def capture(self, *signals: Signal) -> list[tuple[Signal, SmarterDictType]]:
         """Record the signals that are sent, with their arguments, until the test ends."""

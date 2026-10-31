@@ -22,6 +22,8 @@
 #               deploy.yml reads
 #   merge-main  main, merged back into next, next-major, alpha and beta, and
 #               the release pushed to its major version's branch (v0)
+#   notify      the build, posted to Slack: the release, the image's Docker
+#               Hub and ECR tags with links, and the Helm chart
 #
 # A push whose commits call for no release (only docs, ci, chore, refactor,
 # test commits, and so on, see release.config.js) builds and deploys nothing.
@@ -48,6 +50,7 @@
 #      the merge-back)
 # DOCKERHUB_USERNAME, DOCKERHUB_PAT, DOCKERHUB_ACCOUNT, DOCKERHUB_REPO
 # COSIGN_KEY, COSIGN_PASSWORD
+# SLACK_BOT_TOKEN (optional: notify posts to #smarter with it)
 #------------------------------------------------------------------------------
 name: Build
 
@@ -432,6 +435,45 @@ jobs:
             --tag "$TARGET:${{ env.DATESTAMP }}" \
             "$SOURCE"
 
+      # -----------------------------------------------------------------------
+      # The image's lines of the notify job's Slack message, and of this job's
+      # summary: where the image is, with links, and every tag it has. Handed
+      # over in an artifact, not a job output: GitHub drops outputs that
+      # contain a secret's value, and the Docker Hub names are secrets.
+      # -----------------------------------------------------------------------
+      - name: Describe the image
+        shell: bash
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DIGEST: ${{ steps.build-and-push-to-ecr.outputs.digest }}
+          DOCKERHUB: ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}
+        run: |
+          ACCOUNT="${REGISTRY%%.*}"
+          ECR_URL="https://${AWS_REGION}.console.aws.amazon.com/ecr/repositories/private/${ACCOUNT}/${AWS_ECR_REPO}/_/image/${DIGEST}/details?region=${AWS_REGION}"
+          HUB_URL="https://hub.docker.com/r/${DOCKERHUB}/tags?name=${LATEST_RELEASE}"
+          TAGS="latest, ${LATEST_RELEASE}, ${MAJOR_RELEASE}, ${MINOR_RELEASE}, ${PATCH_RELEASE}, ${GITHUB_RUN_ID}, ${DATESTAMP}"
+          mkdir -p build-info
+          {
+            echo "• Docker Hub: <${HUB_URL}|${DOCKERHUB}:${LATEST_RELEASE}>"
+            echo "• AWS ECR: <${ECR_URL}|${AWS_ECR_REPO}:${LATEST_RELEASE}>"
+            echo "• Tags: \`${TAGS//, /\`, \`}\`"
+            echo "• Digest: \`${DIGEST}\`"
+          } > build-info/image.txt
+          {
+            echo "### Image"
+            echo "- Docker Hub: [${DOCKERHUB}:${LATEST_RELEASE}](${HUB_URL})"
+            echo "- AWS ECR: [${AWS_ECR_REPO}:${LATEST_RELEASE}](${ECR_URL})"
+            echo "- Tags: ${TAGS}"
+            echo "- Digest: \`${DIGEST}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build-info
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-info
+          path: build-info/
+          retention-days: 7
+
   #----------------------------------------------------------------------------
   # The Helm chart of the release, from main only: package it, push it to
   # GHCR, sign it with Cosign, verify the signature, and attach the package to
@@ -441,6 +483,8 @@ jobs:
     needs: image
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.chart_version.outputs.version }}
     permissions:
       contents: write
       packages: write
@@ -531,6 +575,65 @@ jobs:
         with:
           tag_name: ${{ needs.image.outputs.tag }}
           files: smarter-*.tgz
+
+  #----------------------------------------------------------------------------
+  # Post the build to Slack: the release, the image on Docker Hub and in ECR
+  # with every tag, and the Helm chart. A run that built no image (a push to
+  # alpha or beta, which only makes a prerelease, or a push that released
+  # nothing) posts nothing, unless its release failed. A Slack outage doesn't
+  # fail the build. scripts/slack_post.py posts the message, with the
+  # SLACK_BOT_TOKEN secret; without it, nothing is posted.
+  #----------------------------------------------------------------------------
+  notify:
+    needs: [release, image, helm]
+    if: ${{ !cancelled() && (needs.image.result != 'skipped' || needs.release.result == 'failure') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download build-info
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info
+          path: build-info
+
+      - name: Tell Slack
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: smarter
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RELEASE: ${{ needs.release.result }}
+          IMAGE: ${{ needs.image.result }}
+          HELM: ${{ needs.helm.result }}
+          TAG: ${{ needs.image.outputs.tag || needs.release.outputs.tag }}
+          CHART: ${{ needs.helm.outputs.version }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [ "$RELEASE" = "success" ] && [ "$IMAGE" = "success" ] && [ "$HELM" != "failure" ]; then
+            ICON=":white_check_mark:"; OUTCOME="succeeded"
+          else
+            ICON=":x:"; OUTCOME="failed"
+          fi
+          {
+            echo "${ICON} *Build #${GITHUB_RUN_NUMBER} ${OUTCOME}* · \`${GITHUB_REF_NAME}\` · ${GITHUB_ACTOR}"
+            if [ -n "$TAG" ]; then
+              echo "• Release: <${REPO_URL}/releases/tag/${TAG}|${TAG}>"
+            fi
+            cat build-info/image.txt 2>/dev/null || echo "• Image: ${IMAGE}"
+            if [ -n "$CHART" ]; then
+              echo "• Helm chart: <https://github.com/orgs/${OWNER}/packages/container/package/charts%2Fsmarter|oci://ghcr.io/${OWNER}/charts/smarter:${CHART}>"
+            elif [ "$HELM" != "skipped" ]; then
+              echo "• Helm chart: ${HELM}"
+            fi
+            [ "$RELEASE" = "success" ] || echo "• Release: ${RELEASE}"
+            echo "<${RUN_URL}|View the run>"
+          } | python3 -I scripts/slack_post.py --channel "$SLACK_CHANNEL"
 
   #----------------------------------------------------------------------------
   # Hand the release's tag to deploy.yml, which starts when this run succeeds

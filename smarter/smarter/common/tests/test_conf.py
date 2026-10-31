@@ -269,6 +269,11 @@ class TestSettings(SmarterTestBase):
         """SMTP is optional: the host is None when neither SMTP_HOST nor AWS_REGION is set."""
         self.assertTrue(smarter_settings.smtp_host is None or isinstance(smarter_settings.smtp_host, str))
 
+    def test_slack_bot_token(self):
+        self.assertTrue(
+            smarter_settings.slack_bot_token is None or isinstance(smarter_settings.slack_bot_token, SecretStr)
+        )
+
     def test_smtp_password(self):
         self.assertTrue(smarter_settings.smtp_password is None or isinstance(smarter_settings.smtp_password, SecretStr))
 
