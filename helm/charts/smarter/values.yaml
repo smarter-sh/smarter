@@ -348,8 +348,8 @@ databaseScheduledBackup:
 # needs no Ingress. It reads env.SMARTER_SLACK_BOT_TOKEN and
 # env.SMARTER_SLACK_APP_TOKEN. Enable it in one environment only: two bots with
 # the same Slack app would each receive part of the messages. The deploy workflow
-# enables it when the GitHub environment's secrets SLACK_BOT_TOKEN and
-# SLACK_APP_TOKEN and its variable SLACK_BOT_AGENT_URL are set.
+# enables it in prod only, when the repository secrets SLACK_BOT_TOKEN,
+# SLACK_APP_TOKEN and SLACK_BOT_AGENT_URL are set.
 # See helm/charts/slack-bot/values.yaml for the other values.
 slackBot:
   enabled: false
