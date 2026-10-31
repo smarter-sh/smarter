@@ -1,5 +1,5 @@
 """
-Tests for smarter.apps.mcpserver.blog.
+Tests for smarter.apps.mcpserver.index.blog.
 
 The blog is never contacted: ``requests.get`` is replaced, and serves the posts of
 ./data/blog-posts.yaml as a fake WordPress REST api.
@@ -9,9 +9,9 @@ from unittest import mock
 
 import requests
 
-from smarter.apps.mcpserver import blog as blog_module
-from smarter.apps.mcpserver import indexer
-from smarter.apps.mcpserver.blog import (
+from smarter.apps.mcpserver.index import blog as blog_module
+from smarter.apps.mcpserver.index import indexer
+from smarter.apps.mcpserver.index.blog import (
     fetch_posts,
     html_to_text,
     index_blog,
@@ -34,7 +34,7 @@ from smarter.lib import json
 
 from .base_classes import BLOG_URL, MCPServerTestBase, blog_posts
 
-REQUESTS_PATCH = "smarter.apps.mcpserver.blog.requests.get"
+REQUESTS_PATCH = "smarter.apps.mcpserver.index.blog.requests.get"
 SECRETS_POST = "2026/10/20/keeping-secrets-out-of-the-logs"
 
 

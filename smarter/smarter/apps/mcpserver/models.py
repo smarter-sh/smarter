@@ -4,7 +4,7 @@ Models of the MCPServer app: the search index of The Smarter Project's repositor
 :class:`RepositoryIndex` records, for each repository of
 :data:`~smarter.apps.mcpserver.repositories.SMARTER_PROJECT_REPOSITORIES`, the commit that
 is indexed, and :class:`RepositoryFile` holds the text of each of its files. The index is
-built by :func:`smarter.apps.mcpserver.indexer.index_repository`, and replaced whenever the
+built by :func:`smarter.apps.mcpserver.index.indexer.index_repository`, and replaced whenever the
 repository's branch moves to a new commit.
 
 .. note::

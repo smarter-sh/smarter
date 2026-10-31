@@ -45,8 +45,12 @@ from django.db.models import (
 from django.db.models.functions import Cast, Least, Length, Lower, Replace
 from pydantic import BaseModel, ConfigDict, Field
 
-from .models import RepositoryFile, RepositoryFileKind, RepositoryIndexStatus
-from .repositories import ProjectSource
+from smarter.apps.mcpserver.models import (
+    RepositoryFile,
+    RepositoryFileKind,
+    RepositoryIndexStatus,
+)
+from smarter.apps.mcpserver.repositories import ProjectSource
 
 MAX_TERMS = 8
 MIN_TERM_LENGTH = 2

@@ -1,7 +1,7 @@
 """Index The Smarter Project's GitHub repositories, and its blog, for the Smarter Project MCP server."""
 
-from smarter.apps.mcpserver.blog import index_blog
-from smarter.apps.mcpserver.indexer import index_repository
+from smarter.apps.mcpserver.index.blog import index_blog
+from smarter.apps.mcpserver.index.indexer import index_repository
 from smarter.apps.mcpserver.repositories import repository_names
 from smarter.apps.mcpserver.tasks import index_blog as index_blog_task
 from smarter.apps.mcpserver.tasks import index_repositories
