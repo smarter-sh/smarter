@@ -1,0 +1,324 @@
+---
+#------------------------------------------------------------------------------
+# Daily Pod Log Review.
+#
+# Downloads the logs of a deployed environment's running pods (the app server,
+# the Celery workers and beat), redacts credentials and personal data from
+# them, and has Claude Code review them, following
+# .github/prompts/pod-log-review.md and the smarter-pod-log-review skill.
+# Claude diagnoses each problem against the code, and keeps the GitHub issues
+# current through the Smarter Project MCP server: it opens an issue for a new
+# problem, comments on an existing one only when it has new evidence, closes
+# an issue that a merged pull request resolved, and may propose a small fix
+# as a draft pull request.
+#
+# Runs daily, on the default branch, against prod, and by hand against any
+# environment.
+#
+# Secrets:
+#   ANTHROPIC_API_KEY                   Claude Code.
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, EKS_CLUSTER_NAME
+#                                       read the pods' logs (kubectl get, describe, logs).
+#   PAT                                 a GitHub classic personal access token, ghp_...,
+#                                       with the public_repo scope. It is sent only to the
+#                                       MCP server, which writes the issues, comments and
+#                                       pull requests with it.
+#   SLACK_BOT_TOKEN                     optional: the Smarter Slack app's bot token. With it,
+#                                       each run that wrote to GitHub posts one message to
+#                                       #smarter, listing what it wrote. The bot must be in
+#                                       the channel, with the chat:write scope.
+#
+# Safety. The logs are untrusted: anyone can put text into them. So:
+#   - Claude never holds a credential that it could leak: the AWS credentials
+#     and kubeconfig are removed before it starts, and the PAT is only in the
+#     MCP server's configuration, outside the folders that Claude can read.
+#   - Claude's tools are read-only, except the MCP server's GitHub tools. It
+#     has no network access, no kubectl, no gh, no git push.
+#   - The MCP server refuses to write a credential to GitHub, never changes an
+#     existing branch or a file under .github/, and closes an issue only if
+#     GitHub confirms that the pull request that resolved it was merged.
+#   - Pull requests are drafts into alpha, where no workflow runs with secrets
+#     on pull requests, and a maintainer reviews them.
+#   - This repository's workflow logs are public: nothing from the logs is
+#     printed, and no log is uploaded as an artifact. Only Claude's final
+#     summary is shown, on the run's page.
+#------------------------------------------------------------------------------
+name: Pod Log Review
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # daily, 09:00 UTC
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "The environment whose pods to review."
+        required: true
+        type: choice
+        default: prod
+        options:
+          - prod
+          - alpha
+          - beta
+          - next
+      since:
+        description: "How far back to read each pod's log, e.g. 25h. Empty reads all that each container kept."
+        required: false
+        type: string
+        default: "25h"
+      pr-base:
+        description: "The branch that fix pull requests merge into."
+        required: false
+        type: string
+        default: "alpha"
+      max-new-issues:
+        description: "The most issues to open."
+        required: false
+        type: string
+        default: "5"
+      max-comments:
+        description: "The most comments to add to existing issues."
+        required: false
+        type: string
+        default: "10"
+      max-closed-issues:
+        description: "The most issues to close."
+        required: false
+        type: string
+        default: "5"
+      max-pull-requests:
+        description: "The most fix pull requests to open. 0 turns them off."
+        required: false
+        type: string
+        default: "2"
+      max-budget-usd:
+        description: "The most that Claude Code may spend on this run, in US dollars."
+        required: false
+        type: string
+        default: "5"
+      dry-run:
+        description: "Review and report only: write nothing to GitHub."
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: pod-log-review-${{ inputs.environment || 'prod' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  ENVIRONMENT: ${{ inputs.environment || 'prod' }}
+  NAMESPACE_BASE: "smarter-ubc"
+  PLATFORM_SUBDOMAIN: "ubc"
+  ROOT_DOMAIN: "smarter.sh"
+  SINCE: ${{ github.event_name == 'schedule' && '25h' || inputs.since }}
+  PR_BASE: ${{ inputs.pr-base || 'alpha' }}
+  MAX_NEW_ISSUES: ${{ inputs.max-new-issues || '5' }}
+  MAX_COMMENTS: ${{ inputs.max-comments || '10' }}
+  MAX_CLOSED_ISSUES: ${{ inputs.max-closed-issues || '5' }}
+  MAX_PULL_REQUESTS: ${{ inputs.max-pull-requests || '2' }}
+  MAX_BUDGET_USD: ${{ inputs.max-budget-usd || '25' }}
+  DRY_RUN: ${{ inputs.dry-run && 'true' || 'false' }}
+  CLAUDE_CODE_VERSION: "2.1.316"
+  CLAUDE_MODEL: "claude-opus-5-5"
+  # The MCP server that holds the GitHub tools. It is the prod platform's,
+  # whichever environment is reviewed.
+  MCP_SERVER_URL: "https://ubc.smarter.sh/api/v1/mcp/smarter-project/"
+  # Where to announce what the review wrote to GitHub. The Slack app's bot must be a member.
+  SLACK_CHANNEL: "smarter"
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          # every branch and tag: Claude reads the deployed release's code, and
+          # looks for the merged pull requests that resolved an issue.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set the namespace and domain
+        shell: bash
+        run: |
+          echo "NAMESPACE=${NAMESPACE_BASE}-${ENVIRONMENT}" >> "$GITHUB_ENV"
+          if [ "$ENVIRONMENT" = "prod" ]; then
+            echo "PLATFORM_DOMAIN=${PLATFORM_SUBDOMAIN}.${ROOT_DOMAIN}" >> "$GITHUB_ENV"
+          else
+            echo "PLATFORM_DOMAIN=${ENVIRONMENT}.${PLATFORM_SUBDOMAIN}.${ROOT_DOMAIN}" >> "$GITHUB_ENV"
+          fi
+          echo "LOG_DIR=$RUNNER_TEMP/pod-logs" >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # The output names the cluster's ARN, which holds the AWS account id, so it is discarded.
+      - name: Configure kubectl
+        shell: bash
+        env:
+          EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          aws eks --region "$AWS_REGION" update-kubeconfig --name "$EKS_CLUSTER_NAME" --alias "$EKS_CLUSTER_NAME" >/dev/null
+
+      # Read-only: every kubectl call goes through skills/smarter-kubectl/scripts/kubectl.sh.
+      - name: Download the pods' logs
+        shell: bash
+        env:
+          EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+        run: |
+          skills/smarter-pod-log-review/scripts/download-logs.sh "$EKS_CLUSTER_NAME" "$NAMESPACE" "$LOG_DIR" "$SINCE"
+
+      - name: Remove the cluster credentials
+        shell: bash
+        run: |
+          rm -f "$HOME/.kube/config"
+          {
+            echo "AWS_ACCESS_KEY_ID="
+            echo "AWS_SECRET_ACCESS_KEY="
+            echo "AWS_SESSION_TOKEN="
+          } >> "$GITHUB_ENV"
+
+      - name: Redact credentials and personal data
+        shell: bash
+        run: python3 -I skills/smarter-pod-log-review/scripts/redact-logs.py "$LOG_DIR"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install Claude Code
+        shell: bash
+        run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+      # The PAT is written only here, to a file outside the folders that Claude
+      # can read, and reaches only the MCP server. A dry run sends no token, so
+      # the MCP server does not even list its tools that write.
+      - name: Configure the Smarter Project MCP server
+        shell: bash
+        env:
+          GITHUB_PAT: ${{ secrets.PAT }}
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/claude"
+          if [ "$DRY_RUN" = "true" ]; then
+            jq -n --arg url "$MCP_SERVER_URL" \
+              '{mcpServers: {"smarter-project": {type: "http", url: $url}}}' > "$RUNNER_TEMP/claude/mcp.json"
+          else
+            jq -n --arg url "$MCP_SERVER_URL" --arg auth "Bearer $GITHUB_PAT" \
+              '{mcpServers: {"smarter-project": {type: "http", url: $url, headers: {Authorization: $auth}}}}' \
+              > "$RUNNER_TEMP/claude/mcp.json"
+          fi
+
+      - name: Review the logs with Claude Code
+        id: claude
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          release=$(awk '$2 > 0 {print $3}' "$LOG_DIR/inventory/images.txt" | sed -n 's/.*://p' | sort -u | paste -sd, -)
+          if [ "$DRY_RUN" = "true" ]; then
+            mode="DRY RUN: write nothing to GitHub. Report what you would have opened, commented, closed and proposed."
+          else
+            mode="Act: write issues, comments, closings and pull requests within the limits."
+          fi
+          prompt=$(cat <<EOF
+          Review the pod logs of the Smarter environment below, following .github/prompts/pod-log-review.md. Read that file first.
+
+          - Environment: ${ENVIRONMENT}, https://${PLATFORM_DOMAIN}
+          - Log folder: ${LOG_DIR}
+          - Each log covers: the last ${SINCE:-lifetime of the container}
+          - Deployed release (image tags): ${release:-unknown, see inventory/images.txt}
+          - Date: $(date -u +%Y-%m-%d)
+          - Workflow run: ${RUN_URL}
+          - Pull request base branch: ${PR_BASE}
+          - Limits for this run: ${MAX_NEW_ISSUES} new issues, ${MAX_COMMENTS} comments, ${MAX_CLOSED_ISSUES} closed issues, ${MAX_PULL_REQUESTS} pull requests
+          - Mode: ${mode}
+          EOF
+          )
+          # no AWS credentials, kubeconfig or GitHub token in Claude's environment.
+          env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN -u KUBECONFIG \
+            -u GITHUB_TOKEN -u GH_TOKEN -u ACTIONS_RUNTIME_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_TOKEN \
+            claude -p "$prompt" \
+            --model "$CLAUDE_MODEL" \
+            --mcp-config "$RUNNER_TEMP/claude/mcp.json" \
+            --strict-mcp-config \
+            --add-dir "$LOG_DIR" \
+            --permission-mode dontAsk \
+            --tools "Read,Grep,Glob,Edit,Write,Bash,Skill,TodoWrite" \
+            --allowedTools "Read" "Grep" "Glob" "Edit" "Write" "Skill" "TodoWrite" \
+              "mcp__smarter-project" \
+              "Bash(grep *)" "Bash(sed -n *)" "Bash(wc *)" "Bash(sort *)" "Bash(uniq *)" "Bash(head *)" \
+              "Bash(tail *)" "Bash(cut *)" "Bash(ls *)" "Bash(awk *)" "Bash(tr *)" \
+              "Bash(git log *)" "Bash(git show *)" "Bash(git diff *)" "Bash(git tag *)" "Bash(git branch *)" \
+              "Bash(git grep *)" "Bash(git blame *)" "Bash(git merge-base *)" "Bash(git rev-parse *)" \
+              "Bash(python3 -I skills/smarter-log-review/scripts/scan-log.py *)" \
+            --disallowedTools "WebFetch" "WebSearch" "Bash(curl *)" "Bash(wget *)" "Bash(gh *)" \
+              "Bash(git push *)" "Bash(git commit *)" "Bash(git remote *)" "Bash(git fetch *)" "Bash(kubectl *)" \
+              "Bash(env *)" "Bash(printenv *)" "Read(//proc/**)" "Read(/${RUNNER_TEMP}/claude/**)" \
+            --max-budget-usd "$MAX_BUDGET_USD" \
+            --output-format stream-json \
+            --verbose \
+            --no-session-persistence \
+            > "$RUNNER_TEMP/claude/stream.jsonl"
+
+      # Only Claude's final summary, which follows the same public-writing rules as the issues.
+      # The stream, which holds every tool call and result, is never printed.
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          result="$RUNNER_TEMP/claude/result.json"
+          if [ -s "$RUNNER_TEMP/claude/stream.jsonl" ]; then
+            jq -c 'select(.type == "result")' "$RUNNER_TEMP/claude/stream.jsonl" | tail -n 1 > "$result" || true
+          fi
+          if [ ! -s "$result" ]; then
+            echo "Claude Code did not finish: see the step above." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "# Pod log review: ${ENVIRONMENT}"
+            echo
+            jq -r '.result // "Claude Code returned no summary."' "$result"
+            echo
+            echo "---"
+            jq -r '"Turns: \(.num_turns // "?"), cost: $\(.total_cost_usd // "?"), error: \(.is_error // false)"' "$result"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$(jq -r '.is_error // false' "$result")" = "true" ]; then
+            exit 1
+          fi
+
+      # One message per run, listing each issue opened, commented on or closed, and
+      # each pull request, taken from the MCP server's results rather than from what
+      # Claude says. A run that wrote nothing, and a dry run, post nothing. Claude
+      # never has the Slack token.
+      - name: Tell Slack what changed on GitHub
+        if: always() && env.DRY_RUN != 'true'
+        shell: bash
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ ! -s "$RUNNER_TEMP/claude/stream.jsonl" ]; then
+            echo "Claude Code wrote no output, so there is nothing to tell Slack."
+            exit 0
+          fi
+          python3 -I skills/smarter-pod-log-review/scripts/slack-notify.py "$RUNNER_TEMP/claude/stream.jsonl" \
+            --channel "$SLACK_CHANNEL" \
+            --title "Pod log review of ${PLATFORM_DOMAIN}" \
+            --run-url "$RUN_URL"
+
+      - name: Remove the logs and the MCP configuration
+        if: always()
+        shell: bash
+        run: rm -rf "$LOG_DIR" "$RUNNER_TEMP/claude" "$HOME/.kube"
