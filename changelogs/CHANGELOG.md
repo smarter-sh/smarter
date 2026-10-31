@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.39.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.39.0...v0.39.1-alpha.1) (2026-10-31)
+
+### Bug Fixes
+
+* **deploy:** read the Slack bot's settings from repository secrets ([ef3c4c6](https://github.com/smarter-sh/smarter/commit/ef3c4c6595626baf86f77514789fda8efd8f1792))
+
 ## [0.39.0](https://github.com/smarter-sh/smarter/compare/v0.38.2...v0.39.0) (2026-10-31)
 
 ### Features
