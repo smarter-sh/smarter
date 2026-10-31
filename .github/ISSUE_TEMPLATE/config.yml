@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Ask a question on Slack
+    url: https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw
+    about: Real-time questions and discussion with other Smarter users and contributors.
+  - name: Ask a question in GitHub Discussions
+    url: https://github.com/smarter-sh/smarter/discussions
+    about: Questions, ideas and help that others can search later.
