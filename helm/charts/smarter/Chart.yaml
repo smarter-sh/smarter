@@ -48,6 +48,11 @@ dependencies:
     version: 28.3.1
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
+  - name: slack-bot
+    alias: slackBot
+    version: 0.1.0
+    repository: file://../slack-bot
+    condition: slackBot.enabled
 icon: https://cdn.smarter.sh/images/logo/smarter-crop.png
 keywords:
   - ai

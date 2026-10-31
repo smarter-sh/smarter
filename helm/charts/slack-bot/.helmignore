@@ -1,0 +1,4 @@
+# The bot's tests run in CI and on a developer's computer, not in the cluster.
+tests/
+__pycache__/
+*.pyc
