@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.2](https://github.com/smarter-sh/smarter/compare/v0.40.1...v0.40.2) (2026-10-31)
+
+### Bug Fixes
+
+* **account:** delete retired example resources at initialization ([6fc5bdc](https://github.com/smarter-sh/smarter/commit/6fc5bdc445fd7866c0e9dc6ca3c873fd1762b0be)), closes [#882](https://github.com/smarter-sh/smarter/issues/882)
+
 ## [0.40.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.1...v0.40.2-alpha.1) (2026-10-31)
 
 ### Bug Fixes
