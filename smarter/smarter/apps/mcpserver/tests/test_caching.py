@@ -4,12 +4,9 @@ from unittest import mock
 
 from smarter.apps.mcpserver import caching
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
+from smarter.apps.mcpserver.index.tools import SearchCodeTool, SearchDocumentationTool
+from smarter.apps.mcpserver.protocol.tools import SmarterProjectScope
 from smarter.apps.mcpserver.receivers import handle_mcpserver_repository_indexed
-from smarter.apps.mcpserver.tools import (
-    SearchCodeTool,
-    SearchDocumentationTool,
-    SmarterProjectScope,
-)
 
 from .base_classes import MCPServerTestBase
 

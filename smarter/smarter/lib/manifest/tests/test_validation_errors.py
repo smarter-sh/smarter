@@ -2,6 +2,7 @@
 
 import copy
 import os
+from typing import ClassVar
 
 import yaml
 from pydantic import BaseModel, model_validator
@@ -10,6 +11,7 @@ from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.guardrail.models import Guardrail
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import is_client_manifest
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 GUARDRAIL_MANIFEST = os.path.join(
@@ -43,6 +45,24 @@ class RaisesEmptyError(BaseModel):
     @classmethod
     def fail(cls, data):
         raise RuntimeError()
+
+
+class RecordsClientManifest(BaseModel):
+    """A model that records whether it was validated as a client's manifest."""
+
+    seen: ClassVar[list[bool]] = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def record(cls, data):
+        cls.seen.append(is_client_manifest())
+        return {}
+
+
+class RecordsClientManifestBroker(AbstractBroker):  # pylint: disable=abstract-method
+    """A broker whose model records whether it was validated as a client's manifest."""
+
+    _pydantic_model = RecordsClientManifest  # type: ignore[assignment]
 
 
 class SAMValidationErrorBroker(AbstractBroker):  # pylint: disable=abstract-method
@@ -117,3 +137,10 @@ class TestValidationErrors(SmarterTestBase):
         """Test that an exception without a message is reported with its type's name as its message."""
         errors = EmptyErrorBroker.validation_errors(self.manifest)
         self.assertEqual(errors, [{"loc": [], "message": "RuntimeError", "type": "RuntimeError"}])
+
+    def test_external_checks(self):
+        """Test that a manifest is validated as a client's, unless external_checks is False."""
+        RecordsClientManifest.seen.clear()
+        self.assertEqual(RecordsClientManifestBroker.validation_errors(self.manifest), [])
+        self.assertEqual(RecordsClientManifestBroker.validation_errors(self.manifest, external_checks=False), [])
+        self.assertEqual(RecordsClientManifest.seen, [True, False])

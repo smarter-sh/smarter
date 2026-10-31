@@ -259,7 +259,7 @@ class ProjectBlog(BaseModel):
     The Smarter Project's blog, a WordPress site, whose posts the MCP server reads.
 
     Its posts are indexed like a repository's documentation, by
-    :func:`smarter.apps.mcpserver.blog.index_blog`, under the blog's :attr:`name`. A post's
+    :func:`smarter.apps.mcpserver.index.blog.index_blog`, under the blog's :attr:`name`. A post's
     path is its permalink's path, e.g. ``2026/10/26/release-smarter-api-v0-6``.
 
     **Example usage**::
@@ -308,7 +308,7 @@ class ProjectBlog(BaseModel):
         self, commit_sha: Optional[str], path: str, start_line: Optional[int] = None, end_line: Optional[int] = None
     ) -> str:
         """
-        Return the url of a post, for :func:`smarter.apps.mcpserver.search.search_files`.
+        Return the url of a post, for :func:`smarter.apps.mcpserver.index.search.search_files`.
 
         The signature is that of :meth:`ProjectRepository.file_url`. A post has no commit,
         and its page has no line anchors, so only ``path`` is used.

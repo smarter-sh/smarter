@@ -1,5 +1,5 @@
 """
-Tests for smarter.apps.mcpserver.views: the MCP server over HTTP.
+Tests for smarter.apps.mcpserver.protocol.views: the MCP server over HTTP.
 
 :class:`TestMCPClientEndToEnd` connects Smarter's own MCPClient, with the MCP Python SDK's
 Streamable HTTP client, to the view, through an httpx2 transport that hands each request to
@@ -11,17 +11,20 @@ from unittest import mock
 
 import anyio.to_thread
 import httpx2
-from django.test import Client
+from django.test import Client, RequestFactory
 from django.urls import reverse
 
 from smarter.apps.mcpclient.connection import MCPServerConnection
 from smarter.apps.mcpclient.models import MCPClient
+from smarter.apps.mcpserver.github.issues import GitHubIssue
+from smarter.apps.mcpserver.protocol.views import bearer_token
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
 
-from .base_classes import MCPServerTestBase
+from .base_classes import TOKEN, MCPServerTestBase
 
 CONNECTION = "smarter.apps.mcpclient.connection"
 HEADERS = {"HTTP_ACCEPT": "application/json, text/event-stream"}
+CREATE_ISSUE = "smarter.apps.mcpserver.github.issues.create_issue"
 
 
 def url(repository=None) -> str:
@@ -64,7 +67,33 @@ class TestSmarterProjectMCPServerView(MCPServerTestBase):
             url(), data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}), content_type="application/json"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()["result"]["tools"]), 8)
+        self.assertEqual(len(response.json()["result"]["tools"]), 10)
+
+    def test_bearer_token(self):
+        """The token of an Authorization: Bearer header is read, and nothing else."""
+        factory = RequestFactory()
+        cases = [
+            ({}, None),
+            ({"HTTP_AUTHORIZATION": f"Bearer {TOKEN}"}, TOKEN),
+            ({"HTTP_AUTHORIZATION": f"  bearer   {TOKEN}  "}, TOKEN),
+            ({"HTTP_AUTHORIZATION": "Bearer "}, None),
+            ({"HTTP_AUTHORIZATION": f"Token {TOKEN}"}, None),
+            ({"HTTP_AUTHORIZATION": f"Basic {TOKEN}"}, None),
+        ]
+        for headers, expected in cases:
+            with self.subTest(headers=headers):
+                token = bearer_token(factory.post("/", **headers))
+                self.assertEqual(token.get_secret_value() if token else None, expected)
+                if token:
+                    self.assertNotIn(TOKEN, repr(token))
+
+    def test_github_token_serves_create_issue(self):
+        """A request with a GitHub token is also served create_issue and comment_on_issue."""
+        body = {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
+        tools = self.post(url(), body, HTTP_AUTHORIZATION=f"Bearer {TOKEN}").json()["result"]["tools"]
+        self.assertEqual(len(tools), 12)
+        self.assertEqual([tool["name"] for tool in tools[-2:]], ["create_issue", "comment_on_issue"])
+        self.assertFalse(tools[-1]["annotations"]["readOnlyHint"])
 
     def test_notification(self):
         """A notification is accepted, with no body."""
@@ -115,6 +144,11 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
                     data=request.content,
                     content_type=request.headers.get("content-type", ""),
                     HTTP_ACCEPT=request.headers.get("accept", ""),
+                    **(
+                        {"HTTP_AUTHORIZATION": request.headers["authorization"]}
+                        if "authorization" in request.headers
+                        else {}
+                    ),
                 )
 
             response = await anyio.to_thread.run_sync(forward)
@@ -136,12 +170,12 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
             patcher.start()
             self.addCleanup(patcher.stop)
 
-    def connection(self, repository=None) -> MCPServerConnection:
+    def connection(self, repository=None, auth_type="none") -> MCPServerConnection:
         mcpclient = MCPClient(
             name="test_mcpserver_end_to_end",
             endpoint_url=f"https://platform.example.com{url(repository)}",
             transport="http",
-            auth_type="none",
+            auth_type=auth_type,
             timeout=30,
             allowed_tools=[],
         )
@@ -170,3 +204,20 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
         result = self.connection().call_tool("read_file", {"path": "README.md"})
         self.assertTrue(result.is_error)
         self.assertIn("repository is required", result.text)
+
+    def test_create_issue_with_a_bearer_token(self):
+        """An MCPClient whose bearer token is a GitHub token discovers create_issue, as a tool that writes, and calls it."""
+        issue = GitHubIssue(number=9, title="t", html_url="https://github.com/smarter-sh/x/issues/9", author="octocat")
+        with mock.patch.object(MCPServerConnection, "credential", return_value=TOKEN):
+            connection = self.connection(self.docs_repository.name, auth_type="bearer_token")
+            catalog = connection.discover()
+            tools = {tool.name: tool for tool in catalog.tools}
+            self.assertFalse(tools["create_issue"].read_only)
+            self.assertIn("create_issue opens a public GitHub issue", catalog.instructions)
+            self.assertFalse(tools["comment_on_issue"].read_only)
+            self.assertTrue(tools["search_issues"].read_only)
+            with mock.patch(CREATE_ISSUE, return_value=issue) as create_issue:
+                result = connection.call_tool("create_issue", {"title": "t", "body": "b"})
+        self.assertFalse(result.is_error)
+        self.assertIn(issue.html_url, result.text)
+        self.assertEqual(create_issue.call_args.args[3].get_secret_value(), TOKEN)
