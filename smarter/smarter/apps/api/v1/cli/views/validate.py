@@ -3,8 +3,7 @@
 from http import HTTPStatus
 
 from smarter.apps.api.v1.cli.brokers import Brokers
-from smarter.apps.api.v1.contract.models import CliApiValidation
-from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.api.v1.cli.validation import validate_manifest
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
@@ -43,29 +42,15 @@ class ApiV1CliValidateApiView(CliBaseApiView):
         """
         manifest = self.manifest_data
         kind = manifest.get("kind") if isinstance(manifest, dict) else None
-        broker_class = Brokers.get_broker(kind) if isinstance(kind, str) and kind else None
-
-        if not isinstance(manifest, dict):
-            errors = [{"loc": [], "message": "The manifest is not a JSON or YAML object.", "type": "invalid_manifest"}]
-        elif broker_class is None:
-            errors = [
-                {
-                    "loc": ["kind"],
-                    "message": f"kind must be one of: {', '.join(SAMKinds.all())}",
-                    "type": "invalid_kind",
-                }
-            ]
-        else:
-            errors = broker_class.validation_errors(manifest)
+        validation = validate_manifest(manifest)
+        errors = validation.errors
 
         command = SmarterJournalCliCommands.VALIDATE
         message = "Manifest is valid" if not errors else f"Manifest has {len(errors)} error(s)"
         return SmarterJournaledJsonResponse(
             request=request,
             data={
-                "data": CliApiValidation.model_validate({"valid": not errors, "errors": errors}).model_dump(
-                    mode="json"
-                ),
+                "data": validation.model_dump(mode="json"),
                 "message": message,
             },
             thing=Brokers.get_broker_kind(kind) if isinstance(kind, str) else None,

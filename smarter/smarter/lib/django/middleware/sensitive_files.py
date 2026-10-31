@@ -43,10 +43,14 @@ For each request, the middleware:
 #. Resolves the client IP address
 #. Applies IP-based throttling checks
 #. Detects sensitive path patterns
-#. Blocks suspicious requests with ``HTTP 403 Forbidden``
+#. Answers a sensitive path with the platform's ordinary ``404 Not Found``
+
+A blocked path gets exactly the response of any url that does not exist, so a
+scanner cannot tell that it was blocked, nor that the path is of interest.
 
 Repeated suspicious requests from the same client IP result in temporary
-throttling.
+throttling: ``429 Too Many Requests``, with a ``Retry-After`` header of
+``THROTTLE_TIMEOUT`` seconds.
 
 Path Normalization
 ==================
@@ -209,11 +213,12 @@ from typing import cast
 from asgiref.sync import sync_to_async
 from cache_results import cache_results
 from cache_results import lazy_cache as cache
+from django.core.handlers.exception import response_for_exception
 from django.http import (
+    Http404,
     HttpRequest,
     HttpResponse,
     HttpResponseBase,
-    HttpResponseForbidden,
 )
 
 from smarter.common.conf import smarter_settings
@@ -430,9 +435,13 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
                 client_ip,
             )
 
-            return HttpResponseForbidden(
-                "Too many suspicious requests detected. " f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
+            throttled = HttpResponse(
+                "Too many suspicious requests detected. " f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance.",
+                status=429,
+                content_type="text/plain",
             )
+            throttled["Retry-After"] = str(self.THROTTLE_TIMEOUT)
+            return throttled
 
         if self.is_sensitive_request(normalized_path):
 
@@ -444,9 +453,8 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
             self.increment_throttle(client_ip)
 
-            return HttpResponseForbidden(
-                "Your request has been blocked by Smarter. " f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
-            )
+            # the platform's ordinary 404, so that a blocked path looks like any missing one.
+            return response_for_exception(request, Http404())
 
         return None
 

@@ -1,12 +1,12 @@
-"""Tests for smarter.apps.mcpserver.search."""
+"""Tests for smarter.apps.mcpserver.index.search."""
 
-from smarter.apps.mcpserver.models import RepositoryFileKind
-from smarter.apps.mcpserver.search import (
+from smarter.apps.mcpserver.index.search import (
     MAX_TERMS,
     matching_lines,
     query_terms,
     search_files,
 )
+from smarter.apps.mcpserver.models import RepositoryFileKind
 
 from .base_classes import COMMIT_SHA, DOCS_URL, MCPServerTestBase
 

@@ -22,17 +22,18 @@ from unittest import mock
 
 from cache_results import lazy_cache
 
-from smarter.apps.mcpserver.blog import (
+from smarter.apps.mcpserver.caching import invalidate_cached_tool_results
+from smarter.apps.mcpserver.index.blog import (
     WORDPRESS_POSTS,
     WordPressPost,
     post_file,
     posts_fingerprint,
 )
-from smarter.apps.mcpserver.caching import invalidate_cached_tool_results
-from smarter.apps.mcpserver.indexer import ArchiveFile, file_kind, store_files
+from smarter.apps.mcpserver.index.indexer import ArchiveFile, file_kind, store_files
+from smarter.apps.mcpserver.index.tools import queue_indexing_key
 from smarter.apps.mcpserver.models import RepositoryIndex
+from smarter.apps.mcpserver.protocol.tools import SmarterProjectScope
 from smarter.apps.mcpserver.repositories import ProjectBlog, ProjectRepository
-from smarter.apps.mcpserver.tools import queue_indexing_key
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -47,6 +48,8 @@ BLOG_URL = "https://blog.example.com"
 REPOSITORIES_PATCH = "smarter.apps.mcpserver.repositories.SMARTER_PROJECT_REPOSITORIES"
 BLOG_PATCH = "smarter.apps.mcpserver.repositories.SMARTER_PROJECT_BLOG"
 INDEX_TASK_PATCH = "smarter.apps.mcpserver.tasks.index_repository"
+TOKEN = "ghp_" + "x" * 36
+"""A fake GitHub classic personal access token, in GitHub's format."""
 INDEX_BLOG_TASK_PATCH = "smarter.apps.mcpserver.tasks.index_blog"
 
 
@@ -177,6 +180,15 @@ class MCPServerTestBase(SmarterTestBase):
         """Index a test repository's files, at :data:`COMMIT_SHA`."""
         index, _ = RepositoryIndex.objects.get_or_create(repository=repository.name)
         return store_files(index, COMMIT_SHA, archive_files(files))
+
+    def single(self, repository=None) -> SmarterProjectScope:
+        """Return the scope of the MCP server of one repository, by default the docs repository."""
+        repository = repository or self.docs_repository
+        return SmarterProjectScope(repository=repository, repositories=(repository,))
+
+    def all(self) -> SmarterProjectScope:
+        """Return the scope of the MCP server of all of the test repositories."""
+        return SmarterProjectScope(repository=None, repositories=self.repositories)
 
     def setUp(self):
         super().setUp()

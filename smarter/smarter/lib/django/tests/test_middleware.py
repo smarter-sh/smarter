@@ -48,6 +48,6 @@ class TestSmarterBlockSensitiveFilesMiddleware(SmarterTestBase):
             response = self.middleware(request)
             self.assertEqual(
                 response.status_code,
-                HTTPStatus.FORBIDDEN,
-                f"Expected 403 for {sensitive_file}, got {response.status_code}",
+                HTTPStatus.NOT_FOUND,
+                f"Expected 404 for {sensitive_file}, got {response.status_code}",
             )
