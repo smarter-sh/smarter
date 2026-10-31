@@ -100,8 +100,13 @@ spec:
             - name: SMARTER_PROMPT_THREADS
               value: {{ .Values.app.promptThreads | quote }}
             {{- end }}
+          securityContext:
+            {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
-            {{- toYaml .Values.app.extraVolumeMounts | nindent 12 }}
+            {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
+            {{- with .Values.app.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           # The probes, tuned for a server that loads in about 10 seconds:
           #
           # - startupProbe: /healthz/ is answered in asgi.py, before Django (see
@@ -162,11 +167,15 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
       volumes:
-        {{- toYaml .Values.app.extraVolumes | nindent 8 }}
+        {{- include "smarter.writableVolumes" . | nindent 8 }}
+        {{- with .Values.app.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       terminationGracePeriodSeconds: 45
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Always
       schedulerName: default-scheduler
-      securityContext: {}
+      securityContext:
+        {{- toYaml .Values.global.podSecurityContext | nindent 8 }}
       shareProcessNamespace: false
