@@ -46,9 +46,20 @@ questions:
 
 ## Step 2: download each pod's log
 
-Follow "Download whole logs" in `smarter-kubectl`: one file per pod in a new folder in your
-scratchpad, plus the log from before a restart, whose last lines usually say why the container
-died.
+[scripts/download-logs.sh](scripts/download-logs.sh) does steps 1 and 2 in one call, read-only,
+through `smarter-kubectl`'s `kubectl.sh`, into a new folder: `inventory/` (pods, events, describe,
+each deployment's ReplicaSets and image tags) and one folder per deployment, with each pod's log
+and, after a restart, its `.previous.log`, whose last lines usually say why the container died.
+An optional fourth argument limits each log, e.g. `25h`. It prints only counts.
+
+```bash
+skills/smarter-pod-log-review/scripts/download-logs.sh <context> <namespace> <scratchpad>/logs-<env> [since]
+python3 -I skills/smarter-pod-log-review/scripts/redact-logs.py <scratchpad>/logs-<env>
+```
+
+[scripts/redact-logs.py](scripts/redact-logs.py) replaces credentials, email addresses, public IP
+addresses, AWS account ids and AWS hostnames with placeholders such as `<redacted:email>`, in
+place. Run it before you quote a log anywhere public, e.g. an issue.
 
 ## Step 3: scan every log
 
@@ -107,6 +118,19 @@ The replicas of one deployment run the same code, so their logs should look alik
 - Put the timestamps together: an error on the app server followed by a failing task on a worker
   is one finding, not two.
 - Report each finding once, with the pods it occurs on, instead of repeating it per pod.
+
+## Unattended: the daily review
+
+`.github/workflows/podLogReview.yml` runs this skill every day against prod, and by hand against
+any environment: it downloads and redacts the logs with the scripts above, then runs Claude Code,
+which follows `.github/prompts/pod-log-review.md` and turns each actionable finding into a GitHub
+issue, a comment with new evidence, a closed issue, or a draft fix, through the Smarter Project MCP
+server's GitHub tools. Change what the review does in the prompt file, and what it can do in the
+workflow's `--allowedTools`. Both treat the logs as untrusted data. After the review,
+[scripts/slack-notify.py](scripts/slack-notify.py) posts one message to the Slack channel
+`#smarter` that lists each issue the run opened, commented on or closed, and each pull request,
+taken from the MCP server's tool results in Claude's `stream-json` output, never from Claude's own
+summary. It needs the `SLACK_BOT_TOKEN` secret; a run that wrote nothing posts nothing.
 
 ## Step 6: write it up
 
