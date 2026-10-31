@@ -3,7 +3,7 @@
 # Tests:           the Python unit test suite, plus the React apps' Prettier,
 #                  ESLint, TypeScript and Vitest unit tests.
 #
-# Four jobs:
+# The jobs:
 #
 #   fingerprint    Hashes the files each suite depends on (python: smarter/smarter,
 #                  react: smarter/react), and looks for a
@@ -49,6 +49,10 @@
 #                  one job summary, combines their coverage, and uploads it
 #                  to Codecov once (flag: python), when every shard passed.
 #                  It fails when any shard failed, so it stands for all eight.
+#   slack-bot      The unit tests of the Helm chart's Slack bot and of the
+#                  workflows' Slack scripts (scripts/tests).
+#   notify         Posts the results to Slack: the job summaries' test counts,
+#                  coverage and failed tests (scripts/slack_test_report.py).
 #
 # How a shard builds the platform
 #
@@ -267,8 +271,22 @@ jobs:
       - name: Check @smarter.sh/ui-widgets
         run: npm run check:dist --workspace=@smarter.sh/ui-widgets
 
+      # Naming any reporter replaces Vitest's defaults, so default (the log)
+      # and github-actions (annotations and the job summary) are named too.
+      # json writes the results that the notify job posts to Slack.
       - name: Unit tests (Vitest), with coverage
-        run: npm run coverage
+        run: npm run coverage -- --reporter=default --reporter=github-actions --reporter=json --outputFile.json=vitest-results.json
+
+      - name: Upload the test results for notify
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-results
+          path: |
+            smarter/react/vitest-results.json
+            smarter/react/coverage/coverage-summary.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       #========================================================================
       # Upload coverage/lcov.info under the react flag. Its paths are relative
@@ -297,9 +315,10 @@ jobs:
           key: ${{ needs.fingerprint.outputs.react-key }}
 
   #----------------------------------------------------------------------------
-  # The optional Slack bot of the Helm chart (helm/charts/slack-bot). Its
-  # program runs outside Django, on a stock Python image, so its tests need
-  # only the standard library, and run in a few seconds.
+  # The optional Slack bot of the Helm chart (helm/charts/slack-bot), and
+  # the workflows' Slack scripts (scripts/slack_*.py). Both run outside
+  # Django, so their tests need only the standard library, and run in a few
+  # seconds.
   #----------------------------------------------------------------------------
   slack-bot:
     runs-on: ubuntu-latest
@@ -315,6 +334,9 @@ jobs:
 
       - name: Unit tests
         run: python -m unittest discover -v -s helm/charts/slack-bot/tests
+
+      - name: Unit tests of the workflows' Slack scripts
+        run: python -m unittest discover -v -s scripts/tests
 
   #----------------------------------------------------------------------------
   # One shard of the Python suite. SHARDS must match the length of the shard
@@ -880,6 +902,14 @@ jobs:
             "| \($t.num_statements) | \($t.missing_lines) | **\($t.percent_covered_display)%** |"
           ' coverage.json >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Upload the coverage total for notify
+        if: needs.python.result == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: coverage.json
+          retention-days: 7
+
       - name: Upload coverage to Codecov
         if: needs.python.result == 'success'
         uses: codecov/codecov-action@v7
@@ -913,3 +943,71 @@ jobs:
         run: |
           echo "::error::A shard of the Python tests did not pass: ${{ needs.python.result }}."
           exit 1
+
+  #----------------------------------------------------------------------------
+  # Post the run's results to Slack: what the job summaries show (the React
+  # and Python test counts, coverage, and the tests that failed), which the
+  # GitHub app for Slack leaves out. scripts/slack_test_report.py writes the
+  # message, and scripts/slack_post.py posts it. A Slack outage doesn't fail
+  # the run.
+  #
+  # Runs after every run that wasn't cancelled. A cancelled run, e.g. one
+  # replaced by a newer push, posts nothing. Without the SLACK_BOT_TOKEN
+  # secret (e.g. a pull request from a fork) it posts nothing, and passes.
+  # The bot must be in the channel, with the chat:write scope.
+  #
+  # The pull request's title is passed through env, never put into the
+  # script by ${{ }}, because anyone who opens a pull request writes it.
+  #----------------------------------------------------------------------------
+  notify:
+    needs: [fingerprint, react, slack-bot, python-report]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download the test results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: results
+
+      - name: Tell Slack the results
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: smarter
+          TITLE: "Tests #${{ github.run_number }}"
+          REF: ${{ github.head_ref || github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REACT_RESULT: ${{ needs.react.result }}
+          REACT_PASSED_BEFORE: ${{ needs.fingerprint.outputs.react-passed }}
+          PYTHON_RESULT: ${{ needs.python-report.result }}
+          PYTHON_PASSED_BEFORE: ${{ needs.fingerprint.outputs.python-passed }}
+          SLACK_BOT_RESULT: ${{ needs.slack-bot.result }}
+        run: |
+          args=()
+          [ "$REACT_PASSED_BEFORE" = "true" ] && args+=(--react-passed-before)
+          [ "$PYTHON_PASSED_BEFORE" = "true" ] && args+=(--python-passed-before)
+          python3 -I scripts/slack_test_report.py \
+            --title "$TITLE" \
+            --ref "$REF" \
+            --actor "$ACTOR" \
+            --pr-title "$PR_TITLE" \
+            --pr-url "$PR_URL" \
+            --run-url "$RUN_URL" \
+            --react-result "$REACT_RESULT" \
+            --react-results results/react-results/vitest-results.json \
+            --react-coverage results/react-results/coverage/coverage-summary.json \
+            --python-result "$PYTHON_RESULT" \
+            --python-results results \
+            --python-coverage results/python-coverage/coverage.json \
+            --slack-bot-result "$SLACK_BOT_RESULT" \
+            "${args[@]}" \
+            | python3 -I scripts/slack_post.py --channel "$SLACK_CHANNEL"
