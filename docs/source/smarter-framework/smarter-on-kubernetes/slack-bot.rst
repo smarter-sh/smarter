@@ -11,7 +11,12 @@ People talk to the bot in two ways:
 
 - **@mention it in a channel.** It answers in the message's thread, and every later mention in that
   thread continues the same conversation.
-- **Send it a direct message.** The direct-message conversation is one conversation.
+- **Send it a direct message.** The messages outside threads are one conversation, and each thread
+  is a conversation of its own.
+
+A message that is only ``new``, ``reset``, ``start over`` or ``new conversation`` starts a new
+conversation in its thread. :doc:`../../slack` is the guide for the workspace's members, to which
+new members can be referred.
 
 How It Works
 ------------

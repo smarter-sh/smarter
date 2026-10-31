@@ -453,6 +453,12 @@ From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/exa
 
 .. toctree::
    :maxdepth: 1
+   :caption: Community
+
+   slack
+
+.. toctree::
+   :maxdepth: 1
    :caption: Smarter Docs
 
    smarter-platform

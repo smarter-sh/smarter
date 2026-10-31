@@ -77,6 +77,15 @@ class TestToSlack(unittest.TestCase):
         text = "```yaml\nkind: LLMClient\n```\n- `smarter apply`"
         self.assertEqual(bot.to_slack(text), text)
 
+    def test_image_becomes_a_link(self):
+        self.assertEqual(
+            bot.to_slack("![Network policies](https://cdn.example.com/np.png)"),
+            "<https://cdn.example.com/np.png|Network policies>",
+        )
+
+    def test_image_without_alt_text(self):
+        self.assertEqual(bot.to_slack("![](https://cdn.example.com/np.png)"), "<https://cdn.example.com/np.png|image>")
+
 
 class TestQuestionText(unittest.TestCase):
     """Question_text() removes mentions."""
@@ -162,6 +171,26 @@ class TestAgentClient(unittest.TestCase):
         self.assertEqual(self.client(api).reply("t", "<@U1>"), bot.EMPTY_QUESTION)
         self.assertEqual(api.calls, [])
 
+    def test_reset_starts_a_new_conversation(self):
+        api = FakeAgentApi(
+            prompt_response({"role": "assistant", "content": "one"}),
+            prompt_response({"role": "assistant", "content": "two"}),
+        )
+        agent = self.client(api)
+        agent.ask("t", "q1")
+        for word in ("<@U1> reset", "New conversation.", "start over!"):
+            self.assertEqual(agent.reply("t", word), bot.NEW_CONVERSATION)
+        self.assertEqual(agent.ask("t", "q2"), "two")
+        self.assertEqual(api.sessions, 2)
+        self.assertEqual(api.calls[-1][1]["messages"], [{"role": "user", "content": "q2"}])
+
+    def test_reset_word_inside_a_question_is_a_question(self):
+        api = FakeAgentApi(prompt_response({"role": "assistant", "content": "a"}))
+        self.assertEqual(self.client(api).reply("t", "how do I reset my password?"), "a")
+
+    def test_forget_an_unknown_thread(self):
+        self.client(FakeAgentApi()).forget("unknown")
+
     def test_reply_when_the_agent_fails(self):
         agent = bot.AgentClient(AGENT_URL)
         with mock.patch.object(agent, "_post", side_effect=OSError("down")), self.assertLogs(bot.logger, "ERROR"):
@@ -205,6 +234,12 @@ class TestListeners(unittest.TestCase):
         self.app.listeners["message"]({"channel_type": "im", "channel": "D1", "text": "hi"}, self.say)
         self.agent.reply.assert_called_once_with("D1", "hi")
         self.say.assert_called_once_with(text="answer")
+
+    def test_direct_message_in_a_thread(self):
+        event = {"channel_type": "im", "channel": "D1", "ts": "2.0", "thread_ts": "1.0", "text": "more"}
+        self.app.listeners["message"](event, self.say)
+        self.agent.reply.assert_called_once_with("D1:1.0", "more")
+        self.say.assert_called_once_with(text="answer", thread_ts="1.0")
 
     def test_ignored_messages(self):
         for event in (
