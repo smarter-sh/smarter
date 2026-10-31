@@ -21,7 +21,9 @@
         "tolerations": {
           "type": "array",
           "items": { "type": "object" }
-        }
+        },
+        "podSecurityContext": { "type": "object" },
+        "containerSecurityContext": { "type": "object" }
       }
     },
     "app": {

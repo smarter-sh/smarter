@@ -151,36 +151,39 @@ Following are commonly asked questions about Smarter security.
 
 * **Webhook secrets**: SMARTER HAS NO WEBHOOKS.
 
-* **Container hardening**: LLMs have raised concerns about needing to harden the
-  Smarter container. However, Smarter containers exceed what is considered best
-  practice in terms of minimizing file permissions within the container file
-  system. See: `smarter-sh/smarter/Dockerfile#L200 <https://github.com/smarter-sh/smarter/blob/main/Dockerfile#L200>`__.
-  These are as close to "no-trust" as a file system can technically achieve
-  without actually breaking the code due to permissions problems. Moreover, the
-  containers themselves run as pods inside of Kubernetes following all security
-  best practices (as implemented by AWS’s own EKS engineers’ Terraform module),
-  on a private network inside of a VPC with no public access. Generally, this is
-  what you’ll find inside of a running Smarter container:
+* **Container hardening**: The Smarter image runs as a non-root user,
+  ``smarter_user``, that cannot change the code it runs. Outside local
+  development, the permissions stage of the
+  `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
+  makes ``root`` the owner of the application, its virtualenv, its migrations
+  and its static files, and ``smarter_user`` reads them through its group:
+  files are ``r--r-----`` and directories ``r-xr-x---``, with nothing for
+  anyone else. A file's owner can always make it writable again, so
+  ``smarter_user`` owns only what the application writes at runtime: its data
+  directory and ``~/.cache``. The Helm chart adds what an image can't: every
+  pod that runs the image runs as ``smarter_user`` (``runAsNonRoot``), with a
+  read-only root filesystem, no Linux capabilities, no privilege escalation and
+  the container runtime's default seccomp profile, and the few directories that
+  the application writes are ``emptyDir`` volumes. These are
+  ``global.podSecurityContext`` and ``global.containerSecurityContext`` in the
+  chart's ``values.yaml``. The pods run on a private network inside of a VPC
+  with no public access. This is what you'll find inside of a running Smarter
+  container:
 
   .. code-block:: bash
 
-    dr-x------. 1 smarter_user smarter_user   93 Feb 21 22:33 .
-    dr-x------. 1 smarter_user smarter_user   40 Feb 21 22:33 ..
-    -r--------. 1 smarter_user smarter_user  647 Feb 21 22:32 __init__.py
-    -r--------. 1 smarter_user smarter_user  143 Feb 21 22:32 __version__.py
-    dr-x------. 1 smarter_user smarter_user  139 Feb 21 22:33 apps
-    -r--------. 1 smarter_user smarter_user  338 Feb 21 22:32 asgi.py
-    dr-x------. 1 smarter_user smarter_user   40 Feb 21 22:33 common
-    -r--------. 1 smarter_user smarter_user 6.7K Feb 21 22:32 hosts.py
-    dr-x------. 1 smarter_user smarter_user  129 Feb 21 22:33 lib
-    dr-x------. 1 smarter_user smarter_user   25 Feb 21 22:33 settings
-    dr-x------. 1 smarter_user smarter_user  131 Feb 21 22:32 static
-    dr-x------. 1 smarter_user smarter_user  16K Feb 21 22:32 templates
-    dr-x------. 1 smarter_user smarter_user  157 Feb 21 22:32 tests
-    dr-x------. 1 smarter_user smarter_user   76 Feb 21 22:32 urls
-    dr-x------. 1 smarter_user smarter_user   25 Feb 21 22:33 workers
-    -r--------. 1 smarter_user smarter_user  781 Feb 21 22:32 wsgi.py
-    smarter_user@smarter-6789cccff6-db529:~/smarter/smarter$
+    smarter_user@smarter-6789cccff6-db529:~/smarter/smarter$ ls -la
+    dr-xr-x--- 1 root smarter_user 4096 Oct 31 18:26 .
+    dr-xr-x--- 1 root smarter_user 4096 Oct  1 17:25 ..
+    -r--r----- 1 root smarter_user  731 Jun  9 20:23 __init__.py
+    dr-xr-x--- 1 root smarter_user 4096 Oct 31 18:26 __pycache__
+    -r--r----- 1 root smarter_user  157 Jun 17 20:08 __version__.py
+    dr-xr-x--- 1 root smarter_user 4096 Oct 31 18:26 apps
+    -r--r----- 1 root smarter_user 2084 Oct 27 15:02 asgi.py
+    smarter_user@smarter-6789cccff6-db529:~/smarter/smarter$ chmod u+w asgi.py
+    chmod: changing permissions of 'asgi.py': Read-only file system
+    smarter_user@smarter-6789cccff6-db529:~/smarter/smarter$ touch ../../data/x
+    touch: cannot touch '../../data/x': Read-only file system
 
 
 * **Log rotation**: LLMs have sometimes criticized Smarter for lacking a formal

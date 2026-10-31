@@ -106,15 +106,24 @@ spec:
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
             {{- end }}
+          securityContext:
+            {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
-            {{- toYaml .Values.worker.extraVolumeMounts | nindent 12 }}
+            {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
+            {{- with .Values.worker.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
       volumes:
-        {{- toYaml .Values.worker.extraVolumes | nindent 8 }}
+        {{- include "smarter.writableVolumes" . | nindent 8 }}
+        {{- with .Values.worker.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Always
       schedulerName: default-scheduler
-      securityContext: {}
+      securityContext:
+        {{- toYaml .Values.global.podSecurityContext | nindent 8 }}
       shareProcessNamespace: false
