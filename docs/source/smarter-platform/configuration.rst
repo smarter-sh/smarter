@@ -140,6 +140,8 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
      - (optional) API key for Pinecone vector database
    * - PINECONE_ENVIRONMENT
      - (optional) Pinecone environment name
+   * - SLACK_BOT_TOKEN
+     - (optional) A Slack app's bot token, ``xoxb-...``, with the scopes ``chat:write`` and ``files:write``. The init Job and the nightly backup post their outcome and log to Slack with it. See :doc:`Smarter on Kubernetes <../smarter-framework/smarter-on-kubernetes>`
    * - SMARTER_MYSQL_BACKUP_PASSWORD
      - (optional) Password of the read-only MariaDB account, ``smarter_backup``, that the nightly backup dumps the database with. Unset: the backup dumps as root
    * - SMTP_PASSWORD

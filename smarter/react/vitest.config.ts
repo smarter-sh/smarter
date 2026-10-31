@@ -11,7 +11,8 @@ export default defineConfig({
       provider: "v8",
       include: ["packages/*/src/**/*.{ts,tsx}", "i18n/*.ts"],
       exclude: ["**/*.stories.tsx", "**/*.test.{ts,tsx}", "**/*.config.ts", "**/mocks/**", "**/main.tsx", "**/*.d.ts"],
-      reporter: ["text-summary", "html", "lcov"],
+      // json-summary: coverage/coverage-summary.json, whose total the Tests workflow posts to Slack.
+      reporter: ["text-summary", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage",
     },
   },
