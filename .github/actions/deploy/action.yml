@@ -159,6 +159,15 @@ inputs:
     description: "True to enable verbose console output of the settings at startup."
     required: true
     default: "false"
+  slack-app-token:
+    description: "The Slack app's app-level token (xapp-...) of the optional Slack bot. The bot is deployed only when slack-app-token, slack-bot-token and slack-bot-agent-url are all set"
+    required: false
+  slack-bot-agent-url:
+    description: "The url of the deployed LLMClient that the optional Slack bot asks, e.g. https://smarter-developer.<account-number>.api.<root-domain>/"
+    required: false
+  slack-bot-token:
+    description: "The Slack app's bot token (xoxb-...) of the optional Slack bot. The bot is deployed only when slack-app-token, slack-bot-token and slack-bot-agent-url are all set"
+    required: false
   social-auth-google-oauth2-key:
     description: "The Google OAuth2 key"
     required: true
@@ -497,6 +506,8 @@ runs:
             "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
             "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
             "SMARTER_SETTINGS_OUTPUT": ${{ inputs.smarter-settings-output && format('"{0}"', inputs.smarter-settings-output) || 'null' }},
+            "SMARTER_SLACK_APP_TOKEN": ${{ inputs.slack-app-token && format('"{0}"', inputs.slack-app-token) || 'null' }},
+            "SMARTER_SLACK_BOT_TOKEN": ${{ inputs.slack-bot-token && format('"{0}"', inputs.slack-bot-token) || 'null' }},
             "SMARTER_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},
             "SMARTER_SOCIAL_AUTH_GITHUB_SECRET": ${{ inputs.social-auth-github-secret && format('"{0}"', inputs.social-auth-github-secret) || 'null' }},
             "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": ${{ inputs.social-auth-google-oauth2-key && format('"{0}"', inputs.social-auth-google-oauth2-key) || 'null' }},
@@ -566,6 +577,8 @@ runs:
           --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
           --set global.image.pullPolicy="IfNotPresent" \
           --set databaseScheduledBackup.s3Uri="${{ env.SMARTER_MYSQL_BACKUP_S3_URI }}" \
+          --set slackBot.enabled=${{ inputs.slack-bot-token != '' && inputs.slack-app-token != '' && inputs.slack-bot-agent-url != '' }} \
+          --set slackBot.agentUrl="${{ inputs.slack-bot-agent-url }}" \
           --values /tmp/values.yaml
 
     # Clean up secrets file

@@ -1,0 +1,41 @@
+# ==============================================================================
+# Smarter Slack bot - Helm Chart Values
+# ==============================================================================
+#
+# A subchart of the smarter chart, where these values live under slackBot, and
+# where slackBot.enabled (false by default) turns it on. See files/bot.py.
+#
+# The Slack tokens are not values of this chart. The bot reads them from the
+# smarter chart's environment Secret, <global.appName>-env, under the keys
+# SMARTER_SLACK_BOT_TOKEN (xoxb-...) and SMARTER_SLACK_APP_TOKEN (xapp-...),
+# which the smarter chart's env.SMARTER_SLACK_BOT_TOKEN and
+# env.SMARTER_SLACK_APP_TOKEN fill.
+# ==============================================================================
+
+# Required. The deployed LLMClient that answers, e.g.
+# https://smarter-developer.<account-number>.api.<root-domain>/. Its own host's
+# /config/ and /prompt/ are called without an api key, so the LLMClient must not
+# require authentication. The deploy workflow sets it from the GitHub
+# environment's variable SLACK_BOT_AGENT_URL.
+agentUrl: ""
+
+# Seconds to wait for an answer. An answer with several tool calls takes 10 to 20.
+timeout: 240
+
+# A stock Python image: the bot needs only the standard library and Slack Bolt,
+# which the container installs when it starts.
+image:
+  repository: python
+  tag: "3.12-slim"
+  pullPolicy: IfNotPresent
+
+# The Slack Bolt release that the container installs.
+slackBoltVersion: "1.30.0"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

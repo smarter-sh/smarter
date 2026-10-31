@@ -16,6 +16,10 @@ The Smarter Project Documentation
    :target: https://github.com/smarter-sh/smarter/discussions
    :alt: Forums
 
+.. image:: https://img.shields.io/badge/Slack-The%20Smarter%20Project-4A154B?logo=slack&logoColor=white
+   :target: https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw
+   :alt: Slack
+
 .. image:: https://img.shields.io/badge/YouTube-Tutorials-red?logo=youtube
    :target: https://www.youtube.com/@project-smarter
    :alt: Video Tutorials
@@ -446,6 +450,12 @@ From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/exa
 
    smarter-instructor
    smarter-instructors/example-courses/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Community
+
+   slack
 
 .. toctree::
    :maxdepth: 1

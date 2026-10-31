@@ -13,6 +13,7 @@
 [![TypeScript](https://img.shields.io/badge/types-included-blue?logo=typescript&logoColor=white)](#typescript)
 [![React 19](https://img.shields.io/badge/react-19-61dafb?logo=react&logoColor=white)](https://react.dev)
 [![License: AGPL-3.0-or-later](https://img.shields.io/npm/l/@smarter.sh/ui-chat)](https://github.com/smarter-sh/smarter/blob/main/LICENSE)
+[![Slack](https://img.shields.io/badge/Slack-The%20Smarter%20Project-4A154B?logo=slack&logoColor=white)](https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw)
 
 ![Smarter Chat](https://cdn.smarter.sh/images/smarter-chat-ui-example.png)
 
