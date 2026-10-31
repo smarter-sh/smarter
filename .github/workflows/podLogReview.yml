@@ -16,7 +16,11 @@
 # environment.
 #
 # Secrets:
-#   ANTHROPIC_API_KEY                   Claude Code.
+#   CLAUDE_CODE_OAUTH_TOKEN             Claude Code, billed to a Claude subscription. Create it
+#                                       with "claude setup-token". When it is set, it is used
+#                                       instead of ANTHROPIC_API_KEY.
+#   ANTHROPIC_API_KEY                   Claude Code, billed to Anthropic API credit, when
+#                                       CLAUDE_CODE_OAUTH_TOKEN is not set.
 #   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, EKS_CLUSTER_NAME
 #                                       read the pods' logs (kubectl get, describe, logs).
 #   PAT                                 a GitHub classic personal access token, ghp_...,
@@ -223,9 +227,21 @@ jobs:
         id: claude
         shell: bash
         env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          # exactly one Anthropic credential: the subscription token if there is one, else the API key.
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "Claude Code authenticates with CLAUDE_CODE_OAUTH_TOKEN (Claude subscription)."
+            unset_auth=(-u ANTHROPIC_API_KEY)
+          elif [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "Claude Code authenticates with ANTHROPIC_API_KEY (API credit)."
+            unset_auth=(-u CLAUDE_CODE_OAUTH_TOKEN)
+          else
+            echo "::error::Set the CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY secret."
+            exit 1
+          fi
           release=$(awk '$2 > 0 {print $3}' "$LOG_DIR/inventory/images.txt" | sed -n 's/.*://p' | sort -u | paste -sd, -)
           if [ "$DRY_RUN" = "true" ]; then
             mode="DRY RUN: write nothing to GitHub. Report what you would have opened, commented, closed and proposed."
@@ -247,7 +263,7 @@ jobs:
           EOF
           )
           # no AWS credentials, kubeconfig or GitHub token in Claude's environment.
-          env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN -u KUBECONFIG \
+          env "${unset_auth[@]}" -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN -u KUBECONFIG \
             -u GITHUB_TOKEN -u GH_TOKEN -u ACTIONS_RUNTIME_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_TOKEN \
             claude -p "$prompt" \
             --model "$CLAUDE_MODEL" \
@@ -295,6 +311,12 @@ jobs:
             jq -r '"Turns: \(.num_turns // "?"), cost: $\(.total_cost_usd // "?"), error: \(.is_error // false)"' "$result"
           } >> "$GITHUB_STEP_SUMMARY"
           if [ "$(jq -r '.is_error // false' "$result")" = "true" ]; then
+            # why it failed, in the log too. An API error's message comes from the API, not from the pod logs.
+            jq -r '"Claude Code failed: subtype=\(.subtype // "?"), terminal_reason=\(.terminal_reason // "?"), api_error_status=\(.api_error_status // "none"), turns=\(.num_turns // "?"), cost=$\(.total_cost_usd // "?")"' "$result"
+            if [ "$(jq -r '.api_error_status // empty' "$result")" != "" ]; then
+              jq -r '.result // empty' "$result" | head -c 500
+              echo
+            fi
             exit 1
           fi
 

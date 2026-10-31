@@ -50,6 +50,10 @@ class TestInitializePlatform(CommandTestBase):
         for dependency in ("initialize_providers", "install_official_extensions", "initialize_vectorstore_providers"):
             self.assertLess(names.index(dependency), first_load)
         self.assertLess(len(names) - 1 - names[::-1].index("load_from_github"), names.index("verify_stackademy"))
+        # the retired examples are deleted after the example manifests are loaded, for their owner.
+        retired = names.index("delete_retired_examples")
+        self.assertEqual(retired, first_load + 1)
+        self.assertEqual(call.call_args_list[retired].kwargs, {"username": "admin"})
         self.assertIn("verify_dns_configuration", names)
         self.assertEqual(names[-1], "sync_infrastructure_inventory")
 
