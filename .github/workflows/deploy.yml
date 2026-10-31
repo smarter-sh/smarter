@@ -11,6 +11,10 @@
 # Started by hand, it deploys the given tag, or the branch's latest tag, to
 # the branch's environment: main to prod, alpha, beta and next to their own.
 #
+# The notify job posts the deployment to the SLACK_CHANNEL Slack channel:
+# the environment, the version, the changes since the previous release, the
+# image and the chart. The init Job then posts its own log there.
+#
 # workflow_run always runs this workflow's file from main, the default
 # branch, so github.ref is main, and the environment prod.
 #
@@ -48,6 +52,7 @@ env:
   SMARTER_CACHE_EXPIRATION: "60"
   SMARTER_ENABLE_WEB_CONSOLE_TERMINAL: "true"
   VERSION: "latest"
+  SLACK_CHANNEL: "smarter"
 
 jobs:
   #----------------------------------------------------------------------------
@@ -98,6 +103,10 @@ jobs:
     needs: resolve
     if: needs.resolve.outputs.deploy == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.describe.outputs.environment }}
+      version: ${{ steps.describe.outputs.version }}
+      chart: ${{ steps.describe.outputs.chart }}
     steps:
       - name: Checkout code
         id: checkout_code
@@ -186,10 +195,14 @@ jobs:
           smarter-mariadb-backup-password: ${{ secrets.SMARTER_MYSQL_BACKUP_PASSWORD }}
           smarter-settings-output: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}
           # The Slack bot runs in prod only: two bots on one Slack app would each
-          # receive part of the messages.
+          # receive part of the messages. It needs all three of slack-app-token,
+          # slack-bot-agent-url and slack-bot-token, so passing the bot token to
+          # every environment doesn't start it elsewhere. Every environment's init
+          # Job and nightly backup post their logs to SLACK_CHANNEL with it.
           slack-app-token: ${{ env.ENVIRONMENT == 'prod' && secrets.SLACK_APP_TOKEN || '' }}
           slack-bot-agent-url: ${{ env.ENVIRONMENT == 'prod' && secrets.SLACK_BOT_AGENT_URL || '' }}
-          slack-bot-token: ${{ env.ENVIRONMENT == 'prod' && secrets.SLACK_BOT_TOKEN || '' }}
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack-notify-channel: ${{ env.SLACK_CHANNEL }}
           social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
           social-auth-google-oauth2-secret: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
           social-auth-github-key: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
@@ -198,6 +211,19 @@ jobs:
           social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
           tavily-api-key: ${{ secrets.TAVILY_API_KEY }}
           togetherai-api-key: ${{ secrets.TOGETHERAI_API_KEY }}
+
+      # What the notify job tells Slack. It runs even when the deployment
+      # failed, so that the failure is reported with its version. The deploy
+      # action sets the chart's version (scripts/bump_version.py), so it is
+      # read afterwards.
+      - name: Describe the deployment
+        id: describe
+        if: always()
+        shell: bash
+        run: |
+          echo "environment=$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "chart=$(yq '.version' helm/charts/smarter/Chart.yaml 2>/dev/null || true)" >> "$GITHUB_OUTPUT"
 
       - name: Set deployment domain
         id: set-deployment-domain
@@ -240,3 +266,64 @@ jobs:
           name: release-info
           path: release-info/
           retention-days: 7
+
+  #----------------------------------------------------------------------------
+  # Post the deployment to Slack: the environment and its url, the version
+  # with its release notes, the changes since the previous release, the
+  # commit, the image and the Helm chart. The init Job that the deployment
+  # starts posts its own log to the same channel when it finishes (see
+  # helm/charts/smarter/templates/job-init.yaml). A Slack outage doesn't fail
+  # the deployment, so Publish still follows. scripts/slack_post.py posts the
+  # message, with the SLACK_BOT_TOKEN secret; without it, nothing is posted.
+  #----------------------------------------------------------------------------
+  notify:
+    needs: [resolve, deploy]
+    if: ${{ !cancelled() && needs.resolve.outputs.deploy == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.deploy.outputs.version || needs.resolve.outputs.tag || github.ref }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Tell Slack
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULT: ${{ needs.deploy.result }}
+          DEPLOYED_ENVIRONMENT: ${{ needs.deploy.outputs.environment }}
+          VERSION: ${{ needs.deploy.outputs.version || needs.resolve.outputs.tag }}
+          CHART: ${{ needs.deploy.outputs.chart }}
+        run: |
+          if [ "$RESULT" = "success" ]; then
+            ICON=":rocket:"; OUTCOME="deployed"
+          else
+            ICON=":x:"; OUTCOME="failed to deploy"
+          fi
+          if [ "$DEPLOYED_ENVIRONMENT" = "prod" ]; then
+            DOMAIN="${PLATFORM_SUBDOMAIN}.${ROOT_DOMAIN}"
+          elif [ -n "$DEPLOYED_ENVIRONMENT" ]; then
+            DOMAIN="${DEPLOYED_ENVIRONMENT}.${PLATFORM_SUBDOMAIN}.${ROOT_DOMAIN}"
+          fi
+          VERSION="${VERSION:-$(git describe --tags --abbrev=0)}"
+          PREVIOUS=$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || true)
+          COMMIT=$(git rev-parse --short "${VERSION}^{commit}" 2>/dev/null || true)
+          {
+            echo "${ICON} *Deploy #${GITHUB_RUN_NUMBER}: ${DOMAIN:-smarter} ${OUTCOME}* · ${GITHUB_ACTOR}"
+            [ -n "$DOMAIN" ] && echo "• Environment: \`${DEPLOYED_ENVIRONMENT}\` · <https://${DOMAIN}/|${DOMAIN}>"
+            echo "• Version: <${REPO_URL}/releases/tag/${VERSION}|${VERSION}>"
+            if [ -n "$PREVIOUS" ]; then
+              echo "• Changes since ${PREVIOUS}: <${REPO_URL}/compare/${PREVIOUS}...${VERSION}|${PREVIOUS}...${VERSION}>"
+            fi
+            [ -n "$COMMIT" ] && echo "• Commit: <${REPO_URL}/commit/${COMMIT}|${COMMIT}>"
+            [ -n "$DEPLOYED_ENVIRONMENT" ] && echo "• Image: \`${NAMESPACE_BASE}-${DEPLOYED_ENVIRONMENT}:${VERSION}\` (AWS ECR)"
+            [ -n "$CHART" ] && echo "• Helm chart: \`smarter ${CHART}\`"
+            [ "$RESULT" = "success" ] && echo "• The init job posts its log here when it finishes."
+            echo "<${RUN_URL}|View the run>"
+          } | python3 -I scripts/slack_post.py --channel "$SLACK_CHANNEL"

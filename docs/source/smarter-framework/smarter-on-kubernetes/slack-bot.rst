@@ -60,7 +60,8 @@ Setting It Up
    - Under **Socket Mode**, enable Socket Mode and create an app-level token with the
      ``connections:write`` scope. This is the app token, ``xapp-...``.
    - Under **OAuth & Permissions**, add the bot token scopes ``app_mentions:read``, ``chat:write``,
-     ``im:history`` and ``users:read``.
+     ``im:history`` and ``users:read``, and ``files:write``, with which the platform uploads its
+     init Job's and database backup's logs (see :doc:`../smarter-on-kubernetes`).
    - Under **Event Subscriptions**, subscribe to the bot events ``app_mention``, ``message.im``,
      ``team_join`` and ``app_home_opened``.
    - Under **App Home**, enable the Messages tab, so that people can send the bot direct messages.
@@ -79,11 +80,14 @@ Setting It Up
    - the repository secrets ``SLACK_BOT_TOKEN`` and ``SLACK_APP_TOKEN``;
    - the repository secret ``SLACK_BOT_AGENT_URL``, the LLMClient's url.
 
-   The deploy workflow passes them to the prod deployment only, because two bots with the same
-   Slack app would each receive part of the messages. It passes the tokens to the chart as
-   ``env.SMARTER_SLACK_BOT_TOKEN`` and ``env.SMARTER_SLACK_APP_TOKEN``, which are stored in the
-   platform's environment Secret, and the url as ``slackBot.agentUrl``. It sets
-   ``slackBot.enabled`` to ``true`` only when all three are set.
+   The deploy workflow passes the app token and the url to the prod deployment only, because two
+   bots with the same Slack app would each receive part of the messages. It passes the tokens to
+   the chart as ``env.SMARTER_SLACK_BOT_TOKEN`` and ``env.SMARTER_SLACK_APP_TOKEN``, which are
+   stored in the platform's environment Secret, and the url as ``slackBot.agentUrl``. It sets
+   ``slackBot.enabled`` to ``true`` only when all three are set. The bot token alone, which only
+   posts, goes to every environment, whose init Job and database backup post their outcome with
+   it, to the channel that ``databaseInit.notifySlackChannel`` and
+   ``databaseScheduledBackup.notifySlackChannel`` name.
 
 4. **Deploy**, and invite the bot to a channel (``/invite @<bot name>``).
 
@@ -121,7 +125,9 @@ Values
    * - ``slackBot.resources``
      - The container's requests and limits: 50m CPU and 128Mi of memory, up to 256Mi.
    * - ``env.SMARTER_SLACK_BOT_TOKEN``, ``env.SMARTER_SLACK_APP_TOKEN``
-     - The Slack app's bot and app-level tokens.
+     - The Slack app's bot and app-level tokens. The platform also reads the bot token, as
+       ``smarter_settings.slack_bot_token``, to post its Jobs' logs, whether or not the bot is
+       enabled.
 
 Operating It
 ------------
