@@ -166,8 +166,12 @@ inputs:
     description: "The url of the deployed LLMClient that the optional Slack bot asks, e.g. https://smarter-developer.<account-number>.api.<root-domain>/"
     required: false
   slack-bot-token:
-    description: "The Slack app's bot token (xoxb-...) of the optional Slack bot. The bot is deployed only when slack-app-token, slack-bot-token and slack-bot-agent-url are all set"
+    description: "The Slack app's bot token (xoxb-...). The init Job and the nightly backup post their logs with it, to slack-notify-channel. The optional Slack bot also uses it, and is deployed only when slack-app-token, slack-bot-token and slack-bot-agent-url are all set"
     required: false
+  slack-notify-channel:
+    description: "The Slack channel, e.g. smarter, that the init Job and the nightly backup post their results and logs to, with slack-bot-token. The bot must be in the channel, with the chat:write and files:write scopes. Empty: they don't post"
+    required: false
+    default: ""
   social-auth-google-oauth2-key:
     description: "The Google OAuth2 key"
     required: true
@@ -579,6 +583,8 @@ runs:
           --set databaseScheduledBackup.s3Uri="${{ env.SMARTER_MYSQL_BACKUP_S3_URI }}" \
           --set slackBot.enabled=${{ inputs.slack-bot-token != '' && inputs.slack-app-token != '' && inputs.slack-bot-agent-url != '' }} \
           --set slackBot.agentUrl="${{ inputs.slack-bot-agent-url }}" \
+          --set databaseInit.notifySlackChannel="${{ inputs.slack-notify-channel }}" \
+          --set databaseScheduledBackup.notifySlackChannel="${{ inputs.slack-notify-channel }}" \
           --values /tmp/values.yaml
 
     # Clean up secrets file

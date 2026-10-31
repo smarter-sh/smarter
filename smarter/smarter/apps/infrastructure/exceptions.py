@@ -69,6 +69,10 @@ class EmailServiceError(SmarterInfrastructureError):
     """The email service is misconfigured."""
 
 
+class SlackServiceError(SmarterInfrastructureError):
+    """Slack could not be reached, or rejected a request."""
+
+
 __all__ = [
     "CertificateNotFound",
     "CertificateNotIssued",
@@ -83,5 +87,6 @@ __all__ = [
     "InfrastructureResourceNotFound",
     "InfrastructureTimeout",
     "KubernetesServiceError",
+    "SlackServiceError",
     "SmarterInfrastructureError",
 ]

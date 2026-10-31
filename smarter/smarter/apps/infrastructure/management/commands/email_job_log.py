@@ -1,5 +1,5 @@
 """
-Email a job's log, by default to the platform's admin, ``smarter_settings.email_admin``.
+Email a job's log, by default to the platform's admin, ``smarter_settings.email_admin``, and post it to Slack.
 
 The Helm chart's init Job tees its output to a file, and runs this command last, so that the
 admin, or whoever ``--to`` names, learns how each install and upgrade went without reading
@@ -19,10 +19,23 @@ log's last ``--lines`` lines instead.
 It is sent with :data:`~smarter.apps.infrastructure.services.infrastructure` ``.email``, which
 also sends the admin a blind copy when someone else is the recipient.
 
+``--slack-channel`` also posts the job's outcome to a Slack channel, whatever became of the email,
+with :data:`~smarter.apps.infrastructure.services.infrastructure` ``.slack``, when Slack is
+configured (``SMARTER_SLACK_BOT_TOKEN``). The message says whether the job succeeded, followed by
+the summary, if any, and the whole log, redacted, is uploaded into the message's thread, as the same
+file that the email attaches. If it cannot be uploaded, e.g. because the bot lacks the scope
+``files:write``, the thread gets the log's last lines that fit in a Slack message instead, and the
+link to the log, if it was saved to public storage. Text from the log, the summary and the job's
+name is escaped, so that it cannot mention anyone, e.g. with ``<!channel>``.
+
+The command never fails, so that it never changes the job's outcome: neither email nor Slack
+changes its exit status.
+
 .. code-block:: console
 
     python manage.py email_job_log --file /tmp/job.log --job smarter-job-init --status 1
     python manage.py email_job_log --file /tmp/backup.log --summary /tmp/backup-summary.txt --job smarter-mysql-backup
+    python manage.py email_job_log --file /tmp/job.log --job smarter-job-init --slack-channel smarter
 """
 
 import html
@@ -39,6 +52,7 @@ from django.core.files.storage import default_storage
 from django.utils.text import slugify
 
 from smarter.apps.infrastructure.services import EmailAttachment, infrastructure
+from smarter.apps.infrastructure.services.slack import escape
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
@@ -63,6 +77,12 @@ Base64 encoding adds a third, and AWS SES accepts 10 MB messages.
 
 STORAGE_FOLDER = "job-logs"
 """The folder of the default file storage that holds logs too large to attach."""
+
+SLACK_TAIL_CHARACTERS = 3500
+"""The most characters of the log's last lines that are posted to Slack when the log cannot be uploaded.
+
+Slack shortens a message's text after 4,000 characters.
+"""
 
 
 def secret_values() -> list[str]:
@@ -89,24 +109,55 @@ def redact(text: str) -> str:
     return text
 
 
-def read_summary(filename: str) -> str:
+def read_summary_text(filename: str) -> str:
     """
-    The body's summary of a job: the text of ``--summary``, redacted, as html.
+    The summary of a job: the text of ``--summary``, redacted.
 
     A summary that is missing or empty, for example because the job failed before it wrote one, is
-    left out, and the email is sent without it.
+    left out, and the email and Slack message are sent without it.
 
     :param filename: The summary file, or an empty string for none.
-    :returns: The summary as a ``<pre>`` element, or an empty string.
+    :returns: The summary, or an empty string.
     """
     if not filename:
         return ""
     try:
-        summary = redact(Path(filename).read_text(encoding="utf-8", errors="replace")).strip()
+        return redact(Path(filename).read_text(encoding="utf-8", errors="replace")).strip()
     except OSError as e:
-        logger.warning("%s.read_summary() could not read the summary %s: %s", logger_prefix, filename, e)
+        logger.warning("%s.read_summary_text() could not read the summary %s: %s", logger_prefix, filename, e)
         return ""
-    return f"<pre>{html.escape(summary)}</pre>" if summary else ""
+
+
+def slack_code_block(text: str) -> str:
+    """
+    Return text as a Slack ``mrkdwn`` code block, escaped.
+
+    :param text: The text, e.g. a log's last lines.
+    :returns: The code block. Backticks that would end it early are broken up.
+    """
+    return "```\n" + escape(text).replace("```", "`\u200b``") + "\n```"
+
+
+def slack_tail(log: list[str], limit: int = SLACK_TAIL_CHARACTERS) -> list[str]:
+    """
+    The log's last lines that fit in a Slack message, once escaped.
+
+    :param log: The log's lines.
+    :param limit: The most characters, escaped, newlines included.
+    :returns: The last lines, in order. If even the last line is too long, its end.
+    """
+    tail: list[str] = []
+    size = 0
+    for line in reversed(log):
+        size += len(escape(line)) + 1
+        if size > limit:
+            break
+        tail.append(line)
+    if not tail and log:
+        # an escaped character is at most five characters, e.g. &amp;
+        end = log[-1][-limit:]
+        tail = [end if len(escape(end)) <= limit else log[-1][-(limit // 5) :]]
+    return list(reversed(tail))
 
 
 def save_public(filename: str, content: bytes) -> str:
@@ -136,7 +187,8 @@ class Command(SmarterCommand):
     help = (
         "Email a job's log, by default to the platform's admin (smarter_settings.email_admin), with credentials "
         "redacted. The log is attached, or, if it is too large, saved to the platform's public file storage and "
-        "linked. Never fails, so that it never changes the job's outcome."
+        "linked. With --slack-channel, also post the outcome to Slack, with the log in the message's thread. "
+        "Never fails, so that it never changes the job's outcome."
     )
 
     def add_arguments(self, parser):
@@ -159,6 +211,16 @@ class Command(SmarterCommand):
             help="The largest log that is attached. A larger one is saved to public file storage and linked.",
         )
         parser.add_argument(
+            "--slack-channel",
+            type=str,
+            default="",
+            help=(
+                "Also post the job's outcome to this Slack channel, e.g. smarter, with the log in the message's thread. "
+                "Needs SMARTER_SLACK_BOT_TOKEN, a bot with the scopes chat:write and files:write, in the channel. "
+                "Empty: don't post."
+            ),
+        )
+        parser.add_argument(
             "--lines",
             type=int,
             default=500,
@@ -174,12 +236,17 @@ class Command(SmarterCommand):
         outcome = "SUCCEEDED" if status == 0 else f"FAILED (exit status {status})"
 
         log: Optional[list[str]] = None
+        read_error = ""
         try:
             log = redact(Path(options["file"]).read_text(encoding="utf-8", errors="replace")).splitlines()
         except OSError as e:
-            note = f"<p>The log could not be read: {html.escape(str(e))}</p>"
+            read_error = str(e)
+            note = f"<p>The log could not be read: {html.escape(read_error)}</p>"
 
         attachments: list[EmailAttachment] = []
+        filename = ""
+        content = b""
+        url = ""
         if log is not None:
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             filename = f"{slugify(job) or 'job'}-{timestamp}.txt"
@@ -206,13 +273,100 @@ class Command(SmarterCommand):
                     )
 
         subject = f"[{smarter_settings.environment_platform_domain}] {job} {outcome}"
-        body = f"<p>{html.escape(job)} {html.escape(outcome)}.</p>{read_summary(options['summary'])}{note}"
+        summary = read_summary_text(options["summary"])
+        summary_html = f"<pre>{html.escape(summary)}</pre>" if summary else ""
+        body = f"<p>{html.escape(job)} {html.escape(outcome)}.</p>{summary_html}{note}"
 
         to = options["to"] or str(smarter_settings.email_admin)
-        if infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, attachments=attachments):
+        emailed = infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, attachments=attachments)
+        if emailed:
             self.stdout.write(self.style.SUCCESS(f"Emailed the log of {job} to {to}."))
+        else:
+            self.stdout.write(self.style.WARNING(f"The log of {job} could not be emailed to {to}."))
+
+        channel = options["slack_channel"].strip().lstrip("#")
+        if channel:
+            try:
+                self.post_to_slack(channel, subject, status, summary, log, filename, content, url, read_error)
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("%s.handle() could not post the log of %s to Slack: %s", logger_prefix, job, e)
+                self.stdout.write(self.style.WARNING(f"The log of {job} could not be posted to Slack #{channel}."))
+
+        # the job's outcome is decided by the job, not by whether its log could be emailed or posted.
+        if emailed:
             self.handle_completed_success()
         else:
-            # the job's outcome is decided by the job, not by whether its log could be emailed.
-            self.stdout.write(self.style.WARNING(f"The log of {job} could not be emailed to {to}."))
             self.handle_completed_failure(None, msg=f"The log of {job} could not be emailed to {to}.")
+
+    # pylint: disable=too-many-arguments
+    def post_to_slack(
+        self,
+        channel: str,
+        title: str,
+        status: int,
+        summary: str,
+        log: Optional[list[str]],
+        filename: str,
+        content: bytes,
+        url: str,
+        read_error: str,
+    ) -> bool:
+        """
+        Post the job's outcome to a Slack channel, with its log in the message's thread.
+
+        The message is the outcome, with an emoji, and the summary, if any. The whole log is
+        uploaded into its thread. If it cannot be uploaded, the thread gets the log's last lines
+        that fit in a message, and the link to the log, if it was saved to public storage.
+
+        :param channel: The channel's name, e.g. ``smarter``, or its id.
+        :param title: The email's subject, e.g. ``[platform.example.com] smarter-job-init SUCCEEDED``.
+        :param status: The job's exit status.
+        :param summary: The job's summary, redacted, or an empty string.
+        :param log: The log's lines, redacted, or None if it could not be read.
+        :param filename: The log's file name, as the email attaches it.
+        :param content: The log, as the email attaches it.
+        :param url: The log's public url, if it was saved to public storage, or an empty string.
+        :param read_error: Why the log could not be read, or an empty string.
+        :returns: True if the outcome was posted, whether or not the log was.
+        """
+        slack = infrastructure.slack
+        if not slack.ready:
+            logger.warning(
+                "%s.post_to_slack() Slack is not configured. Nothing was posted to %s.", logger_prefix, channel
+            )
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Slack is not configured (SMARTER_SLACK_BOT_TOKEN). Nothing was posted to #{channel}."
+                )
+            )
+            return False
+
+        emoji = ":white_check_mark:" if status == 0 else ":x:"
+        text = f"{emoji} *{escape(title)}*"
+        if summary:
+            text += "\n" + slack_code_block(summary)
+        if read_error:
+            text += f"\nThe log could not be read: {escape(read_error)}"
+        message = slack.post_message(channel, text)
+        if message is None:
+            self.stdout.write(self.style.WARNING(f"The outcome could not be posted to Slack #{channel}."))
+            return False
+
+        if log is None:
+            self.stdout.write(self.style.SUCCESS(f"Posted the outcome to Slack #{channel}."))
+            return True
+        if slack.upload_file(message.channel_id, filename, content, thread_ts=message.ts):
+            self.stdout.write(self.style.SUCCESS(f"Posted the outcome and the log to Slack #{channel}."))
+            return True
+
+        tail = slack_tail(log)
+        reply = f"The log ({len(log)} lines, {len(content):,} bytes) could not be uploaded. Its last {len(tail)} lines:"
+        reply += "\n" + slack_code_block("\n".join(tail))
+        if url:
+            reply += f"\nThe whole log: {escape(url)}"
+        if slack.post_message(message.channel_id, reply, thread_ts=message.ts):
+            self.stdout.write(self.style.WARNING(f"Posted the outcome and the log's last lines to Slack #{channel}."))
+        else:
+            self.stdout.write(self.style.WARNING(f"Posted the outcome to Slack #{channel}, without the log."))
+        return True
