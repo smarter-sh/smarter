@@ -67,7 +67,7 @@ class TestSmarterProjectMCPServerView(MCPServerTestBase):
             url(), data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}), content_type="application/json"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()["result"]["tools"]), 10)
+        self.assertEqual(len(response.json()["result"]["tools"]), 11)
 
     def test_bearer_token(self):
         """The token of an Authorization: Bearer header is read, and nothing else."""
@@ -88,11 +88,14 @@ class TestSmarterProjectMCPServerView(MCPServerTestBase):
                     self.assertNotIn(TOKEN, repr(token))
 
     def test_github_token_serves_create_issue(self):
-        """A request with a GitHub token is also served create_issue and comment_on_issue."""
+        """A request with a GitHub token is also served the tools that write: issues, comments and pull requests."""
         body = {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
         tools = self.post(url(), body, HTTP_AUTHORIZATION=f"Bearer {TOKEN}").json()["result"]["tools"]
-        self.assertEqual(len(tools), 12)
-        self.assertEqual([tool["name"] for tool in tools[-2:]], ["create_issue", "comment_on_issue"])
+        self.assertEqual(len(tools), 15)
+        self.assertEqual(
+            [tool["name"] for tool in tools[-4:]],
+            ["create_issue", "comment_on_issue", "close_issue", "create_pull_request"],
+        )
         self.assertFalse(tools[-1]["annotations"]["readOnlyHint"])
 
     def test_notification(self):

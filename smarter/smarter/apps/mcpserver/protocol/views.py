@@ -15,8 +15,9 @@ Not Allowed``, which MCP clients expect of a stateless server.
 
 The endpoint requires no authentication: its read-only tools serve the public
 repositories of The Smarter Project. A client may send the user's GitHub classic personal
-access token in an ``Authorization: Bearer`` header, and is then also served
-``create_issue``, which opens issues as that user. The token is passed to the tool as a
+access token in an ``Authorization: Bearer`` header, and is then also served the tools
+that write as that user: ``create_issue``, ``comment_on_issue``, ``close_issue`` and
+``create_pull_request``. The token is passed to the tool as a
 ``SecretStr``, and is never logged. Each client IP address may send at most
 ``smarter_settings.mcpserver_rate_limit`` requests a minute: see
 :mod:`smarter.apps.mcpserver.ratelimit`.

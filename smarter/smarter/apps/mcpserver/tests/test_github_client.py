@@ -16,6 +16,7 @@ from smarter.apps.mcpserver.github.client import (
     explain_failure,
     github_request,
     optional_token,
+    refuse_secrets,
     validate_token,
 )
 from smarter.apps.mcpserver.repositories import ProjectRepository
@@ -127,6 +128,11 @@ class TestGitHub(SmarterTestBase):
             (response(403, {"message": "Resource protected by SAML"}), "Resource protected by SAML"),
             (response(403, None), "forbidden"),
             (response(404, {"message": "Not Found"}, {"X-OAuth-Scopes": "public_repo"}), "was not found"),
+            (
+                response(409, {"message": "Git Repository is empty."}),
+                "could not open the issue: Git Repository is empty.",
+            ),
+            (response(409, None), "could not open the issue: conflict"),
             (response(410, {"message": "Issues are disabled"}), "Issues are turned off"),
             (response(422, {"message": "Validation Failed"}), "could not open the issue: Validation Failed"),
             (response(422, None), "validation failed"),
@@ -148,3 +154,32 @@ class TestGitHub(SmarterTestBase):
         """A long message from GitHub is shortened."""
         long = "x" * (client.MAX_GITHUB_MESSAGE_LENGTH + 100)
         self.assertEqual(len(client.github_message(response(422, {"message": long}))), client.MAX_GITHUB_MESSAGE_LENGTH)
+
+    # -------------------------------------------------------------------------
+    # refuse_secrets
+    # -------------------------------------------------------------------------
+    def test_refuse_secrets_allows_ordinary_text(self):
+        """Text without a credential may be written, including an empty token."""
+        refuse_secrets(TOKEN, "smarter apply fails", "It fails with HTTP 500 at 12:00, see #42.")
+        refuse_secrets("", "no token")
+
+    def test_refuse_the_callers_token(self):
+        """The caller's own token is refused, and never quoted."""
+        with self.assertRaises(SmarterMCPServerToolError) as context:
+            refuse_secrets(TOKEN, "title", f"the header was Bearer {TOKEN}.")
+        self.assertIn("caller's GitHub token", context.exception.message)
+        self.assertNotIn(TOKEN, context.exception.message)
+
+    def test_refuse_credentials(self):
+        """Each kind of credential that the Guardrail recognizes is refused, and never quoted."""
+        secrets = {
+            "api_key": "sk-" + "ant-" + "a1B2" * 8,
+            "aws_access_key": "AKIA" + "ABCDEFGHIJKLMNOP",
+            "jwt": "eyJ" + "hbGciOiJIUzI1" + ".eyJ" + "zdWIiOiIxMjM0" + "." + "c2lnbmF0dXJl",
+            "private_key": "-----BEGIN " + "RSA PRIVATE KEY-----\nabc\n-----END RSA PRIVATE KEY-----",
+        }
+        for label, secret in secrets.items():
+            with self.subTest(label=label), self.assertRaises(SmarterMCPServerToolError) as context:
+                refuse_secrets(TOKEN, "ok", f"the log said {secret} here")
+            self.assertIn(label, context.exception.message)
+            self.assertNotIn(secret, context.exception.message)

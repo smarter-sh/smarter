@@ -5,7 +5,7 @@ Each feature's tools are in its own package, beside the code that they call:
 
 - :mod:`smarter.apps.mcpserver.index.tools`: the repositories and the blog, from the index.
 - :mod:`smarter.apps.mcpserver.manifests.tools`: the platform's manifests.
-- :mod:`smarter.apps.mcpserver.github.tools`: the GitHub issues.
+- :mod:`smarter.apps.mcpserver.github.tools`: the GitHub issues and pull requests.
 
 Their base class is :class:`smarter.apps.mcpserver.protocol.tools.SmarterProjectTool`.
 
@@ -17,8 +17,11 @@ Their base class is :class:`smarter.apps.mcpserver.protocol.tools.SmarterProject
 """
 
 from smarter.apps.mcpserver.github.tools import (
+    CloseIssueTool,
     CommentOnIssueTool,
     CreateIssueTool,
+    CreatePullRequestTool,
+    ReadIssueTool,
     SearchIssuesTool,
 )
 from smarter.apps.mcpserver.index.tools import (
@@ -47,8 +50,11 @@ TOOL_CLASSES: tuple[type[SmarterProjectTool], ...] = (
     SearchBlogTool,
     ReadBlogPostTool,
     SearchIssuesTool,
+    ReadIssueTool,
     CreateIssueTool,
     CommentOnIssueTool,
+    CloseIssueTool,
+    CreatePullRequestTool,
 )
 """Every tool of the Smarter Project MCP server, in the order that tools/list lists them."""
 

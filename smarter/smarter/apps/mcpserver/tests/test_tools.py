@@ -46,8 +46,8 @@ class TestTools(MCPServerTestBase):
 
     def test_definition(self):
         """Only the GitHub tools reach beyond the platform, and only the operations write."""
-        writes = {"create_issue", "comment_on_issue"}
-        open_world = writes | {"search_issues"}
+        writes = {"create_issue", "comment_on_issue", "close_issue", "create_pull_request"}
+        open_world = writes | {"search_issues", "read_issue"}
         for tool_class in TOOL_CLASSES:
             with self.subTest(tool=tool_class.name):
                 definition = tool_class(self.single()).definition()

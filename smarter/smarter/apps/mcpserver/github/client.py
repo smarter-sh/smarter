@@ -3,8 +3,9 @@ The GitHub REST api, as the Smarter Project MCP server's tools call it.
 
 :func:`github_request` sends one request to ``api.github.com``, with the caller's own GitHub
 token, or anonymously. Its callers are :mod:`smarter.apps.mcpserver.github.issues`,
-which opens issues and comments as the caller, and
-:mod:`smarter.apps.mcpserver.github.issues`, which searches the issues.
+which searches and reads issues, and opens issues and comments as the caller, and
+:mod:`smarter.apps.mcpserver.github.pulls`, which opens pull requests as the caller.
+:func:`refuse_secrets` stops every one of them from writing a credential to GitHub.
 
 **The caller's token.** An MCP client sends the user's GitHub classic personal access token
 in the request's ``Authorization: Bearer`` header (see :mod:`smarter.apps.mcpserver.protocol.views`).
@@ -30,6 +31,8 @@ from typing import Optional
 import requests
 from pydantic import JsonValue, SecretStr
 
+from smarter.apps.guardrail.manifest.enum import SAMGuardrailDetector
+from smarter.apps.guardrail.services.strategies.detectors import detect
 from smarter.apps.mcpserver.const import USER_AGENT
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
 from smarter.apps.mcpserver.repositories import GITHUB_API_URL, ProjectRepository
@@ -51,6 +54,40 @@ GITHUB_API_VERSION = "2022-11-28"
 REQUEST_TIMEOUT = 30
 """Seconds to wait for GitHub to respond."""
 MAX_GITHUB_MESSAGE_LENGTH = 300
+SECRET_DETECTORS = [
+    SAMGuardrailDetector.API_KEY.value,
+    SAMGuardrailDetector.AWS_ACCESS_KEY.value,
+    SAMGuardrailDetector.JWT.value,
+    SAMGuardrailDetector.PRIVATE_KEY.value,
+]
+"""The Guardrail detectors that :func:`refuse_secrets` runs on everything that a tool writes to GitHub."""
+
+
+def refuse_secrets(token: str, *texts: str) -> None:
+    """
+    Refuse to write a credential to GitHub, where everything that the tools write is public.
+
+    The text of an issue, a comment or a pull request is often written from material that the
+    LLM read, e.g. a log, which may hold a credential. The caller's own GitHub token, and every
+    credential that the Guardrail's secret detectors recognize (api keys, AWS access keys, JWTs,
+    private keys), are refused. The error never quotes the credential.
+
+    :param token: The caller's GitHub token, from :func:`validate_token`.
+    :param texts: The text that would be written.
+    :raises SmarterMCPServerToolError: If a text holds a credential.
+    """
+    for text in texts:
+        if token and token in text:
+            raise SmarterMCPServerToolError(
+                "The text holds the caller's GitHub token. Remove it: everything written to GitHub is public."
+            )
+        found = detect(text, SECRET_DETECTORS)
+        if found:
+            kinds = ", ".join(sorted({match.label for match in found if match.label})) or "a credential"
+            raise SmarterMCPServerToolError(
+                f"The text holds what looks like a credential ({kinds}). Remove or redact it, e.g. as <redacted>: "
+                "everything written to GitHub is public."
+            )
 
 
 def validate_token(token: Optional[SecretStr]) -> str:
@@ -189,6 +226,8 @@ def explain_failure(
         return f"GitHub refused to {action} in {repository.full_name}: {message or 'forbidden'}."
     if status == 404:
         return not_found or f"{repository.full_name} was not found on GitHub, or the token cannot see it."
+    if status == 409:
+        return f"GitHub could not {action}: {message or 'conflict'}."
     if status == 410:
         return f"Issues are turned off for {repository.full_name}."
     if status == 422:
@@ -196,4 +235,4 @@ def explain_failure(
     return f"GitHub responded with HTTP {status}{': ' + message if message else ''}."
 
 
-__all__ = ["explain_failure", "github_request", "optional_token", "validate_token"]
+__all__ = ["explain_failure", "github_request", "optional_token", "refuse_secrets", "validate_token"]
