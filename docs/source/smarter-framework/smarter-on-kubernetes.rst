@@ -83,6 +83,16 @@ email links to its CDN URL. The email is sent only when SMTP is configured (see
 :doc:`technologies/smtp`), and a Job that is killed, for example for running out of memory, sends
 none.
 
+The Job can also post its outcome to a Slack channel, ``databaseInit.notifySlackChannel`` (empty by
+default, which posts nothing), with ``email_job_log --slack-channel``. The message says whether the
+Job succeeded, with ✅ or ❌, and the whole log, redacted, is uploaded into the message's thread, as
+the same file that the email attaches. It is posted as the bot of ``SMARTER_SLACK_BOT_TOKEN``, which
+needs the scopes ``chat:write`` and ``files:write``, and must be a member of the channel. A bot
+without ``files:write`` posts the log's last lines in the thread instead, and the link to the log
+when it was saved to S3. Text from the log is escaped, so that a log line can't mention anyone.
+Slack, like email, never changes the Job's outcome. The deploy workflow passes the bot token to
+every environment, and sets both jobs' channel to ``smarter``.
+
 A CronJob, ``smarter-mysql-backup``, backs up the database every night (``databaseScheduledBackup``),
 with ``mariadb-dump``, and uploads the compressed dump to ``databaseScheduledBackup.s3Uri``, by
 default ``s3://<SMARTER_S3_BUCKET>/backups/sql``. Point ``s3Uri`` at a private bucket when the
@@ -100,8 +110,10 @@ to the end and that the archive is intact, and after uploading, that the object 
 archive's size.
 
 The backup emails its result the same way, to ``databaseScheduledBackup.notifyEmail`` or to
-``SMARTER_EMAIL_ADMIN``, with the backup's log attached. After a successful backup, the email names
-the backup file, its size, and its location in S3. The backup runs on a plain Debian image, as an init
+``SMARTER_EMAIL_ADMIN``, with the backup's log attached, and posts it to the Slack channel
+``databaseScheduledBackup.notifySlackChannel``, if one is set, with the log in the message's thread.
+After a successful backup, the email and the Slack message name the backup file, its size, and its
+location in S3. The backup runs on a plain Debian image, as an init
 container, which installs only the MariaDB client and a pinned AWS CLI
 (``databaseScheduledBackup.awsCliVersion``), whose download it verifies against the AWS CLI team's
 PGP signature. The email is sent by a second container, from the Smarter image, which passes that
