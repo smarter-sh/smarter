@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.40.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.39.2...v0.40.0-alpha.1) (2026-10-31)
+
+### Features
+
+* **mcpserver:** add GitHub issue tools and manifest validation ([5a33702](https://github.com/smarter-sh/smarter/commit/5a33702b058a49fdb42b9b12673c62c2a1a02cc3))
+
+### Bug Fixes
+
+* **middleware:** answer blocked paths 404, throttled clients 429 ([411e11b](https://github.com/smarter-sh/smarter/commit/411e11b4164ae78b8e4547316de51c17b6113f85))
+
 ## [0.39.2](https://github.com/smarter-sh/smarter/compare/v0.39.1...v0.39.2) (2026-10-31)
 
 ### Bug Fixes
