@@ -174,6 +174,25 @@ global:
       value: "smarter"
       effect: "NoSchedule"
 
+  # The security contexts of the pods that run the Smarter image: the app, the Celery
+  # workers, beat and the init job. They run as smarter_user, the user that the Dockerfile
+  # creates (uid and gid 1000), which reads the image's code through its group. runAsGroup
+  # must stay 1000: with only runAsUser set, the process's group would be root's, and it
+  # could not read the code. The root filesystem is read-only; the directories that the
+  # processes write are emptyDirs (templates/_helpers.tpl, smarter.writableVolumes).
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
 
 # -----------------------------------------------------------------------------
 # Smarter Application Configuration

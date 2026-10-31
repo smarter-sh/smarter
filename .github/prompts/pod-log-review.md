@@ -22,9 +22,10 @@ the message that started you.
   (`git show <tag>:<path>`) when it differs from the checkout.
 - **The logs**, already downloaded and redacted, in the log folder: one folder per deployment,
   one `.log` per pod, `.previous.log` for the container before its last restart, and
-  `inventory/` (pods, events, describe, images). Read them with Grep, `grep`, `sed -n`, `wc`,
-  `sort`, `uniq`, and `python3 -I skills/smarter-log-review/scripts/scan-log.py`. Never read a
-  whole large log at once.
+  `inventory/` (pods, events, describe, images). Read them with Grep, Read with an offset and a
+  limit, `grep`, `wc`, `sort`, `uniq`, `head`, `tail`, `cut`, and
+  `python3 -I skills/smarter-log-review/scripts/scan-log.py`. Never read a whole large log at once.
+  You cannot edit or write files: a fix goes into `create_pull_request` as whole file contents.
 - **The Smarter Project MCP server** (`mcp__smarter-project__*`): `search_issues`, `read_issue`,
   `create_issue`, `comment_on_issue`, `close_issue`, `create_pull_request`, and the code,
   documentation and blog search tools. The write tools act as the repository's maintainer
