@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.39.2](https://github.com/smarter-sh/smarter/compare/v0.39.1...v0.39.2) (2026-10-31)
+
+### Bug Fixes
+
+* **helm:** welcome new Slack members with the bot's how-to message ([6a36ad5](https://github.com/smarter-sh/smarter/commit/6a36ad5615081bad6fbfceef57d9502b60ad13b1))
+
+## [0.39.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.39.1...v0.39.2-alpha.1) (2026-10-31)
+
+### Bug Fixes
+
+* **helm:** welcome new Slack members with the bot's how-to message ([6a36ad5](https://github.com/smarter-sh/smarter/commit/6a36ad5615081bad6fbfceef57d9502b60ad13b1))
+
 ## [0.39.1](https://github.com/smarter-sh/smarter/compare/v0.39.0...v0.39.1) (2026-10-31)
 
 ### Bug Fixes
