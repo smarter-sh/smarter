@@ -10,13 +10,14 @@ host, and a Kubernetes Ingress whose TLS certificate is issued automatically. Re
 :doc:`custom domain <../../smarter-resources/smarter-custom-domain>` creates a DNS zone and a
 TLS certificate. A self-hosted :doc:`vectorstore <../../smarter-resources/smarter-vectorstore>`
 runs in Kubernetes, with a persistent volume for its data. And the platform sends email, for
-example to activate an account or to reset a password.
+example to activate an account or to reset a password, and posts to Slack, for example the outcome
+of each deployment.
 
 All of this is done through one layer of Python code, the **infrastructure services**, in the
 Django app ``smarter.apps.infrastructure``. The rest of the platform never calls a cloud
 provider's SDK, such as AWS's boto3. It asks the infrastructure services for what it needs, in
 terms that do not depend on the cloud: a DNS zone, a DNS record, a TLS certificate, a
-Kubernetes manifest, an email.
+Kubernetes manifest, an email, a Slack message.
 
 .. code-block:: python
 
@@ -27,6 +28,7 @@ Kubernetes manifest, an email.
     infrastructure.certificates.create_validation_records(certificate_id)
     infrastructure.kubernetes.apply_manifest(manifest)
     infrastructure.email.send_email(subject="Welcome!", body="<p>Hello</p>", to="user@example.com", html=True)
+    infrastructure.slack.post_message("smarter", "*Deployed*")
 
 Smarter runs on :doc:`Amazon Web Services <aws>` today. Because the platform depends only on
 the infrastructure services, supporting another cloud, such as Microsoft Azure, Google Cloud
@@ -35,7 +37,7 @@ or DigitalOcean, means adding a cloud provider, not changing the platform.
 The Services
 ------------
 
-``infrastructure`` gives the platform five services:
+``infrastructure`` gives the platform six services:
 
 - ``dns``: DNS zones and records. A zone, for example an AWS Route53 hosted zone, holds the
   records of a domain and its subdomains. Zones and records are described by the
@@ -48,6 +50,11 @@ The Services
 - ``kubernetes``: the resources of the platform's Kubernetes cluster, through
   `kubectl <https://kubernetes.io/docs/reference/kubectl/>`__.
 - ``email``: the platform's outgoing email, through SMTP. See :doc:`smtp`.
+- ``slack``: the platform's messages to Slack, through the Slack Web API, as the bot of
+  ``SMARTER_SLACK_BOT_TOKEN``. It posts messages, and uploads files into a channel or a message's
+  thread. The Helm chart's init Job and nightly database backup post their outcome and log with it
+  (see :doc:`../smarter-on-kubernetes`). Like email, it never raises: a failure is logged, and
+  returned as ``None`` or ``False``.
 - ``provider``: the cloud provider itself, for example its account identity, and a
   description of the Kubernetes cluster for the ``status`` API.
 
@@ -68,6 +75,7 @@ Some services depend on a cloud, and some do not:
   provider contributes only the kubeconfig, for example with ``aws eks update-kubeconfig``.
 - **Email** does not depend on a cloud either. Smarter sends it with SMTP, to any SMTP server,
   for example AWS Simple Email Service's.
+- **Slack** does not depend on a cloud: it is Slack's own Web API.
 
 ``SMARTER_CLOUD_PROVIDER``, which is ``smarter_settings.cloud_provider``, selects the provider.
 It is ``aws`` by default. ``memory`` selects a provider that keeps DNS zones, records and
@@ -187,21 +195,28 @@ Testing Safely
 
 The Smarter Docker containers hold real cloud credentials, and a real kubeconfig, which can
 create billable resources. So the real services refuse to reach their backends from the unit
-tests: the AWS provider is never ready, kubectl never runs, and SMTP sends nothing. Tests
-install fakes instead:
+tests: the AWS provider is never ready, kubectl never runs, SMTP sends nothing, and Slack posts
+nothing. Tests install fakes instead:
 
 .. code-block:: python
 
     from smarter.apps.infrastructure.providers import configure_provider
     from smarter.apps.infrastructure.providers.memory import InMemoryProvider
-    from smarter.apps.infrastructure.services import InMemoryEmailService, configure_email
+    from smarter.apps.infrastructure.services import (
+        InMemoryEmailService,
+        InMemorySlackService,
+        configure_email,
+        configure_slack,
+    )
 
     provider = InMemoryProvider()
     configure_provider(lambda: provider)
     configure_email(InMemoryEmailService)
+    configure_slack(InMemorySlackService)
     ...
     configure_provider(None)
     configure_email(None)
+    configure_slack(None)
 
 Tests of code that uses ``infrastructure`` can also patch it where it is used, for example
 ``patch("smarter.apps.llmclient.tasks.verify_custom_domain.infrastructure")``. Tests that must
@@ -219,6 +234,7 @@ Technical Reference
    infrastructure/certificates
    infrastructure/kubernetes
    infrastructure/email
+   infrastructure/slack
    infrastructure/inventory
    infrastructure/providers
    infrastructure/aws
