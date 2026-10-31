@@ -36,8 +36,14 @@
 #   - Claude never holds a credential that it could leak: the AWS credentials
 #     and kubeconfig are removed before it starts, and the PAT is only in the
 #     MCP server's configuration, outside the folders that Claude can read.
-#   - Claude's tools are read-only, except the MCP server's GitHub tools. It
-#     has no network access, no kubectl, no gh, no git push.
+#   - Claude's tools are read-only, except the MCP server's GitHub tools: no
+#     Edit or Write, no kubectl, no gh, no git push. Its permissions are in
+#     .github/prompts/pod-log-review.settings.json. Those rules match command
+#     text, so they are a first layer, not the boundary.
+#   - The boundaries: Claude Code refuses reads outside the repository and the
+#     log folder (blockReadsOutsideWorkingDirectories), and Harden-Runner
+#     blocks every outbound connection except to the hosts this job needs, so
+#     nothing that leaks into a command can leave the runner.
 #   - The MCP server refuses to write a credential to GitHub, never changes an
 #     existing branch or a file under .github/, and closes an issue only if
 #     GitHub confirms that the pull request that resolved it was merged.
@@ -138,6 +144,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
+      # Must be the first step. Blocks every outbound connection except to these hosts,
+      # for the whole job: GitHub (checkout, Node.js), AWS (STS and the EKS API, for the
+      # logs), npm (Claude Code), the Anthropic API, the MCP server, and Slack. Telemetry
+      # is off because StepSecurity's report on a public repository's run is public, and
+      # it would name the EKS API's host, which identifies the cluster.
+      - name: Harden the runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: block
+          disable-telemetry: true
+          disable-sudo-and-containers: true
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            raw.githubusercontent.com:443
+            objects.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+            *.actions.githubusercontent.com:443
+            nodejs.org:443
+            registry.npmjs.org:443
+            *.amazonaws.com:443
+            api.anthropic.com:443
+            ubc.smarter.sh:443
+            slack.com:443
+
       - name: Checkout code
         uses: actions/checkout@v6
         with:
@@ -223,6 +255,20 @@ jobs:
               > "$RUNNER_TEMP/claude/mcp.json"
           fi
 
+      # Why not anthropics/claude-code-action? Anthropic's official action is built for
+      # interactive use: replying to @claude mentions and reviewing pull requests. It
+      # runs this same claude CLI and takes the same flags through its claude_args
+      # input, so it would not make the permissions below shorter or stricter. It also
+      # hands Claude a GitHub token and its own GitHub tools, and this workflow is
+      # built so that Claude holds no token: it reads untrusted logs, so every write
+      # to GitHub goes through the Smarter Project MCP server, which refuses
+      # credentials, never touches an existing branch or .github/, and closes an issue
+      # only when GitHub confirms the fix was merged. Calling the CLI directly keeps
+      # that design, and keeps the stream-json output that the Slack step reads.
+      #
+      # The permissions are in .github/prompts/pod-log-review.settings.json. Only what
+      # depends on this run stays here: the MCP configuration, the log folder, and
+      # the folder that holds the PAT, which Claude may not read.
       - name: Review the logs with Claude Code
         id: claude
         shell: bash
@@ -230,6 +276,8 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # no telemetry, error reporting or update checks: the runner allows only the hosts above.
+          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
         run: |
           # exactly one Anthropic credential: the subscription token if there is one, else the API key.
           if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
@@ -267,21 +315,13 @@ jobs:
             -u GITHUB_TOKEN -u GH_TOKEN -u ACTIONS_RUNTIME_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_TOKEN \
             claude -p "$prompt" \
             --model "$CLAUDE_MODEL" \
+            --settings .github/prompts/pod-log-review.settings.json \
+            --permission-mode dontAsk \
+            --tools "Read,Grep,Glob,Bash,Skill,TodoWrite" \
             --mcp-config "$RUNNER_TEMP/claude/mcp.json" \
             --strict-mcp-config \
             --add-dir "$LOG_DIR" \
-            --permission-mode dontAsk \
-            --tools "Read,Grep,Glob,Edit,Write,Bash,Skill,TodoWrite" \
-            --allowedTools "Read" "Grep" "Glob" "Edit" "Write" "Skill" "TodoWrite" \
-              "mcp__smarter-project" \
-              "Bash(grep *)" "Bash(sed -n *)" "Bash(wc *)" "Bash(sort *)" "Bash(uniq *)" "Bash(head *)" \
-              "Bash(tail *)" "Bash(cut *)" "Bash(ls *)" "Bash(awk *)" "Bash(tr *)" \
-              "Bash(git log *)" "Bash(git show *)" "Bash(git diff *)" "Bash(git tag *)" "Bash(git branch *)" \
-              "Bash(git grep *)" "Bash(git blame *)" "Bash(git merge-base *)" "Bash(git rev-parse *)" \
-              "Bash(python3 -I skills/smarter-log-review/scripts/scan-log.py *)" \
-            --disallowedTools "WebFetch" "WebSearch" "Bash(curl *)" "Bash(wget *)" "Bash(gh *)" \
-              "Bash(git push *)" "Bash(git commit *)" "Bash(git remote *)" "Bash(git fetch *)" "Bash(kubectl *)" \
-              "Bash(env *)" "Bash(printenv *)" "Read(//proc/**)" "Read(/${RUNNER_TEMP}/claude/**)" \
+            --disallowedTools "Read(/${RUNNER_TEMP}/claude/**)" \
             --max-budget-usd "$MAX_BUDGET_USD" \
             --output-format stream-json \
             --verbose \
