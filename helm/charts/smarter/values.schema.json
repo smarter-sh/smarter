@@ -140,6 +140,8 @@
         "SMARTER_ADMIN_USERNAME": { "type": "string" },
         "SMARTER_ADMIN_PASSWORD": { "type": "string" },
         "SMARTER_ADMIN_EMAIL": { "type": "string" },
+        "SMARTER_SLACK_APP_TOKEN": { "type": "string" },
+        "SMARTER_SLACK_BOT_TOKEN": { "type": "string" },
         "SMTP_HOST": { "type": "string" },
         "SMTP_PORT": { "type": "string" },
         "SMTP_USE_SSL": { "type": "string" },
@@ -230,6 +232,15 @@
         "resources": { "type": "object" },
         "readinessProbe": { "type": "object" },
         "service": { "type": "object" }
+      }
+    },
+    "slackBot": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "agentUrl": { "type": "string" },
+        "timeout": { "type": "integer" },
+        "slackBoltVersion": { "type": "string" }
       }
     },
     "redis": {

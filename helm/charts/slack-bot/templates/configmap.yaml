@@ -1,0 +1,31 @@
+# -----------------------------------------------------------------------------------
+# ConfigMap Manifest for the Smarter Slack bot
+#
+# - Maintainer: The Smarter Project, https://smarter.sh
+# - Purpose: Holds the bot's program, files/bot.py, so that it runs on a stock
+#   Python image, with no image of its own to build.
+# - Usage: Mounted into the bot's Deployment (deployment.yaml), whose
+#   checksum/code annotation rolls the pod when the program changes.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+# -----------------------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Values.global.appName }}-slack-bot"
+  namespace: "{{ .Release.Namespace }}"
+  annotations:
+    meta.helm.sh/release-name: "{{ .Release.Name }}"
+    meta.helm.sh/release-namespace: "{{ .Release.Namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-slack-bot"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+data:
+  bot.py: |
+    {{- .Files.Get "files/bot.py" | nindent 4 }}
