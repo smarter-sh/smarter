@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.1](https://github.com/smarter-sh/smarter/compare/v0.40.0...v0.40.1) (2026-10-31)
+
+### Bug Fixes
+
+* **infrastructure:** post the init and backup job logs to Slack ([7d12824](https://github.com/smarter-sh/smarter/commit/7d12824f8830f876aeeae35edc379088068a72e6))
+
 ## [0.40.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.0...v0.40.1-alpha.1) (2026-10-31)
 
 ### Bug Fixes
