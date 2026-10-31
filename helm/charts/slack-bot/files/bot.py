@@ -41,8 +41,32 @@ AGENT_ERROR = "Sorry, I couldn't reach the Smarter agent. Please try again in a 
 EMPTY_QUESTION = "Hi! Ask me a question about Smarter, and I'll answer in this thread."
 NEW_CONVERSATION = "OK, let's start a new conversation. What would you like to know?"
 
+# The workspace members' guide to the bot.
+GUIDE_URL = "https://docs.smarter.sh/en/latest/slack.html"
+
+# Sent to new members, to people who open the bot's direct message for the first time, and in
+# reply to a message that is only one of HELP_WORDS. In Slack mrkdwn.
+WELCOME = (
+    "Hi! I'm *Smarter Developer*, The Smarter Project's bot. I answer questions about Smarter "
+    "from the project's public GitHub repositories and its blog, and I link to the sources I used.\n"
+    "\n"
+    "*How to ask me*\n"
+    "• In a channel, mention me: `@Smarter Developer how do I write a Plugin?` I answer in a "
+    "thread. To follow up, reply in that thread and mention me again.\n"
+    "• In a direct message with me, just type your question. No mention is needed.\n"
+    "• Send `new` to start a new conversation, or `help` to see this message again.\n"
+    "\n"
+    "*Please be patient:* I search the code and the docs before I answer, so an answer takes "
+    "10 to 30 seconds.\n"
+    "\n"
+    f"More about me: <{GUIDE_URL}|Smarter on Slack>"
+)
+
 # A message that is only one of these words starts a new conversation in its thread.
 RESET_WORDS = frozenset({"new", "reset", "start over", "new conversation"})
+
+# A message that is only one of these words is answered with WELCOME.
+HELP_WORDS = frozenset({"help"})
 
 
 def to_slack(text: str) -> str:
@@ -161,7 +185,8 @@ class AgentClient:
         """
         The bot's reply to a Slack message: the LLMClient's answer, in Slack mrkdwn.
 
-        A message that is only one of :data:`RESET_WORDS` starts a new conversation instead.
+        A message that is only one of :data:`RESET_WORDS` starts a new conversation instead, and
+        one that is only one of :data:`HELP_WORDS` is answered with :data:`WELCOME`.
 
         :param thread_id: The Slack thread's id.
         :param text: The Slack message's text.
@@ -170,7 +195,10 @@ class AgentClient:
         question = question_text(text)
         if not question:
             return EMPTY_QUESTION
-        if question.lower().strip(" .!") in RESET_WORDS:
+        word = question.lower().strip(" .!?")
+        if word in HELP_WORDS:
+            return WELCOME
+        if word in RESET_WORDS:
             self.forget(thread_id)
             return NEW_CONVERSATION
         try:
@@ -188,10 +216,31 @@ def register(app, agent: AgentClient) -> None:
       channel thread is one conversation.
     - ``message`` in a direct message: answers in the conversation, where the messages outside
       threads are one conversation, or in the message's thread, which is a conversation of its own.
+    - ``team_join``: sends a new member of the workspace :data:`WELCOME`, in a direct message.
+    - ``app_home_opened``: sends :data:`WELCOME` when someone opens the bot's direct message for
+      the first time, so that the members who joined before the bot are welcomed too.
 
     :param app: The Slack Bolt ``App``.
     :param agent: The LLMClient's client.
     """
+
+    @app.event("team_join")
+    def on_team_join(event, client):
+        user = event.get("user") or {}
+        if not user.get("id") or user.get("is_bot") or user.get("deleted"):
+            return
+        client.chat_postMessage(channel=user["id"], text=WELCOME, unfurl_links=False)
+        logger.info("%s.on_team_join() welcomed a new member", logger_prefix)
+
+    @app.event("app_home_opened")
+    def on_app_home_opened(event, client):
+        if event.get("tab") != "messages" or not event.get("channel"):
+            return
+        history = client.conversations_history(channel=event["channel"], limit=1)
+        if history.get("messages"):
+            return
+        client.chat_postMessage(channel=event["channel"], text=WELCOME, unfurl_links=False)
+        logger.info("%s.on_app_home_opened() welcomed a member to its direct message", logger_prefix)
 
     @app.event("app_mention")
     def on_mention(event, say):
