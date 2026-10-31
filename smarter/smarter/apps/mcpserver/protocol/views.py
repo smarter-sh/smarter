@@ -3,7 +3,7 @@
 The Django view of the Smarter Project MCP server.
 
 :class:`SmarterProjectMCPServerView` is the MCP Streamable HTTP endpoint of
-:class:`~smarter.apps.mcpserver.server.SmarterProjectMCPServer`. It is mounted at:
+:class:`~smarter.apps.mcpserver.protocol.server.SmarterProjectMCPServer`. It is mounted at:
 
 - ``/api/v1/mcp/smarter-project/``: every repository of The Smarter Project.
 - ``/api/v1/mcp/smarter-project/<repository>/``: one repository, e.g. ``smarter-cli``.
@@ -13,8 +13,12 @@ Accepted``, with no body, and every other POST with ``application/json``. The se
 issues no session, and offers no GET stream, so GET and DELETE are answered ``405 Method
 Not Allowed``, which MCP clients expect of a stateless server.
 
-The endpoint requires no authentication: it is read-only, and serves the public
-repositories of The Smarter Project. Each client IP address may send at most
+The endpoint requires no authentication: its read-only tools serve the public
+repositories of The Smarter Project. A client may send the user's GitHub classic personal
+access token in an ``Authorization: Bearer`` header, and is then also served the tools
+that write as that user: ``create_issue``, ``comment_on_issue``, ``close_issue`` and
+``create_pull_request``. The token is passed to the tool as a
+``SecretStr``, and is never logged. Each client IP address may send at most
 ``smarter_settings.mcpserver_rate_limit`` requests a minute: see
 :mod:`smarter.apps.mcpserver.ratelimit`.
 
@@ -33,16 +37,38 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
+from pydantic import SecretStr
 
+from smarter.apps.mcpserver.ratelimit import (
+    RATE_LIMITED,
+    client_ip,
+    is_rate_limited,
+    retry_after,
+)
+from smarter.apps.mcpserver.repositories import get_repository, repository_names
 from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .ratelimit import RATE_LIMITED, client_ip, is_rate_limited, retry_after
-from .repositories import get_repository, repository_names
 from .server import SmarterProjectMCPServer
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
+
+BEARER_SCHEME = "bearer"
+
+
+def bearer_token(request: HttpRequest) -> Optional[SecretStr]:
+    """
+    Return the token of a request's ``Authorization: Bearer`` header.
+
+    :param request: The request.
+    :returns: The token, or None if the request has no bearer token.
+    """
+    scheme, _, token = request.headers.get("Authorization", "").strip().partition(" ")
+    token = token.strip()
+    if scheme.lower() != BEARER_SCHEME or not token:
+        return None
+    return SecretStr(token)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -95,10 +121,10 @@ class SmarterProjectMCPServerView(SmarterView):
         except ValueError:
             error = SmarterProjectMCPServer.error(None, mcp_types.PARSE_ERROR, "the request body is not JSON.")
             return JsonResponse(SmarterProjectMCPServer.dump(error), status=HTTPStatus.BAD_REQUEST)
-        response = SmarterProjectMCPServer(project_repository).handle(payload)
+        response = SmarterProjectMCPServer(project_repository, github_token=bearer_token(request)).handle(payload)
         if response is None:
             return HttpResponse(status=HTTPStatus.ACCEPTED)
         return JsonResponse(response, safe=False)
 
 
-__all__ = ["SmarterProjectMCPServerView"]
+__all__ = ["SmarterProjectMCPServerView", "bearer_token"]

@@ -11,7 +11,7 @@ up to date with its published posts, so that the MCP server's ``search_blog`` an
    already indexed, there is nothing to do.
 3. Otherwise it converts each post's html to Markdown-like text, with its illustrations as
    Markdown images, ``![alt](url)``, which Smarter Chat displays, and replaces the blog's
-   files in one transaction, with :func:`~smarter.apps.mcpserver.indexer.store_files`. A
+   files in one transaction, with :func:`~smarter.apps.mcpserver.index.indexer.store_files`. A
    post's path is its permalink's path, e.g. ``2026/10/26/release-smarter-api-v0-6``, and
    the fingerprint is stored as the index's ``commit_sha``.
 
@@ -38,21 +38,28 @@ from bs4 import BeautifulSoup
 from bs4.element import NavigableString, Tag
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
+from smarter.apps.mcpserver.const import USER_AGENT
+from smarter.apps.mcpserver.exceptions import SmarterMCPServerIndexError
+from smarter.apps.mcpserver.models import (
+    RepositoryFileKind,
+    RepositoryIndex,
+    RepositoryIndexStatus,
+)
+from smarter.apps.mcpserver.repositories import ProjectBlog, project_blog
+from smarter.apps.mcpserver.signals import (
+    mcpserver_repository_index_failed,
+    mcpserver_repository_indexed,
+)
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .exceptions import SmarterMCPServerIndexError
 from .indexer import (
     MAX_FILE_BYTES,
     REQUEST_TIMEOUT,
-    USER_AGENT,
     ArchiveFile,
     markdown_image,
     store_files,
 )
-from .models import RepositoryFileKind, RepositoryIndex, RepositoryIndexStatus
-from .repositories import ProjectBlog, project_blog
-from .signals import mcpserver_repository_index_failed, mcpserver_repository_indexed
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
 
@@ -139,7 +146,7 @@ def image_markdown(image: Tag, base_url: str = "") -> Optional[str]:
     Return an image as a Markdown image, ``![alt](url)``, which Smarter Chat displays.
 
     The LLM cannot see the image, so its alt text is what tells the LLM what it shows. An alt
-    text too long to fit on the image's line, see :func:`~smarter.apps.mcpserver.indexer.markdown_image`,
+    text too long to fit on the image's line, see :func:`~smarter.apps.mcpserver.index.indexer.markdown_image`,
     is given in full on the lines after it.
 
     :param image: An ``img`` element.
@@ -250,7 +257,7 @@ def post_file(blog: ProjectBlog, post: WordPressPost) -> ArchiveFile:
     Return a post as a file of the blog's index.
 
     The text starts with the post's title, dates and url, so that a reader of any part of it
-    can cite it. A post longer than :data:`~smarter.apps.mcpserver.indexer.MAX_FILE_BYTES` is
+    can cite it. A post longer than :data:`~smarter.apps.mcpserver.index.indexer.MAX_FILE_BYTES` is
     truncated.
 
     :param blog: The blog.
