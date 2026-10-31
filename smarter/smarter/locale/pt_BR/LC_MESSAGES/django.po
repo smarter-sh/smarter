@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 16:45+0000\n"
+"POT-Creation-Date: 2026-10-30 23:35+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -1560,6 +1560,14 @@ msgstr ""
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
+"<strong>Slack</strong> - join The Smarter Project's Slack workspace for real-"
+"time questions and discussion with other users and contributors <a "
+"href=\"https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-"
+"e2c5Of4hS4fBr_XwfQARCw\" rel=\"noopener\" target=\"_blank\">[join]</a>"
+msgstr "<strong>Slack</strong> - participe do espaço de trabalho do Slack do The Smarter Project para tirar dúvidas e conversar em tempo real com outros usuários e colaboradores <a href=\"https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw\" rel=\"noopener\" target=\"_blank\">[participar]</a>"
+
+#: smarter/templates/account/email/welcome.html
+msgid ""
 "<strong>Source code</strong> on GitHub, where contributions are welcome <a "
 "href=\"https://github.com/smarter-sh/\" rel=\"noopener\" "
 "target=\"_blank\">[learn more]</a>"
@@ -1637,6 +1645,17 @@ msgid ""
 msgstr ""
 "Saiba mais sobre os manifestos, plugins e extensões do %(product_name)s, a "
 "interface de linha de comando e a API."
+
+#: smarter/templates/account/email/welcome.html
+msgid "Slack Community"
+msgstr "Comunidade no Slack"
+
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"Ask questions and talk with other %(product_name)s users and contributors in "
+"real time, in The Smarter Project's Slack workspace."
+msgstr "Tire dúvidas e converse em tempo real com outros usuários e colaboradores do %(product_name)s no espaço de trabalho do Slack do The Smarter Project."
 
 #: smarter/templates/account/email/welcome.html
 #, python-format

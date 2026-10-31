@@ -1,0 +1,19 @@
+apiVersion: v2
+name: slack-bot
+description: >
+  An optional Slack bot for the Smarter platform. It answers questions in a Slack
+  workspace with a deployed Smarter LLMClient, such as smarter_developer, through
+  the LLMClient's chat api. It connects to Slack with Socket Mode, so it needs no
+  Ingress, DNS record or certificate. A subchart of the smarter chart, enabled with
+  slackBot.enabled.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.30.0-0"
+home: https://smarter.sh
+sources:
+  - https://github.com/smarter-sh/smarter/tree/main/helm/charts/slack-bot
+maintainers:
+  - name: Lawrence McDaniel
+    email: lpm0073@gmail.com
+    url: https://lawrencemcdaniel.com
