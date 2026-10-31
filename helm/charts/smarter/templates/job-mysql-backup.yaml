@@ -16,9 +16,10 @@
 #
 # When the backup completes, the Job emails the result, with the backup's log
 # attached, in the same way that job-init.yaml does: with manage.py email_job_log,
-# to databaseScheduledBackup.notifyEmail, or to smarter_settings.email_admin. A
-# successful backup's email names the backup file, its size and where in S3 it was
-# saved. The Debian image has no Django, so the backup runs as an init container,
+# to databaseScheduledBackup.notifyEmail, or to smarter_settings.email_admin, and
+# posts it to the Slack channel databaseScheduledBackup.notifySlackChannel, if any,
+# with the log in the message's thread. A successful backup's email and Slack
+# message name the backup file, its size and where in S3 it was saved. The Debian image has no Django, so the backup runs as an init container,
 # which writes its log, exit status and summary to a shared volume, and always exits
 # 0, so that the email container runs after a failed backup too. The email
 # container then exits with the backup's status. A failed backup fails the pod, and
@@ -200,7 +201,7 @@ spec:
                 - |
                   # a backup that never wrote its status, e.g. one killed for running out of memory, failed.
                   status=$(cat /job/backup.status 2>/dev/null || echo 1)
-                  python manage.py email_job_log --file /job/backup.log --summary /job/backup-summary.txt --job "{{ .Values.global.appName }}-mysql-backup {{ .Chart.Version }}" --status "$status" --to "{{ .Values.databaseScheduledBackup.notifyEmail | default "" }}" || true
+                  python manage.py email_job_log --file /job/backup.log --summary /job/backup-summary.txt --job "{{ .Values.global.appName }}-mysql-backup {{ .Chart.Version }}" --status "$status" --to "{{ .Values.databaseScheduledBackup.notifyEmail | default "" }}" --slack-channel "{{ .Values.databaseScheduledBackup.notifySlackChannel | default "" }}" || true
                   exit $status
               resources:
                 requests:

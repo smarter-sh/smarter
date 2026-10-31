@@ -292,6 +292,18 @@ class TestSettingsMethods(SmarterTestBase):
         with self.assertRaises(SmarterConfigurationError):
             call(Settings.validate_github_api_token, "github-token", {})
 
+    def test_slack_bot_token(self):
+        """Test that the Slack bot token is None when missing, or a placeholder, and must be a SecretStr."""
+        module = "smarter.common.conf.settings"
+        for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")):
+            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
+                defaults.SLACK_BOT_TOKEN = None
+                self.assertIsNone(call(Settings.validate_slack_bot_token, value, {}))
+        token = SecretStr("xoxb-test")
+        self.assertIs(call(Settings.validate_slack_bot_token, token, {}), token)
+        with self.assertRaises(SmarterConfigurationError):
+            call(Settings.validate_slack_bot_token, "xoxb-test", {})
+
     def test_versions(self):
         for name in ("version", "python_version", "pydantic_version", "drf_version", "linux_distribution"):
             with self.subTest(name=name):
