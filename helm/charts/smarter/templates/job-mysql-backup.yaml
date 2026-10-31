@@ -76,6 +76,7 @@ spec:
                 defaultMode: 0755
             - name: job-log
               emptyDir: {}
+            {{- include "smarter.writableVolumes" . | nindent 12 }}
 
           initContainers:
             - name: mysql-backup
@@ -210,10 +211,15 @@ spec:
                 limits:
                   cpu: 500m
                   memory: 1Gi
+              # The pod's security context would also apply to the Debian init container, which
+              # installs packages as root, so the Smarter image's settings are set here instead.
+              securityContext:
+                {{- toYaml (merge (deepCopy .Values.global.containerSecurityContext) .Values.global.podSecurityContext) | nindent 16 }}
               volumeMounts:
                 - name: job-log
                   mountPath: /job
                   readOnly: true
+                {{- include "smarter.writableVolumeMounts" . | nindent 16 }}
               # the platform's environment, from the Secret in secret-env.yaml
               envFrom:
                 - secretRef:
