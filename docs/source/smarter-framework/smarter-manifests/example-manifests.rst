@@ -73,6 +73,11 @@ manifest that fails is reported, and doesn't stop the others.
 - A Budget whose manifest lists no ``spec.resources`` is created detached, once. If the Budget
   exists, it is left as it is, so the resources that a superuser attached it to, and their changes
   to it, survive the next initialization.
+- Applying never deletes anything. A resource whose manifest was removed from the repository stays
+  on every platform that loaded it, until ``manage.py delete_retired_examples``, which
+  ``manage.py initialize_platform`` runs after the example manifests, deletes it. To retire an
+  example, remove its manifest from the repository, and add it to
+  :data:`~smarter.apps.account.management.commands.delete_retired_examples.RETIRED_EXAMPLES`.
 
 .. code-block:: console
 

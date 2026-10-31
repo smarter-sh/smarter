@@ -50,7 +50,8 @@ class Command(SmarterCommand):
         2. Initialize the Waffle switches, the Smarter project's index, the built-in Providers, the
            official extensions and the vector store providers.
         3. Load the example manifests from GitHub, https://github.com/smarter-sh/example-manifests,
-           and deploy their LLMClients.
+           and deploy their LLMClients. Then delete the example resources whose manifests were removed
+           from it since an earlier initialization, with ``delete_retired_examples``.
         4. Load the Stackademy project from GitHub, deploy its LLMClients, and verify them.
         5. Verify the DNS configuration, and sync the ledger of infrastructure resources with the
            Kubernetes cluster.
@@ -164,6 +165,14 @@ class Command(SmarterCommand):
             )
         except (Exception, SystemExit) as e:
             logger.error("Failed to load the example manifests from %s: %s", EXAMPLE_MANIFESTS_REPOSITORY_URL, e)
+
+        try:
+            # after the example manifests. load_from_github never deletes a resource whose manifest was removed
+            # from its repository, e.g. the MCPClient of an MCP server endpoint that no longer exists, which
+            # then fails every time it is used. This deletes those that the Smarter admin owns.
+            call_command("delete_retired_examples", username=username)
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to delete the retired example resources: %s", e)
 
         try:
             # The Stackademy project: the Secrets, Connections, plugins, LLMClients and Budget of a fictional
