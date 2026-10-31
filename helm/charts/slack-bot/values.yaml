@@ -15,8 +15,8 @@
 # Required. The deployed LLMClient that answers, e.g.
 # https://smarter-developer.<account-number>.api.<root-domain>/. Its own host's
 # /config/ and /prompt/ are called without an api key, so the LLMClient must not
-# require authentication. The deploy workflow sets it from the GitHub
-# environment's variable SLACK_BOT_AGENT_URL.
+# require authentication. The deploy workflow sets it in prod from the
+# repository secret SLACK_BOT_AGENT_URL.
 agentUrl: ""
 
 # Seconds to wait for an answer. An answer with several tool calls takes 10 to 20.

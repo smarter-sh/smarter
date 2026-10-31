@@ -67,17 +67,17 @@ Setting It Up
       curl -X POST -H "Content-Type: application/json" -d '{}' \
         https://smarter-developer.<account-number>.api.<root-domain>/config/
 
-3. **Configure the environment that runs the bot**, and only that one: two bots with the same
-   Slack app would each receive part of the messages. In the repository's GitHub settings, under the
-   environment (e.g. ``prod``), add:
+3. **Configure the repository.** In its GitHub settings, under **Secrets and variables** then
+   **Actions**, add:
 
-   - the secrets ``SLACK_BOT_TOKEN`` and ``SLACK_APP_TOKEN``;
-   - the variable ``SLACK_BOT_AGENT_URL``, the LLMClient's url.
+   - the repository secrets ``SLACK_BOT_TOKEN`` and ``SLACK_APP_TOKEN``;
+   - the repository secret ``SLACK_BOT_AGENT_URL``, the LLMClient's url.
 
-   The deploy workflow passes the tokens to the chart as ``env.SMARTER_SLACK_BOT_TOKEN`` and
-   ``env.SMARTER_SLACK_APP_TOKEN``, which are stored in the platform's environment Secret, and the
-   url as ``slackBot.agentUrl``. It sets ``slackBot.enabled`` to ``true`` only when all three are
-   set, so the other environments don't run the bot.
+   The deploy workflow passes them to the prod deployment only, because two bots with the same
+   Slack app would each receive part of the messages. It passes the tokens to the chart as
+   ``env.SMARTER_SLACK_BOT_TOKEN`` and ``env.SMARTER_SLACK_APP_TOKEN``, which are stored in the
+   platform's environment Secret, and the url as ``slackBot.agentUrl``. It sets
+   ``slackBot.enabled`` to ``true`` only when all three are set.
 
 4. **Deploy**, and invite the bot to a channel (``/invite @<bot name>``).
 
