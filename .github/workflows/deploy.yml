@@ -185,9 +185,11 @@ jobs:
           smarter-logo: ${{ secrets.SMARTER_LOGO }}
           smarter-mariadb-backup-password: ${{ secrets.SMARTER_MYSQL_BACKUP_PASSWORD }}
           smarter-settings-output: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}
-          slack-app-token: ${{ secrets.SLACK_APP_TOKEN }}
-          slack-bot-agent-url: ${{ vars.SLACK_BOT_AGENT_URL }}
-          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          # The Slack bot runs in prod only: two bots on one Slack app would each
+          # receive part of the messages.
+          slack-app-token: ${{ env.ENVIRONMENT == 'prod' && secrets.SLACK_APP_TOKEN || '' }}
+          slack-bot-agent-url: ${{ env.ENVIRONMENT == 'prod' && secrets.SLACK_BOT_AGENT_URL || '' }}
+          slack-bot-token: ${{ env.ENVIRONMENT == 'prod' && secrets.SLACK_BOT_TOKEN || '' }}
           social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
           social-auth-google-oauth2-secret: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
           social-auth-github-key: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
