@@ -19,12 +19,12 @@ of the task, so the tasks do not retry.
     be documented.
 """
 
+from smarter.apps.mcpserver.index import blog, indexer
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
-from . import blog, indexer
 from .repositories import repository_names
 
 logger = logging.getSmarterLogger(

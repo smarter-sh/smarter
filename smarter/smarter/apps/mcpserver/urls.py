@@ -1,7 +1,7 @@
 """
 URL configuration of the MCPServer app.
 
-These are mounted at ``/api/v1/mcp/``. See :mod:`smarter.apps.mcpserver.views`.
+These are mounted at ``/api/v1/mcp/``. See :mod:`smarter.apps.mcpserver.protocol.views`.
 """
 
 from django.urls import path
@@ -9,7 +9,7 @@ from django.urls import path
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
-from .views import SmarterProjectMCPServerView
+from .protocol.views import SmarterProjectMCPServerView
 
 app_name = namespace
 

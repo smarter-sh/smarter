@@ -1,7 +1,7 @@
 Blog
 ====
 
-.. automodule:: smarter.apps.mcpserver.blog
+.. automodule:: smarter.apps.mcpserver.index.blog
     :members:
     :undoc-members:
     :show-inheritance:
