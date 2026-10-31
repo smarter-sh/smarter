@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.3](https://github.com/smarter-sh/smarter/compare/v0.40.2...v0.40.3) (2026-10-31)
+
+### Bug Fixes
+
+* **docker:** make code root-owned and pod filesystems read-only ([b94979d](https://github.com/smarter-sh/smarter/commit/b94979d63d2706bc9a1a847e9a42bb78fe4017b0))
+
 ## [0.40.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.2...v0.40.3-alpha.1) (2026-10-31)
 
 ### Bug Fixes
