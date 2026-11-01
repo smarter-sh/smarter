@@ -161,6 +161,8 @@ jobs:
       # logs), npm (Claude Code), the Anthropic API, the MCP server, and Slack. Telemetry
       # is off because StepSecurity's report on a public repository's run is public, and
       # it would name the EKS API's host, which identifies the cluster.
+      #
+      # mcdaniel: that sha is actually the 'right' way to use this action.
       - name: Harden the runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
