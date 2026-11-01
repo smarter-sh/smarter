@@ -7,6 +7,8 @@ from http import HTTPStatus
 from typing import Any, Optional, Type
 
 import yaml
+from django.conf import settings
+from django.contrib.auth import SESSION_KEY
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest
@@ -191,6 +193,28 @@ def http_status_for_exception(e: BaseException) -> int:
     if isinstance(e, SAMBrokerError) and e.__cause__ is None:
         return HTTPStatus.BAD_REQUEST.value
     return HTTPStatus.INTERNAL_SERVER_ERROR.value
+
+
+def session_csrf_failure(request: Request) -> Optional[str]:
+    """
+    Explain why a signed-in browser session failed authentication, if it was the CSRF check.
+
+    DRF's ``SessionAuthentication`` rejects a session request without a valid CSRF token, and then
+    treats it as anonymous, so the view sees only ``NotAuthenticated``. DRF also replaces the Django
+    request's user with ``AnonymousUser``, so the session itself is the evidence: if it holds a
+    signed-in user's id, the user was signed in, and the CSRF check is what failed.
+
+    :param request: The DRF request that failed authentication.
+    :returns: ``CSRF cookie not set.`` when the browser sent no ``csrftoken`` cookie, e.g. because
+        it expired (issue #885); ``CSRF token missing or incorrect.`` when it sent one; or None if
+        the session isn't signed in, so that the failure is not about CSRF.
+    """
+    session = getattr(request._request, "session", None)  # pylint: disable=protected-access
+    if session is None or not session.get(SESSION_KEY):
+        return None
+    if settings.CSRF_COOKIE_NAME not in request.COOKIES:
+        return "CSRF cookie not set."
+    return "CSRF token missing or incorrect."
 
 
 def describe_exception(e: BaseException, status: int) -> Optional[str]:
@@ -719,6 +743,18 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 # initialize the SmarterRequestMixin so that we can
                 # access the request object, headers, url, etc.
                 auth_header = request.headers.get("Authorization")
+                csrf_failure = session_csrf_failure(request)
+                if not auth_header and csrf_failure:
+                    # a signed-in browser session, e.g. a web console React app, that failed only
+                    # the CSRF check: say so, rather than blame a missing api key.
+                    logger.warning(
+                        "%s.initial() - the session is signed in, but the request failed the CSRF check: %s",
+                        self.formatted_class_name,
+                        csrf_failure,
+                    )
+                    raise SmarterAPIV1CLIViewErrorNotAuthenticated(
+                        f"Smarter api v1 command-line interface error: {csrf_failure} Reload the page and try again."
+                    ) from e
                 if auth_header:
                     logger.error(
                         "%s.initial() - Authorization header '%s' seems to be invalid. The following exception was raised: %s",

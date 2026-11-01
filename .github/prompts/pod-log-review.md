@@ -84,6 +84,35 @@ i.e. whether it is already fixed on `alpha` or `main`. Use the MCP server's
 `search_documentation` and `search_code` for the intended behavior. State what you verified and
 what is a hypothesis: never present a guess as a fact.
 
+### Redactions are leaks
+
+Smarter's logs must never hold a credential or personal data. `scripts/pod_log_redact.py`
+replaced what looked like one with a placeholder, e.g. `<redacted:email>`, before you started,
+but that is a safety net, not the fix. **Every placeholder is an actionable finding**, and the
+message that started you says how many there are (`- Redactions:`). `redactions.json`, in the log
+folder, lists each file, kind and line number; it never holds the redacted value, and neither do
+the logs any more.
+
+For each kind of placeholder, grouped by the log statement that wrote it:
+
+- Read the lines around it, and find the code that logged the line: its prefix (the module or
+  class), its fixed words, `git grep` at the release tag. Work out which variable carried the
+  value, e.g. a user profile whose `__str__` holds an email, a request header, a settings dump.
+- Decide which it is, and say how you verified it:
+  - **a leak**: Smarter logged a credential or personal data. The fix is in the code that wrote
+    the line (log an id, a name or a masked value instead; see `smarter-logging`). Labels
+    `security` and `logging`, severity `high` for a credential and `medium` for personal data
+    or infrastructure identifiers, unless the evidence says worse.
+  - **a false positive of the redactor**: the pattern matched something harmless, e.g. a hash or
+    an id after the word `token`. The fix is a narrower pattern in `scripts/pod_log_redact.py`,
+    with a test in `scripts/tests/test_pod_log_redact.py`. Labels `logging`, severity `low`.
+- Open or update its issue as in step 5, with the fingerprint
+  `<deployment>:redacted:<kind>:<module>:<function or log template>`. The evidence is the
+  placeholder's line with the placeholder in it, the counts and the files' deployments, never a
+  guess at the value.
+
+Never report a redaction as harmless without an issue: either the code or the redactor changes.
+
 ### 4. Give each finding a fingerprint
 
 A fingerprint is a short, stable key for the problem, the same in every run, made from what
@@ -223,3 +252,11 @@ End with a Markdown summary for the run's page, which is public, under the same 
 - a table of what you did: each issue opened, commented on or closed, and each pull request, with links;
 - the findings you did not act on, and why (not new, not actionable, over the limits);
 - anything you could not do, e.g. a tool that failed.
+
+The very last line of your answer is a verdict, on its own line, exactly one of:
+
+- `Verdict: healthy` when the environment needs nothing from a maintainer: no actionable finding,
+  new or already reported and still open, no redaction, no restart or event with a cause worth
+  looking into, and nothing you could not do. The workflow then posts a clean bill of health to
+  Slack, unless the logs had redactions: it checks that itself.
+- `Verdict: needs attention` otherwise, and whenever you are unsure.

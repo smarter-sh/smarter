@@ -2,6 +2,9 @@
 
 from decimal import Decimal
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+
 from smarter.apps.account.models import Account, Budget
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.connection.models import ApiConnection, ConnectionBase
@@ -10,6 +13,7 @@ from smarter.lib.annotation.models import (
     annotation_content_type,
     annotation_root_model,
     get_cached_annotations,
+    prefetch_annotations,
 )
 from smarter.lib.annotation.validation import SmarterAnnotationError
 
@@ -134,3 +138,42 @@ class TestAnnotationModel(TestAccountMixin):
         self.assertEqual({(type(r), r.pk) for r in resources}, {(Budget, budget.pk), (Account, self.account.pk)})
         self.assertEqual(list(Budget.with_annotation(key)), sorted([budget, other], key=lambda b: b.pk))
         self.assertEqual(list(Budget.with_annotation(key, "A-99999")), [other])
+
+    def test_prefetch_annotations(self):
+        """Test that a list of resources reads its annotations in one query, until they change."""
+        first = self.budget(**{"acme.com/a": "1", "acme.com/b": "2"})
+        second = self.budget(**{"acme.com/a": "3"})
+        empty = self.budget()
+        page = [Budget.objects.get(pk=budget.pk) for budget in (first, second, empty)]
+        page.append(page[0])
+        with CaptureQueriesContext(connection) as prefetch:
+            prefetch_annotations([*page, Budget(name="unsaved"), self.admin_user])
+        self.assertEqual(len(prefetch.captured_queries), 1)
+        with CaptureQueriesContext(connection) as reads:
+            self.assertEqual(
+                [budget.annotations for budget in page],
+                [
+                    {"acme.com/a": "1", "acme.com/b": "2"},
+                    {"acme.com/a": "3"},
+                    {},
+                    {"acme.com/a": "1", "acme.com/b": "2"},
+                ],
+            )
+        self.assertEqual(reads.captured_queries, [])
+        # the returned map is a copy.
+        page[0].annotations["acme.com/c"] = "x"
+        self.assertNotIn("acme.com/c", page[0].annotations)
+
+        page[1].annotations = {"acme.com/a": "4"}
+        self.assertEqual(page[1].annotations, {"acme.com/a": "4"})
+        page[1].save()
+        self.assertEqual(page[1].annotations, {"acme.com/a": "4"})
+
+        Annotation.objects.sync(page[2], {"acme.com/z": "9"})
+        self.assertEqual(page[2].annotations, {"acme.com/z": "9"})
+
+    def test_prefetch_annotations_of_nothing(self):
+        """Test that an empty list costs no query."""
+        with CaptureQueriesContext(connection) as queries:
+            prefetch_annotations([])
+        self.assertEqual(queries.captured_queries, [])

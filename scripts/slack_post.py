@@ -26,16 +26,19 @@ import urllib.request
 SLACK_POST_MESSAGE_URL = "https://slack.com/api/chat.postMessage"
 
 
-def post(channel: str, text: str, token: str) -> None:
+def post(channel: str, text: str, token: str, unfurl: bool = False) -> dict:
     """
     Post a message to a Slack channel with ``chat.postMessage``.
 
     :param channel: A channel name, e.g. ``smarter``, or id.
     :param text: The message, in Slack's mrkdwn.
     :param token: The bot token.
+    :param unfurl: Let Slack expand the message's links into preview cards, e.g. a blog post's
+        title, description and image. The workflows' messages leave it off.
+    :returns: Slack's answer, with the message's ``channel`` and ``ts``.
     :raises RuntimeError: If Slack refused it, e.g. ``not_in_channel``.
     """
-    body = json.dumps({"channel": channel, "text": text, "unfurl_links": False, "unfurl_media": False}).encode()
+    body = json.dumps({"channel": channel, "text": text, "unfurl_links": unfurl, "unfurl_media": unfurl}).encode()
     request = urllib.request.Request(  # nosec B310: a fixed https url
         SLACK_POST_MESSAGE_URL,
         data=body,
@@ -45,6 +48,7 @@ def post(channel: str, text: str, token: str) -> None:
         answer = json.loads(response.read().decode())
     if not answer.get("ok"):
         raise RuntimeError(f"Slack refused the message: {answer.get('error', 'unknown error')}")
+    return answer
 
 
 def main(argv: list[str] | None = None) -> int:
