@@ -1,0 +1,291 @@
+---
+#------------------------------------------------------------------------------
+# API Contract Sync.
+#
+# Checks, once a week, that every repository that copies the platform's api
+# contract (smarter/smarter/apps/api/v1/contract/, the chat and the journal
+# contracts) still agrees with it, and proposes the sync where one doesn't.
+# The repositories, and what each copies, are in the smarter-project-repositories
+# skill:
+#
+#   smarter-python        the Python SDK
+#   smarter-nodejs        the Node.js SDK
+#   smarter-golang        the Go SDK
+#   smarter-cli           the smarter command-line interface
+#   smarter-vscode-yaml   the VS Code extension
+#
+# The jobs:
+#
+#   release   Finds the platform's latest stable release tag on main. The
+#             repositories sync with released contracts only, as the
+#             smarter-contract-sync skill requires.
+#   check     One runner per repository, at its --base branch (alpha):
+#               1. runs its unit tests, with its current copy (the baseline),
+#               2. runs its own scripts/sync-contracts.sh at the release tag,
+#                  and regenerates the code that it generates from the
+#                  contract, exactly as its make sam-models (or make
+#                  contracts) does,
+#               3. runs its unit tests again,
+#               4. if the sync changed anything, opens an issue in that
+#                  repository (label api-contract), and a pull request from
+#                  its branch api-contract-sync into alpha with the sync as
+#                  one commit. The pull request is a draft when the tests
+#                  fail after the sync: the contract changed in a way that
+#                  needs SDK work, which a maintainer pushes to the branch.
+#                  A later run updates the same issue and pull request, and
+#                  closes both once the copy is current again.
+#             No test reaches a Smarter platform: each repository's unit
+#             tests answer every request with a fake.
+#   report    Writes one summary of every repository on the run's page, and
+#             posts it to Slack: the repositories that are out of date, or a
+#             clean bill of health when every one is current. It fails when a
+#             repository's tests fail, or when publishing failed.
+#
+# The logic is in scripts/api_contract_sync.py, whose tests are in
+# scripts/tests and run on every pull request (test.yml).
+#
+# Secrets:
+#   PAT               a GitHub classic personal access token, ghp_..., with the
+#                     public_repo scope, that may push branches and open issues
+#                     and pull requests in the five repositories. Without it,
+#                     the run only checks and reports.
+#   SLACK_BOT_TOKEN   optional: the Smarter Slack app's bot token, with
+#                     chat:write.public, or the bot must be a member of
+#                     #general. Without it, nothing is posted.
+#------------------------------------------------------------------------------
+name: API Contract Sync
+
+on:
+  schedule:
+    - cron: "0 13 * * 1" # weekly, Monday 13:00 UTC
+  workflow_dispatch:
+    inputs:
+      platform-ref:
+        description: "The platform release tag to sync with. Empty uses the latest stable release on main."
+        required: false
+        type: string
+        default: ""
+      base:
+        description: "The branch of each repository to check, and that the pull requests merge into."
+        required: false
+        type: string
+        default: "alpha"
+      dry-run:
+        description: "Check and report only: open no issue or pull request, and post nothing to Slack."
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: api-contract-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  BASE: ${{ inputs.base || 'alpha' }}
+  DRY_RUN: ${{ inputs.dry-run && 'true' || 'false' }}
+  SLACK_CHANNEL: "general"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Find the platform release
+        id: release
+        shell: bash
+        env:
+          PLATFORM_REF: ${{ inputs.platform-ref }}
+        run: |
+          tag="${PLATFORM_REF:-$(git describe --tags --abbrev=0 HEAD)}"
+          sha="$(git rev-parse "${tag}^{commit}")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Checking every repository against smarter $tag ($sha)."
+
+  check:
+    name: ${{ matrix.repository }}
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repository: smarter-python
+            toolchain: python
+            # as its own CI installs, plus the generator and the hooks, at the versions it pins.
+            install: pip install -e ".[test]" $(grep -E '^(datamodel-code-generator|pre-commit)==' requirements/local.txt)
+            # as make sam-models does: generate, then format with the repository's hooks.
+            regenerate: python scripts/generate_sam_models.py && (ls smarter/models/sam/*.py | xargs pre-commit run --files > /dev/null || true)
+            test: python -m unittest discover -s tests -t .
+            shipped: smarter/models/sam
+          - repository: smarter-nodejs
+            toolchain: node
+            node-version: "24"
+            install: npm ci --include=dev
+            regenerate: npm run sam-models
+            test: npx tsc --noEmit && npx vitest run
+            shipped: src/models/sam
+          - repository: smarter-golang
+            toolchain: go
+            install: go mod download
+            regenerate: go run ./internal/cmd/samgen
+            test: go vet ./... && go test ./...
+            shipped: sam
+          - repository: smarter-cli
+            toolchain: go
+            install: go mod download
+            regenerate: "true"
+            test: go vet ./... && go test ./...
+            shipped: ""
+          - repository: smarter-vscode-yaml
+            toolchain: node
+            node-version: "22"
+            install: npm ci
+            regenerate: npm run contract:types
+            test: npm run build && npm test
+            # the extension bundles the schemas and examples.
+            shipped: contract src/contract
+    defaults:
+      run:
+        shell: bash
+        working-directory: consumer
+    steps:
+      # the platform, at main: its scripts, and every tag, which sync-contracts.sh reads with git show.
+      - name: Checkout the platform
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: platform
+          fetch-depth: 0
+          fetch-tags: true
+
+      # the token is kept in the checkout's git configuration, so that publish can push the sync branch.
+      - name: Checkout ${{ matrix.repository }}
+        uses: actions/checkout@v6
+        with:
+          repository: smarter-sh/${{ matrix.repository }}
+          ref: ${{ env.BASE }}
+          path: consumer
+          token: ${{ secrets.PAT || github.token }}
+
+      - name: Set up Python
+        if: matrix.toolchain == 'python'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Set up Node.js
+        if: matrix.toolchain == 'node'
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Set up Go
+        if: matrix.toolchain == 'go'
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: consumer/go.mod
+
+      - name: Install dependencies
+        run: ${{ matrix.install }}
+
+      - name: Run the tests with the current copy
+        id: baseline
+        continue-on-error: true
+        run: ${{ matrix.test }}
+
+      - name: Sync the contract at smarter ${{ needs.release.outputs.tag }}
+        env:
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          scripts/sync-contracts.sh "$GITHUB_WORKSPACE/platform" "$TAG"
+          ${{ matrix.regenerate }}
+
+      - name: Run the tests with the synced copy
+        id: tests
+        continue-on-error: true
+        run: ${{ matrix.test }}
+
+      - name: Record the result
+        env:
+          REPOSITORY: smarter-sh/${{ matrix.repository }}
+          TAG: ${{ needs.release.outputs.tag }}
+          SHA: ${{ needs.release.outputs.sha }}
+          SHIPPED: ${{ matrix.shipped }}
+          BASELINE: ${{ steps.baseline.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/result"
+          python3 -I "$GITHUB_WORKSPACE/platform/scripts/api_contract_sync.py" status \
+            --repository "$REPOSITORY" --tag "$TAG" --sha "$SHA" --shipped "$SHIPPED" \
+            --baseline "$BASELINE" --tests "$TESTS" \
+            --output "$RUNNER_TEMP/result/${{ matrix.repository }}.json"
+          git status --short
+
+      - name: Open or update the issue and pull request
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 -I "$GITHUB_WORKSPACE/platform/scripts/api_contract_sync.py" publish \
+            --result "$RUNNER_TEMP/result/${{ matrix.repository }}.json" --base "$BASE" --run-url "$RUN_URL"
+
+      - name: Upload the result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-contract-sync-${{ matrix.repository }}
+          path: ${{ runner.temp }}/result/
+          if-no-files-found: ignore
+
+  report:
+    needs: [release, check]
+    if: always() && needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download the results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: api-contract-sync-*
+          path: ${{ runner.temp }}/results
+          merge-multiple: true
+
+      # fails when a repository's tests fail, or its issue or pull request could not be published.
+      - name: Summarize
+        shell: bash
+        env:
+          TAG: ${{ needs.release.outputs.tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 -I scripts/api_contract_sync.py report --results "$RUNNER_TEMP/results" \
+            --tag "$TAG" --run-url "$RUN_URL" --summary "$GITHUB_STEP_SUMMARY" > "$RUNNER_TEMP/slack.txt"
+
+      # One message per run: the repositories that need attention, or a clean bill of health.
+      # A Slack outage must never fail the run.
+      - name: Post to Slack
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          DRY_RUN_FLAG: ${{ env.DRY_RUN == 'true' && '--dry-run' || '' }}
+        run: python3 -I scripts/slack_post.py --channel "$SLACK_CHANNEL" $DRY_RUN_FLAG < "$RUNNER_TEMP/slack.txt"

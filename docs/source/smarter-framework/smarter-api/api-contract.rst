@@ -272,6 +272,18 @@ Clients
 The live OpenAPI Contract page, and how to generate a client from ``openapi.json``, are on the
 user-facing :doc:`Smarter OpenAPI Contract <../smarter-openapi>` page.
 
+The SDKs, the cli and the VS Code extension (smarter-vscode-yaml) each keep a pinned copy of these
+files, which their own tests check their code against. Each one copies it with its own
+``make contracts SMARTER_REF=<release tag>``. Every week, the platform's *API Contract Sync*
+workflow (``.github/workflows/apiContractSync.yml``) syncs each repository's ``alpha`` branch with
+the platform's latest stable release, and runs that repository's unit tests before and after the
+sync. When a copy is out of date, it opens an issue in that repository, labeled ``api-contract``,
+and a pull request from its ``api-contract-sync`` branch with the sync as one commit. The pull
+request is a draft when the tests fail after the sync, because the release changed the contract in a
+way that needs work in the client. Later runs update the same issue and pull request, and close both
+once the copy is current. Each run posts one message to the #general Slack channel: the
+repositories that are out of date, or a clean bill of health.
+
 
 Technical Reference
 -------------------
