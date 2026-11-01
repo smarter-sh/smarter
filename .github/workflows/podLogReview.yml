@@ -15,6 +15,17 @@
 # Runs daily, on the default branch, against prod, and by hand against any
 # environment.
 #
+# Code. The workflow's Python scripts are in scripts/, the repository's home
+# for code that workflows run: pod_log_redact.py, pod_log_review.py,
+# pod_log_review_stream.py and pod_log_review_slack.py, which posts through
+# slack_post.py like every workflow's Slack step. Their tests are in
+# scripts/tests, and run on every pull request (test.yml). They use only the
+# standard library, because the runner has no virtual environment, and run
+# with "python3 -E -s": no PYTHONPATH, no user site-packages, but the
+# script's own folder on sys.path, so that they import each other by name.
+# The shell scripts that download the logs are the smarter-pod-log-review and
+# smarter-kubectl skills' own, which also use them for reviews by hand.
+#
 # Secrets:
 #   CLAUDE_CODE_OAUTH_TOKEN             Claude Code, billed to a Claude subscription. Create it
 #                                       with "claude setup-token". When it is set, it is used
@@ -29,8 +40,9 @@
 #                                       pull requests with it.
 #   SLACK_BOT_TOKEN                     optional: the Smarter Slack app's bot token. With it,
 #                                       each run that wrote to GitHub posts one message to
-#                                       #smarter, listing what it wrote. The bot must be in
-#                                       the channel, with the chat:write scope.
+#                                       #smarter, listing what it wrote, and a run that found
+#                                       nothing to fix posts a clean bill of health. The bot
+#                                       must be in the channel, with the chat:write scope.
 #
 # Safety. The logs are untrusted: anyone can put text into them. So:
 #   - Claude never holds a credential that it could leak: the AWS credentials
@@ -225,7 +237,7 @@ jobs:
 
       - name: Redact credentials and personal data
         shell: bash
-        run: python3 -I skills/smarter-pod-log-review/scripts/redact-logs.py "$LOG_DIR"
+        run: python3 -E -s scripts/pod_log_redact.py "$LOG_DIR"
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -234,7 +246,14 @@ jobs:
 
       - name: Install Claude Code
         shell: bash
-        run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+        run: |
+          # npm's registry occasionally fails a download; try three times.
+          for attempt in 1 2 3; do
+            npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && break
+            [ "$attempt" -eq 3 ] && exit 1
+            sleep 15
+          done
+          claude --version
 
       # The PAT is written only here, to a file outside the folders that Claude
       # can read, and reaches only the MCP server. A dry run sends no token, so
@@ -266,104 +285,35 @@ jobs:
       # only when GitHub confirms the fix was merged. Calling the CLI directly keeps
       # that design, and keeps the stream-json output that the Slack step reads.
       #
-      # The permissions are in .github/prompts/pod-log-review.settings.json. Only what
-      # depends on this run stays here: the MCP configuration, the log folder, and
-      # the folder that holds the PAT, which Claude may not read.
+      # The run's parameters, the credentials Claude may not hold, and when a failed
+      # run is retried are in scripts/pod_log_review.py; the
+      # permissions are in .github/prompts/pod-log-review.settings.json.
       - name: Review the logs with Claude Code
         id: claude
         shell: bash
+        # leaves the job's last 20 minutes for the summary, Slack and the cleanup.
+        timeout-minutes: 100
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           # no telemetry, error reporting or update checks: the runner allows only the hosts above.
           CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
-        run: |
-          # exactly one Anthropic credential: the subscription token if there is one, else the API key.
-          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
-            echo "Claude Code authenticates with CLAUDE_CODE_OAUTH_TOKEN (Claude subscription)."
-            unset_auth=(-u ANTHROPIC_API_KEY)
-          elif [ -n "$ANTHROPIC_API_KEY" ]; then
-            echo "Claude Code authenticates with ANTHROPIC_API_KEY (API credit)."
-            unset_auth=(-u CLAUDE_CODE_OAUTH_TOKEN)
-          else
-            echo "::error::Set the CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY secret."
-            exit 1
-          fi
-          release=$(awk '$2 > 0 {print $3}' "$LOG_DIR/inventory/images.txt" | sed -n 's/.*://p' | sort -u | paste -sd, -)
-          if [ "$DRY_RUN" = "true" ]; then
-            mode="DRY RUN: write nothing to GitHub. Report what you would have opened, commented, closed and proposed."
-          else
-            mode="Act: write issues, comments, closings and pull requests within the limits."
-          fi
-          prompt=$(cat <<EOF
-          Review the pod logs of the Smarter environment below, following .github/prompts/pod-log-review.md. Read that file first.
-
-          - Environment: ${ENVIRONMENT}, https://${PLATFORM_DOMAIN}
-          - Log folder: ${LOG_DIR}
-          - Each log covers: the last ${SINCE:-lifetime of the container}
-          - Deployed release (image tags): ${release:-unknown, see inventory/images.txt}
-          - Date: $(date -u +%Y-%m-%d)
-          - Workflow run: ${RUN_URL}
-          - Pull request base branch: ${PR_BASE}
-          - Limits for this run: ${MAX_NEW_ISSUES} new issues, ${MAX_COMMENTS} comments, ${MAX_CLOSED_ISSUES} closed issues, ${MAX_PULL_REQUESTS} pull requests
-          - Mode: ${mode}
-          EOF
-          )
-          # no AWS credentials, kubeconfig or GitHub token in Claude's environment.
-          env "${unset_auth[@]}" -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN -u KUBECONFIG \
-            -u GITHUB_TOKEN -u GH_TOKEN -u ACTIONS_RUNTIME_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_TOKEN \
-            claude -p "$prompt" \
-            --model "$CLAUDE_MODEL" \
-            --settings .github/prompts/pod-log-review.settings.json \
-            --permission-mode dontAsk \
-            --tools "Read,Grep,Glob,Bash,Skill,TodoWrite" \
-            --mcp-config "$RUNNER_TEMP/claude/mcp.json" \
-            --strict-mcp-config \
-            --add-dir "$LOG_DIR" \
-            --disallowedTools "Read(/${RUNNER_TEMP}/claude/**)" \
-            --max-budget-usd "$MAX_BUDGET_USD" \
-            --output-format stream-json \
-            --verbose \
-            --no-session-persistence \
-            > "$RUNNER_TEMP/claude/stream.jsonl"
+        run: python3 -E -s scripts/pod_log_review.py run
 
       # Only Claude's final summary, which follows the same public-writing rules as the issues.
       # The stream, which holds every tool call and result, is never printed.
       - name: Summarize
         if: always()
         shell: bash
-        run: |
-          result="$RUNNER_TEMP/claude/result.json"
-          if [ -s "$RUNNER_TEMP/claude/stream.jsonl" ]; then
-            jq -c 'select(.type == "result")' "$RUNNER_TEMP/claude/stream.jsonl" | tail -n 1 > "$result" || true
-          fi
-          if [ ! -s "$result" ]; then
-            echo "Claude Code did not finish: see the step above." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          {
-            echo "# Pod log review: ${ENVIRONMENT}"
-            echo
-            jq -r '.result // "Claude Code returned no summary."' "$result"
-            echo
-            echo "---"
-            jq -r '"Turns: \(.num_turns // "?"), cost: $\(.total_cost_usd // "?"), error: \(.is_error // false)"' "$result"
-          } >> "$GITHUB_STEP_SUMMARY"
-          if [ "$(jq -r '.is_error // false' "$result")" = "true" ]; then
-            # why it failed, in the log too. An API error's message comes from the API, not from the pod logs.
-            jq -r '"Claude Code failed: subtype=\(.subtype // "?"), terminal_reason=\(.terminal_reason // "?"), api_error_status=\(.api_error_status // "none"), turns=\(.num_turns // "?"), cost=$\(.total_cost_usd // "?")"' "$result"
-            if [ "$(jq -r '.api_error_status // empty' "$result")" != "" ]; then
-              jq -r '.result // empty' "$result" | head -c 500
-              echo
-            fi
-            exit 1
-          fi
+        run: python3 -E -s scripts/pod_log_review.py summarize
 
       # One message per run, listing each issue opened, commented on or closed, and
       # each pull request, taken from the MCP server's results rather than from what
-      # Claude says. A run that wrote nothing, and a dry run, post nothing. Claude
-      # never has the Slack token.
+      # Claude says. A run that wrote nothing, finished cleanly and ended with
+      # "Verdict: healthy" posts a clean bill of health instead, with its facts taken
+      # from the kubectl inventory in the log folder. Any other run that wrote
+      # nothing, and a dry run, post nothing. Claude never has the Slack token.
       - name: Tell Slack what changed on GitHub
         if: always() && env.DRY_RUN != 'true'
         shell: bash
@@ -375,10 +325,12 @@ jobs:
             echo "Claude Code wrote no output, so there is nothing to tell Slack."
             exit 0
           fi
-          python3 -I skills/smarter-pod-log-review/scripts/slack-notify.py "$RUNNER_TEMP/claude/stream.jsonl" \
+          python3 -E -s scripts/pod_log_review_slack.py "$RUNNER_TEMP/claude/stream.jsonl" \
             --channel "$SLACK_CHANNEL" \
             --title "Pod log review of ${PLATFORM_DOMAIN}" \
-            --run-url "$RUN_URL"
+            --run-url "$RUN_URL" \
+            --log-dir "$LOG_DIR" \
+            --since "$SINCE"
 
       - name: Remove the logs and the MCP configuration
         if: always()
