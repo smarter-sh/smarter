@@ -8,6 +8,7 @@ a ``content_type`` and an ``object_id``. A resource that uses multi-table inheri
 holds its metadata, so that both classes see the same annotations.
 """
 
+from collections.abc import Iterable
 from typing import Optional, Union
 
 from cache_results import cache_results
@@ -69,7 +70,9 @@ def get_cached_annotations(content_type_id: int, pk: str) -> AnnotationsMap:
     """
     Return the annotations of one resource, from the cache when possible.
 
-    Invalidated by :meth:`AnnotationQuerySet.sync` and :meth:`AnnotationQuerySet.delete_for_object`.
+    Invalidated, once the transaction commits, whenever one of the resource's rows is saved or
+    deleted, however that happens: by :meth:`AnnotationQuerySet.sync`, by the Django admin, or
+    directly (see :mod:`smarter.lib.annotation.receivers`).
 
     :param content_type_id: The id of the resource's content type, from :func:`annotation_content_type`.
     :type content_type_id: int
@@ -80,6 +83,46 @@ def get_cached_annotations(content_type_id: int, pk: str) -> AnnotationsMap:
     """
     rows = Annotation.objects.filter(content_type_id=content_type_id, object_id=pk).order_by("id")
     return {row.key: row.value for row in rows}
+
+
+def prefetch_annotations(instances: Iterable[models.Model]) -> None:
+    """
+    Read the annotations of many resources at once, in one query per kind.
+
+    This is ``prefetch_related()`` for annotations, which aren't a relation that Django can
+    prefetch. A list that shows every resource's annotations calls it with a page of resources,
+    so that the page doesn't cost one query per resource. Each instance then answers
+    :attr:`smarter.lib.django.models.MetaDataModel.annotations` from what was read, until its
+    annotations are next assigned or saved. Instances that have no annotations are skipped.
+
+    **Example:**
+
+    .. code-block:: python
+
+        page = list(LLMClient.objects.filter(user_profile=user_profile)[:50])
+        prefetch_annotations(page)
+        [llmclient.annotations for llmclient in page]  # no more queries
+
+    :param instances: The resources, of one kind or several.
+    :type instances: Iterable[models.Model]
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.lib.django.models import MetaDataModel
+
+    by_content_type: dict[int, dict[str, list[MetaDataModel]]] = {}
+    for instance in instances:
+        if not isinstance(instance, MetaDataModel) or instance.pk is None:
+            continue
+        content_type_id = annotation_content_type(instance).pk
+        by_content_type.setdefault(content_type_id, {}).setdefault(str(instance.pk), []).append(instance)
+    for content_type_id, by_pk in by_content_type.items():
+        found: dict[str, AnnotationsMap] = {pk: {} for pk in by_pk}
+        rows = Annotation.objects.filter(content_type_id=content_type_id, object_id__in=list(by_pk)).order_by("id")
+        for object_id, key, value in rows.values_list("object_id", "key", "value"):
+            found[object_id][key] = value
+        for pk, annotations in found.items():
+            for instance in by_pk[pk]:
+                instance._prefetched_annotations = dict(annotations)  # pylint: disable=protected-access
 
 
 class AnnotationQuerySet(QuerySet["Annotation"]):
@@ -208,6 +251,9 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         from .handlers import dispatch_annotation_changes
 
         content_type = annotation_content_type(instance)
+        # annotations read by prefetch_annotations() are about to be out of date.
+        if hasattr(instance, "_prefetched_annotations"):
+            instance._prefetched_annotations = None  # pylint: disable=protected-access
         with transaction.atomic():
             existing = {
                 row.key: row
@@ -228,7 +274,6 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
                     row.value = new_value
                     row.save(update_fields=["value", "updated_at"])
         if changes:
-            get_cached_annotations.invalidate(content_type.pk, str(instance.pk))
             logger.debug(
                 "%s.sync() %s changes to the annotations of %s %s",
                 logger_prefix,
@@ -259,7 +304,6 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         if not rows:
             return []
         self.filter(pk__in=[row.pk for row in rows]).delete()
-        get_cached_annotations.invalidate(content_type.pk, str(instance.pk))
         changes = [AnnotationChange(key=row.key, old_value=row.value, new_value=None) for row in rows]
         dispatch_annotation_changes(instance, changes, resource_deleted=True)
         return changes
@@ -397,4 +441,5 @@ __all__ = [
     "annotation_content_type",
     "annotation_root_model",
     "get_cached_annotations",
+    "prefetch_annotations",
 ]
