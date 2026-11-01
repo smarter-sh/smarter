@@ -50,7 +50,7 @@
 #                  to Codecov once (flag: python), when every shard passed.
 #                  It fails when any shard failed, so it stands for all eight.
 #   slack-bot      The unit tests of the Helm chart's Slack bot and of the
-#                  workflows' Slack scripts (scripts/tests).
+#                  workflows' scripts (scripts/tests).
 #   notify         Posts the results to Slack: the job summaries' test counts,
 #                  coverage and failed tests (scripts/slack_test_report.py).
 #
@@ -316,7 +316,7 @@ jobs:
 
   #----------------------------------------------------------------------------
   # The optional Slack bot of the Helm chart (helm/charts/slack-bot), and
-  # the workflows' Slack scripts (scripts/slack_*.py). Both run outside
+  # the workflows' scripts (scripts/*.py). Both run outside
   # Django, so their tests need only the standard library, and run in a few
   # seconds.
   #----------------------------------------------------------------------------
@@ -335,8 +335,9 @@ jobs:
       - name: Unit tests
         run: python -m unittest discover -v -s helm/charts/slack-bot/tests
 
-      - name: Unit tests of the workflows' Slack scripts
-        run: python -m unittest discover -v -s scripts/tests
+      # -t scripts puts scripts/ on sys.path, so that the tests import the scripts by name.
+      - name: Unit tests of the workflows' scripts
+        run: python -m unittest discover -v -s scripts/tests -t scripts
 
   #----------------------------------------------------------------------------
   # One shard of the Python suite. SHARDS must match the length of the shard

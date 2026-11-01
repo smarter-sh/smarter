@@ -223,3 +223,10 @@ End with a Markdown summary for the run's page, which is public, under the same 
 - a table of what you did: each issue opened, commented on or closed, and each pull request, with links;
 - the findings you did not act on, and why (not new, not actionable, over the limits);
 - anything you could not do, e.g. a tool that failed.
+
+The very last line of your answer is a verdict, on its own line, exactly one of:
+
+- `Verdict: healthy` when the environment needs nothing from a maintainer: no actionable finding,
+  new or already reported and still open, no restart or event with a cause worth looking into, and
+  nothing you could not do. The workflow then posts a clean bill of health to Slack.
+- `Verdict: needs attention` otherwise, and whenever you are unsure.

@@ -54,10 +54,11 @@ An optional fourth argument limits each log, e.g. `25h`. It prints only counts.
 
 ```bash
 skills/smarter-pod-log-review/scripts/download-logs.sh <context> <namespace> <scratchpad>/logs-<env> [since]
-python3 -I skills/smarter-pod-log-review/scripts/redact-logs.py <scratchpad>/logs-<env>
+python3 -E -s scripts/pod_log_redact.py <scratchpad>/logs-<env>
 ```
 
-[scripts/redact-logs.py](scripts/redact-logs.py) replaces credentials, email addresses, public IP
+[scripts/pod_log_redact.py](../../scripts/pod_log_redact.py), in the repository's `scripts/`
+because the daily review runs it too, replaces credentials, email addresses, public IP
 addresses, AWS account ids and AWS hostnames with placeholders such as `<redacted:email>`, in
 place. Run it before you quote a log anywhere public, e.g. an issue.
 
@@ -130,11 +131,17 @@ server's GitHub tools. Change what the review does in the prompt file, and what 
 logs as untrusted data. The rules match command text, so they are not the security boundary: the
 workflow also blocks reads outside the repository and the log folder, and Harden-Runner blocks
 every outbound host the job doesn't need. A new host for the job goes into the workflow's
-`allowed-endpoints`. After the review,
-[scripts/slack-notify.py](scripts/slack-notify.py) posts one message to the Slack channel
+`allowed-endpoints`. The workflow's Python code is in the repository's `scripts/`, with its tests
+in `scripts/tests`: [pod_log_review.py](../../scripts/pod_log_review.py) runs Claude Code, retries
+once after a transient API error if nothing was written yet, and writes the run's summary. After
+the review, [pod_log_review_slack.py](../../scripts/pod_log_review_slack.py) posts one message to the Slack channel
 `#smarter` that lists each issue the run opened, commented on or closed, and each pull request,
 taken from the MCP server's tool results in Claude's `stream-json` output, never from Claude's own
-summary. It needs the `SLACK_BOT_TOKEN` secret; a run that wrote nothing posts nothing.
+summary. A run that wrote nothing, finished without an error, and whose final answer ends with the
+exact line `Verdict: healthy` posts a clean bill of health instead: pods, restarts and release,
+read from the kubectl inventory in the log folder. That fixed verdict is the only thing taken from
+Claude, so no text from the logs reaches Slack. Any other run that wrote nothing posts nothing. It
+needs the `SLACK_BOT_TOKEN` secret.
 
 ## Step 6: write it up
 
