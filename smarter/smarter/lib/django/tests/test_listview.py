@@ -226,6 +226,35 @@ class TestSmarterListApiView(TestAccountMixin):
         # each owned guardrail still asks once whether an LLMClient uses it (see user_can_delete).
         self.assertLessEqual(len(many.captured_queries) - len(few.captured_queries), 4)
 
+    def test_annotations_cost_one_query_per_page(self):
+        """The page's annotations are read in one query, not one per resource."""
+        key = f"listview-{self.hash_suffix}.example.com/n"
+        names = []
+        for i in range(5):
+            guardrail = Guardrail.objects.create(
+                name=f"test_listview_annotated_{i}",
+                user_profile=self.user_profile,
+                annotations={key: str(i)},
+                **copy.deepcopy(GUARDRAIL_DEFAULTS),
+            )
+            self.addCleanup(Guardrail.objects.filter(pk=guardrail.pk).delete)
+            names.append(guardrail.name)
+        with CaptureQueriesContext(connection) as few:
+            self.listed(page_size="2", invalidate_cache="true", annotation=key)
+        with CaptureQueriesContext(connection) as many:
+            data = self.listed(page_size="5", invalidate_cache="true", annotation=key)
+        # the ?annotation= filter is a subquery of the page's own queries; only reads come from the table.
+        annotation_queries = [
+            q["sql"] for q in many.captured_queries if "FROM `annotation_annotation` WHERE" in q["sql"]
+        ]
+        self.assertEqual(len(annotation_queries), 1, annotation_queries)
+        # each owned guardrail still asks once whether an LLMClient uses it (see user_can_delete).
+        self.assertLessEqual(len(many.captured_queries) - len(few.captured_queries), 3)
+        self.assertEqual(
+            {item["name"]: item["annotations"] for item in data["objects"]},
+            {name: {key: str(i)} for i, name in enumerate(names)},
+        )
+
     def test_tags_and_annotations_narrow_the_page(self):
         """?tag= and ?annotation=, each repeatable, narrow the page, which says which applied."""
         tag = f"listview_tag_{self.hash_suffix}"
