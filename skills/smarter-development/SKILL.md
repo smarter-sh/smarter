@@ -121,6 +121,15 @@ When you move a module into a subpackage, convert the imports that would become 
 absolute ones, rather than adding dots. Older code still has some `..` imports; convert the ones
 in a module you change, and don't copy them.
 
+## GitHub Actions workflows
+
+Keep a workflow's syntax and complexity to a minimum. Its YAML lists steps and passes
+inputs; any logic goes in a Python module in `scripts/`, with tests in `scripts/tests` (which
+`test.yml` runs). One Python module is always better than 100 lines of shell, `jq` and JSON
+manipulation inside `run:` blocks. Those scripts use only the standard library and run with
+`python3 -I` (the runner has no virtual environment). Slack messages go through
+`scripts/slack_post.py`. See `scripts/api_contract_sync.py` and `pod_log_review.py`.
+
 ## Caching
 
 `@cache_results` is the one way to cache results for an hour or longer. It is
