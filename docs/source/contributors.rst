@@ -52,24 +52,6 @@ both the platform and the community around it.
         <a href="https://www.linkedin.com/in/lawrencemcdaniel/">Lawrence McDaniel</a>
       </p>
     </div>
-
-    <div>
-      <a href="https://www.linkedin.com/in/kentfuka/">
-        <img src="https://github.com/kentfuka.png" alt="kentfuka" width="150px" height="150px" style="border-radius: 50%" />
-      </a>
-      <p>
-        <a href="https://www.linkedin.com/in/kentfuka/">Kent Fuka</a>
-      </p>
-    </div>
-
-    <div>
-      <a href="https://www.linkedin.com/in/shoemakermark/">
-        <img src="https://github.com/shoefish.png" alt="shoefish" width="150px" height="150px" style="border-radius: 50%" />
-      </a>
-      <p>
-        <a href="https://www.linkedin.com/in/shoemakermark/">Mark Shoemaker</a>
-      </p>
-    </div>
   </div>
 
 
@@ -80,7 +62,7 @@ Community Contributors
 .. contributors:: smarter-sh/smarter smarter-sh/smarter-python smarter-sh/smarter-vscode-yaml smarter-sh/smarter-infrastructure smarter-sh/smarter-cli smarter-sh/smarter-deploy
    :avatars:
    :names:
-   :exclude: lpm0073, kentfuka, shoefish, actions-user, github-actions[bot], dependabot[bot], pre-commit-ci[bot], Semantic Release Bot
+   :exclude: lpm0073, actions-user, github-actions[bot], dependabot[bot], pre-commit-ci[bot], Semantic Release Bot
    :limit: 50
 
 .. Repository link substitutions
