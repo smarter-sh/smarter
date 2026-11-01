@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.1...v0.40.4-alpha.2) (2026-11-01)
+
+### Bug Fixes
+
+* **prompt:** redirect a signed-out visitor of the workbench to sign-in instead of a 403 ([5dd01b0](https://github.com/smarter-sh/smarter/commit/5dd01b0c47e12e3ebca7e208667bd35f967f2edb)), closes [#886](https://github.com/smarter-sh/smarter/issues/886)
+
 ## [0.40.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.3...v0.40.4-alpha.1) (2026-11-01)
 
 ### Bug Fixes
