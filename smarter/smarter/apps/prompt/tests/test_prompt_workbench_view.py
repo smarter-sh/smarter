@@ -5,7 +5,7 @@ The page's rendering for a signed-in user is tested in ``test_views.py``, with t
 """
 
 from http import HTTPStatus
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from django.test import Client
 
@@ -30,4 +30,7 @@ class TestPromptWorkbenchView(SmarterTestBase):
         )
         response = Client().get(url, HTTP_HOST=PLATFORM_HOST)
         self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:500])
-        self.assertEqual(response["Location"], "/login/")
+        # login_required adds ?next=, which returns the visitor to the workbench after signing in.
+        location = urlparse(response["Location"])
+        self.assertEqual(location.path, "/login/")
+        self.assertEqual(parse_qs(location.query).get("next"), [url])
