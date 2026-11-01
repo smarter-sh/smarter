@@ -100,6 +100,9 @@ class MetaDataModel(TimestampedModel):
     _pending_annotations: Optional[AnnotationsMap] = None
     """Annotations assigned to the instance, and written to the database by the next ``save()``."""
 
+    _prefetched_annotations: Optional[AnnotationsMap] = None
+    """Annotations read for a whole list of resources by :func:`smarter.lib.annotation.models.prefetch_annotations`."""
+
     @property
     def annotations(self) -> AnnotationsMap:
         """
@@ -122,6 +125,8 @@ class MetaDataModel(TimestampedModel):
         """
         if self._pending_annotations is not None:
             return dict(self._pending_annotations)
+        if self._prefetched_annotations is not None:
+            return dict(self._prefetched_annotations)
         if self.pk is None:
             return {}
         # pylint: disable=import-outside-toplevel
@@ -136,6 +141,7 @@ class MetaDataModel(TimestampedModel):
     def annotations(self, value: AnnotationsInput) -> None:
         """Validate the annotations, and keep them for the next ``save()``."""
         self._pending_annotations = normalize_annotations(value)
+        self._prefetched_annotations = None
 
     def set_annotation(self, key: str, value: object) -> None:
         """

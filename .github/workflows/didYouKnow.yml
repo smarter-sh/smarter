@@ -1,0 +1,70 @@
+---
+#------------------------------------------------------------------------------
+# Did You Know? of the day.
+#
+# Posts the fact of the day, from @smarter/didyouknow
+# (smarter/react/packages/smarter-didyouknow), to The Smarter Project's
+# #general Slack channel, once a day. It is the same fact that the web
+# console's Did you know? widget and smarter.sh show that day: the fact
+# changes at midnight UTC, so the time of the run doesn't change which one.
+#
+# - npm run slack:fact bundles scripts/slack-fact-of-the-day.ts from source
+#   with esbuild and prints the message; scripts/slack_post.py posts it.
+# - Scheduled runs use the default branch's facts. By hand, it can print the
+#   message without posting it (dry-run).
+# - GitHub can start a scheduled run late, at busy times by an hour or more.
+#
+# Secrets:
+#   SLACK_BOT_TOKEN   the Smarter Slack app's bot token. It needs the scope
+#                     chat:write.public, or the bot must be a member of
+#                     #general. Without it, nothing is posted.
+#------------------------------------------------------------------------------
+name: Slack Post - Did You Know
+
+on:
+  schedule:
+    - cron: "0 14 * * *" # daily, 14:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Print the message on the run's page instead of posting it."
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: did-you-know
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: smarter/react/package-lock.json
+
+      - name: npm ci
+        working-directory: smarter/react
+        run: npm ci --include=dev
+
+      - name: Post the fact of the day to Slack
+        shell: bash
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: general
+          DRY_RUN: ${{ inputs.dry-run && '--dry-run' || '' }}
+        run: |
+          set -o pipefail
+          npm run --silent --prefix smarter/react/packages/smarter-didyouknow slack:fact \
+            | python3 -I scripts/slack_post.py --channel "$SLACK_CHANNEL" $DRY_RUN

@@ -18,6 +18,7 @@ Usage:
                 [--featured-media MEDIA_ID]
   wp.py upload IMAGE [--alt TEXT]
   wp.py clear-cache
+  wp.py slack ID [--dry-run]
 
 publish converts POST.md with md2wp.py, which leaves out the post's # H1 and date
 line (the theme prints the title and date), and uses the H1 as the title unless
@@ -28,10 +29,13 @@ media library and prints its id and url, for a ``![alt](url)`` line in a post.
 backdated. --featured-media sets the featured image in the same request as the
 content, which makes Yoast SEO rebuild the post's og:image; publish checks it
 and saves once more if Yoast has not caught up. clear-cache deletes WP Super
-Cache's whole page cache.
+Cache's whole page cache. slack announces a published post in Slack, as the bot
+whose token is SLACK_BOT_TOKEN: a release announcement (category 4) in
+SLACK_ANNOUNCEMENTS_CHANNEL, any other post in SLACK_BLOG_CHANNEL.
 """
 
 import argparse
+import html
 import http.cookiejar
 import json
 import mimetypes
@@ -47,11 +51,12 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from md2wp import convert, split_header  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
+ANNOUNCEMENTS_CATEGORY = 4  # release announcements
 
 
-def credentials() -> tuple[str, str, str]:
-    """Return the blog's base url, username and password, from the environment or .env."""
-    values = {k: os.environ.get(k, "") for k in ("WP_URL", "WP_USERNAME", "WP_PASSWORD")}
+def settings(*keys: str) -> dict[str, str]:
+    """Return these settings from the environment, or from the repository's .env."""
+    values = {k: os.environ.get(k, "") for k in keys}
     env_file = REPO / ".env"
     if not all(values.values()) and env_file.exists():
         for line in env_file.read_text(encoding="utf-8").splitlines():
@@ -61,8 +66,52 @@ def credentials() -> tuple[str, str, str]:
     missing = [k for k, v in values.items() if not v]
     if missing:
         sys.exit(f"missing {', '.join(missing)}: set them in the environment or in {env_file}")
+    return values
+
+
+def credentials() -> tuple[str, str, str]:
+    """Return the blog's base url, username and password."""
+    values = settings("WP_URL", "WP_USERNAME", "WP_PASSWORD")
     parts = urllib.parse.urlsplit(values["WP_URL"])
     return f"{parts.scheme}://{parts.netloc}", values["WP_USERNAME"], values["WP_PASSWORD"]
+
+
+def slack_escape(text: str) -> str:
+    """Escape the three characters that Slack's mrkdwn treats as control characters."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def announce(post: dict, dry_run: bool = False) -> None:
+    """Post a published post's title, link and description to Slack.
+
+    Release announcements (category 4) go to SLACK_ANNOUNCEMENTS_CHANNEL, every
+    other post to SLACK_BLOG_CHANNEL.
+
+    Slack unfurls the link into a card from the page's Yoast og:title, og:description
+    and og:image, so the message itself stays short.
+    """
+    if post["status"] != "publish":
+        sys.exit(f"slack: post {post['id']} is {post['status']}, not published. Announce only live posts.")
+    title = html.unescape(post["title"]["rendered"])
+    yoast = post.get("yoast_head_json") or {}
+    description = yoast.get("og_description") or re.sub(r"<[^>]+>", "", post["excerpt"]["rendered"])
+    description = html.unescape(description).strip()
+    text = f"New on the blog: *<{post['link']}|{slack_escape(title)}>*"
+    if description:
+        text += f"\n{slack_escape(description)}"
+    if dry_run:
+        print(text)
+        return
+    channel = "SLACK_ANNOUNCEMENTS_CHANNEL" if ANNOUNCEMENTS_CATEGORY in post["categories"] else "SLACK_BLOG_CHANNEL"
+    values = settings("SLACK_BOT_TOKEN", channel)
+    sys.path.insert(0, str(REPO / "scripts"))
+    from slack_post import post as slack_post  # pylint: disable=import-outside-toplevel
+
+    try:
+        result = slack_post(values[channel], text, values["SLACK_BOT_TOKEN"], unfurl=True)
+    except RuntimeError as error:
+        sys.exit(f"slack: {error}")
+    print(json.dumps({"channel": result["channel"], "ts": result["ts"]}))
 
 
 class Blog:
@@ -160,6 +209,9 @@ def main() -> None:
     upload.add_argument("file")
     upload.add_argument("--alt", default="", help="the image's alt text")
     sub.add_parser("clear-cache")
+    slack = sub.add_parser("slack")
+    slack.add_argument("id")
+    slack.add_argument("--dry-run", action="store_true", help="print the message instead of posting it")
     args = parser.parse_args()
 
     blog = Blog()
@@ -183,6 +235,8 @@ def main() -> None:
         print(post["title"]["raw"])
     elif args.command == "clear-cache":
         blog.clear_cache()
+    elif args.command == "slack":
+        announce(blog.request("GET", f"posts/{args.id}", context="edit"), args.dry_run)
     elif args.command == "upload":
         media = blog.upload(pathlib.Path(args.file), args.alt)
         print(json.dumps({k: media[k] for k in ("id", "source_url", "alt_text")}))

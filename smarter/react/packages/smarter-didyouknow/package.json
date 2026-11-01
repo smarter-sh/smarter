@@ -26,7 +26,8 @@
     "build-storybook": "storybook build",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "slack:fact": "esbuild scripts/slack-fact-of-the-day.ts --bundle --platform=node --format=esm --log-level=error --loader:.css=empty --alias:@smarter/common=../smarter-common/src/index.tsx | node --input-type=module"
   },
   "peerDependencies": {
     "react": "^19",
