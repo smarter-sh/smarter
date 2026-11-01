@@ -47,6 +47,9 @@ Handlers and Signals
     :members:
     :undoc-members:
 
+.. automodule:: smarter.lib.annotation.receivers
+    :members:
+
 .. automodule:: smarter.lib.annotation.contract
     :members:
     :undoc-members:

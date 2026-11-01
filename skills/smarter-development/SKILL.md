@@ -270,6 +270,7 @@ reference implementations.
 | Sphinx pages                                                     | `smarter-sphinx-docs`                  |
 | Lint, format, pre-commit                                         | `smarter-code-quality`                 |
 | Writing a commit message                                         | `smarter-git-commits`                  |
+| Creating or describing a pull request                            | `smarter-pull-requests`                |
 | Publishing an extension's release to the extension registry      | `smarter-extension-registry`           |
 | Code in the cli, an SDK, vscode-yaml or another smarter-sh repo  | `smarter-project-repositories`         |
 | A course design for the Free Course Catalog (instructors docs)   | `smarter-course-design`                |

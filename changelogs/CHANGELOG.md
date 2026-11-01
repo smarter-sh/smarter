@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.40.4-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.3...v0.40.4-alpha.4) (2026-11-01)
+
+### Bug Fixes
+
+* **csrf:** renew the csrftoken cookie on console pages, name CSRF 403s ([df08a9f](https://github.com/smarter-sh/smarter/commit/df08a9f22334794560d80e48beffa7068402294c)), closes [#885](https://github.com/smarter-sh/smarter/issues/885)
+
+## [0.40.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.2...v0.40.4-alpha.3) (2026-11-01)
+
+### Bug Fixes
+
+* **annotation:** invalidate cached annotations, prefetch them per page ([cb6bfcf](https://github.com/smarter-sh/smarter/commit/cb6bfcf818f3af8a86f1691006c81e5c71dc91d4))
+
+## [0.40.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.1...v0.40.4-alpha.2) (2026-11-01)
+
+### Bug Fixes
+
+* **prompt:** redirect a signed-out visitor of the workbench to sign-in instead of a 403 ([5dd01b0](https://github.com/smarter-sh/smarter/commit/5dd01b0c47e12e3ebca7e208667bd35f967f2edb)), closes [#886](https://github.com/smarter-sh/smarter/issues/886)
+
+## [0.40.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.3...v0.40.4-alpha.1) (2026-11-01)
+
+### Bug Fixes
+
+* **blog:** announce release posts in Slack [#announcements](https://github.com/smarter-sh/smarter/issues/announcements), not [#general](https://github.com/smarter-sh/smarter/issues/general) ([8be14ed](https://github.com/smarter-sh/smarter/commit/8be14edecaa8cf8f388e850fd4abb65c9ffb4eae))
+
 ## [0.40.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.2...v0.40.3-alpha.1) (2026-10-31)
 
 ### Bug Fixes
