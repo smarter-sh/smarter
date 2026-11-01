@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.4-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.3...v0.40.4-alpha.4) (2026-11-01)
+
+### Bug Fixes
+
+* **csrf:** renew the csrftoken cookie on console pages, name CSRF 403s ([df08a9f](https://github.com/smarter-sh/smarter/commit/df08a9f22334794560d80e48beffa7068402294c)), closes [#885](https://github.com/smarter-sh/smarter/issues/885)
+
 ## [0.40.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.2...v0.40.4-alpha.3) (2026-11-01)
 
 ### Bug Fixes
