@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.40.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.3...v0.40.4-alpha.1) (2026-11-01)
+
+### Bug Fixes
+
+* **blog:** announce release posts in Slack [#announcements](https://github.com/smarter-sh/smarter/issues/announcements), not [#general](https://github.com/smarter-sh/smarter/issues/general) ([8be14ed](https://github.com/smarter-sh/smarter/commit/8be14edecaa8cf8f388e850fd4abb65c9ffb4eae))
+
 ## [0.40.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.2...v0.40.3-alpha.1) (2026-10-31)
 
 ### Bug Fixes
