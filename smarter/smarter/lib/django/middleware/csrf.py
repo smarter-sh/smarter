@@ -136,8 +136,8 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponseForbidden
-from django.middleware.csrf import CsrfViewMiddleware
+from django.http import HttpResponse, HttpResponseForbidden
+from django.middleware.csrf import CsrfViewMiddleware, get_token
 from django.utils.functional import cached_property
 
 from smarter.common.conf import smarter_settings
@@ -284,6 +284,45 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             allowed_origin_subdomains[parsed.scheme].append(parsed.netloc.lstrip("*"))
 
         return allowed_origin_subdomains
+
+    def renews_csrf_cookie(self, request: ASGIRequest, response: HttpResponse) -> bool:
+        """
+        Return whether a response should renew the CSRF cookie: a web console page for a signed-in user.
+
+        The CSRF cookie lives ``CSRF_COOKIE_AGE`` (1 day), and the session ``SESSION_COOKIE_AGE``
+        (28 days). Django only sets the cookie on a response whose request asked for the token,
+        e.g. with ``{% csrf_token %}``, which the React host pages don't. Without renewal, every
+        React app that writes through ``fetchDjangoUrl()`` fails with a 403 "CSRF cookie not set"
+        from the second day of a session.
+
+        :param request: The request.
+        :param response: The view's response.
+        :returns: True for a successful HTML response to a signed-in user's ``GET``, so that the
+            cookie lives as long as the user keeps using the console. Api responses, redirects,
+            errors and anonymous visitors are left alone.
+        """
+        if request.method != "GET" or response.status_code != 200:
+            return False
+        if not response.get("Content-Type", "").startswith("text/html"):
+            return False
+        user = getattr(request, "user", None)
+        return bool(user is not None and user.is_authenticated)
+
+    def process_response(self, request: ASGIRequest, response: HttpResponse) -> HttpResponse:
+        """
+        Renew the CSRF cookie on a signed-in user's console pages, then let Django set it.
+
+        ``get_token()`` keeps the current token when the request has one, or makes a new one when
+        the cookie has expired, and marks the cookie for update, so that Django's
+        ``process_response()`` sends it again with a fresh ``CSRF_COOKIE_AGE``.
+
+        :param request: The request.
+        :param response: The view's response.
+        :returns: The response, with the ``csrftoken`` cookie when it was renewed.
+        """
+        if self.renews_csrf_cookie(request, response):
+            get_token(request)
+        return super().process_response(request, response)
 
     def process_view(
         self,

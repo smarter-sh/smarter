@@ -294,7 +294,9 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
     A subclass sets :attr:`model`, :attr:`serializer_class` and :attr:`listview_cache_kind`, and
     names the relations that its serializer reads in :attr:`select_related` and
     :attr:`prefetch_related`, so that a page costs a few queries, however many resources it has.
-    The resource's owner and tags, when it has them, are always fetched with it.
+    The resource's owner and tags, when it has them, are always fetched with it, and the
+    annotations of the page's resources are read in one query (see
+    :func:`~smarter.lib.annotation.models.prefetch_annotations`).
     """
 
     model: ClassVar[type[models.Model]]
@@ -366,7 +368,7 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         )
 
     @classmethod
-    def build_page(  # pylint: disable=R0913,R0917
+    def build_page(  # pylint: disable=R0913,R0914,R0917
         cls,
         user_profile,
         ownership_filter: str,
@@ -399,6 +401,7 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=C0415
         from smarter.apps.account.serializers import UserProfileSerializer
         from smarter.apps.account.utils import smarter_cached_objects
+        from smarter.lib.annotation.models import prefetch_annotations
 
         objects, pagination = paginate_queryset(
             cls.get_queryset(user_profile.user, ownership_filter),
@@ -413,6 +416,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
             tags=tags,
             annotations=annotations,
         )
+        # the serializer shows each resource's annotations, which aren't a relation to prefetch.
+        prefetch_annotations(objects)
         request = ListviewPageRequest(user_profile.user)
         response = {
             "user": UserProfileSerializer(user_profile).data,

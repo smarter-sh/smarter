@@ -81,6 +81,10 @@ required secret, a DNS record that should exist and doesn't.
 
 Check each candidate against the code; record why it is or isn't a leak.
 
+A `<redacted:<kind>>` placeholder means `scripts/pod_log_redact.py` found something that looked
+like a credential or personal data (see `smarter-pod-log-review`, step 2). It is always a finding:
+a leak to fix in the code that logged it, or a redactor pattern to narrow.
+
 **Not leaks** (verified):
 
 - `"apiKeys": [{"apiKey": "<uuid>"}]` in `llmclient_saved()` dumps is the SmarterAuthToken's public

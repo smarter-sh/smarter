@@ -331,9 +331,12 @@ limits on what it writes and spends, and a dry run writes nothing. Nothing from 
 in the workflow's public log, except Claude's summary, which follows the same rules as the issues.
 When a run writes to GitHub, the workflow posts one message to the Slack channel ``#smarter`` that
 lists each issue opened, commented on or closed, and each pull request, with its link, taken from
-the MCP server's results rather than from Claude's summary. Its scripts, ``download-logs.sh``,
-``redact-logs.py`` and ``slack-notify.py``, are in
-``skills/smarter-pod-log-review/scripts/``, and are as useful for a review by hand.
+the MCP server's results rather than from Claude's summary. When a run finds nothing that needs a
+maintainer, it posts a clean bill of health instead: the number of pods, their restarts and the
+deployed release, taken from the cluster's inventory. Its Python scripts are in the repository's
+``scripts/`` folder (``pod_log_redact.py``, ``pod_log_review.py`` and
+``pod_log_review_slack.py``), and the script that downloads the logs, ``download-logs.sh``, is in
+``skills/smarter-pod-log-review/scripts/``. Both are as useful for a review by hand.
 
 The Built-in MCPClients
 -----------------------
