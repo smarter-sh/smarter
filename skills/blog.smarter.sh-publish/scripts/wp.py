@@ -29,8 +29,9 @@ media library and prints its id and url, for a ``![alt](url)`` line in a post.
 backdated. --featured-media sets the featured image in the same request as the
 content, which makes Yoast SEO rebuild the post's og:image; publish checks it
 and saves once more if Yoast has not caught up. clear-cache deletes WP Super
-Cache's whole page cache. slack announces a published post in the Slack channel
-SLACK_BLOG_CHANNEL, as the bot whose token is SLACK_BOT_TOKEN.
+Cache's whole page cache. slack announces a published post in Slack, as the bot
+whose token is SLACK_BOT_TOKEN: a release announcement (category 4) in
+SLACK_ANNOUNCEMENTS_CHANNEL, any other post in SLACK_BLOG_CHANNEL.
 """
 
 import argparse
@@ -50,6 +51,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from md2wp import convert, split_header  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
+ANNOUNCEMENTS_CATEGORY = 4  # release announcements
 
 
 def settings(*keys: str) -> dict[str, str]:
@@ -80,7 +82,10 @@ def slack_escape(text: str) -> str:
 
 
 def announce(post: dict, dry_run: bool = False) -> None:
-    """Post a published post's title, link and description to the Slack blog channel.
+    """Post a published post's title, link and description to Slack.
+
+    Release announcements (category 4) go to SLACK_ANNOUNCEMENTS_CHANNEL, every
+    other post to SLACK_BLOG_CHANNEL.
 
     Slack unfurls the link into a card from the page's Yoast og:title, og:description
     and og:image, so the message itself stays short.
@@ -97,12 +102,13 @@ def announce(post: dict, dry_run: bool = False) -> None:
     if dry_run:
         print(text)
         return
-    values = settings("SLACK_BOT_TOKEN", "SLACK_BLOG_CHANNEL")
+    channel = "SLACK_ANNOUNCEMENTS_CHANNEL" if ANNOUNCEMENTS_CATEGORY in post["categories"] else "SLACK_BLOG_CHANNEL"
+    values = settings("SLACK_BOT_TOKEN", channel)
     sys.path.insert(0, str(REPO / "scripts"))
     from slack_post import post as slack_post  # pylint: disable=import-outside-toplevel
 
     try:
-        result = slack_post(values["SLACK_BLOG_CHANNEL"], text, values["SLACK_BOT_TOKEN"], unfurl=True)
+        result = slack_post(values[channel], text, values["SLACK_BOT_TOKEN"], unfurl=True)
     except RuntimeError as error:
         sys.exit(f"slack: {error}")
     print(json.dumps({"channel": result["channel"], "ts": result["ts"]}))
