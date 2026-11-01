@@ -1,0 +1,45 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.39.2](https://github.com/smarter-sh/smarter/compare/v0.39.1...v0.39.2) (2026-10-31)
+
+### Bug Fixes
+
+- **helm:** welcome new Slack members with the bot's how-to message ([6a36ad5](https://github.com/smarter-sh/smarter/commit/6a36ad5615081bad6fbfceef57d9502b60ad13b1))
+
+## [0.39.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.39.1...v0.39.2-alpha.1) (2026-10-31)
+
+### Bug Fixes
+
+- **helm:** welcome new Slack members with the bot's how-to message ([6a36ad5](https://github.com/smarter-sh/smarter/commit/6a36ad5615081bad6fbfceef57d9502b60ad13b1))
+
+## [0.39.1](https://github.com/smarter-sh/smarter/compare/v0.39.0...v0.39.1) (2026-10-31)
+
+### Bug Fixes
+
+- **deploy:** read the Slack bot's settings from repository secrets ([ef3c4c6](https://github.com/smarter-sh/smarter/commit/ef3c4c6595626baf86f77514789fda8efd8f1792))
+
+## [0.39.0](https://github.com/smarter-sh/smarter/compare/v0.38.2...v0.39.0) (2026-10-31)
+
+### Features
+
+- **helm:** add an optional Slack bot that answers with an LLMClient ([fbd1ef7](https://github.com/smarter-sh/smarter/commit/fbd1ef76cd0da1b05e1d332098a63d207ee9d4bd))
+
+### Bug Fixes
+
+- **helm:** add a reset word to the Slack bot, and a Slack user guide ([60eb11c](https://github.com/smarter-sh/smarter/commit/60eb11c2c98d54fe8e54e8de8d2fcb19ed8ee48f))
+
+## [0.39.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.39.0-alpha.1...v0.39.0-alpha.2) (2026-10-31)
+
+### Bug Fixes
+
+- **helm:** add a reset word to the Slack bot, and a Slack user guide ([60eb11c](https://github.com/smarter-sh/smarter/commit/60eb11c2c98d54fe8e54e8de8d2fcb19ed8ee48f))
+
+## [0.39.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.38.2...v0.39.0-alpha.1) (2026-10-30)
+
+### Features
+
+- **helm:** add an optional Slack bot that answers with an LLMClient ([fbd1ef7](https://github.com/smarter-sh/smarter/commit/fbd1ef76cd0da1b05e1d332098a63d207ee9d4bd))
