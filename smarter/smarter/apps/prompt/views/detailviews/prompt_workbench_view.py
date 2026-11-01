@@ -224,7 +224,8 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
       The view supports both sandbox and production URL formats, allowing it to work with deployed and not-yet-deployed LLMClients.
 
     - **Authentication Protected:**
-      This view requires the user to be authenticated. If the user is not authenticated, access is denied.
+      This view requires the user to be authenticated. A visitor who is not signed in is redirected to the
+      sign-in page, and a signed-in user without a user profile is refused with a 403.
 
     - **Cache Control:**
       The view uses Django's `never_cache` decorator to ensure that the browser does not cache the prompt page itself.
@@ -362,7 +363,8 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
           Supports both sandbox and production URL formats, allowing the view to work with both deployed and not-yet-deployed LLMClients.
 
         - **Authentication Protected:**
-          Requires the user to be authenticated. If the user is not authenticated, access is denied.
+          Requires the user to be authenticated. A visitor who is not signed in is redirected to the sign-in page,
+          and a signed-in user without a user profile is refused with a 403.
 
         - **Cache Control:**
           Uses Django's `never_cache` decorator to prevent the browser from caching the prompt page, ensuring session security.
@@ -385,6 +387,11 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         --------
         PromptConfigView : The endpoint that provides configuration data to the React app.
         """
+        user = getattr(request, "user", None)
+        if not (user and user.is_authenticated):
+            # the base class redirects a visitor who is not signed in to the sign-in page. Its redirect is
+            # returned as is: it isn't an error status, so the check below would let the request through.
+            return super().dispatch(request, *args, **kwargs)
         if not self.user_profile:
             logger.error(
                 "%s.dispatch() - user_profile is None. This should not happen. Returning 403.",
