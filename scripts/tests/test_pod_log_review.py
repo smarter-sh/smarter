@@ -1,6 +1,7 @@
 """Test scripts/pod_log_review.py, which runs the pod log review with Claude Code, and summarizes it."""
 
 import io
+import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -106,6 +107,14 @@ class TestCommandLine(PodLogReviewTestCase):
         self.assertIn("- Each log covers: the last 25h", text)
         self.assertIn("- Mode: Act:", text)
         self.assertIn("- Mode: DRY RUN", prompt(replace(self.settings, dry_run=True)))
+        self.assertIn("- Redactions: none", text)
+
+    def test_prompt_names_the_redactions(self):
+        report = {"total": 3, "kinds": {"email": 2, "token": 1}, "files": {"smarter/a.log": {}, "smarter/b.log": {}}}
+        (Path(self.settings.log_dir) / "redactions.json").write_text(json.dumps(report), encoding="utf-8")
+        text = prompt(self.settings)
+        self.assertIn("- Redactions: 3 (email 2, token 1) in 2 file(s), listed in ", text)
+        self.assertIn('Each one is a finding: see "Redactions are leaks".', text)
 
     def test_claude_command(self):
         command = claude_command(self.settings, "review")

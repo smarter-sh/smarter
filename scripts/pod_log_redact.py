@@ -14,6 +14,14 @@ issues from the logs: the issues must never quote a credential or a person's dat
 follow the Guardrail's built-in detectors (``smarter.apps.guardrail.services.strategies.detectors``),
 and this script copies them rather than importing them, so that it runs without Django.
 
+Smarter's logs must never hold a credential or personal data, so redacting is a safety net, not
+the fix: **every redaction is a finding.** Either Smarter logged something it must not, and the
+code that wrote the line must change, or a pattern here matched something harmless, and the
+pattern must change. Both get a GitHub issue. So the script also writes :data:`REPORT_NAME` in the
+folder, which says where each placeholder is (file, kind, line numbers, never the value), the
+review's prompt names the count, a run with redactions is never reported as healthy, and the
+workflow's log gets a warning.
+
 It uses only Python's standard library, which comes with every Python install:
 
 - ``argparse`` reads the command line: here, the one argument, the folder.
@@ -22,6 +30,7 @@ It uses only Python's standard library, which comes with every Python install:
 - ``re`` is regular expressions: :data:`PATTERNS` describes what a credential looks like, and
   ``Pattern.sub()`` replaces every match in a text with what a function returns for it.
 - ``ipaddress`` parses an IP address and says whether it is private (``10.0.0.1``) or public.
+- ``json`` writes the report, :data:`REPORT_NAME`, and reads it back in :func:`read_report`.
 - ``collections.Counter`` is a dict that counts: ``counts["email"] += 1`` works even before the
   first email, starting from 0.
 - ``functools.partial`` fills in some of a function's arguments ahead of time, so that
@@ -34,6 +43,7 @@ import argparse
 import collections
 import functools
 import ipaddress
+import json
 import pathlib
 import re
 import sys
@@ -127,6 +137,20 @@ See :func:`redact_ip`.
 KEEP_IPS = {"127.0.0.1", "0.0.0.0", "::1"}  # nosec B104: addresses to keep, not to bind
 """Addresses that say where a server listens, not who connected."""
 
+PLACEHOLDER = re.compile(r"<redacted:(?P<kind>[a-z-]+)>")
+"""A placeholder that :func:`redact_match` or :func:`redact_ip` wrote, e.g. ``<redacted:email>``."""
+
+REPORT_NAME = "redactions.json"
+"""The report that :func:`main` writes in the folder: where each placeholder is.
+
+E.g. ``{"total": 3, "kinds": {"email": 3}, "files": {"smarter/<pod>.log": {"email": {"count": 3,
+"lines": [12, 40, 41]}}}}``. It names files, kinds and line numbers, never a redacted value. Its
+``.json`` suffix keeps it out of the files that :func:`main` redacts.
+"""
+
+MAX_LINES = 20
+"""The most line numbers that the report lists for one kind in one file; ``count`` has them all."""
+
 
 def redact_match(match: re.Match, kind: str, counts: collections.Counter) -> str:
     """
@@ -184,11 +208,48 @@ def redact(text: str, counts: collections.Counter) -> str:
     return IP_ADDRESS.sub(functools.partial(redact_ip, counts=counts), text)
 
 
+def locate(text: str) -> dict[str, dict]:
+    """
+    Return where the placeholders in a redacted text are, by kind.
+
+    :param text: A log, after :func:`redact`.
+    :returns: E.g. ``{"email": {"count": 3, "lines": [12, 40, 41]}}``, with at most
+        :data:`MAX_LINES` line numbers, counted from 1, per kind. Empty if there are none.
+    """
+    found: dict[str, dict] = {}
+    for number, line in enumerate(text.splitlines(), start=1):
+        for match in PLACEHOLDER.finditer(line):
+            entry = found.setdefault(match.group("kind"), {"count": 0, "lines": []})
+            entry["count"] += 1
+            if len(entry["lines"]) < MAX_LINES and entry["lines"][-1:] != [number]:
+                entry["lines"].append(number)
+    return found
+
+
+def read_report(folder: str) -> dict:
+    """
+    Return the report that :func:`main` wrote in a folder of logs.
+
+    :param folder: The folder of logs, or an empty string.
+    :returns: The report (see :data:`REPORT_NAME`), or an empty dict if there is none or it can't
+        be read. Its ``total`` is 0 when nothing was redacted.
+    """
+    if not folder:
+        return {}
+    try:
+        report = json.loads((pathlib.Path(folder) / REPORT_NAME).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return report if isinstance(report, dict) else {}
+
+
 def main() -> int:
     """
     Redact every ``*.log`` and ``*.txt`` file under the folder named on the command line, in place.
 
-    Prints only the number of files and of matches of each kind, never a match.
+    Writes :data:`REPORT_NAME` in the folder, and prints only the number of files and of
+    placeholders of each kind, never a match. When there are placeholders it also prints a GitHub
+    Actions ``::warning::``, because each one is a finding (see the module's docstring).
 
     :returns: 0, or 1 if the folder doesn't exist.
     """
@@ -199,19 +260,31 @@ def main() -> int:
     if not folder.is_dir():
         print(f"pod_log_redact.py: {folder} is not a folder", file=sys.stderr)
         return 1
-    # the matches of every file, by kind, e.g. {"email": 3}.
+    # the placeholders of every file, by kind, e.g. {"email": 3}.
     total: collections.Counter = collections.Counter()
+    # where they are, by file, e.g. {"smarter/<pod>.log": {"email": {"count": 3, "lines": [...]}}}.
+    where: dict[str, dict] = {}
     # every .log and .txt file under the folder, at any depth, e.g. smarter/<pod>.log and inventory/pods.txt.
     files = sorted(p for p in folder.rglob("*") if p.is_file() and p.suffix in (".log", ".txt"))
     for path in files:
-        counts: collections.Counter = collections.Counter()
         # errors="replace" turns bytes that aren't UTF-8 into "�" rather than failing on them.
-        text = path.read_text(encoding="utf-8", errors="replace")
-        path.write_text(redact(text, counts), encoding="utf-8")
-        # adds this file's counts to the totals, kind by kind.
-        total.update(counts)
+        text = redact(path.read_text(encoding="utf-8", errors="replace"), collections.Counter())
+        path.write_text(text, encoding="utf-8")
+        # counted from the placeholders in the redacted text, so that running the script twice
+        # on the same folder reports the same thing.
+        found = locate(text)
+        if found:
+            where[path.relative_to(folder).as_posix()] = found
+            total.update({kind: entry["count"] for kind, entry in found.items()})
+    report = {"total": sum(total.values()), "kinds": dict(sorted(total.items())), "files": where}
+    (folder / REPORT_NAME).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     summary = ", ".join(f"{kind} {count}" for kind, count in sorted(total.items())) or "nothing"
     print(f"redacted {len(files)} file(s): {summary}")
+    if total:
+        print(
+            f"::warning::{report['total']} redaction(s) in {len(where)} log(s): Smarter's logs must not hold "
+            f"credentials or personal data, so each one is a finding to investigate (see {REPORT_NAME})."
+        )
     return 0
 
 

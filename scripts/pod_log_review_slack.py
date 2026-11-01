@@ -18,9 +18,11 @@ instead.
   write tools that succeeded (an issue opened, commented on or closed, a pull request proposed),
   with its link. What happened is taken from the tool's result, which the MCP server wrote after
   GitHub accepted the change, never from what Claude says it did.
-- **It wrote nothing, and was healthy.** Claude Code finished without an error, and its final
+- **It wrote nothing, and was healthy.** Claude Code finished without an error, its final
   answer ends with the exact line ``Verdict: healthy`` (see
-  :attr:`pod_log_review_stream.ReviewResult.healthy`). The message is a clean bill of health, whose facts
+  :attr:`pod_log_review_stream.ReviewResult.healthy`), and ``pod_log_redact.py`` redacted
+  nothing from the logs: Smarter's logs must not hold credentials or personal data, so a
+  redaction is a finding whatever Claude concluded. The message is a clean bill of health, whose facts
   (pods, restarts, release) come from the kubectl inventory in ``--log-dir``. The verdict is the
   only thing taken from Claude, and it chooses between fixed texts, so nothing that Claude or the
   logs wrote reaches Slack.
@@ -43,6 +45,7 @@ import os
 import re
 import sys
 
+from pod_log_redact import read_report
 from pod_log_review_stream import (
     WRITE_TOOLS,
     JsonObject,
@@ -214,13 +217,14 @@ def message(stream: str, title: str, run_url: str, log_dir: str, since: str) -> 
     :param run_url: The workflow run's url, or an empty string.
     :param log_dir: The folder of ``download-logs.sh``, for a clean bill of health.
     :param since: How far back each log reaches, e.g. ``25h``, or an empty string.
-    :returns: The message, in Slack mrkdwn, or None if the run wrote nothing and wasn't healthy.
+    :returns: The message, in Slack mrkdwn, or None if the run wrote nothing and wasn't healthy,
+        or if ``pod_log_redact.py`` redacted anything from the logs in ``log_dir``.
     """
     lines = actions(stream)
     if lines:
         return actions_message(title, lines, run_url)
     result = final_result(stream)
-    if result is not None and result.healthy:
+    if result is not None and result.healthy and not read_report(log_dir).get("total"):
         return clean_bill_of_health(title, PodInventory.read(log_dir), since, run_url)
     return None
 
