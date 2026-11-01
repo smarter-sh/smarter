@@ -28,12 +28,13 @@ The scripts use only its scheme and host.
 - The account is an administrator. Don't change users, plugins, settings or
   other people's posts.
 
-`wp.py slack` also reads `SLACK_BOT_TOKEN` and `SLACK_BLOG_CHANNEL` the same
-way. The token is the "Smarter Developer" Slack app's bot token, the same bot
+`wp.py slack` also reads `SLACK_BOT_TOKEN`, `SLACK_BLOG_CHANNEL` and
+`SLACK_ANNOUNCEMENTS_CHANNEL` the same way. The token is the "Smarter Developer" Slack app's bot token, the same bot
 that answers DMs in The Smarter Project's Slack workspace (see
 `docs/source/smarter-framework/smarter-on-kubernetes/slack-bot.rst`). It has
 the `chat:write.public` scope, so it can post to a public channel without being
-a member. `SLACK_BLOG_CHANNEL` is the id (`C...`) of #general. Treat the token
+a member. `SLACK_BLOG_CHANNEL` is the id (`C...`) of #general, and
+`SLACK_ANNOUNCEMENTS_CHANNEL` the id of #announcements. Treat the token
 like the password.
 
 ## Why cookie login, not Application Passwords
@@ -105,12 +106,14 @@ $S/wp.py publish ... --id 546 --featured-media 548   # set the featured image (a
 $S/wp.py publish ... --date 2026-04-21T09:00:00      # backdate, only when the user asks
 $S/wp.py clear-cache                                 # delete WP Super Cache's page cache
 $S/wp.py slack 546 --dry-run                         # print the Slack announcement
-$S/wp.py slack 546                                   # post it to #general
+$S/wp.py slack 546                                   # post it to Slack
 ```
 
 `slack` posts "New on the blog: <title>" with the link and Yoast's
 og:description, and Slack unfurls the link into a card with the featured image.
-It refuses a post that isn't published.
+It picks the channel from the post's categories: a release announcement
+(category 4) goes to #announcements, any other post to #general. It refuses a
+post that isn't published.
 
 To add a screenshot, `upload` it and put its `source_url` in an image line.
 Resize it to 1680 px wide first (`sips --resampleWidth 1680 in.png --out
@@ -265,12 +268,13 @@ which bypasses the cache and shows you a page that visitors don't get.
 6. **Publish** with `--status publish --id <id>`, if the user asked you to.
 7. **Verify the public page.** `curl -sL -o /dev/null -w '%{http_code}' <link>`
    gives 200, and the page's `<title>` is the post's title.
-8. **Announce it in Slack.** The user wants every newly published article
-   and release announcement posted to #general: run `wp.py slack <id>` once the
+8. **Announce it in Slack.** The user wants every newly published release
+   announcement posted to #announcements, and every other article to #general;
+   `wp.py slack` chooses between them by category. Run `wp.py slack <id>` once the
    public page checks out, and `clear-cache` has run, so the unfurl shows the
    right og:image. Do this only when a post goes from draft to published, once
    per post. Don't announce an edit, a typo fix or a republish of a post that
-   was already live; a second message in #general can't be taken back quietly.
+   was already live; a second message in Slack can't be taken back quietly.
    Grouped releases published together get one message each.
 9. **Report** each post's link, which releases it covers, the Slack
    announcement, and the claims to review (see the release announcement
