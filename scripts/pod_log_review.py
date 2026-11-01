@@ -57,6 +57,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from pod_log_redact import REPORT_NAME, read_report
 from pod_log_review_stream import (
     PodInventory,
     ReviewResult,
@@ -228,6 +229,15 @@ def prompt(settings: Settings) -> str:
     else:
         mode = "Act: write issues, comments, closings and pull requests within the limits."
     span = f"the last {settings.since}" if settings.since else "the lifetime of the container"
+    report = read_report(settings.log_dir)
+    if report.get("total"):
+        kinds = ", ".join(f"{kind} {count}" for kind, count in report.get("kinds", {}).items())
+        redactions = (
+            f"{report['total']} ({kinds}) in {len(report.get('files', {}))} file(s), listed in "
+            f'{os.path.join(settings.log_dir, REPORT_NAME)}. Each one is a finding: see "Redactions are leaks".'
+        )
+    else:
+        redactions = "none"
     limits = (
         f"{settings.max_new_issues} new issues, {settings.max_comments} comments, "
         f"{settings.max_closed_issues} closed issues, {settings.max_pull_requests} pull requests"
@@ -241,6 +251,7 @@ def prompt(settings: Settings) -> str:
             f"- Log folder: {settings.log_dir}",
             f"- Each log covers: {span}",
             f"- Deployed release (image tags): {releases}",
+            f"- Redactions: {redactions}",
             f"- Date: {datetime.now(timezone.utc):%Y-%m-%d}",
             f"- Workflow run: {settings.run_url}",
             f"- Pull request base branch: {settings.pr_base}",

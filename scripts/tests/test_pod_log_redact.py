@@ -2,6 +2,7 @@
 
 import collections
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -9,7 +10,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
-from pod_log_redact import main, redact
+from pod_log_redact import REPORT_NAME, locate, main, read_report, redact
 
 
 class TestPodLogRedact(unittest.TestCase):
@@ -39,7 +40,51 @@ class TestPodLogRedact(unittest.TestCase):
             with mock.patch.object(sys, "argv", ["pod_log_redact.py", folder]), redirect_stdout(output):
                 self.assertEqual(main(), 0)
             self.assertEqual(log.read_text(encoding="utf-8"), "mail <redacted:email>\n")
-            self.assertEqual(output.getvalue().strip(), "redacted 1 file(s): email 1")
+            first, warning = output.getvalue().strip().splitlines()
+            self.assertEqual(first, "redacted 1 file(s): email 1")
+            self.assertTrue(warning.startswith("::warning::1 redaction(s) in 1 log(s)"))
+            self.assertNotIn("someone", output.getvalue())
+            report = json.loads((Path(folder) / REPORT_NAME).read_text(encoding="utf-8"))
+            self.assertEqual(
+                report,
+                {
+                    "total": 1,
+                    "kinds": {"email": 1},
+                    "files": {"smarter/pod.log": {"email": {"count": 1, "lines": [1]}}},
+                },
+            )
+            self.assertNotIn("someone", json.dumps(report), "the report never holds a value")
+            # a second run reports the placeholders that are already there, the same way.
+            with mock.patch.object(sys, "argv", ["pod_log_redact.py", folder]), redirect_stdout(io.StringIO()):
+                self.assertEqual(main(), 0)
+            self.assertEqual(read_report(folder), report)
+
+    def test_main_reports_nothing_on_clean_logs(self):
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / "pod.log").write_text("all is well\n", encoding="utf-8")
+            output = io.StringIO()
+            with mock.patch.object(sys, "argv", ["pod_log_redact.py", folder]), redirect_stdout(output):
+                self.assertEqual(main(), 0)
+            self.assertEqual(output.getvalue().strip(), "redacted 1 file(s): nothing")
+            self.assertEqual(read_report(folder), {"total": 0, "kinds": {}, "files": {}})
+
+    def test_locate(self):
+        text = "a\n<redacted:email> and <redacted:email>\nb <redacted:token>\n" + "<redacted:email>\n" * 30
+        found = locate(text)
+        self.assertEqual(found["token"], {"count": 1, "lines": [3]})
+        self.assertEqual(found["email"]["count"], 32)
+        self.assertEqual(found["email"]["lines"][:2], [2, 4], "a line is listed once")
+        self.assertEqual(len(found["email"]["lines"]), 20)
+        self.assertEqual(locate("nothing here"), {})
+
+    def test_read_report_without_a_report(self):
+        self.assertEqual(read_report(""), {})
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertEqual(read_report(folder), {})
+            (Path(folder) / REPORT_NAME).write_text("not json", encoding="utf-8")
+            self.assertEqual(read_report(folder), {})
+            (Path(folder) / REPORT_NAME).write_text("[1]", encoding="utf-8")
+            self.assertEqual(read_report(folder), {})
 
     def test_main_needs_a_folder(self):
         with (

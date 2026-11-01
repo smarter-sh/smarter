@@ -62,6 +62,14 @@ because the daily review runs it too, replaces credentials, email addresses, pub
 addresses, AWS account ids and AWS hostnames with placeholders such as `<redacted:email>`, in
 place. Run it before you quote a log anywhere public, e.g. an issue.
 
+Redacting is a safety net, not the fix: Smarter's logs must never hold a credential or personal
+data, so **every placeholder is a finding**. The script writes `redactions.json` in the folder
+(each file, kind and line number, never the value) and prints a warning when it found anything.
+For each kind, find the log statement that wrote the line and decide whether Smarter leaked
+(fix the code that logs it) or the redactor matched something harmless (narrow its pattern, with
+a test in `scripts/tests/test_pod_log_redact.py`). Either way it gets a GitHub issue, and the
+review isn't healthy.
+
 ## Step 3: scan every log
 
 ```bash

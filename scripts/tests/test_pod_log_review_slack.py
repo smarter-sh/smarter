@@ -75,6 +75,13 @@ class TestPodLogReviewSlack(unittest.TestCase):
         self.assertIn(":muscle: Zero restarts", output)
         self.assertIn(":package: Release v0.40.4", output)
 
+    def test_a_healthy_verdict_with_redactions_posts_nothing(self):
+        (Path(self.log_dir) / "redactions.json").write_text('{"total": 1}', encoding="utf-8")
+        status, output, post = self.main([result_event()], token="xoxb-test")
+        self.assertEqual(status, 0)
+        self.assertIn("nothing is posted", output)
+        post.assert_not_called()
+
     def test_other_runs_post_nothing(self):
         cases = {
             "needs attention": [result_event("Verdict: needs attention")],
