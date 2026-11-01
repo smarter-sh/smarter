@@ -94,6 +94,14 @@ class TestPost(unittest.TestCase):
             {"channel": "smarter", "text": "hello", "unfurl_links": False, "unfurl_media": False},
         )
 
+    def test_unfurl_and_answer(self):
+        body = b'{"ok": true, "channel": "C1", "ts": "1.2"}'
+        with mock.patch("urllib.request.urlopen", return_value=self.response(body)) as urlopen:
+            answer = slack_post.post("C1", "<https://blog.smarter.sh/x/|x>", "xoxb-test", unfurl=True)
+        sent = json.loads(urlopen.call_args.args[0].data)
+        self.assertEqual((sent["unfurl_links"], sent["unfurl_media"]), (True, True))
+        self.assertEqual((answer["channel"], answer["ts"]), ("C1", "1.2"))
+
     def test_raises_when_refused(self):
         body = b'{"ok": false, "error": "not_in_channel"}'
         with mock.patch("urllib.request.urlopen", return_value=self.response(body)):

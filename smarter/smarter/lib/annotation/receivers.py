@@ -1,15 +1,15 @@
 # pylint: disable=unused-argument
 """Django signal receivers of Smarter annotations."""
 
-from django.db.models.signals import post_delete
+from django.db import transaction
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from smarter.lib import logging
-from smarter.lib.django.listview import LISTVIEW_CACHE_ALL, invalidate_listview_cache
+from smarter.lib.django.listview import LISTVIEW_CACHE_ALL, connect_listview_cache
 from smarter.lib.django.models import MetaDataModel
 
-from .models import Annotation
-from .signals import annotations_changed
+from .models import Annotation, get_cached_annotations
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -36,13 +36,26 @@ def delete_annotations(sender, instance, **kwargs):
         )
 
 
-@receiver(annotations_changed, dispatch_uid=f"{__name__}.invalidate_listviews")
-def invalidate_listviews(sender, **kwargs):
+@receiver(post_save, sender=Annotation, dispatch_uid=f"{__name__}.invalidate_cached_annotations.post_save")
+@receiver(post_delete, sender=Annotation, dispatch_uid=f"{__name__}.invalidate_cached_annotations.post_delete")
+def invalidate_cached_annotations(sender, instance: Annotation, **kwargs):
     """
-    Make every list's cached pages stale when a resource's annotations change.
+    Make a resource's cached annotations stale when one of its rows is saved or deleted.
 
-    The web console's lists show annotations and filter by them. A change may be made without
-    saving the resource, e.g. with ``set_annotation()``, so the resource's own ``post_save`` can't be
-    relied on.
+    Rows change through :meth:`~smarter.lib.annotation.models.AnnotationQuerySet.sync`, and also
+    through the Django admin and direct writes, which don't go through it. Waiting for the commit
+    keeps a request that reads the rows before the change commits from caching the old ones.
     """
-    invalidate_listview_cache(LISTVIEW_CACHE_ALL)
+    content_type_id, object_id = instance.content_type_id, instance.object_id
+    logger.debug(
+        "%s.invalidate_cached_annotations() content_type_id=%s object_id=%s",
+        logger_prefix,
+        content_type_id,
+        object_id,
+    )
+    transaction.on_commit(lambda: get_cached_annotations.invalidate(content_type_id, object_id))
+
+
+# the web console's lists show annotations and filter by them, and an annotation may change without
+# its resource being saved, e.g. with set_annotation() or in the Django admin.
+connect_listview_cache(LISTVIEW_CACHE_ALL, "annotation.Annotation")
