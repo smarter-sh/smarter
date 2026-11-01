@@ -4,8 +4,10 @@ from http import HTTPStatus
 from typing import Any
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import OperationalError
+from django.middleware.csrf import CSRF_SECRET_LENGTH
 from pydantic import BaseModel, Field
 from pydantic import ValidationError as PydanticValidationError
 from rest_framework.test import APIClient
@@ -121,6 +123,34 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
         """Verify that session authentication also works api requests."""
         _, status = self.authentication_scenarios(path=self.public_path, session_authentication=True)
         self.assertEqual(status, HTTPStatus.OK)
+
+    def csrf_failure(self, cookie: str | None, header: str | None) -> tuple[int, str]:
+        """POST to a private url from a signed-in session that enforces CSRF, and return the status and error."""
+        client = APIClient(enforce_csrf_checks=True)
+        client.force_login(user=self.non_admin_user)
+        if cookie is not None:
+            client.cookies[settings.CSRF_COOKIE_NAME] = cookie
+        headers = {"X-CSRFToken": header} if header is not None else {}
+        response = client.post(path=self.private_path, data=None, content_type="application/json", headers=headers)
+        return response.status_code, json.dumps(json.loads(response.content))
+
+    def test_a_session_without_a_csrf_cookie_is_told_so(self):
+        """A signed-in session whose csrftoken cookie expired gets a 403 that says so, not "Authorization header is missing" (issue #885)."""
+        status, error = self.csrf_failure(cookie=None, header=None)
+        self.assertEqual(status, HTTPStatus.FORBIDDEN)
+        self.assertIn("CSRF cookie not set.", error)
+        self.assertNotIn("Authorization", error)
+
+    def test_a_session_with_a_wrong_csrf_token_is_told_so(self):
+        """A signed-in session whose X-CSRFToken doesn't match its cookie gets a 403 that says so."""
+        status, error = self.csrf_failure(cookie="a" * CSRF_SECRET_LENGTH, header="b" * CSRF_SECRET_LENGTH)
+        self.assertEqual(status, HTTPStatus.FORBIDDEN)
+        self.assertIn("CSRF token missing or incorrect.", error)
+
+    def test_a_session_with_its_csrf_token_succeeds(self):
+        """Control: a signed-in session that sends its cookie's token gets through."""
+        status, error = self.csrf_failure(cookie="a" * CSRF_SECRET_LENGTH, header="a" * CSRF_SECRET_LENGTH)
+        self.assertNotEqual(status, HTTPStatus.FORBIDDEN, error)
 
 
 class Temperature(BaseModel):

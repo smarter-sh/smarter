@@ -16,5 +16,17 @@ class AnnotationAdmin(SmarterStaffOnlyModelAdmin):
     search_fields = ("key", "value")
     readonly_fields = ("prefix", "created_at", "updated_at")
 
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Keep an annotation on its resource once it exists.
+
+        Saving a row makes the cached annotations of the resource that it points at stale. Moving
+        the row to another resource would leave the first resource's cached annotations unchanged.
+        """
+        readonly = tuple(super().get_readonly_fields(request, obj))
+        if obj is not None:
+            readonly += ("content_type", "object_id")
+        return readonly
+
 
 smarter_restricted_admin_site.register(Annotation, AnnotationAdmin)
