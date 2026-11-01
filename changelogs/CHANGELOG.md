@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.2...v0.40.4-alpha.3) (2026-11-01)
+
+### Bug Fixes
+
+* **annotation:** invalidate cached annotations, prefetch them per page ([cb6bfcf](https://github.com/smarter-sh/smarter/commit/cb6bfcf818f3af8a86f1691006c81e5c71dc91d4))
+
 ## [0.40.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.40.4-alpha.1...v0.40.4-alpha.2) (2026-11-01)
 
 ### Bug Fixes
