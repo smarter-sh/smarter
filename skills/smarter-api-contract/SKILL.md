@@ -278,6 +278,13 @@ SMARTER_REF=<ref>`, into `test/data/` and `testdata/`), regenerate their SAM
   operations that they don't call. A new operation is work in all three SDKs.
 - **smarter-vscode-yaml** reads the live `json-schema` endpoint, which returns
   the same schemas.
+- **The weekly API Contract Sync workflow** (`.github/workflows/apiContractSync.yml`,
+  logic in `scripts/api_contract_sync.py`) syncs each of those five repositories'
+  `alpha` with the latest release tag on `main`, runs its tests before and after,
+  and opens an issue (label `api-contract`) and a pull request (branch
+  `api-contract-sync`, a draft when the tests break) in each one that is out of
+  date. It posts to #general on Slack. A release that changes the contract
+  therefore reaches the SDKs within a week, even if nobody runs `make contracts`.
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.
 - **Every platform serves the committed `openapi.json`** at `/docs/openapi.json`
   (`smarter.apps.docs.views.openapi`), with its own `/api/v1` added as the first
