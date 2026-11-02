@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 23:35+0000\n"
+"POT-Creation-Date: 2026-11-02 17:50+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -43,6 +43,11 @@ msgstr ""
 #: smarter/templates/account/welcome.html
 msgid "Welcome to Smarter!"
 msgstr "Boas-vindas ao Smarter!"
+
+#: smarter/apps/account/models/account_contact.py
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Join the Smarter community on Slack"
+msgstr "Participe da comunidade Smarter no Slack"
 
 #: smarter/apps/account/views/authentication/account_views.py
 msgid "User not found. Please log in to activate your account."
@@ -110,6 +115,14 @@ msgstr "o formulário de entrada é inválido."
 #: smarter/apps/account/views/password_management.py
 msgid "Passwords do not match."
 msgstr "As senhas não coincidem."
+
+#: smarter/apps/account/views/unsubscribe.py
+msgid ""
+"This unsubscribe link is not valid. Copy the whole link from the email, and "
+"try again."
+msgstr ""
+"Este link de cancelamento não é válido. Copie o link completo do e-mail e "
+"tente novamente."
 
 #: smarter/apps/dashboard/views/views/coming_soon.py
 msgid "We'll notify you when the launch date nears."
@@ -1356,6 +1369,227 @@ msgstr "Último"
 msgid "Last Login"
 msgstr "Último login"
 
+#: smarter/templates/account/email/slack-invitation.html
+msgid "The Smarter Project on Slack"
+msgstr "The Smarter Project no Slack"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid ""
+"Where the people who build, run and learn Smarter meet, and where the "
+"platform reports on its own health, every day, in public."
+msgstr ""
+"Onde se encontram as pessoas que constroem, operam e aprendem o Smarter, e "
+"onde a plataforma informa sobre a própria saúde, todos os dias, em público."
+
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid "Howdy %(first_name)s,"
+msgstr "Olá, %(first_name)s,"
+
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
+msgid "Howdy,"
+msgstr "Olá,"
+
+#: smarter/templates/account/email/slack-invitation.html
+#, python-format
+msgid ""
+"A couple of days ago you received your welcome to %(product_name)s. Now that "
+"you've had a chance to look around, I'd like to invite you to The Smarter "
+"Project's Slack workspace. It's free and open to everyone, and it's the "
+"fastest way to get answers, to see what's changing, and to meet the people "
+"behind the platform."
+msgstr ""
+"Há alguns dias você recebeu as boas-vindas ao %(product_name)s. Agora que "
+"você já teve a chance de dar uma olhada, gostaria de convidar você para o "
+"espaço de trabalho do Slack do The Smarter Project. Ele é gratuito e aberto "
+"a todos, e é o jeito mais rápido de conseguir respostas, ver o que está "
+"mudando e conhecer as pessoas por trás da plataforma."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Join the Smarter Slack"
+msgstr "Entre no Slack do Smarter"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "The project's pulse, in public"
+msgstr "O pulso do projeto, em público"
+
+#: smarter/templates/account/email/slack-invitation.html
+#, python-format
+msgid ""
+"%(product_name)s is open source, and so is the way it's run. Automated "
+"workflows post their results to Slack around the clock: test runs across "
+"every repository, deployments, security and secrets reviews, dependency "
+"updates, and a daily review of the production platform's logs. You see the "
+"health of the platform as it happens, not after the fact."
+msgstr ""
+"O %(product_name)s é de código aberto, e a forma como ele é gerido também. "
+"Fluxos de trabalho automatizados publicam seus resultados no Slack o tempo "
+"todo: testes em todos os repositórios, implantações, revisões de segurança e "
+"de segredos, atualizações de dependências e uma revisão diária dos logs da "
+"plataforma de produção. Você acompanha a saúde da plataforma enquanto as "
+"coisas acontecem, não depois."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Channels worth following"
+msgstr "Canais que valem a pena seguir"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Join the ones you care about, and mute the rest."
+msgstr "Entre nos que interessam a você e silencie o resto."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Chat directly with the @Smarter Developer agent, any time of day."
+msgstr ""
+"Converse diretamente com o agente @Smarter Developer, a qualquer hora do dia."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid ""
+"Every new post on blog.smarter.sh: release announcements, how-tos, and the "
+"stories behind the code."
+msgstr ""
+"Cada nova publicação do blog.smarter.sh: anúncios de versões, tutoriais e as "
+"histórias por trás do código."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid ""
+"New releases of every smarter-sh repository: the platform, the command-line "
+"interface, the SDKs and more."
+msgstr ""
+"Novas versões de todos os repositórios do smarter-sh: a plataforma, a "
+"interface de linha de comando, os SDKs e mais."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid ""
+"Workflow results of the Smarter platform itself, including the daily review "
+"of the production platform's logs."
+msgstr ""
+"Os resultados dos fluxos de trabalho da própria plataforma Smarter, "
+"incluindo a revisão diária dos logs da plataforma de produção."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Pull requests, issues and CI runs from GitHub, as they happen."
+msgstr ""
+"Pull requests, issues e execuções de CI do GitHub, assim que acontecem."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid ""
+"Conversation, plus the reports of the project's other repositories: security "
+"reviews, dependency updates, package health, and a daily Did You Know? tip."
+msgstr ""
+"Conversas, além dos relatórios dos outros repositórios do projeto: revisões "
+"de segurança, atualizações de dependências, saúde dos pacotes e uma dica "
+"diária \"Você sabia?\"."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid ""
+"A private channel for the people who contribute to Smarter. Contributions of "
+"every size are welcome."
+msgstr ""
+"Um canal privado para as pessoas que contribuem com o Smarter. Contribuições "
+"de qualquer tamanho são bem-vindas."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Ask @Smarter Developer anything"
+msgstr "Pergunte qualquer coisa ao @Smarter Developer"
+
+#: smarter/templates/account/email/slack-invitation.html
+#, python-format
+msgid ""
+"The workspace has its own AI agent, which answers questions about "
+"%(product_name)s at any hour. It searches and reads the source code and "
+"documentation of every smarter-sh repository before it answers, and links to "
+"what it used. Ask it in #help, in a direct message, or by mentioning it in "
+"any channel."
+msgstr ""
+"O espaço de trabalho tem seu próprio agente de IA, que responde perguntas "
+"sobre o %(product_name)s a qualquer hora. Antes de responder, ele pesquisa e "
+"lê o código-fonte e a documentação de todos os repositórios do smarter-sh, e "
+"inclui links para o que usou. Pergunte no #help, em uma mensagem direta ou "
+"mencionando-o em qualquer canal."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Try asking"
+msgstr "Experimente perguntar"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "How do I add a Smarter chatbot to my WordPress site?"
+msgstr "Como adiciono um chatbot do Smarter ao meu site WordPress?"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "Write an MCPClient manifest for an MCP server that needs an API key."
+msgstr ""
+"Escreva um manifesto de MCPClient para um servidor MCP que precisa de uma "
+"chave de API."
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "What changed in the last release of the command-line interface?"
+msgstr "O que mudou na última versão da interface de linha de comando?"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "A direct message with @Smarter Developer in Slack"
+msgstr "Uma mensagem direta com o @Smarter Developer no Slack"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "How to get the best answers from the bot"
+msgstr "Como conseguir as melhores respostas do bot"
+
+#: smarter/templates/account/email/slack-invitation.html
+msgid "See you in Slack!"
+msgstr "Até logo no Slack!"
+
+#: smarter/templates/account/email/slack-invitation.html
+#, python-format
+msgid ""
+"Or copy this link into your browser: <a href=\"%(slack_url)s\" "
+"rel=\"noopener\" target=\"_blank\" style=\"color:#7E8299\">%(slack_url)s</a>"
+msgstr ""
+"Ou copie este link no seu navegador: <a href=\"%(slack_url)s\" "
+"rel=\"noopener\" target=\"_blank\" style=\"color:#7E8299\">%(slack_url)s</a>"
+
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid "Technical point of contact for %(product_name)s."
+msgstr "Contato técnico do %(product_name)s."
+
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"Email me at <a href=\"mailto:%(support_email)s\" style=\"font-weight: "
+"600\">%(support_email)s</a>, or visit <a href=\"%(contact_url)s\" "
+"rel=\"noopener\" target=\"_blank\" style=\"font-weight: 600\">my website</a>."
+msgstr ""
+"Me escreva em <a href=\"mailto:%(support_email)s\" style=\"font-weight: "
+"600\">%(support_email)s</a>, ou visite <a href=\"%(contact_url)s\" "
+"rel=\"noopener\" target=\"_blank\" style=\"font-weight: 600\">meu site</a>."
+
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"%(product_name)s is free, open source software, licensed under the <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
+msgstr ""
+"O %(product_name)s é software livre e de código aberto, licenciado sob a <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
+
+#: smarter/templates/account/email/unsubscribe-footer.html
+msgid ""
+"You received this email because you have a Smarter account, or were invited "
+"to Smarter."
+msgstr ""
+"Você recebeu este e-mail porque tem uma conta no Smarter, ou foi convidado "
+"para o Smarter."
+
+#: smarter/templates/account/email/unsubscribe-footer.html
+msgid "Unsubscribe from these emails"
+msgstr "Cancelar a inscrição nestes e-mails"
+
 #: smarter/templates/account/email/welcome.html
 #, python-format
 msgid "Welcome to %(product_name)s!"
@@ -1363,23 +1597,14 @@ msgstr "Boas-vindas ao %(product_name)s!"
 
 #: smarter/templates/account/email/welcome.html
 #, python-format
-msgid "Howdy %(first_name)s,"
-msgstr "Olá, %(first_name)s,"
-
-#: smarter/templates/account/email/welcome.html
-msgid "Howdy,"
-msgstr "Olá,"
-
-#: smarter/templates/account/email/welcome.html
-#, python-format
 msgid ""
-"I'm %(primary_contact)s, the technical point of contact for the "
-"%(product_name)s platform, and I just created a new account for you. To get "
-"started, sign in with the button below. Your username is this email address."
+"I'm %(primary_contact)s, the technical point of contact for "
+"%(product_name)s, and I just created a new account for you. To get started, "
+"sign in with the button below. Your username is this email address."
 msgstr ""
-"Sou %(primary_contact)s, o contato técnico da plataforma %(product_name)s, e "
-"acabei de criar uma conta para você. Para começar, entre com o botão abaixo. "
-"Seu nome de usuário é este endereço de e-mail."
+"Sou %(primary_contact)s, o contato técnico do %(product_name)s, e acabei de "
+"criar uma conta para você. Para começar, entre com o botão abaixo. Seu nome "
+"de usuário é este endereço de e-mail."
 
 #: smarter/templates/account/email/welcome.html
 msgid "You should receive your password in a separate text-only email."
@@ -1559,12 +1784,16 @@ msgstr ""
 "rel=\"noopener\" target=\"_blank\">[saiba mais]</a>"
 
 #: smarter/templates/account/email/welcome.html
+#, python-format
 msgid ""
 "<strong>Slack</strong> - join The Smarter Project's Slack workspace for real-"
 "time questions and discussion with other users and contributors <a "
-"href=\"https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-"
-"e2c5Of4hS4fBr_XwfQARCw\" rel=\"noopener\" target=\"_blank\">[join]</a>"
-msgstr "<strong>Slack</strong> - participe do espaço de trabalho do Slack do The Smarter Project para tirar dúvidas e conversar em tempo real com outros usuários e colaboradores <a href=\"https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw\" rel=\"noopener\" target=\"_blank\">[participar]</a>"
+"href=\"%(slack_url)s\" rel=\"noopener\" target=\"_blank\">[join]</a>"
+msgstr ""
+"<strong>Slack</strong> - participe do espaço de trabalho do Slack do The "
+"Smarter Project para tirar dúvidas e conversar em tempo real com outros "
+"usuários e colaboradores <a href=\"%(slack_url)s\" rel=\"noopener\" "
+"target=\"_blank\">[participar]</a>"
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
@@ -1655,34 +1884,45 @@ msgstr "Comunidade no Slack"
 msgid ""
 "Ask questions and talk with other %(product_name)s users and contributors in "
 "real time, in The Smarter Project's Slack workspace."
-msgstr "Tire dúvidas e converse em tempo real com outros usuários e colaboradores do %(product_name)s no espaço de trabalho do Slack do The Smarter Project."
+msgstr ""
+"Tire dúvidas e converse em tempo real com outros usuários e colaboradores do "
+"%(product_name)s no espaço de trabalho do Slack do The Smarter Project."
 
-#: smarter/templates/account/email/welcome.html
-#, python-format
-msgid "Technical point of contact for the %(product_name)s platform."
-msgstr "Contato técnico da plataforma %(product_name)s."
+#: smarter/templates/account/unsubscribe.html
+msgid "You're unsubscribed"
+msgstr "Sua inscrição foi cancelada"
 
-#: smarter/templates/account/email/welcome.html
+#: smarter/templates/account/unsubscribe.html
 #, python-format
 msgid ""
-"Email me at <a href=\"mailto:%(support_email)s\" style=\"font-weight: "
-"600\">%(support_email)s</a>, or visit <a href=\"%(contact_url)s\" "
-"rel=\"noopener\" target=\"_blank\" style=\"font-weight: 600\">my website</a>."
+"<strong>%(email)s</strong> won't receive the welcome and Slack invitation "
+"emails any more."
 msgstr ""
-"Me escreva em <a href=\"mailto:%(support_email)s\" style=\"font-weight: "
-"600\">%(support_email)s</a>, ou visite <a href=\"%(contact_url)s\" "
-"rel=\"noopener\" target=\"_blank\" style=\"font-weight: 600\">meu site</a>."
+"<strong>%(email)s</strong> não receberá mais os e-mails de boas-vindas e de "
+"convite para o Slack."
 
-#: smarter/templates/account/email/welcome.html
+#: smarter/templates/account/unsubscribe.html
+msgid "Notices about your account, such as password resets, are still sent."
+msgstr ""
+"Os avisos sobre a sua conta, como a redefinição de senha, continuam sendo "
+"enviados."
+
+#: smarter/templates/account/unsubscribe.html
+msgid "Unsubscribe from these emails?"
+msgstr "Cancelar a inscrição nestes e-mails?"
+
+#: smarter/templates/account/unsubscribe.html
 #, python-format
 msgid ""
-"%(product_name)s is free, open source software, licensed under the <a "
-"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
-"target=\"_blank\">GNU AGPL v3</a>."
+"<strong>%(email)s</strong> will no longer receive the welcome and Slack "
+"invitation emails."
 msgstr ""
-"O %(product_name)s é software livre e de código aberto, licenciado sob a <a "
-"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
-"target=\"_blank\">GNU AGPL v3</a>."
+"<strong>%(email)s</strong> deixará de receber os e-mails de boas-vindas e de "
+"convite para o Slack."
+
+#: smarter/templates/account/unsubscribe.html
+msgid "Unsubscribe"
+msgstr "Cancelar inscrição"
 
 #: smarter/templates/account/welcome.html
 msgid ""

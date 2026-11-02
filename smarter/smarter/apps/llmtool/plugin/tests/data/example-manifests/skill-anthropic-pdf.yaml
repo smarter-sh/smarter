@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/plugins/skill/skill-anthropic-pdf.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/skill/skill-anthropic-pdf.yaml, for unit tests.
 ---
 # A SkillPlugin that refers to Anthropic's pdf skill in the public
 # https://github.com/anthropics/skills repository, by the URL of its directory.

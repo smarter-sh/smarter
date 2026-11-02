@@ -498,7 +498,7 @@ More Examples
 -------------
 
 Every built-in LLMClient has styles, from a single color to a full theme, so each is an example to copy.
-They're in the `llm-clients/ <https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__
+They're in the `llm-clients/ <https://github.com/smarter-sh/example-manifests/tree/main/smarter/llm-clients>`__
 folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`:
 
 - ``llmclient-simple.yaml``: just a logo and one color. A little goes a long way.

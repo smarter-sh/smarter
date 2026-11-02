@@ -349,6 +349,34 @@
             "description": "AccountContact.phone.",
             "title": "Phone"
           },
+          "slackInvitedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "AccountContact.slack_invited_at: when its email address was sent the Slack invitation, if ever.",
+            "title": "Slackinvitedat"
+          },
+          "unsubscribedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "AccountContact.unsubscribed_at: when its email address unsubscribed from the welcome and Slack invitation emails, if it did.",
+            "title": "Unsubscribedat"
+          },
           "updatedAt": {
             "anyOf": [
               {
@@ -367,6 +395,20 @@
             "description": "AccountContact.welcomed: whether it was sent the welcome email.",
             "title": "Welcomed",
             "type": "boolean"
+          },
+          "welcomedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "AccountContact.welcomed_at: when it was sent the welcome email, if ever.",
+            "title": "Welcomedat"
           }
         },
         "required": [

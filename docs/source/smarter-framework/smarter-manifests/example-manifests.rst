@@ -12,7 +12,8 @@ can read them, copy them into a project of their own, and propose new ones.
 The Repository
 --------------
 
-Each folder holds the manifests of one kind of resource.
+The manifests are in its ``smarter/`` folder, where each subfolder holds the manifests of one kind
+of resource.
 
 .. list-table::
    :header-rows: 1
@@ -20,28 +21,28 @@ Each folder holds the manifests of one kind of resource.
 
    * - Folder
      - Resources
-   * - ``llm-clients/``
+   * - ``smarter/llm-clients/``
      - :doc:`LLMClients </smarter-resources/smarter-llmclient>`, e.g. ``simple``, ``calculator``,
        ``weather``, ``research_analyst``, ``data_analyst`` and ``customer_support``.
-   * - ``plugins/static/``, ``plugins/skill/``, ``plugins/websearch/``, ``plugins/image-search/``
+   * - ``smarter/plugins/static/``, ``smarter/plugins/skill/``, ``smarter/plugins/websearch/``, ``smarter/plugins/image-search/``
      - :doc:`Plugins </smarter-resources/smarter-llmtool>`: Static, Skill, Websearch and ImageSearch
        plugins.
-   * - ``guardrails/``
+   * - ``smarter/guardrails/``
      - :doc:`Guardrails </smarter-resources/smarter-guardrail>` for inputs and outputs.
-   * - ``mcp-clients/``
+   * - ``smarter/mcp-clients/``
      - :doc:`MCPClients </smarter-resources/smarter-mcpclient>` for public MCP servers, and, as
        :doc:`manifest templates <manifest-templates>`, ``*.yaml.tpl``, for the
        :doc:`Smarter Project MCP server </smarter-platform/smarter-project-mcp-server>`.
-   * - ``proxies/``
+   * - ``smarter/proxies/``
      - :doc:`Proxies </smarter-resources/smarter-proxy>`, one per built-in Provider.
-   * - ``llmhosts/``, ``llmhost-computes/``
+   * - ``smarter/llmhosts/``, ``smarter/llmhost-computes/``
      - :doc:`LLMHosts </smarter-resources/smarter-llmhost>`, self-hosted open-weight models, and the
        LLMHostCompute node groups that they run on.
-   * - ``vectorstores/``
+   * - ``smarter/vectorstores/``
      - :doc:`VectorStores </smarter-resources/smarter-vectorstore>`.
-   * - ``custom-domains/``
+   * - ``smarter/custom-domains/``
      - A :doc:`CustomDomain </smarter-resources/smarter-custom-domain>`, ``example.com``.
-   * - ``budgets/``
+   * - ``smarter/budgets/``
      - :doc:`Budgets </smarter-resources/smarter-budget>`. Each is detached, ``resources: []``, with
        the resources that it could be attached to as a commented-out example.
 

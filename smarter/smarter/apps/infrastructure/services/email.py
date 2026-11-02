@@ -138,17 +138,21 @@ class EmailService(InfrastructureService):
         html: bool = False,
         from_email=None,
         attachments: Optional[List[EmailAttachment]] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> MIMEMultipart:
         """
         Return a message, from ``smarter_settings.smtp_from_email`` unless ``from_email`` is given.
 
         It has no ``Bcc`` header: blind copies are added to the envelope by :meth:`_deliver`.
         A message with attachments is ``multipart/mixed``, with the body as its first part.
+        ``headers`` are added after the standard ones, e.g. ``List-Unsubscribe``.
         """
         message = MIMEMultipart("mixed" if attachments else "alternative")
         message["Subject"] = subject
         message["From"] = from_email or smarter_settings.smtp_from_email
         message["To"] = ", ".join(to)
+        for name, value in (headers or {}).items():
+            message[name] = value
         message.attach(MIMEText(body, "html") if html else MIMEText(body))
         for attachment in attachments or []:
             message.attach(attachment.mime_part())
@@ -191,6 +195,7 @@ class EmailService(InfrastructureService):
         quiet: bool = False,
         bcc_admin: bool = True,
         attachments: Optional[List[EmailAttachment]] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> bool:
         """
         Send an email.
@@ -210,6 +215,7 @@ class EmailService(InfrastructureService):
             its recipient may see.
         :param attachments: Files to attach. The message's size, attachments included, is limited
             by the SMTP server, e.g. 10 MB for AWS Simple Email Service.
+        :param headers: More headers, e.g. ``{"List-Unsubscribe": "<https://...>"}``.
         :returns: True if the email was sent.
         """
         if not self.ready:
@@ -224,7 +230,9 @@ class EmailService(InfrastructureService):
             logger.debug("%s quiet mode. Would have sent '%s' to: %s", self.formatted_class_name, subject, recipients)
             return False
 
-        message = self.message(subject, body, recipients, html=html, from_email=from_email, attachments=attachments)
+        message = self.message(
+            subject, body, recipients, html=html, from_email=from_email, attachments=attachments, headers=headers
+        )
         bcc = self.admin_bcc(recipients) if bcc_admin else []
         try:
             self._deliver(message, recipients, bcc)

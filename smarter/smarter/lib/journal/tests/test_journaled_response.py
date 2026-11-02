@@ -129,11 +129,15 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
         self.assertIn("stacktrace", data["error"])
         self.assertIn("errorClass", data["error"])
         self.assertEqual(str(data["error"]["status"]), str(HTTPStatus.UNAUTHORIZED))
-        mock_logger.error.assert_called()
+        # a client error is a warning, logged without its stack trace.
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
+        self.assertIn("Exception", str(mock_logger.warning.call_args))
+        self.assertNotIn("trace", str(mock_logger.warning.call_args))
 
     @patch("smarter.lib.journal.http.logger")
-    def test_error_response_without_stack_trace(self, mock_logger):
-        """Test that include_stack_trace=False logs the stack trace, but leaves it out of the response."""
+    def test_server_error_response_is_logged_as_an_error(self, mock_logger):
+        """Test that a 5xx is logged at ERROR, with its stack trace."""
         mock_request = Mock()
         mock_request.build_absolute_uri.return_value = "http://testserver/api/"
         mock_request.META = {}
@@ -146,12 +150,35 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
             e=Exception("fail"),
             thing="thing",
             command="command",
-            status=HTTPStatus.NOT_FOUND,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             stack_trace="trace",
-            description="Not found.",
+        )
+        self.assertEqual(resp.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        mock_logger.warning.assert_not_called()
+        mock_logger.error.assert_called_once()
+        self.assertIn("trace", str(mock_logger.error.call_args))
+
+    @patch("smarter.lib.journal.http.logger")
+    def test_error_response_without_stack_trace(self, mock_logger):
+        """Test that include_stack_trace=False logs a server error's stack trace, but leaves it out of the response."""
+        mock_request = Mock()
+        mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.META = {}
+        mock_request.GET = {}
+        mock_request.POST = {}
+        mock_request.COOKIES = {}
+        mock_request.headers = {}
+        resp = SmarterJournaledJsonErrorResponse(
+            request=mock_request,
+            e=Exception("fail"),
+            thing="thing",
+            command="command",
+            status=HTTPStatus.BAD_GATEWAY,
+            stack_trace="trace",
+            description="Upstream failed.",
             include_stack_trace=False,
         )
         data = json.loads(resp.content.decode("utf-8"))
         self.assertNotIn("stacktrace", data["error"])
-        self.assertEqual(data["error"]["description"], "Not found.")
+        self.assertEqual(data["error"]["description"], "Upstream failed.")
         self.assertIn("trace", str(mock_logger.error.call_args))

@@ -86,6 +86,17 @@ class TestInMemoryEmailService(InfrastructureTestBase):
         self.assertEqual(self.email.outbox[0].attachments, [])
         self.assertIn("multipart/alternative", self.email.outbox[0].headers["Content-Type"])
 
+    def test_headers(self):
+        """Test that more headers, e.g. List-Unsubscribe, reach the message."""
+        headers = {
+            "List-Unsubscribe": "<https://example.com/u/>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        }
+        self.email.send_email("Hello", "Hi", "a@example.com", headers=headers)
+        sent_headers = self.email.outbox[0].headers
+        for name, value in headers.items():
+            self.assertEqual(sent_headers[name], value)
+
     def test_attachment_without_subtype(self):
         part = EmailAttachment(filename="blob", content=b"x", content_type="application").mime_part()
         self.assertEqual(part.get_content_type(), "application/octet-stream")

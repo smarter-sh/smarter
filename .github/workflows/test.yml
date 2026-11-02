@@ -60,9 +60,11 @@
 # make python-init (the venv), the React build, make collectstatic, make
 # docker-build (the smarter image), then make docker-init, which starts the
 # containers on a new, empty database, migrates it and initializes the
-# platform. The runner first gets what make init expects a developer to have
-# installed: Python 3.14, Node, MariaDB Connector/C and a docker-compose
-# command. make pre-commit-init is skipped: it installs a git hook and
+# platform. The runner first frees disk space for the images, and gets what
+# make init expects a developer to have installed: Python 3.14, Node, MariaDB
+# Connector/C and a docker-compose command. Before the tests run, Celery Beat
+# is stopped, so that no scheduled task changes a running test's rows.
+# make pre-commit-init is skipped: it installs a git hook and
 # rewrites .pre-commit-config.yaml, and neither matters to the tests.
 #
 # The slow steps are cached, so that a shard skips them when nothing they
@@ -369,6 +371,28 @@ jobs:
         with:
           fetch-depth: 0 # Ensures all history and tags are fetched
           fetch-tags: true
+
+      #------------------------------------------------------------------------
+      # Free disk space
+      #
+      # make docker-build exports four copies of the smarter image at once
+      # (app, worker, worker-infrastructure, beat), and each export writes a
+      # tarball and then loads it into Docker. That can fill the runner's disk
+      # ("no space left on device"). This removes SDKs that the runner image
+      # preinstalls and this job never uses. The Python and Node tool caches
+      # are kept.
+      #------------------------------------------------------------------------
+      - name: Free disk space
+        shell: bash
+        run: |
+          df -h /
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL
+          df -h /
 
       #------------------------------------------------------------------------
       # Prerequisites for `make init`: python3.14 (check-python, python-init),
@@ -755,6 +779,20 @@ jobs:
         shell: bash
         run: |
           make docker-init
+
+      #========================================================================
+      # Stop Celery Beat
+      #
+      # The tests share the database with the Celery workers, and don't roll
+      # back their rows. Beat's scheduled tasks (e.g. reconcile_vectorstores,
+      # every five minutes) would then change the rows of a running test, and
+      # fail it at random. No test needs a scheduled task. The workers keep
+      # running, for the tasks that tests queue with .delay().
+      #========================================================================
+      - name: Stop Celery Beat
+        shell: bash
+        run: |
+          docker-compose stop smarter-beat
 
       #========================================================================
       # Run this shard of the unit tests with coverage

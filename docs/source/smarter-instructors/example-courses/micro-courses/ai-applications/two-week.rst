@@ -4,14 +4,14 @@ Building AI Applications: Two-Week Online Course
 A two-week online course on the architecture of AI applications: retrieval, tool calling, structured
 data, MCP servers and multi-agent workflows, each a resource declared in a YAML manifest. Students
 work on the resources that ship with every Smarter installation: `nineteen built-in LLMClients
-<https://github.com/smarter-sh/example-manifests/tree/main/llm-clients>`__,
+<https://github.com/smarter-sh/example-manifests/tree/main/smarter/llm-clients>`__,
 from the bare ``simple`` assistant to ``research_analyst``, which searches the web through an `Exa
 MCP server
-<https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/exa.yaml>`__,
+<https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/exa.yaml>`__,
 reads pages and PDFs, and checks its citations with guardrails; `twenty-eight MCP clients
-<https://github.com/smarter-sh/example-manifests/tree/main/mcp-clients>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/smarter/mcp-clients>`__
 for services such as GitHub, Notion and Stripe; `Vectorstores
-<https://github.com/smarter-sh/example-manifests/tree/main/vectorstores>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/smarter/vectorstores>`__
 on Qdrant and Pinecone; and an :doc:`Orchestrator </smarter-resources/smarter-orchestrator>` with
 six coordination strategies. There are six 30-minute recorded lectures and a 90-minute live session
 each week. Week 1 covers knowledge (retrieval and structured data), and week 2 covers action (tools,

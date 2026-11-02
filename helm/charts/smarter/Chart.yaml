@@ -29,7 +29,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 7.3.0
+    version: 7.5.0
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
@@ -37,7 +37,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 28.1.1
+    version: 28.1.5
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
@@ -45,7 +45,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 28.3.1
+    version: 28.3.10
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
   - name: slack-bot
