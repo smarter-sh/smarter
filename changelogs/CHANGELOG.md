@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.5-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.40.5-alpha.2...v0.40.5-alpha.3) (2026-11-02)
+
+### Bug Fixes
+
+* **journal:** log 4xx error responses at WARNING without stack trace ([62d64a1](https://github.com/smarter-sh/smarter/commit/62d64a15bb32c7d5dbaab109bcffe42f34504e59)), closes [#897](https://github.com/smarter-sh/smarter/issues/897)
+
 ## [0.40.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.40.5-alpha.1...v0.40.5-alpha.2) (2026-11-02)
 
 ### Bug Fixes
