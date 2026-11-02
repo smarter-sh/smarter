@@ -91,6 +91,22 @@ MAX_EVENT_MESSAGE = 300
 """The most characters of a warning event's message that ``platform_status`` shows."""
 
 
+def platform_region() -> str:
+    """
+    Return the platform's AWS region, for the AWS status feeds and the report.
+
+    ``smarter_settings.aws_region`` is None when no region is configured. It is then reported, and
+    put in the feeds' urls, as ``None``, as the tools have always done. No AWS feed exists for a
+    region of that name.
+
+    :returns: The region, e.g. ``us-east-2``, or ``"None"`` if none is configured.
+    """
+    region = smarter_settings.aws_region
+    if region is None:
+        return "None"
+    return region
+
+
 def utc(value: Optional[datetime]) -> str:
     """
     Format a time for a tool's result.
@@ -352,7 +368,7 @@ class PlatformStatusTool(SmarterOperationsTool):
         :returns: The report, as Markdown.
         """
         namespace = smarter_settings.environment_namespace
-        region = smarter_settings.aws_region
+        region = platform_region()
         snapshot = cluster_snapshot(namespace, minutes=arguments.minutes)
         checks = health_checks()
         depths = queue_depths()
@@ -520,7 +536,7 @@ class EksStatusTool(SmarterOperationsTool):
         :raises SmarterInfrastructureError: If the cluster cannot be described.
         """
         health = infrastructure.provider.get_kubernetes_cluster_health()
-        region = smarter_settings.aws_region
+        region = platform_region()
         aws_events, unread_feeds = aws_service_events(region)
 
         out = [f"## Cluster {health.name}", ""]

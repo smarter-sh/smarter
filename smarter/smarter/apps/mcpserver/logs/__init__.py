@@ -7,5 +7,8 @@ The platform's pod logs, and the operations tools that search and summarize them
   ``summarize_log_errors``.
 
 The logs come from :data:`smarter.apps.infrastructure.services.infrastructure` ``.logs``, the last
-72 hours of the app, the Celery workers, beat and MariaDB, kept in Loki.
+72 hours of the app, the Celery workers, beat and MariaDB, kept in Loki. The tools are served by the
+staff-only Smarter Operations MCP server
+(:mod:`~smarter.apps.mcpserver.protocol.operations_server`), which records each call in its audit
+trail.
 """

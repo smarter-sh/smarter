@@ -40,6 +40,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from django.conf import settings
+from social_django.models import UserSocialAuth
 
 from smarter.apps.account.login_audit import LoginFailure, login_identity
 from smarter.apps.account.models import User, UserProfile
@@ -175,7 +176,8 @@ def account_state(user: User) -> AccountState:
     :returns: The account's state.
     """
     providers = []
-    for social in user.social_auth.all():
+    socials = UserSocialAuth.objects.filter(user=user)
+    for social in socials:
         providers.append(str(social.provider))
 
     accounts = []
