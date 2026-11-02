@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.40.5-alpha.1...v0.40.5-alpha.2) (2026-11-02)
+
+### Bug Fixes
+
+* **middleware:** don't log the client's IP address on a throttled request ([df41d14](https://github.com/smarter-sh/smarter/commit/df41d146dbf6094281cb9e6a3718b1f39de22947)), closes [#896](https://github.com/smarter-sh/smarter/issues/896)
+* **prompt:** truncate a long User-Agent to Prompt.user_agent's length ([e02f695](https://github.com/smarter-sh/smarter/commit/e02f6951b450b4d3fa72fad93dba1cdf921a6675)), closes [#895](https://github.com/smarter-sh/smarter/issues/895)
+
 ## [0.40.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.4...v0.40.5-alpha.1) (2026-11-02)
 
 ### Bug Fixes
