@@ -20,13 +20,14 @@ The infrastructure service layer: the platform's only way to reach its infrastru
   cloud provider's kubeconfig.
 - ``email``: :class:`~.email.EmailService`, implemented with SMTP.
 - ``slack``: :class:`~.slack.SlackService`, implemented with the Slack Web API.
+- ``logs``: :class:`~.logs.LogService`, the pod logs, implemented with Loki.
 - ``provider``: the :class:`~smarter.apps.infrastructure.providers.base.CloudProvider` of
   ``smarter_settings.cloud_provider``.
 
 Each service is resolved when it is used, not when this module is imported, so that tests can
 replace it, with :func:`~smarter.apps.infrastructure.providers.configure_provider`,
-:func:`~.kubernetes.configure_kubernetes`, :func:`~.email.configure_email` and
-:func:`~.slack.configure_slack`, and so that
+:func:`~.kubernetes.configure_kubernetes`, :func:`~.email.configure_email`,
+:func:`~.slack.configure_slack` and :func:`~.logs.configure_logs`, and so that
 importing the platform never reaches the network.
 
 Tests of code that uses :data:`infrastructure` can also patch it where it is used, e.g.
@@ -47,10 +48,20 @@ from .email import (
     get_email,
 )
 from .kubernetes import (
+    InMemoryKubernetesService,
     KubectlKubernetesService,
     KubernetesService,
     configure_kubernetes,
     get_kubernetes,
+)
+from .logs import (
+    InMemoryLogService,
+    LogLine,
+    LogQuery,
+    LogService,
+    LokiLogService,
+    configure_logs,
+    get_logs,
 )
 from .slack import (
     InMemorySlackService,
@@ -109,6 +120,11 @@ class InfrastructureServices:
         """The platform's messages to Slack."""
         return get_slack()
 
+    @property
+    def logs(self) -> LogService:
+        """The platform's pod logs, from the log store."""
+        return get_logs()
+
 
 infrastructure = InfrastructureServices()
 """The platform's infrastructure services."""
@@ -123,20 +139,28 @@ __all__ = [
     "EmailAttachment",
     "EmailService",
     "InMemoryEmailService",
+    "InMemoryKubernetesService",
+    "InMemoryLogService",
     "InMemorySlackService",
     "InfrastructureService",
     "InfrastructureServices",
     "KubectlKubernetesService",
     "KubernetesService",
+    "LogLine",
+    "LogQuery",
+    "LogService",
+    "LokiLogService",
     "SMTPEmailService",
     "SlackMessage",
     "SlackService",
     "SlackWebApiService",
     "configure_email",
     "configure_kubernetes",
+    "configure_logs",
     "configure_slack",
     "get_email",
     "get_kubernetes",
+    "get_logs",
     "get_slack",
     "infrastructure",
     "refuse_in_unit_tests",
