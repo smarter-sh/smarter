@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/smarter-project-github.yaml.tpl, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/smarter-project-github.yaml.tpl, for unit tests.
 ---
 # The Smarter Project's GitHub repository smarter-sh/smarter, through the Smarter Project MCP server
 # of this platform, which indexes the repository from GitHub every hour.

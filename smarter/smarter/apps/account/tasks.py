@@ -9,11 +9,14 @@ future high-traffic scenarios.
 
 from decimal import Decimal
 
+from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
+from .models.account_contact import AccountContact
 from .models.budget import evaluate_budgets
 from .models.charge import Charge, aggregate_charges
 from .models.llm_prices import LLMPrices
@@ -138,3 +141,39 @@ def evaluate_budget_constraints() -> int:
     retval = evaluate_budgets()
     logger.info("%s %s resources are locked by a budget.", prefix, retval)
     return retval
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+)
+def send_slack_invitation_emails() -> int:
+    """
+    Top-level Celery task for inviting account contacts to the Slack workspace.
+
+    Sends the Slack invitation email to every account contact who was sent the welcome email at
+    least two days ago, and was neither invited nor unsubscribed, with
+    :meth:`AccountContact.send_slack_invitation_emails()
+    <smarter.apps.account.models.AccountContact.send_slack_invitation_emails>`. Scheduled hourly
+    via Celery Beat.
+
+    It does nothing unless the ``ENABLE_SLACK_INVITATION_EMAIL`` waffle switch is active, which it
+    isn't by default, or while the platform's email service isn't configured, so that the contacts
+    aren't claimed and released every hour for nothing.
+
+    :returns: The number of emails sent.
+    """
+    prefix = logging.SmarterFormattedText.text(module_prefix + "send_slack_invitation_emails()")
+    if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SLACK_INVITATION_EMAIL):
+        logger.debug(
+            "%s the %s waffle switch is not active. Sending no Slack invitation emails.",
+            prefix,
+            SmarterWaffleSwitches.ENABLE_SLACK_INVITATION_EMAIL,
+        )
+        return 0
+    if not infrastructure.email.ready:
+        logger.warning("%s the email service is not configured. Sending no Slack invitation emails.", prefix)
+        return 0
+    return AccountContact.send_slack_invitation_emails()

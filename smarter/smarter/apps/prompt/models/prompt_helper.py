@@ -366,12 +366,16 @@ class PromptHelper(SmarterRequestMixin):
                 # to a more Django friendly URL.
                 django_friendly_url = self.url or ""
                 django_friendly_url = django_friendly_url.replace("http://testserver/", "http://testserver.local/")
+                # The User-Agent header has no length limit, but its column does: a longer value
+                # would make the database raise DataError, and the request fail with a 500.
+                user_agent_max_length = Prompt._meta.get_field("user_agent").max_length
+                user_agent = (self.user_agent or "user_agent")[:user_agent_max_length]
                 prompt = Prompt.objects.create(
                     session_key=self.session_key,
                     user_profile=self.user_profile,
                     llmclient=self.llmclient,
                     ip_address=self.ip_address,
-                    user_agent=self.user_agent,
+                    user_agent=user_agent,
                     url=django_friendly_url,
                 )
             except IntegrityError as e:

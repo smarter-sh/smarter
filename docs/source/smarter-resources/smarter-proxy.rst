@@ -355,7 +355,7 @@ key:
      - Llama API, or OpenAI with ``.../compat/v1/``
      - v1/chat/completions, v1/moderations, v1/models, compat/v1/chat/completions
 
-Their manifests are in the ``proxies/`` folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`, and are shown in
+Their manifests are in the ``smarter/proxies/`` folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`, and are shown in
 :doc:`proxy/manifest/example-manifests`.
 
 Technical Reference

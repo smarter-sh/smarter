@@ -201,6 +201,10 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     and display in the user console. It is the common error response for all
     CLI commands.
 
+    A server error (5xx) is logged at ERROR, with its stack trace. A client error
+    (4xx), e.g. an invalid api key or a rejected manifest, is expected, so it is
+    logged at WARNING, without the stack trace.
+
     :param request: The original Django request object.
     :type request: django.http.HttpRequest
     :param e: The Python exception object that was raised.
@@ -221,7 +225,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     :type description: str, optional
     :param include_stack_trace: Whether the response includes ``stack_trace``. Defaults to ``True``.
         Responses that a browser may receive, e.g. those of the Smarter Chat apis, pass ``False``:
-        the stack trace is still logged, but is never sent to the client.
+        the stack trace of a server error is still logged, but is never sent to the client.
     :type include_stack_trace: bool, optional
     :param kwargs: Additional keyword arguments passed to the parent class.
 
@@ -292,8 +296,16 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             )
         )
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.{self.formatted_class_name}.__init__()"
-        logger.error("%s %s", logger_prefix, SmarterFormattedText.json(error_response.dump()))
-        # the stack trace is logged above, but, when include_stack_trace is False, never sent to the client.
+        if int(status) >= HTTPStatus.INTERNAL_SERVER_ERROR:
+            # the server failed: log it with its stack trace, which, when include_stack_trace is
+            # False, is never sent to the client.
+            logger.error("%s %s", logger_prefix, SmarterFormattedText.json(error_response.dump()))
+        else:
+            # the client's request was rejected, e.g. an invalid api key (401) or manifest (400):
+            # expected, so a warning, and its stack trace is noise.
+            logger.warning(
+                "%s %s", logger_prefix, SmarterFormattedText.json(error_response.dump(include_stack_trace=False))
+            )
         data = error_response.dump(include_stack_trace=include_stack_trace)
 
         super().__init__(
