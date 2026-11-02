@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.41.0-alpha.1...v0.41.0-alpha.2) (2026-11-02)
+
+### Features
+
+* **mcpserver:** add platform_status and eks_status operations tools ([c4cf86a](https://github.com/smarter-sh/smarter/commit/c4cf86af25114dbc7cc1d20a1aa460af56b6a335))
+
 ## [0.41.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.5...v0.41.0-alpha.1) (2026-11-02)
 
 ### Features
