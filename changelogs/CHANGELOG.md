@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.1-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.41.1-alpha.1...v0.41.1-alpha.2) (2026-11-02)
+
+### Bug Fixes
+
+* **mcpserver:** serve platform staff only, and staff-only LLMClients ([7bac749](https://github.com/smarter-sh/smarter/commit/7bac749cdeb7692717780a48c14ea5f3faa52a1d))
+
 ## [0.41.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.41.0...v0.41.1-alpha.1) (2026-11-02)
 
 ### Bug Fixes
