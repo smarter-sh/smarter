@@ -55,6 +55,10 @@ The Services
   thread. The Helm chart's init Job and nightly database backup post their outcome and log with it
   (see :doc:`../smarter-on-kubernetes`). Like email, it never raises: a failure is logged, and
   returned as ``None`` or ``False``.
+- ``logs``: the last 72 hours of the platform's pod logs, from the Loki that the Helm chart runs,
+  at ``SMARTER_LOKI_URL``. A query is structured, not LogQL: the service escapes every value, so
+  that a caller, such as an LLM's tool call, cannot inject a query of its own. The
+  :doc:`Smarter Operations MCP Server <../../smarter-platform/smarter-operations-mcp-server>` reads it.
 - ``provider``: the cloud provider itself, for example its account identity, and a
   description of the Kubernetes cluster for the ``status`` API.
 
@@ -235,6 +239,7 @@ Technical Reference
    infrastructure/kubernetes
    infrastructure/email
    infrastructure/slack
+   infrastructure/logs
    infrastructure/inventory
    infrastructure/providers
    infrastructure/aws

@@ -17,11 +17,9 @@ all of the repositories adds one, whose values are the repositories' names.
     be documented.
 """
 
-import copy
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import ClassVar, Optional
 
-import mcp_types
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
 from smarter.apps.mcpserver.caching import (
@@ -30,6 +28,11 @@ from smarter.apps.mcpserver.caching import (
     index_generation,
 )
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
+from smarter.apps.mcpserver.protocol.base import (
+    MCPToolBase,
+    invalid_arguments,
+    simplify_schema,
+)
 from smarter.apps.mcpserver.repositories import ProjectRepository, get_repository
 
 DEFAULT_SEARCH_LIMIT = 8
@@ -85,31 +88,6 @@ class SmarterProjectScope(BaseModel):
         return repository
 
 
-def simplify_schema(schema: SmarterDictType) -> SmarterDictType:
-    """
-    Simplify a Pydantic JSON schema for an LLM.
-
-    Titles, the model's docstring and null defaults are removed, and an optional field's
-    ``anyOf: [<type>, null]`` becomes its type.
-
-    :param schema: The schema, from ``model_json_schema()``.
-    :returns: The simplified schema.
-    """
-    schema = copy.deepcopy(schema)
-    schema.pop("title", None)
-    schema.pop("description", None)
-    for name, prop in list(schema.get("properties", {}).items()):
-        prop.pop("title", None)
-        if "default" in prop and prop["default"] is None:
-            prop.pop("default")
-        variants = prop.get("anyOf")
-        if variants and len(variants) == 2 and {"type": "null"} in variants:
-            prop.pop("anyOf")
-            prop.update(next(variant for variant in variants if variant != {"type": "null"}))
-        schema["properties"][name] = prop
-    return schema
-
-
 class ToolArguments(BaseModel):
     """The arguments of every tool: ``repository``, which only the MCP server of all of the repositories offers."""
 
@@ -118,7 +96,7 @@ class ToolArguments(BaseModel):
     repository: Optional[str] = Field(default=None, description="The repository.")
 
 
-class SmarterProjectTool(ABC):
+class SmarterProjectTool(MCPToolBase):
     """
     A tool of the Smarter Project MCP server.
 
@@ -137,15 +115,8 @@ class SmarterProjectTool(ABC):
     """Whether the tool takes a ``repository`` argument on the MCP server of all of the repositories."""
     project_wide: ClassVar[bool] = False
     """Whether only the MCP server of all of the repositories serves the tool."""
-    read_only: ClassVar[bool] = True
-    """Whether the tool only reads.
-
-    A tool that writes is annotated so, and its results are never cached.
-    """
     requires_github_token: ClassVar[bool] = False
     """Whether the tool is served only to a request that carries the caller's GitHub token."""
-    open_world: ClassVar[bool] = False
-    """Whether the tool reaches beyond the index, e.g. to GitHub, rather than the platform's own data."""
     cache_ttl: ClassVar[Optional[int]] = None
     """Seconds that a read-only tool's result is cached, or None for :data:`~smarter.apps.mcpserver.caching.TOOL_RESULT_CACHE_TTL`."""
 
@@ -195,22 +166,6 @@ class SmarterProjectTool(ABC):
         schema["additionalProperties"] = False
         return schema
 
-    def definition(self) -> mcp_types.Tool:
-        """Return the tool, as tools/list lists it."""
-        return mcp_types.Tool(
-            name=self.name,
-            title=self.title,
-            description=self.description,
-            input_schema=self.input_schema(),
-            annotations=mcp_types.ToolAnnotations(
-                title=self.title,
-                read_only_hint=self.read_only,
-                destructive_hint=False,
-                idempotent_hint=self.read_only,
-                open_world_hint=self.open_world,
-            ),
-        )
-
     def call(self, arguments: Optional[SmarterDictType]) -> str:
         """
         Validate a tool call's arguments, and run the tool.
@@ -228,10 +183,7 @@ class SmarterProjectTool(ABC):
         try:
             validated = self.arguments_model.model_validate(arguments)
         except ValidationError as e:
-            problems = "; ".join(
-                f"{'.'.join(str(part) for part in error['loc']) or 'arguments'}: {error['msg']}" for error in e.errors()
-            )
-            raise SmarterMCPServerToolError(f"invalid arguments for {self.name}: {problems}") from e
+            raise invalid_arguments(self.name, e) from e
         if not self.read_only:
             return self.run(validated)
         scope = self.scope.repository.name if self.scope.repository else "*"

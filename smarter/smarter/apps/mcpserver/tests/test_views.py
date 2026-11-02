@@ -14,13 +14,16 @@ import httpx2
 from django.test import Client, RequestFactory
 from django.urls import reverse
 
+from smarter.apps.account.models import User
 from smarter.apps.mcpclient.connection import MCPServerConnection
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpserver.github.issues import GitHubIssue
-from smarter.apps.mcpserver.protocol.views import bearer_token
+from smarter.apps.mcpserver.protocol.views import api_key, bearer_token
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
+from smarter.lib.drf.models import SmarterAuthToken
 
 from .base_classes import TOKEN, MCPServerTestBase
+from .operations_base import TICKET, OperationsTestBase
 
 CONNECTION = "smarter.apps.mcpclient.connection"
 HEADERS = {"HTTP_ACCEPT": "application/json, text/event-stream"}
@@ -224,3 +227,124 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
         self.assertFalse(result.is_error)
         self.assertIn(issue.html_url, result.text)
         self.assertEqual(create_issue.call_args.args[3].get_secret_value(), TOKEN)
+
+
+class TestSmarterOperationsMCPServerView(OperationsTestBase):
+    """Test the staff-only endpoint of the Smarter Operations MCP server, with real api keys."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.staff_token, cls.staff_key = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user_profile=cls.user_profile, name="test_operations_staff", user=cls.admin_user, description="test"
+        )
+        cls.inactive_token, cls.inactive_key = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user_profile=cls.user_profile,
+            name="test_operations_inactive",
+            user=cls.admin_user,
+            description="test",
+            is_active=False,
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        SmarterAuthToken.objects.filter(pk__in=[cls.staff_token.pk, cls.inactive_token.pk]).delete()
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        self.client = Client(enforce_csrf_checks=True)
+        self.url = reverse(f"{MCPServerReverseNames.namespace}:{MCPServerReverseNames.smarter_operations}")
+
+    def post(self, body, key=None, **extra):
+        if key is not None:
+            extra["HTTP_AUTHORIZATION"] = f"Token {key}"
+        return self.client.post(self.url, data=json.dumps(body), content_type="application/json", **HEADERS, **extra)
+
+    def test_url(self):
+        self.assertEqual(self.url, "/api/v1/mcp/smarter-operations/")
+
+    def test_api_key(self):
+        """The key of an Authorization: Token header is read, and nothing else."""
+        factory = RequestFactory()
+        cases = [
+            ({}, None),
+            ({"HTTP_AUTHORIZATION": "Token abc123"}, "abc123"),
+            ({"HTTP_AUTHORIZATION": "  token   abc123  "}, "abc123"),
+            ({"HTTP_AUTHORIZATION": "Token "}, None),
+            ({"HTTP_AUTHORIZATION": "Bearer abc123"}, None),
+        ]
+        for headers, expected in cases:
+            with self.subTest(headers=headers):
+                self.assertEqual(api_key(factory.post("/", **headers)), expected)
+
+    def test_staff(self):
+        """A staff user's api key is served the operations tools, and nothing else."""
+        response = self.post({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, key=self.staff_key)
+        self.assertEqual(response.status_code, 200)
+        names = [tool["name"] for tool in response.json()["result"]["tools"]]
+        self.assertEqual(names, ["summarize_log_errors", "search_logs", "list_log_sources"])
+
+    def test_tool_call_is_audited(self):
+        body = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {"name": "search_logs", "arguments": {"ticket": TICKET, "contains": ["timeout"]}},
+        }
+        response = self.post(body, key=self.staff_key)
+        self.assertIn("timeout talking to provider", response.json()["result"]["content"][0]["text"])
+        self.assertEqual(self.audit_rows().first().ticket, TICKET)
+
+    def test_refused(self):
+        """Without a valid, active key of an active staff user, nothing is read, and nothing is answered."""
+        ping = {"jsonrpc": "2.0", "id": 1, "method": "ping"}
+        cases = [
+            ({}, 401),
+            ({"key": "not-a-real-key"}, 401),
+            ({"key": self.inactive_key}, 401),
+            ({"HTTP_AUTHORIZATION": f"Bearer {TOKEN}"}, 401),
+        ]
+        for kwargs, status in cases:
+            with self.subTest(kwargs=kwargs):
+                response = self.post(ping, **kwargs)
+                self.assertEqual(response.status_code, status)
+                self.assertNotIn(b'"result"', response.content)
+        # without a key, the view refuses; an invalid key is refused by the platform's token
+        # middleware before the view, with a 401 of its own.
+        response = self.post(ping)
+        self.assertEqual(response.json()["error"]["code"], -32001)
+        self.assertEqual(response["WWW-Authenticate"], "Token")
+        self.assertFalse(self.audit_rows().exists())
+
+    def test_user_who_is_not_staff(self):
+        """An api key outlives its user's staff status: such a user is forbidden."""
+        User.objects.filter(pk=self.admin_user.pk).update(is_staff=False)
+        try:
+            response = self.post({"jsonrpc": "2.0", "id": 1, "method": "ping"}, key=self.staff_key)
+        finally:
+            User.objects.filter(pk=self.admin_user.pk).update(is_staff=True)
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("staff only", response.json()["error"]["message"])
+
+    def test_inactive_staff_user(self):
+        self.admin_user.is_active = False
+        self.admin_user.save(update_fields=["is_active"])
+        try:
+            response = self.post({"jsonrpc": "2.0", "id": 1, "method": "ping"}, key=self.staff_key)
+            self.assertIn(response.status_code, (401, 403))
+        finally:
+            self.admin_user.is_active = True
+            self.admin_user.save(update_fields=["is_active"])
+
+    def test_not_json(self):
+        response = self.client.post(
+            self.url, data="{not json", content_type="application/json", HTTP_AUTHORIZATION=f"Token {self.staff_key}"
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_rate_limited(self):
+        with mock.patch("smarter.apps.mcpserver.protocol.views.is_rate_limited", return_value=True):
+            response = self.post({"jsonrpc": "2.0", "id": 1, "method": "ping"}, key=self.staff_key)
+        self.assertEqual(response.status_code, 429)
+        self.assertIn("Retry-After", response)

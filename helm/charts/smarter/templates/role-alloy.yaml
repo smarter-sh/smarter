@@ -1,0 +1,43 @@
+{{- if .Values.alloy.enabled }}
+###############################################################################
+# Alloy's Role: read the pods of this namespace, and their logs
+#
+# Alloy (the alloy subchart, see values.yaml) tails the logs of the app, the
+# Celery workers, beat and MariaDB through the Kubernetes api, with
+# discovery.kubernetes and loki.source.kubernetes, and sends them to Loki.
+# This is everything that it needs. The subchart's own ClusterRole is off
+# (alloy.rbac.create: false), because it would let Alloy read every namespace
+# of the cluster, which every environment shares.
+###############################################################################
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "{{ .Values.global.appName }}-alloy"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-alloy"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "{{ .Values.global.appName }}-alloy"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-alloy"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "{{ .Values.global.appName }}-alloy"
+subjects:
+  - kind: ServiceAccount
+    name: "{{ .Values.alloy.serviceAccount.name }}"
+    namespace: "{{ .Release.Namespace }}"
+{{- end }}
