@@ -278,7 +278,8 @@ SMARTER_REF=<ref>`, into `test/data/` and `testdata/`), regenerate their SAM
   operations that they don't call. A new operation is work in all three SDKs.
 - **smarter-vscode-yaml** reads the live `json-schema` endpoint, which returns
   the same schemas.
-- **The weekly API Contract Sync workflow** (`.github/workflows/apiContractSync.yml`,
+- **The weekly API Contract Sync workflow** (in smarter-sh/automation, the
+  repository of the project's scheduled jobs: `.github/workflows/apiContractSync.yml`,
   logic in `scripts/api_contract_sync.py`) syncs each of those five repositories'
   `alpha` with the latest release tag on `main`, runs its tests before and after,
   and opens an issue (label `api-contract`) and a pull request (branch

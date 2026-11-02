@@ -1,5 +1,5 @@
 /**
- * The fact of the day as a Slack message, which .github/workflows/didYouKnow.yml posts to #general
+ * The fact of the day as a Slack message, which smarter-sh/automation's didYouKnow.yml posts to #general
  * every day, through scripts/slack-fact-of-the-day.ts.
  */
 import type { DidYouKnowFact } from "./facts";
