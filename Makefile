@@ -128,11 +128,15 @@ analyze:
 	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 # docker exec smarter-app bash -c "coverage run manage.py test smarter.apps.llmtool && coverage report -m && coverage html"
+# Celery Beat is stopped while the tests run, as in docker-test.
 coverage:
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."
 	@echo "==============================================================================="
-	docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"
+	docker stop smarter-beat > /dev/null || true
+	docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"; status=$$?; \
+	docker start smarter-beat > /dev/null; \
+	exit $$status
 
 
 change-log:
@@ -222,9 +226,18 @@ docker-run:
 # To run only the infrastructure tests:
 #   docker exec smarter-app bash -c "python manage.py test smarter --tag infrastructure"
 # See smarter/smarter/lib/unittest/runner.py.
+#
+# Celery Beat is stopped while the tests run, and started again afterwards, even when a
+# test fails. The tests share the database with the Celery workers and don't roll back
+# their rows, so a scheduled task, e.g. reconcile_vectorstores, would change a running
+# test's data, and fail it at random. In the local containers it would also send a test's
+# resources to the real Kubernetes cluster. The workers keep running, for .delay().
 docker-test:
-	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter"
+	make docker-check
+	docker stop smarter-beat > /dev/null || true
+	docker exec smarter-app bash -c "python manage.py test smarter"; status=$$?; \
+	docker start smarter-beat > /dev/null; \
+	exit $$status
 
 docker-prune:
 	@echo ""

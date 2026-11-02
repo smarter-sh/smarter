@@ -307,12 +307,13 @@ the LLM not to try again. See :mod:`smarter.apps.mcpserver.github.pulls`.
 Daily Pod Log Review
 --------------------
 
-The workflow ``.github/workflows/podLogReview.yml`` uses these tools to keep the smarter
+The workflow ``.github/workflows/podLogReview.yml``, in `smarter-sh/automation <https://github.com/smarter-sh/automation>`__ (the
+repository of The Smarter Project's scheduled jobs), uses these tools to keep the smarter
 repository's issues current with what the platform logs. Every day, and on demand for any
 environment, it downloads the logs of the environment's app server, Celery worker and beat pods,
 redacts credentials and personal data from them, and runs Claude Code on them, unattended, with the
-instructions in ``.github/prompts/pod-log-review.md`` and the repository's ``smarter-pod-log-review``
-and ``smarter-log-review`` skills. Claude groups repeated errors into findings, diagnoses each one
+instructions in that repository's ``.github/prompts/pod-log-review.md`` and the smarter repository's
+``smarter-pod-log-review`` and ``smarter-log-review`` skills. Claude groups repeated errors into findings, diagnoses each one
 against the code of the deployed release, and then:
 
 - opens an issue for a new problem, labeled ``pod-log-review``, with a severity and a category, and
@@ -333,10 +334,10 @@ When a run writes to GitHub, the workflow posts one message to the Slack channel
 lists each issue opened, commented on or closed, and each pull request, with its link, taken from
 the MCP server's results rather than from Claude's summary. When a run finds nothing that needs a
 maintainer, it posts a clean bill of health instead: the number of pods, their restarts and the
-deployed release, taken from the cluster's inventory. Its Python scripts are in the repository's
+deployed release, taken from the cluster's inventory. Its Python scripts are in smarter-sh/automation's
 ``scripts/`` folder (``pod_log_redact.py``, ``pod_log_review.py`` and
 ``pod_log_review_slack.py``), and the script that downloads the logs, ``download-logs.sh``, is in
-``skills/smarter-pod-log-review/scripts/``. Both are as useful for a review by hand.
+this repository's ``skills/smarter-pod-log-review/scripts/``. Both are as useful for a review by hand.
 
 The Built-in MCPClients
 -----------------------
