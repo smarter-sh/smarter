@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/github.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/github.yaml, for unit tests.
 ---
 # Read and manage GitHub repositories, issues and pull requests, with GitHub's official MCP server.
 # Documentation: https://github.com/github/github-mcp-server

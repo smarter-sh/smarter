@@ -156,7 +156,7 @@ Security
 Example Manifests
 -----------------
 
-The ``mcp-clients/`` folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>` holds example
+The ``smarter/mcp-clients/`` folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>` holds example
 manifests for popular remote MCP servers.
 
 .. list-table::
@@ -247,17 +247,17 @@ and reads The Smarter Project's documentation and source code. Their manifests a
 
 For example, DeepWiki's MCP server requires no authentication:
 
-.. literalinclude:: /_example-manifests/mcp-clients/deepwiki.yaml
+.. literalinclude:: /_example-manifests/smarter/mcp-clients/deepwiki.yaml
     :language: yaml
 
-From `mcp-clients/deepwiki.yaml <https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/deepwiki.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `mcp-clients/deepwiki.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/deepwiki.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 and GitHub's requires a personal access token:
 
-.. literalinclude:: /_example-manifests/mcp-clients/github.yaml
+.. literalinclude:: /_example-manifests/smarter/mcp-clients/github.yaml
     :language: yaml
 
-From `mcp-clients/github.yaml <https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/github.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `mcp-clients/github.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/github.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. note::
 

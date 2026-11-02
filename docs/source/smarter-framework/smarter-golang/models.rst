@@ -65,4 +65,7 @@ REST models
 
 The other structs model the REST API's resources, e.g. ``smarter.LLMClient``, ``smarter.Guardrail``
 and ``smarter.Vectorstore``. Each embeds ``smarter.Resource``, the fields that every resource shares,
-whose ``Ref()`` is the resource's ``smarter.ID``.
+whose ``Ref()`` is the resource's ``smarter.ID``. Every resource has the metadata of its manifest
+(``Name``, ``Description``, ``Version``, ``Tags`` and ``Annotations``), its ``ManifestURL``, and its
+``DetailURL``: the page of the web console that shows its manifest, the resources that it uses, and
+those that use it.

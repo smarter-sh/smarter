@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/plugins/image-search/image-search-diagram.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/image-search/image-search-diagram.yaml, for unit tests.
 ---
 # An ImageSearchPlugin for technical diagrams, not photographs: the term
 # "diagram" is appended to the LLM's query, only png, svg and gif images, which

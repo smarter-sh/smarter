@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-docs-assistant.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/websearch/websearch-docs-assistant.yaml, for unit tests.
 ---
 # A WebsearchPlugin that answers questions from official documentation only.
 # allowedDomains restricts both search results and the pages that may be read to

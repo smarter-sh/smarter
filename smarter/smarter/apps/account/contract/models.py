@@ -271,6 +271,17 @@ class AccountApiContact(AccountApiModel):
     is_primary: bool = Field(..., description="AccountContact.is_primary: whether it is the account's main contact.")
     is_test: bool = Field(..., description="AccountContact.is_test: whether a test created it.")
     welcomed: bool = Field(..., description="AccountContact.welcomed: whether it was sent the welcome email.")
+    welcomed_at: Optional[datetime] = Field(
+        None, description="AccountContact.welcomed_at: when it was sent the welcome email, if ever."
+    )
+    slack_invited_at: Optional[datetime] = Field(
+        None,
+        description="AccountContact.slack_invited_at: when its email address was sent the Slack invitation, if ever.",
+    )
+    unsubscribed_at: Optional[datetime] = Field(
+        None,
+        description="AccountContact.unsubscribed_at: when its email address unsubscribed from the welcome and Slack invitation emails, if it did.",
+    )
 
     @classmethod
     def from_model(cls, contact: "AccountContact") -> "AccountApiContact":
@@ -294,6 +305,9 @@ class AccountApiContact(AccountApiModel):
             is_primary=contact.is_primary,
             is_test=contact.is_test,
             welcomed=contact.welcomed,
+            welcomed_at=contact.welcomed_at,
+            slack_invited_at=contact.slack_invited_at,
+            unsubscribed_at=contact.unsubscribed_at,
         )
 
 

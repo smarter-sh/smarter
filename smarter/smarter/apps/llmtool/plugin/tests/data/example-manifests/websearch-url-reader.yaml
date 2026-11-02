@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-url-reader.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/websearch/websearch-url-reader.yaml, for unit tests.
 ---
 # A WebsearchPlugin that reads the web pages that users link to, e.g. to
 # summarize an article or answer questions about a page. It cannot search, so it

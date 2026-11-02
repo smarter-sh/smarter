@@ -1324,6 +1324,37 @@ class Settings(BaseSettings):
             return settings_defaults.BRANDING_URL_LINKEDIN
         return v
 
+    branding_url_slack: Optional[HttpUrl] = Field(
+        settings_defaults.BRANDING_URL_SLACK,
+        description="The invite link of the Slack workspace that the platform's emails invite users to.",
+        examples=["https://join.slack.com/t/example/shared_invite/zt-example"],
+        title="Branding URL Slack",
+    )
+    """
+    The invite link of the Slack workspace that the platform's emails invite users to.
+
+    The welcome email links to it, and the Slack invitation email, which a Celery Beat task sends
+    two days after the welcome email, is about it. The default is the invite link of The Smarter
+    Project's Slack workspace.
+
+    :type: Optional[HttpUrl]
+    :default: Value from ``settings_defaults.BRANDING_URL_SLACK``
+    :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
+    """
+
+    @before_field_validator("branding_url_slack")
+    def validate_branding_url_slack(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+        """Validates the `branding_url_slack` field.
+
+        Args:
+            v (Optional[HttpUrl]): The Slack invite link to validate.
+        Returns:
+            Optional[HttpUrl]: The validated Slack invite link.
+        """
+        if v is None or v == "":
+            return settings_defaults.BRANDING_URL_SLACK
+        return v
+
     cache_expiration: int = Field(
         settings_defaults.CACHE_EXPIRATION,
         gt=0,

@@ -57,9 +57,12 @@ Without a language, it uses ``AccountContact.preferred_language()``: the prefere
 user who has the contact's email address, or English for a contact who isn't a user. The
 ``create_user`` command's ``--language`` option, e.g. ``--language=es``, sets the new user's
 preference, and its password email is written in it too. The ``add_account_contact`` and
-``send_welcome_email`` commands take ``--language`` to override the preference. The local-only preview at
-``/dashboard/account/email/welcome/<first_name>/`` renders the email in the request's language, or in
-the language of its ``?language=`` parameter.
+``send_welcome_email`` commands take ``--language`` to override the preference. The Slack invitation
+email (``templates/account/email/slack-invitation.html``) works the same way, through
+``AccountContact.send_slack_invitation_email(language=...)`` and the ``send_slack_invitation_email``
+command. The local-only previews at ``/account/email/welcome/<first_name>/`` and
+``/account/email/slack-invitation/<first_name>/`` render the emails in the request's language, or in
+the language of their ``?language=`` parameter.
 
 The Message Catalogs
 --------------------

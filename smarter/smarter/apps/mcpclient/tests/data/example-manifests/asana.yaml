@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/asana.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/asana.yaml, for unit tests.
 ---
 # Work with Asana tasks, projects and goals. Uses the legacy HTTP+SSE transport.
 # Documentation: https://developers.asana.com/docs/using-asanas-mcp-server

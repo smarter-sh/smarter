@@ -1,7 +1,7 @@
 Example Manifests
 ===================
 
-The Budget examples live in the `budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__ folder of
+The Budget examples live in the `budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/smarter/budgets>`__ folder of
 `smarter-sh/example-manifests <https://github.com/smarter-sh/example-manifests>`__, the community-supported
 :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`, which every Smarter platform
 loads when ``manage.py initialize_platform`` runs. See :doc:`example-manifests/budget`. The
