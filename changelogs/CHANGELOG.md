@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.4...v0.40.5-alpha.1) (2026-11-02)
+
+### Bug Fixes
+
+* **account:** add a Slack invitation email and an unsubscribe link ([1fb9f1d](https://github.com/smarter-sh/smarter/commit/1fb9f1ddb42553ac94063a7e7cc15be4453647d2))
+
 ## [0.40.4](https://github.com/smarter-sh/smarter/compare/v0.40.3...v0.40.4) (2026-11-01)
 
 ### Bug Fixes
