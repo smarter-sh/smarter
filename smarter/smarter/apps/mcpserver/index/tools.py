@@ -1,6 +1,11 @@
 """
 The tools that answer from the index of the repositories and the blog.
 
+The Smarter Project MCP server offers these tools to an LLM, which calls them to answer questions
+about The Smarter Project from its own copy of the repositories' files and the blog's posts. The
+copy is made by :mod:`smarter.apps.mcpserver.index.indexer` and
+:mod:`smarter.apps.mcpserver.index.blog`, and searched by :mod:`smarter.apps.mcpserver.index.search`:
+
 - ``get_repository_overview``: what a repository contains, its layout, and its README.
 - ``search_documentation``: ranked passages of the documentation.
 - ``search_code``: ranked files of source code, with their matching lines.
@@ -11,7 +16,9 @@ The tools that answer from the index of the repositories and the blog.
 
 The blog's tools have no ``repository`` argument, and only the MCP server of all of the
 repositories serves them. A tool that is called on a repository that is not indexed yet
-says so, and queues the repository for indexing.
+says so, and queues the repository for indexing, with a Celery task. Every tool is read-only,
+so :meth:`~smarter.apps.mcpserver.protocol.tools.SmarterProjectTool.call` caches its results until
+an index changes.
 
 .. note::
 
@@ -27,7 +34,7 @@ from cache_results import lazy_cache
 from pydantic import BaseModel, ConfigDict, Field
 
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
-from smarter.apps.mcpserver.index.search import SearchHit, search_files
+from smarter.apps.mcpserver.index.search import SearchHit, SearchLine, search_files
 from smarter.apps.mcpserver.models import (
     RepositoryFile,
     RepositoryFileKind,
@@ -49,12 +56,28 @@ from smarter.apps.mcpserver.repositories import (
 )
 
 MAX_READ_LINES = 400
-"""The maximum number of lines that read_file returns at once."""
+"""The maximum number of lines that read_file and read_blog_post return at once."""
+
 MAX_LIST_ENTRIES = 300
+"""The maximum number of folders and files that list_files returns.
+
+The rest are counted.
+"""
+
 MAX_README_CHARACTERS = 6000
+"""The most characters of a README that get_repository_overview shows.
+
+The rest is read with read_file.
+"""
+
 README_NAMES = ("README.md", "README.rst", "readme.md", "README.txt", "README")
+"""The names of a repository's top-level README, which get_repository_overview shows."""
+
 INDEX_QUEUE_TIMEOUT = 600
 """Seconds during which a repository that is not indexed is queued for indexing only once."""
+
+MAX_SUGGESTIONS = 8
+"""The most paths that a "not found" error suggests."""
 
 CODE_FENCE_LANGUAGES = {
     ".py": "python",
@@ -77,10 +100,19 @@ CODE_FENCE_LANGUAGES = {
     ".rst": "rst",
     ".md": "markdown",
 }
+"""The language of a Markdown code fence, by file extension, so that a client highlights the code.
+
+Others are ``text``.
+"""
 
 
 def queue_indexing_key(name: str) -> str:
-    """Return the cache key that remembers that a repository was queued for indexing."""
+    """
+    Return the cache key that remembers that a repository was queued for indexing.
+
+    :param name: The repository's name, or the blog's.
+    :returns: The key.
+    """
     return f"smarter.apps.mcpserver.index.tools.queue_indexing.{name}"
 
 
@@ -88,29 +120,41 @@ def queue_indexing(repository: ProjectSource) -> None:
     """
     Queue a repository, or the blog, that is not indexed for indexing, at most once every :data:`INDEX_QUEUE_TIMEOUT` seconds.
 
+    Many tool calls may find the same repository not indexed while it is being indexed, so a cache
+    key, added only if it is missing, makes sure that only the first of them queues a task.
+
+    Side effects: a cache write, and, if the key was not there, a Celery task queued:
+    :func:`smarter.apps.mcpserver.tasks.index_blog` or :func:`smarter.apps.mcpserver.tasks.index_repository`.
+
     :param repository: The repository, or the blog.
     """
     # pylint: disable=import-outside-toplevel
     from smarter.apps.mcpserver.tasks import index_blog, index_repository
 
-    if lazy_cache.add(queue_indexing_key(repository.name), True, timeout=INDEX_QUEUE_TIMEOUT):
-        if isinstance(repository, ProjectBlog):
-            index_blog.delay()
-        else:
-            index_repository.delay(repository.name)
+    key = queue_indexing_key(repository.name)
+    is_first = lazy_cache.add(key, True, timeout=INDEX_QUEUE_TIMEOUT)
+    if not is_first:
+        return
+    if isinstance(repository, ProjectBlog):
+        index_blog.delay()
+    else:
+        index_repository.delay(repository.name)
 
 
 def ready_indexes(repositories: Sequence[ProjectSource]) -> dict[str, RepositoryIndex]:
     """
     Return the indexes of the repositories that are ready to search, and queue the others for indexing.
 
+    Side effects: one database query, and :func:`queue_indexing` for each repository that is not ready.
+
     :param repositories: The repositories, or the blog.
     :returns: The ready indexes, by repository name.
     """
-    indexes = {
-        index.repository: index
-        for index in RepositoryIndex.objects.filter(repository__in=[r.name for r in repositories])
-    }
+    names = [repository.name for repository in repositories]
+    indexes = {}
+    for index in RepositoryIndex.objects.filter(repository__in=names):
+        indexes[index.repository] = index
+
     ready = {}
     for repository in repositories:
         index = indexes.get(repository.name)
@@ -125,11 +169,14 @@ def require_index(repository: ProjectRepository) -> RepositoryIndex:
     """
     Return a repository's index.
 
+    Side effects: see :func:`ready_indexes`.
+
     :param repository: The repository.
     :returns: Its index.
     :raises SmarterMCPServerToolError: If the repository is not indexed yet. It is then queued for indexing.
     """
-    index = ready_indexes([repository]).get(repository.name)
+    ready = ready_indexes([repository])
+    index = ready.get(repository.name)
     if index is None:
         raise SmarterMCPServerToolError(
             f"{repository.name} has not been indexed yet. Indexing has started: try again in a few minutes."
@@ -138,23 +185,73 @@ def require_index(repository: ProjectRepository) -> RepositoryIndex:
 
 
 def not_indexed_note(repositories: list[ProjectRepository], ready: dict[str, RepositoryIndex]) -> str:
-    """Return a note that names the repositories that were not searched because they are not indexed yet."""
-    missing = [repository.name for repository in repositories if repository.name not in ready]
+    """
+    Return a note that names the repositories that were not searched because they are not indexed yet.
+
+    :param repositories: The repositories that the search was asked to search.
+    :param ready: The indexes that were ready, by repository name, from :func:`ready_indexes`.
+    :returns: The note, which starts with a blank line, or an empty string if every repository was searched.
+    """
+    missing = []
+    for repository in repositories:
+        if repository.name not in ready:
+            missing.append(repository.name)
     if not missing:
         return ""
-    return f"\n\nNot searched, because they are still being indexed: {', '.join(missing)}. Try again in a few minutes."
+    names = ", ".join(missing)
+    return f"\n\nNot searched, because they are still being indexed: {names}. Try again in a few minutes."
 
 
 def code_fence_language(path: str) -> str:
-    """Return the Markdown code fence language of a file."""
-    return CODE_FENCE_LANGUAGES.get(posixpath.splitext(path)[1].lower(), "text")
+    """
+    Return the Markdown code fence language of a file.
+
+    :param path: The file's path.
+    :returns: The language, from :data:`CODE_FENCE_LANGUAGES`, or ``text``.
+    """
+    extension = posixpath.splitext(path)[1].lower()
+    return CODE_FENCE_LANGUAGES.get(extension, "text")
+
+
+def numbered_excerpt(lines: list[SearchLine]) -> str:
+    """
+    Return a hit's lines, each after its line number, right-aligned, for a code block.
+
+    :param lines: The hit's lines.
+    :returns: The lines, e.g. `` 9  text`` and ``10  text``.
+    """
+    width = 1
+    if lines:
+        width = len(str(lines[-1].number))
+    numbered = [f"{line.number:>{width}}  {line.text}" for line in lines]
+    return "\n".join(numbered)
+
+
+def suggested_paths(index: RepositoryIndex, order_by: str, **path_filter: str) -> list[str]:
+    """
+    Return up to :data:`MAX_SUGGESTIONS` paths of an index's files that match a filter.
+
+    Side effects: one database query.
+
+    :param index: The index.
+    :param order_by: The field to order the paths by, e.g. ``path`` or ``-path``.
+    :param path_filter: The lookup to filter the files by, e.g. ``path__icontains="tasks.py"``.
+    :returns: The paths.
+    """
+    files = RepositoryFile.objects.filter(index=index, **path_filter).order_by(order_by)
+    paths = files.values_list("path", flat=True)[:MAX_SUGGESTIONS]
+    return list(paths)
 
 
 # -----------------------------------------------------------------------------
 # get_repository_overview
 # -----------------------------------------------------------------------------
 class GetRepositoryOverviewTool(SmarterProjectTool):
-    """What a repository contains, how it is laid out, and its README."""
+    """
+    The ``get_repository_overview`` tool: what a repository contains, how it is laid out, and its README.
+
+    Without a repository, it lists every repository of the server, with whether each is indexed.
+    """
 
     name = "get_repository_overview"
     title = "Repository overview"
@@ -165,13 +262,25 @@ class GetRepositoryOverviewTool(SmarterProjectTool):
     )
 
     def run(self, arguments: ToolArguments) -> str:
+        """
+        Describe the named repository, or list them all if none is named.
+
+        Side effects: database queries, and, for a repository that is not indexed yet, a Celery task
+        queued to index it (see :func:`queue_indexing`).
+
+        :param arguments: The validated arguments.
+        :returns: The overview, as Markdown.
+        :raises SmarterMCPServerToolError: If the repository is not one of the server's, or is not indexed yet.
+        """
         repository = self.scope.resolve(arguments.repository, required=False)
         if repository is None:
             return self.all_repositories()
         index = require_index(repository)
         files = RepositoryFile.objects.filter(index=index)
         documentation = files.filter(kind=RepositoryFileKind.DOCUMENTATION).count()
+        code = index.file_count - documentation
         top_level = ListFilesTool(self.scope).entries(index, "")
+
         parts = [
             f"# {repository.name}: {repository.title}",
             repository.description,
@@ -182,10 +291,12 @@ class GetRepositoryOverviewTool(SmarterProjectTool):
         parts.append(
             f"- Indexed commit: {index.commit_sha} of {repository.ref}, "
             f"{index.indexed_at:%Y-%m-%d %H:%M} UTC: {index.file_count} files, "
-            f"{documentation} of documentation and {index.file_count - documentation} of code"
+            f"{documentation} of documentation and {code} of code"
         )
         parts.append("\n## Top-level folders and files\n\n" + "\n".join(top_level))
-        readme = files.filter(path__in=README_NAMES).order_by("path").values_list("path", "content").first()
+
+        readmes = files.filter(path__in=README_NAMES).order_by("path")
+        readme = readmes.values_list("path", "content").first()
         if readme:
             path, content = readme
             excerpt = content[:MAX_README_CHARACTERS]
@@ -195,31 +306,45 @@ class GetRepositoryOverviewTool(SmarterProjectTool):
         return "\n".join(parts)
 
     def all_repositories(self) -> str:
-        """Return a table of every repository of the scope."""
-        indexes = {index.repository: index for index in RepositoryIndex.objects.filter(repository__in=self.scope.names)}
+        """
+        Return a table of every repository of the scope, with whether each one is indexed.
+
+        Side effects: one database query, and a Celery task queued for each repository that is not
+        indexed yet (see :func:`queue_indexing`).
+
+        :returns: The table, as Markdown, and where the documentation and the blog are.
+        """
+        indexes = {}
+        for index in RepositoryIndex.objects.filter(repository__in=self.scope.names):
+            indexes[index.repository] = index
+
         rows = ["| Repository | Contents | Indexed |", "| --- | --- | --- |"]
         for repository in self.scope.repositories:
             index = indexes.get(repository.name)
             if index is not None and index.is_ready:
-                indexed = f"{(index.commit_sha or '')[:7]}, {index.file_count} files"
+                commit_sha = index.commit_sha or ""
+                indexed = f"{commit_sha[:7]}, {index.file_count} files"
             else:
                 indexed = "not yet"
                 queue_indexing(repository)
             rows.append(f"| [{repository.name}]({repository.github_url}) | {repository.description} | {indexed} |")
-        return (
+
+        table = "\n".join(rows)
+        overview = (
             "# The Smarter Project's repositories\n\n"
-            + "\n".join(rows)
+            + table
             + f"\n\nThe documentation, {SMARTER_PROJECT_DOCS_LATEST_URL}, is built from the smarter "
             f"repository's docs/source. The blog, {project_blog().url}, is searched with search_blog. "
             "Name a repository to see its layout and README."
         )
+        return overview
 
 
 # -----------------------------------------------------------------------------
 # search_documentation, search_code
 # -----------------------------------------------------------------------------
 class SearchArguments(ToolArguments):
-    """The arguments of search_documentation."""
+    """The arguments of search_documentation and search_blog, and the base of those of search_code."""
 
     query: str = Field(
         min_length=1,
@@ -232,7 +357,7 @@ class SearchArguments(ToolArguments):
 
 
 class SearchCodeArguments(SearchArguments):
-    """The arguments of search_code."""
+    """The arguments of search_code: those of search_documentation, and a folder to search under."""
 
     path: Optional[str] = Field(
         default=None,
@@ -242,57 +367,97 @@ class SearchCodeArguments(SearchArguments):
 
 
 class SearchTool(SmarterProjectTool):
-    """The base class of the search tools."""
+    """
+    The base class of the search tools of the repositories, ``search_documentation`` and ``search_code``.
+
+    A subclass sets which kind of file it searches, and the noun that its results call them.
+    """
 
     kind: ClassVar[str]
+    """The kind of file that the tool searches, a :class:`~smarter.apps.mcpserver.models.RepositoryFileKind`."""
+
     noun: ClassVar[str]
+    """What the tool's results call the files, e.g. ``documentation`` or ``code``."""
 
     def search(self, arguments: SearchArguments, path: Optional[str] = None) -> str:
-        """Search the scope's repositories, and return the hits as Markdown."""
+        """
+        Search the scope's repositories, and return the hits as Markdown.
+
+        The named repository is searched, or else every repository of the scope. A repository that is
+        not indexed yet is queued for indexing, and named in a note after the results.
+
+        Side effects: database queries, and Celery tasks queued (see :func:`ready_indexes`).
+
+        :param arguments: The validated arguments.
+        :param path: Only search files under this folder, or None to search them all.
+        :returns: The hits, best first, as Markdown, or a message that nothing matches.
+        :raises SmarterMCPServerToolError: If the repository is not one of the server's, or no repository
+            to search is indexed yet.
+        """
         repository = self.scope.resolve(arguments.repository, required=False)
-        repositories = [repository] if repository else list(self.scope.repositories)
+        if repository:
+            repositories = [repository]
+            where = repository.name
+        else:
+            repositories = list(self.scope.repositories)
+            where = "The Smarter Project's repositories"
         ready = ready_indexes(repositories)
         if not ready:
+            names = ", ".join(r.name for r in repositories)
             raise SmarterMCPServerToolError(
-                f"{', '.join(r.name for r in repositories)} has not been indexed yet. "
-                "Indexing has started: try again in a few minutes."
+                f"{names} has not been indexed yet. Indexing has started: try again in a few minutes."
             )
+        searchable = [r for r in repositories if r.name in ready]
         hits = search_files(
-            [r for r in repositories if r.name in ready],
+            searchable,
             arguments.query,
             kind=self.kind,
             path=path,
             limit=arguments.limit,
         )
-        where = repository.name if repository else "The Smarter Project's repositories"
+        note = not_indexed_note(repositories, ready)
         if not hits:
-            return (
+            message = (
                 f'No {self.noun} of {where} matches "{arguments.query}". Try other keywords, an identifier, '
-                "or the other search tool." + not_indexed_note(repositories, ready)
+                "or the other search tool." + note
             )
-        results = "\n\n".join(self.format_hit(number, hit) for number, hit in enumerate(hits, start=1))
-        return (
+            return message
+        formatted_hits = [self.format_hit(number, hit) for number, hit in enumerate(hits, start=1)]
+        results = "\n\n".join(formatted_hits)
+        answer = (
             f'{len(hits)} results in the {self.noun} of {where}, for "{arguments.query}", best first. '
-            f"Read a file with read_file to see more of it.\n\n{results}" + not_indexed_note(repositories, ready)
+            f"Read a file with read_file to see more of it.\n\n{results}" + note
         )
+        return answer
 
     def format_hit(self, number: int, hit: SearchHit) -> str:
-        """Return one hit, as Markdown."""
-        heading = f"{number}. **{hit.title}** `{hit.path}`" if hit.title else f"{number}. `{hit.path}`"
+        """
+        Return one hit, as Markdown: a numbered heading, its links, and its lines in a code block.
+
+        :param number: The hit's rank, from 1.
+        :param hit: The hit.
+        :returns: The Markdown. The heading names the repository on the server of all of them.
+        """
+        if hit.title:
+            heading = f"{number}. **{hit.title}** `{hit.path}`"
+        else:
+            heading = f"{number}. `{hit.path}`"
         if not self.scope.is_single:
             heading += f" in {hit.repository}"
         links = []
         if hit.documentation_url:
             links.append(f"   Documentation: {hit.documentation_url}")
         links.append(f"   Source: {hit.url}")
-        width = len(str(hit.lines[-1].number)) if hit.lines else 1
-        excerpt = "\n".join(f"{line.number:>{width}}  {line.text}" for line in hit.lines)
-        fence = code_fence_language(hit.path) if hit.kind == RepositoryFileKind.CODE else "text"
-        return f"{heading}\n" + "\n".join(links) + f"\n\n```{fence}\n{excerpt}\n```"
+        excerpt = numbered_excerpt(hit.lines)
+        fence = "text"
+        if hit.kind == RepositoryFileKind.CODE:
+            fence = code_fence_language(hit.path)
+        markdown = f"{heading}\n" + "\n".join(links) + f"\n\n```{fence}\n{excerpt}\n```"
+        return markdown
 
 
 class SearchDocumentationTool(SearchTool):
-    """Search the documentation."""
+    """The ``search_documentation`` tool: ranked passages of the repositories' documentation."""
 
     name = "search_documentation"
     title = "Search documentation"
@@ -307,11 +472,17 @@ class SearchDocumentationTool(SearchTool):
     noun = "documentation"
 
     def run(self, arguments: ToolArguments) -> str:
+        """
+        Search the documentation (see :meth:`SearchTool.search`).
+
+        :param arguments: The validated arguments, a :class:`SearchArguments`.
+        :returns: The hits, as Markdown.
+        """
         return self.search(cast(SearchArguments, arguments))
 
 
 class SearchCodeTool(SearchTool):
-    """Search the source code."""
+    """The ``search_code`` tool: ranked files of the repositories' source code, with their matching lines."""
 
     name = "search_code"
     title = "Search code"
@@ -326,6 +497,12 @@ class SearchCodeTool(SearchTool):
     noun = "code"
 
     def run(self, arguments: ToolArguments) -> str:
+        """
+        Search the code, under the folder that the arguments name, if any (see :meth:`SearchTool.search`).
+
+        :param arguments: The validated arguments, a :class:`SearchCodeArguments`.
+        :returns: The hits, as Markdown.
+        """
         search_arguments = cast(SearchCodeArguments, arguments)
         return self.search(search_arguments, path=search_arguments.path)
 
@@ -348,6 +525,10 @@ def read_lines(content: str, start_line: int, end_line: Optional[int]) -> ReadLi
     """
     Return a range of a file's lines, with line numbers, within :data:`MAX_READ_LINES` and :data:`MAX_READ_CHARACTERS`.
 
+    A start after the last line reads the last line. The range ends early, but always has at least
+    one line, when its text would exceed :data:`MAX_READ_CHARACTERS`, so that the result fits in a
+    tool result: the caller then reads on from ``end + 1``.
+
     :param content: The file's content.
     :param start_line: The first line to read, from 1.
     :param end_line: The last line to read, or None to read as many as allowed.
@@ -356,7 +537,11 @@ def read_lines(content: str, start_line: int, end_line: Optional[int]) -> ReadLi
     lines = content.splitlines()
     total = len(lines)
     start = min(start_line, max(total, 1))
-    end = min(end_line or start + MAX_READ_LINES - 1, start + MAX_READ_LINES - 1, total)
+    last_allowed = start + MAX_READ_LINES - 1
+    requested_end = end_line
+    if not requested_end:
+        requested_end = last_allowed
+    end = min(requested_end, last_allowed, total)
     width = len(str(end))
     selected: list[str] = []
     characters = 0
@@ -370,6 +555,21 @@ def read_lines(content: str, start_line: int, end_line: Optional[int]) -> ReadLi
     return ReadLines(start=start, end=end, total=total, text="\n".join(selected))
 
 
+def continuation(tool_name: str, noun: str, lines: ReadLines) -> str:
+    """
+    Return the note that tells the LLM how to read the rest of a file or post.
+
+    :param tool_name: The tool that reads on, e.g. ``read_file``.
+    :param noun: What is read, e.g. ``file`` or ``post``.
+    :param lines: The lines that were read.
+    :returns: The note, which starts with a blank line, or an empty string if the last line was read.
+    """
+    if lines.end >= lines.total:
+        return ""
+    next_line = lines.end + 1
+    return f"\n\nThe {noun} continues: call {tool_name} with start_line={next_line}."
+
+
 class ReadFileArguments(ToolArguments):
     """The arguments of read_file."""
 
@@ -381,7 +581,7 @@ class ReadFileArguments(ToolArguments):
 
 
 class ReadFileTool(SmarterProjectTool):
-    """Read a file."""
+    """The ``read_file`` tool: a file of a repository, or a range of its lines, with line numbers."""
 
     name = "read_file"
     title = "Read file"
@@ -394,6 +594,20 @@ class ReadFileTool(SmarterProjectTool):
     requires_repository = True
 
     def run(self, arguments: ToolArguments) -> str:
+        """
+        Read the lines of the file that the arguments name.
+
+        The result starts with the file's GitHub url at the indexed commit, and its published
+        documentation page, if it is one.
+
+        Side effects: database queries, and, for a repository that is not indexed yet, a Celery task
+        queued to index it.
+
+        :param arguments: The validated arguments, a :class:`ReadFileArguments`.
+        :returns: The lines, in a code block, as Markdown.
+        :raises SmarterMCPServerToolError: If the repository is not indexed yet, or has no such file.
+            The error suggests files with a similar path.
+        """
         arguments = cast(ReadFileArguments, arguments)
         repository = cast(ProjectRepository, self.scope.resolve(arguments.repository, required=True))
         index = require_index(repository)
@@ -402,31 +616,32 @@ class ReadFileTool(SmarterProjectTool):
         if row is None:
             raise SmarterMCPServerToolError(self.not_found(index, repository, path))
         lines = read_lines(row["content"], arguments.start_line, arguments.end_line)
-        header = f"{repository.name}/{path}, lines {lines.start}-{lines.end} of {lines.total}\n{repository.file_url(index.commit_sha, path, lines.start, lines.end)}"
+        github_url = repository.file_url(index.commit_sha, path, lines.start, lines.end)
+        header = f"{repository.name}/{path}, lines {lines.start}-{lines.end} of {lines.total}\n{github_url}"
         documentation_url = repository.documentation_url(path)
         if documentation_url:
             header += f"\nPublished at {documentation_url}"
-        footer = (
-            f"\n\nThe file continues: call read_file with start_line={lines.end + 1}."
-            if lines.end < lines.total
-            else ""
-        )
-        return f"{header}\n\n```{code_fence_language(path)}\n{lines.text}\n```{footer}"
+        footer = continuation("read_file", "file", lines)
+        language = code_fence_language(path)
+        return f"{header}\n\n```{language}\n{lines.text}\n```{footer}"
 
     def not_found(self, index: RepositoryIndex, repository: ProjectRepository, path: str) -> str:
-        """Return an error message that suggests the files that the LLM may have meant."""
+        """
+        Return an error message that suggests the files that the LLM may have meant.
+
+        The suggestions are the files with the same name, or else the files whose path contains it.
+
+        Side effects: one or two database queries.
+
+        :param index: The repository's index.
+        :param repository: The repository.
+        :param path: The path that was not found.
+        :returns: The message.
+        """
         basename = posixpath.basename(path)
-        suggestions = list(
-            RepositoryFile.objects.filter(index=index, path__iendswith="/" + basename)
-            .order_by("path")
-            .values_list("path", flat=True)[:8]
-        )
+        suggestions = suggested_paths(index, "path", path__iendswith="/" + basename)
         if not suggestions:
-            suggestions = list(
-                RepositoryFile.objects.filter(index=index, path__icontains=basename)
-                .order_by("path")
-                .values_list("path", flat=True)[:8]
-            )
+            suggestions = suggested_paths(index, "path", path__icontains=basename)
         message = f"{path} is not a file of {repository.name}, or is not indexed."
         if suggestions:
             message += " Did you mean: " + ", ".join(suggestions) + "?"
@@ -449,7 +664,11 @@ class ListFilesArguments(ToolArguments):
 
 
 class ListFilesTool(SmarterProjectTool):
-    """List a folder."""
+    """
+    The ``list_files`` tool: the folders and indexed files directly in a folder of a repository.
+
+    Only indexed files are listed, so a folder of only binaries or vendored files does not appear.
+    """
 
     name = "list_files"
     title = "List files"
@@ -464,41 +683,70 @@ class ListFilesTool(SmarterProjectTool):
         """
         Return the folders and files directly in a folder, as Markdown list items.
 
+        Side effects: one database query, of the paths and sizes of the files under the folder.
+
         :param index: The repository's index.
         :param folder: The folder, or an empty string for the top level.
-        :returns: The folders, then the files, each sorted by name.
+        :returns: The folders, with the number of files under each, then the files, with their sizes,
+            each sorted by name, at most :data:`MAX_LIST_ENTRIES`, and a last item that counts the rest.
         """
-        prefix = folder.strip("/") + "/" if folder.strip("/") else ""
+        folder = folder.strip("/")
+        prefix = ""
+        if folder:
+            prefix = folder + "/"
         folders: dict[str, int] = {}
         files: list[tuple[str, int]] = []
-        for path, size in RepositoryFile.objects.filter(index=index, path__startswith=prefix).values_list(
-            "path", "size"
-        ):
+        rows = RepositoryFile.objects.filter(index=index, path__startswith=prefix).values_list("path", "size")
+        for path, size in rows:
             rest = path[len(prefix) :]
             if "/" in rest:
                 name = rest.split("/", 1)[0]
                 folders[name] = folders.get(name, 0) + 1
             else:
                 files.append((rest, size))
-        items = [f"- {name}/ ({count} files)" for name, count in sorted(folders.items())]
-        items += [f"- {name} ({size} bytes)" for name, size in sorted(files)]
+
+        items = []
+        for name, count in sorted(folders.items()):
+            items.append(f"- {name}/ ({count} files)")
+        for name, size in sorted(files):
+            items.append(f"- {name} ({size} bytes)")
         if len(items) > MAX_LIST_ENTRIES:
-            items = items[:MAX_LIST_ENTRIES] + [f"- ... and {len(items) - MAX_LIST_ENTRIES} more"]
+            hidden = len(items) - MAX_LIST_ENTRIES
+            items = items[:MAX_LIST_ENTRIES]
+            items.append(f"- ... and {hidden} more")
         return items
 
     def run(self, arguments: ToolArguments) -> str:
+        """
+        List the folder that the arguments name, or the top-level folder.
+
+        Side effects: database queries, and, for a repository that is not indexed yet, a Celery task
+        queued to index it.
+
+        :param arguments: The validated arguments, a :class:`ListFilesArguments`.
+        :returns: The folder's name, its GitHub url, and its entries, as Markdown.
+        :raises SmarterMCPServerToolError: If the repository is not indexed yet, or the folder has no
+            indexed files.
+        """
         arguments = cast(ListFilesArguments, arguments)
         repository = cast(ProjectRepository, self.scope.resolve(arguments.repository, required=True))
         index = require_index(repository)
-        folder = (arguments.path or "").strip().strip("/")
+        folder = ""
+        if arguments.path:
+            folder = arguments.path.strip().strip("/")
         items = self.entries(index, folder)
         if not items:
             raise SmarterMCPServerToolError(
                 f"{folder} is not a folder of {repository.name}, or has no indexed files. "
                 "Omit path for the top-level folder."
             )
-        location = f"{repository.name}/{folder}" if folder else f"{repository.name} (top level)"
-        return f"{location}\n{repository.github_url}/tree/{index.commit_sha}/{folder}\n\n" + "\n".join(items)
+        if folder:
+            location = f"{repository.name}/{folder}"
+        else:
+            location = f"{repository.name} (top level)"
+        github_url = f"{repository.github_url}/tree/{index.commit_sha}/{folder}"
+        listing = "\n".join(items)
+        return f"{location}\n{github_url}\n\n{listing}"
 
 
 # -----------------------------------------------------------------------------
@@ -508,11 +756,14 @@ def require_blog_index(blog: ProjectBlog) -> RepositoryIndex:
     """
     Return the blog's index.
 
+    Side effects: see :func:`ready_indexes`.
+
     :param blog: The blog.
     :returns: Its index.
     :raises SmarterMCPServerToolError: If the blog is not indexed yet. It is then queued for indexing.
     """
-    index = ready_indexes([blog]).get(blog.name)
+    ready = ready_indexes([blog])
+    index = ready.get(blog.name)
     if index is None:
         raise SmarterMCPServerToolError(
             f"The blog, {blog.url}, has not been indexed yet. Indexing has started: try again in a few minutes."
@@ -521,7 +772,7 @@ def require_blog_index(blog: ProjectBlog) -> RepositoryIndex:
 
 
 class SearchBlogTool(SmarterProjectTool):
-    """Search the blog's posts."""
+    """The ``search_blog`` tool: ranked passages of the blog's posts, with links to them."""
 
     name = "search_blog"
     title = "Search blog"
@@ -537,27 +788,48 @@ class SearchBlogTool(SmarterProjectTool):
     project_wide = True
 
     def run(self, arguments: ToolArguments) -> str:
+        """
+        Search the blog's posts.
+
+        Side effects: database queries, and, if the blog is not indexed yet, a Celery task queued to
+        index it.
+
+        :param arguments: The validated arguments, a :class:`SearchArguments`.
+        :returns: The hits, best first, as Markdown, or a message that nothing matches.
+        :raises SmarterMCPServerToolError: If the blog is not indexed yet.
+        """
         arguments = cast(SearchArguments, arguments)
         blog = project_blog()
         require_blog_index(blog)
         hits = search_files([blog], arguments.query, kind=RepositoryFileKind.DOCUMENTATION, limit=arguments.limit)
         if not hits:
-            return (
+            message = (
                 f'No post of the blog, {blog.url}, matches "{arguments.query}". Try other keywords, or '
                 "search_documentation."
             )
-        results = "\n\n".join(self.format_hit(number, hit) for number, hit in enumerate(hits, start=1))
-        return (
+            return message
+        formatted_hits = [self.format_hit(number, hit) for number, hit in enumerate(hits, start=1)]
+        results = "\n\n".join(formatted_hits)
+        answer = (
             f'{len(hits)} posts of the blog, {blog.url}, for "{arguments.query}", best first. '
             f"Read a post with read_blog_post to see more of it.\n\n{results}"
         )
+        return answer
 
     @staticmethod
     def format_hit(number: int, hit: SearchHit) -> str:
-        """Return one hit, as Markdown."""
-        width = len(str(hit.lines[-1].number)) if hit.lines else 1
-        excerpt = "\n".join(f"{line.number:>{width}}  {line.text}" for line in hit.lines)
-        return f"{number}. **{hit.title or hit.path}** `{hit.path}`\n   Post: {hit.url}\n\n```text\n{excerpt}\n```"
+        """
+        Return one hit, as Markdown: a numbered heading, the post's url, and its passage in a code block.
+
+        :param number: The hit's rank, from 1.
+        :param hit: The hit.
+        :returns: The Markdown.
+        """
+        excerpt = numbered_excerpt(hit.lines)
+        heading = hit.title
+        if not heading:
+            heading = hit.path
+        return f"{number}. **{heading}** `{hit.path}`\n   Post: {hit.url}\n\n```text\n{excerpt}\n```"
 
 
 class ReadBlogPostArguments(ToolArguments):
@@ -575,7 +847,7 @@ class ReadBlogPostArguments(ToolArguments):
 
 
 class ReadBlogPostTool(SmarterProjectTool):
-    """Read a post of the blog."""
+    """The ``read_blog_post`` tool: a post of the blog, or a range of its lines, as text with line numbers."""
 
     name = "read_blog_post"
     title = "Read blog post"
@@ -589,32 +861,49 @@ class ReadBlogPostTool(SmarterProjectTool):
     project_wide = True
 
     def run(self, arguments: ToolArguments) -> str:
+        """
+        Read the lines of the post that the arguments name, by its path or its url.
+
+        Side effects: database queries, and, if the blog is not indexed yet, a Celery task queued to
+        index it.
+
+        :param arguments: The validated arguments, a :class:`ReadBlogPostArguments`.
+        :returns: The post's url, and its lines in a code block, as Markdown.
+        :raises SmarterMCPServerToolError: If the blog is not indexed yet, or has no such post. The error
+            suggests posts with the same slug.
+        """
         arguments = cast(ReadBlogPostArguments, arguments)
         blog = project_blog()
         index = require_blog_index(blog)
         path = blog.post_path(arguments.path)
         row = RepositoryFile.objects.filter(index=index, path=path).values("content").first()
         if row is None:
-            slug = path.rsplit("/", 1)[-1]
-            suggestions = list(
-                RepositoryFile.objects.filter(index=index, path__icontains=slug)
-                .order_by("-path")
-                .values_list("path", flat=True)[:8]
-            )
-            message = f"{path} is not a post of the blog, {blog.url}."
-            if suggestions and slug:
-                message += " Did you mean: " + ", ".join(suggestions) + "?"
-            else:
-                message += " Use search_blog to find it."
-            raise SmarterMCPServerToolError(message)
+            raise SmarterMCPServerToolError(self.not_found(index, blog, path))
         lines = read_lines(row["content"], arguments.start_line, arguments.end_line)
         header = f"{blog.post_url(path)}, lines {lines.start}-{lines.end} of {lines.total}"
-        footer = (
-            f"\n\nThe post continues: call read_blog_post with start_line={lines.end + 1}."
-            if lines.end < lines.total
-            else ""
-        )
+        footer = continuation("read_blog_post", "post", lines)
         return f"{header}\n\n```markdown\n{lines.text}\n```{footer}"
+
+    @staticmethod
+    def not_found(index: RepositoryIndex, blog: ProjectBlog, path: str) -> str:
+        """
+        Return an error message that suggests the posts that the LLM may have meant: those with the same slug.
+
+        Side effects: one database query.
+
+        :param index: The blog's index.
+        :param blog: The blog.
+        :param path: The path that was not found.
+        :returns: The message.
+        """
+        slug = path.rsplit("/", 1)[-1]
+        suggestions = suggested_paths(index, "-path", path__icontains=slug)
+        message = f"{path} is not a post of the blog, {blog.url}."
+        if suggestions and slug:
+            message += " Did you mean: " + ", ".join(suggestions) + "?"
+        else:
+            message += " Use search_blog to find it."
+        return message
 
 
 __all__ = [

@@ -98,6 +98,9 @@ env:
   SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
   SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
   SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
+  # The Loki of the loki subchart, which the Smarter Operations MCP server's log tools query.
+  # Set it to "" with loki.enabled: false.
+  SMARTER_LOKI_URL: "http://smarter-loki:3100"
   SMARTER_LOGIN_URL: "https://platform.example.com/login/"
   SMARTER_LOGO: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_MAILCHIMP_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -556,11 +559,217 @@ grafana:
         - name: Loki
           type: loki
           access: proxy
-          url: http://loki:3100
+          url: http://smarter-loki:3100
 
+# ----------------------------------------------------------------------------
+# Pod logs: Loki stores them, Alloy collects them
+# ----------------------------------------------------------------------------
+# The last 72 hours of the logs of the app, the Celery workers, beat and MariaDB,
+# which the Smarter MCP Server's log tools search (smarter.apps.mcpserver.logs).
+#
+# - Loki runs as one pod (deploymentMode SingleBinary) with its chunks and index on
+#   its own gp3 volume. Nothing is sent to S3 or CloudWatch, which would add cost.
+#   Its compactor deletes logs older than limits_config.retention_period.
+# - Alloy runs as one pod, not a DaemonSet on every node. loki.source.kubernetes
+#   tails the logs through the Kubernetes api, so Alloy needs no host paths, and
+#   reads only its own namespace, with the Role in templates/role-alloy.yaml. Its
+#   own ClusterRole and CRDs are off: the cluster is shared by every environment,
+#   and two releases would each claim the same cluster-wide objects.
+# - Alloy redacts email addresses, IP addresses, tokens, api keys and passwords
+#   before a line is stored (loki.process "redact"). A failed sign-in is logged
+#   with a hash of the email address instead (smarter.apps.account.login_audit).
+# - Both pods carry the application-group label, so the namespace's network
+#   policies admit them. The application group's egress policy must allow TCP 3100
+#   to Loki (smarter-infrastructure, aws/terraform/kubernetes/network_policy.tf).
+# - Loki has no authentication (auth_enabled: false). Only pods in the namespace
+#   can reach it, and it has no Service outside the cluster.
 loki:
-  enabled: false
-  podLabels:
-      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
-  persistence:
-    enabled: false  # For demo/dev. Set to true and configure storage for production.
+  enabled: true
+  fullnameOverride: "smarter-loki"
+  deploymentMode: SingleBinary
+  # a Role in this namespace, not a ClusterRole: every environment's release is named
+  # smarter, and they would each claim the same cluster-wide smarter-loki-clusterrole.
+  rbac:
+    namespaced: true
+  loki:
+    auth_enabled: false
+    commonConfig:
+      replication_factor: 1
+      # one pod: no memberlist ring, whose port the network policies don't open.
+      ring:
+        kvstore:
+          store: inmemory
+    storage:
+      type: filesystem
+    schemaConfig:
+      configs:
+        - from: "2026-11-01"
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+    limits_config:
+      retention_period: 72h
+      # Alloy can resend lines after a restart; older ones are already deleted.
+      reject_old_samples_max_age: 72h
+      max_query_lookback: 72h
+    compactor:
+      retention_enabled: true
+      delete_request_store: filesystem
+    pattern_ingester:
+      enabled: false
+    ui:
+      enabled: false
+  singleBinary:
+    replicas: 1
+    podLabels:
+      app.kubernetes.io/application-group: "smarter"
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: gp3
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+  # the other deployment modes' components, and the extras that SingleBinary doesn't need.
+  backend:
+    replicas: 0
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+  gateway:
+    enabled: false
+  chunksCache:
+    enabled: false
+  resultsCache:
+    enabled: false
+  lokiCanary:
+    enabled: false
+  test:
+    enabled: false
+  minio:
+    enabled: false
+  sidecar:
+    rules:
+      enabled: false
+
+alloy:
+  enabled: true
+  fullnameOverride: "smarter-alloy"
+  crds:
+    create: false
+  # templates/role-alloy.yaml grants the service account a Role in this namespace.
+  rbac:
+    create: false
+  serviceAccount:
+    create: true
+    name: smarter-alloy
+  controller:
+    type: deployment
+    replicas: 1
+    podLabels:
+      app.kubernetes.io/application-group: "smarter"
+  alloy:
+    enableReporting: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    configMap:
+      # Alloy's configuration language. The chart passes it through tpl, so Helm
+      # expressions work, and Alloy's own braces need no escaping.
+      content: |
+        // The pods of the app, the Celery workers, beat and MariaDB, in this namespace only.
+        discovery.kubernetes "pods" {
+          role = "pod"
+          namespaces {
+            own_namespace = true
+          }
+          selectors {
+            role  = "pod"
+            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-beat,mariadb)"
+          }
+        }
+
+        // The labels that the MCP Server's queries select on: component, pod and container.
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+            target_label  = "component"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+        }
+
+        loki.source.kubernetes "pods" {
+          targets    = discovery.relabel.pods.output
+          forward_to = [loki.process.redact.receiver]
+        }
+
+        // Each stage.replace replaces what its expression's capture group matched.
+        loki.process "redact" {
+          stage.replace {
+            expression = "([\\w.+-]+@[\\w-]+\\.[\\w.-]+)"
+            replace    = "<email>"
+          }
+          stage.replace {
+            expression = "\\b((?:\\d{1,3}\\.){3}\\d{1,3})\\b"
+            replace    = "<ip>"
+          }
+          stage.replace {
+            expression = "(?i)(?:bearer|token)[\"' :=]+([A-Za-z0-9._~+/-]{12,})"
+            replace    = "<redacted>"
+          }
+          stage.replace {
+            expression = "\\b(sk-[A-Za-z0-9_-]{20,})"
+            replace    = "<redacted>"
+          }
+          stage.replace {
+            expression = "\\b((?:AKIA|ASIA)[A-Z0-9]{16})\\b"
+            replace    = "<redacted>"
+          }
+          stage.replace {
+            expression = "\\b(gh[pousr]_[A-Za-z0-9]{30,}|xox[abposr]-[A-Za-z0-9-]{10,})"
+            replace    = "<redacted>"
+          }
+          stage.replace {
+            expression = "\\b(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,})"
+            replace    = "<redacted>"
+          }
+          stage.replace {
+            expression = "(?i)(?:password|passwd|secret|api_key|apikey)[\"']?\\s*[:=]\\s*[\"']?([^\\s\"',}]{4,})"
+            replace    = "<redacted>"
+          }
+          stage.replace {
+            expression = "://[^:/\\s]+:([^@\\s]+)@"
+            replace    = "<redacted>"
+          }
+          forward_to = [loki.write.default.receiver]
+        }
+
+        loki.write "default" {
+          endpoint {
+            url = "http://smarter-loki.{{ .Release.Namespace }}.svc.cluster.local:3100/loki/api/v1/push"
+          }
+        }

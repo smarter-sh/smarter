@@ -35,7 +35,11 @@ logger = logging.getSmarterLogger(
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 TOOL_RESULT_CACHE_TTL = 60 * 60
-"""Seconds to cache a tool call's result."""
+"""Seconds to cache a tool call's result: one hour.
+
+A new index generation makes a result stale sooner, so the TTL only bounds how long a stale
+entry stays in Redis.
+"""
 
 TOOL_CACHE_NAMESPACE = "mcpserver"
 """The namespace of the server's tool results in :func:`~smarter.lib.cache.tool_results.cached_tool_call`."""
@@ -46,16 +50,32 @@ INDEX_GENERATION_KEY = "smarter.apps.mcpserver.caching.index_generation"
 
 def index_generation() -> int:
     """
-    Return the current index generation.
+    Return the current index generation, which is part of the key of every cached tool result.
+
+    The generation is stored in the cache, without a timeout, by
+    :func:`invalidate_cached_tool_results`. Side effect: one cache read.
 
     :returns: The time, in nanoseconds, when an index last changed, or 0 if none has since the cache was cleared.
     """
-    return int(lazy_cache.get(INDEX_GENERATION_KEY) or 0)
+    generation = lazy_cache.get(INDEX_GENERATION_KEY)
+    if generation is None:
+        return 0
+    return int(generation)
 
 
 def invalidate_cached_tool_results() -> None:
-    """Start a new index generation, so that every cached tool result is stale and expires with its TTL."""
-    lazy_cache.set(INDEX_GENERATION_KEY, time.time_ns(), timeout=None)
+    """
+    Start a new index generation, so that every cached tool result is stale and expires with its TTL.
+
+    Nothing is deleted: the old results are simply never looked up again, because every new
+    key holds the new generation. That is cheaper, and safer, than finding and deleting every
+    key of the namespace.
+
+    Side effects: one cache write, of :data:`INDEX_GENERATION_KEY`, without a timeout, and an
+    info log message.
+    """
+    generation = time.time_ns()
+    lazy_cache.set(INDEX_GENERATION_KEY, generation, timeout=None)
     logger.info("%s.invalidate_cached_tool_results() started a new index generation.", logger_prefix)
 
 

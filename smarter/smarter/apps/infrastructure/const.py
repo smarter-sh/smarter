@@ -38,6 +38,7 @@ class InfrastructureServiceNames(str, SmarterEnumAbstract):
     KUBERNETES = "kubernetes"
     EMAIL = "email"
     SLACK = "slack"
+    LOGS = "logs"
 
 
 class CertificateStatus(str, SmarterEnumAbstract):
