@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.5...v0.41.0-alpha.1) (2026-11-02)
+
+### Features
+
+* **mcpserver:** add a staff-only operations server for pod logs ([c5d5e05](https://github.com/smarter-sh/smarter/commit/c5d5e05f53e574cd89a154aca2a243d3b15d08b8))
+
 ## [0.40.5](https://github.com/smarter-sh/smarter/compare/v0.40.4...v0.40.5) (2026-11-02)
 
 ### Bug Fixes
