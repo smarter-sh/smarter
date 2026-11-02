@@ -178,6 +178,54 @@ Run it on demand with:
 
    python manage.py sync_infrastructure_inventory
 
+Pod Logs
+~~~~~~~~
+
+``kubectl logs`` shows only what a container wrote since it last started, and nothing of a pod
+that is gone, e.g. one on a spot node that was replaced. So the Helm chart also keeps the last 72
+hours of the logs of the app, the Celery workers, beat and MariaDB, in
+`Loki <https://grafana.com/oss/loki/>`__:
+
+- `Grafana Alloy <https://grafana.com/docs/alloy/latest/>`__ (``smarter-alloy``) runs as one pod. It
+  tails the pods' logs through the Kubernetes api, with a Role that reads only the pods of its own
+  namespace, and labels each line with its ``component`` (``smarter``, ``smarter-worker``,
+  ``smarter-worker-infrastructure``, ``smarter-beat`` or ``mariadb``), ``pod`` and ``container``.
+- Before a line is stored, Alloy replaces email addresses, IP addresses, bearer tokens, api keys,
+  JWTs and passwords with ``<email>``, ``<ip>`` or ``<redacted>``.
+- Loki (``smarter-loki``) runs as one pod, with its data on its own 10Gi gp3 volume, and deletes
+  logs older than 72 hours. Nothing is sent to S3 or CloudWatch. It has no authentication, and only
+  the pods of the namespace can reach it, on port 3100.
+
+Both are subcharts, ``loki`` and ``alloy`` in ``helm/charts/smarter/values.yaml``. Turn them off with
+``--set loki.enabled=false --set alloy.enabled=false``. The namespace's network policies must let
+the application group reach Loki, see ``network_policy.tf`` in
+`smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__.
+
+The platform's staff, and their AI agents, search these logs with the
+:doc:`Smarter Operations MCP Server <../../smarter-platform/smarter-operations-mcp-server>`. You can also
+query Loki from a pod in the namespace with `LogQL <https://grafana.com/docs/loki/latest/query/>`__,
+e.g. the errors of the Celery workers in the last hour:
+
+.. code-block:: console
+
+   curl -sG http://smarter-loki:3100/loki/api/v1/query_range \
+     --data-urlencode 'query={component="smarter-worker"} |= "ERROR"' \
+     --data-urlencode 'since=1h'
+
+A failed sign-in to the web console is logged at WARNING, with why it failed (``wrong_password``,
+``unknown_account``, ``inactive_account``, ``no_password``, ``invalid_form`` or ``error``) and a
+keyed hash of the email address instead of the address
+(:py:mod:`smarter.apps.account.login_audit`). To find a user's failed sign-ins, compute the hash of
+their email address in ``python manage.py shell``:
+
+.. code-block:: python
+
+   from smarter.apps.account.login_audit import login_identity
+
+   login_identity("user@example.com")
+
+and search for ``identity=<hash>``.
+
 
 Troubleshooting a Deployment
 ----------------------------

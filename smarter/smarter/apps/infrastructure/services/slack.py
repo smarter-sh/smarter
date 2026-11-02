@@ -186,8 +186,6 @@ class SlackService(InfrastructureService):
             response = self._call("chat.postMessage", payload)
             if not response.channel or not response.ts:
                 raise SlackServiceError("chat.postMessage returned no channel or ts")
-        except SystemExit:
-            raise
         # pylint: disable=broad-except
         except Exception as e:
             logger.error("%s.post_message() could not post to %s: %s", self.formatted_class_name, channel, e)
@@ -237,8 +235,6 @@ class SlackService(InfrastructureService):
             if initial_comment:
                 payload["initial_comment"] = initial_comment
             self._call("files.completeUploadExternal", payload)
-        except SystemExit:
-            raise
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(

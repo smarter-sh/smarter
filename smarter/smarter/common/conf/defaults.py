@@ -163,6 +163,7 @@ class SettingsDefaults:
         "EXTENSION_REGISTRY_URL", "https://smarter-sh.github.io/extensions-registry/index.json"
     )
     EXTENSION_REGISTRY_PUBLIC_KEY: str = get_env("EXTENSION_REGISTRY_PUBLIC_KEY", "")
+    LOKI_URL: str = get_env("LOKI_URL", "")  # e.g. http://smarter-loki:3100. Empty: no pod log store
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
         re.compile(r"^/$"),
