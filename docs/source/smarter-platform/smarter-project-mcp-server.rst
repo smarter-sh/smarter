@@ -357,10 +357,10 @@ applies them. Their manifests, in its ``mcp-clients/`` folder, are templates, ``
 ``localhost:9357``. An MCPClient may connect to a loopback host only in the local environment:
 see :func:`smarter.apps.mcpclient.connection.validate_endpoint_url`.
 
-.. literalinclude:: /_example-manifests/mcp-clients/smarter-project.yaml.tpl
+.. literalinclude:: /_example-manifests/smarter/mcp-clients/smarter-project.yaml.tpl
     :language: yaml
 
-From `mcp-clients/smarter-project.yaml.tpl <https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/smarter-project.yaml.tpl>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `mcp-clients/smarter-project.yaml.tpl <https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/smarter-project.yaml.tpl>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 The example LLMClients ``smarter_developer``, which helps developers understand and contribute to
 the platform, and ``smarter_sdk_guide``, which helps programmers call it from Python, Node.js, Go

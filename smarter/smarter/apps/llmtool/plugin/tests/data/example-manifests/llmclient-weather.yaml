@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-weather.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-weather.yaml, for unit tests.
 apiVersion: smarter.sh/v1
 kind: LLMClient
 metadata:
