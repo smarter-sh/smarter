@@ -20,15 +20,21 @@ The platform does not change.
 """
 
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Optional
 
+from smarter.apps.infrastructure.cluster_health import ClusterHealth, HealthIssue
+from smarter.apps.infrastructure.const import InfrastructureServiceNames
+from smarter.apps.infrastructure.services.base import (
+    DiscoveredResource,
+    InfrastructureService,
+)
+from smarter.apps.infrastructure.services.certificates import CertificateService
+from smarter.apps.infrastructure.services.dns import DNSService
+from smarter.apps.infrastructure.signals import (
+    infrastructure_authenticated,
+    infrastructure_authentication_failed,
+)
 from smarter.lib.typing import SmarterDictType
-
-from ..const import InfrastructureServiceNames
-from ..services.base import DiscoveredResource, InfrastructureService
-from ..services.certificates import CertificateService
-from ..services.dns import DNSService
-from ..signals import infrastructure_authenticated, infrastructure_authentication_failed
 
 
 class CloudProvider(InfrastructureService):
@@ -123,6 +129,34 @@ class CloudProvider(InfrastructureService):
 
         :raises InfrastructureNotReadyError: If the provider is not ready.
         """
+
+    def get_kubernetes_cluster_health(self) -> ClusterHealth:
+        """
+        Describe the health of the platform's Kubernetes cluster, as the cloud provider sees it.
+
+        The Smarter Operations MCP server's ``eks_status`` tool reports it. This implementation knows
+        only what :meth:`get_kubernetes_cluster_info` returns: the control plane's status, versions and
+        health issues. A provider overrides it to add its node groups, add-ons and recommendations, as
+        :class:`~smarter.apps.infrastructure.providers.aws.AWSProvider` does with EKS.
+
+        :returns: The cluster's health, with no node groups, add-ons or insights.
+        :raises InfrastructureNotReadyError: If the provider is not ready.
+        """
+        info = self.get_kubernetes_cluster_info()
+        health = info.get("health") or {}
+        issues = []
+        for issue in health.get("issues") or []:
+            if not isinstance(issue, dict):
+                continue
+            code = str(issue.get("code", ""))
+            message = str(issue.get("message", ""))
+            issues.append(HealthIssue(code=code, message=message))
+        return ClusterHealth(
+            status=str(info.get("status") or ""),
+            version=str(info.get("version") or ""),
+            platform_version=str(info.get("platformVersion") or ""),
+            issues=tuple(issues),
+        )
 
     def get_kubernetes_cluster_resources(self) -> dict[str, list[DiscoveredResource]]:
         """

@@ -1927,6 +1927,41 @@ class Settings(BaseSettings):
     :default: Value from ``settings_defaults.EXTENSION_REGISTRY_PUBLIC_KEY``
     """
 
+    loki_url: str = Field(
+        settings_defaults.LOKI_URL,
+        description="The base url of the Loki that stores the platform's pod logs, e.g. http://smarter-loki:3100. Empty: there is none.",
+        examples=["http://smarter-loki:3100"],
+        title="Loki URL",
+    )
+    """
+    The base url of the `Loki <https://grafana.com/oss/loki/>`__ that stores the last 72 hours of the platform's pod logs.
+
+    The Helm chart runs Loki in the platform's namespace, and sets this to its Service, e.g.
+    ``http://smarter-loki:3100``. The Smarter Operations MCP server's log tools query it, through
+    :data:`smarter.apps.infrastructure.services.infrastructure` ``.logs``. While it is empty, e.g. in
+    local development, the log tools say that there is no log store.
+    :type: str
+    :default: Value from ``settings_defaults.LOKI_URL``
+    :raises SmarterConfigurationError: If the value is not an http or https url.
+    """
+
+    @before_field_validator("loki_url")
+    def validate_loki_url(cls, v: Optional[str]) -> str:
+        """Validates the 'loki_url' field: an http or https url without a trailing slash, or empty.
+
+        Args:
+            v (Optional[str]): the url.
+
+        Returns:
+            str: The validated url.
+        """
+        if v is None or str(v).strip() == "":
+            return ""
+        v = str(v).strip().rstrip("/")
+        if not v.startswith(("http://", "https://")):
+            raise SmarterConfigurationError(f"loki_url {v} must be an http or https url.")
+        return v
+
     mcpserver_rate_limit: int = Field(
         settings_defaults.MCPSERVER_RATE_LIMIT,
         ge=0,

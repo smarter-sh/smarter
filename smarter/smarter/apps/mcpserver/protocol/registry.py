@@ -56,6 +56,13 @@ TOOL_CLASSES: tuple[type[SmarterProjectTool], ...] = (
     CloseIssueTool,
     CreatePullRequestTool,
 )
-"""Every tool of the Smarter Project MCP server, in the order that tools/list lists them."""
+"""
+Every tool of the Smarter Project MCP server, in the order that tools/list lists them.
+
+:class:`~smarter.apps.mcpserver.protocol.server.SmarterProjectMCPServer` creates one of each that
+its scope serves (see :meth:`~smarter.apps.mcpserver.protocol.tools.SmarterProjectTool.serves`).
+The order puts the tools that an LLM should try first, the overview and the searches, before the
+tools that read one item, and the tools that write to GitHub last.
+"""
 
 __all__ = ["TOOL_CLASSES"]

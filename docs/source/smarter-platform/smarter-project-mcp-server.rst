@@ -380,6 +380,7 @@ Technical Reference
    :caption: Protocol
 
    smarter-project-mcp-server/views
+   smarter-project-mcp-server/base
    smarter-project-mcp-server/server
    smarter-project-mcp-server/tools
 
