@@ -39,20 +39,20 @@ A Plugin that gives the LLM access to the open web: searching it, and reading we
 
 .. sphinx note: /_example-manifests/ is the clone of smarter-sh/example-manifests that docs/source/conf.py makes.
 
-.. literalinclude:: /_example-manifests/plugins/websearch/websearch-research-assistant.yaml
+.. literalinclude:: /_example-manifests/smarter/plugins/websearch/websearch-research-assistant.yaml
     :language: yaml
     :caption: 1.) Example Websearch Plugin Manifest
 
 From `plugins/websearch/websearch-research-assistant.yaml
-<https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-research-assistant.yaml>`__ in the
+<https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/websearch/websearch-research-assistant.yaml>`__ in the
 :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
-.. literalinclude:: /_example-manifests/llm-clients/llmclient-example.yaml
+.. literalinclude:: /_example-manifests/smarter/llm-clients/llmclient-example.yaml
     :language: yaml
     :caption: 2.) Example LLMClient Manifest
 
 From `llm-clients/llmclient-example.yaml
-<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-example.yaml>`__ in the
+<https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-example.yaml>`__ in the
 :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. note::
@@ -424,7 +424,7 @@ class WebsearchPlugin(PluginBase):
         See Also:
 
         - :class:`SAMWebsearchPlugin`
-        - ``plugins/websearch/`` in https://github.com/smarter-sh/example-manifests for more examples.
+        - ``smarter/plugins/websearch/`` in https://github.com/smarter-sh/example-manifests for more examples.
         """
         metadata = SAMPluginCommonMetadata(
             name="research_assistant",
