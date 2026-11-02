@@ -66,11 +66,11 @@ unless they start with `docs/`.
 
 ## 7. Example manifests
 
-| Step           | File                                                                                                                 |
-| -------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Manifest       | `custom-domains/example-com.yaml` in [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests) |
-| Apply order    | smarter-types `src/smarter_types/kinds.py`: `SAMKinds.apply_order()`                                                 |
-| Platform setup | `apps/account/management/commands/initialize_platform.py`: `call_command("load_from_github", url=...)`               |
+| Step           | File                                                                                                                         |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Manifest       | `smarter/custom-domains/example-com.yaml` in [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests) |
+| Apply order    | smarter-types `src/smarter_types/kinds.py`: `SAMKinds.apply_order()`                                                         |
+| Platform setup | `apps/account/management/commands/initialize_platform.py`: `call_command("load_from_github", url=...)`                       |
 
 ## 8. Sphinx
 

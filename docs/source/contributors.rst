@@ -54,6 +54,30 @@ both the platform and the community around it.
     </div>
   </div>
 
+Becoming a Core Contributor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is no application form and no commit quota. The current Core Contributors
+invite new ones, based on a track record that usually includes:
+
+- **Steady contributions.** Pull requests merged over several months that follow
+  the :doc:`contributing guide <smarter-framework/guides/contributing>` and the
+  :doc:`feature checklist <smarter-framework/guides/developer-feature-checklist>`:
+  tests included, pre-commit hooks passing, and documentation for user-facing changes.
+- **Work beyond your own pull requests.** Reviewing other contributors' pull
+  requests, reproducing and triaging issues, answering questions, and improving
+  the documentation and onboarding material.
+- **Ownership of an area.** Knowing one part of the project well enough that others
+  rely on your reviews there, for example a SAM resource, the web console, the
+  CLI, an SDK, or the infrastructure.
+- **Good judgment and conduct.** Weighing backward compatibility, security and
+  maintainability, helping newcomers, and following the
+  :doc:`Code of Conduct <smarter-framework/guides/code-of-conduct>`.
+
+Once a Core Contributor nominates you and the others agree, you are added to the
+repository's ``CODEOWNERS`` file for the areas you look after, which gives you
+review and merge responsibility there, and you are listed on this page.
+
 
 
 Community Contributors

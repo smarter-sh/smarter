@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 EXAMPLE_MANIFESTS_PATH = os.path.join(HERE, "data", "example-manifests")
-"""Copies of the budgets/ folder of https://github.com/smarter-sh/example-manifests."""
+"""Copies of the smarter/budgets/ folder of https://github.com/smarter-sh/example-manifests."""
 
 
 class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):

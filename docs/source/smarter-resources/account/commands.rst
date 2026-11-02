@@ -17,6 +17,7 @@ manage.py Commands
    commands/initialize_platform
    commands/load_from_github
    commands/reset_cache
+   commands/send_slack_invitation_email
    commands/send_welcome_email
 
 ``load_from_github`` applies the platform's example resources, from the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`, and ``delete_retired_examples`` deletes those whose manifests were removed from it.
