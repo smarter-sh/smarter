@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.40.5](https://github.com/smarter-sh/smarter/compare/v0.40.4...v0.40.5) (2026-11-02)
+
+### Bug Fixes
+
+* **account:** add a Slack invitation email and an unsubscribe link ([1fb9f1d](https://github.com/smarter-sh/smarter/commit/1fb9f1ddb42553ac94063a7e7cc15be4453647d2))
+* **journal:** log 4xx error responses at WARNING without stack trace ([62d64a1](https://github.com/smarter-sh/smarter/commit/62d64a15bb32c7d5dbaab109bcffe42f34504e59)), closes [#897](https://github.com/smarter-sh/smarter/issues/897)
+* **middleware:** don't log the client's IP address on a throttled request ([df41d14](https://github.com/smarter-sh/smarter/commit/df41d146dbf6094281cb9e6a3718b1f39de22947)), closes [#896](https://github.com/smarter-sh/smarter/issues/896)
+* **prompt:** truncate a long User-Agent to Prompt.user_agent's length ([e02f695](https://github.com/smarter-sh/smarter/commit/e02f6951b450b4d3fa72fad93dba1cdf921a6675)), closes [#895](https://github.com/smarter-sh/smarter/issues/895)
+
+## [0.40.5-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.40.5-alpha.2...v0.40.5-alpha.3) (2026-11-02)
+
+### Bug Fixes
+
+* **journal:** log 4xx error responses at WARNING without stack trace ([62d64a1](https://github.com/smarter-sh/smarter/commit/62d64a15bb32c7d5dbaab109bcffe42f34504e59)), closes [#897](https://github.com/smarter-sh/smarter/issues/897)
+
+## [0.40.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.40.5-alpha.1...v0.40.5-alpha.2) (2026-11-02)
+
+### Bug Fixes
+
+* **middleware:** don't log the client's IP address on a throttled request ([df41d14](https://github.com/smarter-sh/smarter/commit/df41d146dbf6094281cb9e6a3718b1f39de22947)), closes [#896](https://github.com/smarter-sh/smarter/issues/896)
+* **prompt:** truncate a long User-Agent to Prompt.user_agent's length ([e02f695](https://github.com/smarter-sh/smarter/commit/e02f6951b450b4d3fa72fad93dba1cdf921a6675)), closes [#895](https://github.com/smarter-sh/smarter/issues/895)
+
+## [0.40.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.40.4...v0.40.5-alpha.1) (2026-11-02)
+
+### Bug Fixes
+
+* **account:** add a Slack invitation email and an unsubscribe link ([1fb9f1d](https://github.com/smarter-sh/smarter/commit/1fb9f1ddb42553ac94063a7e7cc15be4453647d2))
+
 ## [0.40.4](https://github.com/smarter-sh/smarter/compare/v0.40.3...v0.40.4) (2026-11-01)
 
 ### Bug Fixes

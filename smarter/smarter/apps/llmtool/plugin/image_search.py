@@ -32,12 +32,12 @@ A Plugin that searches for images with the Brave Image Search API, and returns a
 
 .. sphinx note: /_example-manifests/ is the clone of smarter-sh/example-manifests that docs/source/conf.py makes.
 
-.. literalinclude:: /_example-manifests/plugins/image-search/image-search-safe.yaml
+.. literalinclude:: /_example-manifests/smarter/plugins/image-search/image-search-safe.yaml
     :language: yaml
     :caption: Example ImageSearch Plugin Manifest
 
 From `plugins/image-search/image-search-safe.yaml
-<https://github.com/smarter-sh/example-manifests/blob/main/plugins/image-search/image-search-safe.yaml>`__ in the
+<https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/image-search/image-search-safe.yaml>`__ in the
 :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 .. note::
@@ -583,7 +583,7 @@ class ImageSearchPlugin(PluginBase):
         See Also:
 
         - :class:`SAMImageSearchPlugin`
-        - ``plugins/image-search/`` in https://github.com/smarter-sh/example-manifests for more examples.
+        - ``smarter/plugins/image-search/`` in https://github.com/smarter-sh/example-manifests for more examples.
         """
         metadata = SAMPluginCommonMetadata(
             name="safe_image_search",

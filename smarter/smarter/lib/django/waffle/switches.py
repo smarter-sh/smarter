@@ -176,6 +176,9 @@ class SmarterWaffleSwitches:
     ENABLE_NEW_USER_PASSWORD_EMAIL = "enable_new_user_password_email"
     """Enables sending textemail with password to new users."""
 
+    ENABLE_SLACK_INVITATION_EMAIL = "enable_slack_invitation_email"
+    """Enables the Celery Beat task that invites account contacts to the Slack workspace, two days after their welcome email."""
+
     ENABLE_SMARTER_PAGE_CACHING = "enable_smarter_page_caching"
     """Enables the Smarter user-based page caching decorator for user-facing pages to improve performance."""
 
@@ -442,6 +445,11 @@ class SmarterWaffleSwitches:
         ENABLE_NEW_USER_PASSWORD_EMAIL: SmarterWaffleSwitch(
             name=ENABLE_NEW_USER_PASSWORD_EMAIL,
             comment="Enables sending textemail with password to new users.",
+            default=False,
+        ),
+        ENABLE_SLACK_INVITATION_EMAIL: SmarterWaffleSwitch(
+            name=ENABLE_SLACK_INVITATION_EMAIL,
+            comment="Enables the Celery Beat task that invites account contacts to the Slack workspace, two days after their welcome email.",
             default=False,
         ),
         ENABLE_FORMATTED_LOGGING: SmarterWaffleSwitch(

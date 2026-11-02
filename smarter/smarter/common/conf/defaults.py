@@ -129,6 +129,12 @@ class SettingsDefaults:
     BRANDING_URL_LINKEDIN: HttpUrl = HttpUrl(
         get_env("BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/")
     )
+    BRANDING_URL_SLACK: HttpUrl = HttpUrl(
+        get_env(
+            "BRANDING_URL_SLACK",
+            "https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw",
+        )
+    )
 
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes

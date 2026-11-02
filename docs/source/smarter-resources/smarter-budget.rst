@@ -20,11 +20,11 @@ of refusing.
 Budgets are managed by superusers, with Budget manifests. ``spec.resources`` lists the resources
 that the budget is enforced on, by kind and name:
 
-.. literalinclude:: /_example-manifests/budgets/student-monthly-allowance.yaml
+.. literalinclude:: /_example-manifests/smarter/budgets/student-monthly-allowance.yaml
    :language: yaml
    :caption: Example Budget Manifest
 
-From `budgets/student-monthly-allowance.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/student-monthly-allowance.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `budgets/student-monthly-allowance.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/student-monthly-allowance.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 The web console's **Budgets** page, and the dashboard's **Budget vs Actual** chart, show each
 resource's spending against its budget.

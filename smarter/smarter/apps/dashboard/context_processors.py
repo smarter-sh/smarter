@@ -438,6 +438,7 @@ def branding(request: "HttpRequest") -> SmarterDictType:
                 "url_facebook": smarter_settings.branding_url_facebook,
                 "url_twitter": smarter_settings.branding_url_twitter,
                 "url_linkedin": smarter_settings.branding_url_linkedin,
+                "url_slack": smarter_settings.branding_url_slack,
                 "smarter_logo": smarter_settings.logo,
                 "smarter_product_name": SMARTER_PRODUCT_NAME,
                 "smarter_product_description": SMARTER_PRODUCT_DESCRIPTION,

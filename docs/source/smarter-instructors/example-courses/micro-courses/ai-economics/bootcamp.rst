@@ -10,9 +10,9 @@ with its tokens and its cost in USD, against the user, the application and the a
 priced from a table of `prices per million tokens
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/llm_prices.py>`__.
 Self-hosted GPU nodes are charged by the hour from the `price of each compute profile
-<https://github.com/smarter-sh/example-manifests/tree/main/llmhost-computes>`__, and
+<https://github.com/smarter-sh/example-manifests/tree/main/smarter/llmhost-computes>`__, and
 `Budget manifests
-<https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__
+<https://github.com/smarter-sh/example-manifests/tree/main/smarter/budgets>`__
 turn spending limits into enforced controls, so students measure real costs and test real policies
 rather than estimate them. See :doc:`../course-formats` for the standard bootcamp day, the grading
 scale and the course policies, and :doc:`../ai-economics` for an overview of the subject.

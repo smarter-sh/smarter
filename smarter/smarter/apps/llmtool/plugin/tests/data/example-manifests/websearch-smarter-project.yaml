@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-smarter-project.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/websearch/websearch-smarter-project.yaml, for unit tests.
 ---
 # A WebsearchPlugin that searches the web for information about The Smarter Project,
 # from reputable sources.

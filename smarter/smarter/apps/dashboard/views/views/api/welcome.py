@@ -38,7 +38,7 @@ logger_prefix = logging.SmarterFormattedText.text(__name__)
 WEATHER_LLMCLIENT_NAME = "weather"
 """The example LLMClient that the welcome dialog suggests trying first.
 
-See ``llm-clients/llmclient-weather.yaml`` in https://github.com/smarter-sh/example-manifests.
+See ``smarter/llm-clients/llmclient-weather.yaml`` in https://github.com/smarter-sh/example-manifests.
 """
 
 WELCOME_SHOWN_SESSION_KEY = "smarter_welcome_shown"

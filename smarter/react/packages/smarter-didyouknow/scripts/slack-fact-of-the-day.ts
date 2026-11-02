@@ -1,6 +1,6 @@
 /**
- * Prints the fact of the day as a Slack message, for .github/workflows/didYouKnow.yml, which pipes
- * it into scripts/slack_post.py. It is the same fact that the web console and smarter.sh show today
+ * Prints the fact of the day as a Slack message, for the Did You Know? workflow of smarter-sh/automation
+ * (.github/workflows/didYouKnow.yml), which pipes it into that repository's scripts/slack_post.py. It is the same fact that the web console and smarter.sh show today
  * (midnight to midnight UTC).
  *
  * Run it with `npm run --silent slack:fact`, which bundles it with esbuild from source, so that no

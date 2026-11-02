@@ -161,6 +161,9 @@ The middleware emits structured logs for:
 - path normalization checks
 - client IP resolution failures
 
+The logs name the request's path, never the client's IP address, which is
+personal data.
+
 Classes
 =======
 
@@ -429,10 +432,11 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
             return None
 
         if self.is_throttled(client_ip):
+            # the client's IP address is personal data: log the path, never the address.
             logger.warning(
-                "%s throttled client: %s",
+                "%s throttled request: %s",
                 self.formatted_class_name,
-                client_ip,
+                normalized_path,
             )
 
             throttled = HttpResponse(

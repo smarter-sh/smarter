@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/context7.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/context7.yaml, for unit tests.
 ---
 # Up-to-date, version-specific documentation and code examples for programming libraries, from Upstash Context7.
 # Documentation: https://github.com/upstash/context7

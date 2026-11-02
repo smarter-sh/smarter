@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/plugins/image-search/image-search.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/image-search/image-search.yaml, for unit tests.
 ---
 # An open ImageSearchPlugin, which is always selected, and whose systemRole and
 # description tell the LLM to proactively include an image in any answer about

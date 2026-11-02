@@ -28,7 +28,7 @@ The manifest API
    if _, err := client.Manifests.Apply(ctx, manifest); err != nil { // create or update
        return err
    }
-   guardrails, err := client.Manifests.Get(ctx, "Guardrail", "")
+   guardrails, err := client.Manifests.Get(ctx, "Guardrail", "", nil)
    if err != nil {
        return err
    }
@@ -104,6 +104,50 @@ A struct ignores fields that it doesn't declare, so apply a ``*smarter.Manifest`
 you change a manifest that a newer platform described. ``manifest.ToYAML()`` writes a manifest as
 YAML, without its read-only ``Status``, ready to apply. There is a struct of every kind: see
 :doc:`Models <models>`.
+
+Annotations
+-----------
+
+A manifest's ``metadata.annotations`` are annotations as in Kubernetes: a map of string keys to
+string values that your own software attaches to a resource, e.g. to associate an LLMClient with an
+account in a CRM. A key is an optional DNS-subdomain prefix that names its owner, then a slash and a
+name, e.g. ``acme.com/crm-account-id``. The prefix ``smarter.sh`` and its subdomains are reserved
+for the platform.
+
+.. code-block:: yaml
+
+   metadata:
+     name: customer_support
+     annotations:
+       acme.com/crm-account-id: A-10042
+       acme.com/active: "true"
+
+Every struct of a resource or a manifest has its annotations as a ``smarter.Annotations``, a
+``map[string]string``, and every ``sam`` struct as a ``map[string]string``. Manifests of Smarter
+0.37 and earlier wrote them as a list of one-key maps, which the platform still accepts on apply. So
+does the SDK: it converts the list, and values that YAML reads as booleans, numbers or dates, to the
+map of strings that the platform stores (``smarter.NormalizeAnnotations``).
+
+.. code-block:: go
+
+   manifest, err := client.LLMClients.Describe(ctx, "customer_support")
+   if err != nil {
+       return err
+   }
+   fmt.Println(manifest.Metadata.Annotations["acme.com/crm-account-id"]) // A-10042
+
+``Get`` takes an annotation selector, in the syntax of Kubernetes label selectors: ``key`` (the
+resource has the key), ``!key`` (it hasn't), ``key=value`` and ``key!=value``, which also matches
+resources without the key. Every requirement must match:
+
+.. code-block:: go
+
+   clients, err := client.Manifests.Get(ctx, "LLMClient", "", &smarter.GetParams{
+       Annotation: []string{"acme.com/crm-account-id", "!acme.com/archived"},
+   })
+
+The platform validates the selector, and the error of an invalid one matches
+``smarter.ErrBadRequest``.
 
 Manifests in CI/CD
 ------------------

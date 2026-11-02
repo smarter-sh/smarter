@@ -54,11 +54,11 @@ An optional fourth argument limits each log, e.g. `25h`. It prints only counts.
 
 ```bash
 skills/smarter-pod-log-review/scripts/download-logs.sh <context> <namespace> <scratchpad>/logs-<env> [since]
-python3 -E -s scripts/pod_log_redact.py <scratchpad>/logs-<env>
+python3 -E -s ../automation/scripts/pod_log_redact.py <scratchpad>/logs-<env>
 ```
 
-[scripts/pod_log_redact.py](../../scripts/pod_log_redact.py), in the repository's `scripts/`
-because the daily review runs it too, replaces credentials, email addresses, public IP
+`scripts/pod_log_redact.py`, in smarter-sh/automation (local checkout `../automation`, next to this
+one) because the daily review runs it too, replaces credentials, email addresses, public IP
 addresses, AWS account ids and AWS hostnames with placeholders such as `<redacted:email>`, in
 place. Run it before you quote a log anywhere public, e.g. an issue.
 
@@ -67,7 +67,7 @@ data, so **every placeholder is a finding**. The script writes `redactions.json`
 (each file, kind and line number, never the value) and prints a warning when it found anything.
 For each kind, find the log statement that wrote the line and decide whether Smarter leaked
 (fix the code that logs it) or the redactor matched something harmless (narrow its pattern, with
-a test in `scripts/tests/test_pod_log_redact.py`). Either way it gets a GitHub issue, and the
+a test in automation's `scripts/tests/test_pod_log_redact.py`). Either way it gets a GitHub issue, and the
 review isn't healthy.
 
 ## Step 3: scan every log
@@ -130,19 +130,20 @@ The replicas of one deployment run the same code, so their logs should look alik
 
 ## Unattended: the daily review
 
-`.github/workflows/podLogReview.yml` runs this skill every day against prod, and by hand against
-any environment: it downloads and redacts the logs with the scripts above, then runs Claude Code,
-which follows `.github/prompts/pod-log-review.md` and turns each actionable finding into a GitHub
+smarter-sh/automation's `.github/workflows/podLogReview.yml` runs this skill every day against
+prod, and by hand against any environment: it downloads and redacts the logs with the scripts
+above, then runs Claude Code in a checkout of this repository. Claude follows automation's
+`.github/prompts/pod-log-review.md` and turns each actionable finding into a GitHub
 issue, a comment with new evidence, a closed issue, or a draft fix, through the Smarter Project MCP
 server's GitHub tools. Change what the review does in the prompt file, and what it can do in
-`.github/prompts/pod-log-review.settings.json` (Claude Code's permission rules). Both treat the
+automation's `.github/prompts/pod-log-review.settings.json` (Claude Code's permission rules). Both treat the
 logs as untrusted data. The rules match command text, so they are not the security boundary: the
-workflow also blocks reads outside the repository and the log folder, and Harden-Runner blocks
+workflow also blocks reads outside the smarter checkout, the log folder and the prompts folder, and Harden-Runner blocks
 every outbound host the job doesn't need. A new host for the job goes into the workflow's
-`allowed-endpoints`. The workflow's Python code is in the repository's `scripts/`, with its tests
-in `scripts/tests`: [pod_log_review.py](../../scripts/pod_log_review.py) runs Claude Code, retries
+`allowed-endpoints`. The workflow's Python code is in automation's `scripts/`, with its tests
+in `scripts/tests`: `pod_log_review.py` runs Claude Code, retries
 once after a transient API error if nothing was written yet, and writes the run's summary. After
-the review, [pod_log_review_slack.py](../../scripts/pod_log_review_slack.py) posts one message to the Slack channel
+the review, `pod_log_review_slack.py` posts one message to the Slack channel
 `#smarter` that lists each issue the run opened, commented on or closed, and each pull request,
 taken from the MCP server's tool results in Claude's `stream-json` output, never from Claude's own
 summary. A run that wrote nothing, finished without an error, and whose final answer ends with the
