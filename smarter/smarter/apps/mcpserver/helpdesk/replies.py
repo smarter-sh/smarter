@@ -165,12 +165,20 @@ def detector_findings(reply: str, requester_email: Optional[str]) -> list[ReplyF
     :returns: Each match of every detector of :data:`DETECTOR_REASONS`, except the requester's address,
         in the order of the draft.
     """
-    allowed = (requester_email or "").strip().lower()
+    allowed = ""
+    if requester_email:
+        allowed = requester_email.strip().lower()
+    detectors = list(DETECTOR_REASONS)
     findings = []
-    for match in detect(reply, list(DETECTOR_REASONS)):
-        if match.label == SAMGuardrailDetector.EMAIL.value and match.text.lower() == allowed:
+    for match in detect(reply, detectors):
+        label = match.label
+        if label is None:
+            # detect() always labels its matches; this only satisfies the type checker.
             continue
-        finding = ReplyFinding(rule=match.label, text=match.text, why=DETECTOR_REASONS[match.label])
+        if label == SAMGuardrailDetector.EMAIL.value and match.text.lower() == allowed:
+            continue
+        why = DETECTOR_REASONS[label]
+        finding = ReplyFinding(rule=label, text=match.text, why=why)
         findings.append(finding)
     return findings
 

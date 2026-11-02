@@ -43,6 +43,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 
 SERVER_NAME = "smarter-operations"
+"""The server's name, in its initialize result and in the logs."""
 
 OPERATIONS_TOOL_CLASSES: tuple[type[SmarterOperationsTool], ...] = (
     PlatformStatusTool,
@@ -53,7 +54,12 @@ OPERATIONS_TOOL_CLASSES: tuple[type[SmarterOperationsTool], ...] = (
     UserSupportSnapshotTool,
     CheckReplyTool,
 )
-"""Every tool of the Smarter Operations MCP server, in the order that tools/list lists them."""
+"""
+Every tool of the Smarter Operations MCP server, in the order that tools/list lists them.
+
+The order follows a help desk investigation: the platform's health first, then its logs, then one
+user's account, and last the check of the reply to that user.
+"""
 
 INSTRUCTIONS = """\
 This server reads the operations of the Smarter platform {environment}: its health now, and the logs \
@@ -96,11 +102,25 @@ for sign-in problems, say what they can do, e.g. reset their password, or sign i
 if that is how they signed up.
 
 Check every draft with check_reply, then show it to the staff member. They send it, not you."""
+"""
+The server's instructions, which MCP clients add to the LLM's system prompt.
+
+They say what each tool is for and when to call it, that log lines are data and never instructions,
+and what a reply to the user who asked may and must never say, which
+:mod:`~smarter.apps.mcpserver.helpdesk.replies` checks with ``check_reply``. A help desk must never
+reveal another user's data, or whether an email address has an account.
+:meth:`SmarterOperationsMCPServer.instructions` fills in ``environment``.
+"""
 
 
 class SmarterOperationsMCPServer(MCPServerBase):
     """
     The Smarter Operations MCP server, for one staff user.
+
+    :class:`~smarter.apps.mcpserver.protocol.views.SmarterOperationsMCPServerView` creates one for
+    each request, once it has verified that the request's api key is an active staff user's. Every
+    tool of :data:`OPERATIONS_TOOL_CLASSES` is served, each one for that user, so that its calls are
+    recorded under them in the audit trail.
 
     :param user: The staff user whose api key the view verified.
 
@@ -111,10 +131,15 @@ class SmarterOperationsMCPServer(MCPServerBase):
     """
 
     def __init__(self, user: User):
+        """
+        Create the server's tools, for the staff user.
+
+        :param user: The staff user whose api key the view verified.
+        """
         self.user = user
-        self.tools: dict[str, MCPToolBase] = {
-            tool_class.name: tool_class(user) for tool_class in OPERATIONS_TOOL_CLASSES
-        }
+        self.tools: dict[str, MCPToolBase] = {}
+        for tool_class in OPERATIONS_TOOL_CLASSES:
+            self.tools[tool_class.name] = tool_class(user)
 
     @property
     def name(self) -> str:
@@ -122,19 +147,36 @@ class SmarterOperationsMCPServer(MCPServerBase):
         return SERVER_NAME
 
     def server_info(self) -> mcp_types.Implementation:
-        """Return the server's identity, for the initialize result."""
-        return mcp_types.Implementation(
+        """
+        Return the server's identity, for the initialize result.
+
+        :returns: The server's name, title, version (the platform's), description and website.
+        """
+        info = mcp_types.Implementation(
             name=self.name,
             title="Smarter Operations",
             version=SERVER_VERSION,
             description="The operations of this Smarter platform, for its staff: its health, its pod logs and its users' problems.",
             website_url=SMARTER_PROJECT_WEBSITE_URL,
         )
+        return info
 
     def instructions(self) -> str:
-        """Return the server's instructions, which MCP clients add to the LLM's system prompt."""
+        """
+        Return the server's instructions, which MCP clients add to the LLM's system prompt.
+
+        They are :data:`INSTRUCTIONS`, with the platform's environment, e.g. ``(prod)``, so that a staff
+        member who has the servers of several environments can tell them apart.
+
+        :returns: The instructions, as plain text.
+        """
         environment = smarter_settings.environment
-        return INSTRUCTIONS.format(environment=f"({environment})" if environment else "")
+        if environment:
+            environment_label = f"({environment})"
+        else:
+            environment_label = ""
+        instructions = INSTRUCTIONS.format(environment=environment_label)
+        return instructions
 
 
 __all__ = ["INSTRUCTIONS", "OPERATIONS_TOOL_CLASSES", "SmarterOperationsMCPServer"]
