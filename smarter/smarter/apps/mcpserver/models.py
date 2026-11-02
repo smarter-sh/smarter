@@ -1,11 +1,16 @@
 """
-Models of the MCPServer app: the search index of The Smarter Project's repositories.
+Models of the MCPServer app: the search index of The Smarter Project's repositories, and the audit trail of the operations tools.
 
 :class:`RepositoryIndex` records, for each repository of
 :data:`~smarter.apps.mcpserver.repositories.SMARTER_PROJECT_REPOSITORIES`, the commit that
 is indexed, and :class:`RepositoryFile` holds the text of each of its files. The index is
 built by :func:`smarter.apps.mcpserver.index.indexer.index_repository`, and replaced whenever the
 repository's branch moves to a new commit.
+
+:class:`OperationsToolCall` records every call to a tool of the Smarter Operations MCP server
+(:mod:`smarter.apps.mcpserver.protocol.operations`): who called it, for which help desk ticket,
+with which arguments, and whether it failed. The tools read logs and users' data, so each call
+is kept until a superuser deletes it.
 
 .. note::
 
@@ -14,6 +19,7 @@ repository's branch moves to a new commit.
     be documented.
 """
 
+from django.conf import settings
 from django.db import models
 
 from smarter.lib.django.models import TimestampedModel
@@ -61,7 +67,7 @@ class RepositoryIndex(TimestampedModel):
     error = models.TextField(blank=True, null=True, help_text="Why the last attempt to index the repository failed.")
 
     def __str__(self) -> str:
-        return f"{self.repository}@{(self.commit_sha or '')[:7]} {self.status}"
+        return f"{self.repository}@{str(self.commit_sha or '')[:7]} {self.status}"
 
     @property
     def is_ready(self) -> bool:
@@ -90,7 +96,37 @@ class RepositoryFile(TimestampedModel):
         return f"{self.index.repository}:{self.path}"
 
 
+class OperationsToolCall(TimestampedModel):
+    """One call to a tool of the Smarter Operations MCP server, for the audit trail."""
+
+    # pylint: disable=C0115
+    class Meta:
+        verbose_name = "Operations Tool Call"
+        indexes = [models.Index(fields=["ticket"])]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text="The staff user whose api key called the tool. Empty once the user is deleted: see username.",
+    )
+    username = models.CharField(
+        max_length=150, help_text="The user's username at the time of the call, which outlives the user."
+    )
+    tool = models.CharField(max_length=100, help_text="The tool, e.g. search_logs.")
+    ticket = models.CharField(max_length=200, help_text="The help desk ticket, or reason, that the caller gave.")
+    arguments = models.JSONField(default=dict, help_text="The tool call's other arguments.")
+    is_error = models.BooleanField(default=False, help_text="Whether the tool returned an error.")
+    characters = models.PositiveIntegerField(default=0, help_text="The length of the result.")
+
+    def __str__(self) -> str:
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.username} {self.tool} [{self.ticket}]"
+
+
 __all__ = [
+    "OperationsToolCall",
     "RepositoryFile",
     "RepositoryFileKind",
     "RepositoryIndex",

@@ -236,8 +236,6 @@ class EmailService(InfrastructureService):
         bcc = self.admin_bcc(recipients) if bcc_admin else []
         try:
             self._deliver(message, recipients, bcc)
-        except SystemExit:
-            raise
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
