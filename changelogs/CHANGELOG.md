@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.41.0-alpha.2...v0.41.0-alpha.3) (2026-11-02)
+
+### Features
+
+* **mcpserver:** add user_support_snapshot and check_reply tools ([223268c](https://github.com/smarter-sh/smarter/commit/223268c5b28a4027b6d1be6a7834d52a8cf0396d))
+
 ## [0.41.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.41.0-alpha.1...v0.41.0-alpha.2) (2026-11-02)
 
 ### Features
