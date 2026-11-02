@@ -1,0 +1,11 @@
+{% load i18n %}{% comment %}
+  The last row of every contact email's table: the recipient's unsubscribe link.
+  Context: branding, unsubscribe_url (smarter.apps.account.models.contact_email_context).
+{% endcomment %}
+<tr>
+  <td align="center" valign="middle"
+    style="font-size: 12px; padding: 12px 30px 0 30px; text-align:center; font-weight: 500; color: #A1A5B7; font-family:Arial,Helvetica,sans-serif">
+    <p style="margin:0">{% translate "You received this email because you have a Smarter account, or were invited to Smarter." %}
+      <a href="{{ unsubscribe_url }}" rel="noopener" target="_blank" style="color:#7E8299; font-weight:600">{% translate "Unsubscribe from these emails" %}</a></p>
+  </td>
+</tr>
