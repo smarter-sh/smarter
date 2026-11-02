@@ -111,6 +111,44 @@ Smarter is large and highly consistent. Almost every change has a precedent.
 When existing code disagrees with these skills, the code that is newest and
 consistent with most of the codebase wins. Say so in your summary.
 
+## One operation per line
+
+Write Python for a reader who is learning Python. Each line does about one thing: one call, one
+lookup, one comparison, one assignment. Clarity beats compactness, every time. If a line needs a
+second read to understand, split it.
+
+- **Name the steps.** Put each intermediate value in a variable whose name says what it is. The
+  name is documentation that the reader gets for free.
+- **Prefer a plain `for` loop with `if` statements** to a comprehension that filters, transforms
+  and nests at once. A one-line comprehension that only maps or only filters is fine, e.g.
+  `names = [pod.name for pod in pods]`.
+- **Avoid chains** of `or` and `and` that pick a value (`a or b or c or (d if e else "")`), chained
+  `.get()` calls (`(x.get("a") or {}).get("b")`), and nested conditional expressions. Write the
+  `if` statements.
+- **One condition per `if`** where you can. Two short, related conditions are fine.
+- **Don't return a complex expression.** Compute it into a variable, then return the variable.
+
+Too compact:
+
+```python
+problem = waiting or terminated or problem or (f"last restart: {last}" if last else "")
+requests = [((c.get("resources") or {}).get("requests") or {}) for c in (pod.get("spec") or {}).get("containers", [])]
+```
+
+Clear:
+
+```python
+spec = pod.get("spec") or {}
+requests = []
+for container in spec.get("containers", []):
+    resources = container.get("resources") or {}
+    container_requests = resources.get("requests") or {}
+    requests.append(container_requests)
+```
+
+Longer code that a newcomer reads once beats short code that an expert reads twice. Black wraps
+long lines, but it doesn't make them simpler: that is your job.
+
 ## Imports
 
 **No parent-relative imports.** Never write `from ..module import x` or `from ...module import x`.
@@ -310,6 +348,7 @@ reference implementations.
 ## Definition of done
 
 - The code follows an existing pattern.
+- The Python has about one operation per line (see [One operation per line](#one-operation-per-line)).
 - The tests cover it, and you ran them in the container. Report failures
   honestly, including pre-existing ones.
 - The pre-commit hooks pass on the changed files.
