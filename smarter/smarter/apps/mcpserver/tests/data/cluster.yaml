@@ -1,0 +1,107 @@
+# A test cluster for the Smarter Operations MCP server's status tools (tests/operations_base.py), as
+# kubectl get -o json returns its resources, keyed by kind. The values are fake. The tests set each
+# event's lastTimestamp to a few minutes before they run.
+pod:
+  - metadata:
+      name: smarter-6f9c7d-a1b2c
+      namespace: test-namespace
+      labels: {app.kubernetes.io/name: smarter}
+    spec:
+      nodeName: ip-10-0-0-1.ec2.internal
+      containers:
+        - name: smarter
+          resources:
+            requests: {cpu: "1", memory: 1280Mi}
+            limits: {cpu: "2", memory: 2Gi}
+    status:
+      phase: Running
+      startTime: "2026-11-02T10:00:00Z"
+      containerStatuses:
+        - {name: smarter, ready: true, restartCount: 0, state: {running: {}}}
+  - metadata:
+      name: smarter-worker-5b8d4c-x9y8z
+      namespace: test-namespace
+      labels: {app.kubernetes.io/name: smarter-worker}
+    spec:
+      nodeName: ip-10-0-0-2.ec2.internal
+      containers:
+        - name: smarter-worker
+          resources:
+            requests: {cpu: 250m, memory: 1280Mi}
+            limits: {cpu: "1", memory: 2Gi}
+    status:
+      phase: Running
+      containerStatuses:
+        - name: smarter-worker
+          ready: false
+          restartCount: 7
+          state: {waiting: {reason: CrashLoopBackOff}}
+          lastState: {terminated: {reason: Error}}
+  - metadata:
+      name: smarter-beat-7c6d5e-q1w2e
+      namespace: test-namespace
+      labels: {app.kubernetes.io/name: smarter-beat}
+    spec:
+      nodeName: ip-10-0-0-1.ec2.internal
+      containers:
+        - name: smarter-beat
+          resources:
+            requests: {cpu: 100m, memory: 512Mi}
+            limits: {cpu: 500m, memory: 1Gi}
+    status:
+      phase: Running
+      containerStatuses:
+        - name: smarter-beat
+          ready: true
+          restartCount: 1
+          state: {running: {}}
+          lastState: {terminated: {reason: OOMKilled}}
+  - metadata:
+      name: smarter-mysql-backup-29000000-abcde
+      namespace: test-namespace
+      labels: {job-name: smarter-mysql-backup-29000000}
+    spec: {containers: [{name: backup}]}
+    status: {phase: Succeeded}
+pods.metrics.k8s.io:
+  - metadata: {name: smarter-6f9c7d-a1b2c, namespace: test-namespace}
+    containers: [{name: smarter, usage: {cpu: 350000000n, memory: 900Mi}}]
+  - metadata: {name: smarter-beat-7c6d5e-q1w2e, namespace: test-namespace}
+    containers: [{name: smarter-beat, usage: {cpu: 5m, memory: 980Mi}}]
+node:
+  - metadata:
+      name: ip-10-0-0-1.ec2.internal
+      creationTimestamp: "2026-11-01T00:00:00Z"
+      labels:
+        node.kubernetes.io/instance-type: t3.xlarge
+        eks.amazonaws.com/capacityType: SPOT
+    status:
+      allocatable: {cpu: 3920m, memory: 15000Mi}
+      conditions:
+        - {type: Ready, status: "True"}
+        - {type: MemoryPressure, status: "False"}
+  - metadata:
+      name: ip-10-0-0-2.ec2.internal
+      labels: {node.kubernetes.io/instance-type: t3.xlarge}
+    spec: {unschedulable: true}
+    status:
+      allocatable: {cpu: 3920m, memory: 15000Mi}
+      conditions:
+        - {type: Ready, status: "True"}
+        - {type: MemoryPressure, status: "True"}
+nodes.metrics.k8s.io:
+  - metadata: {name: ip-10-0-0-1.ec2.internal}
+    usage: {cpu: 1960m, memory: 7500Mi}
+  - metadata: {name: ip-10-0-0-2.ec2.internal}
+    usage: {cpu: 3800m, memory: 14000Mi}
+event:
+  - metadata: {name: smarter-worker.1, namespace: test-namespace}
+    type: Warning
+    reason: BackOff
+    message: Back-off restarting failed container smarter-worker
+    count: 12
+    involvedObject: {kind: Pod, name: smarter-worker-5b8d4c-x9y8z}
+  - metadata: {name: smarter.2, namespace: test-namespace}
+    type: Normal
+    reason: Pulled
+    message: Container image already present on machine
+    involvedObject: {kind: Pod, name: smarter-6f9c7d-a1b2c}

@@ -16,6 +16,7 @@ from smarter.apps.infrastructure.providers.memory import InMemoryProvider
 from smarter.apps.infrastructure.services import (
     configure_email,
     configure_kubernetes,
+    configure_logs,
     configure_slack,
 )
 from smarter.lib.typing import SmarterDictType
@@ -35,6 +36,7 @@ class InfrastructureTestBase(SmarterTestBase):
         self.addCleanup(configure_kubernetes, None)
         self.addCleanup(configure_email, None)
         self.addCleanup(configure_slack, None)
+        self.addCleanup(configure_logs, None)
 
     def capture(self, *signals: Signal) -> list[tuple[Signal, SmarterDictType]]:
         """Record the signals that are sent, with their arguments, until the test ends."""

@@ -1,7 +1,8 @@
 """
 Test :mod:`smarter.apps.infrastructure.services.inventory`, its Celery task and its management command.
 
-The cloud is the in-memory provider, and the cluster is :class:`FakeKubernetes`, which answers
+The cloud is the in-memory provider, and the cluster is
+:class:`~smarter.apps.infrastructure.services.InMemoryKubernetesService`, which answers
 :meth:`~smarter.apps.infrastructure.services.kubernetes.KubernetesService.find_resources` from a
 dict, so nothing reaches real infrastructure.
 """
@@ -14,7 +15,11 @@ from django.core.management import call_command
 
 from smarter.apps.infrastructure.const import KubernetesResourceTypes
 from smarter.apps.infrastructure.models import InfrastructureResource
-from smarter.apps.infrastructure.services import KubernetesService, configure_kubernetes
+from smarter.apps.infrastructure.services import (
+    InMemoryKubernetesService,
+    KubernetesService,
+    configure_kubernetes,
+)
 from smarter.apps.infrastructure.services.base import DiscoveredResource
 from smarter.apps.infrastructure.services.inventory import (
     KUBERNETES_SOURCES,
@@ -38,47 +43,6 @@ MODULE = "smarter.apps.infrastructure.services.inventory"
 COMMAND = "smarter.apps.infrastructure.management.commands.sync_infrastructure_inventory"
 ENV = smarter_settings.environment_namespace
 OTHER = "smarter-platform-other"
-
-
-class FakeKubernetes(KubernetesService):
-    """A cluster whose resources are a dict of items, keyed by kind.
-
-    A kind that is missing cannot be listed.
-    """
-
-    def __init__(self, provider_name: str):
-        super().__init__(provider_name=provider_name)
-        self.items: dict[str, list[SmarterDictType]] = {}
-        self.calls: list[tuple[str, Optional[str]]] = []
-
-    @property
-    def ready(self) -> bool:
-        return True
-
-    def find_resources(self, kind, namespace=None):
-        self.calls.append((kind, namespace))
-        items = self.items.get(kind)
-        if items is None or namespace is None:
-            return items
-        return [i for i in items if i["metadata"]["namespace"] == namespace]
-
-    def apply_manifest(self, manifest):
-        raise NotImplementedError
-
-    def get_resource(self, kind, name, namespace):
-        raise NotImplementedError
-
-    def list_resources(self, kind, namespace, selector=None):
-        raise NotImplementedError
-
-    def delete_resource(self, kind, name, namespace):
-        raise NotImplementedError
-
-    def delete_resources(self, kinds, namespace, selector):
-        raise NotImplementedError
-
-    def get_pod_logs(self, namespace, selector, container=None, tail=200):
-        raise NotImplementedError
 
 
 def item(
@@ -107,7 +71,7 @@ class InventoryTestBase(InfrastructureTestBase):
                 DiscoveredResource(str(KubernetesResourceTypes.NODEGROUP), "default", "arn:nodegroup/default")
             ],
         }
-        self.kubernetes = FakeKubernetes(self.provider.provider_name)
+        self.kubernetes = InMemoryKubernetesService(provider_name=self.provider.provider_name)
         configure_kubernetes(lambda: self.kubernetes)
         self.kubernetes.items = {
             "node": [item("node-1", spec={"providerID": "aws:///us-east-1a/i-1"}), item("")],

@@ -73,6 +73,10 @@ class SlackServiceError(SmarterInfrastructureError):
     """Slack could not be reached, or rejected a request."""
 
 
+class LogServiceError(SmarterInfrastructureError):
+    """The pod log store could not be reached, or rejected a query."""
+
+
 __all__ = [
     "CertificateNotFound",
     "CertificateNotIssued",
@@ -87,6 +91,7 @@ __all__ = [
     "InfrastructureResourceNotFound",
     "InfrastructureTimeout",
     "KubernetesServiceError",
+    "LogServiceError",
     "SlackServiceError",
     "SmarterInfrastructureError",
 ]
