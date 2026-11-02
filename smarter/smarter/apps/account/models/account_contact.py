@@ -16,7 +16,9 @@ Key Features
 
 - Enforces a single primary contact per account.
 - Supports sending emails to individual contacts, all contacts, or just the primary contact.
-- Automatically sends a welcome email to new contacts.
+- Automatically sends a welcome email to new contacts, and records when it was sent.
+- Sends the Slack invitation email, which a Celery Beat task sends two days after the welcome email.
+- Lets an email address unsubscribe from both emails, with a signed link in each of them.
 - Integrates with Smarter's logging and email helper utilities.
 
 Example
@@ -35,20 +37,30 @@ Example
     contact.send_welcome_email()
 """
 
-from typing import Optional
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional, Union
+from urllib.parse import urljoin
 
 # django stuff
 from django.conf import settings
+from django.core import signing
 from django.db import models
 from django.template.loader import render_to_string
-from django.utils import translation
+from django.utils import timezone, translation
+from django.utils.functional import Promise
+from django.utils.translation import gettext_lazy
 
 # our stuff
+from smarter.apps.account.const import SLACK_INVITATION_EMAIL_DELAY
 from smarter.apps.infrastructure.services import infrastructure
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from .account import Account, welcome_email_context
 
@@ -67,6 +79,159 @@ def welcome_email_languages() -> list[str]:
     return [code for code, _ in settings.LANGUAGES]
 
 
+UNSUBSCRIBE_SALT = "smarter.apps.account.models.account_contact.unsubscribe"
+"""The salt of the signed unsubscribe tokens, which keeps them from being valid as any other signed value."""
+
+
+@dataclass(frozen=True)
+class ContactEmail:
+    """
+    An HTML email that account contacts are sent, and can unsubscribe from.
+
+    :param name: What the email is, for log messages, e.g. ``welcome``.
+    :param template_name: The template of its body, e.g. ``account/email/welcome.html``.
+    :param subject: Its subject, marked for translation with ``gettext_lazy``, so that it is
+        translated into the language that the email is sent in.
+    """
+
+    name: str
+    template_name: str
+    subject: Union[str, Promise]
+
+
+WELCOME_EMAIL = ContactEmail(
+    name="welcome",
+    template_name="account/email/welcome.html",
+    subject=gettext_lazy("Welcome to Smarter!"),
+)
+"""The welcome email, which a new :class:`AccountContact` is sent when it is saved."""
+
+SLACK_INVITATION_EMAIL = ContactEmail(
+    name="Slack invitation",
+    template_name="account/email/slack-invitation.html",
+    subject=gettext_lazy("Join the Smarter community on Slack"),
+)
+"""The Slack invitation email, which :meth:`AccountContact.send_slack_invitation_emails` sends."""
+
+
+def unsubscribe_token(email: str) -> str:
+    """
+    Return the signed token of an email address's unsubscribe link.
+
+    The token never expires, so that the link in an old email still works, and is the same every
+    time for the same address. It is signed with ``settings.SECRET_KEY``, so that nobody can
+    unsubscribe someone else's address.
+
+    :param email: The email address.
+    :returns: The token, which is safe in a url path.
+    """
+    return signing.Signer(salt=UNSUBSCRIBE_SALT).sign_object(email.strip().lower())
+
+
+def unsubscribe_email_address(token: str) -> str:
+    """
+    Return the email address of an unsubscribe token.
+
+    :param token: A token that :func:`unsubscribe_token` made.
+    :returns: The email address, in lower case.
+    :raises django.core.signing.BadSignature: If the token was not signed by this platform, or was changed.
+    """
+    return str(signing.Signer(salt=UNSUBSCRIBE_SALT).unsign_object(token))
+
+
+def unsubscribe_url(email: str) -> str:
+    """
+    Return the absolute url of an email address's unsubscribe page.
+
+    :param email: The email address.
+    :returns: The url, on the platform's domain, e.g.
+        ``https://platform.example.com/account/unsubscribe/<token>/``.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.account.urls import AccountReverseNames
+    from smarter.lib.django.shortcuts import reverse
+
+    path = reverse(
+        f"{AccountReverseNames.namespace}:{AccountReverseNames.unsubscribe}",
+        kwargs={"token": unsubscribe_token(email)},
+        urlconf=settings.ROOT_URLCONF,
+    )
+    url = urljoin(smarter_settings.environment_url, path)
+    return SmarterValidator.urlify(url, environment=smarter_settings.environment)
+
+
+def contact_email_context(first_name: str, email: str) -> SmarterDictType:
+    """
+    Return the context of a :class:`ContactEmail`'s template.
+
+    It is :func:`~smarter.apps.account.models.welcome_email_context`, plus the recipient's
+    ``unsubscribe_url``, which the footer of every contact email links to.
+
+    :param first_name: The recipient's first name, or an empty string.
+    :param email: The recipient's email address.
+    :returns: The context.
+    """
+    context = welcome_email_context(first_name=first_name)
+    context["unsubscribe_url"] = unsubscribe_url(email)
+    return context
+
+
+# pylint: disable=too-many-arguments
+def send_contact_email(
+    contact_email: ContactEmail,
+    email: str,
+    first_name: str = "",
+    language: Optional[str] = None,
+    quiet: bool = False,
+) -> bool:
+    """
+    Send a :class:`ContactEmail` to an email address, unless the address unsubscribed.
+
+    The address doesn't need to belong to an :class:`AccountContact`, so that the
+    ``send_slack_invitation_email`` management command can send the Slack invitation to
+    anyone. The email has ``List-Unsubscribe`` headers (RFC 8058), so that mail clients show
+    their own unsubscribe button, which posts to the same page as the link in the footer.
+
+    :param contact_email: The email to send, e.g. :data:`WELCOME_EMAIL`.
+    :param email: The recipient's email address.
+    :param first_name: The recipient's first name, for the greeting. Empty for a generic greeting.
+    :param language: A language code of ``settings.LANGUAGES``. Defaults to ``settings.LANGUAGE_CODE``.
+    :param quiet: True to only log what would have been sent, e.g. for a test contact.
+    :returns: True if the email was sent.
+    :raises SmarterValueError: If the language is not one of ``settings.LANGUAGES``.
+    """
+    prefix = logging.SmarterFormattedText.text(__name__) + ".send_contact_email()"
+    language = language or settings.LANGUAGE_CODE
+    if language not in welcome_email_languages():
+        raise SmarterValueError(f"Unknown language {language}. Choose one of {', '.join(welcome_email_languages())}.")
+    unsubscribed_at = AccountContact.unsubscribed_at_of(email)
+    if unsubscribed_at:
+        logger.info(
+            "%s Not sending the %s email to %s, who unsubscribed on %s",
+            prefix,
+            contact_email.name,
+            email,
+            unsubscribed_at.isoformat(),
+        )
+        return False
+    with translation.override(language):
+        context = contact_email_context(first_name=first_name, email=email)
+        body = render_to_string(contact_email.template_name, context)
+        subject = str(contact_email.subject)
+    logger.debug("%s Sending the %s %s email to %s", prefix, language, contact_email.name, email)
+    return infrastructure.email.send_email(
+        subject=subject,
+        to=email,
+        body=body,
+        html=True,
+        quiet=quiet,
+        headers={
+            "List-Unsubscribe": f"<{context['unsubscribe_url']}>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )
+
+
 class AccountContact(TimestampedModel):
     """
     Model for storing contact information associated with an account.
@@ -83,6 +248,10 @@ class AccountContact(TimestampedModel):
     :param is_primary: Boolean. Marks this contact as the primary contact for the account.
     :param is_test: Boolean. Indicates if this contact is for testing purposes.
     :param welcomed: Boolean. Indicates if a welcome email has been sent.
+    :param welcomed_at: DateTime or None. When the welcome email was sent.
+    :param slack_invited_at: DateTime or None. When the Slack invitation email was sent.
+    :param unsubscribed_at: DateTime or None. When the contact's email address unsubscribed from the
+        welcome and Slack invitation emails.
 
     .. note::
 
@@ -133,8 +302,23 @@ class AccountContact(TimestampedModel):
     welcomed = models.BooleanField(
         default=False, help_text="Indicates if a welcome email has been sent to this contact."
     )
+    welcomed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When the welcome email was sent to this contact. Empty if it was never sent.",
+    )
+    slack_invited_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When the Slack invitation email was sent to this contact's email address. Empty if it was never sent.",
+    )
+    unsubscribed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When this contact's email address unsubscribed from the welcome and Slack invitation emails. Empty while subscribed.",
+    )
 
-    def send_email(self, subject: str, body: str, html: bool = False, from_email: Optional[str] = None):
+    def send_email(self, subject: str, body: str, html: bool = False, from_email: Optional[str] = None) -> bool:
         """
         Send an email to this account contact.
 
@@ -145,10 +329,16 @@ class AccountContact(TimestampedModel):
         :param body: String. The email body content.
         :param html: Boolean. If True, sends the email as HTML. Defaults to False.
         :param from_email: String or None. Optional sender email address.
+        :returns: True if the email was sent.
 
         .. note::
 
             If the contact is marked as a test contact (`is_test=True`), the email is sent quietly.
+
+        .. note::
+
+            This sends account notices, which an unsubscribed contact still receives. Only the
+            :class:`ContactEmail` emails respect :attr:`unsubscribed_at`.
 
         .. tip::
 
@@ -164,7 +354,7 @@ class AccountContact(TimestampedModel):
             )
         """
 
-        infrastructure.email.send_email(
+        return infrastructure.email.send_email(
             subject=subject, to=self.email, body=body, html=html, from_email=from_email, quiet=self.is_test
         )
 
@@ -181,16 +371,18 @@ class AccountContact(TimestampedModel):
         language = self.account.user_profiles.filter(user__email=self.email).values_list("language", flat=True).first()
         return language or settings.LANGUAGE_CODE
 
-    def send_welcome_email(self, language: Optional[str] = None) -> None:
+    def send_welcome_email(self, language: Optional[str] = None) -> bool:
         """
         Send a personalized welcome email to this account contact.
 
         This method renders the welcome email template with the contact's first name, in the
-        given language, and sends it as HTML.
+        given language, and sends it as HTML, unless the contact's email address unsubscribed.
+        When it is sent, :attr:`welcomed_at` records when, and the Slack invitation email follows
+        two days later.
 
         :param language: String or None. A language code of ``settings.LANGUAGES``, e.g. ``es`` or
             ``pt-br``. Defaults to :meth:`preferred_language`.
-        :returns: None
+        :returns: True if the email was sent.
         :raises SmarterValueError: If the language is not one of ``settings.LANGUAGES``.
 
         .. note::
@@ -207,24 +399,144 @@ class AccountContact(TimestampedModel):
             contact.send_welcome_email()
             contact.send_welcome_email(language="es")
         """
-        language = language or self.preferred_language()
-        if language not in welcome_email_languages():
-            raise SmarterValueError(
-                f"Unknown language {language}. Choose one of {', '.join(welcome_email_languages())}."
+        sent = send_contact_email(
+            WELCOME_EMAIL,
+            email=self.email,
+            first_name=self.first_name,
+            language=language or self.preferred_language(),
+            quiet=self.is_test,
+        )
+        if sent:
+            self.welcomed_at = timezone.now()
+            if self.pk:
+                AccountContact.objects.filter(pk=self.pk).update(welcomed_at=self.welcomed_at)
+        return sent
+
+    def send_slack_invitation_email(self, language: Optional[str] = None) -> bool:
+        """
+        Send the Slack invitation email to this account contact.
+
+        The email invites the contact to the Slack workspace of ``smarter_settings.branding_url_slack``,
+        unless the contact's email address unsubscribed. When it is sent, :attr:`slack_invited_at`
+        records when, on every contact with the same email address, so that a person who is a
+        contact of several accounts is invited once.
+
+        :param language: String or None. A language code of ``settings.LANGUAGES``. Defaults to
+            :meth:`preferred_language`.
+        :returns: True if the email was sent.
+        :raises SmarterValueError: If the language is not one of ``settings.LANGUAGES``.
+
+        **Example usage**::
+
+            contact.send_slack_invitation_email(language="fr")
+        """
+        sent = send_contact_email(
+            SLACK_INVITATION_EMAIL,
+            email=self.email,
+            first_name=self.first_name,
+            language=language or self.preferred_language(),
+            quiet=self.is_test,
+        )
+        if sent:
+            self.slack_invited_at = timezone.now()
+            AccountContact.objects.filter(email__iexact=self.email).update(slack_invited_at=self.slack_invited_at)
+        return sent
+
+    @classmethod
+    def due_slack_invitations(cls, now: Optional[datetime] = None) -> "models.QuerySet[AccountContact]":
+        """
+        Return the contacts who are due the Slack invitation email.
+
+        They were sent the welcome email at least ``SLACK_INVITATION_EMAIL_DELAY`` (two days) ago,
+        and were neither sent the Slack invitation nor unsubscribed. Test contacts are never due.
+        Contacts who were welcomed before :attr:`welcomed_at` existed have no date, and are never due.
+
+        :param now: The current time. Defaults to ``timezone.now()``.
+        :returns: The contacts, the longest-welcomed first.
+        """
+        now = now or timezone.now()
+        return cls.objects.filter(
+            welcomed_at__lte=now - SLACK_INVITATION_EMAIL_DELAY,
+            slack_invited_at__isnull=True,
+            unsubscribed_at__isnull=True,
+            is_test=False,
+        ).order_by("welcomed_at", "pk")
+
+    @classmethod
+    def send_slack_invitation_emails(cls) -> int:
+        """
+        Send the Slack invitation email to every contact who is due it.
+
+        The Celery Beat task :func:`smarter.apps.account.tasks.send_slack_invitation_emails` calls
+        this hourly. Each email address is sent one email, even if it is the address of several
+        contacts. Before sending, the address's contacts are claimed, by setting their
+        :attr:`slack_invited_at`, so that two runs at once can't both send it. If the email isn't
+        sent, the claim is released, and the next run tries again.
+
+        :returns: The number of emails sent.
+        """
+        prefix = logging.SmarterFormattedText.text(__name__) + ".AccountContact.send_slack_invitation_emails()"
+        now = timezone.now()
+        sent_count = 0
+        addresses: set[str] = set()
+        for contact in cls.due_slack_invitations(now):
+            address = contact.email.strip().lower()
+            if address in addresses:
+                continue
+            addresses.add(address)
+            claimed = cls.objects.filter(email__iexact=address, slack_invited_at__isnull=True).update(
+                slack_invited_at=now
             )
-        with translation.override(language):
-            context = welcome_email_context(first_name=self.first_name)
-            html_template = render_to_string("account/email/welcome.html", context)
-            subject = translation.gettext("Welcome to Smarter!")
-        logger.debug(
-            "%s.send_welcome_email() Sending the %s welcome email to %s",
-            logging.SmarterFormattedText.text(__name__) + ".AccountContact.send_welcome_email()",
-            language,
-            self.email,
+            if not claimed:
+                continue
+            sent = False
+            try:
+                sent = contact.send_slack_invitation_email()
+            finally:
+                if not sent:
+                    cls.objects.filter(email__iexact=address, slack_invited_at=now).update(slack_invited_at=None)
+            if sent:
+                sent_count += 1
+        logger.info("%s sent %s Slack invitation emails.", prefix, sent_count)
+        return sent_count
+
+    @classmethod
+    def unsubscribed_at_of(cls, email: str) -> Optional[datetime]:
+        """
+        Return when an email address unsubscribed from the welcome and Slack invitation emails.
+
+        :param email: The email address, in any case.
+        :returns: The earliest :attr:`unsubscribed_at` of the address's contacts, or None if it is subscribed.
+        """
+        return (
+            cls.objects.filter(email__iexact=email.strip(), unsubscribed_at__isnull=False)
+            .order_by("unsubscribed_at")
+            .values_list("unsubscribed_at", flat=True)
+            .first()
         )
 
-        body = html_template
-        self.send_email(subject=subject, body=body, html=True)
+    @classmethod
+    def unsubscribe(cls, email: str) -> int:
+        """
+        Unsubscribe an email address from the welcome and Slack invitation emails.
+
+        Every contact with the address, in every account, records the time in :attr:`unsubscribed_at`.
+        A contact that is added later with the same address is unsubscribed when it is saved.
+
+        :param email: The email address, in any case.
+        :returns: The number of contacts that were unsubscribed: 0 if the address has no contact, or
+            was already unsubscribed.
+        """
+        count = cls.objects.filter(email__iexact=email.strip(), unsubscribed_at__isnull=True).update(
+            unsubscribed_at=timezone.now()
+        )
+        logger.info(
+            "%s unsubscribed %s contacts with the email address %s.",
+            logging.SmarterFormattedText.text(__name__) + ".AccountContact.unsubscribe()",
+            count,
+            email,
+        )
+        return count
 
     @classmethod
     def get_primary_contact(cls, account: Account) -> Optional["AccountContact"]:
@@ -347,7 +659,8 @@ class AccountContact(TimestampedModel):
         Save the AccountContact instance, enforcing primary contact uniqueness and sending a welcome email if needed.
 
         This method ensures that only one primary contact exists per account. If the contact is new and has not
-        been welcomed, a welcome email is sent and the `welcomed` flag is updated.
+        been welcomed, a welcome email is sent and the `welcomed` flag is updated. A new contact
+        whose email address unsubscribed is unsubscribed too, and isn't sent the welcome email.
 
         :param args: Positional arguments passed to the parent save method.
         :param language: String or None. The language of the welcome email, if one is sent. Defaults to
@@ -378,6 +691,10 @@ class AccountContact(TimestampedModel):
                 qs = qs.exclude(pk=self.pk)
             if qs.exists():
                 raise SmarterValueError("There is already a primary contact for this account.")
+
+        # a new contact of an address that unsubscribed is unsubscribed too.
+        if self._state.adding and self.unsubscribed_at is None:
+            self.unsubscribed_at = AccountContact.unsubscribed_at_of(self.email)
 
         super().save(*args, **kwargs)
         if not self.welcomed:

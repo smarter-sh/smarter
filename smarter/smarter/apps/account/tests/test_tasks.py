@@ -13,6 +13,7 @@ from smarter.apps.account.tasks import (
     aggregate_records,
     create_charge,
     evaluate_budget_constraints,
+    send_slack_invitation_emails,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -71,3 +72,31 @@ class TestAccountTasks(SmarterTestBase):
         with patch(f"{MODULE}.evaluate_budgets", return_value=3) as evaluate_budgets:
             self.assertEqual(evaluate_budget_constraints(), 3)
         evaluate_budgets.assert_called_once_with()
+
+
+class TestSendSlackInvitationEmailsTask(SmarterTestBase):
+    """Test that send_slack_invitation_emails sends only with its switch on and email configured."""
+
+    def setUp(self):
+        super().setUp()
+        for name in ("waffle", "infrastructure", "AccountContact"):
+            patcher = patch(f"{MODULE}.{name}")
+            setattr(self, name, patcher.start())
+            self.addCleanup(patcher.stop)
+        self.waffle.switch_is_active.return_value = True
+        self.infrastructure.email.ready = True
+        self.AccountContact.send_slack_invitation_emails.return_value = 2
+
+    def test_sends(self):
+        self.assertEqual(send_slack_invitation_emails(), 2)
+        self.AccountContact.send_slack_invitation_emails.assert_called_once_with()
+
+    def test_switch_off(self):
+        self.waffle.switch_is_active.return_value = False
+        self.assertEqual(send_slack_invitation_emails(), 0)
+        self.AccountContact.send_slack_invitation_emails.assert_not_called()
+
+    def test_email_not_configured(self):
+        self.infrastructure.email.ready = False
+        self.assertEqual(send_slack_invitation_emails(), 0)
+        self.AccountContact.send_slack_invitation_emails.assert_not_called()
