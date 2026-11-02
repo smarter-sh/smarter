@@ -146,8 +146,8 @@
                         <p class="title-text">{% if first_name %}{% blocktranslate trimmed %}Howdy {{ first_name }},{% endblocktranslate %}{% else %}{% translate "Howdy," %}{% endif %}</p>
                         <p style="color:#3F4254; line-height:1.6">
                           {% blocktranslate with primary_contact=branding.primary_contact product_name=branding.smarter_product_name trimmed %}
-                            I'm {{ primary_contact }}, the technical point of contact for the {{ product_name }}
-                            platform, and I just created a new account for you. To get started, sign in with the
+                            I'm {{ primary_contact }}, the technical point of contact for {{ product_name }},
+                            and I just created a new account for you. To get started, sign in with the
                             button below. Your username is this email address.
                           {% endblocktranslate %}
                           {% if send_password_email %}
@@ -240,7 +240,7 @@
                               <li>{% blocktranslate trimmed %}<strong>Cost accounting</strong> of every LLM request, by account, user and chat session <a href="https://docs.smarter.sh/en/latest/smarter-platform/cost-accounting.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Runs on Kubernetes</strong>, on-premise or in the cloud <a href="https://docs.smarter.sh/en/latest/smarter-framework/technologies/kubernetes.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Developer tools</strong>: a command-line interface, a REST API, and SDKs for Python, Node.js and Go <a href="https://docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
-                              <li>{% blocktranslate trimmed %}<strong>Slack</strong> - join The Smarter Project's Slack workspace for real-time questions and discussion with other users and contributors <a href="https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw" rel="noopener" target="_blank">[join]</a>{% endblocktranslate %}</li>
+                              <li>{% blocktranslate with slack_url=branding.url_slack trimmed %}<strong>Slack</strong> - join The Smarter Project's Slack workspace for real-time questions and discussion with other users and contributors <a href="{{ slack_url }}" rel="noopener" target="_blank">[join]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Source code</strong> on GitHub, where contributions are welcome <a href="https://github.com/smarter-sh/" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
                               <li>{% blocktranslate trimmed %}<strong>Deployment guides</strong> for <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/production-deployment.html" rel="noopener" target="_blank">production</a>, a <a href="https://docs.smarter.sh/en/latest/smarter-platform/installation/quick-start.html" rel="noopener" target="_blank">Quick Start</a> for evaluation, and <a href="https://docs.smarter.sh/en/latest/smarter-framework/guides/developer-setup.html" rel="noopener" target="_blank">running from source</a> for developers.{% endblocktranslate %}</li>
                             </ul>
@@ -411,7 +411,7 @@
                           <!--begin::Content-->
                           <div>
                             <!--begin::Title-->
-                            <a href="https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw" target="_blank" rel="noopener"
+                            <a href="{{ branding.url_slack }}" target="_blank" rel="noopener"
                               style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Slack Community" %}</a>
                             <!--end::Title-->
                             <!--begin::Desc-->
@@ -436,7 +436,7 @@
                   <td align="center" valign="center"
                     style="font-size: 13px; text-align:center; padding: 0 10px 10px 10px; font-weight: 500; color: #A1A5B7; font-family:Arial,Helvetica,sans-serif">
                     <p style="color:#181C32; font-size: 16px; font-weight: 600; margin-bottom:9px">{{ branding.primary_contact }}</p>
-                    <p style="margin-bottom:2px">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Technical point of contact for the {{ product_name }} platform.{% endblocktranslate %}</p>
+                    <p style="margin-bottom:2px">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Technical point of contact for {{ product_name }}.{% endblocktranslate %}</p>
                     <p>{% blocktranslate with support_email=branding.support_email contact_url=branding.contact_url trimmed %}Email me at <a href="mailto:{{ support_email }}" style="font-weight: 600">{{ support_email }}</a>, or visit <a href="{{ contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">my website</a>.{% endblocktranslate %}</p>
                   </td>
                 </tr>
@@ -456,6 +456,7 @@
                     <p>{% blocktranslate with product_name=branding.smarter_product_name trimmed %}{{ product_name }} is free, open source software, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener" target="_blank">GNU AGPL v3</a>.{% endblocktranslate %}</p>
                   </td>
                 </tr>
+                {% include "account/email/unsubscribe-footer.html" %}
               </tbody>
             </table>
           </div>
