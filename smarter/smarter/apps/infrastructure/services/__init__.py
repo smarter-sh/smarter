@@ -48,6 +48,7 @@ from .email import (
     get_email,
 )
 from .kubernetes import (
+    InMemoryKubernetesService,
     KubectlKubernetesService,
     KubernetesService,
     configure_kubernetes,
@@ -138,6 +139,7 @@ __all__ = [
     "EmailAttachment",
     "EmailService",
     "InMemoryEmailService",
+    "InMemoryKubernetesService",
     "InMemoryLogService",
     "InMemorySlackService",
     "InfrastructureService",

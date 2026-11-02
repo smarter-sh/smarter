@@ -22,6 +22,7 @@ from smarter.apps.infrastructure.const import CertificateStatus, CloudProviders
 from smarter.apps.infrastructure.exceptions import (
     InfrastructureConfigurationError,
     InfrastructureNotReadyError,
+    SmarterInfrastructureError,
 )
 from smarter.apps.infrastructure.providers.aws import AWSProvider
 from smarter.apps.infrastructure.providers.aws.certificates import to_certificate
@@ -689,3 +690,143 @@ class TestAWSBase(AWSTestBase):
         with patch(f"{HELPERS}.base.smarter_settings", self.settings()):
             base = AWSBase(aws_region="eu-west-1", debug_mode=True, init_info="test")
         self.assertEqual(base.aws_region, "eu-west-1")
+
+
+def client_error(code: str) -> botocore.exceptions.ClientError:
+    """An AWS error with a code, as boto3 raises it."""
+    return botocore.exceptions.ClientError({"Error": {"Code": code, "Message": code}}, "Operation")
+
+
+class TestAWSEksClusterHealth(AWSTestBase):
+    """Test AWSEks.get_cluster_health() and AWSProvider.get_kubernetes_cluster_health(), with a fake EKS client."""
+
+    def setUp(self):
+        super().setUp()
+        self.eks = connect(AWSEks(), MagicMock())
+        client = self.eks.client
+        client.describe_cluster.return_value = {
+            "cluster": {
+                "name": "cluster",
+                "status": "ACTIVE",
+                "version": "1.33",
+                "platformVersion": "eks.9",
+                "health": {
+                    "issues": [{"code": "Ec2SubnetInvalidConfiguration", "message": "subnet", "resourceIds": ["s-1"]}]
+                },
+            }
+        }
+        pages = {
+            "list_nodegroups": [{"nodegroups": ["default"]}],
+            "list_addons": [{"addons": ["coredns"]}],
+        }
+        client.get_paginator.side_effect = lambda name: Paginator(lambda clusterName: pages[name])
+        client.describe_nodegroup.return_value = {
+            "nodegroup": {
+                "nodegroupName": "default",
+                "status": "DEGRADED",
+                "scalingConfig": {"desiredSize": 3, "minSize": 3, "maxSize": 15},
+                "instanceTypes": ["t3.xlarge"],
+                "capacityType": "SPOT",
+                "releaseVersion": "1.33.0-20261001",
+                "health": {
+                    "issues": [
+                        {"code": "AsgInstanceLaunchFailures", "message": "no capacity", "resourceIds": ["i-1", "i-2"]},
+                        "not an issue",
+                    ]
+                },
+            }
+        }
+        client.describe_addon.return_value = {
+            "addon": {"addonName": "coredns", "addonVersion": "v1.11.4-eksbuild.2", "status": "ACTIVE"}
+        }
+        client.describe_addon_versions.return_value = {
+            "addons": [
+                {"addonVersions": [{"addonVersion": "v1.9.3-eksbuild.1"}, {"addonVersion": "v1.11.10-eksbuild.1"}]}
+            ]
+        }
+        client.list_insights.side_effect = [
+            {
+                "insights": [
+                    {
+                        "name": "Deprecated APIs removed in Kubernetes v1.34",
+                        "category": "UPGRADE_READINESS",
+                        "kubernetesVersion": "1.34",
+                        "insightStatus": {"status": "WARNING", "reason": "deprecated api in use"},
+                    }
+                ],
+                "nextToken": "page-2",
+            },
+            {
+                "insights": [
+                    {
+                        "name": "Kubelet version skew",
+                        "category": "UPGRADE_READINESS",
+                        "insightStatus": {"status": "PASSING"},
+                    }
+                ]
+            },
+        ]
+        settings = patch(f"{HELPERS}.eks.smarter_settings")
+        self.settings = settings.start()
+        self.addCleanup(settings.stop)
+        self.settings.aws_eks_cluster_name = "cluster"
+
+    def test_get_cluster_health(self):
+        health = self.eks.get_cluster_health()
+        self.assertEqual(
+            (health.name, health.status, health.version, health.platform_version),
+            ("cluster", "ACTIVE", "1.33", "eks.9"),
+        )
+        self.assertEqual(health.issues[0].resources, ("s-1",))
+        group = health.nodegroups[0]
+        self.assertEqual(
+            (group.status, group.desired_size, group.max_size, group.capacity_type), ("DEGRADED", 3, 15, "SPOT")
+        )
+        self.assertEqual(group.issues[0].code, "AsgInstanceLaunchFailures")
+        self.assertEqual(len(group.issues), 1, "an issue that is not an object is ignored")
+        addon = health.addons[0]
+        self.assertEqual(addon.latest_version, "v1.11.10-eksbuild.1", "versions compare by their numbers")
+        self.assertTrue(addon.update_available)
+        self.assertEqual([insight.status for insight in health.insights], ["WARNING", "PASSING"], "both pages")
+        self.assertEqual(self.eks.client.list_insights.call_args_list[1].kwargs["nextToken"], "page-2")
+        self.eks.client.describe_addon_versions.assert_called_once_with(addonName="coredns", kubernetesVersion="1.33")
+        self.assertEqual(health.errors, [])
+
+    def test_parts_that_cannot_be_read(self):
+        """A part that fails is named in errors, and the others are still read."""
+        self.eks.client.list_insights.side_effect = client_error("AccessDeniedException")
+        self.eks.client.describe_addon_versions.side_effect = client_error("AccessDeniedException")
+        health = self.eks.get_cluster_health()
+        self.assertEqual(health.errors, ["insights: AccessDeniedException"])
+        self.assertIsNone(health.addons[0].latest_version, "an add-on without its versions is still described")
+        self.assertFalse(health.addons[0].update_available)
+        self.assertEqual(len(health.nodegroups), 1)
+        self.eks.client.describe_nodegroup.side_effect = client_error("ResourceNotFoundException")
+        self.eks.client.describe_addon.side_effect = client_error("ThrottlingException")
+        health = self.eks.get_cluster_health()
+        self.assertIn("nodegroups: ResourceNotFoundException", health.errors)
+        self.assertIn("addons: ThrottlingException", health.errors)
+
+    def test_no_addon_versions(self):
+        self.eks.client.describe_addon_versions.return_value = {"addons": []}
+        self.assertIsNone(self.eks.get_cluster_health().addons[0].latest_version)
+
+    def test_not_ready(self):
+        with patch.object(AWSEks, "ready", new_callable=PropertyMock, return_value=False):
+            with self.assertRaises(AWSNotReadyError):
+                AWSEks().get_cluster_health()
+        self.settings.aws_eks_cluster_name = None
+        with patch.object(AWSEks, "_cluster_name_warned", True):
+            with self.assertRaises(AWSNotReadyError):
+                self.eks.get_cluster_health()
+
+    def test_provider(self):
+        """The provider delegates to the EKS helper, and translates its errors."""
+        provider = self.aws_provider()
+        provider._eks = self.eks  # pylint: disable=protected-access
+        self.assertEqual(provider.get_kubernetes_cluster_health().name, "cluster")
+        self.eks.client.describe_cluster.side_effect = client_error("ResourceNotFoundException")
+        with self.assertRaises(SmarterInfrastructureError):
+            provider.get_kubernetes_cluster_health()
+        with self.assertRaises(InfrastructureNotReadyError):
+            AWSProvider().get_kubernetes_cluster_health()
