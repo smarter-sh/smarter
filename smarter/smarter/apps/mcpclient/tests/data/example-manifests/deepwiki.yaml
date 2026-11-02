@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/mcp-clients/deepwiki.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/deepwiki.yaml, for unit tests.
 ---
 # AI-generated documentation for public GitHub repositories, from Cognition's DeepWiki.
 # Documentation: https://docs.devin.ai/work-with-devin/deepwiki-mcp

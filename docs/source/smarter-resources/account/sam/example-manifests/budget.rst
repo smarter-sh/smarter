@@ -1,7 +1,7 @@
 Budget Example Manifests
 ==================================
 
-These examples are in the `budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/budgets>`__
+These examples are in the `budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/smarter/budgets>`__
 folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`, except for the Stackademy project budget, which is in the
 `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__ repository with the rest of the
 :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`. Apply one with
@@ -26,29 +26,29 @@ Overview
 Per-user monthly allowance
 --------------------------
 
-.. literalinclude:: /_example-manifests/budgets/student-monthly-allowance.yaml
+.. literalinclude:: /_example-manifests/smarter/budgets/student-monthly-allowance.yaml
    :language: yaml
    :linenos:
 
-From `budgets/student-monthly-allowance.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/student-monthly-allowance.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `budgets/student-monthly-allowance.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/student-monthly-allowance.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 Per-user hourly token throttle
 ------------------------------
 
-.. literalinclude:: /_example-manifests/budgets/user-hourly-token-throttle.yaml
+.. literalinclude:: /_example-manifests/smarter/budgets/user-hourly-token-throttle.yaml
    :language: yaml
    :linenos:
 
-From `budgets/user-hourly-token-throttle.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/user-hourly-token-throttle.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `budgets/user-hourly-token-throttle.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/user-hourly-token-throttle.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 Organizational monthly cost constraint
 --------------------------------------
 
-.. literalinclude:: /_example-manifests/budgets/account-monthly-cap.yaml
+.. literalinclude:: /_example-manifests/smarter/budgets/account-monthly-cap.yaml
    :language: yaml
    :linenos:
 
-From `budgets/account-monthly-cap.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/account-monthly-cap.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `budgets/account-monthly-cap.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/account-monthly-cap.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 Project budget
 --------------
@@ -91,26 +91,26 @@ From `budgets/stackademy-project.yaml <https://github.com/smarter-sh/stackademy/
 Provider daily budget
 ---------------------
 
-.. literalinclude:: /_example-manifests/budgets/provider-daily.yaml
+.. literalinclude:: /_example-manifests/smarter/budgets/provider-daily.yaml
    :language: yaml
    :linenos:
 
-From `budgets/provider-daily.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/provider-daily.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `budgets/provider-daily.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/provider-daily.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 LLMHost compute budget
 ----------------------
 
-.. literalinclude:: /_example-manifests/budgets/llmhost-compute.yaml
+.. literalinclude:: /_example-manifests/smarter/budgets/llmhost-compute.yaml
    :language: yaml
    :linenos:
 
-From `budgets/llmhost-compute.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/llmhost-compute.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `budgets/llmhost-compute.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/llmhost-compute.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 Spending alerts only
 --------------------
 
-.. literalinclude:: /_example-manifests/budgets/proxy-warn-only.yaml
+.. literalinclude:: /_example-manifests/smarter/budgets/proxy-warn-only.yaml
    :language: yaml
    :linenos:
 
-From `budgets/proxy-warn-only.yaml <https://github.com/smarter-sh/example-manifests/blob/main/budgets/proxy-warn-only.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `budgets/proxy-warn-only.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/proxy-warn-only.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.

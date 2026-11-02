@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/guardrails/data-subject-request-input.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/guardrails/data-subject-request-input.yaml, for unit tests.
 ---
 apiVersion: smarter.sh/v1
 kind: Guardrail
