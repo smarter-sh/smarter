@@ -66,7 +66,7 @@ The implementation is
 information about The Smarter Project on the web, from reputable sources. It is an example to
 copy, and no example LLMClient uses it. Its manifest is
 `plugins/websearch/websearch-smarter-project.yaml
-<https://github.com/smarter-sh/example-manifests/blob/main/plugins/websearch/websearch-smarter-project.yaml>`__,
+<https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/websearch/websearch-smarter-project.yaml>`__,
 in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 ``manage.py initialize_platform`` and ``manage.py initialize_account`` apply the sample plugins,
@@ -112,7 +112,7 @@ Setup
 Other WebsearchPlugins can use the same Secret, by setting ``apiKey: tavily_api_key``, or a
 Secret of their own: ``apiKey`` is the name of any Secret that the plugin's owner can read. See
 the sample manifests in `plugins/websearch/
-<https://github.com/smarter-sh/example-manifests/tree/main/plugins/websearch>`__.
+<https://github.com/smarter-sh/example-manifests/tree/main/smarter/plugins/websearch>`__.
 
 The environment variable is listed in :doc:`Configuration <../../smarter-platform/configuration>`.
 

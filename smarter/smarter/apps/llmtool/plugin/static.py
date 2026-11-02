@@ -18,20 +18,20 @@ A Plugin that returns static data stored in the Plugin itself.
 
 .. sphinx note: /_example-manifests/ is the clone of smarter-sh/example-manifests that docs/source/conf.py makes.
 
-.. literalinclude:: /_example-manifests/plugins/static/everlasting-gobstopper.yaml
+.. literalinclude:: /_example-manifests/smarter/plugins/static/everlasting-gobstopper.yaml
     :language: yaml
     :caption: 1.) Example Static Plugin Manifest
 
 From `plugins/static/everlasting-gobstopper.yaml
-<https://github.com/smarter-sh/example-manifests/blob/main/plugins/static/everlasting-gobstopper.yaml>`__ in the
+<https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/static/everlasting-gobstopper.yaml>`__ in the
 :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
-.. literalinclude:: /_example-manifests/llm-clients/llmclient-example.yaml
+.. literalinclude:: /_example-manifests/smarter/llm-clients/llmclient-example.yaml
     :language: yaml
     :caption: 2.) Example LLMClient Manifest
 
 From `llm-clients/llmclient-example.yaml
-<https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-example.yaml>`__ in the
+<https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-example.yaml>`__ in the
 :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 """
 

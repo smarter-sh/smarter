@@ -49,11 +49,11 @@ downloaded text-generation model on Hugging Face at the time of writing. It is s
 on a single NVIDIA L4 GPU, and it is one of the examples in the ``llmhosts/`` folder of
 the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`:
 
-.. literalinclude:: /_example-manifests/llmhosts/qwen3-0.6b.yaml
+.. literalinclude:: /_example-manifests/smarter/llmhosts/qwen3-0.6b.yaml
    :language: yaml
    :caption: qwen3-0.6b.yaml
 
-From `llmhosts/qwen3-0.6b.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llmhosts/qwen3-0.6b.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `llmhosts/qwen3-0.6b.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/llmhosts/qwen3-0.6b.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 The manifest describes four things:
 
