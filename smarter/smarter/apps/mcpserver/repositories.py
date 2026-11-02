@@ -23,9 +23,17 @@ from pydantic import BaseModel, ConfigDict, Field
 from smarter.common.const import SMARTER_PROJECT_BLOG_URL, SMARTER_PROJECT_DOCS_URL
 
 GITHUB_URL = "https://github.com"
+"""GitHub's web site, the base of the links to repositories and their files."""
+
 GITHUB_API_URL = "https://api.github.com"
+"""GitHub's REST api, which the indexer asks for a branch's latest commit."""
+
 GITHUB_CODELOAD_URL = "https://codeload.github.com"
+"""GitHub's archive host, which the indexer downloads a repository's tar archive from."""
+
 SMARTER_PROJECT_GITHUB_ORGANIZATION = "smarter-sh"
+"""The GitHub organization that owns The Smarter Project's repositories."""
+
 SMARTER_PROJECT_DOCS_LATEST_URL = f"{SMARTER_PROJECT_DOCS_URL}/en/latest/"
 """The latest version of the Sphinx documentation, built from the smarter repository's docs/source."""
 
@@ -37,6 +45,12 @@ class ProjectRepository(BaseModel):
     """
     A public GitHub repository of The Smarter Project.
 
+    It says where the repository is, which branch is indexed, and, for a repository with
+    Sphinx documentation, where its pages are published. Its methods build the links that the
+    MCP server's tools give the LLM: to a file on GitHub, to a range of its lines, and to the
+    published page that a documentation source file becomes. The model is frozen: the
+    repositories are declared once, in :data:`SMARTER_PROJECT_REPOSITORIES`.
+
     **Example usage**::
 
         repository = get_repository("smarter-cli")
@@ -47,18 +61,41 @@ class ProjectRepository(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     name: str = Field(description="The repository's name, which is also its endpoint's path, e.g. smarter-cli.")
+    """The repository's name in its organization, e.g. ``smarter-cli``.
+
+    It is also the last part of its MCP endpoint, ``/api/v1/mcp/smarter-project/<name>/``, and
+    the ``repository`` of its :class:`~smarter.apps.mcpserver.models.RepositoryIndex`.
+    """
+
     title: str = Field(
         description="What the repository contains, in a few words, e.g. 'the Smarter command-line interface'."
     )
+    """What the repository contains, in a few words, e.g. ``the Smarter command-line interface``."""
+
     description: str = Field(description="What the repository contains, and what questions it answers.")
+    """What the repository contains, and what questions it answers.
+
+    The MCP server shows it to the LLM, so that it can choose which repository to search.
+    """
+
     owner: str = Field(default=SMARTER_PROJECT_GITHUB_ORGANIZATION, description="The GitHub organization.")
+    """The GitHub organization that owns the repository, :data:`SMARTER_PROJECT_GITHUB_ORGANIZATION` by default."""
+
     ref: str = Field(default="main", description="The branch that is indexed.")
+    """The branch that is indexed, ``main`` by default, and that links without a commit point to."""
+
     docs_root: Optional[str] = Field(
         default=None, description="The folder of the Sphinx documentation's source files, e.g. docs/source."
     )
+    """The folder of the Sphinx documentation's source files, e.g. ``docs/source``, or None if it has none."""
+
     docs_url: Optional[str] = Field(
         default=None, description="The url of the published Sphinx documentation that is built from docs_root."
     )
+    """The url of the published Sphinx documentation that is built from :attr:`docs_root`, with a trailing slash.
+
+    It is None if the repository has no published documentation.
+    """
 
     @property
     def full_name(self) -> str:
@@ -67,12 +104,16 @@ class ProjectRepository(BaseModel):
 
     @property
     def github_url(self) -> str:
-        """The repository's GitHub url."""
+        """The repository's GitHub url, e.g. ``https://github.com/smarter-sh/smarter-cli``."""
         return f"{GITHUB_URL}/{self.full_name}"
 
     @property
     def commit_api_url(self) -> str:
-        """The GitHub api url of the latest commit of :attr:`ref`."""
+        """
+        The GitHub api url of the latest commit of :attr:`ref`.
+
+        The indexer requests it to find out whether the branch has moved since it was indexed.
+        """
         return f"{GITHUB_API_URL}/repos/{self.full_name}/commits/{self.ref}"
 
     def archive_url(self, commit_sha: str) -> str:
@@ -80,7 +121,7 @@ class ProjectRepository(BaseModel):
         Return the url of the repository's gzipped tar archive at a commit.
 
         :param commit_sha: The commit.
-        :returns: The url.
+        :returns: The url, e.g. ``https://codeload.github.com/smarter-sh/smarter-cli/tar.gz/0123abc``.
         """
         return f"{GITHUB_CODELOAD_URL}/{self.full_name}/tar.gz/{commit_sha}"
 
@@ -93,10 +134,14 @@ class ProjectRepository(BaseModel):
         :param commit_sha: The commit, for a permanent link. Defaults to :attr:`ref`.
         :param path: The file's path in the repository.
         :param start_line: The first line to highlight.
-        :param end_line: The last line to highlight.
-        :returns: The url.
+        :param end_line: The last line to highlight. Ignored unless it is after ``start_line``.
+        :returns: The url, e.g. ``https://github.com/smarter-sh/smarter-cli/blob/0123abc/README.md#L1-L20``.
         """
-        url = f"{self.github_url}/blob/{commit_sha or self.ref}/{path}"
+        if commit_sha:
+            version = commit_sha
+        else:
+            version = self.ref
+        url = f"{self.github_url}/blob/{version}/{path}"
         if start_line:
             url += f"#L{start_line}"
             if end_line and end_line > start_line:
@@ -114,10 +159,14 @@ class ProjectRepository(BaseModel):
         if not self.docs_root or not self.docs_url:
             return None
         prefix = self.docs_root.rstrip("/") + "/"
-        stem, extension = posixpath.splitext(path)
-        if not path.startswith(prefix) or extension.lower() not in DOCUMENTATION_PAGE_EXTENSIONS:
+        if not path.startswith(prefix):
             return None
-        return f"{self.docs_url}{stem[len(prefix):]}.html"
+        stem, extension = posixpath.splitext(path)
+        if extension.lower() not in DOCUMENTATION_PAGE_EXTENSIONS:
+            return None
+        page = stem[len(prefix) :]
+        url = f"{self.docs_url}{page}.html"
+        return url
 
 
 SMARTER_PROJECT_REPOSITORIES: tuple[ProjectRepository, ...] = (
@@ -258,6 +307,11 @@ class ProjectBlog(BaseModel):
     """
     The Smarter Project's blog, a WordPress site, whose posts the MCP server reads.
 
+    It has the same ``name``, ``title``, ``description``, ``file_url()`` and
+    ``documentation_url()`` as a :class:`ProjectRepository`, so that the search tools can
+    treat the blog as one more source (see :data:`ProjectSource`). The model is frozen: the
+    blog is declared once, in :data:`SMARTER_PROJECT_BLOG`.
+
     Its posts are indexed like a repository's documentation, by
     :func:`smarter.apps.mcpserver.index.blog.index_blog`, under the blog's :attr:`name`. A post's
     path is its permalink's path, e.g. ``2026/10/26/release-smarter-api-v0-6``.
@@ -272,13 +326,28 @@ class ProjectBlog(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     name: str = Field(description="The name of the blog's index, e.g. blog.smarter.sh. It is not a repository's name.")
+    """The name of the blog's index, e.g. ``blog.smarter.sh``.
+
+    It is the ``repository`` of the blog's :class:`~smarter.apps.mcpserver.models.RepositoryIndex`,
+    and is never the name of a repository.
+    """
+
     title: str = Field(description="What the blog contains, in a few words.")
+    """What the blog contains, in a few words, e.g. ``the Smarter blog``."""
+
     description: str = Field(description="What the blog contains, and what questions it answers.")
+    """What the blog contains, and what questions it answers, which the MCP server shows the LLM."""
+
     url: str = Field(description="The blog's url, without a trailing slash, e.g. https://blog.smarter.sh.")
+    """The blog's url, without a trailing slash, e.g. ``https://blog.smarter.sh``."""
 
     @property
     def posts_api_url(self) -> str:
-        """The url of the WordPress REST api's posts."""
+        """
+        The url of the WordPress REST api's posts, e.g. ``https://blog.smarter.sh/wp-json/wp/v2/posts``.
+
+        The blog's indexer pages through it to read every published post.
+        """
         return f"{self.url}/wp-json/wp/v2/posts"
 
     def post_url(self, path: str) -> str:
@@ -294,15 +363,23 @@ class ProjectBlog(BaseModel):
         """
         Return the path of a post, from its url or its path.
 
+        The blog's url, over https or http, is removed, and so are a fragment (``#...``), a query
+        (``?...``) and the slashes at either end. An LLM may give either form, so the tools
+        accept both.
+
         :param url_or_path: e.g. ``https://blog.smarter.sh/2026/10/26/release-smarter-api-v0-6/``.
         :returns: The path, e.g. ``2026/10/26/release-smarter-api-v0-6``.
         """
         value = url_or_path.strip()
-        for prefix in (self.url, self.url.replace("https://", "http://", 1)):
+        http_url = self.url.replace("https://", "http://", 1)
+        for prefix in (self.url, http_url):
             if value.startswith(prefix):
                 value = value[len(prefix) :]
                 break
-        return value.split("#", 1)[0].split("?", 1)[0].strip("/")
+        without_fragment = value.split("#", 1)[0]
+        without_query = without_fragment.split("?", 1)[0]
+        path = without_query.strip("/")
+        return path
 
     def file_url(
         self, commit_sha: Optional[str], path: str, start_line: Optional[int] = None, end_line: Optional[int] = None
@@ -312,11 +389,25 @@ class ProjectBlog(BaseModel):
 
         The signature is that of :meth:`ProjectRepository.file_url`. A post has no commit,
         and its page has no line anchors, so only ``path`` is used.
+
+        :param commit_sha: Ignored.
+        :param path: The post's path, e.g. ``2026/10/26/release-smarter-api-v0-6``.
+        :param start_line: Ignored.
+        :param end_line: Ignored.
+        :returns: The post's url.
         """
         return self.post_url(path)
 
     def documentation_url(self, path: str) -> Optional[str]:
-        """Return the url of a post, which is its published page."""
+        """
+        Return the url of a post, which is its published page.
+
+        The signature is that of :meth:`ProjectRepository.documentation_url`. Every post is a
+        published page, so the url is never None.
+
+        :param path: The post's path, e.g. ``2026/10/26/release-smarter-api-v0-6``.
+        :returns: The post's url.
+        """
         return self.post_url(path)
 
 
@@ -342,6 +433,8 @@ def project_blog() -> ProjectBlog:
 
     Every module reads the blog through this function, so that tests can replace it with a
     throwaway blog, whose index does not collide with the real one.
+
+    :returns: The blog.
     """
     return SMARTER_PROJECT_BLOG
 
@@ -352,6 +445,8 @@ def project_repositories() -> tuple[ProjectRepository, ...]:
 
     Every module reads the repositories through this function, so that tests can replace
     them with throwaway repositories, whose indexes do not collide with the real ones.
+
+    :returns: The repositories, in the order that the MCP server lists them.
     """
     return SMARTER_PROJECT_REPOSITORIES
 
@@ -363,11 +458,21 @@ def get_repository(name: str) -> Optional[ProjectRepository]:
     :param name: The repository's name, e.g. ``smarter-cli``.
     :returns: The repository, or None if there is no such repository.
     """
-    return next((repository for repository in project_repositories() if repository.name == name), None)
+    for repository in project_repositories():
+        if repository.name == name:
+            return repository
+    return None
 
 
 def repository_names() -> list[str]:
-    """Return the names of :data:`SMARTER_PROJECT_REPOSITORIES`."""
+    """
+    Return the names of :data:`SMARTER_PROJECT_REPOSITORIES`.
+
+    The indexing task and the ``index_smarter_project`` command use them to index every
+    repository.
+
+    :returns: The names, e.g. ``["smarter", "smarter-cli", ...]``, in the order that they are declared.
+    """
     return [repository.name for repository in project_repositories()]
 
 

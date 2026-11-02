@@ -1,4 +1,17 @@
-"""Index The Smarter Project's GitHub repositories, and its blog, for the Smarter Project MCP server."""
+"""
+The ``index_smarter_project`` management command: index The Smarter Project's repositories and blog.
+
+The Smarter Project MCP server searches an index of each repository's files, and of the blog's
+posts. This command brings those indexes up to date, either in the foreground, which shows
+each outcome, or by queueing the Celery tasks of :mod:`smarter.apps.mcpserver.tasks`, which is
+how ``manage.py initialize_platform`` runs it.
+
+.. note::
+
+    **Experimental.** The MCPServer was designed and coded by Claude Code (Anthropic's
+    Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental, and will
+    be documented.
+"""
 
 from smarter.apps.mcpserver.index.blog import index_blog
 from smarter.apps.mcpserver.index.indexer import index_repository
@@ -20,6 +33,13 @@ class Command(SmarterCommand):
     repositories, and ``--blog`` only the blog. With ``--queue``, the repositories are indexed by the Celery
     worker instead, which is how ``manage.py initialize_platform`` runs it.
 
+    A repository that cannot be indexed is reported as a warning, and the command still
+    succeeds: the failure is recorded in the index's ``error``, and the previous index, if any,
+    is still searched.
+
+    **Side effects:** requests to the GitHub api and the blog, and the replacement of the
+    indexed files in the database. With ``--queue``, Celery tasks are queued instead.
+
     **Example usage**::
 
         python manage.py index_smarter_project
@@ -31,7 +51,11 @@ class Command(SmarterCommand):
     help = "Index The Smarter Project's GitHub repositories, and its blog, for the Smarter Project MCP server."
 
     def add_arguments(self, parser):
-        """Add arguments to the command."""
+        """
+        Add the command's options: ``--repository``, ``--blog``, ``--force`` and ``--queue``.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument(
             "--repository",
             action="append",
@@ -43,22 +67,40 @@ class Command(SmarterCommand):
         parser.add_argument("--queue", action="store_true", help="Queue the indexing for the Celery worker.")
 
     def handle(self, *args, **options):
-        """Index the repositories."""
+        """
+        Index the repositories and the blog that the options name, or queue their indexing.
+
+        Without ``--repository`` or ``--blog``, every repository and the blog are indexed. With
+        ``--queue`` and neither of them, one :func:`~smarter.apps.mcpserver.tasks.index_repositories`
+        task is queued, which queues the others.
+
+        :param args: Unused.
+        :param options: The parsed options.
+        """
         self.handle_begin()
         force = options["force"]
-        only_blog = options["blog"] and not options["repository"]
-        names = [] if only_blog else options["repository"] or repository_names()
-        include_blog = options["blog"] or not options["repository"]
+        requested_names = options["repository"]
+        wants_blog = options["blog"]
+        only_blog = wants_blog and not requested_names
+        if only_blog:
+            names = []
+        elif requested_names:
+            names = requested_names
+        else:
+            names = repository_names()
+        include_blog = wants_blog or not requested_names
 
         if options["queue"]:
-            if options["repository"] or only_blog:
+            if requested_names or only_blog:
                 for name in names:
                     index_repository_task.delay(name, force=force)
                 if include_blog:
                     index_blog_task.delay(force=force)
             else:
                 index_repositories.delay(force=force)
-            queued = names + (["the blog"] if include_blog else [])
+            queued = list(names)
+            if include_blog:
+                queued.append("the blog")
             self.stdout.write(f"Queued the indexing of {', '.join(queued)}.")
             self.handle_completed_success()
             return

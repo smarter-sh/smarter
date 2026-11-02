@@ -14,6 +14,7 @@ from smarter.apps.infrastructure.exceptions import (
     KubernetesServiceError,
 )
 from smarter.apps.infrastructure.services import (
+    InMemoryKubernetesService,
     KubectlKubernetesService,
     configure_kubernetes,
     get_kubernetes,
@@ -22,6 +23,7 @@ from smarter.apps.infrastructure.services import (
 from smarter.apps.infrastructure.services.kubernetes import (
     billable_resources,
     manifest_kinds,
+    matches_selector,
 )
 from smarter.apps.infrastructure.signals import (
     billable_resource_created,
@@ -477,3 +479,63 @@ class TestConfigureKubernetes(InfrastructureTestBase):
         self.assertIs(get_kubernetes(), fake)
         configure_kubernetes(None)
         self.assertIsNot(get_kubernetes(), fake)
+
+
+def labeled(kind: str, name: str, namespace: str, **labels: str) -> SmarterDictType:
+    """A resource with labels, as kubectl get -o json returns it."""
+    return {"kind": kind, "metadata": {"name": name, "namespace": namespace, "labels": labels}}
+
+
+class TestInMemoryKubernetesService(InfrastructureTestBase):
+    """Test InMemoryKubernetesService, the in-memory cluster of the tests."""
+
+    def setUp(self):
+        super().setUp()
+        self.cluster = InMemoryKubernetesService()
+        self.cluster.items = {
+            "pod": [
+                labeled("Pod", "web-1", "ns", app="web", tier="front"),
+                labeled("Pod", "worker-1", "ns", app="worker"),
+                labeled("Pod", "web-2", "other", app="web"),
+            ],
+            "node": [{"metadata": {"name": "node-1"}}],
+        }
+
+    def test_matches_selector(self):
+        pod = labeled("Pod", "web-1", "ns", app="web", tier="front")
+        self.assertTrue(matches_selector(pod, None))
+        self.assertTrue(matches_selector(pod, "app=web, tier=front"))
+        self.assertFalse(matches_selector(pod, "app=web,tier=back"))
+        self.assertFalse(matches_selector({}, "app=web"))
+
+    def test_find_resources(self):
+        self.assertEqual(len(self.cluster.find_resources("pod", "ns")), 2)
+        self.assertEqual(len(self.cluster.find_resources("pod")), 3, "every namespace")
+        self.assertEqual(len(self.cluster.find_resources("node")), 1)
+        self.assertIsNone(self.cluster.find_resources("ingress", "ns"), "a kind that is not a key cannot be listed")
+        self.assertEqual(self.cluster.calls[:2], [("pod", "ns"), ("pod", None)])
+
+    def test_list_and_get(self):
+        self.assertEqual(
+            [p["metadata"]["name"] for p in self.cluster.list_resources("pod", "ns", "app=web")], ["web-1"]
+        )
+        self.assertEqual(self.cluster.get_resource("pod", "web-2", "other")["metadata"]["name"], "web-2")
+        self.assertIsNone(self.cluster.get_resource("pod", "web-2", "ns"))
+
+    def test_delete(self):
+        self.assertTrue(self.cluster.delete_resource("pod", "worker-1", "ns"))
+        self.assertTrue(self.cluster.delete_resource("pod", "worker-1", "ns"), "deleting twice is fine")
+        self.assertTrue(self.cluster.delete_resources(["pod"], "ns", "app=web"))
+        self.assertEqual(self.cluster.find_resources("pod", "ns"), [])
+        self.assertEqual(len(self.cluster.find_resources("pod", "other")), 1, "other namespaces are kept")
+
+    def test_apply_and_logs(self):
+        self.cluster.apply_manifest("kind: Pod")
+        self.assertEqual(self.cluster.manifests, ["kind: Pod"])
+        self.assertEqual(self.cluster.get_pod_logs("ns", "app=web"), "")
+
+    def test_not_ready(self):
+        cluster = InMemoryKubernetesService(ready=False)
+        cluster.items = self.cluster.items
+        self.assertIsNone(cluster.find_resources("pod", "ns"))
+        self.assertEqual(cluster.list_resources("pod", "ns"), [])
