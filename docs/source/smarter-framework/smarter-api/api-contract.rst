@@ -274,8 +274,9 @@ user-facing :doc:`Smarter OpenAPI Contract <../smarter-openapi>` page.
 
 The SDKs, the cli and the VS Code extension (smarter-vscode-yaml) each keep a pinned copy of these
 files, which their own tests check their code against. Each one copies it with its own
-``make contracts SMARTER_REF=<release tag>``. Every week, the platform's *API Contract Sync*
-workflow (``.github/workflows/apiContractSync.yml``) syncs each repository's ``alpha`` branch with
+``make contracts SMARTER_REF=<release tag>``. Every week, the project's *API Contract Sync*
+workflow (``.github/workflows/apiContractSync.yml`` in `smarter-sh/automation <https://github.com/smarter-sh/automation>`__, the
+repository of The Smarter Project's scheduled jobs) syncs each repository's ``alpha`` branch with
 the platform's latest stable release, and runs that repository's unit tests before and after the
 sync. When a copy is out of date, it opens an issue in that repository, labeled ``api-contract``,
 and a pull request from its ``api-contract-sync`` branch with the sync as one commit. The pull

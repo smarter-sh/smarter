@@ -128,7 +128,8 @@ inputs; any logic goes in a Python module in `scripts/`, with tests in `scripts/
 `test.yml` runs). One Python module is always better than 100 lines of shell, `jq` and JSON
 manipulation inside `run:` blocks. Those scripts use only the standard library and run with
 `python3 -I` (the runner has no virtual environment). Slack messages go through
-`scripts/slack_post.py`. See `scripts/api_contract_sync.py` and `pod_log_review.py`.
+`scripts/slack_post.py`. Scheduled (cron) jobs don't live here: they are in smarter-sh/automation
+(local checkout `../automation`), e.g. the API Contract Sync, Did You Know? and Pod Log Review jobs.
 
 ## Caching
 
