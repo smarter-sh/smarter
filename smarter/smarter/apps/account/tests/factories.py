@@ -77,6 +77,33 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
     return user, account, user_profile
 
 
+def platform_staff_profile_factory(user: User) -> UserProfile:
+    """
+    Give a user a profile in the Smarter account, which makes a staff user one of the platform's staff.
+
+    See :func:`smarter.apps.account.utils.is_platform_staff`. The test deletes the profile when it is
+    done, e.g. in ``tearDownClass``. Deleting the user deletes it too.
+
+    The profile is not ``is_test``: :func:`factory_account_teardown` deletes every ``is_test``
+    profile's account, and this one's is the Smarter account.
+
+    :param user: The user, usually from :func:`admin_user_factory`, which is staff.
+    :returns: The user's new profile in the Smarter account.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.account.utils import smarter_cached_objects
+
+    user_profile = UserProfile.objects.create(
+        name=user.username,
+        description="Platform staff user profile for testing purposes",
+        version=COMMON_VERSION,
+        user=user,
+        account=smarter_cached_objects.smarter_account,
+        is_test=False,
+    )
+    return user_profile
+
+
 def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
     username = str(to_snake_case(f"testMortalUser_{hashed_slug}"))

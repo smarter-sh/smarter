@@ -11,7 +11,9 @@ from django.contrib.auth.models import User
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 
+from smarter.apps.account.models import get_resolved_user
 from smarter.apps.account.models.user_profile import UserProfile
+from smarter.apps.account.utils import is_platform_staff
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.llmclient.models import (
     LLMClient,
@@ -20,6 +22,7 @@ from smarter.apps.llmclient.models import (
 )
 from smarter.apps.llmclient.signals import llmclient_called
 from smarter.apps.llmtool.plugin.base import PluginBase
+from smarter.apps.mcpserver.acting_user import acting_user
 from smarter.apps.prompt.contract.builders import (
     PromptChatApiError,
     PromptChatApiErrorBadRequest,
@@ -437,6 +440,9 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
             return self.error_response(
                 request, PromptChatApiErrorForbidden("Forbidden. Please provide a valid API key.")
             )
+        if self.llmclient.staff_only and not is_platform_staff(get_resolved_user(request.user)):
+            # a 404, as for an LLMClient that doesn't exist, so that it can't be discovered.
+            return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
 
         self.plugins = LLMClientPlugin().plugins(llmclient=self.llmclient)
 
@@ -598,8 +604,14 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
 
         contract = self.forced_contract or requested_contract(request)
 
+        # the prompt runs as the LLMClient's owner, self.user_profile, but its MCP servers learn who
+        # sent it: this platform's Smarter Operations MCP server serves only its staff, and records
+        # each call under the person who made it. See smarter.apps.mcpserver.acting_user.
+        prompting_user = get_resolved_user(request.user)
+
         def complete() -> HttpResponse:
-            response = handler(self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins)  # type: ignore[union-attr]
+            with acting_user(prompting_user):
+                response = handler(self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins)  # type: ignore[union-attr]
             if not self.include_diagnostics:
                 response = without_diagnostics(response)
             if contract == CHAT_CONTRACT_V2:
