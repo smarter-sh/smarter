@@ -131,6 +131,25 @@ manipulation inside `run:` blocks. Those scripts use only the standard library a
 `scripts/slack_post.py`. Scheduled (cron) jobs don't live here: they are in smarter-sh/automation
 (local checkout `../automation`), e.g. the API Contract Sync, Did You Know? and Pod Log Review jobs.
 
+## Slack workspace
+
+The Smarter Project's Slack workspace (`thesmarterproject`) has these channels. Post each kind of
+message to the channel that owns it, and describe them this way in emails, docs and the console:
+
+| Channel          | What goes there                                                         |
+| ---------------- | ----------------------------------------------------------------------- |
+| `#announcements` | Every announcement from blog.smarter.sh                                 |
+| `#contributors`  | Private channel for the project's contributors                          |
+| `#general`       | Posts that don't originate from smarter-sh/smarter                      |
+| `#github-ci`     | All output of the GitHub app's subscriptions                            |
+| `#help`          | Chat directly with the @Smarter Developer agent                         |
+| `#releases`      | Releases from all smarter-sh repositories                               |
+| `#smarter`       | Workflow results that are specific to the smarter-sh/smarter repository |
+
+The bot token has no `channels:read` scope, so it can't list them: this table is the source.
+The invite link is `smarter_settings.branding_url_slack` (`{{ branding.url_slack }}` in templates);
+don't hard-code it in Python or templates.
+
 ## Caching
 
 `@cache_results` is the one way to cache results for an hour or longer. It is
