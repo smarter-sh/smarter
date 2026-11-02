@@ -18,6 +18,15 @@ docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.
 
 - **The container has no bind mount of the source.** Sync your edited files
   first, or you're testing stale code. See `smarter-docker-environment`.
+- **Stop Celery Beat while tests run** (`docker stop smarter-beat`, then
+  `docker start smarter-beat` afterwards); `make docker-test` and
+  `make coverage` do this themselves. The tests share the database with the
+  Celery workers and don't roll back their rows, so a scheduled task changes a
+  running test's data: `reconcile_vectorstores` once overwrote a test
+  vectorstore's `ready` with `provisioning`, failing
+  `test_undeploy_and_deploy` at random. In the local containers it would also
+  send the test's resources to the real Kubernetes cluster. Keep the workers
+  running; tests queue tasks with `.delay()`. CI stops Beat the same way.
 - **Run the tests yourself, every time.** Don't ask the user to re-run. Run long
   suites in the background, with output written to a log file in your
   scratchpad, and read the summary at the end.
@@ -160,6 +169,7 @@ below the 90% target are also frowned upon. (see `smarter-development`).
 ```console
 make coverage
 # = docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"
+#   with smarter-beat stopped while it runs
 ```
 
 CI's `python` job (`.github/workflows/test.yml`) runs the same command as eight

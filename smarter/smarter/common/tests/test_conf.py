@@ -123,6 +123,9 @@ class TestSettings(SmarterTestBase):
     def test_branding_url_linkedin(self):
         self.assertIsNotNone(smarter_settings.branding_url_linkedin)
 
+    def test_branding_url_slack(self):
+        self.assertIsNotNone(smarter_settings.branding_url_slack)
+
     def test_cache_expiration(self):
         self.assertIsNotNone(smarter_settings.cache_expiration)
 

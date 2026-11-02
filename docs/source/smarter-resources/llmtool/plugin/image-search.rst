@@ -28,7 +28,7 @@ Brave's results:
 
 Use them to tailor a plugin to one purpose, such as kid-friendly images from Wikimedia Commons,
 black and white photographs, technical diagrams or SVG images. The sample manifests in the
-`plugins/image-search/ <https://github.com/smarter-sh/example-manifests/tree/main/plugins/image-search>`__
+`plugins/image-search/ <https://github.com/smarter-sh/example-manifests/tree/main/smarter/plugins/image-search>`__
 folder of the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`
 do just that.
 

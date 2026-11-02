@@ -1,9 +1,14 @@
-"""Test the welcome email's dev preview view, in each language."""
+"""Test the dev preview views of the welcome and Slack invitation emails, in each language."""
 
 from django.test import RequestFactory
 from django.utils import translation
 
-from smarter.apps.account.views.email import EmailWelcomeView
+from smarter.apps.account.models import unsubscribe_url
+from smarter.apps.account.views.email import (
+    PREVIEW_EMAIL_ADDRESS,
+    EmailSlackInvitationView,
+    EmailWelcomeView,
+)
 
 from .mixins import TestAccountMixin
 
@@ -30,6 +35,31 @@ class TestEmailWelcomeView(TestAccountMixin):
     def test_english(self):
         response = self.get()
         self.assertIn("Howdy Jane,", response.content.decode())
+
+    def test_unknown_language(self):
+        self.assertEqual(self.get("?language=xx").status_code, 400)
+
+
+class TestEmailSlackInvitationView(TestAccountMixin):
+    """Test the Slack invitation email's preview."""
+
+    def get(self, query: str = "", language: str = "en"):
+        request = RequestFactory().get(f"/account/email/slack-invitation/jane/{query}")
+        request.user = self.admin_user
+        with translation.override(language):
+            return EmailSlackInvitationView.as_view()(request, first_name="jane")
+
+    def test_english(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertIn("Howdy Jane,", body)
+        self.assertIn("#help", body)
+        self.assertIn(unsubscribe_url(PREVIEW_EMAIL_ADDRESS), body)
+
+    def test_language_parameter(self):
+        response = self.get("?language=es")
+        self.assertIn("Hola, Jane:", response.content.decode())
 
     def test_unknown_language(self):
         self.assertEqual(self.get("?language=xx").status_code, 400)

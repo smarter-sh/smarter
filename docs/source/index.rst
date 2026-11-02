@@ -412,11 +412,11 @@ Usage
 This built-in LLMClient is a complete, governed AI application. It combines a SkillPlugin, an
 MCPClient, and four guardrails, and it contains no code.
 
-.. literalinclude:: /_example-manifests/llm-clients/llmclient-data-analyst.yaml
+.. literalinclude:: /_example-manifests/smarter/llm-clients/llmclient-data-analyst.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 
-From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-data-analyst.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-data-analyst.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
 
 
 **2. Apply the Manifest**

@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/guardrails/moderation-input.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/guardrails/moderation-input.yaml, for unit tests.
 ---
 apiVersion: smarter.sh/v1
 kind: Guardrail

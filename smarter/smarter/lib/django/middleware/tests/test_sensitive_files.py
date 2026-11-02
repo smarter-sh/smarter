@@ -159,6 +159,19 @@ class TestSmarterBlockSensitiveFilesMiddleware(unittest.TestCase):
         self.assertEqual(resp["Retry-After"], str(self.middleware.THROTTLE_TIMEOUT))
         self.assertIn(b"Too many suspicious requests", resp.content)
 
+    def test_throttle_log_names_the_path_not_the_client_ip(self):
+        """Test that the throttled warning names the request's path, never the client's ip, which is personal data."""
+        ip = self.public_ip()
+        for _ in range(self.middleware.THROTTLE_LIMIT):
+            self.middleware(self.make_request("/.env", ip=ip))
+        with patch("smarter.lib.django.middleware.sensitive_files.logger") as mock_logger:
+            resp = self.middleware(self.make_request("/.env.remote", ip=ip))
+        self.assertEqual(resp.status_code, 429)
+        mock_logger.warning.assert_called_once()
+        args = mock_logger.warning.call_args.args
+        self.assertIn("/.env.remote", args)
+        self.assertNotIn(ip, " ".join(str(arg) for arg in args))
+
     def test_blocked_path_looks_like_any_missing_page(self):
         """Test that a blocked path gets the platform's ordinary 404, with no sign that it was blocked."""
         resp = self.middleware(self.make_request("/.env"))

@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/plugins/skill/skill-meeting-notes.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/plugins/skill/skill-meeting-notes.yaml, for unit tests.
 ---
 # A SkillPlugin whose SKILL.md is pasted verbatim into spec.skillData.skill,
 # along with a bundled template in spec.skillData.resources.

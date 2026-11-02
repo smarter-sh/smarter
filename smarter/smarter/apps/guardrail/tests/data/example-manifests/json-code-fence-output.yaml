@@ -1,4 +1,4 @@
-# A copy of https://github.com/smarter-sh/example-manifests/blob/main/guardrails/json-code-fence-output.yaml, for unit tests.
+# A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/guardrails/json-code-fence-output.yaml, for unit tests.
 ---
 apiVersion: smarter.sh/v1
 kind: Guardrail

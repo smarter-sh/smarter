@@ -40,7 +40,7 @@ Tools and Extensibility
      - An LLMClient lists Extensions by slug in ``spec.extensions``. The built-in weather
        LLMClient's system prompt names the tool exactly as the LLM sees it,
        ``ext_weather_get_weather``, and a test keeps prompts and manifests from drifting apart.
-     - `llmclient-weather.yaml <https://github.com/smarter-sh/example-manifests/blob/main/llm-clients/llmclient-weather.yaml>`__
+     - `llmclient-weather.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-weather.yaml>`__
 
 The Official Extensions
 ~~~~~~~~~~~~~~~~~~~~~~~
