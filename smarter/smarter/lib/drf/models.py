@@ -169,7 +169,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         tags = self.tags
         if not isinstance(tags, list):
             return []
-        return [str(tag) for tag in tags]
+        return [str(tag) for tag in tags]  # pylint: disable=not-an-iterable
 
     @classmethod
     def get_object_by_locator(cls, locator: str) -> Optional["SmarterAuthToken"]:

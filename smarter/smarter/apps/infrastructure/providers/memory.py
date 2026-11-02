@@ -18,12 +18,21 @@ tests exercise the service layer, and its signals, without reaching real infrast
 import copy
 from typing import Any, Optional
 
+from smarter.apps.infrastructure.cluster_health import ClusterHealth
+from smarter.apps.infrastructure.const import CertificateStatus, CloudProviders
+from smarter.apps.infrastructure.services.base import DiscoveredResource
+from smarter.apps.infrastructure.services.certificates import (
+    Certificate,
+    CertificateService,
+)
+from smarter.apps.infrastructure.services.dns import (
+    DNSRecord,
+    DNSService,
+    DNSZone,
+    normalize_name,
+)
 from smarter.lib.typing import SmarterDictType
 
-from ..const import CertificateStatus, CloudProviders
-from ..services.base import DiscoveredResource
-from ..services.certificates import Certificate, CertificateService
-from ..services.dns import DNSRecord, DNSService, DNSZone, normalize_name
 from .base import CloudProvider
 
 ACCOUNT_ID = "000000000000"
@@ -162,6 +171,8 @@ class InMemoryProvider(CloudProvider):
             "status": "ACTIVE",
             "version": "1.33",
         }
+        self.cluster_health: Optional[ClusterHealth] = None
+        """The cluster's health, or None for the one that :attr:`cluster_info` describes."""
         self.cluster_resources: dict[str, list[DiscoveredResource]] = {}
         """The cloud resources of the cluster, by resource type, for the inventory."""
 
@@ -200,6 +211,20 @@ class InMemoryProvider(CloudProvider):
     def get_kubernetes_cluster_info(self) -> SmarterDictType:
         self.require_ready()
         return dict(self.cluster_info)
+
+    def get_kubernetes_cluster_health(self) -> ClusterHealth:
+        """
+        Return the cluster's health that a test set in :attr:`cluster_health`.
+
+        Without one, it is built from :attr:`cluster_info`, as the base class builds it.
+
+        :returns: A copy of the health, so that a caller cannot change the test's.
+        :raises InfrastructureNotReadyError: If the provider is not ready.
+        """
+        if self.cluster_health is None:
+            return super().get_kubernetes_cluster_health()
+        self.require_ready()
+        return self.cluster_health.model_copy(deep=True)
 
     def get_kubernetes_cluster_resources(self) -> dict[str, list[DiscoveredResource]]:
         if not self.ready:

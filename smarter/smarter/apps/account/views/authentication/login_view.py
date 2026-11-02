@@ -9,6 +9,12 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.translation import gettext as _
 
+from smarter.apps.account.login_audit import (
+    LoginFailure,
+    log_login_failure,
+    login_identity,
+    password_failure,
+)
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
@@ -218,29 +224,37 @@ class LoginView(SmarterNeverCachedWebView):
                 if authenticated_user is not None:
                     login(request, authenticated_user)
                     logger.debug(
-                        "%s.LoginView.post() authentication succeeded for user %s", self.formatted_class_name, email
+                        "%s.LoginView.post() authentication succeeded for identity %s",
+                        self.formatted_class_name,
+                        login_identity(email),
                     )
                     return redirect_and_expire_cache(path="/")
-                logger.debug("%s.LoginView.post() authentication failed for user %s", self.formatted_class_name, email)
+                log_login_failure(email, password_failure(user))
                 return SmarterHttpResponseBadRequest(
                     request=request, error_message=_("Username and/or password do not match.")
                 )
             except User.DoesNotExist:
-                logger.debug("%s.LoginView.post() no user found with email %s", self.formatted_class_name, email)
+                log_login_failure(email, LoginFailure.UNKNOWN_ACCOUNT)
                 return SmarterHttpResponseForbidden(
                     request=request, error_message=_("Invalid login attempt. Unknown user %(email)s") % {"email": email}
                 )
             # pylint: disable=W0718
             except Exception as e:
-                logger.debug(
-                    "%s.LoginView.post() encountered an unknown error for user %s: %s\n%s",
+                log_login_failure(email, LoginFailure.ERROR)
+                logger.error(
+                    "%s.LoginView.post() sign-in of identity %s raised an exception: %s\n%s",
                     self.formatted_class_name,
-                    email,
+                    login_identity(email),
                     e,
                     traceback.format_exc(),
                 )
                 return SmarterHttpResponseServerError(
                     request=request, error_message=_("An unknown error occurred %(error)s") % {"error": e}
                 )
-        logger.debug("%s.LoginView.post() invalid form data received: %s", self.formatted_class_name, form.errors)
+        log_login_failure(request.POST.get("email"), LoginFailure.INVALID_FORM)
+        logger.debug(
+            "%s.LoginView.post() invalid form data received in fields: %s",
+            self.formatted_class_name,
+            list(form.errors.keys()),
+        )
         return SmarterHttpResponseBadRequest(request=request, error_message=_("Received invalid responses."))

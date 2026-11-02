@@ -1,5 +1,5 @@
 """
-Celery tasks for the mcpserver app.
+Celery tasks of the MCPServer app, which keep the Smarter Project MCP server's indexes up to date.
 
 - :func:`index_repository` brings one repository's index up to date. The MCP server's
   tools queue it for a repository that is not indexed yet.
@@ -38,10 +38,18 @@ def index_repository(name: str, force: bool = False) -> str:
     """
     Bring a repository's index up to date with the latest commit of its branch.
 
+    Runs :func:`smarter.apps.mcpserver.index.indexer.index_repository` in the Celery worker.
+    Side effects: a request to the GitHub api for the branch's latest commit and, when it has
+    moved, a download of the repository's archive, and the replacement of its
+    :class:`~smarter.apps.mcpserver.models.RepositoryFile` rows. The indexer then sends
+    ``mcpserver_repository_indexed``, which makes the cached tool results stale, or
+    ``mcpserver_repository_index_failed``.
+
     :param name: The repository's name, e.g. ``smarter-cli``.
     :param force: Index the repository even if its latest commit is already indexed.
-    :returns: The index's status.
+    :returns: The index's status, e.g. ``ready``.
     :rtype: str
+    :raises SmarterMCPServerIndexError: If ``name`` is not a repository of The Smarter Project.
     """
     index = indexer.index_repository(name, force=force)
     logger.info(
@@ -51,7 +59,8 @@ def index_repository(name: str, force: bool = False) -> str:
         index.status,
         index.commit_sha,
     )
-    return str(index.status)
+    status = str(index.status)
+    return status
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
@@ -59,8 +68,14 @@ def index_blog(force: bool = False) -> str:
     """
     Bring the blog's index up to date with its published posts.
 
+    Runs :func:`smarter.apps.mcpserver.index.blog.index_blog` in the Celery worker. Side
+    effects: requests to the blog's WordPress REST api, one per 100 posts, and, when the posts
+    changed, the replacement of the blog's
+    :class:`~smarter.apps.mcpserver.models.RepositoryFile` rows and a signal that makes the
+    cached tool results stale.
+
     :param force: Index the posts even if they are already indexed.
-    :returns: The index's status.
+    :returns: The index's status, e.g. ``ready``.
     :rtype: str
     """
     index = blog.index_blog(force=force)
@@ -71,13 +86,18 @@ def index_blog(force: bool = False) -> str:
         index.status,
         index.file_count,
     )
-    return str(index.status)
+    status = str(index.status)
+    return status
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
 def index_repositories(force: bool = False) -> int:
     """
     Queue :func:`index_repository` for every repository of The Smarter Project, and :func:`index_blog`.
+
+    Each repository is indexed by its own task, so that one slow or failing repository does
+    not hold up the others. Side effects: one Celery task queued per repository, and one for
+    the blog.
 
     :param force: Index each repository, and the blog, even if they are already indexed.
     :returns: The number of repositories queued, not counting the blog.

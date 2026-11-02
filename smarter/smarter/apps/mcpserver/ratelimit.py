@@ -29,24 +29,39 @@ from smarter.common.conf import smarter_settings
 from smarter.common.mixins import SmarterMiddlewareMixin
 
 WINDOW_SECONDS = 60
-"""The length of a rate limit window."""
+"""The length of a rate limit window, in seconds."""
+
+WINDOW_KEY_TIMEOUT = WINDOW_SECONDS * 2
+"""How long a window's count is kept in the cache: two windows, so that it outlives its window."""
+
 RATE_LIMITED = -32010
 """The JSON-RPC error code of a rate-limited request, in the implementation-defined range of MCP's error codes."""
 
 
 class ClientAddress(SmarterMiddlewareMixin):
-    """:meth:`SmarterMiddlewareMixin.get_client_ip`, outside of a middleware."""
+    """
+    Finds a request's client address, as the platform's middleware does, outside of a middleware.
+
+    :class:`~smarter.common.mixins.SmarterMiddlewareMixin` knows which headers carry the
+    client's address behind the platform's proxies, in
+    :meth:`~smarter.common.mixins.SmarterMiddlewareMixin.get_client_ip`. It is a middleware, so
+    its constructor needs a ``get_response`` callable, which is never called here.
+    """
 
     def __init__(self):
+        """Create the helper, with a ``get_response`` that is never called."""
         super().__init__(get_response=lambda request: None)
 
 
 _client_address: Optional[ClientAddress] = None
+"""The one :class:`ClientAddress` of the process, created on the first call of :func:`client_ip`."""
 
 
 def client_ip(request: HttpRequest) -> Optional[str]:
     """
     Return the public IP address of a request's client.
+
+    The :class:`ClientAddress` helper is created on the first call, and reused.
 
     :param request: The request.
     :returns: The address, or None if it cannot be determined.
@@ -58,23 +73,49 @@ def client_ip(request: HttpRequest) -> Optional[str]:
 
 
 def current_window() -> int:
-    """Return the number of the current rate limit window."""
-    return int(time.time() // WINDOW_SECONDS)
+    """
+    Return the number of the current rate limit window.
+
+    The windows are numbered from the Unix epoch, so every pod agrees on the current one.
+
+    :returns: The number of :data:`WINDOW_SECONDS`-long windows since the epoch.
+    """
+    now = time.time()
+    return int(now // WINDOW_SECONDS)
 
 
 def retry_after() -> int:
-    """Return the seconds until the current rate limit window ends."""
-    return max(1, WINDOW_SECONDS - int(time.time() % WINDOW_SECONDS))
+    """
+    Return the seconds until the current rate limit window ends, for a ``Retry-After`` header.
+
+    :returns: The seconds left in the window, at least 1.
+    """
+    now = time.time()
+    seconds_into_window = int(now % WINDOW_SECONDS)
+    seconds_left = WINDOW_SECONDS - seconds_into_window
+    return max(1, seconds_left)
 
 
 def rate_limit_key(ip: str, window: int) -> str:
-    """Return the cache key of a client's request count in a window."""
+    """
+    Return the cache key of a client's request count in a window.
+
+    :param ip: The client's IP address.
+    :param window: The window's number, from :func:`current_window`.
+    :returns: The key, e.g. ``smarter.apps.mcpserver.ratelimit.203.0.113.7.29374512``.
+    """
     return f"smarter.apps.mcpserver.ratelimit.{ip}.{window}"
 
 
 def is_rate_limited(ip: Optional[str]) -> bool:
     """
     Count a request of a client, and return whether the client is over the limit.
+
+    The count is kept in the cache (Redis), so every pod of the platform shares it. The first
+    request of a window creates its key with ``add()``, and each later one increments it with
+    ``incr()``, which is atomic, so that concurrent requests are all counted.
+
+    Side effects: one or two cache writes, unless the limit is off or the address is unknown.
 
     :param ip: The client's IP address, from :func:`client_ip`.
     :returns: True if the client has sent more than ``smarter_settings.mcpserver_rate_limit``
@@ -83,16 +124,20 @@ def is_rate_limited(ip: Optional[str]) -> bool:
     limit = smarter_settings.mcpserver_rate_limit
     if not limit or not ip:
         return False
-    key = rate_limit_key(ip, current_window())
-    if lazy_cache.add(key, 1, timeout=WINDOW_SECONDS * 2):
-        return 1 > limit
-    try:
-        count = lazy_cache.incr(key)
-    except ValueError:
-        # the key expired between add() and incr().
-        lazy_cache.set(key, 1, timeout=WINDOW_SECONDS * 2)
+    window = current_window()
+    key = rate_limit_key(ip, window)
+    is_first_request = lazy_cache.add(key, 1, timeout=WINDOW_KEY_TIMEOUT)
+    if is_first_request:
         count = 1
-    return count > limit
+    else:
+        try:
+            count = lazy_cache.incr(key)
+        except ValueError:
+            # the key expired between add() and incr().
+            lazy_cache.set(key, 1, timeout=WINDOW_KEY_TIMEOUT)
+            count = 1
+    is_over_limit = count > limit
+    return is_over_limit
 
 
 __all__ = ["RATE_LIMITED", "client_ip", "is_rate_limited", "retry_after"]

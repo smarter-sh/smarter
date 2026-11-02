@@ -20,14 +20,21 @@ from typing import Any, Optional
 
 import boto3
 
+from smarter.apps.infrastructure.cluster_health import ClusterHealth
+from smarter.apps.infrastructure.const import CloudProviders, KubernetesResourceTypes
+from smarter.apps.infrastructure.exceptions import (
+    InfrastructureConfigurationError,
+    SmarterInfrastructureError,
+)
+from smarter.apps.infrastructure.providers.base import CloudProvider
+from smarter.apps.infrastructure.services.base import (
+    DiscoveredResource,
+    refuse_in_unit_tests,
+)
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
-from ...const import CloudProviders, KubernetesResourceTypes
-from ...exceptions import InfrastructureConfigurationError, SmarterInfrastructureError
-from ...services.base import DiscoveredResource, refuse_in_unit_tests
-from ..base import CloudProvider
 from .certificates import ACMCertificateService
 from .dns import Route53DNSService
 from .helpers.base import AWSBase
@@ -148,6 +155,24 @@ class AWSProvider(CloudProvider):
         self.require_ready()
         with self.operation("get_kubernetes_cluster_info"):
             return self.eks.get_kubernetes_info()
+
+    def get_kubernetes_cluster_health(self) -> ClusterHealth:
+        """
+        Describe the EKS cluster's health: its control plane, node groups, add-ons and insights.
+
+        It delegates to :meth:`~smarter.apps.infrastructure.providers.aws.helpers.eks.AWSEks.get_cluster_health`,
+        and translates its errors, e.g. a ``ClientError``, into the service's own exception, so that the
+        caller never handles an AWS SDK exception.
+
+        Side effects: read-only calls to the EKS api. Nothing is changed.
+
+        :returns: The cluster's health. A part that could not be read is named in its ``errors``.
+        :raises InfrastructureNotReadyError: If AWS is not ready.
+        :raises SmarterInfrastructureError: If the cluster itself cannot be described.
+        """
+        self.require_ready()
+        with self.operation("get_kubernetes_cluster_health"):
+            return self.eks.get_cluster_health()
 
     def get_kubernetes_cluster_resources(self) -> dict[str, list[DiscoveredResource]]:
         """
