@@ -240,6 +240,7 @@ Technical Reference
    infrastructure/email
    infrastructure/slack
    infrastructure/logs
+   infrastructure/cluster-health
    infrastructure/inventory
    infrastructure/providers
    infrastructure/aws

@@ -4,8 +4,9 @@ Smarter Operations MCP Server
 Every Smarter platform runs a second `Model Context Protocol <https://modelcontextprotocol.io>`__
 server, beside the public :doc:`Smarter Project MCP Server <smarter-project-mcp-server>`, for the
 platform's own staff. It gives them, and the AI agents they work with, such as Claude Code, what they
-need to answer help desk questions like "my login isn't working", "why is Smarter slow right now?" or
-"my prompt says there was a system error": the platform's pod logs, for the last 72 hours.
+need to answer help desk questions like "my login isn't working", "why is Smarter slow right now?",
+"my prompt says there was a system error" or "is there something wrong with EKS right now?": the
+platform's health now, and its pod logs, for the last 72 hours.
 
 Its data is not public, so it serves only the platform's active staff users, and records every tool
 call in an audit trail.
@@ -47,6 +48,19 @@ for the call, which is recorded in the audit trail.
 
    * - Tool
      - What it does
+   * - ``platform_status``
+     - Reports the platform's health now, in one call, starting with what looks wrong: the
+       environment's pods (ready, restarts, problems such as ``CrashLoopBackOff`` or ``OOMKilled``,
+       CPU and memory use), the cluster's nodes (ready, pressure, CPU and memory use), recent
+       Kubernetes warning events, the web console dashboard's health checks of the database, cache,
+       task broker and workers, the Celery queues' backlog, the database's connections, and the
+       public status pages of OpenAI, Anthropic and Mistral, and of AWS EKS and EC2 in the
+       platform's region. The place to start for "is Smarter down?" and slowness.
+   * - ``eks_status``
+     - Reports the cluster as AWS EKS sees it: the control plane's status, version and health
+       issues, each node group's status, size, instance types and health issues, each add-on's
+       version and whether a newer one is available, and EKS's insights, such as readiness for the
+       next Kubernetes version, with the recent AWS events in the platform's region.
    * - ``summarize_log_errors``
      - Groups the errors, and optionally the warnings, of a period by component, level and
        signature: the message without its numbers, ids and quoted values. Each group has its count,
@@ -58,6 +72,12 @@ for the call, which is recorded in the audit trail.
    * - ``list_log_sources``
      - Lists the components and pods that wrote to the logs recently. A component that is missing
        has written nothing, for example because its pods are down.
+
+The status tools read Kubernetes and metrics-server (the numbers that ``kubectl top`` shows), the
+EKS api, the platform's own database and Celery broker, and public status pages, when they are
+called. They add no cloud monitoring, such as CloudWatch, and so no cost. A part that cannot be read,
+for example EKS insights without the ``eks:ListInsights`` permission, is named in the result, and the
+other parts are still reported.
 
 The components are ``smarter`` (the web app and api), ``smarter-worker`` and
 ``smarter-worker-infrastructure`` (the Celery workers), ``smarter-beat`` (the scheduler) and
@@ -101,5 +121,9 @@ Technical Reference
 
    smarter-operations-mcp-server/operations-server
    smarter-operations-mcp-server/operations-tools
+   smarter-operations-mcp-server/status-tools
+   smarter-operations-mcp-server/status-cluster
+   smarter-operations-mcp-server/status-platform
+   smarter-operations-mcp-server/status-feeds
    smarter-operations-mcp-server/log-tools
    smarter-operations-mcp-server/log-summary

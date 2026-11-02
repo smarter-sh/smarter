@@ -34,12 +34,15 @@ from smarter.apps.mcpserver.protocol.base import (
     MCPToolBase,
 )
 from smarter.apps.mcpserver.protocol.operations_tools import SmarterOperationsTool
+from smarter.apps.mcpserver.status.tools import EksStatusTool, PlatformStatusTool
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 
 SERVER_NAME = "smarter-operations"
 
 OPERATIONS_TOOL_CLASSES: tuple[type[SmarterOperationsTool], ...] = (
+    PlatformStatusTool,
+    EksStatusTool,
     SummarizeLogErrorsTool,
     SearchLogsTool,
     ListLogSourcesTool,
@@ -47,15 +50,20 @@ OPERATIONS_TOOL_CLASSES: tuple[type[SmarterOperationsTool], ...] = (
 """Every tool of the Smarter Operations MCP server, in the order that tools/list lists them."""
 
 INSTRUCTIONS = """\
-This server reads the operations of the Smarter platform {environment}: the logs of its pods for the \
-last 72 hours. You are helping the platform's staff answer help desk questions, e.g. "my login isn't \
+This server reads the operations of the Smarter platform {environment}: its health now, and the logs \
+of its pods for the last 72 hours. You are helping the platform's staff answer help desk questions, e.g. "my login isn't \
 working", "why is Smarter slow right now?" or "my prompt says there was a system error".
 
 Every tool takes a ticket: the help desk ticket, or the reason for the call. Every call is recorded, \
 with your user and the ticket, in the audit trail.
 
-- summarize_log_errors groups the errors of a period by their signature. Call it first for errors, \
-slowness and outages.
+- platform_status reports what looks wrong now: pods, nodes, CPU and memory, warning events, the health \
+checks, the task queues, the database, and the status pages of the AI providers and AWS. Call it first for \
+"is Smarter down?", slowness and outages.
+- eks_status reports the cluster as AWS EKS sees it: node groups, add-ons and their updates, health issues \
+and insights. Call it for questions about EKS, nodes and upgrades.
+- summarize_log_errors groups the errors of a period by their signature. Call it for errors, and after \
+platform_status for slowness and outages.
 - search_logs finds the lines around a problem: by component, pod, text, pattern and level.
 - list_log_sources lists the components and pods that wrote to the logs recently. A component that is \
 missing has written nothing, e.g. because it is down.
@@ -109,7 +117,7 @@ class SmarterOperationsMCPServer(MCPServerBase):
             name=self.name,
             title="Smarter Operations",
             version=SERVER_VERSION,
-            description="The operations of this Smarter platform, for its staff: its pod logs.",
+            description="The operations of this Smarter platform, for its staff: its health and its pod logs.",
             website_url=SMARTER_PROJECT_WEBSITE_URL,
         )
 
