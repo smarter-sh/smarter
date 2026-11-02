@@ -8,10 +8,19 @@ It describes the platform's EKS cluster, its add-ons and node groups, and writes
 import base64
 import subprocess
 import time
-from typing import Any
+from typing import Any, Optional
 
+from botocore.exceptions import ClientError
 from botocore.signers import RequestSigner
 
+from smarter.apps.infrastructure.cluster_health import (
+    AddonHealth,
+    ClusterHealth,
+    ClusterInsight,
+    HealthIssue,
+    NodeGroupHealth,
+    version_key,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
@@ -31,6 +40,33 @@ How long an EKS token is used.
 EKS accepts one for 15 minutes, and ``aws eks get-token`` reports
 14, so 10 leaves a margin for the clocks of the cluster and the worker.
 """
+
+
+def health_issues(resource: SmarterDictType) -> tuple[HealthIssue, ...]:
+    """
+    Read the health issues of an EKS cluster, node group or add-on from its description.
+
+    EKS describes each of them with a ``health`` object, whose ``issues`` each have a ``code``, a
+    ``message`` and the ``resourceIds`` that they affect. A resource without issues has an empty list,
+    or no ``health`` at all.
+
+    :param resource: The description, e.g. ``describe_nodegroup(...)["nodegroup"]``.
+    :returns: The issues, in EKS's order, or an empty tuple if there are none.
+    """
+    health = resource.get("health") or {}
+    issues = []
+    for issue in health.get("issues") or []:
+        if not isinstance(issue, dict):
+            continue
+        resource_ids = issue.get("resourceIds") or []
+        issues.append(
+            HealthIssue(
+                code=str(issue.get("code", "")),
+                message=str(issue.get("message", "")),
+                resources=tuple(str(resource_id) for resource_id in resource_ids),
+            )
+        )
+    return tuple(issues)
 
 
 class AWSEks(AWSBase):
@@ -124,6 +160,185 @@ class AWSEks(AWSBase):
                 for nodegroup in nodegroups
             ],
         }
+
+    def get_cluster_health(self) -> ClusterHealth:
+        """
+        Describe the health of the platform's EKS cluster, ``smarter_settings.aws_eks_cluster_name``.
+
+        It reads the control plane, each managed node group, each add-on with its newest version for the
+        cluster's Kubernetes version, and EKS's insights, e.g. the cluster's readiness for the next
+        Kubernetes version. The node groups, the add-ons and the insights are each read on their own: a
+        part that fails, e.g. because the credentials may not call ``eks:ListInsights``, is named in
+        :attr:`ClusterHealth.errors`, with AWS's error code, and the other parts are still returned.
+
+        Side effects: read-only calls to the EKS api: ``DescribeCluster``, ``ListNodegroups`` and
+        ``DescribeNodegroup``, ``ListAddons``, ``DescribeAddon`` and ``DescribeAddonVersions``, and
+        ``ListInsights``. Nothing is changed.
+
+        :returns: The cluster's health.
+        :raises AWSNotReadyError: If AWS is not ready, or the cluster's name is not set.
+        :raises botocore.exceptions.ClientError: If the cluster itself cannot be described.
+        """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
+        if not self.cluster_name_is_set():
+            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
+        cluster_name = smarter_settings.aws_eks_cluster_name
+        cluster = self.client.describe_cluster(name=cluster_name)["cluster"]
+        health = ClusterHealth(
+            name=str(cluster.get("name", cluster_name)),
+            status=str(cluster.get("status", "")),
+            version=str(cluster.get("version", "")),
+            platform_version=str(cluster.get("platformVersion", "")),
+            issues=health_issues(cluster),
+        )
+
+        try:
+            health.nodegroups = self._nodegroups(cluster_name)
+        except ClientError as e:
+            health.errors.append(self._part_error("nodegroups", e))
+        try:
+            health.addons = self._addons(cluster_name, health.version)
+        except ClientError as e:
+            health.errors.append(self._part_error("addons", e))
+        try:
+            health.insights = self._insights(cluster_name)
+        except ClientError as e:
+            health.errors.append(self._part_error("insights", e))
+        return health
+
+    def _part_error(self, part: str, error: ClientError) -> str:
+        """
+        Describe a part of the cluster's health that could not be read, and log it.
+
+        :param part: The part, e.g. ``insights``.
+        :param error: AWS's error.
+        :returns: The part and AWS's error code, e.g. ``insights: AccessDeniedException``.
+        """
+        details = error.response.get("Error", {})
+        code = details.get("Code", "ClientError")
+        logger.warning("%s.get_cluster_health() could not read %s: %s", self.formatted_class_name, part, code)
+        return f"{part}: {code}"
+
+    def _nodegroups(self, cluster_name: str) -> list[NodeGroupHealth]:
+        """
+        Describe each managed node group of the cluster.
+
+        Side effects: one ``ListNodegroups`` call per page of node groups, and one ``DescribeNodegroup``
+        call per node group.
+
+        :param cluster_name: The cluster's name.
+        :returns: Each node group's health, in EKS's order.
+        :raises botocore.exceptions.ClientError: If the node groups cannot be listed or described.
+        """
+        nodegroups = []
+        paginator = self.client.get_paginator("list_nodegroups")
+        for page in paginator.paginate(clusterName=cluster_name):
+            for name in page.get("nodegroups", []):
+                response = self.client.describe_nodegroup(clusterName=cluster_name, nodegroupName=name)
+                nodegroup = response["nodegroup"]
+                scaling = nodegroup.get("scalingConfig") or {}
+                instance_types = nodegroup.get("instanceTypes") or []
+                health = NodeGroupHealth(
+                    name=str(nodegroup.get("nodegroupName", name)),
+                    status=str(nodegroup.get("status", "")),
+                    desired_size=scaling.get("desiredSize"),
+                    min_size=scaling.get("minSize"),
+                    max_size=scaling.get("maxSize"),
+                    instance_types=tuple(instance_types),
+                    capacity_type=str(nodegroup.get("capacityType", "")),
+                    release_version=str(nodegroup.get("releaseVersion", "")),
+                    issues=health_issues(nodegroup),
+                )
+                nodegroups.append(health)
+        return nodegroups
+
+    def _addons(self, cluster_name: str, kubernetes_version: str) -> list[AddonHealth]:
+        """
+        Describe each add-on of the cluster, with its newest version for the cluster's Kubernetes version.
+
+        Side effects: one ``ListAddons`` call per page of add-ons, and one ``DescribeAddon`` and one
+        ``DescribeAddonVersions`` call per add-on.
+
+        :param cluster_name: The cluster's name.
+        :param kubernetes_version: The cluster's Kubernetes version, e.g. ``1.33``, for which the newest
+            add-on versions are looked up.
+        :returns: Each add-on's health, in EKS's order.
+        :raises botocore.exceptions.ClientError: If the add-ons cannot be listed or described.
+        """
+        addons = []
+        paginator = self.client.get_paginator("list_addons")
+        for page in paginator.paginate(clusterName=cluster_name):
+            for name in page.get("addons", []):
+                response = self.client.describe_addon(clusterName=cluster_name, addonName=name)
+                addon = response["addon"]
+                health = AddonHealth(
+                    name=str(addon.get("addonName", name)),
+                    version=str(addon.get("addonVersion", "")),
+                    status=str(addon.get("status", "")),
+                    latest_version=self._latest_addon_version(name, kubernetes_version),
+                    issues=health_issues(addon),
+                )
+                addons.append(health)
+        return addons
+
+    def _latest_addon_version(self, name: str, kubernetes_version: str) -> Optional[str]:
+        """
+        Find the newest version of an add-on that EKS offers for a Kubernetes version.
+
+        EKS lists the versions without promising an order, so they are compared by their numbers (see
+        :func:`~smarter.apps.infrastructure.cluster_health.version_key`).
+
+        Side effects: one ``DescribeAddonVersions`` call.
+
+        :param name: The add-on's name, e.g. ``coredns``.
+        :param kubernetes_version: The Kubernetes version, e.g. ``1.33``.
+        :returns: The newest version, e.g. ``v1.11.4-eksbuild.2``, or None if EKS offers none, or the
+            versions could not be read, e.g. without the ``eks:DescribeAddonVersions`` permission. The
+            failure is logged, and does not fail the add-on's description.
+        """
+        try:
+            response = self.client.describe_addon_versions(addonName=name, kubernetesVersion=kubernetes_version)
+        except ClientError as e:
+            logger.debug("%s could not read the versions of %s: %s", self.formatted_class_name, name, e)
+            return None
+        versions = []
+        for addon in response.get("addons", []):
+            for version in addon.get("addonVersions", []):
+                versions.append(str(version.get("addonVersion", "")))
+        if not versions:
+            return None
+        return max(versions, key=version_key)
+
+    def _insights(self, cluster_name: str) -> list[ClusterInsight]:
+        """
+        Read EKS's insights about the cluster, e.g. its readiness for the next Kubernetes version.
+
+        Side effects: one ``ListInsights`` call per page of insights.
+
+        :param cluster_name: The cluster's name.
+        :returns: Each insight, in EKS's order.
+        :raises botocore.exceptions.ClientError: If the insights cannot be listed, e.g. without the
+            ``eks:ListInsights`` permission.
+        """
+        insights = []
+        arguments: SmarterDictType = {"clusterName": cluster_name}
+        while True:
+            response = self.client.list_insights(**arguments)
+            for insight in response.get("insights", []):
+                status = insight.get("insightStatus") or {}
+                result = ClusterInsight(
+                    name=str(insight.get("name", "")),
+                    category=str(insight.get("category", "")),
+                    status=str(status.get("status", "")),
+                    reason=str(status.get("reason", "")),
+                    kubernetes_version=str(insight.get("kubernetesVersion", "")),
+                )
+                insights.append(result)
+            next_token = response.get("nextToken")
+            if not next_token:
+                return insights
+            arguments["nextToken"] = next_token
 
     def update_kubeconfig(self) -> bool:
         """

@@ -520,6 +520,174 @@ class KubectlKubernetesService(KubernetesService):
         return (result.stdout or "") + (result.stderr or "")
 
 
+def matches_selector(item: SmarterDictType, selector: Optional[str]) -> bool:
+    """
+    Decide whether a resource's labels match a label selector, as ``kubectl get -l`` does.
+
+    Only equality requirements are supported, e.g. ``app.kubernetes.io/name=smarter,tier=web``, which
+    are all that the platform uses. Every requirement must match.
+
+    :param item: The resource, as ``kubectl get -o json`` returns it.
+    :param selector: The selector, or None or an empty string, which every resource matches.
+    :returns: True if every requirement of the selector matches one of the resource's labels.
+    """
+    if not selector:
+        return True
+    metadata = item.get("metadata") or {}
+    labels = metadata.get("labels") or {}
+    for requirement in selector.split(","):
+        key, _, value = requirement.strip().partition("=")
+        if labels.get(key) != value:
+            return False
+    return True
+
+
+class InMemoryKubernetesService(KubernetesService):
+    """
+    A Kubernetes cluster in memory, for tests and local development.
+
+    Its resources are :attr:`items`: lists of resources, as ``kubectl get -o json`` returns them,
+    keyed by kind, e.g. ``{"pod": [...], "node": [...]}``. A kind that is not a key cannot be
+    listed: :meth:`find_resources` returns None for it, as for a cluster that is unavailable, or a
+    CustomResourceDefinition that is not installed.
+
+    :param ready: Whether the cluster is ready.
+    :param provider_name: The provider's name, in signals and logs.
+    """
+
+    def __init__(self, ready: bool = True, provider_name: str = "memory", **kwargs):
+        super().__init__(provider_name=provider_name, **kwargs)
+        self._ready = ready
+        self.items: dict[str, list[SmarterDictType]] = {}
+        self.calls: list[tuple[str, Optional[str]]] = []
+        """The (kind, namespace) of every :meth:`find_resources` and :meth:`list_resources` call, in order."""
+        self.manifests: list[str] = []
+        """Every manifest that :meth:`apply_manifest` received, in order."""
+
+    @property
+    def ready(self) -> bool:
+        return self._ready
+
+    def _in(self, kind: str, namespace: Optional[str]) -> list[SmarterDictType]:
+        """
+        Return the resources of a kind in one namespace, or in every namespace.
+
+        :param kind: The kind, e.g. ``pod``.
+        :param namespace: The namespace, or None for every namespace, e.g. for a cluster-scoped kind
+            such as ``node``.
+        :returns: The resources, in the order of :attr:`items`.
+        """
+        found = []
+        for item in self.items.get(kind, []):
+            if namespace is None:
+                found.append(item)
+                continue
+            metadata = item.get("metadata") or {}
+            if metadata.get("namespace") == namespace:
+                found.append(item)
+        return found
+
+    def apply_manifest(self, manifest: str) -> None:
+        """
+        Record a manifest in :attr:`manifests`, without creating its resources.
+
+        :param manifest: The manifest.
+        """
+        self.manifests.append(manifest)
+
+    def get_resource(self, kind: str, name: str, namespace: str) -> Optional[SmarterDictType]:
+        """
+        Find one resource of :attr:`items` by its kind, name and namespace.
+
+        :param kind: The kind, e.g. ``ingress``.
+        :param name: The resource's name.
+        :param namespace: The resource's namespace.
+        :returns: The resource, or None if there is none.
+        """
+        for item in self._in(kind, namespace):
+            metadata = item.get("metadata") or {}
+            if metadata.get("name") == name:
+                return item
+        return None
+
+    def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[SmarterDictType]:
+        """
+        Return the resources of a kind in a namespace that match a label selector, and record the call.
+
+        :param kind: The kind, e.g. ``pod``.
+        :param namespace: The namespace.
+        :param selector: An equality label selector, or None for every resource (see :func:`matches_selector`).
+        :returns: The resources, or an empty list if the cluster is not ready, or has none.
+        """
+        self.calls.append((kind, namespace))
+        if not self.ready:
+            return []
+        found = []
+        for item in self._in(kind, namespace):
+            if matches_selector(item, selector):
+                found.append(item)
+        return found
+
+    def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[SmarterDictType]]:
+        """
+        Return every resource of a kind, and record the call.
+
+        :param kind: The kind, e.g. ``node``.
+        :param namespace: The namespace of a namespaced kind, or None for every namespace.
+        :returns: The resources, or None if the cluster is not ready, or the kind is not a key of
+            :attr:`items`, as for a cluster that cannot be read.
+        """
+        self.calls.append((kind, namespace))
+        if not self.ready:
+            return None
+        if kind not in self.items:
+            return None
+        return self._in(kind, namespace)
+
+    def delete_resource(self, kind: str, name: str, namespace: str) -> bool:
+        """
+        Remove a resource from :attr:`items`.
+
+        :param kind: The kind.
+        :param name: The resource's name.
+        :param namespace: The resource's namespace.
+        :returns: True, also for a resource that does not exist, as Kubernetes' delete is idempotent.
+        """
+        item = self.get_resource(kind, name, namespace)
+        if item is not None:
+            self.items[kind].remove(item)
+        return True
+
+    def delete_resources(self, kinds: list[str], namespace: str, selector: str) -> bool:
+        """
+        Remove the resources of several kinds that match a label selector from :attr:`items`.
+
+        :param kinds: The kinds, e.g. ``["ingress", "service"]``.
+        :param namespace: The namespace.
+        :param selector: An equality label selector (see :func:`matches_selector`).
+        :returns: True.
+        """
+        for kind in kinds:
+            matching = self.list_resources(kind, namespace, selector)
+            for item in matching:
+                self.items[kind].remove(item)
+        return True
+
+    def get_pod_logs(
+        self, namespace: str, selector: str, container: Optional[str] = None, tail: int = 200
+    ) -> Optional[str]:
+        """
+        Return no log lines: the in-memory cluster runs no pods.
+
+        :param namespace: Ignored.
+        :param selector: Ignored.
+        :param container: Ignored.
+        :param tail: Ignored.
+        :returns: An empty string.
+        """
+        return ""
+
+
 _kubernetes_factory: Optional[Callable[[], KubernetesService]] = None
 _kubernetes: Optional[KubernetesService] = None
 
@@ -559,10 +727,12 @@ def get_kubernetes() -> KubernetesService:
 
 
 __all__ = [
+    "InMemoryKubernetesService",
     "KubectlKubernetesService",
     "KubernetesService",
     "billable_resources",
     "configure_kubernetes",
     "get_kubernetes",
     "manifest_kinds",
+    "matches_selector",
 ]

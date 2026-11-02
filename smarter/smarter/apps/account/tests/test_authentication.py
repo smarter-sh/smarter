@@ -67,6 +67,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
 
+from smarter.apps.account.login_audit import LoginFailure, password_failure
 from smarter.apps.account.models import User
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.views.authentication import (
@@ -84,6 +85,8 @@ from smarter.lib.django.shortcuts import reverse
 from .mixins import TestAccountMixin
 
 logger = logging.getLogger(__name__)
+
+LOGIN_VIEW = "smarter.apps.account.views.authentication.login_view"
 
 
 class TestLoginView(TestAccountMixin):
@@ -161,12 +164,14 @@ class TestLoginView(TestAccountMixin):
         request.session.save()
 
         view = LoginView()
-        response = view.post(request)
+        with patch(f"{LOGIN_VIEW}.log_login_failure") as log_login_failure:
+            response = view.post(request)
         self.assertEqual(
             response.status_code,
             HTTPStatus.BAD_REQUEST,
             f"Expected BAD_REQUEST for invalid password but got {response.status_code}",
         )
+        log_login_failure.assert_called_once_with(self.admin_user.email, password_failure(self.admin_user))
 
     def test_post_login_unknown_user(self):
         """POST unknown email should return forbidden."""
@@ -178,12 +183,35 @@ class TestLoginView(TestAccountMixin):
         request.session.save()
 
         view = LoginView()
-        response = view.post(request)
+        with patch(f"{LOGIN_VIEW}.log_login_failure") as log_login_failure:
+            response = view.post(request)
         self.assertEqual(
             response.status_code,
             HTTPStatus.FORBIDDEN,
             f"Expected FORBIDDEN for unknown user but got {response.status_code}",
         )
+        log_login_failure.assert_called_once_with("unknown@example.com", LoginFailure.UNKNOWN_ACCOUNT)
+
+    def test_post_login_exception(self):
+        """POST that raises inside the sign-in should return a server error, and log the failure as ERROR."""
+        data = {"email": self.admin_user.email, "password": "irrelevant"}
+        request = self.request_factory().post("/login/", data)
+        request.user = AnonymousUser()
+        middleware = SessionMiddleware(lambda request: HttpResponse())
+        middleware.process_request(request)
+        request.session.save()
+
+        view = LoginView()
+        with (
+            patch(f"{LOGIN_VIEW}.authenticate", side_effect=RuntimeError("boom")),
+            patch(f"{LOGIN_VIEW}.log_login_failure") as log_login_failure,
+            patch(f"{LOGIN_VIEW}.logger") as view_logger,
+        ):
+            response = view.post(request)
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        log_login_failure.assert_called_once_with(self.admin_user.email, LoginFailure.ERROR)
+        view_logger.error.assert_called_once()
+        self.assertNotIn(self.admin_user.email, repr(view_logger.error.call_args))
 
     def test_post_login_invalid_form(self):
         """POST with missing fields should return bad request."""
@@ -195,13 +223,16 @@ class TestLoginView(TestAccountMixin):
         request.session.save()
 
         view = LoginView()
-        response = view.post(request)
+        with patch(f"{LOGIN_VIEW}.log_login_failure") as log_login_failure:
+            response = view.post(request)
 
         logger.debug(
             "%s.test_post_login_invalid_form() Response error_message: %s",
             self.formatted_class_name,
             response.status_code,
         )
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        log_login_failure.assert_called_once_with("", LoginFailure.INVALID_FORM)
 
     @patch("smarter.apps.account.views.authentication.login_view.logger")
     @patch("smarter.apps.account.views.authentication.login_view.smarter_settings")
