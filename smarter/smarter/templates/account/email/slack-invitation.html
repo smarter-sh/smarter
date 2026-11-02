@@ -1,0 +1,281 @@
+{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}{% comment %}
+  The Slack invitation email, which account contacts are sent two days after the welcome email.
+  See smarter.apps.account.models.SLACK_INVITATION_EMAIL. Mail clients strip <style> blocks,
+  scripts and external stylesheets, so the layout is tables with inline styles, and the images
+  are PNGs.
+  Preview: http://localhost:9357/account/email/slack-invitation/<first_name>/?language=es
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only" />
+  <title>{% translate "Join the Smarter community on Slack" %}</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#D5D9E2; font-family:Arial,Helvetica,sans-serif; color:#3F4254">
+  <table role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" width="100%"
+    style="border-collapse:collapse; background-color:#D5D9E2">
+    <tr>
+      <td align="center" style="padding:40px 10px">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600"
+          style="border-collapse:separate; width:100%; max-width:600px; background-color:#FFFFFF; border-radius:24px; overflow:hidden">
+
+          <!-- logo -->
+          <tr>
+            <td align="center" style="padding:36px 40px 28px 40px">
+              <a href="{{ branding.smarter_project_website_url }}" rel="noopener" target="_blank">
+                <img alt="{{ branding.smarter_product_name }}" height="60"
+                  src="{{ environment_platform_domain }}{% static 'images/logo/smarter-crop.png' %}" style="height:60px; border:0" />
+              </a>
+            </td>
+          </tr>
+
+          <!-- hero -->
+          <tr>
+            <td align="center" style="background-color:#4A154B; padding:40px 40px 36px 40px; text-align:center">
+              <img alt="Slack" width="56" height="56"
+                src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-slack.png' %}"
+                style="width:56px; height:56px; border:0; background-color:#FFFFFF; border-radius:14px; padding:8px" />
+              <p style="margin:22px 0 8px 0; color:#ECB22E; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase">
+                {% translate "The Smarter Project on Slack" %}</p>
+              <p style="margin:0 0 14px 0; color:#FFFFFF; font-size:30px; font-weight:700; line-height:1.25">
+                {% translate "Join the Smarter community on Slack" %}</p>
+              <p style="margin:0; color:#E9D7EA; font-size:15px; line-height:1.6">
+                {% blocktranslate trimmed %}
+                  Where the people who build, run and learn Smarter meet, and where the platform reports on
+                  its own health, every day, in public.
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- illustration -->
+          <tr>
+            <td align="center" style="padding:32px 40px 8px 40px">
+              <img alt="" width="260"
+                src="{{ environment_platform_domain }}{% static 'assets/media/illustrations/unitedpalms-1/12.png' %}"
+                style="width:260px; max-width:70%; height:auto; border:0" />
+            </td>
+          </tr>
+
+          <!-- greeting -->
+          <tr>
+            <td style="padding:24px 50px 8px 50px; font-size:15px; line-height:1.6; color:#3F4254">
+              <p style="margin:0 0 16px 0; color:#181C32; font-size:18px; font-weight:600">{% if first_name %}{% blocktranslate trimmed %}Howdy {{ first_name }},{% endblocktranslate %}{% else %}{% translate "Howdy," %}{% endif %}</p>
+              <p style="margin:0 0 16px 0">
+                {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                  A couple of days ago you received your welcome to {{ product_name }}. Now that you've had a
+                  chance to look around, I'd like to invite you to The Smarter Project's Slack workspace. It's
+                  free and open to everyone, and it's the fastest way to get answers, to see what's changing,
+                  and to meet the people behind the platform.
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- call to action -->
+          <tr>
+            <td align="center" style="padding:8px 50px 36px 50px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="background-color:#4A154B; border-radius:8px">
+                    <a href="{{ branding.url_slack }}" target="_blank" rel="noopener"
+                      style="display:inline-block; padding:14px 30px; color:#FFFFFF; font-size:16px; font-weight:700; text-decoration:none; font-family:Arial,Helvetica,sans-serif">{% translate "Join the Smarter Slack" %}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- the project's pulse -->
+          <tr>
+            <td style="padding:0 40px 8px 40px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
+                style="background-color:#F8F5FA; border-radius:16px">
+                <tr>
+                  <td valign="top" width="110" style="padding:24px 0 24px 22px">
+                    <img alt="" width="96"
+                      src="{{ environment_platform_domain }}{% static 'assets/media/illustrations/sigma-1/13.png' %}"
+                      style="width:96px; height:auto; border:0" />
+                  </td>
+                  <td valign="top" style="padding:24px 24px 24px 16px; font-size:14px; line-height:1.6; color:#3F4254">
+                    <p style="margin:0 0 8px 0; color:#181C32; font-size:18px; font-weight:600">{% translate "The project's pulse, in public" %}</p>
+                    <p style="margin:0">
+                      {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                        {{ product_name }} is open source, and so is the way it's run. Automated workflows post
+                        their results to Slack around the clock: test runs across every repository, deployments,
+                        security and secrets reviews, dependency updates, and a daily review of the production
+                        platform's logs. You see the health of the platform as it happens, not after the fact.
+                      {% endblocktranslate %}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- channels -->
+          <tr>
+            <td style="padding:28px 50px 4px 50px">
+              <p style="margin:0 0 4px 0; color:#181C32; font-size:18px; font-weight:600">{% translate "Channels worth following" %}</p>
+              <p style="margin:0; color:#7E8299; font-size:13px">{% translate "Join the ones you care about, and mute the rest." %}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 40px 8px 40px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse">
+                <tr>
+                  <td valign="top" width="140" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF">
+                    <span style="display:inline-block; background-color:#2EB67D; color:#FFFFFF; border-radius:6px; padding:3px 9px; font-size:13px; font-weight:700">#help</span>
+                  </td>
+                  <td valign="top" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF; font-size:14px; line-height:1.5; color:#3F4254">
+                    {% translate "Chat directly with the @Smarter Developer agent, any time of day." %}</td>
+                </tr>
+                <tr>
+                  <td valign="top" width="140" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF">
+                    <span style="display:inline-block; background-color:#E01E5A; color:#FFFFFF; border-radius:6px; padding:3px 9px; font-size:13px; font-weight:700">#announcements</span>
+                  </td>
+                  <td valign="top" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF; font-size:14px; line-height:1.5; color:#3F4254">
+                    {% translate "Every new post on blog.smarter.sh: release announcements, how-tos, and the stories behind the code." %}</td>
+                </tr>
+                <tr>
+                  <td valign="top" width="140" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF">
+                    <span style="display:inline-block; background-color:#ECB22E; color:#1D1C1D; border-radius:6px; padding:3px 9px; font-size:13px; font-weight:700">#releases</span>
+                  </td>
+                  <td valign="top" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF; font-size:14px; line-height:1.5; color:#3F4254">
+                    {% translate "New releases of every smarter-sh repository: the platform, the command-line interface, the SDKs and more." %}</td>
+                </tr>
+                <tr>
+                  <td valign="top" width="140" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF">
+                    <span style="display:inline-block; background-color:#36C5F0; color:#1D1C1D; border-radius:6px; padding:3px 9px; font-size:13px; font-weight:700">#smarter</span>
+                  </td>
+                  <td valign="top" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF; font-size:14px; line-height:1.5; color:#3F4254">
+                    {% translate "Workflow results of the Smarter platform itself, including the daily review of the production platform's logs." %}</td>
+                </tr>
+                <tr>
+                  <td valign="top" width="140" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF">
+                    <span style="display:inline-block; background-color:#4A154B; color:#FFFFFF; border-radius:6px; padding:3px 9px; font-size:13px; font-weight:700">#github-ci</span>
+                  </td>
+                  <td valign="top" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF; font-size:14px; line-height:1.5; color:#3F4254">
+                    {% translate "Pull requests, issues and CI runs from GitHub, as they happen." %}</td>
+                </tr>
+                <tr>
+                  <td valign="top" width="140" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF">
+                    <span style="display:inline-block; background-color:#5E6278; color:#FFFFFF; border-radius:6px; padding:3px 9px; font-size:13px; font-weight:700">#general</span>
+                  </td>
+                  <td valign="top" style="padding:12px 10px; border-bottom:1px dashed #E4E6EF; font-size:14px; line-height:1.5; color:#3F4254">
+                    {% translate "Conversation, plus the reports of the project's other repositories: security reviews, dependency updates, package health, and a daily Did You Know? tip." %}</td>
+                </tr>
+                <tr>
+                  <td valign="top" width="140" style="padding:12px 10px">
+                    <span style="display:inline-block; background-color:#E4E6EF; color:#3F4254; border-radius:6px; padding:3px 9px; font-size:13px; font-weight:700">&#128274; #contributors</span>
+                  </td>
+                  <td valign="top" style="padding:12px 10px; font-size:14px; line-height:1.5; color:#3F4254">
+                    {% translate "A private channel for the people who contribute to Smarter. Contributions of every size are welcome." %}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- the bot -->
+          <tr>
+            <td style="padding:28px 40px 8px 40px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
+                style="border:1px solid #E4E6EF; border-radius:16px">
+                <tr>
+                  <td valign="top" style="padding:24px 16px 8px 24px; font-size:14px; line-height:1.6; color:#3F4254">
+                    <p style="margin:0 0 8px 0; color:#181C32; font-size:18px; font-weight:600">{% translate "Ask @Smarter Developer anything" %}</p>
+                    <p style="margin:0">
+                      {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                        The workspace has its own AI agent, which answers questions about {{ product_name }} at any
+                        hour. It searches and reads the source code and documentation of every smarter-sh repository
+                        before it answers, and links to what it used. Ask it in #help, in a direct message, or by
+                        mentioning it in any channel.
+                      {% endblocktranslate %}</p>
+                  </td>
+                  <td valign="top" width="110" style="padding:24px 22px 8px 0">
+                    <img alt="" width="96"
+                      src="{{ environment_platform_domain }}{% static 'assets/media/illustrations/sigma-1/20.png' %}"
+                      style="width:96px; height:auto; border:0" />
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding:8px 24px 6px 24px">
+                    <p style="margin:0 0 8px 0; color:#7E8299; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase">{% translate "Try asking" %}</p>
+                    <p style="margin:0 0 8px 0; background-color:#F5F8FA; border-left:3px solid #2EB67D; border-radius:4px; padding:8px 12px; font-size:13px; color:#181C32">
+                      {% translate "How do I add a Smarter chatbot to my WordPress site?" %}</p>
+                    <p style="margin:0 0 8px 0; background-color:#F5F8FA; border-left:3px solid #36C5F0; border-radius:4px; padding:8px 12px; font-size:13px; color:#181C32">
+                      {% translate "Write an MCPClient manifest for an MCP server that needs an API key." %}</p>
+                    <p style="margin:0 0 8px 0; background-color:#F5F8FA; border-left:3px solid #ECB22E; border-radius:4px; padding:8px 12px; font-size:13px; color:#181C32">
+                      {% translate "What changed in the last release of the command-line interface?" %}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding:10px 24px 24px 24px">
+                    <img alt="{% translate 'A direct message with @Smarter Developer in Slack' %}" width="100%"
+                      src="{{ branding.smarter_project_cdn_url }}/images/slack-bot.png"
+                      style="width:100%; height:auto; border:1px solid #E4E6EF; border-radius:8px" />
+                    <p style="margin:12px 0 0 0; font-size:13px">
+                      <a href="{{ branding.smarter_project_docs_url }}/en/latest/slack.html" rel="noopener" target="_blank"
+                        style="color:#4A154B; font-weight:600">{% translate "How to get the best answers from the bot" %} &rarr;</a></p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- second call to action -->
+          <tr>
+            <td align="center" style="padding:36px 50px 12px 50px; text-align:center">
+              <p style="margin:0 0 18px 0; color:#181C32; font-size:20px; font-weight:700">{% translate "See you in Slack!" %}</p>
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+                <tr>
+                  <td align="center" style="background-color:#4A154B; border-radius:8px">
+                    <a href="{{ branding.url_slack }}" target="_blank" rel="noopener"
+                      style="display:inline-block; padding:14px 30px; color:#FFFFFF; font-size:16px; font-weight:700; text-decoration:none; font-family:Arial,Helvetica,sans-serif">{% translate "Join the Smarter Slack" %}</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:14px 0 0 0; color:#7E8299; font-size:12px">
+                {% blocktranslate with slack_url=branding.url_slack trimmed %}
+                  Or copy this link into your browser: <a href="{{ slack_url }}" rel="noopener" target="_blank" style="color:#7E8299">{{ slack_url }}</a>
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- signature -->
+          <tr>
+            <td align="center"
+              style="font-size:13px; text-align:center; padding:28px 30px 10px 30px; font-weight:500; color:#A1A5B7; font-family:Arial,Helvetica,sans-serif">
+              <p style="margin:0 0 6px 0; color:#181C32; font-size:16px; font-weight:600">{{ branding.primary_contact }}</p>
+              <p style="margin:0 0 4px 0">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Technical point of contact for {{ product_name }}.{% endblocktranslate %}</p>
+              <p style="margin:0">{% blocktranslate with support_email=branding.support_email contact_url=branding.contact_url trimmed %}Email me at <a href="mailto:{{ support_email }}" style="font-weight: 600">{{ support_email }}</a>, or visit <a href="{{ contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">my website</a>.{% endblocktranslate %}</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="text-align:center; padding:10px 0 6px 0">
+              <a href="{{ branding.url_linkedin }}" target="_blank" rel="noopener" style="text-decoration:none; margin-right:10px">
+                <img alt="LinkedIn" height="24" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-linkedin.png' %}" style="height:24px; border:0" /></a>
+              <a href="{{ branding.url_twitter }}" target="_blank" rel="noopener" style="text-decoration:none; margin-right:10px">
+                <img alt="X" height="24" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-twitter.png' %}" style="height:24px; border:0" /></a>
+              <a href="{{ branding.url_slack }}" target="_blank" rel="noopener" style="text-decoration:none">
+                <img alt="Slack" height="24" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-slack.png' %}" style="height:24px; border:0" /></a>
+            </td>
+          </tr>
+          <tr>
+            <td align="center"
+              style="font-size:12px; padding:6px 30px 0 30px; text-align:center; font-weight:500; color:#A1A5B7; font-family:Arial,Helvetica,sans-serif">
+              <p style="margin:0">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}{{ product_name }} is free, open source software, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener" target="_blank">GNU AGPL v3</a>.{% endblocktranslate %}</p>
+            </td>
+          </tr>
+          {% include "account/email/unsubscribe-footer.html" %}
+          <tr>
+            <td style="padding:0 0 30px 0; font-size:0; line-height:0">&nbsp;</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>
