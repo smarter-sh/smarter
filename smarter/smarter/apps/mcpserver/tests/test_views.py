@@ -284,7 +284,16 @@ class TestSmarterOperationsMCPServerView(OperationsTestBase):
         self.assertEqual(response.status_code, 200)
         names = [tool["name"] for tool in response.json()["result"]["tools"]]
         self.assertEqual(
-            names, ["platform_status", "eks_status", "summarize_log_errors", "search_logs", "list_log_sources"]
+            names,
+            [
+                "platform_status",
+                "eks_status",
+                "summarize_log_errors",
+                "search_logs",
+                "list_log_sources",
+                "user_support_snapshot",
+                "check_reply",
+            ],
         )
 
     def test_tool_call_is_audited(self):

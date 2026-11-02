@@ -6,7 +6,7 @@ server, beside the public :doc:`Smarter Project MCP Server <smarter-project-mcp-
 platform's own staff. It gives them, and the AI agents they work with, such as Claude Code, what they
 need to answer help desk questions like "my login isn't working", "why is Smarter slow right now?",
 "my prompt says there was a system error" or "is there something wrong with EKS right now?": the
-platform's health now, and its pod logs, for the last 72 hours.
+platform's health now, its pod logs, for the last 72 hours, and the state of one user's account.
 
 Its data is not public, so it serves only the platform's active staff users, and records every tool
 call in an audit trail.
@@ -72,6 +72,19 @@ for the call, which is recorded in the audit trail.
    * - ``list_log_sources``
      - Lists the components and pods that wrote to the logs recently. A component that is missing
        has written nothing, for example because its pods are down.
+   * - ``user_support_snapshot``
+     - Reports what the platform knows about one person's problem, by their email address: whether a
+       user has it, whether that user is active, how they can sign in (password, Google or GitHub),
+       when they last signed in, their failed sign-ins of the last 72 hours and why they failed, and
+       their recent failed requests and prompts, from the journal, with hints for staff. It takes
+       ``verified_by``: how the staff member confirmed that the person who asked owns the address,
+       which is recorded in the audit trail.
+   * - ``check_reply``
+     - Checks a draft reply before the staff member sends it: other people's email addresses, IP
+       addresses, phone and card numbers and secrets, with the same detectors as
+       :doc:`Guardrails <../smarter-resources/smarter-guardrail>`, and the platform's internals (pod,
+       node and host names, internal urls, log lines, stack traces, exception names, versions), and
+       wording that tells whether an address has an account.
 
 The status tools read Kubernetes and metrics-server (the numbers that ``kubectl top`` shows), the
 EKS api, the platform's own database and Celery broker, and public status pages, when they are
@@ -111,7 +124,7 @@ what it reads:
 - A reply never contains anything about another user or account, log lines, stack traces, pod or host
   names, IP addresses, versions, internal urls or secrets, nor whether an email address or account
   exists, unless the user who asked has been verified as its owner.
-- The agent shows its draft to the staff member, who sends it.
+- The agent checks its draft with ``check_reply``, and shows it to the staff member, who sends it.
 
 Technical Reference
 -------------------
@@ -127,3 +140,6 @@ Technical Reference
    smarter-operations-mcp-server/status-feeds
    smarter-operations-mcp-server/log-tools
    smarter-operations-mcp-server/log-summary
+   smarter-operations-mcp-server/helpdesk-tools
+   smarter-operations-mcp-server/helpdesk-users
+   smarter-operations-mcp-server/helpdesk-replies
