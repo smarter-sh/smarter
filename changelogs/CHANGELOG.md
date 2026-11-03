@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.41.4-alpha.2...v0.41.4-alpha.3) (2026-11-03)
+
+### Bug Fixes
+
+* **helm:** stop Alloy redacting Secret names, masks and code ([dd25f72](https://github.com/smarter-sh/smarter/commit/dd25f72dfad7749ef65075c89777d3e8c1c61857)), closes [#913](https://github.com/smarter-sh/smarter/issues/913) [#898](https://github.com/smarter-sh/smarter/issues/898) [#913](https://github.com/smarter-sh/smarter/issues/913)
+
 ## [0.41.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.41.4-alpha.1...v0.41.4-alpha.2) (2026-11-03)
 
 ### Bug Fixes
