@@ -83,6 +83,12 @@ class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
         read_only_fields = ["created_at", "updated_at", "manifest_url", "ready"]
 
     def get_queryset(self):
+        """
+        Return the Provider named by the ``name`` query parameter, or else every active Provider.
+
+        :returns: The Providers queryset; empty if the active Providers can't be read.
+        :raises SmarterException: If ``name`` is given, and no usable Provider has that name.
+        """
         name = self.request.GET.get("name")  # type: ignore
         if name:
             provider = get_provider(provider_name=name)
@@ -109,6 +115,14 @@ class ProviderModelSerializer(SmarterCamelCaseSerializer):
         read_only_fields = ["created_at", "updated_at", "provider"]
 
     def get_queryset(self):
+        """
+        Return the models selected by the ``name`` and ``model_name`` query parameters.
+
+        With both, the one model; with ``name`` only, that Provider's models; with neither, every
+        active model.
+
+        :returns: The ProviderModels queryset; empty if the Provider or model is not found.
+        """
 
         name = self.request.GET.get("name")  # type: ignore
         model_name = self.request.GET.get("model_name")  # type: ignore
@@ -144,6 +158,14 @@ class ProviderVerificationSerializer(SmarterCamelCaseSerializer):
         read_only_fields = ["created_at", "updated_at", "provider"]
 
     def get_queryset(self):
+        """
+        Return the Provider verifications selected by the ``name`` and ``verification_type`` query parameters.
+
+        With ``name``, that Provider's verifications, filtered by ``verification_type`` when given;
+        without it, every active verification.
+
+        :returns: The ProviderVerifications queryset; empty if the Provider is not found.
+        """
         name = self.request.GET.get("name")  # type: ignore
         verification_type = self.request.GET.get("verification_type")  # type: ignore
 
@@ -172,6 +194,13 @@ class ProviderModelVerificationSerializer(SmarterCamelCaseSerializer):
         read_only_fields = ["created_at", "updated_at", "provider_model"]
 
     def get_queryset(self):
+        """
+        Return the verifications of the model named by the ``name`` and ``model_name`` query parameters.
+
+        Filtered by the ``verification_type`` query parameter when given.
+
+        :returns: The ProviderModelVerifications queryset; empty if the model is not found.
+        """
         try:
             provider_model = get_model_for_provider(
                 provider_name=self.request.GET.get("name"), model_name=self.request.GET.get("model_name")  # type: ignore

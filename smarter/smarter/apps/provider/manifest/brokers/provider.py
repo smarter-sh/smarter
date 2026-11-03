@@ -74,6 +74,7 @@ class SAMProviderBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message prefix for Provider broker errors."""
         return "Smarter API Provider Manifest Broker Error"
 
 
@@ -165,8 +166,9 @@ class SAMProviderBroker(AbstractBroker):
         """
         if not self.provider or not self.provider.logo:
             return None
-        if SmarterValidator.is_valid_url(self.provider.logo.name):
-            return self.provider.logo.name
+        logo_name = self.provider.logo.name
+        if logo_name and SmarterValidator.is_valid_url(logo_name):
+            return logo_name
         url = self.provider.logo.url
         if SmarterValidator.is_valid_url(url):
             return url
