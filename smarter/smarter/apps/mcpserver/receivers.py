@@ -1,11 +1,11 @@
 """
 Django signal receivers of the MCPServer app.
 
-They log the MCP servers' requests and tool calls, and the outcome of each attempt to index a
+They log the MCPServer's requests and tool calls, and the outcome of each attempt to index a
 repository or the blog. One of them also keeps the tool result cache correct: when a repository
 is indexed at a new commit, :func:`handle_mcpserver_repository_indexed` starts a new index
 generation, so that no tool answers from the old files (see
-:mod:`smarter.apps.mcpserver.caching`).
+:mod:`smarter.apps.mcpserver.protocol.caching`).
 
 The signals are defined in :mod:`smarter.apps.mcpserver.signals`. The receivers are connected
 when :meth:`smarter.apps.mcpserver.apps.MCPServerConfig.ready` imports this module.
@@ -21,10 +21,10 @@ when :meth:`smarter.apps.mcpserver.apps.MCPServerConfig.ready` imports this modu
 
 from django.dispatch import receiver
 
+from smarter.apps.mcpserver.protocol.caching import invalidate_cached_tool_results
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .caching import invalidate_cached_tool_results
 from .models import RepositoryIndex
 from .signals import (
     mcpserver_called,
@@ -40,7 +40,7 @@ logger_prefix = logging.SmarterFormattedText.text(__name__)
 @receiver(mcpserver_called, dispatch_uid="mcpserver_called")
 def handle_mcpserver_called(sender, server: str, method: str, **kwargs):
     """
-    Log a JSON-RPC request to one of the MCP servers, at DEBUG.
+    Log a JSON-RPC request to the MCPServer, at DEBUG.
 
     :param sender: The class that sent the signal.
     :param server: The server's name, e.g. ``smarter-project-smarter-cli``.
@@ -55,7 +55,7 @@ def handle_mcpserver_tool_called(
     sender, server: str, tool_name: str, arguments: dict, is_error: bool, characters: int, **kwargs
 ):
     """
-    Log a call to one of the MCP servers' tools, with its arguments and the length of its result.
+    Log a call to one of the MCPServer's tools, with its arguments and the length of its result.
 
     :param sender: The class that sent the signal.
     :param server: The server's name.
@@ -87,7 +87,7 @@ def handle_mcpserver_repository_indexed(sender, index: RepositoryIndex, **kwargs
     Make the cached tool results stale, since a repository's files changed, and log it.
 
     Side effect: a cache write, through
-    :func:`~smarter.apps.mcpserver.caching.invalidate_cached_tool_results`, which starts a new
+    :func:`~smarter.apps.mcpserver.protocol.caching.invalidate_cached_tool_results`, which starts a new
     index generation.
 
     :param sender: The function that indexed the repository.

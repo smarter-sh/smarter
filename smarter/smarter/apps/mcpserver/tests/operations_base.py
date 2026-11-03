@@ -1,5 +1,5 @@
 """
-Test harness of the Smarter Operations MCP server.
+Test harness of the MCPServer's staff-only endpoint.
 
 :class:`OperationsTestBase` installs fakes of everything that the operations tools read, so that
 nothing reaches real infrastructure:

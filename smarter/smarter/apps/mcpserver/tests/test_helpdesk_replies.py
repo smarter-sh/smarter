@@ -1,6 +1,6 @@
-"""Test smarter.apps.mcpserver.helpdesk.replies: the check of a draft reply against the reply rules."""
+"""Test smarter.apps.mcpserver.services.helpdesk.replies: the check of a draft reply against the reply rules."""
 
-from smarter.apps.mcpserver.helpdesk.replies import MAX_FINDINGS, check_reply
+from smarter.apps.mcpserver.services.helpdesk.replies import MAX_FINDINGS, check_reply
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 GOOD_REPLY = (

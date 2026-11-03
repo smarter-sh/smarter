@@ -98,7 +98,7 @@ env:
   SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
   SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
   SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
-  # The Loki of the loki subchart, which the Smarter Operations MCP server's log tools query.
+  # The Loki of the loki subchart, which the MCPServer's staff-only log tools query.
   # Set it to "" with loki.enabled: false.
   SMARTER_LOKI_URL: "http://smarter-loki:3100"
   SMARTER_LOGIN_URL: "https://platform.example.com/login/"
@@ -565,7 +565,7 @@ grafana:
 # Pod logs: Loki stores them, Alloy collects them
 # ----------------------------------------------------------------------------
 # The last 72 hours of the logs of the app, the Celery workers, beat and MariaDB,
-# which the Smarter MCP Server's log tools search (smarter.apps.mcpserver.logs).
+# which the Smarter MCP Server's log tools search (smarter.apps.mcpserver.services.logs).
 #
 # - Loki runs as one pod (deploymentMode SingleBinary) with its chunks and index on
 #   its own gp3 volume. Nothing is sent to S3 or CloudWatch, which would add cost.

@@ -1,7 +1,7 @@
 Repository Indexer
 ==================
 
-.. automodule:: smarter.apps.mcpserver.index.indexer
+.. automodule:: smarter.apps.mcpserver.services.indexing.github
     :members:
     :undoc-members:
     :show-inheritance:

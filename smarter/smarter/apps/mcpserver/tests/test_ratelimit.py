@@ -1,4 +1,4 @@
-"""Tests for smarter.apps.mcpserver.ratelimit, and the rate limit of the MCP server's view."""
+"""Tests for smarter.apps.mcpserver.protocol.ratelimit, and the rate limit of the MCP server's view."""
 
 import json
 from unittest import mock
@@ -7,8 +7,8 @@ from cache_results import lazy_cache
 from django.test import Client, RequestFactory
 from django.urls import reverse
 
-from smarter.apps.mcpserver import ratelimit
-from smarter.apps.mcpserver.ratelimit import (
+from smarter.apps.mcpserver.protocol import ratelimit
+from smarter.apps.mcpserver.protocol.ratelimit import (
     RATE_LIMITED,
     WINDOW_SECONDS,
     client_ip,
@@ -20,7 +20,7 @@ from smarter.apps.mcpserver.urls import MCPServerReverseNames
 
 from .base_classes import MCPServerTestBase
 
-SETTINGS_PATCH = "smarter.apps.mcpserver.ratelimit.smarter_settings"
+SETTINGS_PATCH = "smarter.apps.mcpserver.protocol.ratelimit.smarter_settings"
 
 
 class TestRateLimit(MCPServerTestBase):
@@ -90,7 +90,7 @@ class TestRateLimit(MCPServerTestBase):
 
     def test_view(self):
         """A client over the limit is answered 429, with Retry-After and a JSON-RPC error."""
-        url = reverse(f"{MCPServerReverseNames.namespace}:{MCPServerReverseNames.smarter_project}")
+        url = reverse(f"{MCPServerReverseNames.namespace}:{MCPServerReverseNames.public}")
         body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         client = Client()
         statuses = [

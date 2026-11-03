@@ -1,4 +1,4 @@
-"""Tests for smarter.apps.mcpserver.acting_user: the signed user of the platform's requests to its operations server."""
+"""Tests for smarter.apps.mcpserver.services.acting_user: the signed user of the platform's requests to its own staff-only endpoint."""
 
 from unittest import mock
 from urllib.parse import urlparse
@@ -7,38 +7,38 @@ from django.contrib.auth.models import AnonymousUser
 from django.core import signing
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.mcpserver.acting_user import (
+from smarter.apps.mcpserver.services.acting_user import (
     ACTING_USER_HEADER,
     MAX_AGE_SECONDS,
     SALT,
     acting_user,
     acting_user_headers,
     current_acting_user,
-    is_operations_server_url,
-    operations_server_url,
+    is_staff_endpoint_url,
     sign_acting_user,
+    staff_endpoint_url,
     verify_acting_user,
 )
 from smarter.common.conf import smarter_settings
 
-MODULE = "smarter.apps.mcpserver.acting_user"
+MODULE = "smarter.apps.mcpserver.services.acting_user"
 
 
 class TestActingUser(TestAccountMixin):
     """Test signing, verifying and scoping the acting user."""
 
     def test_operations_server_url(self):
-        url = operations_server_url()
+        url = staff_endpoint_url()
         self.assertTrue(url.startswith(smarter_settings.environment_url))
         self.assertTrue(url.endswith("/api/v1/mcp/smarter-operations/"))
 
     def test_is_operations_server_url(self):
-        """Only this platform's own operations server matches: scheme, host, port and path."""
-        url = operations_server_url()
-        self.assertTrue(is_operations_server_url(url))
-        self.assertTrue(is_operations_server_url(url.rstrip("/")))
+        """Only this platform's own staff-only endpoint matches: scheme, host, port and path."""
+        url = staff_endpoint_url()
+        self.assertTrue(is_staff_endpoint_url(url))
+        self.assertTrue(is_staff_endpoint_url(url.rstrip("/")))
         host = urlparse(url).netloc
-        self.assertTrue(is_operations_server_url(url.replace(host, host.upper(), 1)))
+        self.assertTrue(is_staff_endpoint_url(url.replace(host, host.upper(), 1)))
         others = [
             None,
             "",
@@ -52,7 +52,7 @@ class TestActingUser(TestAccountMixin):
             others.append(url.replace("http://", "https://", 1))
         for other in others:
             with self.subTest(url=other):
-                self.assertFalse(is_operations_server_url(other))
+                self.assertFalse(is_staff_endpoint_url(other))
 
     def test_sign_and_verify(self):
         for user, expected in ((self.admin_user, self.admin_user.pk), (None, None)):
@@ -94,8 +94,8 @@ class TestActingUser(TestAccountMixin):
         self.assertIsNone(current_acting_user())
 
     def test_headers(self):
-        """Only this platform's operations server gets the header."""
-        headers = acting_user_headers(operations_server_url(), self.admin_user)
+        """Only this platform's staff-only endpoint gets the header."""
+        headers = acting_user_headers(staff_endpoint_url(), self.admin_user)
         self.assertEqual(list(headers), [ACTING_USER_HEADER])
         self.assertEqual(verify_acting_user(headers[ACTING_USER_HEADER]).user_id, self.admin_user.pk)  # type: ignore[union-attr]
         self.assertEqual(acting_user_headers("https://mcp.example.com/mcp", self.admin_user), {})

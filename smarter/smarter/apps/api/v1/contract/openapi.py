@@ -262,8 +262,8 @@ UNDOCUMENTED_URLCONFS: dict[str, str] = {
         "that the Stackademy ApiPlugin queries. These are not part of the platform's api."
     ),
     "/mcp/": (
-        "The Smarter Project MCP server, smarter.apps.mcpserver: one JSON-RPC endpoint per server, "
-        "whose methods and messages the Model Context Protocol specification defines, not OpenAPI."
+        "The MCPServer, smarter.apps.mcpserver: a JSON-RPC endpoint for its public tools and one for its "
+        "staff-only tools, whose methods and messages the Model Context Protocol specification defines, not OpenAPI."
     ),
 }
 """
