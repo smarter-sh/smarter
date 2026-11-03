@@ -50,6 +50,12 @@ class Prompt(MetaDataWithOwnershipModel):
         return f"{self.id} - {self.ip_address} - {self.url}"  # type: ignore[return]
 
     def delete(self, *args, **kwargs):
+        """
+        Invalidate the cached Prompt of this session key, then delete the Prompt.
+
+        :param args: Positional arguments passed to ``Model.delete()``.
+        :param kwargs: Keyword arguments passed to ``Model.delete()``.
+        """
         if self.session_key:
             get_cached_prompt_by_session_key.invalidate(self.session_key)  # type: ignore[attr-defined]
         super().delete(*args, **kwargs)

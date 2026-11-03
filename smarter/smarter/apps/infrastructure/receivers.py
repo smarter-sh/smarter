@@ -74,7 +74,10 @@ def handle_infrastructure_authenticated(sender, service, provider, identity=None
     Only the last four characters of the cloud account id are logged. The id isn't a secret, but job
     logs are emailed and shipped elsewhere, and the full id isn't needed to tell accounts apart.
     """
-    account = (identity or {}).get("Account") or (identity or {}).get("account")
+    identity = identity or {}
+    account = identity.get("Account")
+    if not account:
+        account = identity.get("account")
     logger.info("%s authenticated, account %s", _prefix("authenticated", service, provider), _mask_account(account))
 
 
@@ -95,25 +98,57 @@ def _mask_account(account) -> Optional[str]:
 
 @receiver(infrastructure_authentication_failed, dispatch_uid="infrastructure_authentication_failed")
 def handle_infrastructure_authentication_failed(sender, service, provider, error=None, **kwargs):
-    """Log that a provider could not authenticate with its cloud."""
+    """
+    Log that a provider could not authenticate with its cloud.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param error: Why it failed.
+    :param kwargs: The signal's other arguments.
+    """
     logger.error("%s authentication failed: %s", _prefix("authentication_failed", service, provider), error)
 
 
 @receiver(infrastructure_connected, dispatch_uid="infrastructure_connected")
 def handle_infrastructure_connected(sender, service, provider, **kwargs):
-    """Log that a service connected to its backend."""
+    """
+    Log that a service connected to its backend.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param kwargs: The signal's other arguments.
+    """
     logger.info("%s connected", _prefix("connected", service, provider))
 
 
 @receiver(infrastructure_connection_failed, dispatch_uid="infrastructure_connection_failed")
 def handle_infrastructure_connection_failed(sender, service, provider, error=None, **kwargs):
-    """Log that a service could not connect to its backend."""
+    """
+    Log that a service could not connect to its backend.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param error: Why it failed.
+    :param kwargs: The signal's other arguments.
+    """
     logger.error("%s connection failed: %s", _prefix("connection_failed", service, provider), error)
 
 
 @receiver(billable_resource_creating, dispatch_uid="infrastructure_billable_resource_creating")
 def handle_billable_resource_creating(sender, service, provider, resource_type, resource_name, **kwargs):
-    """Log that a billable resource is about to be created."""
+    """
+    Log that a billable resource is about to be created.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param resource_type: The resource's type, e.g. ``dns.zone``.
+    :param resource_name: The resource's name, e.g. ``example.com``.
+    :param kwargs: The signal's other arguments.
+    """
     logger.warning(
         "%s creating billable %s %s",
         _prefix("billable_resource_creating", service, provider),
@@ -126,7 +161,18 @@ def handle_billable_resource_creating(sender, service, provider, resource_type, 
 def handle_billable_resource_created(
     sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs
 ):
-    """Log that a billable resource was created, and record it in the ledger."""
+    """
+    Log that a billable resource was created, and record it in the ledger.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param resource_type: The resource's type, e.g. ``dns.zone``.
+    :param resource_name: The resource's name, e.g. ``example.com``.
+    :param resource_id: The resource's cloud id, or None if the provider has not assigned one.
+    :param kwargs: The signal's other arguments. ``reconciled`` is True when the inventory found the resource, or
+        found it gone, rather than a service creating or destroying it.
+    """
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service created it.
         logger.info(
@@ -151,7 +197,17 @@ def handle_billable_resource_created(
 def handle_billable_resource_destroying(
     sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs
 ):
-    """Log that a billable resource is about to be destroyed."""
+    """
+    Log that a billable resource is about to be destroyed.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param resource_type: The resource's type, e.g. ``dns.zone``.
+    :param resource_name: The resource's name, e.g. ``example.com``.
+    :param resource_id: The resource's cloud id, or None if the provider has not assigned one.
+    :param kwargs: The signal's other arguments.
+    """
     logger.warning(
         "%s destroying billable %s %s (%s)",
         _prefix("billable_resource_destroying", service, provider),
@@ -165,7 +221,18 @@ def handle_billable_resource_destroying(
 def handle_billable_resource_destroyed(
     sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs
 ):
-    """Log that a billable resource was destroyed, and record it in the ledger."""
+    """
+    Log that a billable resource was destroyed, and record it in the ledger.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param resource_type: The resource's type, e.g. ``dns.zone``.
+    :param resource_name: The resource's name, e.g. ``example.com``.
+    :param resource_id: The resource's cloud id, or None if the provider has not assigned one.
+    :param kwargs: The signal's other arguments. ``reconciled`` is True when the inventory found the resource, or
+        found it gone, rather than a service creating or destroying it.
+    """
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service destroyed it.
         logger.info(
@@ -188,7 +255,18 @@ def handle_billable_resource_destroyed(
 
 @receiver(resource_created, dispatch_uid="infrastructure_resource_created")
 def handle_resource_created(sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs):
-    """Log that a resource was created or updated, and record it in the ledger."""
+    """
+    Log that a resource was created or updated, and record it in the ledger.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param resource_type: The resource's type, e.g. ``dns.zone``.
+    :param resource_name: The resource's name, e.g. ``example.com``.
+    :param resource_id: The resource's cloud id, or None if the provider has not assigned one.
+    :param kwargs: The signal's other arguments. ``reconciled`` is True when the inventory found the resource, or
+        found it gone, rather than a service creating or destroying it.
+    """
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service created it.
         logger.info(
@@ -211,7 +289,18 @@ def handle_resource_created(sender, service, provider, resource_type, resource_n
 
 @receiver(resource_destroyed, dispatch_uid="infrastructure_resource_destroyed")
 def handle_resource_destroyed(sender, service, provider, resource_type, resource_name, resource_id=None, **kwargs):
-    """Log that a resource was destroyed, and record it in the ledger."""
+    """
+    Log that a resource was destroyed, and record it in the ledger.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param resource_type: The resource's type, e.g. ``dns.zone``.
+    :param resource_name: The resource's name, e.g. ``example.com``.
+    :param resource_id: The resource's cloud id, or None if the provider has not assigned one.
+    :param kwargs: The signal's other arguments. ``reconciled`` is True when the inventory found the resource, or
+        found it gone, rather than a service creating or destroying it.
+    """
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service destroyed it.
         logger.info(
@@ -234,25 +323,61 @@ def handle_resource_destroyed(sender, service, provider, resource_type, resource
 
 @receiver(resource_applied, dispatch_uid="infrastructure_resource_applied")
 def handle_resource_applied(sender, service, provider, kinds=None, **kwargs):
-    """Log that Kubernetes resources were applied."""
+    """
+    Log that Kubernetes resources were applied.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param kinds: The kinds of the manifest's resources, or None.
+    :param kwargs: The signal's other arguments.
+    """
     logger.info("%s applied %s", _prefix("resource_applied", service, provider), ", ".join(kinds or []))
 
 
 @receiver(infrastructure_operation_failed, dispatch_uid="infrastructure_operation_failed")
 def handle_infrastructure_operation_failed(sender, service, provider, operation=None, error=None, **kwargs):
-    """Log that a service's operation failed."""
+    """
+    Log that a service's operation failed.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param operation: The operation that failed, e.g. ``apply_manifest``.
+    :param error: Why it failed.
+    :param kwargs: The signal's other arguments.
+    """
     logger.error("%s %s failed: %s", _prefix("operation_failed", service, provider), operation, error)
 
 
 @receiver(email_sent, dispatch_uid="infrastructure_email_sent")
 def handle_email_sent(sender, service, provider, subject=None, recipients=None, **kwargs):
-    """Log that an email was sent."""
+    """
+    Log that an email was sent.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param subject: The email's subject.
+    :param recipients: The email's recipients.
+    :param kwargs: The signal's other arguments.
+    """
     logger.info("%s sent '%s' to %s", _prefix("email_sent", service, provider), subject, recipients)
 
 
 @receiver(email_failed, dispatch_uid="infrastructure_email_failed")
 def handle_email_failed(sender, service, provider, subject=None, recipients=None, error=None, **kwargs):
-    """Log that an email could not be sent."""
+    """
+    Log that an email could not be sent.
+
+    :param sender: The service's class.
+    :param service: The service's name, e.g. ``dns``.
+    :param provider: The cloud provider's name, e.g. ``aws``.
+    :param subject: The email's subject.
+    :param recipients: The email's recipients.
+    :param error: Why it failed.
+    :param kwargs: The signal's other arguments.
+    """
     logger.error(
         "%s could not send '%s' to %s: %s", _prefix("email_failed", service, provider), subject, recipients, error
     )

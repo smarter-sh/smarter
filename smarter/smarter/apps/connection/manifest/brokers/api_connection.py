@@ -225,6 +225,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
     @property
     def kind(self) -> str:
+        """Return the manifest kind that this broker handles, ``ApiConnection``."""
         return MANIFEST_KIND
 
     @property
@@ -408,12 +409,12 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._api_key_secret:
             return self._api_key_secret
+        name = None
         try:
-            name = (
-                self.manifest.spec.connection.apiKey
-                if self.manifest and self.manifest.spec
-                else self.connection.api_key.name if self.connection and self.connection.api_key else None
-            )
+            if self.manifest and self.manifest.spec:
+                name = self.manifest.spec.connection.apiKey
+            elif self.connection and self.connection.api_key:
+                name = self.connection.api_key.name
             if not name:
                 # an ApiConnection need not have an api key, e.g. with authMethod none.
                 return None
@@ -461,14 +462,12 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._proxy_password_secret:
             return self._proxy_password_secret
+        name = None
         try:
-            name = (
-                self.manifest.spec.connection.proxyPassword
-                if self.manifest and self.manifest.spec
-                else (
-                    self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
-                )
-            )
+            if self.manifest and self.manifest.spec:
+                name = self.manifest.spec.connection.proxyPassword
+            elif self.connection and self.connection.proxy_password:
+                name = self.connection.proxy_password.name
             if not name:
                 # a connection need not use a proxy.
                 return None

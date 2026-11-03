@@ -30,7 +30,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 
 def visible_constraints(user_profile: UserProfile, budget: Budget) -> list[ResourceConstraint]:
-    """The budget's resources that the user may see."""
+    """
+    The budget's resources that the user may see.
+
+    :param user_profile: The UserProfile of the user.
+    :param budget: The Budget.
+    :returns: Its ResourceConstraints, ordered by resource locator; all of them for a superuser.
+    """
     constraints = budget.constraints.select_related("budget").order_by("resource_locator")  # type: ignore[attr-defined]
     if user_profile.user.is_superuser:
         return list(constraints)
@@ -38,7 +44,15 @@ def visible_constraints(user_profile: UserProfile, budget: Budget) -> list[Resou
 
 
 def budget_list_item(view: SmarterAuthenticatedNeverCachedWebView, budget: Budget, constraints) -> SmarterDictType:
-    """A budget, with the budget versus the actual spending of each of its resources."""
+    """
+    A budget, with the budget versus the actual spending of each of its resources.
+
+    :param view: The view, which converts each resource's status to camelCase.
+    :param budget: The Budget.
+    :param constraints: The Budget's ResourceConstraints to include.
+    :returns: The serialized Budget, with ``resourceStatus``: each resource's status, manifest and
+        the url of its spending series.
+    """
     # pylint: disable=C0415
     from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 
@@ -67,6 +81,12 @@ class BudgetListView(SmarterAuthenticatedNeverCachedWebView):
         return f"{self.formatted_text(__name__)}.{BudgetListView.__name__}[{id(self)}]"
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the budget list React app.
+
+        :param request: The request.
+        :returns: The rendered template, with the app's root element settings.
+        """
         # pylint: disable=C0415
         from .urls import BudgetReverseNames
 
@@ -89,9 +109,18 @@ class BudgetListApiView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
+        """The class name, with the instance id, formatted for log messages."""
         return f"{self.formatted_text(__name__)}.{BudgetListApiView.__name__}[{id(self)}]"
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return the budgets that the user may see, with their resources.
+
+        A superuser sees every budget; anyone else, the budgets attached to a resource they may see.
+
+        :param request: The request.
+        :returns: The user, whether they are a superuser, and the budgets, as json.
+        """
         user_profile: UserProfile = self.user_profile  # type: ignore[assignment]
         objects = []
         for budget in Budget.objects.order_by("name"):
@@ -114,9 +143,19 @@ class BudgetListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
+        """The class name, with the instance id, formatted for log messages."""
         return f"{self.formatted_text(__name__)}.{BudgetListApiDeleteView.__name__}[{id(self)}]"
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Delete a Budget.
+
+        Only a superuser may.
+
+        :param request: The request.
+        :param kwargs: ``budget_id``, the Budget's id.
+        :returns: A json response: 200, 403 or 404.
+        """
         budget_id = kwargs.get("budget_id")
         if not self.user_profile or not self.user_profile.user.is_superuser:
             return JsonResponse({"error": "Only superusers may delete a budget."}, status=HTTPStatus.FORBIDDEN)

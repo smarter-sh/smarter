@@ -45,6 +45,14 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the LLMTool list page, which hosts its React app, with the app's configuration in the template context.
+
+        :param request: The request.
+        :param args: Positional arguments from the url, which are only logged.
+        :param kwargs: Keyword arguments from the url, which are only logged.
+        :returns: The page.
+        """
         # pylint: disable=C0415
         from smarter.apps.llmtool.urls import PluginReverseNames
 

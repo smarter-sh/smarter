@@ -110,6 +110,7 @@ class SAMGuardrailBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter API Guardrail Manifest Broker Error"
 
 
@@ -278,10 +279,12 @@ class SAMGuardrailBroker(AbstractBroker):
 
     @property
     def ORMMetaModelClass(self) -> Type[Guardrail]:
+        """The Django model that holds a Guardrail's metadata: :class:`~smarter.apps.guardrail.models.Guardrail`."""
         return Guardrail
 
     @property
     def ORMModelClass(self) -> Type[Guardrail]:
+        """The Django model of a Guardrail: :class:`~smarter.apps.guardrail.models.Guardrail`."""
         return Guardrail
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -392,6 +395,14 @@ class SAMGuardrailBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse the ``prompt`` command: Guardrails cannot be prompted.
+
+        :param request: The request.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
@@ -476,17 +487,41 @@ class SAMGuardrailBroker(AbstractBroker):
         return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse the ``deploy`` command: Guardrails are not deployed.
+
+        :param request: The request.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
         )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse the ``undeploy`` command: Guardrails are not deployed.
+
+        :param request: The request.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an empty ``logs`` response: Guardrails have no logs.
+
+        :param request: The request.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :returns: An ok response with empty data.
+        """
         command = SmarterJournalCliCommands(self.logs.__name__)
         return self.json_response_ok(command=command, data={})

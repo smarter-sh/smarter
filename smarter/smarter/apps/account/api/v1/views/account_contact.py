@@ -36,18 +36,47 @@ class AccountContactView(AccountViewBase):
     account_contact: AccountContact
 
     def get(self, request: Request, account_contact_id: int):
+        """
+        Return an AccountContact as json.
+
+        :param request: The request.
+        :param account_contact_id: The AccountContact's id.
+        :returns: The :class:`AccountApiContact` of the AccountContact.
+        :raises Http404: when the AccountContact does not exist.
+        """
         self.account_contact = get_object_or_404(
             AccountContact.objects.select_related("account"), pk=account_contact_id
         )
         return JsonResponse(AccountApiContact.from_model(self.account_contact).model_dump(mode="json"))
 
     def post(self, request: Request):
+        """
+        Refuse to create an AccountContact: this endpoint does not support it.
+
+        :param request: The request.
+        :returns: A 400 response.
+        """
         return HttpResponseBadRequest()
 
     def patch(self, request: Request, account_contact_id: Optional[int] = None):
+        """
+        Refuse to update an AccountContact: this endpoint does not support it.
+
+        :param request: The request.
+        :param account_contact_id: Unused.
+        :returns: A 400 response.
+        """
         return HttpResponseBadRequest()
 
     def delete(self, request, account_contact_id: int):
+        """
+        Delete an AccountContact, and the AccountContact of the request user, in one transaction.
+
+        :param request: The request.
+        :param account_contact_id: The AccountContact's id.
+        :returns: A redirect to the parent url, or a 500 response when the delete fails.
+        :raises Http404: when the AccountContact does not exist.
+        """
         self.account_contact = get_object_or_404(AccountContact, pk=account_contact_id)
 
         try:
@@ -72,6 +101,11 @@ class AccountContactListView(ContractListMixin, AccountListViewBase):
     contract_model = AccountApiContact
 
     def get_queryset(self):
+        """
+        Return every AccountContact for a superuser, else those of the user's Account.
+
+        :returns: The queryset, ordered by pk; empty for an anonymous request.
+        """
         if not self.request:
             return AccountContact.objects.none()
         if not self.request.user.is_authenticated:  # type: ignore

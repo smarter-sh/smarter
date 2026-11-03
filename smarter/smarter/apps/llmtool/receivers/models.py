@@ -27,7 +27,15 @@ prefix = f"{__name__}."
 
 @receiver(post_save, sender=PluginMeta)
 def handle_plugin_meta_saved(sender, instance, created, **kwargs):
-    """Handle plugin meta saved signal."""
+    """
+    Handle plugin meta saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
 
     if created:
         logger.info(
@@ -43,7 +51,15 @@ def handle_plugin_meta_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PluginSelector)
 def handle_plugin_selector_saved(sender, instance, created, **kwargs):
-    """Handle plugin selector saved signal."""
+    """
+    Handle plugin selector saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
 
     if created:
         logger.info("%s", SmarterFormattedText.text(prefix + "post_save() PluginSelector() record created."))
@@ -57,7 +73,15 @@ def handle_plugin_selector_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PluginPrompt)
 def handle_plugin_prompt_saved(sender, instance, created, **kwargs):
-    """Handle plugin prompt saved signal."""
+    """
+    Handle plugin prompt saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
 
     if created:
         logger.info("%s", SmarterFormattedText.text(prefix + "post_save() PluginPrompt() record created."))
@@ -71,7 +95,15 @@ def handle_plugin_prompt_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PluginDataStatic)
 def handle_plugin_data_saved(sender, instance, created, **kwargs):
-    """Handle plugin data saved signal."""
+    """
+    Handle plugin data saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
 
     if created:
         logger.info("%s", SmarterFormattedText.text(prefix + "post_save() PluginDataStatic() record created."))
@@ -85,7 +117,15 @@ def handle_plugin_data_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PluginSelectorHistory)
 def handle_plugin_selector_history_saved(sender, instance, created, **kwargs):
-    """Handle plugin selector history saved signal."""
+    """
+    Handle plugin selector history saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
 
     if created:
         logger.info(
@@ -103,7 +143,15 @@ def handle_plugin_selector_history_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PluginDataApi)
 def handle_plugin_data_api_saved(sender, instance, created, **kwargs):
-    """Handle plugin data API saved signal."""
+    """
+    Handle plugin data API saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
 
     if created:
         logger.info(
@@ -121,7 +169,15 @@ def handle_plugin_data_api_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PluginDataSql)
 def handle_plugin_data_sql_saved(sender, instance, created, **kwargs):
-    """Handle plugin data SQL saved signal."""
+    """
+    Handle plugin data SQL saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
 
     if created:
         logger.info(
@@ -139,7 +195,14 @@ def handle_plugin_data_sql_saved(sender, instance, created, **kwargs):
 
 @receiver(pre_delete, sender=PluginDataApi)
 def handle_plugin_data_api_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginDataApi."""
+    """
+    Handle pre-delete signal for PluginDataApi.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginDataApi().pre_delete()"),
@@ -149,7 +212,14 @@ def handle_plugin_data_api_pre_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=PluginDataSql)
 def handle_plugin_data_sql_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginDataSql."""
+    """
+    Handle pre-delete signal for PluginDataSql.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginDataSql().pre_delete()"),
@@ -159,7 +229,14 @@ def handle_plugin_data_sql_pre_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=PluginDataStatic)
 def handle_plugin_data_static_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginDataStatic."""
+    """
+    Handle pre-delete signal for PluginDataStatic.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginDataStatic().pre_delete()"),
@@ -169,7 +246,14 @@ def handle_plugin_data_static_pre_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=PluginMeta)
 def handle_plugin_meta_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginMeta."""
+    """
+    Handle pre-delete signal for PluginMeta.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginMeta().pre_delete()"),
@@ -179,7 +263,14 @@ def handle_plugin_meta_pre_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=PluginPrompt)
 def handle_plugin_prompt_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginPrompt."""
+    """
+    Handle pre-delete signal for PluginPrompt.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginPrompt().pre_delete()"),
@@ -189,7 +280,14 @@ def handle_plugin_prompt_pre_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=PluginSelector)
 def handle_plugin_selector_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginSelector."""
+    """
+    Handle pre-delete signal for PluginSelector.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginSelector().pre_delete()"),
@@ -199,7 +297,14 @@ def handle_plugin_selector_pre_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=PluginSelectorHistory)
 def handle_plugin_selector_history_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginSelectorHistory."""
+    """
+    Handle pre-delete signal for PluginSelectorHistory.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginSelectorHistory().pre_delete()"),
@@ -209,7 +314,15 @@ def handle_plugin_selector_history_pre_delete(sender, instance, **kwargs):
 
 @receiver(post_save, sender=PluginDataWebsearch)
 def handle_plugin_data_websearch_saved(sender, instance, created, **kwargs):
-    """Handle plugin data websearch saved signal."""
+    """
+    Handle plugin data websearch saved signal.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    :param created: True if the row was created, False if it was updated.
+    """
     logger.info(
         "%s %s",
         SmarterFormattedText.text(prefix + f"post_save() PluginDataWebsearch() {'created' if created else 'updated'}"),
@@ -219,7 +332,14 @@ def handle_plugin_data_websearch_saved(sender, instance, created, **kwargs):
 
 @receiver(pre_delete, sender=PluginDataWebsearch)
 def handle_plugin_data_websearch_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for PluginDataWebsearch."""
+    """
+    Handle pre-delete signal for PluginDataWebsearch.
+
+    Logs it at INFO.
+
+    :param sender: The model class.
+    :param instance: The row.
+    """
     logger.info(
         "%s %s deleting.",
         SmarterFormattedText.text(prefix + "PluginDataWebsearch().pre_delete()"),

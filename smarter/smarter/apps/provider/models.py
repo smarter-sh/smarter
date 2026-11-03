@@ -94,6 +94,8 @@ class ProviderModelTypedDict(TypedDict):
 
 
 class ProviderStatus(models.TextChoices):
+    """The verification and lifecycle status of a Provider."""
+
     UNVERIFIED = "unverified", "Unverified"
     VERIFYING = "verifying", "Verifying"
     FAILED = "failed", "Verification Failed"
@@ -103,6 +105,8 @@ class ProviderStatus(models.TextChoices):
 
 
 class ProviderVerificationTypes(models.TextChoices):
+    """The kinds of verification test that a Provider undergoes."""
+
     API_CONNECTIVITY = "api_connectivity", "Api Connectivity"
     LOGO = "logo", "Logo"
     CONTACT_EMAIL = "contact_email", "Contact Email"
@@ -116,6 +120,8 @@ class ProviderVerificationTypes(models.TextChoices):
 
 
 class ProviderModelVerificationTypes(models.TextChoices):
+    """The kinds of capability verification test that a Provider's model undergoes."""
+
     STREAMING = "streaming", "Streaming"
     TOOLS = "tools", "Tools"
     TEXT_INPUT = "text_input", "Text Input"
@@ -502,7 +508,15 @@ class Provider(MetaDataWithOwnershipModel):
     def get_cached_provider_by_account_id_and_name(
         cls, invalidate: Optional[bool] = False, account_id: Optional[int] = None, name: Optional[str] = None
     ) -> Optional["Provider"]:
-        """Get a cached provider by account ID and name."""
+        """
+        Get a cached provider by account ID and name.
+
+        :param invalidate: If True, invalidate the cached entry before reading it, so that it is
+            fetched from the database again.
+        :param account_id: The id of the Account that owns the provider.
+        :param name: The provider's name.
+        :returns: The provider, or None if the account has no provider with this name.
+        """
 
         logger_prefix = logging.SmarterFormattedText.text(
             __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
@@ -544,7 +558,15 @@ class Provider(MetaDataWithOwnershipModel):
     def get_cached_providers_for_user(
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None
     ) -> Sequence["Provider"]:
-        """Get cached providers for a user."""
+        """
+        Get the cached providers that a user may read.
+
+        :param invalidate: If True, invalidate the cached user profile and providers before
+            reading them, so that they are fetched from the database again.
+        :param user: The user.
+        :returns: The providers the user has read permission for, or an empty list if the user has
+            no UserProfile.
+        """
         logger_prefix = logging.SmarterFormattedText.text(
             __name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()"
         )
@@ -569,10 +591,10 @@ class Provider(MetaDataWithOwnershipModel):
             return []
 
         if invalidate and user_profile:
-            cached_providers_by_user_id.invalidate(user_profile.user.id)
+            cached_providers_by_user_id.invalidate(user_profile.user.pk)
 
         if user_profile:
-            return cached_providers_by_user_id(user_profile.user.id)
+            return cached_providers_by_user_id(user_profile.user.pk)
         return []
 
     @classmethod

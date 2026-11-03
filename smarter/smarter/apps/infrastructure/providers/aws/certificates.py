@@ -53,6 +53,7 @@ class ACMCertificateService(CertificateService):
 
     @property
     def ready(self) -> bool:
+        """Whether the AWS provider is ready, i.e. authenticated with AWS."""
         return self.provider.ready
 
     @property

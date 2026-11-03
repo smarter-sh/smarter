@@ -366,14 +366,26 @@ class SAMLoader(SmarterHelperMixin):
     # -------------------------------------------------------------------------
     @property
     def api_version(self) -> str:
+        """The manifest's ``apiVersion``, or the api version this loader was created with."""
         return self.manifest_api_version or self._api_version
 
     @property
     def kind(self) -> str:
-        return self.manifest_kind or self._kind or "unknown-kind"
+        """The manifest's ``kind``, or the kind this loader was created with, or ``unknown-kind``."""
+        manifest_kind = self.manifest_kind
+        if manifest_kind:
+            return manifest_kind
+        if self._kind:
+            return self._kind
+        return "unknown-kind"
 
     @property
     def manifest(self) -> Optional[Union[str, SmarterDictType]]:
+        """
+        The manifest this loader was created with, or None if it is not a string or a dict.
+
+        An invalid type is logged as an error.
+        """
         if self._manifest is not None and not isinstance(self._manifest, (str, dict)):
             logger.error(
                 "%s.manifest - integrity error. Invalid manifest type: %s",
@@ -385,20 +397,24 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def file_path(self) -> Optional[str]:
+        """The path of the manifest file this loader was created with, if any."""
         return self._file_path
 
     @property
     def url(self) -> Optional[str]:
+        """The url of the manifest this loader was created with, if any."""
         return self._url
 
     @property
     def name(self) -> str:
+        """The manifest's ``metadata.name``, or ``unknown-name``."""
         if self.manifest_metadata:
             return self.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown-name")
         return "unknown-name"
 
     @property
     def source(self) -> str:
+        """Describe where the manifest came from (manifest, file path or url), for log messages."""
         if self.manifest is not None:
             return "manifest " + type(self.manifest).__name__
         if self.file_path:
@@ -409,22 +425,30 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def specification(self) -> dict[SAMKeys, Any]:
+        """The specification of required manifest keys that the manifest is validated against."""
         return self._specification
 
     @property
     def raw_data(self) -> Optional[Union[str, SmarterDictType]]:
+        """The manifest data as loaded: a JSON or YAML string, or a dict."""
         return self._raw_data
 
     @property
     def json_data(self) -> Optional[SmarterDictType]:
+        """The manifest data parsed into a dict, or None if its format is unknown."""
         if self.data_format == SAMDataFormats.JSON:
-            return json.loads(self.raw_data) if isinstance(self.raw_data, str) else self.raw_data
+            if isinstance(self.raw_data, str):
+                return json.loads(self.raw_data)
+            return self.raw_data
         if self.data_format == SAMDataFormats.YAML:
-            return yaml.safe_load(self.raw_data) if isinstance(self.raw_data, str) else self.raw_data
+            if isinstance(self.raw_data, str):
+                return yaml.safe_load(self.raw_data)
+            return self.raw_data
         return None
 
     @property
     def yaml_data(self) -> Optional[str]:
+        """The manifest data as a YAML string, or None if its format is unknown."""
         if self.data_format == SAMDataFormats.YAML:
             return self.raw_data if isinstance(self.raw_data, str) else yaml.dump(self.json_data)
         if self.data_format == SAMDataFormats.JSON:
@@ -433,6 +457,14 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def data_format(self) -> SAMDataFormats:
+        """
+        Detect, and cache, whether the manifest data is JSON or YAML.
+
+        A JSON string is parsed, and replaces the raw data.
+
+        :returns: The data format, or ``SAMDataFormats.UNKNOWN`` if there is no data.
+        :raises SAMLoaderError: If the data is neither JSON nor YAML.
+        """
         if self._data_format:
             return self._data_format
         if not self.raw_data:
@@ -459,6 +491,7 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def formatted_data(self) -> str:
+        """The manifest data as a JSON string."""
         return json.dumps(self.json_data)
 
     def pydantic_model_dump(self) -> SmarterDictType:

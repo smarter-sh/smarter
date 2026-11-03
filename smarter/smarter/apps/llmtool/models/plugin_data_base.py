@@ -165,7 +165,16 @@ class PluginDataBase(TimestampedModel):
 
     @classmethod
     def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataBase", None]:
+        """
+        Return a plugin's data, cached.
 
+        Subclasses implement it.
+
+        :param plugin: The plugin.
+        :param invalidate: Whether to invalidate the cached data first.
+        :returns: The plugin's data, or None.
+        :raises NotImplementedError: Always, in this base class.
+        """
         raise NotImplementedError("Subclasses must implement get_cached_data_by_plugin method.")
 
     def save(self, *args, **kwargs):

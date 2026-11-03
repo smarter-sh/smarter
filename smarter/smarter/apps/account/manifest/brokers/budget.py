@@ -104,6 +104,7 @@ class SAMBudgetBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The label of this error, used in its string form."""
         return "Smarter API Budget Manifest Broker Error"
 
 
@@ -180,10 +181,12 @@ class SAMBudgetBroker(AbstractBroker):
 
     @property
     def orm_instance(self) -> Optional[Budget]:  # type: ignore[override]
+        """The broker's Budget, or None if it does not exist yet."""
         return self.budget
 
     @property
     def is_superuser(self) -> bool:
+        """Whether the broker's user is a superuser."""
         return bool(self.user_profile and self.user_profile.user.is_superuser)
 
     @property
@@ -217,6 +220,14 @@ class SAMBudgetBroker(AbstractBroker):
     # resources
     # -------------------------------------------------------------------------
     def resolve_account(self, account_number: Optional[str]) -> Account:
+        """
+        Return the Account of a manifest's ``accountNumber``.
+
+        :param account_number: The account number, or None for the broker's own Account.
+        :returns: The Account.
+        :raises SAMBudgetBrokerError: when no account number is given and the broker has no Account, or
+            when no Account has the account number.
+        """
         if not account_number:
             if not self.account:
                 raise SAMBudgetBrokerError("An accountNumber is required.", thing=self.kind)
@@ -366,10 +377,12 @@ class SAMBudgetBroker(AbstractBroker):
     ###########################################################################
     @property
     def ORMMetaModelClass(self) -> Type[Budget]:  # type: ignore[override]
+        """The Django model of the Budget's metadata: :class:`Budget`."""
         return Budget
 
     @property
     def ORMModelClass(self) -> Type[Budget]:  # type: ignore[override]
+        """The Django model of the Budget: :class:`Budget`."""
         return Budget
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -481,6 +494,12 @@ class SAMBudgetBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse to prompt: a Budget is not an LLM resource.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
@@ -560,18 +579,38 @@ class SAMBudgetBroker(AbstractBroker):
         return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse to deploy: a Budget is not deployable.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
         )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse to undeploy: a Budget is not deployable.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the Budget's logs.
+
+        A Budget has none.
+
+        :param request: The request.
+        :returns: A successful response with empty data.
+        """
         command = SmarterJournalCliCommands(self.logs.__name__)
         return self.json_response_ok(command=command, data={})
 

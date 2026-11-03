@@ -58,6 +58,12 @@ class LLMHostAdmin(SmarterCustomerModelAdmin):
     ordering = ["-updated_at"]
 
     def get_queryset(self, request):
+        """
+        Return the LLMHosts that the user may see, by ownership and role.
+
+        :param request: The admin request.
+        :returns: The visible LLMHosts, or none if the user cannot be resolved.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -79,9 +85,23 @@ class LLMHostEventAdmin(SmarterCustomerModelAdmin):
     ordering = ["-created_at"]
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Return every field of LLMHostEvent: events are read only.
+
+        :param request: The admin request.
+        :param obj: The event being viewed, if any.
+        :returns: The names of all of the model's fields.
+        """
         return [field.name for field in LLMHostEvent._meta.fields]
 
     def has_add_permission(self, request, obj=None):
+        """
+        Refuse to add events in the admin: Smarter records them.
+
+        :param request: The admin request.
+        :param obj: Unused.
+        :returns: False.
+        """
         return False
 
     def get_queryset(self, request):
@@ -132,6 +152,12 @@ class LLMHostComputeAdmin(SmarterCustomerModelAdmin):
     actions = ["reconcile"]
 
     def get_queryset(self, request):
+        """
+        Return the LLMHostComputes that the user may see, by ownership and role.
+
+        :param request: The admin request.
+        :returns: The visible LLMHostComputes, or none if the user cannot be resolved.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -140,11 +166,20 @@ class LLMHostComputeAdmin(SmarterCustomerModelAdmin):
 
     @admin.action(description="Reconcile the node groups with their LLMHosts")
     def reconcile(self, request, queryset):
+        """
+        Reconcile each selected LLMHostCompute's node group with its LLMHosts, and report the result.
+
+        Calls the cloud provider: the node group may be created, and nodes added or removed.
+
+        :param request: The admin request.
+        :param queryset: The selected LLMHostComputes.
+        """
         provisioner = ComputeProvisioner()
         for compute in queryset:
             try:
                 state = provisioner.reconcile(compute)
-                self.message_user(request, f"{compute}: {'; '.join(state.actions) or state.message}")
+                summary = "; ".join(state.actions) or state.message
+                self.message_user(request, f"{compute}: {summary}")
             except LLMHostComputeError as e:
                 self.message_user(request, f"{compute}: {e}", level=messages.ERROR)
 

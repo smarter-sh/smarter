@@ -27,7 +27,7 @@ from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
 from .base import AWSBase
-from .exceptions import AWSNotReadyError
+from .exceptions import AWSNotReadyError, SmarterAWSError
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,18 @@ class AWSEks(AWSBase):
 
     Shared by every instance, so that it is logged once.
     """
+
+    @property
+    def eks(self):
+        """
+        The boto3 EKS client.
+
+        :raises AWSNotReadyError: If AWS is not ready.
+        """
+        client = self.client
+        if not self.ready or not client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
+        return client
 
     def cluster_name_is_set(self) -> bool:
         """
@@ -142,24 +154,30 @@ class AWSEks(AWSBase):
             raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
         cluster_name = smarter_settings.aws_eks_cluster_name
         cluster = self.client.describe_cluster(name=cluster_name)["cluster"]
-        addons = [
-            self.client.describe_addon(clusterName=cluster_name, addonName=name)["addon"]
-            for page in self.client.get_paginator("list_addons").paginate(clusterName=cluster_name)
-            for name in page.get("addons", [])
+        addon_pages = self.client.get_paginator("list_addons").paginate(clusterName=cluster_name)
+        addons = []
+        for page in addon_pages:
+            for name in page.get("addons", []):
+                response = self.client.describe_addon(clusterName=cluster_name, addonName=name)
+                addons.append(response["addon"])
+        nodegroup_pages = self.client.get_paginator("list_nodegroups").paginate(clusterName=cluster_name)
+        nodegroups = []
+        for page in nodegroup_pages:
+            for name in page.get("nodegroups", []):
+                response = self.client.describe_nodegroup(clusterName=cluster_name, nodegroupName=name)
+                nodegroups.append(response["nodegroup"])
+        cluster_items = [{"name": cluster.get("name", cluster_name), "arn": cluster.get("arn", "")}]
+        addon_items = [{"name": addon.get("addonName", ""), "arn": addon.get("addonArn", "")} for addon in addons]
+        nodegroup_items = [
+            {"name": nodegroup.get("nodegroupName", ""), "arn": nodegroup.get("nodegroupArn", "")}
+            for nodegroup in nodegroups
         ]
-        nodegroups = [
-            self.client.describe_nodegroup(clusterName=cluster_name, nodegroupName=name)["nodegroup"]
-            for page in self.client.get_paginator("list_nodegroups").paginate(clusterName=cluster_name)
-            for name in page.get("nodegroups", [])
-        ]
-        return {
-            "cluster": [{"name": cluster.get("name", cluster_name), "arn": cluster.get("arn", "")}],
-            "addons": [{"name": addon.get("addonName", ""), "arn": addon.get("addonArn", "")} for addon in addons],
-            "nodegroups": [
-                {"name": nodegroup.get("nodegroupName", ""), "arn": nodegroup.get("nodegroupArn", "")}
-                for nodegroup in nodegroups
-            ],
+        resources = {
+            "cluster": cluster_items,
+            "addons": addon_items,
+            "nodegroups": nodegroup_items,
         }
+        return resources
 
     def get_cluster_health(self) -> ClusterHealth:
         """
@@ -184,6 +202,8 @@ class AWSEks(AWSBase):
         if not self.cluster_name_is_set():
             raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
         cluster_name = smarter_settings.aws_eks_cluster_name
+        if not cluster_name:
+            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
         cluster = self.client.describe_cluster(name=cluster_name)["cluster"]
         health = ClusterHealth(
             name=str(cluster.get("name", cluster_name)),
@@ -232,10 +252,10 @@ class AWSEks(AWSBase):
         :raises botocore.exceptions.ClientError: If the node groups cannot be listed or described.
         """
         nodegroups = []
-        paginator = self.client.get_paginator("list_nodegroups")
+        paginator = self.eks.get_paginator("list_nodegroups")
         for page in paginator.paginate(clusterName=cluster_name):
             for name in page.get("nodegroups", []):
-                response = self.client.describe_nodegroup(clusterName=cluster_name, nodegroupName=name)
+                response = self.eks.describe_nodegroup(clusterName=cluster_name, nodegroupName=name)
                 nodegroup = response["nodegroup"]
                 scaling = nodegroup.get("scalingConfig") or {}
                 instance_types = nodegroup.get("instanceTypes") or []
@@ -267,10 +287,10 @@ class AWSEks(AWSBase):
         :raises botocore.exceptions.ClientError: If the add-ons cannot be listed or described.
         """
         addons = []
-        paginator = self.client.get_paginator("list_addons")
+        paginator = self.eks.get_paginator("list_addons")
         for page in paginator.paginate(clusterName=cluster_name):
             for name in page.get("addons", []):
-                response = self.client.describe_addon(clusterName=cluster_name, addonName=name)
+                response = self.eks.describe_addon(clusterName=cluster_name, addonName=name)
                 addon = response["addon"]
                 health = AddonHealth(
                     name=str(addon.get("addonName", name)),
@@ -298,7 +318,7 @@ class AWSEks(AWSBase):
             failure is logged, and does not fail the add-on's description.
         """
         try:
-            response = self.client.describe_addon_versions(addonName=name, kubernetesVersion=kubernetes_version)
+            response = self.eks.describe_addon_versions(addonName=name, kubernetesVersion=kubernetes_version)
         except ClientError as e:
             logger.debug("%s could not read the versions of %s: %s", self.formatted_class_name, name, e)
             return None
@@ -324,7 +344,7 @@ class AWSEks(AWSBase):
         insights = []
         arguments: SmarterDictType = {"clusterName": cluster_name}
         while True:
-            response = self.client.list_insights(**arguments)
+            response = self.eks.list_insights(**arguments)
             for insight in response.get("insights", []):
                 status = insight.get("insightStatus") or {}
                 result = ClusterInsight(
@@ -403,6 +423,8 @@ class AWSEks(AWSBase):
             expires_in=60,
             operation_name="",
         )
+        if url is None:
+            raise SmarterAWSError(f"{self.formatted_class_name} could not presign the EKS token url.")
         token = EKS_TOKEN_PREFIX + base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8").rstrip("=")
         return token, time.time() + EKS_TOKEN_LIFETIME_SECONDS
 

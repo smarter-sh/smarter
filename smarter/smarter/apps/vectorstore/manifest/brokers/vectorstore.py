@@ -97,6 +97,7 @@ class SAMVectorstoreBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error's title."""
         return "Smarter API Vectorstore Manifest Broker Error"
 
 
@@ -121,6 +122,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     @property
     def SerializerClass(self) -> Type[ModelSerializer]:
+        """The serializer of a vectorstore."""
         return VectorstoreSerializer
 
     @property
@@ -289,10 +291,12 @@ class SAMVectorstoreBroker(AbstractBroker):
     ###########################################################################
     @property
     def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
         return self.formatted_text(f"{SAMVectorstoreBroker.__name__}[{id(self)}]")
 
     @property
     def kind(self) -> str:
+        """The manifest kind, ``Vectorstore``."""
         return MANIFEST_KIND
 
     @property
@@ -313,21 +317,26 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     @property
     def ORMMetaModelClass(self) -> Type[VectorstoreMeta]:
+        """The Django model of a vectorstore."""
         return VectorstoreMeta
 
     @property
     def ORMModelClass(self) -> Type[VectorstoreMeta]:
+        """The Django model of a vectorstore."""
         return VectorstoreMeta
 
     @property
     def orm_meta_instance(self) -> Optional[VectorstoreMeta]:  # type: ignore[override]
+        """The vectorstore, or None if it does not exist."""
         return self.vectorstore
 
     @property
     def orm_instance(self) -> Optional[VectorstoreMeta]:  # type: ignore[override]
+        """The vectorstore, or None if it does not exist."""
         return self.vectorstore
 
     def cache_invalidations(self) -> None:
+        """Invalidate the owner's cached vectorstores, and the cached vectorstore."""
         if self.user_profile:
             invalidate_all_cached_vectorstores_for_user_profile(self.user_profile)
         if self._vectorstore:
@@ -499,6 +508,12 @@ class SAMVectorstoreBroker(AbstractBroker):
         return len(documents)
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: a Vectorstore cannot be prompted.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: Always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 

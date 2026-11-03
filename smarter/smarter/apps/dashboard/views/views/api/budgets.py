@@ -45,13 +45,19 @@ class BudgetsView(SmarterAuthenticatedWebView):
     """The status of every budget that the user may see."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return the status of every active budget constraint on a resource that the user may see.
+
+        :param request: The request.
+        :returns: A list of the constraints' statuses, as JSON.
+        """
         user_profile = UserProfile.get_cached_object(user=get_resolved_user(request.user))  # type: ignore
         constraints = ResourceConstraint.objects.filter(is_active=True).select_related("budget")
-        retval = [
-            _jsonable(constraint.status())
-            for constraint in constraints
-            if is_visible(user_profile, constraint.resource_locator)
-        ]
+        retval = []
+        for constraint in constraints:
+            if not is_visible(user_profile, constraint.resource_locator):
+                continue
+            retval.append(_jsonable(constraint.status()))
         return JsonResponse(retval, status=HTTPStatus.OK, safe=False)
 
 
@@ -63,19 +69,27 @@ class BudgetSeriesView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, resource_locator: str, *args, **kwargs) -> JsonResponse:
+        """
+        Return the budget versus the actual spending of the resource's last billing periods.
+
+        :param request: The request.
+        :param resource_locator: The resource's record locator, from the url.
+        :returns: Each of the resource's constraints' status and series, as JSON; ``404`` if the user
+            may not see the resource; ``400`` if ``periods`` is not an integer.
+        """
         user_profile = UserProfile.get_cached_object(user=get_resolved_user(request.user))  # type: ignore
         if not is_visible(user_profile, resource_locator):
             return JsonResponse({"error": "Not found."}, status=HTTPStatus.NOT_FOUND)
         try:
-            periods = min(max(int(request.GET.get("periods", DEFAULT_PERIODS)), 1), MAX_PERIODS)
+            requested_periods = int(request.GET.get("periods", DEFAULT_PERIODS))
+            periods = max(requested_periods, 1)
+            periods = min(periods, MAX_PERIODS)
         except ValueError:
             return JsonResponse({"error": "periods must be an integer."}, status=HTTPStatus.BAD_REQUEST)
         constraints = ResourceConstraint.objects.filter(resource_locator=resource_locator).select_related("budget")
-        retval = [
-            {
-                "status": _jsonable(constraint.status()),
-                "series": [_jsonable(row) for row in constraint.series(periods=periods)],
-            }
-            for constraint in constraints
-        ]
+        retval = []
+        for constraint in constraints:
+            status = _jsonable(constraint.status())
+            series = [_jsonable(row) for row in constraint.series(periods=periods)]
+            retval.append({"status": status, "series": series})
         return JsonResponse(retval, status=HTTPStatus.OK, safe=False)

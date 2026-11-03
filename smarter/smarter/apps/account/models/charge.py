@@ -129,6 +129,12 @@ class Charge(TimestampedModel):
     total_cost = models.DecimalField(max_digits=18, decimal_places=8, default=Decimal("0"))
 
     def save(self, *args, **kwargs):
+        """
+        Save the Charge, and send ``new_charge_created`` when it is new.
+
+        :param args: Passed to Django's ``save()``.
+        :param kwargs: Passed to Django's ``save()``.
+        """
         is_new = self.pk is None
 
         super().save(*args, **kwargs)

@@ -227,7 +227,12 @@ class Usage:
 
 def _int(data: Mapping, *keys: str) -> int:
     """The sum of the integer values of keys of data, ignoring those that are missing or not integers."""
-    return sum(value for key in keys if isinstance(value := data.get(key), int) and not isinstance(value, bool))
+    total = 0
+    for key in keys:
+        value = data.get(key)
+        if isinstance(value, int) and not isinstance(value, bool):
+            total += value
+    return total
 
 
 def _usage(data: Any) -> Optional[Usage]:
@@ -346,7 +351,13 @@ def record_charges(proxy: Proxy, user_profile: UserProfile, usage: Usage) -> Non
 
 
 def budget_resource_locators(proxy: Proxy, user_profile: UserProfile) -> list[str]:
-    """The record locators of everything that a request is charged to, and whose budgets it must respect."""
+    """
+    The record locators of everything that a request is charged to, and whose budgets it must respect.
+
+    :param proxy: The Proxy.
+    :param user_profile: The caller.
+    :returns: The locators of the Proxy, its Provider (if it has one), the caller, and the caller's account.
+    """
     retval = [proxy.record_locator]
     if proxy.provider_id:  # type: ignore[attr-defined]
         retval.append(proxy.provider.record_locator)
@@ -388,7 +399,14 @@ def forwarded_request_headers(proxy: Proxy, headers: Mapping[str, str], api_key:
 
 
 def returned_response_headers(proxy: Proxy, headers: httpx.Headers) -> list[tuple[str, str]]:
-    """The provider's response headers to return to the caller, and the name of the Proxy."""
+    """
+    The provider's response headers to return to the caller, and the name of the Proxy.
+
+    :param proxy: The Proxy.
+    :param headers: The provider's response headers.
+    :returns: The headers, without those in :data:`~smarter.apps.proxy.const.DROPPED_RESPONSE_HEADERS`,
+        followed by :data:`PROXY_RESPONSE_HEADER` with the Proxy's name.
+    """
     retval = [(name, value) for name, value in headers.multi_items() if name.lower() not in DROPPED_RESPONSE_HEADERS]
     retval.append((PROXY_RESPONSE_HEADER, proxy.name))
     return retval

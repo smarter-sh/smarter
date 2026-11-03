@@ -887,11 +887,12 @@ class UserProfile(MetaDataModel):
         user_identifier = "NoUser"
         company_name = "NoAccount"
         try:
-            user_identifier = (
-                mask_email(self.user.email)
-                if self.user and self.user.email
-                else (self.user.username if self.user else "NoUser")
-            )
+            if self.user and self.user.email:
+                user_identifier = mask_email(self.user.email)
+            elif self.user:
+                user_identifier = self.user.username
+            else:
+                user_identifier = "NoUser"
             if self.account:
                 company_name = self.mask_string(self.account.company_name or "")
         except User.DoesNotExist:

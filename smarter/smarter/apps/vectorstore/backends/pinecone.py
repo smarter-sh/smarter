@@ -51,9 +51,16 @@ class PineconeBackend(SmarterVectorstoreBackend):
 
     @property
     def client(self) -> Pinecone:
+        """
+        The Pinecone client, created when it is first used, with the API key of the vectorstore's ApiConnection.
+
+        :raises VectorStoreBackendConnectionError: If the vectorstore has no ApiConnection with an API key.
+        """
         if self._client is None:
             connection = self.vectorstore.connection
-            api_key = connection.api_key.get_secret() if connection and connection.api_key else None
+            api_key = None
+            if connection and connection.api_key:
+                api_key = connection.api_key.get_secret()
             if not api_key:
                 raise VectorStoreBackendConnectionError(
                     f"Vectorstore {self.vectorstore.name} has no ApiConnection with a Pinecone API key."
@@ -63,6 +70,7 @@ class PineconeBackend(SmarterVectorstoreBackend):
 
     @property
     def index(self):
+        """The Pinecone index, created when it is first used."""
         if self._index is None:
             self._index = self.client.Index(name=self.index_name)
         return self._index
@@ -76,17 +84,33 @@ class PineconeBackend(SmarterVectorstoreBackend):
         if not self.exists():
             return True, ""
         status = self.client.describe_index(self.index_name).status
-        ready = status.get("ready") if isinstance(status, dict) else getattr(status, "ready", True)
-        return bool(ready), "" if ready else "Pinecone is initializing the index."
+        if isinstance(status, dict):
+            ready = status.get("ready")
+        else:
+            ready = getattr(status, "ready", True)
+        if ready:
+            return True, ""
+        return False, "Pinecone is initializing the index."
 
     def exists(self) -> bool:
+        """
+        Whether the Pinecone index exists.
+
+        :raises VectorStoreBackendConnectionError: If Pinecone is unreachable.
+        """
         try:
             return self.client.has_index(self.index_name)
         except Exception as e:
             raise VectorStoreBackendConnectionError(f"Pinecone is unreachable: {e}") from e
 
     def create(self) -> None:
-        config = (self.vectorstore.spec or {}).get("pinecone") or {}
+        """
+        Create a serverless Pinecone index, in the cloud and region of the spec's ``pinecone``.
+
+        It is tagged with the platform's name and the vectorstore's id, and has deletion protection if the vectorstore has.
+        """
+        spec = self.vectorstore.spec or {}
+        config = spec.get("pinecone") or {}
         self.client.create_index(
             name=self.index_name,
             spec=ServerlessSpec(cloud=config.get("cloud", "aws"), region=config.get("region", "us-east-1")),
@@ -97,38 +121,56 @@ class PineconeBackend(SmarterVectorstoreBackend):
         )
 
     def drop(self) -> None:
+        """Delete the Pinecone index, if it exists, and its data."""
         if self.exists():
             self.client.delete_index(self.index_name)
         self._index = None
 
     def stats(self) -> SmarterDictType:
-        stats = self.index.describe_index_stats()
-        stats = stats.to_dict() if hasattr(stats, "to_dict") else dict(stats)
-        return {
+        """The index's vector count, dimension and fullness, from Pinecone."""
+        response = self.index.describe_index_stats()
+        stats: SmarterDictType
+        if isinstance(response, dict):
+            stats = response
+        else:
+            stats = response.to_dict()
+        retval: SmarterDictType = {
             "vector_count": stats.get("total_vector_count", 0),
             "dimension": stats.get("dimension"),
             "index_fullness": stats.get("index_fullness"),
         }
+        return retval
 
     # --- data -------------------------------------------------------------------
     def upsert(self, ids: list[str], texts: list[str], metadatas: list[SmarterDictType], batch_size: int = 64) -> None:
-        """Embed the texts, and upsert them in batches, with each text in its metadata's ``text``."""
+        """
+        Embed the texts, and upsert them in batches, with each text in its metadata's ``text``.
+
+        :param ids: The chunks' ids.
+        :param texts: The chunks' texts.
+        :param metadatas: The chunks' metadata.
+        :param batch_size: How many chunks to embed and upsert at a time.
+        """
         for start in range(0, len(texts), batch_size):
-            batch_texts = texts[start : start + batch_size]
+            end = start + batch_size
+            batch_ids = ids[start:end]
+            batch_texts = texts[start:end]
+            batch_metadatas = metadatas[start:end]
             vectors = self.embeddings.embed_documents(batch_texts)
-            self.index.upsert(
-                vectors=[
-                    {"id": chunk_id, "values": vector, "metadata": {**metadata, TEXT_KEY: text}}
-                    for chunk_id, vector, metadata, text in zip(
-                        ids[start : start + batch_size],
-                        vectors,
-                        metadatas[start : start + batch_size],
-                        batch_texts,
-                    )
-                ]
-            )
+            records = []
+            for chunk_id, vector, metadata, text in zip(batch_ids, vectors, batch_metadatas, batch_texts):
+                record_metadata = {**metadata, TEXT_KEY: text}
+                records.append({"id": chunk_id, "values": vector, "metadata": record_metadata})
+            self.index.upsert(vectors=records)
 
     def delete(self, ids: list[str]) -> None:
+        """
+        Delete chunks by id.
+
+        Ids that do not exist are ignored.
+
+        :param ids: The chunks' ids.
+        """
         if ids:
             self.index.delete(ids=ids)
 
@@ -142,16 +184,31 @@ class PineconeBackend(SmarterVectorstoreBackend):
         lambda_mult: Optional[float] = None,
         metadata_filter: Optional[SmarterDictType] = None,
     ) -> list[SearchResult]:
-        """Search the index with the query's embedding.
+        """
+        Search the index with the query's embedding.
 
         Scores are Pinecone's raw scores for the index's metric. MMR re-ranks ``fetch_k`` matches
         for diversity, and its results have no score.
+
+        :param query: The text to search for.
+        :param k: How many results to return.
+        :param search_type: ``similarity``, ``similarity_score_threshold`` or ``mmr``.
+        :param score_threshold: For ``similarity_score_threshold``, the lowest score to keep. A result
+            without a score is dropped.
+        :param fetch_k: For ``mmr``, how many matches to re-rank. Defaults to ``max(20, k * 4)``.
+        :param lambda_mult: For ``mmr``, from 0 (most diverse) to 1 (most relevant). Defaults to 0.5.
+        :param metadata_filter: A Pinecone metadata filter.
+        :returns: The matching chunks, best first.
         """
         vector = self.embeddings.embed_query(query)
         if search_type == "mmr":
+            if not fetch_k:
+                fetch_k = max(20, k * 4)
+            if not lambda_mult:
+                lambda_mult = 0.5
             response = self.index.query(
                 vector=vector,
-                top_k=fetch_k or max(20, k * 4),
+                top_k=fetch_k,
                 include_values=True,
                 include_metadata=True,
                 filter=metadata_filter,
@@ -159,19 +216,30 @@ class PineconeBackend(SmarterVectorstoreBackend):
             matches = self._matches(response)
             if not matches:
                 return []
-            selected = maximal_marginal_relevance(
-                np.array([vector], dtype=np.float32),
-                [match["values"] for match in matches],
-                k=k,
-                lambda_mult=lambda_mult or 0.5,
-            )
-            results = [self._result(matches[i], score=None) for i in selected]
-            return [result for result in results if result]
+            query_vectors = np.array([vector], dtype=np.float32)
+            match_vectors = [match["values"] for match in matches]
+            selected = maximal_marginal_relevance(query_vectors, match_vectors, k=k, lambda_mult=lambda_mult)
+            mmr_results: list[SearchResult] = []
+            for i in selected:
+                result = self._result(matches[i], score=None)
+                if result:
+                    mmr_results.append(result)
+            return mmr_results
         response = self.index.query(vector=vector, top_k=k, include_metadata=True, filter=metadata_filter)
-        results = [self._result(match, score=match.get("score")) for match in self._matches(response)]
-        results = [result for result in results if result]
-        if search_type == "similarity_score_threshold" and score_threshold is not None:
-            results = [result for result in results if result.score >= score_threshold]
+        threshold: Optional[float] = None
+        if search_type == "similarity_score_threshold":
+            threshold = score_threshold
+        results: list[SearchResult] = []
+        for match in self._matches(response):
+            result = self._result(match, score=match.get("score"))
+            if not result:
+                continue
+            if threshold is not None:
+                if result.score is None:
+                    continue
+                if result.score < threshold:
+                    continue
+            results.append(result)
         return results
 
     @staticmethod
@@ -193,6 +261,13 @@ class PineconeBackend(SmarterVectorstoreBackend):
 
     # --- dumps ------------------------------------------------------------------
     def create_snapshot(self, name: str) -> SnapshotInfo:
+        """
+        Back up the index, with Pinecone's backups.
+
+        :param name: The backup's name.
+        :returns: The backup's id, size, and whether it is ready.
+        :raises VectorStoreBackendError: If Pinecone did not back it up.
+        """
         try:
             backup = self.client.create_backup(
                 index_name=self.index_name, backup_name=name, description=f"{smarter_settings.platform_name} backup"
@@ -207,6 +282,11 @@ class PineconeBackend(SmarterVectorstoreBackend):
         )
 
     def delete_snapshot(self, name: str) -> None:
+        """
+        Delete a Pinecone backup.
+
+        :param name: The backup's id.
+        """
         self.client.delete_backup(backup_id=name)
 
     def restore_snapshot(self, name: str) -> None:

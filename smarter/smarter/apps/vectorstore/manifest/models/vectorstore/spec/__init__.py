@@ -98,6 +98,13 @@ class SAMVectorstoreIndex(SmarterBasePydanticModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate the index name: lowercase letters, digits and hyphens.
+
+        :param v: The name, or None for the default.
+        :returns: The name.
+        :raises SAMValidationError: If it has other characters.
+        """
         if v is not None and not INDEX_NAME.match(v):
             raise SAMValidationError(f"index.name: '{v}' must be lowercase letters, digits and hyphens.")
         return v
@@ -143,6 +150,12 @@ class SAMVectorstoreEmbeddings(SmarterBasePydanticModel):
 
     @model_validator(mode="after")
     def validate_overlap(self) -> "SAMVectorstoreEmbeddings":
+        """
+        Validate that ``chunkOverlap`` is smaller than ``chunkSize``.
+
+        :returns: The model.
+        :raises SAMValidationError: If it is not.
+        """
         if self.chunkOverlap >= self.chunkSize:
             raise SAMValidationError("embeddings.chunkOverlap: must be smaller than chunkSize.")
         return self
@@ -166,6 +179,13 @@ class SAMVectorstoreSelfHosted(SmarterBasePydanticModel):
     @field_validator("storage", "cpu", "memory")
     @classmethod
     def validate_quantity(cls, v: str) -> str:
+        """
+        Validate a Kubernetes quantity, e.g. ``500m``, ``1Gi`` or ``10Gi``.
+
+        :param v: The quantity.
+        :returns: The quantity.
+        :raises SAMValidationError: If it is not a Kubernetes quantity.
+        """
         if not QUANTITY.match(v):
             raise SAMValidationError(f"selfHosted: '{v}' is not a Kubernetes quantity, e.g. 500m, 1Gi or 10Gi.")
         return v
@@ -173,6 +193,13 @@ class SAMVectorstoreSelfHosted(SmarterBasePydanticModel):
     @field_validator("image")
     @classmethod
     def validate_image(cls, v: str) -> str:
+        """
+        Validate a container image reference.
+
+        :param v: The image.
+        :returns: The image.
+        :raises SAMValidationError: If it is not a container image reference.
+        """
         if not IMAGE.match(v):
             raise SAMValidationError(f"selfHosted.image: '{v}' is not a container image reference.")
         return v

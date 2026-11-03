@@ -99,7 +99,18 @@ def is_tool_call_message(message: dict) -> bool:
 
 
 def validate_completion_request(request_body, version: str = "v1") -> None:
-    """See openai.chat.completion.request.json."""
+    """
+    Validate a chat completion request body.
+
+    See openai.chat.completion.request.json.
+
+    :param request_body: The decoded request body.
+    :param version: The api version. For ``v1``, the body must also contain ``model``,
+        ``temperature`` and ``max_completion_tokens``.
+    :raises TypeError: If the request body is not a dict.
+    :raises SmarterValueError: If ``messages`` is missing or invalid, or a key that ``version``
+        requires is missing.
+    """
 
     validate_request_body(request_body=request_body)
     validate_messages(request_body=request_body)

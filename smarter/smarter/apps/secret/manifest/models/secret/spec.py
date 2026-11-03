@@ -1,4 +1,4 @@
-"""Smarter API Manifest - Secret.spec"""
+"""Smarter API Manifest - Secret.spec."""
 
 import os
 from datetime import datetime, timezone
@@ -15,7 +15,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMSecretSpecConfig(AbstractSAMSpecBase):
-    """Smarter API Secret Manifest Secret.spec.config"""
+    """Smarter API Secret Manifest Secret.spec.config."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
 
@@ -30,6 +30,13 @@ class SAMSecretSpecConfig(AbstractSAMSpecBase):
 
     @field_validator("expiration_date")
     def ensure_utc(cls, v):
+        """
+        Treat a naive ``expiration_date`` as UTC.
+
+        :param v: The expiration date, or None.
+        :returns: The date, with UTC as its time zone if it had none, or None.
+        :raises ValueError: when it is not a datetime.
+        """
         if v is None:
             return v
         if isinstance(v, datetime):
@@ -40,13 +47,19 @@ class SAMSecretSpecConfig(AbstractSAMSpecBase):
 
     @field_serializer("value")
     def mask_value(self, v: str) -> str:
+        """
+        Mask the secret value when the spec is serialized, so that it is never shown.
+
+        :param v: The secret value.
+        :returns: The masked value, or the value unchanged when it is empty.
+        """
         if not v:
             return v
         return mask_string(v)
 
 
 class SAMSecretSpec(AbstractSAMSpecBase):
-    """Smarter API Secret Manifest Secret.spec"""
+    """Smarter API Secret Manifest Secret.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

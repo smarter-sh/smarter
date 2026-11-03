@@ -114,7 +114,15 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         )
 
     def create_chat_completion(self, data: SmarterDictType, logger_prefix: str):
-        """Send the prompt to the provider, retrying once with ``reasoning_effort="none"`` when OpenAI requires it for function tools."""
+        """
+        Send the prompt to the provider, retrying once with ``reasoning_effort="none"`` when OpenAI requires it for function tools.
+
+        :param data: The chat completion request body. On a retry, ``reasoning_effort`` is set in it.
+        :param logger_prefix: The caller's log prefix, used in the retry's warning.
+        :returns: The provider's chat completion.
+        :raises openai.BadRequestError: If the provider rejects the request, and the rejection is not
+            the one that the retry handles.
+        """
         try:
             return openai.chat.completions.create(**data)
         except openai.BadRequestError as e:
@@ -140,6 +148,23 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         data: SmarterDictType,
         **kwargs,
     ):
+        """
+        Pass a chat completion request through to the provider, and return its response.
+
+        Sets the module-level ``openai.api_key`` and ``openai.base_url`` from the readable
+        Provider named ``self.provider``, overridden by ``self.api_key`` and ``self.base_url`` when
+        set. Sends the prompt and chat signals, and journals the response.
+
+        :param request: The http request, whose JSON body is the chat completion request.
+        :param user_profile: The requesting user's profile, whose budget authorizes the charge.
+        :param data: Not used: the request body is decoded from ``request`` instead.
+        :param kwargs: Not used.
+        :returns: A journaled JSON response with the chat completion, or a 403 when the user is
+            not authenticated, 404 when the Provider is not found, or 400 when the body is not JSON
+            or the provider call fails.
+        :raises SmarterBudgetExceeded: If a budget's resource lock forbids charges to the user
+            profile.
+        """
         charge_authorization(user_profile.record_locator, self.__class__.__name__)
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.{self.formatted_class_name}.handler()"
         response: Optional[ChatCompletion] = None

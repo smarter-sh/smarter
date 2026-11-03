@@ -559,13 +559,15 @@ class ApiPlugin(PluginBase):
 
             api_data["parameters"] = recasted_parameters
 
+        if self.manifest and self.manifest.metadata:
+            description = self.manifest.metadata.description
+        elif self.plugin_meta:
+            description = self.plugin_meta.description
+        else:
+            description = "no description"
         return {
             "plugin": self.plugin_meta,
-            "description": (
-                self.manifest.metadata.description
-                if self.manifest and self.manifest.metadata
-                else self.plugin_meta.description if self.plugin_meta else "no description"
-            ),
+            "description": description,
             **api_data,
         }  # type: ignore[call-arg]
 
