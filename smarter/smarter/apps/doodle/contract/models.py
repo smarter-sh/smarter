@@ -4,12 +4,12 @@ The response of the doodle of the day, ``GET /api/v1/doodles/today/``.
 The sign-in page's React app, ``@smarter/doodle``, reads it. Its fields are camelCase.
 """
 
-from typing import Literal, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from smarter.apps.doodle.const import LEARN_HOW_URL
+from smarter.apps.doodle.const import LEARN_HOW_URL, DoodleAiCredit
 from smarter.lib.typing import SmarterDictType
 
 
@@ -41,7 +41,7 @@ class DoodleOfTheDay(DoodleApiModel):
     link_url: str = Field(description="Where the caption links to. Empty for nowhere.")
     image_url: str = Field(description="The artwork's url. It never changes, and may be cached forever.")
     is_default: bool = Field(description="Whether it is the plain default doodle, which celebrates nothing.")
-    ai_credit: Literal["", "chosen", "drawn"] = Field(
+    ai_credit: DoodleAiCredit = Field(
         default="",
         description=(
             "What a Smarter AI application did: chosen, the Smarter Doodle Editor chose it; drawn, the "

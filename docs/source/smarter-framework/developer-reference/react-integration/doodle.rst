@@ -47,7 +47,9 @@ The Django app ``smarter.apps.doodle`` does the work, and the React app only sho
 
 A superuser can override a day's doodle in the :doc:`Django admin <../../../smarter-platform/django-admin>`,
 under Doodles: choose another theme, and neither the planner nor the editor changes that day again.
-The list's actions approve or reject doodles. A change shows within ten minutes, the time that a
+The list's actions approve or reject doodles, and its **Preview the week** button shows every
+region's doodle of every planned day as a grid, with its caption, whether a Smarter AI application
+chose or drew it, and why, and an Approve and a Reject button on each. A change shows within ten minutes, the time that a
 day's doodle is cached.
 
 The Smarter Doodle Editor and Artist
