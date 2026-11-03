@@ -70,6 +70,12 @@ class ActivityView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return the user's latest journaled cli activity, and whether the journal is enabled.
+
+        :param request: The request.
+        :returns: The activity, as JSON, in the shape the class docstring shows.
+        """
         user = get_resolved_user(request.user)
         entries = SAMJournal.objects.filter(user=user, command__in=ACTIVITY_COMMANDS).order_by("-created_at")[
             :MAX_ITEMS

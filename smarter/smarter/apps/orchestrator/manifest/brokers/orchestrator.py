@@ -63,6 +63,7 @@ class SAMOrchestratorBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter API Orchestrator Manifest Broker Error"
 
 
@@ -320,7 +321,8 @@ class SAMOrchestratorBroker(AbstractBroker):
             )
             seen_llmclient_ids.add(llmclient.id)
 
-        stale = self.orchestrator.harnesses.exclude(llmclient_id__in=seen_llmclient_ids)
+        memberships = OrchestratorHarness.objects.filter(orchestrator=self.orchestrator)
+        stale = memberships.exclude(llmclient_id__in=seen_llmclient_ids)
         stale_count = stale.count()
         if stale_count:
             logger.debug(
@@ -375,6 +377,8 @@ class SAMOrchestratorBroker(AbstractBroker):
         for status_field in ("userProfile", "createdAt", "updatedAt", "recordLocator"):
             orchestrator_dict.pop(status_field, None)
 
+        memberships = OrchestratorHarness.objects.filter(orchestrator=self.orchestrator)
+        memberships = memberships.select_related("llmclient").order_by("execution_order")
         harnesses = [
             SAMOrchestratorHarnessConfig(
                 llmClientName=membership.llmclient.name,
@@ -383,7 +387,7 @@ class SAMOrchestratorBroker(AbstractBroker):
                 isActive=membership.is_active,
                 config=membership.config,
             )
-            for membership in self.orchestrator.harnesses.select_related("llmclient").order_by("execution_order")
+            for membership in memberships
         ]
         orchestrator_dict["harnesses"] = [harness.model_dump(mode="json") for harness in harnesses]
 
@@ -585,6 +589,17 @@ class SAMOrchestratorBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=model.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the Orchestrators of the user's account that the user owns, as a ``get`` cli response.
+
+        Filtered by the ``name`` kwarg when given, and by the request's annotation selector; at
+        most ``MAX_RESULTS``, ordered by name.
+
+        :param request: The request.
+        :returns: The response: the Orchestrators' column titles and camel-cased serialized rows.
+        :raises SAMBrokerErrorNotReady: when the broker has no user profile.
+        :raises SAMOrchestratorBrokerError: when an Orchestrator cannot be serialized.
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         data = []
@@ -731,11 +746,26 @@ class SAMOrchestratorBroker(AbstractBroker):
             return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented for Orchestrators.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the Orchestrator named by the broker as a manifest.
+
+        :param request: The request.
+        :returns: The response, whose data is the manifest.
+        :raises SAMBrokerErrorNotReady: when the broker has no name.
+        :raises SAMBrokerErrorNotFound: when there is no such Orchestrator.
+        :raises SAMOrchestratorBrokerError: when the manifest cannot be built.
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
@@ -796,6 +826,15 @@ class SAMOrchestratorBroker(AbstractBroker):
         return []
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the Orchestrator named by the broker, after invalidating its caches.
+
+        :param request: The request.
+        :returns: The response, with empty data.
+        :raises SAMBrokerErrorNotReady: when the broker has no name.
+        :raises SAMBrokerErrorNotFound: when there is no such Orchestrator.
+        :raises SAMOrchestratorBrokerError: when the delete fails.
+        """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
@@ -820,6 +859,12 @@ class SAMOrchestratorBroker(AbstractBroker):
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented for Orchestrators.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
@@ -827,6 +872,12 @@ class SAMOrchestratorBroker(AbstractBroker):
         )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented for Orchestrators.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
@@ -834,6 +885,12 @@ class SAMOrchestratorBroker(AbstractBroker):
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an empty ``logs`` response: Orchestrators keep no logs.
+
+        :param request: The request.
+        :returns: The response, with empty data.
+        """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}

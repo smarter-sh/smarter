@@ -23,6 +23,7 @@ class SmarterJournalEnumException(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The error message prefix of these errors."""
         return "Smarter API Manifest Enumeration Error"
 
 

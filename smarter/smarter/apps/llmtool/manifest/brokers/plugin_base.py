@@ -556,6 +556,14 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     @plugin_meta.setter
     def plugin_meta(self, value: PluginMeta) -> None:
+        """
+        Reset the broker's cached plugin, PluginMeta, prompt and status, and take its account and user from a PluginMeta.
+
+        The cached PluginMeta is cleared too, not set to ``value``, so the getter looks it up
+        again. The user is the account's admin user.
+
+        :param value: The PluginMeta, or None to only reset the cached state.
+        """
         logger.debug(
             "%s.plugin_meta() setter called - setting PluginMeta to %s",
             logger_prefix,
@@ -576,6 +584,13 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     @property
     def plugin_data(self) -> Optional[PluginDataBase]:
+        """
+        The plugin's data model, e.g. its PluginDataSql.
+
+        Subclasses implement it.
+
+        :raises NotImplementedError: Always, in this base class.
+        """
         raise NotImplementedError("plugin_data property must be implemented in the subclass of SAMPluginBaseBroker")
 
     @property

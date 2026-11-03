@@ -47,6 +47,11 @@ class Command(SmarterCommand):
     )
 
     def add_arguments(self, parser):
+        """
+        Add the ``--name``, ``--account_number``, ``--public`` and ``--output`` options.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("--name", type=str, required=True, help="The LLMClient's name, e.g. math.")
         parser.add_argument(
             "--account_number",
@@ -58,6 +63,13 @@ class Command(SmarterCommand):
         parser.add_argument("--output", type=str, default=None, help="A file to write. Default: standard output.")
 
     def handle(self, *args, **options):
+        """
+        Write the LLMClient's dependency tree, as its owner sees it, as JSON to ``--output`` or standard output.
+
+        :param args: Unused positional arguments.
+        :param options: The command's options: ``name``, ``account_number``, ``public`` and ``output``.
+        :raises django.core.management.base.CommandError: when the account has no LLMClient of that name.
+        """
         self.handle_begin()
         name = options["name"]
         account_number = options["account_number"]

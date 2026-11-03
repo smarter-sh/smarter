@@ -22,18 +22,18 @@ from typing import Callable, Optional
 from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.db import models
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
 from smarter.lib import json
+from smarter.lib.django.models import MetaDataModel
 from smarter.lib.typing import SmarterDictType
 
 
 class ResourceViewsTestMixin:
     """Test the React list page, the list api, the clone, delete and rename apis, and the detail page."""
 
-    model: type[models.Model]
+    model: type[MetaDataModel]
     reverse_names: type
     id_kwarg: str
     invalidate_cache: Optional[Callable] = None
@@ -41,20 +41,30 @@ class ResourceViewsTestMixin:
     detail_view_name = "detailview"
 
     @classmethod
-    def create_resource(cls, name: str) -> models.Model:
+    def create_resource(cls, name: str) -> MetaDataModel:
+        """
+        Create and return a resource of the kind under test; subclasses implement it.
+
+        :param name: The resource's name.
+        :returns: The saved resource.
+        """
         raise NotImplementedError
 
     @classmethod
     def setUpClass(cls):
+        """Create the resource that the tests share."""
         super().setUpClass()  # type: ignore[misc]
-        cls.resource = cls.create_resource(f"{cls.resource_name_prefix}_{cls.hash_suffix}")  # type: ignore[attr-defined]
+        name = f"{cls.resource_name_prefix}_{cls.hash_suffix}"  # type: ignore[attr-defined]
+        cls.resource = cls.create_resource(name)
 
     @classmethod
     def tearDownClass(cls):
+        """Delete every resource whose name starts with ``resource_name_prefix``."""
         cls.model.objects.filter(name__startswith=cls.resource_name_prefix).delete()  # type: ignore[attr-defined]
         super().tearDownClass()  # type: ignore[misc]
 
     def setUp(self):
+        """Log a test client in as the admin user, and invalidate the list cache, if the test class has one."""
         super().setUp()  # type: ignore[misc]
         self.client = Client()
         self.addCleanup(self.client.logout)  # type: ignore[attr-defined]
@@ -66,10 +76,25 @@ class ResourceViewsTestMixin:
     # helpers
     # -------------------------------------------------------------------------
     def url(self, name: str, **kwargs) -> str:
-        return reverse(f"{self.reverse_names.namespace}:{getattr(self.reverse_names, name)}", kwargs=kwargs or None)
+        """
+        Reverse one of the app's url names, by the attribute of ``reverse_names`` that holds it.
+
+        :param name: The attribute's name, e.g. ``listview_api``.
+        :param kwargs: The url's keyword arguments.
+        :returns: The url path.
+        """
+        url_name = getattr(self.reverse_names, name)
+        view_name = f"{self.reverse_names.namespace}:{url_name}"
+        return reverse(view_name, kwargs=kwargs or None)
 
     def post(self, url: str, status: int = HTTPStatus.OK) -> SmarterDictType:
-        """POST to ``url``, assert the response's status, and return its json."""
+        """
+        POST to ``url``, assert the response's status, and return its json.
+
+        :param url: The url.
+        :param status: The expected status.
+        :returns: The response's json.
+        """
         response = self.client.post(url)
         self.assertEqual(response.status_code, status, response.content[:500])  # type: ignore[attr-defined]
         return json.loads(response.content)
@@ -84,13 +109,21 @@ class ResourceViewsTestMixin:
             url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
         return [item["name"] for item in self.post(url)["objects"]]
 
-    def throwaway(self, suffix: str) -> models.Model:
+    def throwaway(self, suffix: str) -> MetaDataModel:
         """Return a new resource, which is deleted after the test."""
         name = f"{self.resource_name_prefix}_{suffix}_{self.hash_suffix}"  # type: ignore[attr-defined]
         self.addCleanup(self.model.objects.filter(name__startswith=name).delete)  # type: ignore[attr-defined]
         return self.create_resource(name)
 
     def id_url(self, name: str, resource_id: int, **kwargs) -> str:
+        """
+        Reverse one of the app's url names for a resource, by its id.
+
+        :param name: The attribute of ``reverse_names`` that holds the url name.
+        :param resource_id: The resource's id, passed as ``id_kwarg``.
+        :param kwargs: More url keyword arguments.
+        :returns: The url path.
+        """
         return self.url(name, **{self.id_kwarg: resource_id}, **kwargs)
 
     def call_view(self, url: str, **kwargs):

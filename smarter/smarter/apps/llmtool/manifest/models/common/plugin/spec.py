@@ -53,6 +53,13 @@ class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
 
     @field_validator("directive")
     def validate_directive(cls, v) -> str:
+        """
+        Validate the selector's directive, which is case-sensitive.
+
+        :param v: The directive, e.g. ``searchTerms``.
+        :returns: The directive.
+        :raises SAMValidationError: If it is not one of :class:`SAMPluginCommonSpecSelectorKeyDirectiveValues`.
+        """
         if v not in SAMPluginCommonSpecSelectorKeyDirectiveValues.all():
             raise SAMValidationError(
                 f"Invalid value found in {cls.class_identifier}.{SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value}: '{v}'. "
@@ -63,6 +70,13 @@ class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
 
     @field_validator("searchTerms")
     def validate_search_terms(cls, v) -> List[str]:
+        """
+        Validate each search term as a clean string, which may have spaces.
+
+        :param v: The search terms, or None.
+        :returns: The search terms.
+        :raises SAMValidationError: If a search term has characters that are not URL friendly.
+        """
         if isinstance(v, list):
             for search_term in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, search_term):
@@ -74,6 +88,12 @@ class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginCommonSpecSelector":
+        """
+        Require ``searchTerms`` when the directive is ``searchTerms``, and forbid it otherwise.
+
+        :returns: The selector.
+        :raises SAMValidationError: If ``searchTerms`` is missing, or given for another directive.
+        """
         err_desc_searchTerms_name = SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
         directive_name = SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
 
@@ -156,6 +176,13 @@ class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
 
     @field_validator("provider")
     def validate_provider(cls, v) -> str:
+        """
+        Validate the LLM provider: only the default provider is accepted.
+
+        :param v: The provider.
+        :returns: The provider.
+        :raises SAMValidationError: If it is not the default provider.
+        """
 
         # TODO: This is a placeholder for the actual valid providers
         VALID_PROVIDERS = [settings_defaults.LLM_DEFAULT_PROVIDER]
@@ -179,6 +206,13 @@ class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
 
     @field_validator("model")
     def validate_model(cls, v) -> str:
+        """
+        Validate the LLM model.
+
+        :param v: The model, or None for the default model.
+        :returns: The model.
+        :raises SAMValidationError: If it is not a valid chat completion model.
+        """
         if v is None:
             return cls.DEFAULT_MODEL
         if v in VALID_CHAT_COMPLETION_MODELS:

@@ -71,6 +71,7 @@ class VectorstoreDocument(TimestampedModel):
 
     @property
     def pages(self) -> list[str]:
+        """The document's text, split into pages at ``PAGE_BREAK``."""
         return self.content.split(PAGE_BREAK)
 
     def chunk_id(self, index: int) -> str:
@@ -86,6 +87,12 @@ class VectorstoreDocument(TimestampedModel):
         return str(uuid.uuid5(uuid.NAMESPACE_URL, f"smarter:vectorstore:{self.vectorstore_id}:{self.pk}:{index}"))  # type: ignore[attr-defined]
 
     def chunk_ids(self, count: int = 0) -> list[str]:
+        """
+        Return the ids of the document's chunks in the vector database.
+
+        :param count: How many, or 0 for its ``chunk_count``.
+        :returns: The ids, see :meth:`chunk_id`.
+        """
         return [self.chunk_id(i) for i in range(count or self.chunk_count)]
 
     def __str__(self) -> str:

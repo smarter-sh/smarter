@@ -81,7 +81,13 @@ def _request_host(request: HttpRequest) -> str:
 
     ``get_host()`` would raise for a disallowed host.
     """
-    return str(request.META.get("HTTP_HOST") or request.META.get("SERVER_NAME") or "").strip().lower()
+    host = request.META.get("HTTP_HOST")
+    if not host:
+        host = request.META.get("SERVER_NAME")
+    if not host:
+        host = ""
+    host = str(host)
+    return host.strip().lower()
 
 
 def _cache_args(request: HttpRequest) -> tuple[str, str, str]:
@@ -91,7 +97,12 @@ def _cache_args(request: HttpRequest) -> tuple[str, str, str]:
     if path in LLMCLIENT_HOST_PATHS:
         return host, path, ""
     user = getattr(request, "user", None)
-    username = str(getattr(user, "username", "") or "") if getattr(user, "is_authenticated", False) else ""
+    username = ""
+    if getattr(user, "is_authenticated", False):
+        username = getattr(user, "username", "")
+        if not username:
+            username = ""
+        username = str(username)
     return host, path, username
 
 

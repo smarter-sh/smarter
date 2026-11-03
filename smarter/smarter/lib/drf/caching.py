@@ -81,6 +81,11 @@ def get_cached_authtokens_owned_by_user_profile(user_profile: UserProfile) -> mo
 
 
 def invalidate_cached_authtokens_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached AuthTokens owned by a user profile.
+
+    :param user_profile: The user profile.
+    """
     _get_cached_authtokens_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -120,6 +125,11 @@ def get_cached_authtokens_shared_with_user_profile(user_profile: UserProfile) ->
 
 
 def invalidate_cached_authtokens_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached AuthTokens shared with a user profile.
+
+    :param user_profile: The user profile.
+    """
     _get_cached_authtokens_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -160,6 +170,11 @@ def get_cached_authtokens_available_to_user_profile(user_profile: UserProfile) -
 
 
 def invalidate_cached_authtokens_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached AuthTokens available to a user profile.
+
+    :param user_profile: The user profile.
+    """
     _get_cached_authtokens_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

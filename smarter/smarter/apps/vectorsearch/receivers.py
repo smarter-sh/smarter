@@ -19,8 +19,13 @@ module_prefix = __name__
 
 @receiver(post_save, sender=Vectorsearch)
 def vectorsearch_saved(sender, instance: Vectorsearch, created: bool, **kwargs):
-    """Create the default API for the vectorsearch."""
+    """
+    Log the creation or update of a Vectorsearch, with its serialized data.
 
+    :param sender: The model class.
+    :param instance: The Vectorsearch that was saved.
+    :param created: True if the Vectorsearch was created, False if it was updated.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.vectorsearch_saved()"
     data = logging.SmarterFormattedText.json(VectorsearchSerializer(instance).data)
     if created:
@@ -31,7 +36,12 @@ def vectorsearch_saved(sender, instance: Vectorsearch, created: bool, **kwargs):
 
 @receiver(pre_delete, sender=Vectorsearch)
 def vectorsearch_deleted(sender, instance: Vectorsearch, **kwargs):
-    """Delete the default API for the vectorsearch."""
+    """
+    Log that a Vectorsearch is about to be deleted.
+
+    :param sender: The model class.
+    :param instance: The Vectorsearch being deleted.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.vectorsearch_deleted()"
     logger.info("%s %s", prefix, instance)
 

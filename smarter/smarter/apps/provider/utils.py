@@ -77,7 +77,13 @@ def initialize_secret(
 def get_provider_verification_for_type(
     provider: Provider, verification_type: ProviderVerificationTypes
 ) -> ProviderVerification:
-    """Get the provider verification for a specific type."""
+    """
+    Get the provider verification for a specific type, creating it if it does not exist.
+
+    :param provider: The provider.
+    :param verification_type: The kind of verification.
+    :returns: The existing or new ProviderVerification.
+    """
     prefix = SmarterFormattedText.text(module_prefix + "get_provider_verification_for_type()")
     logger.debug("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
 
@@ -90,7 +96,13 @@ def get_provider_verification_for_type(
 def get_model_verification_for_type(
     provider_model: ProviderModel, verification_type: ProviderModelVerificationTypes
 ) -> ProviderModelVerification:
-    """Get the model verification for a specific type."""
+    """
+    Get the model verification for a specific type, creating it if it does not exist.
+
+    :param provider_model: The provider model.
+    :param verification_type: The kind of verification.
+    :returns: The existing or new ProviderModelVerification.
+    """
     prefix = SmarterFormattedText.text(module_prefix + "get_model_verification_for_type()")
     logger.debug("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
 
@@ -105,7 +117,15 @@ def get_model_verification_for_type(
 def set_model_verification(
     provider_model_verification: ProviderModelVerification, is_successful: bool, **kwargs
 ) -> None:
-    """Set the model verification status."""
+    """
+    Save the model verification's outcome, and send the matching signal.
+
+    Sends ``model_verification_success`` or ``model_verification_failure``.
+
+    :param provider_model_verification: The verification to update.
+    :param is_successful: Whether the verification passed.
+    :param kwargs: Not used.
+    """
     prefix = SmarterFormattedText.text(module_prefix + "set_model_verification()")
     logger.debug(
         "%s Setting model verification for %s to %s",
@@ -127,7 +147,15 @@ def set_model_verification(
 
 
 def set_provider_verification(provider_verification: ProviderVerification, is_successful: bool, **kwargs) -> None:
-    """Set the provider verification status."""
+    """
+    Save the provider verification's outcome, and send the matching signal.
+
+    Sends ``provider_verification_success`` or ``provider_verification_failure``.
+
+    :param provider_verification: The verification to update.
+    :param is_successful: Whether the verification passed.
+    :param kwargs: Not used.
+    """
     prefix = SmarterFormattedText.text(module_prefix + "set_provider_verification()")
     logger.debug(
         "%s Setting provider verification for %s to %s",
@@ -145,17 +173,24 @@ def set_provider_verification(provider_verification: ProviderVerification, is_su
 
 
 def test_web_page(url: str, test_str: str) -> bool:
-    """Test a web page to see if it is valid."""
+    """
+    Fetch a web page, and check that it is an HTML page that contains a string.
+
+    :param url: The page's URL, fetched with a 10 second timeout.
+    :param test_str: The text that the page must contain, case-insensitively.
+    :returns: True if the page returns 200, is HTML and contains ``test_str``; False otherwise,
+        including on a network error.
+    """
     prefix = SmarterFormattedText.text(module_prefix + "test_web_page()")
     logger.debug("%s Testing web page %s", prefix, url)
 
     try:
         response = requests.get(url, timeout=10)
-        if (
-            response.status_code == 200
-            and ("<html" in response.text.lower() or "<!doctype html" in response.text.lower())
-            and test_str.lower() in response.text.lower()
-        ):
+        page_text = response.text.lower()
+        is_ok = response.status_code == 200
+        is_html = "<html" in page_text or "<!doctype html" in page_text
+        has_test_str = test_str.lower() in page_text
+        if is_ok and is_html and has_test_str:
             logger.debug("%s Web page test succeeded.", prefix)
             return True
         else:

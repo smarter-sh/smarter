@@ -1,6 +1,4 @@
-"""
-SmarterMiddlewareMixin: A mixin for middleware classes with helper functions.
-"""
+"""SmarterMiddlewareMixin: A mixin for middleware classes with helper functions."""
 
 import ipaddress
 import re
@@ -24,7 +22,9 @@ MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGN
 
 class SmarterMiddlewareMixin(SmarterHelperMixin):
     """
-    A mixin for middleware classes with helper functions. The initialization
+    A mixin for middleware classes with helper functions.
+
+    The initialization
     is a blatant copy of Django 6x cors middleware. This this is our base
     case for working with ASGI and sync middlewares.
 
@@ -35,7 +35,6 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
     Adds a `smarter_process_id` attribute to the request which is helpful for
     caching and logging to correlate logs across the same request flow, especially
     in async contexts where thread-local storage is not reliable.
-
     """
 
     smarter_process_id: int
@@ -73,7 +72,9 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
 
     def set_smarter_process_id(self, request) -> None:
         """
-        Set smarter_process_id on request if not already set. This has to consider
+        Set smarter_process_id on request if not already set.
+
+        This has to consider
         the pipeline of middlewares. Each middleware class sets its own unique
         smarter_process_id, but if a previous middleware has already set the request
         object's smarter_process_id then we should not overwrite it. This allows all middlewares
@@ -177,7 +178,8 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
         except ValueError as e:
             # Regex to match MagicMock or mock object string representations
             ip_str = str(ip)
-            if MOCK_REGEX.search(ip_str) or "Mock" in getattr(ip, "__class__", type(ip)).__name__:
+            class_name = getattr(ip, "__class__", type(ip)).__name__
+            if MOCK_REGEX.search(ip_str) or "Mock" in class_name:
                 logger.warning(
                     "%s._is_private_ip() - Mock object detected as IP: %s", self.formatted_class_name, ip_str
                 )

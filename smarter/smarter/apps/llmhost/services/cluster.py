@@ -37,33 +37,66 @@ class ClusterBackend(ABC):
 
     @abstractmethod
     def apply(self, resources: list[SmarterDictType]) -> None:
-        """Create or update resources.
+        """
+        Create or update resources.
 
-        Raises LLMHostClusterError if the cluster rejects them.
+        :param resources: The Kubernetes resources, as dicts.
+        :raises LLMHostClusterError: if the cluster is unavailable, or rejects them.
         """
 
     @abstractmethod
     def get(self, kind: str, name: str) -> Optional[SmarterDictType]:
-        """Return a resource, or None if it does not exist."""
+        """
+        Return a resource, or None if it does not exist.
+
+        :param kind: The resource's kind, e.g. ``deployment``.
+        :param name: The resource's name.
+        :returns: The resource, as a dict, or None.
+        """
 
     @abstractmethod
     def list_resources(self, kind: str, selector: str) -> list[SmarterDictType]:
-        """Return the resources of a kind that match a label selector."""
+        """
+        Return the resources of a kind that match a label selector.
+
+        :param kind: The resources' kind, e.g. ``pod``.
+        :param selector: A label selector, e.g. ``app=foo,tier=bar``.
+        :returns: The matching resources, as dicts.
+        """
 
     @abstractmethod
     def delete(self, kinds: list[str], selector: str) -> bool:
-        """Delete the resources of several kinds that match a label selector.
+        """
+        Delete the resources of several kinds that match a label selector.
 
         Idempotent.
+
+        :param kinds: The kinds to delete, e.g. ``["deployment", "service"]``.
+        :param selector: A label selector, e.g. ``app=foo``.
+        :returns: Whether the deletion succeeded.
+        :raises LLMHostClusterError: if the cluster is unavailable.
         """
 
     @abstractmethod
     def delete_named(self, kind: str, name: str) -> bool:
-        """Delete one resource by name, e.g. a TLS Secret that cert-manager created without labels."""
+        """
+        Delete one resource by name, e.g. a TLS Secret that cert-manager created without labels.
+
+        :param kind: The resource's kind.
+        :param name: The resource's name.
+        :returns: Whether a resource was deleted.
+        """
 
     @abstractmethod
     def logs(self, selector: str, container: Optional[str] = None, tail: int = 200) -> Optional[str]:
-        """Return the most recent log lines of the pods that match a label selector."""
+        """
+        Return the most recent log lines of the pods that match a label selector.
+
+        :param selector: A label selector, e.g. ``app=foo``.
+        :param container: The container whose logs to read. Defaults to the pod's default container.
+        :param tail: The most lines to return.
+        :returns: The log lines, or None if they cannot be read.
+        """
 
 
 class KubectlClusterBackend(ClusterBackend):
@@ -75,9 +108,16 @@ class KubectlClusterBackend(ClusterBackend):
 
     @property
     def ready(self) -> bool:
+        """Whether the Kubernetes service can reach the cluster."""
         return bool(self.helper.ready)
 
     def apply(self, resources: list[SmarterDictType]) -> None:
+        """
+        Apply the resources to the cluster, as one multi-document YAML manifest.
+
+        :param resources: The Kubernetes resources, as dicts.
+        :raises LLMHostClusterError: if the cluster is unavailable, or rejects them.
+        """
         if not self.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")
         manifest = yaml.safe_dump_all(resources, sort_keys=False)
@@ -87,17 +127,47 @@ class KubectlClusterBackend(ClusterBackend):
             raise LLMHostClusterError(f"The Kubernetes cluster rejected the resources: {e}") from e
 
     def get(self, kind: str, name: str) -> Optional[SmarterDictType]:
+        """
+        Return a resource in the namespace, or None if it does not exist.
+
+        :param kind: The resource's kind.
+        :param name: The resource's name.
+        :returns: The resource, or None.
+        """
         return self.helper.get_resource(kind, name, self.namespace)
 
     def list_resources(self, kind: str, selector: str) -> list[SmarterDictType]:
+        """
+        Return the resources of a kind in the namespace that match a label selector.
+
+        :param kind: The resources' kind.
+        :param selector: A label selector.
+        :returns: The matching resources.
+        """
         return self.helper.list_resources(kind, self.namespace, selector)
 
     def delete(self, kinds: list[str], selector: str) -> bool:
+        """
+        Delete the resources of several kinds in the namespace that match a label selector.
+
+        :param kinds: The kinds to delete.
+        :param selector: A label selector.
+        :returns: Whether the deletion succeeded.
+        :raises LLMHostClusterError: if the cluster is unavailable.
+        """
         if not self.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")
         return self.helper.delete_resources(kinds, self.namespace, selector)
 
     def delete_named(self, kind: str, name: str) -> bool:
+        """
+        Delete one Secret or Ingress in the namespace by name.
+
+        :param kind: ``secret`` or ``ingress``.
+        :param name: The resource's name.
+        :returns: Whether it was deleted.
+        :raises LLMHostClusterError: if ``kind`` is neither.
+        """
         if kind == "secret":
             return self.helper.delete_secret(name, self.namespace)
         if kind == "ingress":
@@ -105,13 +175,23 @@ class KubectlClusterBackend(ClusterBackend):
         raise LLMHostClusterError(f"delete_named() does not support {kind}.")
 
     def logs(self, selector: str, container: Optional[str] = None, tail: int = 200) -> Optional[str]:
+        """
+        Return the most recent log lines of the pods in the namespace that match a label selector.
+
+        :param selector: A label selector.
+        :param container: The container whose logs to read. Optional.
+        :param tail: The most lines to return.
+        :returns: The log lines, or None.
+        """
         return self.helper.get_pod_logs(self.namespace, selector, container=container, tail=tail)
 
 
 def _kind(kind: str) -> str:
     """Normalize a kind, e.g. 'Deployment', 'deployments' and 'deployment' are the same."""
     kind = kind.lower()
-    return kind[:-1] if kind.endswith("s") and not kind.endswith("ss") else kind
+    if kind.endswith("s") and not kind.endswith("ss"):
+        return kind[:-1]
+    return kind
 
 
 def _matches(resource: SmarterDictType, selector: str) -> bool:
@@ -143,13 +223,28 @@ class InMemoryClusterBackend(ClusterBackend):
 
     @property
     def ready(self) -> bool:
+        """Whether the simulated cluster is reachable.
+
+        Tests set it to simulate an outage.
+        """
         return self._ready
 
     @ready.setter
     def ready(self, value: bool) -> None:
+        """
+        Set whether the simulated cluster is reachable.
+
+        :param value: Whether it is reachable.
+        """
         self._ready = value
 
     def apply(self, resources: list[SmarterDictType]) -> None:
+        """
+        Store copies of the resources, keeping each one's previous status, and record the call in :attr:`applied`.
+
+        :param resources: The Kubernetes resources, as dicts.
+        :raises LLMHostClusterError: if the cluster is not ready, or :attr:`fail_apply` is set.
+        """
         if not self.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")
         if self.fail_apply:
@@ -164,13 +259,41 @@ class InMemoryClusterBackend(ClusterBackend):
             self.resources[key] = stored
 
     def get(self, kind: str, name: str) -> Optional[SmarterDictType]:
+        """
+        Return a copy of a stored resource, or None.
+
+        :param kind: The resource's kind, in any form, e.g. ``Deployment`` or ``deployments``.
+        :param name: The resource's name.
+        :returns: The resource, or None.
+        """
         return copy.deepcopy(self.resources.get((_kind(kind), name)))
 
     def list_resources(self, kind: str, selector: str) -> list[SmarterDictType]:
+        """
+        Return copies of the stored resources of a kind that match a label selector.
+
+        :param kind: The resources' kind, in any form.
+        :param selector: A label selector of ``key=value`` terms.
+        :returns: The matching resources.
+        """
         kind = _kind(kind)
-        return [copy.deepcopy(r) for (k, _), r in self.resources.items() if k == kind and _matches(r, selector)]
+        matches = []
+        for (resource_kind, _), resource in self.resources.items():
+            if resource_kind == kind and _matches(resource, selector):
+                matches.append(copy.deepcopy(resource))
+        return matches
 
     def delete(self, kinds: list[str], selector: str) -> bool:
+        """
+        Delete the stored resources of several kinds that match a label selector, and record the call in :attr:`deleted`.
+
+        Deleting Deployments also deletes pods, as Kubernetes garbage collects them.
+
+        :param kinds: The kinds to delete.
+        :param selector: A label selector.
+        :returns: True.
+        :raises LLMHostClusterError: if the cluster is not ready.
+        """
         if not self.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")
         self.deleted.append((list(kinds), selector))
@@ -178,17 +301,38 @@ class InMemoryClusterBackend(ClusterBackend):
         if "deployment" in kinds:
             # Kubernetes garbage collects a Deployment's pods.
             kinds.append("pod")
-        for key in [key for key, r in self.resources.items() if key[0] in kinds and _matches(r, selector)]:
+        keys_to_delete = []
+        for key, resource in self.resources.items():
+            if key[0] in kinds and _matches(resource, selector):
+                keys_to_delete.append(key)
+        for key in keys_to_delete:
             del self.resources[key]
         return True
 
     def delete_named(self, kind: str, name: str) -> bool:
+        """
+        Delete one stored resource by name.
+
+        :param kind: The resource's kind, in any form.
+        :param name: The resource's name.
+        :returns: Whether it existed.
+        """
         return self.resources.pop((_kind(kind), name), None) is not None
 
     def logs(self, selector: str, container: Optional[str] = None, tail: int = 200) -> Optional[str]:
+        """
+        Return the last ``tail`` lines of :attr:`pod_logs`, whatever the selector and container.
+
+        :param selector: Unused.
+        :param container: Unused.
+        :param tail: The most lines to return.
+        :returns: The log lines, or None if the cluster is not ready.
+        """
         if not self.ready:
             return None
-        return "\n".join(self.pod_logs.splitlines()[-tail:])
+        lines = self.pod_logs.splitlines()
+        last_lines = lines[-tail:]
+        return "\n".join(last_lines)
 
     # --- simulation ---------------------------------------------------------------
 
@@ -199,16 +343,30 @@ class InMemoryClusterBackend(ClusterBackend):
     def add_pod(
         self, name: str, labels: dict[str, str], status: SmarterDictType, node_name: Optional[str] = None
     ) -> None:
-        """Add a pod with a status, e.g. {'phase': 'Running', 'containerStatuses': [...]}, scheduled on a node."""
+        """
+        Add a pod with a status, e.g. {'phase': 'Running', 'containerStatuses': [...]}, scheduled on a node.
+
+        :param name: The pod's name.
+        :param labels: The pod's labels.
+        :param status: The pod's status, as Kubernetes reports it.
+        :param node_name: The node it is scheduled on. Optional.
+        """
+        spec = {"nodeName": node_name} if node_name else {}
         self.resources[("pod", name)] = {
             "kind": "Pod",
             "metadata": {"name": name, "labels": labels},
-            "spec": {"nodeName": node_name} if node_name else {},
+            "spec": spec,
             "status": status,
         }
 
     def add_node(self, name: str, labels: dict[str, str], ready: bool = True) -> None:
-        """Add a Node, e.g. one of a node group's, which has joined the cluster."""
+        """
+        Add a Node, e.g. one of a node group's, which has joined the cluster.
+
+        :param name: The node's name, also used in its AWS provider id.
+        :param labels: The node's labels.
+        :param ready: Whether its Ready condition is True.
+        """
         self.resources[("node", name)] = {
             "kind": "Node",
             "metadata": {"name": name, "labels": labels},

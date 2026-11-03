@@ -9,4 +9,5 @@ class SAMConnectionBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """Return the error message prefix for Connection broker errors."""
         return "Smarter Connection Manifest Broker Error"

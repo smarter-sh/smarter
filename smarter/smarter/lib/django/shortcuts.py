@@ -58,7 +58,10 @@ def reverse(*args, urlconf: Optional[str] = None, **kwargs) -> str:
         # unpack namespaces and view name from the argument, which is expected to be in the format "namespace1:namespace2:view_name"
         path_parts.append(arg.split(":"))
 
-    reverse_path = ":".join([item for sublist in path_parts for item in sublist])
+    view_name_parts = []
+    for parts in path_parts:
+        view_name_parts.extend(parts)
+    reverse_path = ":".join(view_name_parts)
     retval = django_reverse(reverse_path, urlconf=urlconf)
     logger.debug(
         "%s.reverse() view name %s resolved to path %s",

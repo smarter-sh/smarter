@@ -19,10 +19,20 @@ class Command(SmarterCommand):
     help = "Write the SAM JSON Schemas and examples, and the Smarter api's OpenAPI document."
 
     def add_arguments(self, parser):
+        """
+        Add the ``--sam-dir`` and ``--openapi`` options.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("--sam-dir", default=SAM_SCHEMA_DIR, help="The folder of the SAM JSON Schemas.")
         parser.add_argument("--openapi", default=OPENAPI_PATH, help="The OpenAPI document's file.")
 
     def handle(self, *args, **options):
+        """
+        Write the SAM JSON Schemas and examples, and the OpenAPI document, and print each file's path.
+
+        :param options: The command's options, ``sam_dir`` and ``openapi``.
+        """
         self.handle_begin()
         paths = write_sam_schemas(options["sam_dir"])
         paths.append(write_openapi(options["openapi"]))

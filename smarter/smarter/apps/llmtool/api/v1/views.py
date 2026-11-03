@@ -44,7 +44,13 @@ class PluginView(SmarterAuthenticatedAPIView):
     """Plugin view for smarter api."""
 
     def get(self, request: ASGIRequest, plugin_id):
+        """
+        Return a plugin's manifest, if the ``ALLOW_API_GET`` waffle switch is active.
 
+        :param request: The request.
+        :param plugin_id: The plugin's id, from the url.
+        :returns: The response of :func:`get_plugin`, or 405 if the switch is inactive.
+        """
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
             logger.error(
                 "%s.get() is not allowed because %s switch is inactive.",
@@ -58,19 +64,47 @@ class PluginView(SmarterAuthenticatedAPIView):
         return get_plugin(request, plugin_id)
 
     def put(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        """
+        Update the plugin with the given id from the manifest in the request body, or create one if no id is given.
+
+        :param request: The request, whose body is the plugin's manifest.
+        :param plugin_id: The plugin's id, from the url.
+        :returns: A redirect to the plugin, or an error response.
+        """
         if plugin_id is not None:
             return update_plugin(request, plugin_id)
         return create_plugin(request)
 
     def post(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        """
+        Update the plugin with the given id from the manifest in the request body, or create one if no id is given.
+
+        :param request: The request, whose body is the plugin's manifest.
+        :param plugin_id: The plugin's id, from the url.
+        :returns: A redirect to the plugin, or an error response.
+        """
         if plugin_id is not None:
             return update_plugin(request, plugin_id)
         return create_plugin(request)
 
     def patch(self, request: ASGIRequest, plugin_id: Optional[int] = None):
+        """
+        Update a plugin from the manifest in the request body.
+
+        :param request: The request, whose body is the plugin's manifest.
+        :param plugin_id: The plugin's id, from the url, or None to find the plugin by the manifest's name.
+        :returns: The response of :func:`update_plugin`.
+        """
         return update_plugin(request, plugin_id)
 
     def delete(self, request: ASGIRequest, plugin_id):
+        """
+        Delete a plugin.
+
+        :param request: The request.
+        :param plugin_id: The plugin's id, from the url.
+        :returns: The response of :func:`delete_plugin`.
+        """
         return delete_plugin(request, plugin_id)
 
 
@@ -78,7 +112,14 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
     """Plugin clone view for smarter api."""
 
     def post(self, request: ASGIRequest, plugin_id, new_name):
+        """
+        Clone a plugin under a new name, and redirect to the clone.
 
+        :param request: The request.
+        :param plugin_id: The id of the plugin to clone, from the url.
+        :param new_name: The clone's name, from the url.
+        :returns: A redirect to ``/plugins/<new id>/``, or an error response.
+        """
         user = get_resolved_user(request.user)
         if not user:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
@@ -110,6 +151,7 @@ class PluginListView(ContractListMixin, SmarterAuthenticatedListAPIView):
         return PluginApiPluginMeta.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self):
+        """Return the plugins that the requesting user has ownership permission for, newest first."""
         plugins = PluginMeta.objects.with_ownership_permission_for(user=self.user_profile.user).order_by("-created_at")  # type: ignore
         return plugins
 
@@ -121,7 +163,14 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 
     @staticmethod
     def parse_yaml_file(data):
+        """
+        Parse a plugin manifest, as YAML or else JSON.
 
+        :param data: The manifest: a YAML or JSON string or bytes, or an already parsed dict or list,
+            which is returned as is.
+        :returns: The parsed manifest.
+        :raises SmarterValueError: If the data is neither YAML nor JSON.
+        """
         if type(data) in [dict, list]:
             return data
 
@@ -145,9 +194,21 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
         return create_plugin(request=request, data=data)
 
     def put(self, request: ASGIRequest):
+        """
+        Create a plugin from the YAML or JSON manifest in the request body.
+
+        :param request: The request.
+        :returns: The response of :func:`create_plugin`.
+        """
         return self._create(request)
 
     def post(self, request: ASGIRequest):
+        """
+        Create a plugin from the YAML or JSON manifest in the request body.
+
+        :param request: The request.
+        :returns: The response of :func:`create_plugin`.
+        """
         return self._create(request)
 
 
@@ -195,7 +256,13 @@ def get_plugin(request, plugin_id):
 
 
 def create_plugin(request, data: Optional[SmarterDictType] = None):
-    """Create a plugin from a json representation in the body of the request."""
+    """
+    Create a plugin from a json representation in the body of the request.
+
+    :param request: The request. Its user's profile owns the new plugin.
+    :param data: The plugin's manifest. If not given, the request's parsed body is used.
+    :returns: A redirect to the new plugin in the plugins api, or an error response.
+    """
     try:
         user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
@@ -273,7 +340,8 @@ def update_plugin(request: ASGIRequest, plugin_id: Optional[int] = None):
             {"error": f"Invalid manifest kind {kind}. Expected one of: {list(PLUGIN_MAP)}"},
             status=HTTPStatus.BAD_REQUEST,
         )
-    manifest_name = (data.get("metadata") or {}).get("name")
+    metadata = data.get("metadata") or {}
+    manifest_name = metadata.get("name")
 
     if plugin_id is not None:
         try:
@@ -306,7 +374,13 @@ def update_plugin(request: ASGIRequest, plugin_id: Optional[int] = None):
 
 
 def delete_plugin(request, plugin_id):
-    """Delete a plugin by id."""
+    """
+    Delete a plugin by id.
+
+    :param request: The request.
+    :param plugin_id: The id of the plugin to delete.
+    :returns: A redirect to the plugins list, or an error response.
+    """
     try:
         user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:

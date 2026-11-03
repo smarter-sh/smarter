@@ -55,8 +55,16 @@ def dns_label(value: str) -> str:
 
 
 def resource_name(llmhost_id: int, name: str) -> str:
-    """The base name of an LLMHost's Kubernetes resources, e.g. llmhost-12-llama-3-1-8b."""
-    return f"{RESOURCE_PREFIX}-{llmhost_id}-{dns_label(name)}"[:MAX_RESOURCE_NAME_LENGTH].rstrip("-")
+    """
+    The base name of an LLMHost's Kubernetes resources, e.g. llmhost-12-llama-3-1-8b.
+
+    :param llmhost_id: The LLMHost's id, which makes the name unique.
+    :param name: The LLMHost's name, converted to a DNS label.
+    :returns: The name, truncated to ``MAX_RESOURCE_NAME_LENGTH`` characters, without a trailing dash.
+    """
+    full_name = f"{RESOURCE_PREFIX}-{llmhost_id}-{dns_label(name)}"
+    truncated = full_name[:MAX_RESOURCE_NAME_LENGTH]
+    return truncated.rstrip("-")
 
 
 def label_selector(base_name: str) -> str:
@@ -98,14 +106,17 @@ class RenderContext:
 
     @property
     def engine(self) -> Engine:
+        """The engine of spec.engine.name."""
         return get_engine(self.spec.engine.name)
 
     @property
     def model(self) -> ResolvedModel:
+        """The spec's model, resolved to where the engine loads it from."""
         return resolve_model(self.spec.model, self.base_name)
 
     @property
     def labels(self) -> dict[str, str]:
+        """The labels of every resource: its name, component, manager, LLMHost and account."""
         return {
             "app.kubernetes.io/name": self.base_name,
             "app.kubernetes.io/component": "llmhost",
@@ -116,28 +127,34 @@ class RenderContext:
 
     @property
     def pod_labels(self) -> dict[str, str]:
+        """The pods' labels: :attr:`labels`, plus the compute's, if the LLMHost has one."""
         if not self.compute:
             return self.labels
         return {**self.labels, LABEL_COMPUTE: self.compute}
 
     @property
     def selector_labels(self) -> dict[str, str]:
+        """The labels that select the LLMHost's pods."""
         return {LABEL_LLMHOST: self.base_name}
 
     @property
     def volume_claim_name(self) -> str:
+        """The model volume's PersistentVolumeClaim: storage.existingClaim, else ``<base_name>-models``."""
         return self.spec.storage.existingClaim or f"{self.base_name}-models"
 
     @property
     def secret_name(self) -> str:
+        """The name of the Secret with the Hugging Face token and the API key: the base name."""
         return self.base_name
 
     @property
     def tls_secret_name(self) -> str:
+        """The name of the Ingress' TLS Secret, which cert-manager creates."""
         return f"{self.base_name}-tls"
 
     @property
     def has_secret(self) -> bool:
+        """Whether the Secret has a Hugging Face token, or an API key."""
         return self.hf_token or self.api_key
 
     @property
@@ -147,7 +164,9 @@ class RenderContext:
 
     @property
     def health_check_url(self) -> str:
-        return f"http://{self.base_name}.{self.namespace}.svc.cluster.local{self.engine.health_path_for(self.spec)}"
+        """The URL of the engine's health check inside the cluster."""
+        health_path = self.engine.health_path_for(self.spec)
+        return f"http://{self.base_name}.{self.namespace}.svc.cluster.local{health_path}"
 
     @property
     def public_url(self) -> Optional[str]:
@@ -157,7 +176,15 @@ class RenderContext:
         return f"https://{self.hostname}{self.engine.openai_path}"
 
     def metadata(self, name: Optional[str] = None, annotations: Optional[SmarterDictType] = None) -> SmarterDictType:
-        retval: SmarterDictType = {"name": name or self.base_name, "namespace": self.namespace, "labels": self.labels}
+        """
+        A resource's metadata: its name, namespace, labels and annotations.
+
+        :param name: The resource's name. Defaults to the base name.
+        :param annotations: The resource's annotations. Optional.
+        :returns: The metadata.
+        """
+        resource_name_ = name or self.base_name
+        retval: SmarterDictType = {"name": resource_name_, "namespace": self.namespace, "labels": self.labels}
         if annotations:
             retval["annotations"] = annotations
         return retval
@@ -207,7 +234,16 @@ def render_secret(ctx: RenderContext, hf_token: Optional[str], api_key: Optional
 
 
 def secret_env(ctx: RenderContext, variable: str, key: str) -> SmarterDictType:
-    return {"name": variable, "valueFrom": {"secretKeyRef": {"name": ctx.secret_name, "key": key}}}
+    """
+    A container environment variable whose value is a key of the LLMHost's Secret.
+
+    :param ctx: The render context.
+    :param variable: The environment variable's name.
+    :param key: The key in the Secret.
+    :returns: The environment variable.
+    """
+    secret_key_ref = {"name": ctx.secret_name, "key": key}
+    return {"name": variable, "valueFrom": {"secretKeyRef": secret_key_ref}}
 
 
 def render_container(ctx: RenderContext) -> SmarterDictType:

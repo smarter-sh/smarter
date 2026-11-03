@@ -61,18 +61,43 @@ class Engine:
         return DEFAULT_IMAGES[self.name]
 
     def container_port(self, spec: SAMLLMHostSpec) -> int:
+        """
+        The port that the server listens on: spec.engine.port, else the engine's default.
+
+        :param spec: The LLMHost's spec.
+        :returns: The port.
+        """
         return spec.engine.port or self.port
 
     def served_name(self, spec: SAMLLMHostSpec, default: str) -> str:
-        """The model name that clients send in their requests."""
+        """
+        The model name that clients send in their requests.
+
+        :param spec: The LLMHost's spec.
+        :param default: The name to use when spec.model.servedName is not set.
+        :returns: spec.model.servedName, else ``default``.
+        """
         return spec.model.servedName or default
 
     def command(self, spec: SAMLLMHostSpec, model: ResolvedModel) -> Optional[list[str]]:
-        """Overrides the image's entrypoint, if not None."""
+        """
+        The command that overrides the image's entrypoint, if not None.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :returns: spec.engine.command, which only the custom engine permits.
+        """
         return spec.engine.command
 
     def model_args(self, spec: SAMLLMHostSpec, model: ResolvedModel, served_name: str) -> list[str]:
-        """The arguments that tell the engine which model to load."""
+        """
+        The arguments that tell the engine which model to load.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :param served_name: The model name that clients send.
+        :returns: The arguments: an empty list, unless the engine overrides it.
+        """
         return []
 
     def setting_args(self, spec: SAMLLMHostSpec) -> list[str]:
@@ -84,32 +109,63 @@ class Engine:
         return []
 
     def args(self, spec: SAMLLMHostSpec, model: ResolvedModel, served_name: str, api_key: bool) -> list[str]:
-        """All the engine's arguments."""
-        args = [*self.model_args(spec, model, served_name), *self.setting_args(spec)]
+        """
+        All the engine's arguments: the model's, the settings', the API key's, then spec.engine.args.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :param served_name: The model name that clients send.
+        :param api_key: Whether the server authenticates requests with an API key.
+        :returns: The arguments.
+        """
+        model_args = self.model_args(spec, model, served_name)
+        setting_args = self.setting_args(spec)
+        args = [*model_args, *setting_args]
         if api_key:
             args += self.api_key_args()
-        return args + list(spec.engine.args)
+        all_args = args + list(spec.engine.args)
+        return all_args
 
     def env(self, spec: SAMLLMHostSpec, model: ResolvedModel) -> dict[str, str]:
-        """Environment variables, other than secrets.
-
-        spec.engine.env overrides them.
         """
-        return {"HF_HOME": HF_HOME, "HF_HUB_CACHE": posixpath.join(HF_HOME, "hub"), **spec.engine.env}
+        Environment variables, other than secrets.
+
+        Spec.engine.env overrides them.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :returns: The variables.
+        """
+        hub_cache = posixpath.join(HF_HOME, "hub")
+        env = {"HF_HOME": HF_HOME, "HF_HUB_CACHE": hub_cache, **spec.engine.env}
+        return env
 
     def probe(self, spec: SAMLLMHostSpec) -> SmarterDictType:
         """The handler of the startup and readiness probes."""
         return {"httpGet": {"path": self.health_path_for(spec), "port": "http"}}
 
     def health_path_for(self, spec: SAMLLMHostSpec) -> str:
+        """
+        The HTTP health path: spec.healthCheck.path, else the engine's.
+
+        :param spec: The LLMHost's spec.
+        :returns: The path.
+        """
         return spec.healthCheck.path or self.health_path
 
     def supports_api_key(self) -> bool:
+        """Whether the engine authenticates requests with an API key."""
         return engine_supports_api_key(self.name)
 
 
 def flag(args: list[str], name: str, value: Any) -> None:
-    """Append ``name value`` to args, if value is set."""
+    """
+    Append ``name value`` to args, if value is set: neither None nor False.
+
+    :param args: The arguments, changed in place.
+    :param name: The flag, e.g. ``--dtype``.
+    :param value: The flag's value, converted to a string.
+    """
     if value is not None and value is not False:
         args += [name, str(value)]
 
@@ -121,13 +177,28 @@ class VllmEngine(Engine):
     api_key_env = "VLLM_API_KEY"
 
     def model_args(self, spec, model, served_name):
-        args = ["--model", model.path if model.local else model.reference, "--served-model-name", served_name]
+        """
+        The model, served name, bind address and port, and revision of a remote model, as vLLM's flags.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :param served_name: The model name that clients send.
+        :returns: The arguments.
+        """
+        location = model.path if model.local else model.reference
+        args = ["--model", location, "--served-model-name", served_name]
         args += ["--host", CONTAINER_BIND_ADDRESS, "--port", str(self.container_port(spec))]
         if not model.local:
             flag(args, "--revision", model.revision)
         return args
 
     def setting_args(self, spec):
+        """
+        Spec.engine's context length, tensor parallelism, GPU memory utilization, dtype, concurrency and trustRemoteCode, as vLLM's flags.
+
+        :param spec: The LLMHost's spec.
+        :returns: The arguments.
+        """
         args: list[str] = []
         engine = spec.engine
         flag(args, "--max-model-len", engine.contextLength)
@@ -147,13 +218,30 @@ class TgiEngine(Engine):
     port = 80
 
     def model_args(self, spec, model, served_name):
-        args = ["--model-id", model.path if model.local else model.reference]
+        """
+        The model id, bind address and port, and revision of a remote model, as TGI's flags.
+
+        TGI has no served name.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :param served_name: The model name that clients send.
+        :returns: The arguments.
+        """
+        location = model.path if model.local else model.reference
+        args = ["--model-id", location]
         args += ["--hostname", CONTAINER_BIND_ADDRESS, "--port", str(self.container_port(spec))]
         if not model.local:
             flag(args, "--revision", model.revision)
         return args
 
     def setting_args(self, spec):
+        """
+        Spec.engine's context length, sharding, dtype, concurrency and trustRemoteCode, as TGI's flags.
+
+        :param spec: The LLMHost's spec.
+        :returns: The arguments.
+        """
         args: list[str] = []
         engine = spec.engine
         flag(args, "--max-total-tokens", engine.contextLength)
@@ -176,16 +264,38 @@ class SglangEngine(Engine):
     api_key_env = API_KEY_ENV
 
     def command(self, spec, model):
+        """
+        Run SGLang's server module, which the image does not use as its entrypoint.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :returns: The command.
+        """
         return ["python3", "-m", "sglang.launch_server"]
 
     def model_args(self, spec, model, served_name):
-        args = ["--model-path", model.path if model.local else model.reference, "--served-model-name", served_name]
+        """
+        The model path, served name, bind address and port, and revision of a remote model, as SGLang's flags.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :param served_name: The model name that clients send.
+        :returns: The arguments.
+        """
+        location = model.path if model.local else model.reference
+        args = ["--model-path", location, "--served-model-name", served_name]
         args += ["--host", CONTAINER_BIND_ADDRESS, "--port", str(self.container_port(spec))]
         if not model.local:
             flag(args, "--revision", model.revision)
         return args
 
     def setting_args(self, spec):
+        """
+        Spec.engine's context length, tensor parallelism, static memory fraction, dtype, concurrency and trustRemoteCode, as SGLang's flags.
+
+        :param spec: The LLMHost's spec.
+        :returns: The arguments.
+        """
         args: list[str] = []
         engine = spec.engine
         flag(args, "--context-length", engine.contextLength)
@@ -198,6 +308,7 @@ class SglangEngine(Engine):
         return args
 
     def api_key_args(self):
+        """Pass the API key with ``--api-key``, from the environment variable that holds it."""
         return ["--api-key", f"$({API_KEY_ENV})"]
 
 
@@ -209,6 +320,14 @@ class LlamaCppEngine(Engine):
     api_key_env = "LLAMA_API_KEY"
 
     def model_args(self, spec, model, served_name):
+        """
+        The local GGUF file, or the Hugging Face repository and file, and the alias, bind address and port, as llama-server's flags.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :param served_name: The model name that clients send.
+        :returns: The arguments.
+        """
         if model.local:
             args = ["--model", model.path]
         else:
@@ -219,6 +338,12 @@ class LlamaCppEngine(Engine):
         return args
 
     def setting_args(self, spec):
+        """
+        Spec.engine's context size and parallelism, as llama-server's flags, and offload of every layer to the GPU, if the pod has one.
+
+        :param spec: The LLMHost's spec.
+        :returns: The arguments.
+        """
         args: list[str] = []
         engine = spec.engine
         flag(args, "--ctx-size", engine.contextLength)
@@ -228,7 +353,17 @@ class LlamaCppEngine(Engine):
         return args
 
     def env(self, spec, model):
-        return {"LLAMA_CACHE": posixpath.join(MODELS_MOUNT_PATH, "llama.cpp"), **super().env(spec, model)}
+        """
+        The base environment, plus ``LLAMA_CACHE`` on the model volume, where llama-server downloads models.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :returns: The variables.
+        """
+        llama_cache = posixpath.join(MODELS_MOUNT_PATH, "llama.cpp")
+        base_env = super().env(spec, model)
+        env = {"LLAMA_CACHE": llama_cache, **base_env}
+        return env
 
 
 class OllamaEngine(Engine):
@@ -246,19 +381,41 @@ class OllamaEngine(Engine):
 
     @staticmethod
     def tag(model: ResolvedModel) -> str:
-        """The Ollama tag.
+        """
+        The Ollama tag.
 
         Hugging Face GGUF repositories are pulled as hf.co/<repository>[:<quantization>].
+
+        :param model: The resolved model.
+        :returns: The tag.
         """
         if model.source == SAMLLMHostModelSource.HUGGINGFACE.value:
-            return f"hf.co/{model.reference}" + (f":{model.file}" if model.file else "")
+            tag = f"hf.co/{model.reference}"
+            if model.file:
+                tag += f":{model.file}"
+            return tag
         return model.reference
 
     def served_name(self, spec, default):
+        """
+        The model's Ollama tag, by which Ollama names models.
+
+        :param spec: The LLMHost's spec.
+        :param default: Unused.
+        :returns: The tag.
+        """
         # ollama names models by their tag.
-        return self.tag(ResolvedModel(source=spec.model.source, reference=spec.model.repository, file=spec.model.file))
+        model = ResolvedModel(source=spec.model.source, reference=spec.model.repository, file=spec.model.file)
+        return self.tag(model)
 
     def command(self, spec, model):
+        """
+        Start ``ollama serve``, wait until it answers, then pull the model.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :returns: A shell command.
+        """
         script = (
             "ollama serve & pid=$!; until ollama list >/dev/null 2>&1; do sleep 1; done; "
             f'ollama pull "${self.MODEL_ENV}" && wait $pid'
@@ -266,6 +423,13 @@ class OllamaEngine(Engine):
         return ["/bin/sh", "-c", script]
 
     def env(self, spec, model):
+        """
+        Ollama's environment: its bind address, models directory on the model volume, keep-alive, the model's tag, and the context length and concurrency, if set.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :returns: The variables, overridden by spec.engine.env.
+        """
         env = {
             "OLLAMA_HOST": f"0.0.0.0:{self.container_port(spec)}",
             "OLLAMA_MODELS": posixpath.join(MODELS_MOUNT_PATH, "ollama"),
@@ -279,6 +443,12 @@ class OllamaEngine(Engine):
         return {**env, **spec.engine.env}
 
     def probe(self, spec):
+        """
+        Run ``ollama show`` on the model, so that a replica is ready only when the model is pulled.
+
+        :param spec: The LLMHost's spec.
+        :returns: The probe's exec handler.
+        """
         return {"exec": {"command": ["/bin/sh", "-c", f'ollama show "${self.MODEL_ENV}" >/dev/null']}}
 
 
@@ -290,13 +460,30 @@ class TeiEngine(Engine):
     api_key_env = "API_KEY"
 
     def model_args(self, spec, model, served_name):
-        args = ["--model-id", model.path if model.local else model.reference]
+        """
+        The model id, bind address and port, and revision of a remote model, as TEI's flags.
+
+        TEI has no served name.
+
+        :param spec: The LLMHost's spec.
+        :param model: The resolved model.
+        :param served_name: The model name that clients send.
+        :returns: The arguments.
+        """
+        location = model.path if model.local else model.reference
+        args = ["--model-id", location]
         args += ["--hostname", CONTAINER_BIND_ADDRESS, "--port", str(self.container_port(spec))]
         if not model.local:
             flag(args, "--revision", model.revision)
         return args
 
     def setting_args(self, spec):
+        """
+        Spec.engine's concurrency and dtype, as TEI's flags.
+
+        :param spec: The LLMHost's spec.
+        :returns: The arguments.
+        """
         args: list[str] = []
         flag(args, "--max-concurrent-requests", spec.engine.maxConcurrentRequests)
         flag(args, "--dtype", spec.engine.dtype)
@@ -304,7 +491,8 @@ class TeiEngine(Engine):
 
 
 class CustomEngine(Engine):
-    """Any other image.
+    """
+    Any other image.
 
     Only spec.engine.command, args and env are used.
     """
@@ -312,6 +500,13 @@ class CustomEngine(Engine):
     name = SAMLLMHostEngine.CUSTOM.value
 
     def image(self, spec):
+        """
+        The container image: spec.engine.image, which is required.
+
+        :param spec: The LLMHost's spec.
+        :returns: The image.
+        :raises LLMHostConfigurationError: if spec.engine.image is not set.
+        """
         if not spec.engine.image:
             raise LLMHostConfigurationError("engine.image: is required when engine.name is custom.")
         return spec.engine.image
