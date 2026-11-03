@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.4-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.41.4-alpha.3...v0.41.4-alpha.4) (2026-11-03)
+
+### Bug Fixes
+
+* **account:** merge users with the same email and make email unique ([c65bf6d](https://github.com/smarter-sh/smarter/commit/c65bf6dce8b98f17e349fd6ed0e0dcd66362251d)), closes [#914](https://github.com/smarter-sh/smarter/issues/914)
+
 ## [0.41.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.41.4-alpha.2...v0.41.4-alpha.3) (2026-11-03)
 
 ### Bug Fixes
