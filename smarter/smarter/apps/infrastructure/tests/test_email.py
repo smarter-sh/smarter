@@ -17,7 +17,7 @@ from smarter.apps.infrastructure.services import (
     get_email,
     infrastructure,
 )
-from smarter.apps.infrastructure.services.email import EmailService
+from smarter.apps.infrastructure.services.email import EmailService, masked_recipients
 from smarter.apps.infrastructure.signals import email_failed, email_sent
 
 from .base import InfrastructureTestBase
@@ -51,6 +51,27 @@ class TestValidateMailList(InfrastructureTestBase):
         self.assertIsNone(EmailService.validate_mail_list(["bad"], quiet=True))
         self.assertIsNone(EmailService.validate_mail_list(42))  # type: ignore[arg-type]
 
+    def test_invalid_addresses_are_logged_masked(self):
+        with patch(f"{MODULE}.logger") as logger:
+            EmailService.validate_mail_list(["a@example.com", "jane.doe@"])
+        logged = str(logger.warning.call_args_list)
+        self.assertIn("j****@", logged)
+        self.assertNotIn("jane.doe", logged)
+
+
+class TestMaskedRecipients(InfrastructureTestBase):
+    """Test masked_recipients(), which masks the addresses that are logged."""
+
+    def test_masked_recipients(self):
+        self.assertEqual(masked_recipients("jane@example.com"), ["j****@example.com"])
+        self.assertEqual(
+            masked_recipients(["jane@example.com", "bob@example.org"]),
+            ["j****@example.com", "b****@example.org"],
+        )
+        self.assertEqual(masked_recipients({"jane@example.com"}), ["j****@example.com"])
+        self.assertEqual(masked_recipients(None), [])
+        self.assertEqual(masked_recipients([]), [])
+
 
 class TestInMemoryEmailService(InfrastructureTestBase):
     """Test send_email(), with the in-memory email service."""
@@ -67,6 +88,32 @@ class TestInMemoryEmailService(InfrastructureTestBase):
         self.assertEqual((sent.subject, sent.recipients), ("Hello", ["a@example.com"]))
         self.assertIn("Hi", sent.body)
         self.assertEqual(self.sent(events, email_sent)[0]["recipients"], ["a@example.com"])
+
+    def test_sent_email_is_logged_masked(self):
+        """The recipients' addresses are logged masked, and the signal still carries them in full."""
+        events = self.capture(email_sent)
+        with patch(f"{MODULE}.logger") as logger:
+            self.assertTrue(self.email.send_email("Hello", "Hi", "jane@example.com"))
+        logged = str(logger.info.call_args_list)
+        self.assertIn("j****@example.com", logged)
+        self.assertNotIn("jane@example.com", logged)
+        self.assertEqual(self.sent(events, email_sent)[0]["recipients"], ["jane@example.com"])
+
+    def test_failed_email_is_logged_masked(self):
+        self.email.fail = "mailbox full"
+        with patch(f"{MODULE}.logger") as logger:
+            self.assertFalse(self.email.send_email("Hello", "Hi", "jane@example.com"))
+        logged = str(logger.error.call_args_list)
+        self.assertIn("j****@example.com", logged)
+        self.assertNotIn("jane@example.com", logged)
+
+    def test_quiet_and_not_ready_are_logged_masked(self):
+        with patch(f"{MODULE}.logger") as logger:
+            self.email.send_email("Hello", "Hi", "jane@example.com", quiet=True)
+            InMemoryEmailService(ready=False).send_email("Hello", "Hi", "jane@example.com")
+        logged = str(logger.debug.call_args_list) + str(logger.warning.call_args_list)
+        self.assertIn("j****@example.com", logged)
+        self.assertNotIn("jane@example.com", logged)
 
     def test_attachments(self):
         attachments = [
@@ -204,7 +251,9 @@ class TestSMTPEmailService(InfrastructureTestBase):
             self.email.send_email("Quiet", "Hi", "a@example.com", quiet=True)
         self.assertEqual(logger.error.call_count, 2)
         banner = logger.error.call_args.args[0]
-        self.assertIn("'Welcome' was not sent to: a@example.com", banner)
+        # the recipient is masked: the banner is written to the logs.
+        self.assertIn("'Welcome' was not sent to: a****@example.com", banner)
+        self.assertNotIn("a@example.com", banner)
         self.assertIn("SMARTER_SMTP_USERNAME", banner)
         self.assertIn("SMARTER_SMTP_PASSWORD", banner)
 

@@ -1,6 +1,6 @@
 ---
 name: smarter-project-repositories
-description: Use when a task reaches beyond this repository into another smarter-sh repository - the smarter-cli (Go), the Python, Node.js or Go SDKs (smarter-python, smarter-nodejs, smarter-golang), smarter-vscode-yaml, smarter-deploy, smarter-infrastructure or stackademy - e.g. to check what a change to a SAM model, an example manifest, the OpenAPI document, or the chat or journal contract breaks downstream, to see how a client calls a route, or to answer a question about one of those repositories. Covers reading their local checkouts next to this one, checking that a checkout is current, each repository's copy of the platform's contracts (make contracts), and the Smarter Project MCP server as a fallback.
+description: Use when a task reaches beyond this repository into another smarter-sh repository - the smarter-cli (Go), the Python, Node.js or Go SDKs (smarter-python, smarter-nodejs, smarter-golang), smarter-vscode-yaml, smarter-deploy, smarter-infrastructure or stackademy - e.g. to check what a change to a SAM model, an example manifest, the OpenAPI document, or the chat or journal contract breaks downstream, to see how a client calls a route, or to answer a question about one of those repositories. Covers reading their local checkouts next to this one, checking that a checkout is current, each repository's copy of the platform's contracts (make contracts), and the public tools of the platform's MCPServer as a fallback.
 ---
 
 # The Other Smarter Project Repositories
@@ -8,7 +8,7 @@ description: Use when a task reaches beyond this repository into another smarter
 The platform in this repository is the source of truth for the api. The other
 repositories of the [smarter-sh](https://github.com/smarter-sh) organization
 consume it, and most of them pin a copy of its contracts. Their list is
-`SMARTER_PROJECT_REPOSITORIES` in `smarter/smarter/apps/mcpserver/repositories.py`.
+`SMARTER_PROJECT_REPOSITORIES` in `smarter/smarter/apps/mcpserver/services/repositories.py`.
 
 ## Initialization stays in initialize_platform
 
@@ -24,7 +24,7 @@ loads, the command that handles that repository (`load_from_github`) fetches and
 ## Where to read them, in order
 
 1. **This repository: always the local tree.** It has the working branch and
-   uncommitted changes. Never read it through the MCP server, whose index is
+   uncommitted changes. Never read it through the MCPServer, whose index is
    GitHub's, rebuilt every hour.
 2. **The others: their local checkouts**, beside this one at
    `../<repository>` (e.g. `../smarter-cli`). Grep and read them like any
@@ -40,7 +40,8 @@ loads, the command that handles that repository (`load_from_github`) fetches and
    and is read, changed and committed here. The archived
    `smarter-sh/smarter-chat` repository holds only its history up to 0.16.2.
 
-3. **The Smarter Project MCP server**, only when a checkout is missing or
+3. **The MCPServer's public tools**, at its public endpoint
+   `/api/v1/mcp/smarter-project/`, only when a checkout is missing or
    hopelessly stale, or to search the published docs by relevance:
    `skills/smarter-project-repositories/scripts/smarter-project-mcp.sh <tool> '<json>'`.
    Its tools are `search_documentation`, `search_code`, `read_file`,

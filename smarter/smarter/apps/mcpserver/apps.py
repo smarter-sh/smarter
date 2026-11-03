@@ -1,9 +1,11 @@
 """
 Django app configuration of the MCPServer app.
 
-The MCPServer app serves the platform's own MCP servers: the Smarter Project MCP server, which
-searches and reads The Smarter Project's repositories and blog, and the Smarter Operations MCP
-server, which gives the platform's staff read-only tools for operations and the help desk.
+The MCPServer app is the platform's MCP server. It serves its public tools, which search and read
+The Smarter Project's repositories, documentation and blog, at ``/api/v1/mcp/smarter-project/``,
+and its staff-only tools, read-only tools for operations and the help desk, at
+``/api/v1/mcp/smarter-operations/``. Its services (:mod:`smarter.apps.mcpserver.services`) do the
+work, and its protocol layer (:mod:`smarter.apps.mcpserver.protocol`) serves them to MCP clients.
 :class:`MCPServerConfig` registers the app with Django and connects its signal receivers.
 
 .. note::

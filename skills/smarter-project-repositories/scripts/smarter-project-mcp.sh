@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Call a tool of the Smarter Project MCP server (smarter.apps.mcpserver) and print its text. The
-# server is read-only and needs no authentication.
+# Call a public tool of the platform's MCPServer (smarter.apps.mcpserver), at its public endpoint, and
+# print its text. The public endpoint needs no authentication, and these tools are read-only.
 #
 # usage:
 #   skills/smarter-project-repositories/scripts/smarter-project-mcp.sh <tool> ['<json arguments>']

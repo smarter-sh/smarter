@@ -117,7 +117,7 @@ Teaching Case Studies
 ~~~~~~~~~~~~~~~~~~~~~
 
 The `Smarter case studies <https://smarter.sh/case-studies>`__ are teaching cases, each built on a
-project that runs on Smarter today: the Stackademy course advisors, the Smarter Project MCP server,
+project that runs on Smarter today: the Stackademy course advisors, the platform's own MCPServer,
 guardrails, AI coding agents, multi-tenancy, what happens when you click deploy, and the API
 contract. Each takes 45 to 60 minutes, and has live AI assistants to talk to, labs to work through
 and discussion questions. Many of the plans assign one as pre-reading or use one of its labs, and

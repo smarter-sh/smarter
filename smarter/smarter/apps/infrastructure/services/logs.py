@@ -26,8 +26,9 @@ local development use :class:`InMemoryLogService`, installed with :func:`configu
 A :class:`LogQuery` is structured, not LogQL: the service builds the query itself, and escapes
 every value, so that a caller, e.g. an LLM's tool call, cannot inject LogQL.
 
-The Smarter Operations MCP server's log tools (:mod:`smarter.apps.mcpserver.logs.tools`) and its
-help desk snapshot (:mod:`smarter.apps.mcpserver.helpdesk.users`) are the service's callers. The
+The MCPServer's staff-only log tools (:mod:`smarter.apps.mcpserver.protocol.tools.logs`), through
+:mod:`smarter.apps.mcpserver.services.logs`, and its
+help desk snapshot (:mod:`smarter.apps.mcpserver.services.helpdesk.users`) are the service's callers. The
 service only reads: nothing is written to Loki, and nothing is cached.
 """
 

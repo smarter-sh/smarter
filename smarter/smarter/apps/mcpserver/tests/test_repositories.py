@@ -1,7 +1,7 @@
-"""Tests for smarter.apps.mcpserver.repositories."""
+"""Tests for smarter.apps.mcpserver.services.repositories."""
 
-from smarter.apps.mcpserver.repositories import (
-    SMARTER_PROJECT_DOCS_LATEST_URL,
+from smarter.apps.mcpserver.services.repositories import (
+    SMARTER_PROJECT_DOCS_ROOT_URL,
     SMARTER_PROJECT_REPOSITORIES,
     ProjectRepository,
     get_repository,
@@ -56,8 +56,8 @@ class TestProjectRepositories(SmarterTestBase):
         """The smarter and cache-results repositories publish their docs/source."""
         smarter = get_repository("smarter")
         self.assertEqual(smarter.docs_root, "docs/source")
-        self.assertEqual(smarter.docs_url, SMARTER_PROJECT_DOCS_LATEST_URL)
-        self.assertEqual(SMARTER_PROJECT_DOCS_LATEST_URL, "https://docs.smarter.sh/en/latest/")
+        self.assertEqual(smarter.docs_url, SMARTER_PROJECT_DOCS_ROOT_URL)
+        self.assertEqual(SMARTER_PROJECT_DOCS_ROOT_URL, "https://docs.smarter.sh/")
         self.assertIsNone(get_repository("smarter-cli").docs_url)
         cache_results = get_repository("cache-results")
         self.assertEqual(cache_results.docs_root, "docs/source")
@@ -91,11 +91,11 @@ class TestProjectRepositories(SmarterTestBase):
         smarter = get_repository("smarter")
         self.assertEqual(
             smarter.documentation_url("docs/source/smarter-resources/smarter-mcpclient.rst"),
-            "https://docs.smarter.sh/en/latest/smarter-resources/smarter-mcpclient.html",
+            "https://docs.smarter.sh/smarter-resources/smarter-mcpclient.html",
         )
         self.assertEqual(
             smarter.documentation_url("docs/source/guides/intro.md"),
-            "https://docs.smarter.sh/en/latest/guides/intro.html",
+            "https://docs.smarter.sh/guides/intro.html",
         )
         self.assertIsNone(smarter.documentation_url("docs/source/conf.py"))
         self.assertIsNone(smarter.documentation_url("README.md"))

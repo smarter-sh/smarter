@@ -154,12 +154,16 @@ def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, 
     """
     Log the ``secret_accessed`` signal.
 
+    The message names the Secret as ``Secret <name>``, not ``Secret: <name>``: the platform's
+    log collector redacts any value that follows ``secret:`` (see ``loki.process "redact"`` in
+    ``helm/charts/smarter/values.yaml``), and a Secret's name is what operators need to see.
+
     :param sender: The signal's sender.
     :param secret: The Secret that was read.
     :param user_profile: The user profile that read it.
     """
     logger.info(
-        "%s.secret_accessed() from %s Secret: %s, id: %s, user_profile: %s",
+        "%s.secret_accessed() from %s, Secret %s, id: %s, user_profile: %s",
         logger_prefix,
         sender_name(sender),
         str(secret),

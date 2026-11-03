@@ -1,15 +1,15 @@
 # pylint: disable=W0613
 """
-The Django views of the MCP servers.
+The Django views of the MCPServer's two endpoints, over MCP's Streamable HTTP transport.
 
-:class:`SmarterProjectMCPServerView` is the MCP Streamable HTTP endpoint of
-:class:`~smarter.apps.mcpserver.protocol.server.SmarterProjectMCPServer`. It is mounted at:
+:class:`PublicEndpointView` is the endpoint of the public tools,
+:class:`~smarter.apps.mcpserver.protocol.public.PublicEndpoint`. It is mounted at:
 
 - ``/api/v1/mcp/smarter-project/``: every repository of The Smarter Project.
 - ``/api/v1/mcp/smarter-project/<repository>/``: one repository, e.g. ``smarter-cli``.
 
-:class:`SmarterOperationsMCPServerView` is the endpoint of
-:class:`~smarter.apps.mcpserver.protocol.operations_server.SmarterOperationsMCPServer`, at
+:class:`StaffEndpointView` is the endpoint of the staff-only tools,
+:class:`~smarter.apps.mcpserver.protocol.staff.StaffEndpoint`, at
 ``/api/v1/mcp/smarter-operations/``. It serves only the platform's staff
 (:func:`~smarter.apps.account.utils.is_platform_staff`: the active staff users of the Smarter
 account, not the admins of other accounts), in one of two ways:
@@ -18,26 +18,27 @@ account, not the admins of other accounts), in one of two ways:
   ``SmarterAuthToken``), e.g. from Claude Code, or
 - a request that this platform signed, whose ``X-Smarter-Acting-User`` header names the staff user
   who is chatting with an LLMClient, e.g. ``smarter_sysadmin``: see
-  :mod:`~smarter.apps.mcpserver.acting_user`. One that the platform signed for nobody in
+  :mod:`~smarter.apps.mcpserver.services.acting_user`. One that the platform signed for nobody in
   particular, e.g. the background refresh of an MCPClient's catalog, may list the tools, but every
   tool refuses to run.
 
 Without a valid credential it answers ``401 Unauthorized``, and for a user who is not one of the
-platform's staff ``403 Forbidden``, before it reads the request's JSON-RPC.
+platform's staff ``403 Forbidden``, before it reads the request's JSON-RPC. The checks are in
+:mod:`smarter.apps.mcpserver.protocol.auth`.
 
 Only POST is served. A POST whose messages are all notifications is answered ``202
 Accepted``, with no body, and every other POST with ``application/json``. The server
 issues no session, and offers no GET stream, so GET and DELETE are answered ``405 Method
 Not Allowed``, which MCP clients expect of a stateless server.
 
-The Smarter Project endpoint requires no authentication: its read-only tools serve the public
+The public endpoint requires no authentication: its read-only tools serve the public
 repositories of The Smarter Project. A client may send the user's GitHub classic personal
 access token in an ``Authorization: Bearer`` header, and is then also served the tools
 that write as that user: ``create_issue``, ``comment_on_issue``, ``close_issue`` and
 ``create_pull_request``. The token is passed to the tool as a
 ``SecretStr``, and is never logged. Each client IP address may send at most
 ``smarter_settings.mcpserver_rate_limit`` requests a minute: see
-:mod:`smarter.apps.mcpserver.ratelimit`.
+:mod:`smarter.apps.mcpserver.protocol.ratelimit`.
 
 .. note::
 
@@ -54,149 +55,34 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
-from pydantic import SecretStr
-from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.apps.account.models import User
-from smarter.apps.account.utils import is_platform_staff
-from smarter.apps.mcpserver.acting_user import ACTING_USER_HEADER, verify_acting_user
-from smarter.apps.mcpserver.protocol.base import MCPServerBase
-from smarter.apps.mcpserver.protocol.operations_server import (
-    SmarterOperationsMCPServer,
+from smarter.apps.mcpserver.protocol.auth import (
+    acting_staff_user,
+    bearer_token,
+    staff_user,
 )
-from smarter.apps.mcpserver.ratelimit import (
+from smarter.apps.mcpserver.protocol.base import MCPEndpointBase
+from smarter.apps.mcpserver.protocol.public import PublicEndpoint
+from smarter.apps.mcpserver.protocol.ratelimit import (
     RATE_LIMITED,
     client_ip,
     is_rate_limited,
     retry_after,
 )
-from smarter.apps.mcpserver.repositories import get_repository, repository_names
+from smarter.apps.mcpserver.protocol.staff import StaffEndpoint
+from smarter.apps.mcpserver.services.acting_user import ACTING_USER_HEADER
+from smarter.apps.mcpserver.services.repositories import (
+    get_repository,
+    repository_names,
+)
 from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
-
-from .server import SmarterProjectMCPServer
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
 
-BEARER_SCHEME = "bearer"
-"""The scheme of a GitHub token in an ``Authorization`` header: ``Bearer <token>``, compared case insensitively."""
-
-TOKEN_SCHEME = "token"
-"""The scheme of a Smarter api key in an ``Authorization`` header: ``Token <key>``, compared case insensitively."""
-
 UNAUTHORIZED = -32001
 """The JSON-RPC error code of a request without a valid staff api key."""
-
-
-def _authorization_credentials(request: HttpRequest, scheme: str) -> Optional[str]:
-    """
-    Return the credentials of a request's ``Authorization`` header, if it uses a scheme.
-
-    The header is ``<scheme> <credentials>``, e.g. ``Token 1a2b...``. The scheme is compared case
-    insensitively, and the credentials are stripped of whitespace.
-
-    :param request: The request.
-    :param scheme: The expected scheme, in lower case: :data:`BEARER_SCHEME` or :data:`TOKEN_SCHEME`.
-    :returns: The credentials, or None if the request has no ``Authorization`` header, its scheme is
-        another one, or its credentials are empty.
-    """
-    header = request.headers.get("Authorization", "")
-    header = header.strip()
-    header_scheme, _, credentials = header.partition(" ")
-    credentials = credentials.strip()
-    if header_scheme.lower() != scheme:
-        return None
-    if not credentials:
-        return None
-    return credentials
-
-
-def bearer_token(request: HttpRequest) -> Optional[SecretStr]:
-    """
-    Return the token of a request's ``Authorization: Bearer`` header.
-
-    The Smarter Project MCP server serves its tools that write to GitHub, e.g. ``create_issue``, to
-    a request that carries the user's GitHub token in this header. The token is wrapped in a
-    :class:`~pydantic.SecretStr`, so that it is never logged or shown by accident.
-
-    :param request: The request.
-    :returns: The token, or None if the request has no bearer token.
-    """
-    token = _authorization_credentials(request, BEARER_SCHEME)
-    if token is None:
-        return None
-    return SecretStr(token)
-
-
-def api_key(request: HttpRequest) -> Optional[str]:
-    """
-    Return the api key of a request's ``Authorization: Token`` header.
-
-    This is the header that the Smarter api, and the ``smarter`` CLI, use for a
-    ``SmarterAuthToken``. The key is not checked here: see :func:`staff_user`.
-
-    :param request: The request.
-    :returns: The key, or None if the request has none.
-    """
-    key = _authorization_credentials(request, TOKEN_SCHEME)
-    return key
-
-
-def staff_user(request: HttpRequest) -> tuple[Optional[User], HTTPStatus]:
-    """
-    Return the platform staff user whose api key a request carries.
-
-    The key is checked with :class:`~smarter.lib.drf.token_authentication.SmarterTokenAuthentication`,
-    the same check as the rest of the Smarter api, which reads the ``SmarterAuthToken`` from the
-    database, refuses a key that is unknown or not active, and sends its authentication signals.
-    Its user must be one of the platform's staff,
-    :func:`~smarter.apps.account.utils.is_platform_staff`: the admin of another account is staff
-    of that account only.
-
-    :param request: The request.
-    :returns: The user and ``200 OK``, or None and ``401 Unauthorized`` if the request has no valid,
-        active api key, or None and ``403 Forbidden`` if its user is not one of the platform's staff.
-    """
-    key = api_key(request)
-    if key is None:
-        return None, HTTPStatus.UNAUTHORIZED
-    try:
-        user, _ = SmarterTokenAuthentication().authenticate_credentials(key.encode("utf-8"))
-    except AuthenticationFailed:
-        return None, HTTPStatus.UNAUTHORIZED
-    if not is_platform_staff(user):
-        return None, HTTPStatus.FORBIDDEN
-    return user, HTTPStatus.OK
-
-
-def acting_staff_user(value: str) -> tuple[Optional[User], HTTPStatus]:
-    """
-    Return the platform staff user of a signed ``X-Smarter-Acting-User`` header.
-
-    The platform sends this header to its own Smarter Operations MCP server, for the user who is
-    chatting with an LLMClient that has an MCPClient of it: see
-    :mod:`~smarter.apps.mcpserver.acting_user`.
-
-    **Side effects:** one database query for the user, and one for their profile in the Smarter
-    account.
-
-    :param value: The header's value.
-    :returns: The user and ``200 OK``; None and ``200 OK`` for a request that the platform signed for
-        nobody in particular, which may list the tools but not call them; None and
-        ``401 Unauthorized`` if this platform did not sign the value, or it has expired; or None and
-        ``403 Forbidden`` if its user is not one of the platform's staff, or no longer exists.
-    """
-    verified = verify_acting_user(value)
-    if verified is None:
-        return None, HTTPStatus.UNAUTHORIZED
-    if verified.user_id is None:
-        return None, HTTPStatus.OK
-    user = User.objects.filter(pk=verified.user_id).first()
-    if not is_platform_staff(user):
-        return None, HTTPStatus.FORBIDDEN
-    return user, HTTPStatus.OK
 
 
 def rate_limited(view: SmarterView, request: HttpRequest) -> Optional[JsonResponse]:
@@ -205,7 +91,7 @@ def rate_limited(view: SmarterView, request: HttpRequest) -> Optional[JsonRespon
 
     Each call counts the request against its IP address's limit, in the cache (Redis), which every
     pod shares: see
-    :func:`~smarter.apps.mcpserver.ratelimit.is_rate_limited`. A refused request is logged as a
+    :func:`~smarter.apps.mcpserver.protocol.ratelimit.is_rate_limited`. A refused request is logged as a
     warning, and its response carries a JSON-RPC error and a ``Retry-After`` header, in seconds.
 
     :param view: The view, for logging.
@@ -217,19 +103,19 @@ def rate_limited(view: SmarterView, request: HttpRequest) -> Optional[JsonRespon
         return None
     logger.warning("%s rate limited %s", view.formatted_class_name, ip)
     message = "rate limit exceeded: too many requests from your IP address. Try again later."
-    error = MCPServerBase.error(None, RATE_LIMITED, message)
-    body = MCPServerBase.dump(error)
+    error = MCPEndpointBase.error(None, RATE_LIMITED, message)
+    body = MCPEndpointBase.dump(error)
     limited = JsonResponse(body, status=HTTPStatus.TOO_MANY_REQUESTS)
     limited["Retry-After"] = str(retry_after())
     return limited
 
 
-def answer(request: HttpRequest, server: MCPServerBase) -> HttpResponse:
+def answer(request: HttpRequest, server: MCPEndpointBase) -> HttpResponse:
     """
     Answer the JSON-RPC message, or batch of messages, of a request's body with a server.
 
-    Both views end with this, once they have checked the rate limit and, for the operations
-    server, the api key.
+    Both views end with this, once they have checked the rate limit and, for the staff-only
+    endpoint, the caller.
 
     :param request: The request.
     :param server: The MCP server.
@@ -239,8 +125,8 @@ def answer(request: HttpRequest, server: MCPServerBase) -> HttpResponse:
     try:
         payload = json.loads(request.body or b"")
     except ValueError:
-        error = MCPServerBase.error(None, mcp_types.PARSE_ERROR, "the request body is not JSON.")
-        body = MCPServerBase.dump(error)
+        error = MCPEndpointBase.error(None, mcp_types.PARSE_ERROR, "the request body is not JSON.")
+        body = MCPEndpointBase.dump(error)
         return JsonResponse(body, status=HTTPStatus.BAD_REQUEST)
     response = server.handle(payload)
     if response is None:
@@ -250,9 +136,9 @@ def answer(request: HttpRequest, server: MCPServerBase) -> HttpResponse:
 
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(never_cache, name="dispatch")
-class SmarterProjectMCPServerView(SmarterView):
+class PublicEndpointView(SmarterView):
     """
-    The MCP Streamable HTTP endpoint of the Smarter Project MCP server.
+    The view of the MCPServer's public endpoint, over MCP's Streamable HTTP transport.
 
     It is public: no authentication, but a rate limit for each IP address. CSRF does not apply,
     because MCP clients are not browsers with a session, and responses are never cached, because
@@ -291,15 +177,15 @@ class SmarterProjectMCPServerView(SmarterView):
                 detail = f"{repository} is not a repository of The Smarter Project: {choices}."
                 return JsonResponse({"detail": detail}, status=HTTPStatus.NOT_FOUND)
         github_token = bearer_token(request)
-        server = SmarterProjectMCPServer(project_repository, github_token=github_token)
+        server = PublicEndpoint(project_repository, github_token=github_token)
         return answer(request, server)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(never_cache, name="dispatch")
-class SmarterOperationsMCPServerView(SmarterView):
+class StaffEndpointView(SmarterView):
     """
-    The MCP Streamable HTTP endpoint of the Smarter Operations MCP server, for staff only.
+    The view of the MCPServer's staff-only endpoint, over MCP's Streamable HTTP transport, for staff only.
 
     It checks the rate limit first, then the caller: the signed ``X-Smarter-Acting-User`` header
     that the platform sends for the user who is chatting with an LLMClient, with
@@ -344,21 +230,14 @@ class SmarterOperationsMCPServerView(SmarterView):
                 message = "this server requires the api key of a staff user, in an Authorization: Token <key> header."
             else:
                 message = "this server is for the platform's staff only."
-            error = MCPServerBase.error(None, UNAUTHORIZED, message)
-            body = MCPServerBase.dump(error)
+            error = MCPEndpointBase.error(None, UNAUTHORIZED, message)
+            body = MCPEndpointBase.dump(error)
             refused = JsonResponse(body, status=status)
             if status == HTTPStatus.UNAUTHORIZED:
                 refused["WWW-Authenticate"] = "Token"
             return refused
-        server = SmarterOperationsMCPServer(user)
+        server = StaffEndpoint(user)
         return answer(request, server)
 
 
-__all__ = [
-    "SmarterOperationsMCPServerView",
-    "SmarterProjectMCPServerView",
-    "acting_staff_user",
-    "api_key",
-    "bearer_token",
-    "staff_user",
-]
+__all__ = ["PublicEndpointView", "StaffEndpointView", "answer", "rate_limited"]
