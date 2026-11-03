@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.41.4...v0.42.0-alpha.1) (2026-11-03)
+
+### Features
+
+* **doodle:** add the sign-in page's doodle of the day ([0df9280](https://github.com/smarter-sh/smarter/commit/0df9280ff18c1155b6d1b8111a35dd42ec6d3302))
+
 ## [0.41.4](https://github.com/smarter-sh/smarter/compare/v0.41.3...v0.41.4) (2026-11-03)
 
 ### Bug Fixes
