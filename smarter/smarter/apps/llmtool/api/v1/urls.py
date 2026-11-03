@@ -19,6 +19,14 @@ class RequestRouter(View):
     """Http method-based request router."""
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Send a POST to :class:`PluginView`, which creates a plugin, and any other method to :class:`PluginListView`.
+
+        :param request: The request.
+        :param args: Positional arguments from the url.
+        :param kwargs: Keyword arguments from the url.
+        :returns: The response of the view that handled the request.
+        """
         if request and isinstance(request.method, str) and request.method.lower() == "post":
             return PluginView.as_view()(request, *args, **kwargs)
         return PluginListView.as_view()(request, *args, **kwargs)

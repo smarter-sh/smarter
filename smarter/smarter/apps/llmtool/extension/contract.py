@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 from pydantic.alias_generators import to_camel
-from pydantic.json_schema import models_json_schema
+from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
 from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 from smarter.lib.typing import SmarterDictType
@@ -109,6 +109,7 @@ class ExtensionSummary(ExtensionConsoleModel):
         :param extension: The extension, with its installed version.
         :param detail_url: The url of its detail page.
         """
+        trust_badge: str = extension.trust_badge
         return cls(
             id=extension.pk,
             slug=extension.slug,
@@ -117,7 +118,7 @@ class ExtensionSummary(ExtensionConsoleModel):
             publisher=extension.publisher,
             source=extension.source,  # type: ignore[arg-type]
             trust_badge=extension.trust_badge,  # type: ignore[arg-type]
-            trust_badge_label=TRUST_BADGE_LABELS.get(extension.trust_badge, extension.trust_badge),
+            trust_badge_label=TRUST_BADGE_LABELS.get(trust_badge, trust_badge),
             enabled=extension.enabled,
             installed_version=extension.installed_version.version if extension.installed_version else None,
             latest_version=extension.latest_version or None,
@@ -275,7 +276,7 @@ class RegistryResponse(ExtensionConsoleModel):
     """The registry's extensions, or why they cannot be listed."""
 
     enabled: bool = Field(..., description="Whether the registry's public key is configured.")
-    error: Optional[str] = Field(None, description="Why the registry cannot be read, if it cannot.")
+    error: Optional[str] = Field(default=None, description="Why the registry cannot be read, if it cannot.")
     objects: list[RegistryExtension]
 
 
@@ -412,7 +413,13 @@ def setting_states(extension: "Extension") -> list[ExtensionSetting]:
 
 
 def version_infos(extension: "Extension", versions: list["ExtensionVersion"]) -> list[ExtensionVersionInfo]:
-    """Return an extension's installed versions, newest first."""
+    """
+    Return an extension's installed versions, in the given order, for the web console.
+
+    :param extension: The extension, whose installed version is marked ``is_installed``.
+    :param versions: The extension's versions, newest first.
+    :returns: A description of each version.
+    """
     return [
         ExtensionVersionInfo(
             id=version.pk,
@@ -429,8 +436,12 @@ def version_infos(extension: "Extension", versions: list["ExtensionVersion"]) ->
 
 def contract_schema() -> SmarterDictType:
     """The contract's JSON Schema (draft 2020-12): one definition, in ``$defs``, per model."""
+    schema_models: list[tuple[type[BaseModel], JsonSchemaMode]] = [
+        (model, "serialization") for model in RESPONSE_MODELS
+    ]
+    schema_models.extend((model, "validation") for model in REQUEST_MODELS)
     _, schema = models_json_schema(
-        [(model, "serialization") for model in RESPONSE_MODELS] + [(model, "validation") for model in REQUEST_MODELS],
+        schema_models,
         title="Smarter Extension console api contract",
         description=(
             "The requests and responses of the web console's Extensions pages. Generated from "

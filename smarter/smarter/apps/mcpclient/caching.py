@@ -102,6 +102,13 @@ def get_cached_mcpclients_owned_by_user_profile(user_profile: UserProfile) -> mo
 
 
 def invalidate_cached_mcpclients_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Drop the cached queryset of MCPClients owned by a user profile.
+
+    The next :func:`get_cached_mcpclients_owned_by_user_profile` call queries the database again.
+
+    :param user_profile: The user profile whose cached queryset is dropped.
+    """
     _get_cached_mcpclients_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -141,6 +148,13 @@ def get_cached_mcpclients_shared_with_user_profile(user_profile: UserProfile) ->
 
 
 def invalidate_cached_mcpclients_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Drop the cached queryset of MCPClients shared with a user profile.
+
+    The next :func:`get_cached_mcpclients_shared_with_user_profile` call queries the database again.
+
+    :param user_profile: The user profile whose cached queryset is dropped.
+    """
     _get_cached_mcpclients_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -181,6 +195,13 @@ def get_cached_mcpclients_available_to_user_profile(user_profile: UserProfile) -
 
 
 def invalidate_cached_mcpclients_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Drop the cached queryset of MCPClients available to (owned or shared) a user profile.
+
+    The next :func:`get_cached_mcpclients_available_to_user_profile` call queries the database again.
+
+    :param user_profile: The user profile whose cached queryset is dropped.
+    """
     _get_cached_mcpclients_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

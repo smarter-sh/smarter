@@ -82,6 +82,12 @@ class SettingsView(SmarterAdminWebView):
     # HTTP override methods
     # -------------------------------------------------------------------------
     def get(self, request, *args, **kwargs):
+        """
+        Render the account settings form.
+
+        :param request: The request.
+        :returns: The rendered template, or a 404 json response when the user has no UserProfile.
+        """
         user_profile = UserProfile.get_cached_object(user=request.user)
         if not user_profile:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "User profile not found."})
@@ -98,10 +104,28 @@ class SettingsView(SmarterAdminWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Validate and save the account settings form.
+
+        :param request: The request.
+        :returns: A json response.
+        """
         return self._handle_write(request)
 
     def patch(self, request, *args, **kwargs):
+        """
+        Validate and save the account settings form.
+
+        :param request: The request.
+        :returns: A json response.
+        """
         return self._handle_write(request)
 
     def put(self, request, *args, **kwargs):
+        """
+        Validate and save the account settings form.
+
+        :param request: The request.
+        :returns: A json response.
+        """
         return self._handle_write(request)

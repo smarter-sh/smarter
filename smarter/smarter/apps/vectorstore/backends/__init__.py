@@ -35,7 +35,14 @@ if set(BACKENDS) != set(SmarterVectorStoreBackends.all()):
 
 
 def get_backend(vectorstore: VectorstoreMeta, embeddings: Optional[Embeddings] = None) -> SmarterVectorstoreBackend:
-    """The backend of a vectorstore."""
+    """
+    The backend of a vectorstore.
+
+    :param vectorstore: The vectorstore.
+    :param embeddings: The embeddings model, or None for a backend that does not embed.
+    :returns: An instance of the backend class of the vectorstore's ``backend``.
+    :raises SmarterConfigurationError: If the backend is not supported.
+    """
     try:
         backend_class = BACKENDS[vectorstore.backend]
     except KeyError as e:

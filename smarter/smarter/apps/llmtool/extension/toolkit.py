@@ -41,6 +41,7 @@ from ..signals import (
 )
 from .exceptions import SmarterExtensionLoadError
 from .loader import LoadedExtension, load_version
+from .manifest import describe_validation_errors
 from .protocol import ExtensionContext, ExtensionToolError, SmarterExtensionTool
 from .settings import resolve_settings
 
@@ -243,9 +244,7 @@ class ExtensionToolkit:
         try:
             validated = function.tool.arguments_model.model_validate(arguments)
         except ValidationError as e:
-            problems = "; ".join(
-                f"{'.'.join(str(part) for part in error['loc']) or 'arguments'}: {error['msg']}" for error in e.errors()
-            )
+            problems = describe_validation_errors(e, whole_location="arguments")
             raise ExtensionToolCallError(f"Invalid arguments: {problems}") from e
         context = ExtensionContext(
             slug=slug,
@@ -316,7 +315,15 @@ class ExtensionToolkit:
             raise ExtensionToolCallError(f"The tool returned a result that is not JSON: {e.errors()[0]['msg']}") from e
 
     def failed(self, function: ExtensionFunction, error: str) -> SmarterDictType:
-        """Report a failed tool call, and return the error for the LLM."""
+        """
+        Report a failed tool call, and return the error for the LLM.
+
+        Sends ``extension_tool_failed``, and logs a warning.
+
+        :param function: The tool that failed.
+        :param error: Why it failed.
+        :returns: ``{"error": error}``.
+        """
         extension_tool_failed.send(
             sender=self.__class__,
             slug=function.extension.slug,

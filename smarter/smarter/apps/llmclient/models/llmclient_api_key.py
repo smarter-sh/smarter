@@ -75,7 +75,15 @@ class LLMClientAPIKey(TimestampedModel):
 
     @classmethod
     def has_active_api_key(cls, llmclient: LLMClient, invalidate: Optional[bool] = False) -> bool:
-        """Returns True if the llmclient has at least one active API key."""
+        """
+        Return True if the llmclient has at least one active API key.
+
+        The result is cached per LLMClient, for ``cache_expiration``.
+
+        :param llmclient: The LLMClient to check. If falsy, returns False.
+        :param invalidate: If True, discard the cached result and query the database again.
+        :returns: True if an active ``SmarterAuthToken`` is linked to the LLMClient, otherwise False.
+        """
         logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + cls.__name__ + ".has_active_api_key()")
 
         @cache_results(cls.cache_expiration)

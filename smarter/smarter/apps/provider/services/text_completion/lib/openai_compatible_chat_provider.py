@@ -625,16 +625,14 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 )
             self.second_iteration[_InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
 
-        serialized_request = (
-            self.first_iteration[_InternalKeys.REQUEST_KEY]
-            if self.iteration == 1
-            else self.second_iteration[_InternalKeys.REQUEST_KEY] if self.second_iteration else None
-        )
-        serialized_response = (
-            self.first_iteration[_InternalKeys.RESPONSE_KEY]
-            if self.iteration == 1
-            else self.second_iteration[_InternalKeys.RESPONSE_KEY] if self.second_iteration else None
-        )
+        serialized_request = None
+        serialized_response = None
+        if self.iteration == 1:
+            serialized_request = self.first_iteration[_InternalKeys.REQUEST_KEY]
+            serialized_response = self.first_iteration[_InternalKeys.RESPONSE_KEY]
+        elif self.second_iteration:
+            serialized_request = self.second_iteration[_InternalKeys.REQUEST_KEY]
+            serialized_response = self.second_iteration[_InternalKeys.RESPONSE_KEY]
 
         chat_response.send(
             sender=self.handler,
@@ -1052,7 +1050,15 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
     def append_guardrail_message(self, stage: str, result: PipelineResult) -> None:
-        """Append a Smarter message that summarizes what the guardrails of a stage did, if anything."""
+        """
+        Append a Smarter message that summarizes what the guardrails of a stage did, if anything.
+
+        Nothing is appended when no guardrail triggered and none failed to run.
+
+        :param stage: The guardrail stage, e.g. ``input`` or ``output``, used in the message text.
+        :param result: The pipeline result whose disposition, triggered findings and failed
+            outcomes are summarized.
+        """
         triggered = [finding.guardrail_name for finding in result.triggered_findings]
         failed = [outcome.guardrail_name for outcome in result.outcomes if outcome.error]
         if not triggered and not failed:

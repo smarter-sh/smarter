@@ -208,7 +208,14 @@ def robots_rules(url: str, timeout: float) -> Optional[RobotFileParser]:
 
 
 def robots_permit(url: str, timeout: float) -> bool:
-    """Return True if a website's robots.txt permits the Smarter user agent to read a URL."""
+    """
+    Return True if a website's robots.txt permits the Smarter user agent to read a URL.
+
+    :param url: The URL to read.
+    :param timeout: Seconds to wait for robots.txt.
+    :returns: True if robots.txt permits it. A missing robots.txt permits everything, and an
+        unreachable one permits nothing.
+    """
     rules = robots_rules(url, timeout)
     return rules is not None and rules.can_fetch(USER_AGENT_TOKEN, url)
 
@@ -220,7 +227,14 @@ def collapse_whitespace(text: str) -> str:
 
 # pylint: disable=too-many-return-statements,too-many-branches,too-many-locals
 def render(node, base_url: str, list_depth: int = 0) -> str:
-    """Render an HTML node as Markdown."""
+    """
+    Render an HTML node as Markdown.
+
+    :param node: A BeautifulSoup node: a tag, a string, or a comment, which renders as nothing.
+    :param base_url: The page's URL, to make links absolute. Links that are not http(s) become plain text.
+    :param list_depth: How deeply the node is nested in lists, to indent list items.
+    :returns: The Markdown.
+    """
     if isinstance(node, Comment):
         return ""
     if isinstance(node, NavigableString):
@@ -321,7 +335,13 @@ def html_to_markdown(html: bytes, base_url: str, encoding: Optional[str] = None)
 
 
 def decode(content: bytes, charset: Optional[str]) -> str:
-    """Decode a response body, falling back to UTF-8."""
+    """
+    Decode a response body, falling back to UTF-8.
+
+    :param content: The response body.
+    :param charset: The character set that the server declared, or None for UTF-8. An unknown one falls back to UTF-8.
+    :returns: The text, with undecodable bytes replaced.
+    """
     try:
         return content.decode(charset or "utf-8", errors="replace")
     except LookupError:
@@ -329,7 +349,13 @@ def decode(content: bytes, charset: Optional[str]) -> str:
 
 
 def truncate(content: str, max_characters: int) -> tuple[str, bool]:
-    """Truncate content to a maximum number of characters, at a word boundary if possible."""
+    """
+    Truncate content to a maximum number of characters, at a word boundary if possible.
+
+    :param content: The content.
+    :param max_characters: The maximum number of characters, before ``TRUNCATION_MARKER`` is appended.
+    :returns: The content, ending with ``TRUNCATION_MARKER`` if it was cut, and whether it was cut.
+    """
     if len(content) <= max_characters:
         return content, False
     cut = content[:max_characters]
@@ -340,7 +366,14 @@ def truncate(content: str, max_characters: int) -> tuple[str, bool]:
 
 
 def make_redirect_policy(policy: DomainPolicy, respect_robots_txt: bool, timeout: float) -> Callable[[str], None]:
-    """Return a safe_http redirect policy that enforces the domain policy and robots.txt on each redirect."""
+    """
+    Return a safe_http redirect policy that enforces the domain policy and robots.txt on each redirect.
+
+    :param policy: The domain policy that each redirect's URL must satisfy.
+    :param respect_robots_txt: Whether each redirect's URL must also be permitted by its website's robots.txt.
+    :param timeout: Seconds to wait for robots.txt.
+    :returns: A function that takes a redirect's URL, and raises ``SafeHttpError`` if it is not permitted.
+    """
 
     def redirect_policy(url: str) -> None:
         if not policy.permits_url(url):

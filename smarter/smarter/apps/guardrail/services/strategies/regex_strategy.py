@@ -49,12 +49,20 @@ class RegexStrategy(BaseGuardrailStrategy):
     """Match a text segment against a regular expression."""
 
     def evaluate(self, *, segment, guardrail, context: StrategyContext) -> StrategyMatch:
-        """Find every match of ``guardrail.pattern`` in the segment."""
-        matches = [
-            GuardrailMatch(start=m.start(), end=m.end(), text=m.group(0))
-            for m in compiled_pattern(guardrail).finditer(segment.text)
-            if m.end() > m.start()
-        ][:MAX_MATCHES]
+        """
+        Find every match of ``guardrail.pattern`` in the segment, ignoring empty matches.
+
+        :param segment: The text segment.
+        :param guardrail: The Guardrail, which supplies the strategy's configuration.
+        :param context: Ambient evaluation context. Unused.
+        :returns: A triggered match, with at most ``MAX_MATCHES`` matches, or an untriggered one.
+        """
+        pattern = compiled_pattern(guardrail)
+        all_matches = []
+        for m in pattern.finditer(segment.text):
+            if m.end() > m.start():
+                all_matches.append(GuardrailMatch(start=m.start(), end=m.end(), text=m.group(0)))
+        matches = all_matches[:MAX_MATCHES]
         if not matches:
             return StrategyMatch(triggered=False)
         return StrategyMatch(

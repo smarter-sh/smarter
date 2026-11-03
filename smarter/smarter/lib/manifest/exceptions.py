@@ -10,11 +10,14 @@ class SAMExceptionBase(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The class name as words, e.g. ``Smarter API Manifest validation error`` for ``SAMValidationError``."""
         name = self.__class__.__name__
         name = name.replace("SAM", "Smarter API Manifest ")
         words = re.findall("[A-Z][^A-Z]*", name)
         retval = " ".join(str(word).lower() for word in words)
-        return retval.replace("smarter  a p i  manifest", "Smarter API Manifest").replace("  ", " ")
+        retval = retval.replace("smarter  a p i  manifest", "Smarter API Manifest")
+        retval = retval.replace("  ", " ")
+        return retval
 
 
 class SAMBadRequestError(SAMExceptionBase):

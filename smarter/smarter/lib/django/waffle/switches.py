@@ -6,11 +6,14 @@ from dataclasses import dataclass
 # pylint: disable=C0115
 @dataclass(frozen=True)
 class SmarterWaffleSwitch:
+    """The definition of one managed waffle switch: its name, its admin comment, and its default state."""
+
     name: str
     comment: str
     default: bool
 
     def to_json(self) -> dict[str, str | bool]:
+        """Return the switch's name, comment and default as a dict."""
         return {
             "name": self.name,
             "comment": self.comment,

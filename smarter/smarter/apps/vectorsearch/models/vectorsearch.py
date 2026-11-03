@@ -100,6 +100,15 @@ class Vectorsearch(MetaDataWithOwnershipModel):
         unique_together = ("user_profile", "name")
 
     def clean(self):
+        """
+        Validate the search parameters against ``search_type``.
+
+        ``k`` must be positive. ``score_threshold`` is required for, and only valid with,
+        ``similarity_score_threshold``. ``fetch_k`` and ``lambda_mult`` are only valid with ``mmr``,
+        where ``fetch_k`` must be at least ``k`` and ``lambda_mult`` between 0.0 and 1.0.
+
+        :raises ValidationError: when a parameter does not suit the search type.
+        """
         super().clean()
 
         if self.k is not None and self.k < 1:

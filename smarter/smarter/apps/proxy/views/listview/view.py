@@ -45,6 +45,14 @@ class ProxyListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the proxy-list React app, which lists the user's Proxies.
+
+        The context holds the app's root element id, cookie names and list api url.
+
+        :param request: The request.
+        :returns: The rendered ``proxy-list`` template.
+        """
         # pylint: disable=C0415
         from smarter.apps.proxy.urls import ProxyReverseNames
 

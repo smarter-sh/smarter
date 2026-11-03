@@ -121,6 +121,7 @@ class SAMLLMHostBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter API LLMHost Manifest Broker Error"
 
 
@@ -292,10 +293,12 @@ class SAMLLMHostBroker(AbstractBroker):
 
     @property
     def ORMMetaModelClass(self) -> Type[LLMHost]:
+        """The Django model that holds an LLMHost's metadata: :class:`~smarter.apps.llmhost.models.LLMHost`."""
         return LLMHost
 
     @property
     def ORMModelClass(self) -> Type[LLMHost]:
+        """The Django model of an LLMHost: :class:`~smarter.apps.llmhost.models.LLMHost`."""
         return LLMHost
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -414,6 +417,12 @@ class SAMLLMHostBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: an LLMHost cannot be prompted through its broker.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 

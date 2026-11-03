@@ -109,10 +109,10 @@ def onboarding_context(user: User | None, api_url: str) -> OnboardingContext:
     signed_in = isinstance(user, User)
     return OnboardingContext(
         enabled=signed_in and switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_ONBOARDING_HINTS),
-        api_url=api_url,
+        apiUrl=api_url,
         seen=[OnboardingHints(hint) for hint in seen_onboarding_hints(user.pk)] if signed_in else [],
-        csrf_cookie_name=settings.CSRF_COOKIE_NAME,
-        cookie_domain=settings.SESSION_COOKIE_DOMAIN or "",
+        csrfCookieName=settings.CSRF_COOKIE_NAME,
+        cookieDomain=settings.SESSION_COOKIE_DOMAIN or "",
     )
 
 
@@ -129,6 +129,13 @@ class OnboardingSeenView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Record the outcome of an onboarding hint, unless the user has one, and invalidate their cached hints.
+
+        :param request: The request.
+        :returns: The hints the user has seen, as JSON; ``401`` if not signed in; ``400`` if the body
+            is invalid.
+        """
         user = get_resolved_user(request.user)
         if not isinstance(user, User):
             return JsonResponse({"error": "Not signed in."}, status=HTTPStatus.UNAUTHORIZED)

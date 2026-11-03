@@ -136,9 +136,17 @@ class ApiConnection(ConnectionBase):
 
     @property
     def connection_string(self) -> str:
+        """Return the connection string, from :meth:`get_connection_string`."""
         return self.get_connection_string()
 
     def test_proxy(self) -> bool:
+        """
+        Test the proxy by sending a GET request to ``https://www.google.com`` through it.
+
+        This makes a network call, and logs an error when the request fails.
+
+        :returns: True if the response status is 200 or 308, otherwise False.
+        """
         proxy_dict = {
             self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
         }

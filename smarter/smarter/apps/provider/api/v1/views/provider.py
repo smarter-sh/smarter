@@ -62,13 +62,24 @@ class ProviderViewBase(SmarterAuthenticatedAPIView):
     """
 
     def get_provider(self, request: Request, name: str) -> Provider:
-        """Return the active Provider with this name that the user may read."""
+        """
+        Return the active Provider with this name that the user may read.
+
+        When several match, the oldest one of the user's own account wins, else the oldest one.
+
+        :param request: The api request, whose user's read permission is applied.
+        :param name: The Provider's name.
+        :returns: The Provider.
+        :raises Http404: If no active Provider with this name is readable by the user.
+        """
         providers = list(readable_providers(request).filter(name=name).order_by("pk"))
         if not providers:
             raise Http404(f"Provider {name} not found.")
         account_id = getattr(self.user_profile, "account_id", None)
         own = [provider for provider in providers if provider.user_profile.account_id == account_id]
-        return (own or providers)[0]
+        if own:
+            return own[0]
+        return providers[0]
 
 
 class ProvidersApiViewSet(ContractListMixin, SmarterAuthenticatedListAPIView):
@@ -78,6 +89,11 @@ class ProvidersApiViewSet(ContractListMixin, SmarterAuthenticatedListAPIView):
     contract_model = ProviderApiProvider
 
     def get_queryset(self, *args, **kwargs) -> QuerySet[Provider]:
+        """
+        Return the active Providers that the requesting user may read.
+
+        :returns: The readable Providers queryset.
+        """
         return readable_providers(self.request)
 
     def item(self, row):
@@ -91,7 +107,14 @@ class ProviderApiViewSet(ProviderViewBase):
     serializer_class = ProviderSerializer
 
     def get(self, request: Request, *args, name: str, **kwargs):
-        """Return the Provider."""
+        """
+        Return the Provider.
+
+        :param request: The api request.
+        :param name: The Provider's name.
+        :returns: A 200 response whose body is the Provider, as a ``ProviderApiProvider``.
+        :raises Http404: If no active Provider with this name is readable by the user.
+        """
         provider = self.get_provider(request, name)
         return Response(
             ProviderApiProvider.from_model(provider, request.user).model_dump(mode="json"), status=HTTPStatus.OK
@@ -104,7 +127,14 @@ class ProviderModelsApiViewSet(ProviderViewBase):
     serializer_class = ProviderModelSerializer
 
     def get(self, request: Request, *args, name: str, **kwargs):
-        """Return the Provider's models."""
+        """
+        Return the Provider's active models, ordered by name.
+
+        :param request: The api request.
+        :param name: The Provider's name.
+        :returns: A 200 response whose body is a list of ``ProviderApiModel``.
+        :raises Http404: If no active Provider with this name is readable by the user.
+        """
         provider = self.get_provider(request, name)
         provider_models = ProviderModel.objects.filter(provider=provider, is_active=True).order_by("name")
         items = [ProviderApiModel.from_model(row, request.user).model_dump(mode="json") for row in provider_models]
@@ -117,7 +147,15 @@ class ProviderModelApiViewSet(ProviderViewBase):
     serializer_class = ProviderModelSerializer
 
     def get(self, request: Request, *args, name: str, model_name: str, **kwargs):
-        """Return the model."""
+        """
+        Return the model.
+
+        :param request: The api request.
+        :param name: The Provider's name.
+        :param model_name: The model's name.
+        :returns: A 200 response whose body is the model, as a ``ProviderApiModel``.
+        :raises Http404: If the Provider, or an active model of it with this name, is not found.
+        """
         provider = self.get_provider(request, name)
         provider_model = ProviderModel.objects.filter(provider=provider, name=model_name, is_active=True).first()
         if provider_model is None:

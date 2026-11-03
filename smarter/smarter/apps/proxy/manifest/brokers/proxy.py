@@ -101,6 +101,7 @@ class SAMProxyBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter API Proxy Manifest Broker Error"
 
 
@@ -321,10 +322,12 @@ class SAMProxyBroker(AbstractBroker):
 
     @property
     def ORMMetaModelClass(self) -> Type[Proxy]:
+        """The Django model of the Proxy manifest's metadata: :class:`~smarter.apps.proxy.models.Proxy`."""
         return Proxy
 
     @property
     def ORMModelClass(self) -> Type[Proxy]:
+        """The Django model that this broker manages: :class:`~smarter.apps.proxy.models.Proxy`."""
         return Proxy
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -434,6 +437,12 @@ class SAMProxyBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: call the Proxy's URL with the provider's SDK instead.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"Prompt not implemented: call the {self.kind}'s URL with the provider's SDK.",
@@ -521,6 +530,12 @@ class SAMProxyBroker(AbstractBroker):
         return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: a Proxy works as soon as it is applied.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"Deploy not implemented: a {self.kind} works as soon as it is applied.",
@@ -529,6 +544,12 @@ class SAMProxyBroker(AbstractBroker):
         )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: set the Proxy's ``spec.isActive`` to false instead.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"Undeploy not implemented: set the {self.kind}'s spec.isActive to false.",
@@ -537,6 +558,12 @@ class SAMProxyBroker(AbstractBroker):
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented for Proxies.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)
 

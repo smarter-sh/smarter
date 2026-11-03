@@ -14,6 +14,7 @@ class SAMPluginBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter API Plugin Manifest Broker Error"
 
 
@@ -23,6 +24,12 @@ class PluginSerializer(SmarterCamelCaseSerializer):
     email = serializers.SerializerMethodField()
 
     def get_email(self, obj: PluginMeta):
+        """
+        Return the email address of the plugin owner's user.
+
+        :param obj: The plugin.
+        :returns: The email address, or None if the plugin has no user profile, or its user is not found.
+        """
         if obj.user_profile:
             user_profile = UserProfile.get_cached_object(pk=obj.user_profile_id)  # type: ignore[union-attr]
             return user_profile.cached_user.email if user_profile.cached_user else None
@@ -39,4 +46,5 @@ class SAMConnectionBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter API Connection Manifest Broker Error"

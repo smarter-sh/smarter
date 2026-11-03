@@ -33,7 +33,14 @@ module_prefix = __name__
 
 @receiver(post_save, sender=Guardrail)
 def guardrail_saved(sender, instance: Guardrail, created: bool, **kwargs):
-    """Log a created or updated Guardrail."""
+    """
+    Log a created or updated Guardrail.
+
+    :param sender: The model class, :class:`~smarter.apps.guardrail.models.Guardrail`.
+    :param instance: The saved Guardrail.
+    :param created: True if the Guardrail was created, False if it was updated.
+    :param kwargs: The other ``post_save`` arguments.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_saved()"
     data = logging.SmarterFormattedText.json(GuardrailSerializer(instance).data)
     logger.info("%s %s %s, %s", prefix, "created" if created else "updated", instance, data)
@@ -41,7 +48,13 @@ def guardrail_saved(sender, instance: Guardrail, created: bool, **kwargs):
 
 @receiver(pre_delete, sender=Guardrail)
 def guardrail_deleted(sender, instance: Guardrail, **kwargs):
-    """Log a deleted Guardrail."""
+    """
+    Log a Guardrail that is about to be deleted.
+
+    :param sender: The model class, :class:`~smarter.apps.guardrail.models.Guardrail`.
+    :param instance: The Guardrail being deleted.
+    :param kwargs: The other ``pre_delete`` arguments.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_deleted()"
     logger.info("%s %s", prefix, instance)
 
@@ -63,7 +76,15 @@ def handle_guardrail_triggered(sender, guardrail: Guardrail, stage: str, disposi
 
 @receiver(guardrail_blocked, dispatch_uid="guardrail_blocked")
 def handle_guardrail_blocked(sender, guardrail: Guardrail, stage: str, message: str, **kwargs):
-    """Log a blocked message or reply."""
+    """
+    Log a blocked message or reply.
+
+    :param sender: The object that sent the signal.
+    :param guardrail: The Guardrail that blocked it.
+    :param stage: The stage it ran at, e.g. ``input`` or ``output``.
+    :param message: The message shown to the user in place of the blocked content.
+    :param kwargs: The other signal arguments.
+    """
     logger.warning(
         "%s %s blocked the %s: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_blocked",
@@ -91,7 +112,16 @@ def handle_guardrail_escalated(sender, guardrail: Guardrail, stage: str, event=N
 
 @receiver(guardrail_failed, dispatch_uid="guardrail_failed")
 def handle_guardrail_failed(sender, guardrail: Guardrail, stage: str, error: str, fail_closed: bool, **kwargs):
-    """Log a guardrail that failed to run."""
+    """
+    Log a guardrail that failed to run.
+
+    :param sender: The object that sent the signal.
+    :param guardrail: The Guardrail that failed.
+    :param stage: The stage it ran at.
+    :param error: The error message.
+    :param fail_closed: True if the failure blocked the content, False if it was let through.
+    :param kwargs: The other signal arguments.
+    """
     logger.error(
         "%s %s failed on the %s%s: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_failed",

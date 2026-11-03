@@ -115,13 +115,27 @@ class SearchResult:
 
 
 def clean_text(value: Any, max_length: int) -> str:
-    """Return a value as single-line text, truncated to a maximum length."""
+    """
+    Return a value as single-line text, truncated to a maximum length.
+
+    :param value: The value, e.g. a title from a web search API. None and other falsy values
+        become an empty string.
+    :param max_length: The maximum length. Longer text is cut, and ends with an ellipsis.
+    :returns: The text, with runs of whitespace collapsed to single spaces.
+    """
     text = " ".join(str(value or "").split())
     return text if len(text) <= max_length else text[: max_length - 1].rstrip() + "…"
 
 
 def post_filter(results: list[SearchResult], request: SearchRequest) -> list[SearchResult]:
-    """Enforce the domain policy on search results, remove duplicate and non-http(s) URLs, and limit the number of results."""
+    """
+    Enforce the domain policy on search results, remove duplicate and non-http(s) URLs, and limit the number of results.
+
+    :param results: The web search API's results, in its order.
+    :param request: The search, whose domain policy and maximum number of results apply.
+    :returns: The results that remain, in their original order. URLs that differ only by a
+        trailing slash are duplicates, and the first is kept.
+    """
     filtered: list[SearchResult] = []
     seen: set[str] = set()
     for result in results:
@@ -140,7 +154,13 @@ def post_filter(results: list[SearchResult], request: SearchRequest) -> list[Sea
 
 
 def describe_http_error(provider: str, error: safe_http.SafeHttpError) -> str:
-    """Describe a failed web search API request, without disclosing the api key."""
+    """
+    Describe a failed web search API request, without disclosing the api key.
+
+    :param provider: The web search API's name, e.g. ``brave``.
+    :param error: The failed request's error, with its HTTP status code, if any.
+    :returns: A message for the LLM.
+    """
     if error.status_code in (401, 403):
         return f"the {provider} web search api rejected the plugin's api key."
     if error.status_code == 429:
@@ -255,6 +275,15 @@ class BraveSearchProvider(SearchProvider):
     freshness = {"day": "pd", "week": "pw", "month": "pm", "year": "py"}
 
     def request(self, request: SearchRequest, api_key_secret_id: Optional[int]) -> safe_http.SafeResponse:
+        """
+        Make a GET request to the Brave Search API, with the domain policy as ``site:`` operators in the query.
+
+        :param request: The search.
+        :param api_key_secret_id: The id of the Secret that holds the api key.
+        :returns: The API's response.
+        :raises WebsearchError: If the api key is unavailable.
+        :raises SafeHttpError: If the request fails.
+        """
         api_key = self.api_key(api_key_secret_id)
         query = request.query
         operators = self.site_operators(request.policy)
@@ -281,18 +310,31 @@ class BraveSearchProvider(SearchProvider):
         )
 
     def parse(self, data: SmarterDictType) -> list[SearchResult]:
+        """
+        Parse the Brave Search API response's ``web.results``, skipping results without a URL.
+
+        :param data: The API's JSON response.
+        :returns: The results.
+        """
         web = data.get("web") or {}
         results = web.get("results") if isinstance(web, dict) else None
-        return [
-            SearchResult(
+        search_results = []
+        for item in results or []:
+            if not isinstance(item, dict) or not item.get("url"):
+                continue
+            published = item.get("page_age")
+            if not published:
+                published = item.get("age")
+            if not published:
+                published = None
+            search_result = SearchResult(
                 title=clean_text(item.get("title"), MAX_TITLE_LENGTH),
                 url=str(item.get("url") or ""),
                 snippet=clean_text(item.get("description"), MAX_SNIPPET_LENGTH),
-                published=item.get("page_age") or item.get("age") or None,
+                published=published,
             )
-            for item in (results or [])
-            if isinstance(item, dict) and item.get("url")
-        ]
+            search_results.append(search_result)
+        return search_results
 
 
 class TavilySearchProvider(SearchProvider):
@@ -311,6 +353,15 @@ class TavilySearchProvider(SearchProvider):
     url = "https://api.tavily.com/search"
 
     def request(self, request: SearchRequest, api_key_secret_id: Optional[int]) -> safe_http.SafeResponse:
+        """
+        Make a POST request to the Tavily Search API, with the domain policy as included and excluded domains.
+
+        :param request: The search.
+        :param api_key_secret_id: The id of the Secret that holds the api key.
+        :returns: The API's response.
+        :raises WebsearchError: If the api key is unavailable.
+        :raises SafeHttpError: If the request fails.
+        """
         api_key = self.api_key(api_key_secret_id)
         body: SmarterDictType = {
             "query": request.query,
@@ -340,16 +391,26 @@ class TavilySearchProvider(SearchProvider):
         )
 
     def parse(self, data: SmarterDictType) -> list[SearchResult]:
-        return [
-            SearchResult(
+        """
+        Parse the Tavily Search API response's ``results``, skipping results without a URL.
+
+        :param data: The API's JSON response.
+        :returns: The results.
+        """
+        results = data.get("results") or []
+        search_results = []
+        for item in results:
+            if not isinstance(item, dict) or not item.get("url"):
+                continue
+            published = item.get("published_date") or None
+            search_result = SearchResult(
                 title=clean_text(item.get("title"), MAX_TITLE_LENGTH),
                 url=str(item.get("url") or ""),
                 snippet=clean_text(item.get("content"), MAX_SNIPPET_LENGTH),
-                published=item.get("published_date") or None,
+                published=published,
             )
-            for item in (data.get("results") or [])
-            if isinstance(item, dict) and item.get("url")
-        ]
+            search_results.append(search_result)
+        return search_results
 
 
 PROVIDERS: dict[str, SearchProvider] = {

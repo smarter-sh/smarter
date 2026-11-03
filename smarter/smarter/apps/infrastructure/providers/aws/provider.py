@@ -95,6 +95,7 @@ class AWSProvider(CloudProvider):
 
     @property
     def identity(self) -> Optional[SmarterDictType]:
+        """The AWS caller identity, from STS, or None if AWS is not configured."""
         try:
             return self.base.identity
         except InfrastructureConfigurationError:
@@ -102,6 +103,12 @@ class AWSProvider(CloudProvider):
 
     @property
     def ready(self) -> bool:
+        """
+        Whether the provider is authenticated with AWS.
+
+        Fetches the caller identity from STS, and records the authentication state, which sends a
+        signal when it changes.
+        """
         try:
             self.require_live()
         except InfrastructureConfigurationError:
@@ -115,32 +122,47 @@ class AWSProvider(CloudProvider):
 
     @property
     def account_id(self) -> Optional[str]:
+        """The AWS account id of the caller identity, or None if it is not authenticated."""
         identity = self.identity
         return identity.get("Account") if isinstance(identity, dict) else None
 
     @property
     def sdk_version(self) -> str:
+        """The version of boto3."""
         return boto3.__version__
 
     @property
     def dns(self) -> Route53DNSService:
+        """Route53, as the provider's DNS service, created when it is first used."""
         if self._dns is None:
             self._dns = Route53DNSService(self)
         return self._dns
 
     @property
     def certificates(self) -> ACMCertificateService:
+        """ACM, as the provider's certificate service, created when it is first used."""
         if self._certificates is None:
             self._certificates = ACMCertificateService(self, self.dns)
         return self._certificates
 
     def update_kubeconfig(self) -> bool:
+        """
+        Write the EKS cluster's kubeconfig, for kubectl.
+
+        :returns: True if it was written, False if AWS is not ready or it could not be written.
+        """
         if not self.ready:
             logger.warning("%s AWS is not ready, so the kubeconfig cannot be updated.", self.formatted_class_name)
             return False
         return self.eks.update_kubeconfig()
 
     def get_kubernetes_token(self) -> Optional[tuple[str, float]]:
+        """
+        Create a bearer token for the EKS cluster, which kubectl uses instead of ``aws eks get-token``.
+
+        :returns: The token and when it expires, as a :func:`time.time`, or None if AWS is not ready or
+            the token could not be created, for kubectl to use its kubeconfig's credentials.
+        """
         if not self.ready:
             return None
         try:
@@ -152,6 +174,12 @@ class AWSProvider(CloudProvider):
             return None
 
     def get_kubernetes_cluster_info(self) -> SmarterDictType:
+        """
+        Describe the EKS cluster, e.g. its status and versions, for the status API.
+
+        :returns: The cluster's description.
+        :raises InfrastructureNotReadyError: If AWS is not ready.
+        """
         self.require_ready()
         with self.operation("get_kubernetes_cluster_info"):
             return self.eks.get_kubernetes_info()
@@ -189,18 +217,20 @@ class AWSProvider(CloudProvider):
         except SmarterInfrastructureError as e:
             logger.warning("%s could not describe the EKS cluster's resources: %s", self.formatted_class_name, e)
             return {}
-        return {
-            str(resource_type): [
-                DiscoveredResource(str(resource_type), item["name"], item["arn"], billable)
-                for item in resources[key]
-                if item["name"]
-            ]
-            for resource_type, key, billable in (
-                (KubernetesResourceTypes.CLUSTER, "cluster", True),
-                (KubernetesResourceTypes.ADDON, "addons", False),
-                (KubernetesResourceTypes.NODEGROUP, "nodegroups", False),
-            )
-        }
+        sources = (
+            (KubernetesResourceTypes.CLUSTER, "cluster", True),
+            (KubernetesResourceTypes.ADDON, "addons", False),
+            (KubernetesResourceTypes.NODEGROUP, "nodegroups", False),
+        )
+        discovered: dict[str, list[DiscoveredResource]] = {}
+        for resource_type, key, billable in sources:
+            found = []
+            for item in resources[key]:
+                if not item["name"]:
+                    continue
+                found.append(DiscoveredResource(str(resource_type), item["name"], item["arn"], billable))
+            discovered[str(resource_type)] = found
+        return discovered
 
 
 __all__ = ["AWSProvider"]

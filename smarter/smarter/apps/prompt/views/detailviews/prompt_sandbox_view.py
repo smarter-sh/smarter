@@ -48,4 +48,12 @@ class PromptSandboxView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
+        """
+        Return 404 for every request: the sandbox has no Django view of its own.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: An ``HttpResponseNotFound``.
+        """
         return HttpResponseNotFound()

@@ -39,6 +39,13 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
+        """
+        Sync the ledger with the infrastructure that exists, and print a summary line per resource type.
+
+        :param args: Unused.
+        :param options: Unused.
+        :raises Exception: Whatever :func:`sync_inventory` raises, after reporting the failure.
+        """
         self.handle_begin()
         try:
             results = sync_inventory()

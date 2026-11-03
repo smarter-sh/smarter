@@ -136,7 +136,12 @@ logger_prefix_cache_invalidations = logging.SmarterFormattedText.text(
 
 
 def static_version(request):
+    """
+    Add the platform's version to the template context, to version static file urls.
 
+    :param request: The request.
+    :returns: ``{"STATIC_VERSION": <version>}``.
+    """
     return {
         "STATIC_VERSION": smarter_settings.version,
     }
@@ -160,6 +165,14 @@ def console_reverse(*args: str) -> str:
 
 @cache_results()
 def sidebar_context() -> SmarterDictType:
+    """
+    The urls of the web console sidebar's links, reversed against ``settings.ROOT_URLCONF``.
+
+    Proxies, Vectorstores, the manifest drop zone and the terminal are included only when their
+    settings enable them. The result is cached.
+
+    :returns: ``{"sidebar": {<link name>: <url>, ...}}``.
+    """
     context = {
         "sidebar": {
             "dashboard": console_reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),

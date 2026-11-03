@@ -80,6 +80,7 @@ class ChatToolCallHistoryListView(ContractListMixin, SmarterAuthenticatedListAPI
     contract_model = PromptHistoryApiToolCall
 
     def get_queryset(self):
+        """Return the tool calls of the chat sessions that the requesting user may manage."""
         return tool_calls_for_user(self.request.user)
 
 
@@ -87,6 +88,15 @@ class ChatToolCallHistoryView(SmarterAuthenticatedAPIView):
     """A tool call of the user's chat sessions: a :class:`PromptHistoryApiToolCall`."""
 
     def get(self, request: Request, *args, **kwargs):
+        """
+        Return the tool call whose id is ``kwargs["pk"]``, if the requesting user may manage its session.
+
+        :param request: The authenticated request.
+        :param args: Unused positional arguments.
+        :param kwargs: The url's keyword arguments, with ``pk``, the tool call's id.
+        :returns: A response whose body is the tool call as a :class:`PromptHistoryApiToolCall`.
+        :raises django.http.Http404: when no such tool call is visible to the user.
+        """
         instance = get_object_or_404(tool_calls_for_user(request.user), pk=kwargs["pk"])
         return Response(PromptHistoryApiToolCall.from_model(instance).model_dump(mode="json"))
 
@@ -102,6 +112,7 @@ class PluginUsageHistoryListView(ContractListMixin, SmarterAuthenticatedListAPIV
         return PromptHistoryApiPluginUsage.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self):
+        """Return the plugin usage of the chat sessions that the requesting user may manage."""
         return plugin_usage_for_user(self.request.user)
 
 
@@ -109,6 +120,15 @@ class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
     """A plugin usage of the user's chat sessions: a :class:`PromptHistoryApiPluginUsage`."""
 
     def get(self, request: Request, *args, **kwargs):
+        """
+        Return the plugin usage whose id is ``kwargs["pk"]``, if the requesting user may manage its session.
+
+        :param request: The authenticated request.
+        :param args: Unused positional arguments.
+        :param kwargs: The url's keyword arguments, with ``pk``, the plugin usage's id.
+        :returns: A response whose body is the plugin usage as a :class:`PromptHistoryApiPluginUsage`.
+        :raises django.http.Http404: when no such plugin usage is visible to the user.
+        """
         instance = get_object_or_404(plugin_usage_for_user(request.user), pk=kwargs["pk"])
         return Response(PromptHistoryApiPluginUsage.from_model(instance, request.user).model_dump(mode="json"))
 
@@ -120,6 +140,7 @@ class ChatHistoryListView(ContractListMixin, SmarterAuthenticatedListAPIView):
     contract_model = PromptHistoryApiSession
 
     def get_queryset(self):
+        """Return the chat sessions that the requesting user may manage."""
         return sessions_for_user(self.request.user)
 
 
@@ -127,5 +148,14 @@ class ChatHistoryView(SmarterAuthenticatedAPIView):
     """One of the user's chat sessions, by its id: a :class:`PromptHistoryApiSession`."""
 
     def get(self, request: Request, *args, **kwargs):
+        """
+        Return the chat session whose id is ``kwargs["pk"]``, if the requesting user may manage its session.
+
+        :param request: The authenticated request.
+        :param args: Unused positional arguments.
+        :param kwargs: The url's keyword arguments, with ``pk``, the chat session's id.
+        :returns: A response whose body is the chat session as a :class:`PromptHistoryApiSession`.
+        :raises django.http.Http404: when no such chat session is visible to the user.
+        """
         instance = get_object_or_404(sessions_for_user(request.user), pk=kwargs["pk"])
         return Response(PromptHistoryApiSession.from_model(instance).model_dump(mode="json"))

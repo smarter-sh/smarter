@@ -143,6 +143,11 @@ class SmarterTestRunner(DiscoverRunner):
         super().__init__(*args, tags=tags or None, exclude_tags=exclude_tags, **kwargs)
 
     def setup_test_environment(self, **kwargs):
+        """
+        Set up Django's test environment, and say when the infrastructure tests are skipped.
+
+        :param kwargs: Passed to Django's ``setup_test_environment()``.
+        """
         super().setup_test_environment(**kwargs)
         if self.skipping_infrastructure and self.verbosity > 0:
             print(

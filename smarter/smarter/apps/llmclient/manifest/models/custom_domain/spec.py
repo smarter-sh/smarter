@@ -44,6 +44,13 @@ class SAMCustomDomainSpecConfig(AbstractSAMSpecBase):
     @field_validator("domainName")
     @classmethod
     def validate_domain_name(cls, v: str) -> str:
+        """
+        Normalize the domain name (strip whitespace, lowercase, drop a trailing dot), and validate it.
+
+        :param v: The domain name from the manifest.
+        :returns: The normalized domain name.
+        :raises SAMValidationError: if the domain name is not valid.
+        """
         v = v.strip().lower().rstrip(".")
         try:
             SmarterValidator.validate_domain(v)

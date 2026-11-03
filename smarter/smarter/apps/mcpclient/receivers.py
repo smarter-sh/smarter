@@ -55,7 +55,12 @@ def mcpclient_saved(sender, instance: MCPClient, created: bool, **kwargs):
 
 @receiver(pre_delete, sender=MCPClient)
 def mcpclient_deleted(sender, instance: MCPClient, **kwargs):
-    """Log the MCPClient, and invalidate its cached catalog."""
+    """
+    Log the MCPClient, and invalidate its cached catalog.
+
+    :param sender: The model class.
+    :param instance: The MCPClient being deleted.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_deleted()"
     logger.info("%s %s", prefix, instance)
     invalidate_cached_catalog(instance)
@@ -63,7 +68,13 @@ def mcpclient_deleted(sender, instance: MCPClient, **kwargs):
 
 @receiver(mcpclient_connected, dispatch_uid="mcpclient_connected")
 def handle_mcpclient_connected(sender, mcpclient: MCPClient, catalog, **kwargs):
-    """Log a successful connection to an MCP server."""
+    """
+    Log a successful connection to an MCP server.
+
+    :param sender: The signal's sender.
+    :param mcpclient: The MCPClient.
+    :param catalog: The server's catalog: its name, version, protocol version and tools.
+    """
     logger.info(
         "%s %s connected to %s %s, protocol %s, %s tools",
         f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_connected",
@@ -77,7 +88,13 @@ def handle_mcpclient_connected(sender, mcpclient: MCPClient, catalog, **kwargs):
 
 @receiver(mcpclient_connection_failed, dispatch_uid="mcpclient_connection_failed")
 def handle_mcpclient_connection_failed(sender, mcpclient: MCPClient, error: str, **kwargs):
-    """Log a failed connection to an MCP server."""
+    """
+    Log a failed connection to an MCP server, as a warning.
+
+    :param sender: The signal's sender.
+    :param mcpclient: The MCPClient.
+    :param error: The error.
+    """
     logger.warning(
         "%s %s: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_connection_failed",
@@ -104,7 +121,16 @@ def handle_mcpclient_tool_called(sender, mcpclient: MCPClient, tool_name: str, a
 def handle_mcpclient_tool_responded(
     sender, mcpclient: MCPClient, tool_name: str, is_error: bool, characters: int, cached: bool = False, **kwargs
 ):
-    """Log a tool's result."""
+    """
+    Log a tool's result, without its content.
+
+    :param sender: The signal's sender.
+    :param mcpclient: The MCPClient.
+    :param tool_name: The tool's name.
+    :param is_error: True if the tool reported an error.
+    :param characters: The length of the result.
+    :param cached: True if the result came from the cache.
+    """
     logger.info(
         "%s %s %s is_error: %s characters: %s cached: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_tool_responded",
@@ -118,7 +144,14 @@ def handle_mcpclient_tool_responded(
 
 @receiver(mcpclient_tool_failed, dispatch_uid="mcpclient_tool_failed")
 def handle_mcpclient_tool_failed(sender, mcpclient: MCPClient, tool_name: str, error: str, **kwargs):
-    """Log a failed tool call."""
+    """
+    Log a failed tool call, as a warning.
+
+    :param sender: The signal's sender.
+    :param mcpclient: The MCPClient.
+    :param tool_name: The tool's name.
+    :param error: The error.
+    """
     logger.warning(
         "%s %s %s failed: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_tool_failed",
@@ -132,7 +165,15 @@ def handle_mcpclient_tool_failed(sender, mcpclient: MCPClient, tool_name: str, e
 def handle_mcpclient_resource_read(
     sender, mcpclient: MCPClient, uri: str, characters: int, cached: bool = False, **kwargs
 ):
-    """Log a resource read."""
+    """
+    Log a resource read, without its content.
+
+    :param sender: The signal's sender.
+    :param mcpclient: The MCPClient.
+    :param uri: The resource's URI.
+    :param characters: The length of the resource's content.
+    :param cached: True if the content came from the cache.
+    """
     logger.info(
         "%s %s %s characters: %s cached: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_resource_read",

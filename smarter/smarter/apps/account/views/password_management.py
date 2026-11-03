@@ -48,7 +48,14 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
     password_reset_link: str = ""
 
     def generate_password_reset_link(self, request, user):
-        """Generate a password reset link for the given user."""
+        """
+        Generate a password reset link for the given user.
+
+        :param request: The request, for the link's host.
+        :param user: The User.
+        :returns: The link.
+        :raises SmarterValueError: when ``user`` is not a User.
+        """
         if not isinstance(user, User):
             raise SmarterValueError("Invalid user object.")
         return self.expiring_token.encode_link(
@@ -56,11 +63,25 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         )
 
     def get(self, request, *args, **kwargs):
+        """
+        Render the form that asks for the email address.
+
+        :param request: The request.
+        :returns: The rendered form.
+        """
         form = PasswordResetRequestView.EmailForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Email a password reset link to the user with the form's email address.
+
+        The response is the same whether or not a user has the address, so that it isn't revealed.
+
+        :param request: The request, with the form's data.
+        :returns: A 200 response, or a 400 one for an invalid address.
+        """
         form = PasswordResetRequestView.EmailForm(request.POST)
         if not form.is_valid():
             return SmarterHttpResponseBadRequest(request=request, error_message=_("Email address is invalid."))
@@ -78,6 +99,9 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         self.password_reset_link = self.generate_password_reset_link(request, user)
         context = {"password_reset": {"url": self.password_reset_link}}
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
+        if isinstance(body, HttpResponse):
+            # the template failed to render, and render_clean_html() logged why.
+            return body
         subject = _("Reset your password")
         to = email
         # the reset link is a secret, so the admin gets no blind copy.
@@ -101,6 +125,13 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
+        """
+        Render the new password form for a password reset link.
+
+        :param request: The request.
+        :param kwargs: ``uidb64`` and ``token``, from the link.
+        :returns: The rendered form, or a 400, 403 or 404 response when the link is not valid.
+        """
         logger.debug("%s.get() begin", self.formatted_class_name)
         form = PasswordResetView.NewPasswordForm()
         try:
@@ -134,6 +165,13 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Set the user's new password from the form, and redirect to the login page.
+
+        :param request: The request, with the form's data.
+        :param kwargs: ``uidb64`` and ``token``, from the link.
+        :returns: The redirect, or a 400, 403 or 404 response when the form or the link is not valid.
+        """
         try:
             self.uidb64 = kwargs["uidb64"]
             self.token = kwargs["token"]

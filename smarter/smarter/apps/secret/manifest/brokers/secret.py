@@ -81,6 +81,7 @@ class SAMSecretBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter API Secret Manifest Broker Error"
 
 

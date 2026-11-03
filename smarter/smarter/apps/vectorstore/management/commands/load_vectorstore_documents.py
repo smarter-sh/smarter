@@ -34,6 +34,11 @@ class Command(SmarterCommand):
     help = "Add a file, or a folder of files, e.g. PDFs, to a vectorstore, and load them."
 
     def add_arguments(self, parser):
+        """
+        Add the command's options: the vectorstore, the path, the owner, and whether to load now.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("--name", required=True, help="The vectorstore's name.")
         parser.add_argument("--path", required=True, help="A file, or a folder.")
         parser.add_argument(
@@ -43,16 +48,31 @@ class Command(SmarterCommand):
 
     @staticmethod
     def files(path: str) -> list[str]:
+        """
+        Return a file, or the supported files of a folder and its subfolders.
+
+        :param path: A file, or a folder.
+        :returns: The file, or the folder's files whose extension is supported, sorted.
+        """
         if os.path.isfile(path):
             return [path]
-        return sorted(
-            os.path.join(root, name)
-            for root, _, names in os.walk(path)
-            for name in names
-            if os.path.splitext(name.lower())[1] in EXTENSIONS
-        )
+        found = []
+        for root, _, names in os.walk(path):
+            for name in names:
+                extension = os.path.splitext(name.lower())[1]
+                if extension in EXTENSIONS:
+                    found.append(os.path.join(root, name))
+        return sorted(found)
 
     def handle(self, *args, **options):
+        """
+        Add each file to the vectorstore, and load it now, with ``--now``, or queue its Celery task.
+
+        A file that is already in the vectorstore is skipped. Nothing is loaded until the vectorstore is ready.
+
+        :param args: Unused.
+        :param options: The command's options, see :meth:`add_arguments`.
+        """
         self.handle_begin()
         user = get_cached_user_for_username(username=options["username"])
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore

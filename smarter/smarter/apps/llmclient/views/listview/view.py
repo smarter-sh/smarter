@@ -44,6 +44,14 @@ class CustomDomainListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the custom domain list React app.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :returns: The rendered template, with the React app's configuration in its context.
+        """
         # pylint: disable=C0415
         from smarter.apps.llmclient.urls import LLMClientReverseNames
 

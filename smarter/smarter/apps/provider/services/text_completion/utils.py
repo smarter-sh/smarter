@@ -187,7 +187,14 @@ def parse_request(request_body: SmarterDictType):
 
 
 def get_content_for_role(messages: list, role: str) -> str:
-    """Get the text content from the messages list for a given role."""
+    """
+    Get the content of the most recent message for a given role.
+
+    :param messages: The messages list; each message must have a ``role`` key.
+    :param role: The role to look for, e.g. ``user``.
+    :returns: The ``content`` of the last message with that role (None if that message has no
+        content), or an empty string if no message has that role.
+    """
     retval = [d.get("content") for d in messages if d["role"] == role]
     try:
         return retval[-1]
@@ -206,7 +213,14 @@ def get_message_history(messages: list) -> list:
 
 
 def get_messages_for_role(messages: list, role: str) -> list:
-    """Get the text content from the messages list for a given role."""
+    """
+    Get the content of every message for a given role.
+
+    :param messages: The messages list; each message must have a ``role`` key.
+    :param role: The role to look for, e.g. ``user``.
+    :returns: The ``content`` of each message with that role, in order; None for a message
+        without content.
+    """
     retval = [d.get("content") for d in messages if d["role"] == role]
     return retval
 
@@ -214,7 +228,18 @@ def get_messages_for_role(messages: list, role: str) -> list:
 def ensure_system_role_present(
     messages: list[SmarterDictType], default_system_role: str = smarter_settings.llm_default_system_role  # type: ignore
 ) -> list:
-    """Ensure that a system role is present in the messages list."""
+    """
+    Ensure that a system role is present in the messages list.
+
+    If no message has the ``system`` role, a system message with ``default_system_role`` as its
+    content is inserted at the front of the list, in place.
+
+    :param messages: The messages list; each message must have ``role`` and ``content`` keys.
+    :param default_system_role: The content of the system message to insert when none is present.
+    :returns: The same list, with a system message.
+    :raises SmarterValueError: If ``messages`` is not a list of dicts with ``role`` and
+        ``content`` keys, or ``default_system_role`` is not a string.
+    """
     if not isinstance(messages, list):
         raise SmarterValueError("Messages must be a list")
     if not all(isinstance(d, dict) for d in messages):
@@ -311,7 +336,12 @@ def message_characters(message: SmarterDictType) -> int:
     :return: The number of characters.
     """
     content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
-    size = len(content) if isinstance(content, str) else len(json.dumps(content)) if content else 0
+    if isinstance(content, str):
+        size = len(content)
+    elif content:
+        size = len(json.dumps(content))
+    else:
+        size = 0
     tool_calls = message.get("tool_calls")
     if tool_calls:
         size += len(json.dumps(tool_calls))

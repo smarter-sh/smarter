@@ -74,6 +74,12 @@ class VectorstoreAdmin(SmarterCustomerModelAdmin):
     ordering = ["-updated_at"]
 
     def get_queryset(self, request):
+        """
+        Return the vectorstores that the admin's user owns, or none for a request without a user.
+
+        :param request: The admin request.
+        :returns: The vectorstores.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):

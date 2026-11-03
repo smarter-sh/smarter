@@ -172,7 +172,14 @@ def create_plugin_selector_history(*args, **kwargs):
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_plugin_charge(*args, **kwargs):
-    pass
+    """
+    Record a charge for a plugin call.
+
+    Not implemented: it does nothing.
+
+    :param args: Ignored.
+    :param kwargs: Ignored.
+    """
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)

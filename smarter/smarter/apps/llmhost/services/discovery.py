@@ -80,6 +80,7 @@ class ModelInfo:
     """A ready-made manifest, for built-in models."""
 
     def to_dict(self) -> SmarterDictType:
+        """The model's fields, as a dict."""
         return asdict(self)
 
 
@@ -90,13 +91,23 @@ class ModelCatalog(ABC):
 
     @abstractmethod
     def search(self, query: Optional[str] = None, task: Optional[str] = None, limit: int = 20) -> list[ModelInfo]:
-        """Return the models that match ``query`` and ``task``, most popular first."""
+        """
+        Return the models that match ``query`` and ``task``, most popular first.
+
+        :param query: Text to search for. Optional.
+        :param task: A :class:`~smarter.apps.llmhost.manifest.enum.SAMLLMHostTask` value. Optional.
+        :param limit: The most models to return.
+        :returns: The matching models.
+        """
 
     @abstractmethod
     def get(self, repository: str) -> ModelInfo:
-        """Return one model.
+        """
+        Return one model.
 
-        Raises LLMHostDiscoveryError if it does not exist.
+        :param repository: The model's repository id, or the catalog's own name for it.
+        :returns: The model.
+        :raises LLMHostDiscoveryError: if it does not exist.
         """
 
 
@@ -141,6 +152,12 @@ class BuiltinCatalog(ModelCatalog):
 
     @staticmethod
     def to_info(manifest: SmarterDictType) -> ModelInfo:
+        """
+        Convert an example LLMHost's manifest to a :class:`ModelInfo`, which carries the manifest.
+
+        :param manifest: The LLMHost's manifest, from :meth:`to_manifest`.
+        :returns: The model.
+        """
         metadata = manifest.get("metadata", {})
         model = manifest.get("spec", {}).get("model", {})
         return ModelInfo(
@@ -160,6 +177,14 @@ class BuiltinCatalog(ModelCatalog):
         )
 
     def search(self, query: Optional[str] = None, task: Optional[str] = None, limit: int = 20) -> list[ModelInfo]:
+        """
+        Search the example LLMHosts by name, repository and tags, case-insensitively, in name order.
+
+        :param query: Text to search for. Optional.
+        :param task: A :class:`~smarter.apps.llmhost.manifest.enum.SAMLLMHostTask` value. Optional.
+        :param limit: The most models to return.
+        :returns: The matching models.
+        """
         query = (query or "").lower()
         retval = []
         for manifest in self.manifests():
@@ -173,6 +198,13 @@ class BuiltinCatalog(ModelCatalog):
         return retval[:limit]
 
     def get(self, repository: str) -> ModelInfo:
+        """
+        Return the example LLMHost whose name or model repository is ``repository``.
+
+        :param repository: The LLMHost's name, or its model's repository id.
+        :returns: The model.
+        :raises LLMHostDiscoveryError: if no example LLMHost matches.
+        """
         for manifest in self.manifests():
             if repository in (manifest["metadata"]["name"], manifest["spec"]["model"]["repository"]):
                 return self.to_info(manifest)
@@ -232,18 +264,38 @@ class HuggingFaceCatalog(ModelCatalog):
         for quantization in ("awq", "gptq", "fp8", "mxfp4"):
             if quantization in tags or quantization in data.get("id", "").lower():
                 return quantization
-        parameters = (data.get("safetensors") or {}).get("parameters") or {}
+        safetensors = data.get("safetensors") or {}
+        parameters: dict[str, int] = safetensors.get("parameters") or {}
         if parameters:
-            dtype = max(parameters, key=parameters.get).lower()
+            dtype = max(parameters, key=parameters.__getitem__).lower()
             return {"bf16": "bf16", "f16": "fp16", "fp16": "fp16", "f32": "fp32"}.get(dtype, "none")
         return SAMLLMHostQuantization.NONE.value
 
     def to_info(self, data: SmarterDictType) -> ModelInfo:
-        files = [s.get("rfilename", "") for s in data.get("siblings", []) or []]
+        """
+        Convert a model's details from the Hub's REST API to a :class:`ModelInfo`.
+
+        The license comes from the model card, else from a ``license:`` tag.
+
+        :param data: A model, as ``/api/models`` returns it.
+        :returns: The model. Its ``files`` lists only its GGUF and safetensors files.
+        """
+        siblings = data.get("siblings", []) or []
+        files = [s.get("rfilename", "") for s in siblings]
         card = data.get("cardData") or {}
         config = data.get("config") or {}
-        tags = [str(t) for t in data.get("tags", []) or []]
-        license_ = card.get("license") or next((t.split(":", 1)[1] for t in tags if t.startswith("license:")), None)
+        raw_tags = data.get("tags", []) or []
+        tags = [str(t) for t in raw_tags]
+        license_ = card.get("license")
+        if not license_:
+            license_ = None
+            for tag in tags:
+                if tag.startswith("license:"):
+                    license_ = tag.split(":", 1)[1]
+                    break
+        safetensors = data.get("safetensors") or {}
+        parameter_count = safetensors.get("total")
+        weight_files = [f for f in files if f.lower().endswith((".gguf", ".safetensors"))]
         return ModelInfo(
             catalog=self.name,
             source=SAMLLMHostModelSource.HUGGINGFACE.value,
@@ -252,15 +304,25 @@ class HuggingFaceCatalog(ModelCatalog):
             license=license_,
             gated=bool(data.get("gated")),
             architecture=config.get("model_type"),
-            parameter_count=(data.get("safetensors") or {}).get("total"),
+            parameter_count=parameter_count,
             quantization=self._quantization(data, files),
             downloads=data.get("downloads"),
             likes=data.get("likes"),
             tags=tags,
-            files=[f for f in files if f.lower().endswith((".gguf", ".safetensors"))],
+            files=weight_files,
         )
 
     def search(self, query: Optional[str] = None, task: Optional[str] = None, limit: int = 20) -> list[ModelInfo]:
+        """
+        Search the Hub's models, most downloaded first.
+
+        :param query: Text to search model ids for. Optional.
+        :param task: A :class:`~smarter.apps.llmhost.manifest.enum.SAMLLMHostTask` value, mapped to
+            the Hub's pipeline tag. Optional.
+        :param limit: The most models to return.
+        :returns: The matching models.
+        :raises LLMHostDiscoveryError: if the Hub is unavailable, or rejects the request.
+        """
         params: list[tuple[str, Any]] = [("sort", "downloads"), ("direction", "-1"), ("limit", limit)]
         if query:
             params.append(("search", query))
@@ -270,6 +332,14 @@ class HuggingFaceCatalog(ModelCatalog):
         return [self.to_info(item) for item in data if isinstance(item, dict)]
 
     def get(self, repository: str) -> ModelInfo:
+        """
+        Return one of the Hub's models, with its context window read from its config.json.
+
+        :param repository: The model's repository id, e.g. ``Qwen/Qwen3-8B``.
+        :returns: The model.
+        :raises LLMHostDiscoveryError: if ``repository`` is not a repository id, the Hub does not
+            have it, denies access to it, or is unavailable.
+        """
         if not re.match(r"^[\w.-]+/[\w.-]+$", repository):
             raise LLMHostDiscoveryError(f"{repository} is not a Hugging Face repository id, e.g. Qwen/Qwen3-8B.")
         data = self._get(f"/api/models/{quote(repository)}")
@@ -280,7 +350,15 @@ class HuggingFaceCatalog(ModelCatalog):
         return info
 
     def context_window(self, repository: str, revision: str = "main") -> Optional[int]:
-        """The model's context window, from its config.json, if it is readable."""
+        """
+        The model's context window, from its config.json, if it is readable.
+
+        A multimodal model's ``text_config`` is read in place of the top-level config.
+
+        :param repository: The model's repository id, e.g. ``Qwen/Qwen3-8B``.
+        :param revision: The git revision to read config.json from.
+        :returns: The context window, in tokens, or None if config.json is unreadable or names none.
+        """
         try:
             config = self._get(f"/{quote(repository)}/resolve/{quote(revision)}/config.json")
         except (LLMHostDiscoveryError, ValueError):
@@ -312,7 +390,13 @@ def get_catalog(name: str, **kwargs) -> ModelCatalog:
 def weights_gb(
     parameter_count: Optional[int], quantization: str = SAMLLMHostQuantization.NONE.value
 ) -> Optional[float]:
-    """The size of a model's weights, at the quantization's bytes per parameter, or None if unknown."""
+    """
+    The size of a model's weights, at the quantization's bytes per parameter, or None if unknown.
+
+    :param parameter_count: The model's parameters, or None if unknown.
+    :param quantization: The model's quantization, e.g. bf16.
+    :returns: Gigabytes, or None if the parameter count is unknown.
+    """
     if not parameter_count:
         return None
     return parameter_count * SAMLLMHostQuantization.bytes_per_parameter(quantization) / 1e9
@@ -355,13 +439,21 @@ def pod_memory(size_gb: Optional[float], gpu_count: int) -> str:
 
 
 def gpus_for(vram_gb: int, compute: LLMHostCompute) -> Optional[int]:
-    """The fewest of the compute's GPUs that fit ``vram_gb``, in powers of two for tensor parallelism, or None."""
+    """
+    The fewest of the compute's GPUs that fit ``vram_gb``, in powers of two for tensor parallelism, or None.
+
+    :param vram_gb: The GPU memory that the model requires, in gigabytes.
+    :param compute: The LLMHostCompute whose nodes would serve the model.
+    :returns: The GPU count, or None if the compute has no GPUs, or too few to fit the model.
+    """
     if not compute.has_gpu:
         return None
     count = 1
     while count * compute.gpu_memory_gb < vram_gb:
         count *= 2
-    return count if count <= compute.gpu_count else None
+    if count > compute.gpu_count:
+        return None
+    return count
 
 
 def recommend_resources(
@@ -396,7 +488,12 @@ def recommend_resources(
         resources = {"gpuCount": 0, "cpu": pod_cpu(0), "memory": pod_memory(size_gb, 0)}
         options.append((resources, PodRequests(cpu_millicores(resources["cpu"]), memory_mib(resources["memory"]))))
     # then the fewest GPUs that fit, of any compute.
-    for count in sorted({c for c in (gpus_for(vram_gb, compute) for compute in computes) if c}):
+    gpu_counts = set()
+    for compute in computes:
+        gpu_count = gpus_for(vram_gb, compute)
+        if gpu_count:
+            gpu_counts.add(gpu_count)
+    for count in sorted(gpu_counts):
         resources = {
             "gpuCount": count,
             "vramRequiredGb": vram_gb,
@@ -458,7 +555,12 @@ def draft_manifest(
     file = None
     if engine == SAMLLMHostEngine.LLAMA_CPP.value:
         # prefer the popular Q4_K_M quantization, else the first file.
-        file = next((f for f in gguf_files if "q4_k_m" in f.lower()), gguf_files[0] if gguf_files else None)
+        for gguf_file in gguf_files:
+            if "q4_k_m" in gguf_file.lower():
+                file = gguf_file
+                break
+        if file is None and gguf_files:
+            file = gguf_files[0]
         if file is None and info.source == SAMLLMHostModelSource.HUGGINGFACE.value:
             raise LLMHostDiscoveryError(f"{info.repository} has no GGUF file, which llama_cpp requires.")
 

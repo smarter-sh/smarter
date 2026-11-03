@@ -160,6 +160,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
+        """The middleware instance's dotted class name, formatted for log messages."""
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 

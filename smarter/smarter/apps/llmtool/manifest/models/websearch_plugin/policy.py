@@ -85,7 +85,13 @@ def normalize_domains(domains: Optional[Iterable[str]]) -> tuple[str, ...]:
 
 
 def host_matches(host: str, domain: str) -> bool:
-    """Return True if a host is the domain, or one of its subdomains."""
+    """
+    Return True if a host is the domain, or one of its subdomains.
+
+    :param host: The host, e.g. ``docs.example.com``. It is compared in lower case, without a trailing dot.
+    :param domain: A normalized domain, e.g. ``example.com``.
+    :returns: True if the host is the domain or one of its subdomains.
+    """
     host = host.lower().rstrip(".")
     return host == domain or host.endswith("." + domain)
 
@@ -114,7 +120,14 @@ class DomainPolicy:
 
     @classmethod
     def create(cls, allowed: Optional[Iterable[str]] = None, blocked: Optional[Iterable[str]] = None) -> "DomainPolicy":
-        """Create a policy from lists of domain names, which are normalized."""
+        """
+        Create a policy from lists of domain names, which are normalized.
+
+        :param allowed: The domains to permit, or None to permit every domain that is not blocked.
+        :param blocked: The domains to block, or None.
+        :returns: The policy.
+        :raises WebsearchPolicyError: If a domain is not valid, or a list has too many domains.
+        """
         return cls(allowed=normalize_domains(allowed), blocked=normalize_domains(blocked))
 
     def permits_host(self, host: Optional[str]) -> bool:

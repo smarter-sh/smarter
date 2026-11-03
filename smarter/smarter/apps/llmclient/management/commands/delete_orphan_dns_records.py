@@ -21,6 +21,12 @@ class Command(SmarterCommand):
         parser.add_argument("--dry-run", action="store_true", help="List the orphaned records, but delete nothing.")
 
     def handle(self, *args, **options):
+        """
+        Delete, or with ``--dry-run`` list, the orphaned A records, and print each one's name and the total.
+
+        :param args: Positional arguments (unused).
+        :param options: The parsed options; ``dry_run`` lists the records without deleting them.
+        """
         self.handle_begin()
         dry_run = options["dry_run"]
         names = delete_orphan_dns_records(dry_run=dry_run)

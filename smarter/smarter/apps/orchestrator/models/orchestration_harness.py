@@ -23,6 +23,8 @@ class OrchestratorHarness(TimestampedModel):
     """
 
     class Role(models.TextChoices):
+        """The role that an LLMClient plays in an Orchestrator."""
+
         PLANNER = "planner", "Planner"
         EXECUTOR = "executor", "Executor"
         CRITIC = "critic", "Critic"

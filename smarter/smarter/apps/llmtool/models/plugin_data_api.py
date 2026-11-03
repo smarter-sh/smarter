@@ -65,6 +65,8 @@ class PluginDataApi(PluginDataBase):
 
     # pylint: disable=C0115
     class DataTypes:
+        """The names of the Python data types of an api plugin's values."""
+
         INT = "int"
         FLOAT = "float"
         STR = "str"
@@ -75,6 +77,7 @@ class PluginDataApi(PluginDataBase):
 
         @classmethod
         def all(cls) -> list:
+            """Return every data type."""
             return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
 
     connection = models.ForeignKey(
@@ -131,6 +134,12 @@ class PluginDataApi(PluginDataBase):
         return urljoin(self.connection.base_url, self.endpoint)
 
     def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
+        """
+        Return the api request's parameters, endpoint, headers and body.
+
+        :param params: Unused: the endpoint is returned with its placeholders.
+        :returns: The api plugin's data.
+        """
         return {
             "parameters": self.parameters,
             "endpoint": self.endpoint,
@@ -254,6 +263,12 @@ class PluginDataApi(PluginDataBase):
                 raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
 
     def validate(self) -> bool:
+        """
+        Validate the test values, that each parameter has one, that each placeholder is a parameter, and the endpoint, url params, headers and body.
+
+        :returns: True.
+        :raises SmarterValueError: If any of them is not valid.
+        """
         super().validate()
         self.validate_test_values()
         self.validate_all_parameters_in_test_values()
@@ -374,7 +389,7 @@ class PluginDataApi(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        retval: PluginDataBase
+        retval: Optional[PluginDataBase] = None
         if pk:
             retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 

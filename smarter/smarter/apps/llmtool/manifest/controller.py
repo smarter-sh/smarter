@@ -256,10 +256,12 @@ class PluginController(AbstractController):
     ###########################################################################
     @property
     def manifest(self) -> Optional[SAMPluginCommon]:
+        """The plugin's manifest, if the controller was given one, or loaded one from its plugin."""
         return self._manifest  # type: ignore
 
     @property
     def name(self) -> Optional[str]:
+        """The plugin's name, from the manifest's metadata, if not given."""
         if self._name:
             return self._name
         if self.manifest:
@@ -268,6 +270,12 @@ class PluginController(AbstractController):
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
+        """
+        The plugin's PluginMeta, looked up by the user profile, the manifest's name and its plugin class, and cached.
+
+        :returns: The PluginMeta, or None if there is none, or its owner is not a valid resource
+            owner for the user profile.
+        """
         if not self._plugin_meta and self.user_profile and self.name and self.manifest:
             try:
                 plugin_meta = PluginMeta.objects.get(
@@ -323,14 +331,20 @@ class PluginController(AbstractController):
 
     @property
     def plugin(self) -> Plugins:
+        """The plugin.
+
+        See :attr:`obj`.
+        """
         return self.obj
 
     @cached_property
     def map(self) -> Dict[str, PluginType]:
+        """Maps manifest kinds to their plugin classes."""
         return PLUGIN_MAP
 
     @cached_property
     def plugin_meta_class_map(self) -> Dict[str, PluginType]:
+        """Maps PluginMeta ``plugin_class`` values to their plugin classes."""
         return PLUGIN_META_CLASS_MAP
 
     @cached_property
@@ -340,22 +354,25 @@ class PluginController(AbstractController):
 
     @property
     def obj(self) -> Plugins:
+        """
+        The plugin, created and cached on first use: from the PluginMeta if the controller has one, else from the manifest.
+
+        :returns: The plugin, or None if there is neither, or the PluginMeta has no user profile to act as.
+        :raises SAMPluginControllerError: If the PluginMeta's plugin class is not supported.
+        """
         if self._plugin:
             return self._plugin
         if self._plugin_meta:
-            Plugin = (
-                self.plugin_meta_class_map[self.plugin_meta.plugin_class]
-                if self.plugin_meta and self.plugin_meta.plugin_class in self.plugin_meta_class_map
-                else None
-            )
+            Plugin = None
+            if self.plugin_meta and self.plugin_meta.plugin_class in self.plugin_meta_class_map:
+                Plugin = self.plugin_meta_class_map[self.plugin_meta.plugin_class]
             if not Plugin:
                 plugin_class = self.plugin_meta.plugin_class if self.plugin_meta else "Unknown"
                 raise SAMPluginControllerError(f"Plugin class {plugin_class} is not supported.")
-            self._plugin = (
-                Plugin(plugin_meta=self.plugin_meta, user_profile=self.user_profile)
-                if self.plugin_meta and self.user_profile
-                else None
-            )
+            if self.plugin_meta and self.user_profile:
+                self._plugin = Plugin(plugin_meta=self.plugin_meta, user_profile=self.user_profile)
+            else:
+                self._plugin = None
             if isinstance(self._plugin, SAMPluginCommon):
                 self._manifest = self._plugin.manifest  # type: ignore[assignment]
         elif self.manifest:
@@ -364,11 +381,22 @@ class PluginController(AbstractController):
         return self._plugin
 
     def model_dump_json(self) -> Optional[SmarterDictType]:
-        if self.plugin:
-            return json.loads(self.plugin.manifest.model_dump_json()) if self.plugin and self.plugin.manifest else None
+        """
+        Return the plugin's manifest as a dict of JSON values.
+
+        :returns: The manifest, or None if there is no plugin, or it has no manifest.
+        """
+        if self.plugin and self.plugin.manifest:
+            manifest_json = self.plugin.manifest.model_dump_json()
+            return json.loads(manifest_json)
         return None
 
     def get_model_titles(self) -> list[dict[str, str]]:
+        """
+        Return the name and type of each field annotation of the plugin's manifest model.
+
+        :returns: ``[{"name": ..., "type": ...}, ...]``, or an empty list if there is no plugin, or it has no manifest.
+        """
         if self.plugin and self.plugin.manifest:
             return [{"name": f, "type": str(t)} for f, t in self.plugin.manifest.__annotations__.items()]
         return []

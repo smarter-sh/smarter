@@ -10528,7 +10528,7 @@
         "type": "object"
       },
       "SAMAccountSpec": {
-        "description": "Smarter API Account Manifest Account.spec",
+        "description": "Smarter API Account Manifest Account.spec.",
         "properties": {
           "config": {
             "$ref": "#/components/schemas/SAMAccountSpecConfig",
@@ -10542,7 +10542,7 @@
         "type": "object"
       },
       "SAMAccountSpecConfig": {
-        "description": "Smarter API Account Manifest Account.spec.config",
+        "description": "Smarter API Account Manifest Account.spec.config.",
         "properties": {
           "address1": {
             "anyOf": [
@@ -10754,7 +10754,7 @@
         "type": "object"
       },
       "SAMApiConnectionSpec": {
-        "description": "Smarter API Api Connection Manifest ApiConnection.spec",
+        "description": "Smarter API Api Connection Manifest ApiConnection.spec.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/ApiConnection",
@@ -17609,7 +17609,7 @@
         "type": "object"
       },
       "SAMSecretSpec": {
-        "description": "Smarter API Secret Manifest Secret.spec",
+        "description": "Smarter API Secret Manifest Secret.spec.",
         "properties": {
           "config": {
             "$ref": "#/components/schemas/SAMSecretSpecConfig",
@@ -17623,7 +17623,7 @@
         "type": "object"
       },
       "SAMSecretSpecConfig": {
-        "description": "Smarter API Secret Manifest Secret.spec.config",
+        "description": "Smarter API Secret Manifest Secret.spec.config.",
         "properties": {
           "expiration_date": {
             "anyOf": [
@@ -18050,7 +18050,7 @@
         "type": "object"
       },
       "SAMSqlConnectionSpec": {
-        "description": "Smarter API Sql Connection Manifest Connection.spec",
+        "description": "Smarter API Sql Connection Manifest Connection.spec.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/Connection",

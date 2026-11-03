@@ -39,28 +39,70 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
+def _spec(item: SmarterDictType) -> SmarterDictType:
+    """The ``spec`` of a Kubernetes resource, or an empty dict if it has none."""
+    spec = item.get("spec") or {}
+    return spec
+
+
 def _name(item: SmarterDictType) -> str:
-    return str((item.get("metadata") or {}).get("name", ""))
+    """The ``metadata.name`` of a Kubernetes resource, or an empty string if it has none."""
+    metadata = item.get("metadata") or {}
+    name = metadata.get("name", "")
+    return str(name)
 
 
 def _load_balancer_hostname(item: SmarterDictType) -> str:
     """The cloud load balancer's hostname, or IP address, of an Ingress or a Service."""
-    ingress = ((item.get("status") or {}).get("loadBalancer") or {}).get("ingress") or [{}]
-    return str(ingress[0].get("hostname") or ingress[0].get("ip") or "")
+    status = item.get("status") or {}
+    load_balancer = status.get("loadBalancer") or {}
+    ingress = load_balancer.get("ingress") or [{}]
+    first_ingress = ingress[0]
+    hostname = first_ingress.get("hostname")
+    if hostname:
+        return str(hostname)
+    ip_address = first_ingress.get("ip")
+    if ip_address:
+        return str(ip_address)
+    return ""
 
 
 def _volume_id(item: SmarterDictType) -> str:
     """The cloud volume's id of a PersistentVolume, e.g. an EBS volume id."""
-    spec = item.get("spec") or {}
-    return str(
-        (spec.get("csi") or {}).get("volumeHandle") or (spec.get("awsElasticBlockStore") or {}).get("volumeID") or ""
-    )
+    spec = _spec(item)
+    csi = spec.get("csi") or {}
+    volume_handle = csi.get("volumeHandle")
+    if volume_handle:
+        return str(volume_handle)
+    ebs = spec.get("awsElasticBlockStore") or {}
+    ebs_volume_id = ebs.get("volumeID")
+    if ebs_volume_id:
+        return str(ebs_volume_id)
+    return ""
 
 
 def _claimed_by_environment(item: SmarterDictType) -> bool:
     """Whether a PersistentVolume is bound to a claim in the environment's namespace."""
-    claim = (item.get("spec") or {}).get("claimRef") or {}
+    claim = _spec(item).get("claimRef") or {}
     return claim.get("namespace") == smarter_settings.environment_namespace
+
+
+def _node_provider_id(item: SmarterDictType) -> str:
+    """The cloud id of a Node, its ``spec.providerID``, e.g. an EC2 instance's."""
+    provider_id = _spec(item).get("providerID", "")
+    return str(provider_id)
+
+
+def _is_load_balancer_service(item: SmarterDictType) -> bool:
+    """Whether a Service is of type LoadBalancer."""
+    service_type = _spec(item).get("type")
+    return service_type == "LoadBalancer"
+
+
+def _certificate_secret_name(item: SmarterDictType) -> str:
+    """The name of the Secret that holds a cert-manager Certificate, its ``spec.secretName``."""
+    secret_name = _spec(item).get("secretName", "")
+    return str(secret_name)
 
 
 @dataclass
@@ -108,7 +150,7 @@ KUBERNETES_SOURCES: list[InventorySource] = [
         "node",
         namespaced=False,
         billable=True,
-        resource_id=lambda item: str((item.get("spec") or {}).get("providerID", "")),
+        resource_id=_node_provider_id,
     ),
     InventorySource(
         str(KubernetesResourceTypes.PERSISTENT_VOLUME),
@@ -124,7 +166,7 @@ KUBERNETES_SOURCES: list[InventorySource] = [
         namespaced=True,
         billable=True,
         resource_id=_load_balancer_hostname,
-        include=lambda item: (item.get("spec") or {}).get("type") == "LoadBalancer",
+        include=_is_load_balancer_service,
     ),
     InventorySource(
         str(KubernetesResourceTypes.INGRESS),
@@ -138,7 +180,7 @@ KUBERNETES_SOURCES: list[InventorySource] = [
         "certificate",
         namespaced=True,
         billable=False,
-        resource_id=lambda item: str((item.get("spec") or {}).get("secretName", "")),
+        resource_id=_certificate_secret_name,
     ),
 ]
 """The Kubernetes resources that the inventory lists."""

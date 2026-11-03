@@ -80,6 +80,12 @@ def is_aware(value):
 
 # pylint: disable=C0209
 def duration_iso_string(duration):
+    """
+    Format a timedelta as an ISO 8601 duration, e.g. ``P1DT02H03M04.000005S``.
+
+    :param duration: The timedelta; a negative one is prefixed with ``-``.
+    :returns: The ISO 8601 string.
+    """
     if duration < datetime.timedelta(0):
         sign = "-"
         duration *= -1
@@ -102,6 +108,18 @@ class SmarterJSONEncoder(json.JSONEncoder):
     """
 
     def default(self, o):
+        """
+        Encode a value that :class:`json.JSONEncoder` can't.
+
+        Datetimes, dates and times become ISO 8601 strings, timedeltas ISO 8601 durations,
+        decimals, UUIDs, lazy strings and urls strings, sets lists, and generic relations and
+        taggit tags their names or lists.
+
+        :param o: The value.
+        :returns: A JSON-serializable value.
+        :raises ValueError: For a timezone-aware time.
+        :raises TypeError: For any other type, from :meth:`json.JSONEncoder.default`.
+        """
         # TaggableManager support (import inside to avoid startup issues)
         # most common cases. pass back the super().default(o)
         if isinstance(o, (str, int, float, type(None), bool)):

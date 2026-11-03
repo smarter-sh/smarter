@@ -51,10 +51,17 @@ class InMemoryDNSService(DNSService):
 
     @property
     def ready(self) -> bool:
+        """Whether the in-memory provider is ready."""
         return self.provider.ready
 
     def add_zone(self, domain: str, a_record: Optional[list[str]] = None) -> DNSZone:
-        """Add a zone, e.g. the environment's API domain, optionally with an A record."""
+        """
+        Add a zone, e.g. the environment's API domain, optionally with an A record.
+
+        :param domain: The zone's domain, e.g. ``api.example.com``.
+        :param a_record: The A record's values, IP addresses, or None for no A record.
+        :returns: The new zone.
+        """
         zone = self._create_zone(domain)
         if a_record:
             self._upsert_record(zone.id, DNSRecord(name=domain, type="A", ttl=600, values=a_record), create=True)
@@ -108,6 +115,7 @@ class InMemoryCertificateService(CertificateService):
 
     @property
     def ready(self) -> bool:
+        """Whether the in-memory provider is ready."""
         return self.provider.ready
 
     def _find_certificate_id(self, domain_name: str) -> Optional[str]:
@@ -178,37 +186,63 @@ class InMemoryProvider(CloudProvider):
 
     @property
     def ready(self) -> bool:
+        """
+        Whether the provider is ready, as set with the setter.
+
+        Records the authentication state, which sends a signal when it changes.
+        """
         return self.authentication_state(self.identity, error="the in-memory provider is not ready")
 
     @ready.setter
     def ready(self, value: bool) -> None:
+        """
+        Set whether the provider is ready, e.g. to test a provider that is not authenticated.
+
+        :param value: Whether it is ready.
+        """
         self._ready = value
 
     @property
     def identity(self) -> Optional[SmarterDictType]:
+        """A fake account identity, or None if the provider is not ready."""
         return {"Account": ACCOUNT_ID, "Arn": f"memory::{ACCOUNT_ID}:user/smarter"} if self._ready else None
 
     @property
     def account_id(self) -> Optional[str]:
+        """The fake account id, or None if the provider is not ready."""
         return ACCOUNT_ID if self._ready else None
 
     @property
     def sdk_version(self) -> str:
+        """The fixed version ``memory``."""
         return "memory"
 
     @property
     def dns(self) -> InMemoryDNSService:
+        """The in-memory DNS service."""
         return self._dns
 
     @property
     def certificates(self) -> InMemoryCertificateService:
+        """The in-memory certificate service."""
         return self._certificates
 
     def update_kubeconfig(self) -> bool:
+        """
+        Count the call in :attr:`kubeconfig_updates`, rather than write a kubeconfig.
+
+        :returns: Whether the provider is ready.
+        """
         self.kubeconfig_updates += 1
         return self._ready
 
     def get_kubernetes_cluster_info(self) -> SmarterDictType:
+        """
+        Return a copy of :attr:`cluster_info`.
+
+        :returns: The cluster's description.
+        :raises InfrastructureNotReadyError: If the provider is not ready.
+        """
         self.require_ready()
         return dict(self.cluster_info)
 
@@ -227,6 +261,11 @@ class InMemoryProvider(CloudProvider):
         return self.cluster_health.model_copy(deep=True)
 
     def get_kubernetes_cluster_resources(self) -> dict[str, list[DiscoveredResource]]:
+        """
+        Return a copy of :attr:`cluster_resources`, which tests set.
+
+        :returns: The cluster's cloud resources, by resource type, or an empty dict if the provider is not ready.
+        """
         if not self.ready:
             return {}
         return copy.deepcopy(self.cluster_resources)

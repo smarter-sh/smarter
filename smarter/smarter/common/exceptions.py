@@ -40,6 +40,7 @@ class SmarterException(Exception):
 
     @property
     def get_formatted_err_message(self):
+        """The error's label: its class name split into words."""
         words = re.findall(r"(?:[A-Z]{2,}(?=[A-Z][a-z]|[0-9]|$))|(?:[A-Z][a-z]+)", type(self).__name__)
         return " ".join(word for word in words)
 

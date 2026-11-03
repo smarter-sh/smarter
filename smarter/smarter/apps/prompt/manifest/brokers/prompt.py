@@ -22,7 +22,6 @@ from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
-    SAMBrokerErrorNotReady,
     SAMBrokerReadOnlyError,
     SAMDependency,
     SAMDependents,
@@ -56,6 +55,7 @@ class SAMPromptBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The fixed error message prefix of the Prompt broker."""
         return "Smarter API Prompt Manifest Broker Error"
 
 
@@ -68,6 +68,12 @@ class PromptSerializer(ModelSerializer):
         fields = ["id", "name", SMARTER_CHAT_SESSION_KEY_NAME, "ip_address", "url", "created_at"]
 
     def to_representation(self, instance):
+        """
+        Serialize the Prompt, with its ``id`` as a string.
+
+        :param instance: The Prompt.
+        :returns: The serialized Prompt.
+        """
         representation = super().to_representation(instance)
         representation["id"] = str(instance.id)
         return representation
@@ -101,6 +107,11 @@ class SAMPromptBroker(AbstractBroker):
 
     @property
     def chat_object(self) -> typing.Optional[Prompt]:
+        """
+        The Prompt that the user may read: the manifest's session key's, else the newest of ``self.name``.
+
+        Cached after the first match. None if no Prompt matches.
+        """
         if self._chat:
             return self._chat
         # a manifest identifies its chat session by its session key, which is unique. Without one, as
@@ -195,10 +206,12 @@ class SAMPromptBroker(AbstractBroker):
 
     @property
     def ORMModelClass(self) -> typing.Type[Prompt]:
+        """The Django ORM model class of the broker: :class:`Prompt`."""
         return Prompt
 
     @property
     def kind(self) -> str:
+        """The manifest kind of the broker: ``Prompt``."""
         return MANIFEST_KIND
 
     @property
@@ -232,6 +245,14 @@ class SAMPromptBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def example_manifest(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an example Prompt manifest.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: A journaled response whose data is the example manifest.
+        """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -253,7 +274,15 @@ class SAMPromptBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        List the Prompts that the user may read, by session key, or by name and annotation selector.
 
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: The cli's options: ``session_key``, ``name``, and annotation selectors.
+        :returns: A journaled response with the titles and items of up to ``MAX_RESULTS`` Prompts, newest first.
+        :raises SAMPromptBrokerError: when a session key matches more than one Prompt, or serializing one fails.
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, "")
@@ -315,6 +344,14 @@ class SAMPromptBroker(AbstractBroker):
         raise SAMBrokerReadOnlyError(message="Prompt is a read-only resource", thing=self.kind, command=command)
 
     def prompt(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return a fixed placeholder chat response that echoes the ``prompt`` keyword argument.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: The cli's options, with ``prompt``.
+        :returns: A journaled response with a placeholder response, the prompt, and a fixed chat id.
+        """
         command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
         prompt: typing.Optional[str] = kwargs.get("prompt", None)
@@ -322,6 +359,16 @@ class SAMPromptBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the Prompt as a manifest.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: A journaled response whose data is the Prompt's manifest.
+        :raises SAMBrokerErrorNotFound: when the user has no such Prompt.
+        :raises SAMPromptBrokerError: when building the manifest fails.
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.chat_object:
@@ -372,6 +419,16 @@ class SAMPromptBroker(AbstractBroker):
         return []
 
     def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the Prompt, after checking that nothing depends on it.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: A journaled response with empty data.
+        :raises SAMBrokerErrorNotFound: when the user has no such Prompt.
+        :raises SAMPromptBrokerError: when the delete fails.
+        """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.verify_no_dependencies(command)
@@ -384,16 +441,43 @@ class SAMPromptBroker(AbstractBroker):
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse to deploy: a Prompt cannot be deployed.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: Never returns.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Refuse to undeploy: a Prompt cannot be undeployed.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: Never returns.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the Prompt's logs, which are always empty.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: A journaled response with empty data.
+        :raises SAMBrokerErrorNotFound: when the user has no such Prompt.
+        """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         if self.chat_object:

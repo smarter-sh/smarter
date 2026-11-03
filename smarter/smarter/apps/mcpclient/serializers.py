@@ -31,6 +31,11 @@ class MCPClientSerializer(MetaDataWithOwnershipModelSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, all of them read-only.
+
+        :returns: The fields, by name.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True

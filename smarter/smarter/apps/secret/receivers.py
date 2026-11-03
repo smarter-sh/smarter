@@ -63,7 +63,13 @@ def secret_log_dict(secret: Secret) -> SmarterDictType:
 
 @receiver(post_save, sender=Secret)
 def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
-    """Signal receiver for created/saved of Secret model."""
+    """
+    Log a saved Secret, without its encrypted value.
+
+    :param sender: The model class.
+    :param instance: The Secret that was saved.
+    :param created: True if the Secret was created, False if it was updated.
+    """
     secret_json = json.dumps(secret_log_dict(instance))
     logger.debug(
         "%s.secret_post_save() Secret: %s, id: %s created: %s, user_profile: %s",
@@ -77,7 +83,12 @@ def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
 
 @receiver(post_delete, sender=Secret)
 def secret_post_delete(sender: Secret, instance: Secret, **kwargs):
-    """Signal receiver for deleted of Secret model."""
+    """
+    Log a deleted Secret.
+
+    :param sender: The model class.
+    :param instance: The Secret that was deleted.
+    """
     logger.info(
         "%s.secret_post_delete() Secret: %s, id: %s",
         logger_prefix,
@@ -88,7 +99,12 @@ def secret_post_delete(sender: Secret, instance: Secret, **kwargs):
 
 @receiver(secret_created)
 def secret_created_receiver(sender, secret: Secret, **kwargs):
-    """Signal receiver for secret_created signal."""
+    """
+    Log the ``secret_created`` signal.
+
+    :param sender: The signal's sender.
+    :param secret: The Secret that was created.
+    """
     logger.info(
         "%s.secret_created() from %s Secret: %s id: %s, user_profile: %s",
         logger_prefix,
@@ -101,7 +117,13 @@ def secret_created_receiver(sender, secret: Secret, **kwargs):
 
 @receiver(secret_deleted)
 def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
-    """Signal receiver for secret_deleted signal."""
+    """
+    Log the ``secret_deleted`` signal.
+
+    :param sender: The signal's sender.
+    :param secret_id: The deleted Secret's id.
+    :param secret_name: The deleted Secret's name.
+    """
     logger.info(
         "%s.secret_deleted() from %s Secret: %s, name: %s",
         logger_prefix,
@@ -129,7 +151,13 @@ def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
 
 @receiver(secret_accessed)
 def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_accessed signal."""
+    """
+    Log the ``secret_accessed`` signal.
+
+    :param sender: The signal's sender.
+    :param secret: The Secret that was read.
+    :param user_profile: The user profile that read it.
+    """
     logger.info(
         "%s.secret_accessed() from %s Secret: %s, id: %s, user_profile: %s",
         logger_prefix,
@@ -157,7 +185,14 @@ def secret_initializing_receiver(sender, secret_name: str, user_profile: UserPro
 
 @receiver(secret_saved)
 def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_saved signal."""
+    """
+    Log the ``secret_saved`` signal, and dump the Secret, without its encrypted value, at DEBUG.
+
+    :param sender: The signal's sender.
+    :param secret: The transformer of the Secret that was saved.
+    :param user_profile: The user profile that saved it.
+    :raises ValueError: when the transformer has no Secret.
+    """
     if not secret.secret:
         raise ValueError("secret.secret is None in secret_saved_receiver")
 
@@ -178,7 +213,14 @@ def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserP
 
 @receiver(secret_updated)
 def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_updated signal."""
+    """
+    Log the ``secret_updated`` signal, and dump the Secret, without its encrypted value, at DEBUG.
+
+    :param sender: The signal's sender.
+    :param secret: The transformer of the Secret that was updated.
+    :param user_profile: The user profile that updated it.
+    :raises ValueError: when the transformer has no Secret.
+    """
     if not secret.secret:
         raise ValueError("secret.secret is None in secret_updated_receiver")
 

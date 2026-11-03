@@ -149,6 +149,12 @@ class BudgetSerializer(MetaDataModelSerializer):
         fields = "__all__"
 
     def get_resources(self, obj: Budget) -> int:
+        """
+        The number of resources that the Budget is attached to.
+
+        :param obj: The Budget.
+        :returns: The number of its active constraints.
+        """
         return obj.constraints.filter(is_active=True).count()  # type: ignore[attr-defined]
 
     def get_manifest_url(self, obj: Budget) -> str:
@@ -163,6 +169,12 @@ class BudgetSerializer(MetaDataModelSerializer):
         )
 
     def get_locked(self, obj: Budget) -> int:
+        """
+        The number of the Budget's resources that are locked.
+
+        :param obj: The Budget.
+        :returns: The number of its active constraints that have a lock.
+        """
         return obj.constraints.filter(is_active=True, locks__isnull=False).distinct().count()  # type: ignore[attr-defined]
 
 
@@ -268,6 +280,11 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, all read-only.
+
+        :returns: The fields.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True

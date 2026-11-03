@@ -31,19 +31,19 @@ class SmarterTokenError(SmarterException):
 
 
 class SmarterTokenParseError(SmarterTokenError):
-    pass
+    """Raised when a token is not two parts separated by one dash."""
 
 
 class SmarterTokenConversionError(SmarterTokenError):
-    pass
+    """Raised when a token's timestamp part is not a valid base36 number."""
 
 
 class SmarterTokenExpiredError(SmarterTokenError):
-    pass
+    """Raised when a token is older than its generator's expiration."""
 
 
 class SmarterTokenIntegrityError(SmarterTokenError):
-    pass
+    """Raised when a token fails Django's token check for the user."""
 
 
 class ExpiringTokenGenerator(PasswordResetTokenGenerator):
@@ -54,14 +54,37 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         super().__init__()
 
     def user_to_uidb64(self, user: User) -> str:
+        """
+        Encode a user's primary key as url-safe base64.
+
+        :param user: The user.
+        :returns: The encoded primary key.
+        """
         return urlsafe_base64_encode(force_bytes(user.pk))
 
     def uidb64_to_user(self, uidb64: str) -> User:
+        """
+        Fetch the user whose primary key is encoded in ``uidb64``.
+
+        :param uidb64: The url-safe base64 encoded primary key.
+        :returns: The user.
+        :raises User.DoesNotExist: If there is no such user.
+        """
         uid = urlsafe_base64_decode(uidb64)
         return User.objects.get(pk=uid)
 
     def encode_link(self, request: SmarterRequest, user: User, reverse_link: str) -> str:
-        """Create an encoded url link that expires after a certain amount of time."""
+        """
+        Create an encoded url link that expires after a certain amount of time.
+
+        The protocol comes from the ``X-Forwarded-Proto`` header, else from the request, and
+        defaults to https if neither can be read.
+
+        :param request: The request, which gives the current site's domain and the protocol.
+        :param user: The user the link is for.
+        :param reverse_link: The url name to reverse, with ``uidb64`` and ``token`` kwargs.
+        :returns: The absolute url.
+        """
         token = self.make_token(user=user)
         domain = get_current_site(request).domain
         uid = self.user_to_uidb64(user)
@@ -83,12 +106,28 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         return url
 
     def decode_link(self, uidb64, token) -> User:
-        """Extract the user from the uid and token and validate."""
+        """
+        Extract the user from the uid and token and validate.
+
+        :param uidb64: The url-safe base64 encoded primary key of the user.
+        :param token: The token.
+        :returns: The user.
+        :raises SmarterTokenError: If the token is malformed, invalid or expired.
+        """
         user = self.uidb64_to_user(uidb64)
         self.validate(user, token)
         return user
 
     def parse_link(self, url: str):
+        """
+        Return the user and token from a link made by :meth:`encode_link`, without validating the token.
+
+        The last two path segments are the encoded user id and the token.
+
+        :param url: The link.
+        :returns: A tuple of the user and the token.
+        :raises User.DoesNotExist: If there is no such user.
+        """
         parsed_url = urlparse(url)
         path_parts = parsed_url.path.strip("/").split("/")
         uidb64 = path_parts[-2]
@@ -99,13 +138,30 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
 
     @staticmethod
     def get_timestamp() -> int:
+        """Return the current unix time, in seconds."""
         return int(timezone_now().timestamp())
 
     def adjusted_timestamp(self, timestamp: int) -> int:
+        """
+        Convert a token's timestamp, counted from ``HFS_EPOCH_UNIX_TIMESTAMP``, to unix time.
+
+        :param timestamp: The token's timestamp, in seconds.
+        :returns: The unix time, in seconds.
+        """
         return timestamp + HFS_EPOCH_UNIX_TIMESTAMP
 
     def validate(self, user, token) -> bool:
-        """Check that a password reset token is correct for a given user."""
+        """
+        Check that a password reset token is correct for a given user.
+
+        :param user: The user.
+        :param token: The token.
+        :returns: True if the token is valid.
+        :raises SmarterTokenParseError: If the token is not two parts separated by a dash.
+        :raises SmarterTokenIntegrityError: If the token fails Django's check.
+        :raises SmarterTokenConversionError: If the timestamp part is not base36.
+        :raises SmarterTokenExpiredError: If the token is older than ``expiration`` seconds.
+        """
         # Ensure token contains exactly one dash and two parts
         parts = token.split("-")
         if len(parts) != 2:

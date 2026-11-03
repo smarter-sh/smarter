@@ -81,6 +81,13 @@ def get_cached_secrets_owned_by_user_profile(user_profile: UserProfile) -> model
 
 
 def invalidate_cached_secrets_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Drop the cached queryset of Secrets owned by a user profile.
+
+    The next :func:`get_cached_secrets_owned_by_user_profile` call queries the database again.
+
+    :param user_profile: The user profile whose cached queryset is dropped.
+    """
     _get_cached_secrets_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -120,6 +127,13 @@ def get_cached_secrets_shared_with_user_profile(user_profile: UserProfile) -> mo
 
 
 def invalidate_cached_secrets_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Drop the cached queryset of Secrets shared with a user profile.
+
+    The next :func:`get_cached_secrets_shared_with_user_profile` call queries the database again.
+
+    :param user_profile: The user profile whose cached queryset is dropped.
+    """
     _get_cached_secrets_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -160,6 +174,13 @@ def get_cached_secrets_available_to_user_profile(user_profile: UserProfile) -> m
 
 
 def invalidate_cached_secrets_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Drop the cached queryset of Secrets available to (owned or shared) a user profile.
+
+    The next :func:`get_cached_secrets_available_to_user_profile` call queries the database again.
+
+    :param user_profile: The user profile whose cached queryset is dropped.
+    """
     _get_cached_secrets_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

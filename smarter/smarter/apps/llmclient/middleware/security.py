@@ -98,11 +98,22 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     @property
     def formatted_class_name(self) -> str:
+        """The module and class name, with the instance id, formatted for log messages."""
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     def process_request(self, request: HttpRequest):
+        """
+        Allow the request, or reject it with a 400 response if its host is not one Smarter serves.
 
+        When the ``ENABLE_MIDDLEWARE_SECURITY`` switch is on, a request passes if its path is a health
+        check, its host is an internal IP address or a local host, it is an ACME challenge, its host
+        matches ``smarter_settings.allowed_hosts``, or it resolves to an LLMClient.
+
+        :param request: The HTTP request.
+        :returns: None to let the request continue, a 400 response for a rejected host, or a 500 response
+            if the request has no host.
+        """
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SECURITY):
             return None
 

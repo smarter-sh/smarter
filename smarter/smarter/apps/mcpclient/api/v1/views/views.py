@@ -213,4 +213,5 @@ class MCPClientListView(ContractListMixin, SmarterAuthenticatedListAPIView):
         return MCPClientApiMCPClient.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self, *args, **kwargs) -> QuerySet[MCPClient]:
+        """The MCPClients that the requesting user may read, ordered by name."""
         return MCPClient.objects.with_read_permission_for(user=self.request.user).order_by("name")  # type: ignore[attr-defined]
