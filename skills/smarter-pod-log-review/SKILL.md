@@ -68,7 +68,9 @@ data, so **every placeholder is a finding**. The script writes `redactions.json`
 For each kind, find the log statement that wrote the line and decide whether Smarter leaked
 (fix the code that logs it) or the redactor matched something harmless (narrow its pattern, with
 a test in automation's `scripts/tests/test_pod_log_redact.py`). Either way it gets a GitHub issue, and the
-review isn't healthy.
+review isn't healthy. A placeholder in a log read from Loki may come from Grafana Alloy, which
+redacts before Loki stores the line: then the pattern to narrow is in this repository's
+`helm/charts/smarter/values.yaml`. See `smarter-log-review`, step 4.
 
 ## Step 3: scan every log
 
