@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.2](https://github.com/smarter-sh/smarter/compare/v0.41.1...v0.41.2) (2026-11-03)
+
+### Bug Fixes
+
+* **provider:** retry without temperature when a model rejects it ([de0a446](https://github.com/smarter-sh/smarter/commit/de0a446e869c898be9b8226b5ffc5b2a77beb9d4))
+
 ## [0.41.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.41.1...v0.41.2-alpha.1) (2026-11-03)
 
 ### Bug Fixes
