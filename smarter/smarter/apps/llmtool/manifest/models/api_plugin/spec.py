@@ -70,6 +70,15 @@ class ApiData(SmarterBasePydanticModel):
 
     @field_validator("endpoint")
     def validate_endpoint(cls, v):
+        """
+        Validate the API endpoint; if it is not valid and has no trailing slash, retry with one.
+
+        An endpoint that is not valid, but already ends with a slash, is returned unchanged.
+
+        :param v: The endpoint, e.g. ``/weather/``.
+        :returns: The endpoint, with the trailing slash if the retry added one.
+        :raises SAMValidationError: If the retry with a trailing slash is not valid either.
+        """
         try:
             SmarterValidator.validate_url_endpoint(v)
         except (SAMValidationError, SmarterValueError) as e:
@@ -84,6 +93,13 @@ class ApiData(SmarterBasePydanticModel):
 
     @field_validator("method")
     def validate_method(cls, v):
+        """
+        Validate the HTTP method, case-insensitively.
+
+        :param v: The HTTP method, e.g. ``get``.
+        :returns: The method in upper case.
+        :raises SAMValidationError: If it is not one of :class:`SmarterHttpMethods`.
+        """
         valid_methods = SmarterHttpMethods.all
         if v.upper() not in valid_methods:
             raise SAMValidationError(f"Invalid HTTP method: {v}. Must be one of {valid_methods}.")

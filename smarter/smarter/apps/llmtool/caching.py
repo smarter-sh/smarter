@@ -81,6 +81,13 @@ def get_cached_plugins_owned_by_user_profile(user_profile: UserProfile) -> model
 
 
 def invalidate_cached_plugins_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached PluginMetas owned by a UserProfile.
+
+    The next call to :func:`get_cached_plugins_owned_by_user_profile` queries the database.
+
+    :param user_profile: The user profile whose cached PluginMetas are invalidated.
+    """
     _get_cached_plugins_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -120,6 +127,13 @@ def get_cached_plugins_shared_with_user_profile(user_profile: UserProfile) -> mo
 
 
 def invalidate_cached_plugins_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached PluginMetas shared with a UserProfile.
+
+    The next call to :func:`get_cached_plugins_shared_with_user_profile` queries the database.
+
+    :param user_profile: The user profile whose cached PluginMetas are invalidated.
+    """
     _get_cached_plugins_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -160,6 +174,13 @@ def get_cached_plugins_available_to_user_profile(user_profile: UserProfile) -> m
 
 
 def invalidate_cached_plugins_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached PluginMetas available to a UserProfile.
+
+    The next call to :func:`get_cached_plugins_available_to_user_profile` queries the database.
+
+    :param user_profile: The user profile whose cached PluginMetas are invalidated.
+    """
     _get_cached_plugins_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

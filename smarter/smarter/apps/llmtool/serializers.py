@@ -28,6 +28,7 @@ from .manifest.enum import (
 
 
 def is_sphinx_build():
+    """Return whether the code is running in a Sphinx docs build, which has imported ``sphinx``."""
     return "sphinx" in sys.modules
 
 

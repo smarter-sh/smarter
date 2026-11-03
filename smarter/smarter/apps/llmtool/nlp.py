@@ -13,7 +13,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 from .signals import search_term_matched
 
 if TYPE_CHECKING:
-    from nltk.corpus.util import LazyCorpusLoader
+    from nltk.corpus.reader.wordnet import WordNetCorpusReader
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +248,10 @@ def simple_search(prompt: str, search_term: str) -> bool:
     if not term_words:
         return False
     prompt_words = normalized_words(prompt)
-    return all(any(word_matches(prompt_word, term_word) for prompt_word in prompt_words) for term_word in term_words)
+    for term_word in term_words:
+        if not any(word_matches(prompt_word, term_word) for prompt_word in prompt_words):
+            return False
+    return True
 
 
 def allowed_distance(search_term: str) -> int:
@@ -335,7 +338,7 @@ def within_levenshtein_distance(prompt: str, search_term: str, threshold: Option
 
 
 @lru_cache(maxsize=1)
-def wordnet() -> Optional["LazyCorpusLoader"]:
+def wordnet() -> Optional["WordNetCorpusReader"]:
     """
     Return the WordNet corpus reader, loading the corpus on first use.
 
@@ -398,6 +401,9 @@ def synonyms(phrase: str, nouns_only: bool = False) -> frozenset[str]:
             synsets += wn.synsets(key, pos=pos)[:THESAURUS_MAX_SENSES]
     retval: set[str] = set()
     for synset in synsets:
+        if synset is None:
+            # nltk types synset_from_pos_and_offset() as Optional, though synsets() only looks up indexed offsets.
+            continue
         retval.update(lemma.name().replace("_", " ").lower() for lemma in synset.lemmas())
     retval.discard(phrase)
     return frozenset(retval)
@@ -422,10 +428,12 @@ def contains_phrase(prompt_words: list[str], phrase: str) -> bool:
     if not phrase_words:
         return False
     size = len(phrase_words)
-    return any(
-        all(word_matches(prompt_words[i + j], phrase_words[j]) for j in range(size))
-        for i in range(len(prompt_words) - size + 1)
-    )
+    last_start = len(prompt_words) - size
+    for start in range(last_start + 1):
+        window = prompt_words[start : start + size]
+        if all(word_matches(prompt_word, phrase_word) for prompt_word, phrase_word in zip(window, phrase_words)):
+            return True
+    return False
 
 
 def thesaurus_match(prompt: str, search_term: str) -> Optional[str]:
@@ -480,19 +488,21 @@ def thesaurus_match(prompt: str, search_term: str) -> Optional[str]:
             continue
         if len(term_word) < THESAURUS_MIN_WORD_LENGTH:
             return None
-        synonym = next(
-            (synonym for synonym in sorted(synonyms(term_word)) if contains_phrase(prompt_words, synonym)), None
-        )
+        # a synonym of the search term's word that is in the prompt
+        synonym = None
+        for candidate in sorted(synonyms(term_word)):
+            if contains_phrase(prompt_words, candidate):
+                synonym = candidate
+                break
+        # else, a word of the prompt that has the search term's word as a synonym
         if synonym is None:
-            synonym = next(
-                (
-                    prompt_word
-                    for prompt_word in prompt_words
-                    if len(prompt_word) >= THESAURUS_MIN_WORD_LENGTH
-                    and any(word_matches(term_word, word) for word in synonyms(prompt_word, nouns_only=True))
-                ),
-                None,
-            )
+            for prompt_word in prompt_words:
+                if len(prompt_word) < THESAURUS_MIN_WORD_LENGTH:
+                    continue
+                prompt_word_synonyms = synonyms(prompt_word, nouns_only=True)
+                if any(word_matches(term_word, word) for word in prompt_word_synonyms):
+                    synonym = prompt_word
+                    break
         if synonym is None:
             return None
         matched.append(synonym)

@@ -26,13 +26,30 @@ logger_prefix = SmarterFormattedText.text(__name__)
 
 @receiver(extension_installed, dispatch_uid="extension_installed")
 def handle_extension_installed(sender, extension, version, **kwargs):
-    """Handle extension installed signal."""
+    """
+    Handle extension installed signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param extension: The extension.
+    :param version: The installed ExtensionVersion.
+    """
     logger.info("%s.extension_installed() %s version: %s", logger_prefix, extension.slug, version.version)
 
 
 @receiver(extension_upgraded, dispatch_uid="extension_upgraded")
 def handle_extension_upgraded(sender, extension, version, previous_version: str, **kwargs):
-    """Handle extension upgraded signal."""
+    """
+    Handle extension upgraded signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param extension: The extension.
+    :param version: The ExtensionVersion that is now installed.
+    :param previous_version: The version that was installed before.
+    """
     logger.info(
         "%s.extension_upgraded() %s version: %s previous_version: %s",
         logger_prefix,
@@ -44,25 +61,57 @@ def handle_extension_upgraded(sender, extension, version, previous_version: str,
 
 @receiver(extension_uninstalled, dispatch_uid="extension_uninstalled")
 def handle_extension_uninstalled(sender, slug: str, **kwargs):
-    """Handle extension uninstalled signal."""
+    """
+    Handle extension uninstalled signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param slug: The extension's slug.
+    """
     logger.info("%s.extension_uninstalled() %s", logger_prefix, slug)
 
 
 @receiver(extension_enabled, dispatch_uid="extension_enabled")
 def handle_extension_enabled(sender, extension, **kwargs):
-    """Handle extension enabled signal."""
+    """
+    Handle extension enabled signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param extension: The extension.
+    """
     logger.info("%s.extension_enabled() %s", logger_prefix, extension.slug)
 
 
 @receiver(extension_disabled, dispatch_uid="extension_disabled")
 def handle_extension_disabled(sender, extension, reason: str = "", **kwargs):
-    """Handle extension disabled signal."""
+    """
+    Handle extension disabled signal.
+
+    Logs it at WARNING.
+
+    :param sender: The class that sent the signal.
+    :param extension: The extension.
+    :param reason: Why it was disabled.
+    """
     logger.warning("%s.extension_disabled() %s reason: %s", logger_prefix, extension.slug, reason)
 
 
 @receiver(extension_tool_called, dispatch_uid="extension_tool_called")
 def handle_extension_tool_called(sender, slug: str, version: str, tool_name: str, arguments=None, **kwargs):
-    """Handle extension tool called signal."""
+    """
+    Handle extension tool called signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param slug: The extension's slug.
+    :param version: The extension's version.
+    :param tool_name: The tool's name.
+    :param arguments: The arguments that the LLM called the tool with.
+    """
     logger.info(
         "%s.extension_tool_called() %s %s %s arguments: %s",
         logger_prefix,
@@ -77,7 +126,18 @@ def handle_extension_tool_called(sender, slug: str, version: str, tool_name: str
 def handle_extension_tool_responded(
     sender, slug: str, version: str, tool_name: str, characters: int = 0, cached: bool = False, **kwargs
 ):
-    """Handle extension tool responded signal."""
+    """
+    Handle extension tool responded signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param slug: The extension's slug.
+    :param version: The extension's version.
+    :param tool_name: The tool's name.
+    :param characters: The length of the tool's result, in characters.
+    :param cached: Whether the response was served from the cache.
+    """
     logger.info(
         "%s.extension_tool_responded() %s %s %s characters: %s cached: %s",
         logger_prefix,
@@ -91,7 +151,17 @@ def handle_extension_tool_responded(
 
 @receiver(extension_tool_failed, dispatch_uid="extension_tool_failed")
 def handle_extension_tool_failed(sender, slug: str, version: str, tool_name: str, error: str, **kwargs):
-    """Handle extension tool failed signal."""
+    """
+    Handle extension tool failed signal.
+
+    Logs it at WARNING.
+
+    :param sender: The class that sent the signal.
+    :param slug: The extension's slug.
+    :param version: The extension's version.
+    :param tool_name: The tool's name.
+    :param error: Why it failed.
+    """
     logger.warning(
         "%s.extension_tool_failed() %s %s %s failed: %s",
         logger_prefix,
@@ -106,7 +176,18 @@ def handle_extension_tool_failed(sender, slug: str, version: str, tool_name: str
 def handle_extension_tool_completed(
     sender, slug: str, version: str, tool_name: str, success: bool, duration: float, **kwargs
 ):
-    """Handle extension tool completed signal."""
+    """
+    Handle extension tool completed signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param slug: The extension's slug.
+    :param version: The extension's version.
+    :param tool_name: The tool's name.
+    :param success: Whether the request succeeded.
+    :param duration: Seconds that the request took.
+    """
     logger.info(
         "%s.extension_tool_completed() %s %s %s success: %s duration: %.3fs",
         logger_prefix,
