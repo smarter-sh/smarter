@@ -41,6 +41,12 @@ from smarter.apps.mcpclient.exceptions import (
     SmarterMCPClientPermissionError,
 )
 from smarter.apps.mcpclient.models import MCPAuthType, MCPClient, MCPTransport
+from smarter.apps.mcpserver.acting_user import (
+    ACTING_USER_HEADER,
+    acting_user,
+    operations_server_url,
+    verify_acting_user,
+)
 from smarter.common.const import SmarterEnvironments
 
 from .base_classes import (
@@ -275,6 +281,19 @@ class TestMCPServerConnection(MCPClientTestBase):
         headers = connection.request_headers()
         self.assertEqual(headers["CONTEXT7_API_KEY"], TOKEN_VALUE)
         self.assertNotIn("Authorization", headers)
+
+    def test_headers_acting_user(self):
+        """Only the platform's own operations server gets the signed acting user, and a stored one is never sent."""
+        stored = {"X-Client-Id": "smarter-tests", "x-smarter-acting-user": "forged"}
+        with acting_user(self.admin_user):
+            elsewhere = self.connection(headers=stored)
+            operations = self.connection(headers=stored, endpoint_url=operations_server_url())
+        elsewhere_headers = elsewhere.request_headers()
+        self.assertEqual(elsewhere_headers, {"X-Client-Id": "smarter-tests", "User-Agent": USER_AGENT})
+        operations_headers = operations.request_headers()
+        self.assertNotIn("x-smarter-acting-user", operations_headers)
+        verified = verify_acting_user(operations_headers[ACTING_USER_HEADER])
+        self.assertEqual(verified.user_id, self.admin_user.pk)  # type: ignore[union-attr]
 
     def test_headers_missing_credentials(self):
         """Test that authentication without a Secret is a configuration error."""
