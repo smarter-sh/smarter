@@ -42,5 +42,9 @@ class PromptHistory(TimestampedModel):
     @property
     def prompt_history(self) -> list[SmarterDictType]:
         """Used by the Reactapp (via PromptConfigView) to display the prompt history."""
-        history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
+        if self.messages:
+            return self.messages
+        if not self.request:
+            return []
+        history = self.request.get("messages", [])
         return history

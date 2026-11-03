@@ -67,12 +67,23 @@ class LLMClientConfigSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, each marked read-only.
+
+        :returns: The fields, keyed by name.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
         return fields
 
     def get_default_system_role(self, obj: LLMClient):
+        """
+        Return the LLMClient's default system role, with the current date and time prepended.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.default_system_role_enhanced``.
+        """
         return obj.default_system_role_enhanced
 
     def get_total_tools(self, obj: LLMClient) -> int:
@@ -104,6 +115,11 @@ class LLMClientAPIKeySerializer(SmarterCamelCaseSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, each marked read-only.
+
+        :returns: The fields, keyed by name.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
@@ -111,6 +127,7 @@ class LLMClientAPIKeySerializer(SmarterCamelCaseSerializer):
 
 
 class LLMClientCustomDomainSerializer(SmarterCamelCaseSerializer):
+    """A custom domain of an LLMClient: every model field, plus its annotations, all read-only."""
 
     # annotations is a property of MetaDataModel, not a column, so "__all__" leaves it out.
     annotations = serializers.JSONField(required=False)
@@ -120,6 +137,11 @@ class LLMClientCustomDomainSerializer(SmarterCamelCaseSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, each marked read-only.
+
+        :returns: The fields, keyed by name.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
@@ -191,18 +213,29 @@ class LLMClientCustomDomainListSerializer(MetaDataWithOwnershipModelSerializer):
         }
 
     def get_dns_records(self, obj: LLMClientCustomDomain):
-        return [
-            {
+        """
+        Return the custom domain's DNS records, ordered by record name.
+
+        :param obj: The custom domain.
+        :returns: One ``{"name", "type", "value", "ttl"}`` dict per
+            :class:`~smarter.apps.llmclient.models.LLMClientCustomDomainDNS` row.
+        """
+        records = LLMClientCustomDomainDNS.objects.filter(custom_domain=obj).order_by("record_name")
+        dns_records = []
+        for record in records:
+            dns_record = {
                 "name": record.record_name,
                 "type": record.record_type,
                 "value": record.record_value,
                 "ttl": record.record_ttl,
             }
-            for record in LLMClientCustomDomainDNS.objects.filter(custom_domain=obj).order_by("record_name")
-        ]
+            dns_records.append(dns_record)
+        return dns_records
 
 
 class LLMClientPluginSerializer(SmarterCamelCaseSerializer):
+    """A Plugin of an LLMClient: the link row, with its PluginMeta nested, all read-only."""
+
     plugin_meta = PluginMetaSerializer()
 
     class Meta:
@@ -210,6 +243,11 @@ class LLMClientPluginSerializer(SmarterCamelCaseSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, each marked read-only.
+
+        :returns: The fields, keyed by name.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
@@ -217,6 +255,7 @@ class LLMClientPluginSerializer(SmarterCamelCaseSerializer):
 
 
 class LLMClientPluginMiniSerializer(SmarterCamelCaseSerializer):
+    """A Plugin of an LLMClient: the link's id, and the Plugin's name."""
 
     # pylint: disable=C0115
     class Meta:
@@ -258,6 +297,11 @@ class LLMClientExtensionsSerializer(SmarterCamelCaseSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, each marked read-only.
+
+        :returns: The fields, keyed by name.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
@@ -265,6 +309,13 @@ class LLMClientExtensionsSerializer(SmarterCamelCaseSerializer):
 
 
 class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
+    """
+    An LLMClient: every model field, its owner, its related resources, and its computed hosts and urls.
+
+    Every field is read-only. The related resources (extensions, plugins, MCPClients, guardrails,
+    custom domains and api keys) are serialized as nested lists.
+    """
+
     hashed_id = serializers.SerializerMethodField()
     url_llmclient = serializers.ReadOnlyField()
     user_profile = UserProfileSerializer()
@@ -300,25 +351,54 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """
+        Return the serializer's fields, each marked read-only.
+
+        :returns: The fields, keyed by name.
+        """
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
         return fields
 
     def get_extensions(self, obj: LLMClient):
+        """
+        Return the LLMClient's extensions, sorted by the Extension's slug.
+
+        :param obj: The LLMClient.
+        :returns: The serialized :class:`~smarter.apps.llmclient.models.LLMClientExtensions` rows.
+        """
         rows = related_rows(obj, "llmclientextensions_set", LLMClientExtensions, "extension")
         rows.sort(key=lambda row: row.extension.slug)
         return LLMClientExtensionsSerializer(rows, many=True).data
 
     def get_plugins(self, obj: LLMClient):
+        """
+        Return the LLMClient's plugins.
+
+        :param obj: The LLMClient.
+        :returns: One ``{"id", "name"}`` per :class:`~smarter.apps.llmclient.models.LLMClientPlugin` row.
+        """
         rows = related_rows(obj, "llmclientplugin_set", LLMClientPlugin, "plugin_meta")
         return LLMClientPluginMiniSerializer(rows, many=True).data
 
     def get_mcpclients(self, obj: LLMClient):
+        """
+        Return the LLMClient's MCPClients.
+
+        :param obj: The LLMClient.
+        :returns: One ``{"id", "name"}`` per :class:`~smarter.apps.llmclient.models.LLMClientMCPClients` row.
+        """
         rows = related_rows(obj, "llmclientmcpclients_set", LLMClientMCPClients, "mcpclient")
         return LLMClientMCPClientMiniSerializer(rows, many=True).data
 
     def get_guardrails(self, obj: LLMClient):
+        """
+        Return the LLMClient's guardrails.
+
+        :param obj: The LLMClient.
+        :returns: One ``{"id", "name"}`` per :class:`~smarter.apps.llmclient.models.LLMClientGuardrails` row.
+        """
         rows = related_rows(obj, "llmclientguardrails_set", LLMClientGuardrails, "guardrail")
         return LLMClientGuardrailMiniSerializer(rows, many=True).data
 
@@ -334,80 +414,209 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
             manifest kind.
         :rtype: list[dict]
         """
-        return [
-            {"id": item["id"], "name": item["name"], "kind": kind}
-            for kind, items in (
-                ("Extension", self.get_extensions(obj)),
-                (PLUGIN_KIND, self.get_plugins(obj)),
-                (MCPCLIENT_KIND, self.get_mcpclients(obj)),
-            )
-            for item in items
-            if item["name"]
-        ]
+        items_by_kind = (
+            ("Extension", self.get_extensions(obj)),
+            (PLUGIN_KIND, self.get_plugins(obj)),
+            (MCPCLIENT_KIND, self.get_mcpclients(obj)),
+        )
+        tools = []
+        for kind, items in items_by_kind:
+            for item in items:
+                if not item["name"]:
+                    continue
+                tool = {"id": item["id"], "name": item["name"], "kind": kind}
+                tools.append(tool)
+        return tools
 
     def get_custom_domains(self, obj: LLMClient):
+        """
+        Return the LLMClient's custom domain, as a list of zero or one.
+
+        :param obj: The LLMClient.
+        :returns: The serialized custom domain in a list, or an empty list if it has none.
+        """
         rows = [obj.custom_domain] if obj.custom_domain else []
         return LLMClientCustomDomainSerializer(rows, many=True).data
 
     def get_api_keys(self, obj: LLMClient):
+        """
+        Return the LLMClient's api keys.
+
+        :param obj: The LLMClient.
+        :returns: The serialized :class:`~smarter.apps.llmclient.models.LLMClientAPIKey` rows.
+        """
         rows = related_rows(obj, "llmclientapikey_set", LLMClientAPIKey, "api_key")
         return LLMClientAPIKeySerializer(rows, many=True).data
 
     def get_hashed_id(self, obj: LLMClient):
+        """
+        Return the LLMClient's hashed id.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.hashed_id``.
+        """
         return obj.hashed_id
 
     def get_rfc1034_compliant_name(self, obj: LLMClient):
+        """
+        Return the LLMClient's RFC 1034 compliant name, used in its hostnames.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.rfc1034_compliant_name``.
+        """
         return obj.rfc1034_compliant_name
 
     def get_default_system_role(self, obj: LLMClient):
+        """
+        Return the LLMClient's default system role, with the current date and time prepended.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.default_system_role_enhanced``.
+        """
         return obj.default_system_role_enhanced
 
     def get_base_api_domain(self, obj: LLMClient):
+        """
+        Return the base api domain that the LLMClient's default hostname uses.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.base_api_domain``.
+        """
         return obj.base_api_domain
 
     def get_base_default_host(self, obj: LLMClient):
+        """
+        Return the part of the LLMClient's default hostname after its RFC 1034 compliant name.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.base_default_host``.
+        """
         return obj.base_default_host
 
     def get_default_host(self, obj: LLMClient):
+        """
+        Return the LLMClient's default hostname.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.default_host``.
+        """
         return obj.default_host
 
     def get_default_url(self, obj: LLMClient):
+        """
+        Return the LLMClient's default url.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.default_url``.
+        """
         return obj.default_url
 
     def get_custom_host(self, obj: LLMClient):
+        """
+        Return the LLMClient's hostname on its custom domain.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.custom_host``.
+        """
         return obj.custom_host
 
     def get_custom_url(self, obj: LLMClient):
+        """
+        Return the LLMClient's url on its custom domain.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.custom_url``.
+        """
         return obj.custom_url
 
     def get_sandbox_host(self, obj: LLMClient):
+        """
+        Return the LLMClient's sandbox hostname.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.sandbox_host``.
+        """
         return obj.sandbox_host
 
     def get_sandbox_url(self, obj: LLMClient):
+        """
+        Return the LLMClient's sandbox url.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.sandbox_url``.
+        """
         return obj.sandbox_url
 
     def get_manifest_url(self, obj: LLMClient):
+        """
+        Return the url of the LLMClient's manifest page in the web console.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.manifest_url``.
+        """
         return obj.manifest_url
 
     def get_hostname(self, obj: LLMClient):
+        """
+        Return the LLMClient's hostname, which depends on its deployment status.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.hostname``.
+        """
         return obj.hostname
 
     def get_url(self, obj: LLMClient):
+        """
+        Return the LLMClient's url, which depends on its deployment status.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.url``.
+        """
         return obj.url
 
     def get_url_llmclient(self, obj: LLMClient):
+        """
+        Return the api url that the chat app posts new prompts to.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.url_llmclient``.
+        """
         return obj.url_llmclient
 
     def get_url_chat_config(self, obj: LLMClient):
+        """
+        Return the api url of the LLMClient's chat configuration.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.url_chat_config``.
+        """
         return obj.url_chat_config
 
     def get_url_chatapp(self, obj: LLMClient):
+        """
+        Return the (deprecated) url of the LLMClient's ChatApp endpoint.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.url_chatapp``.
+        """
         return obj.url_chatapp
 
     def get_ready(self, obj: LLMClient):
+        """
+        Return whether the LLMClient is ready: in sandbox mode, or deployed with verified DNS and an issued certificate.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.ready``.
+        """
         return obj.ready
 
     def get_is_authentication_required(self, obj: LLMClient):
+        """
+        Return whether the LLMClient's api requires authentication.
+
+        :param obj: The LLMClient.
+        :returns: The value of ``obj.is_authentication_required``.
+        """
         return obj.is_authentication_required
 
 

@@ -70,6 +70,7 @@ class SAMCustomDomainBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """Return the error message prefix for CustomDomain broker errors."""
         return "Smarter API CustomDomain Manifest Broker Error"
 
 
@@ -220,10 +221,12 @@ class SAMCustomDomainBroker(AbstractBroker):
 
     @property
     def ORMMetaModelClass(self) -> Type[LLMClientCustomDomain]:
+        """The ORM model of the CustomDomain's metadata: :class:`~smarter.apps.llmclient.models.LLMClientCustomDomain`."""
         return LLMClientCustomDomain
 
     @property
     def ORMModelClass(self) -> Type[LLMClientCustomDomain]:
+        """The ORM model of the CustomDomain: :class:`~smarter.apps.llmclient.models.LLMClientCustomDomain`."""
         return LLMClientCustomDomain
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -339,6 +342,14 @@ class SAMCustomDomainBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not supported: a CustomDomain cannot be prompted.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
@@ -440,11 +451,27 @@ class SAMCustomDomainBroker(AbstractBroker):
         )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not supported: Smarter does not delete a CustomDomain's hosted zone.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an empty logs response: a CustomDomain has no logs.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :returns: A successful response whose data is an empty dict.
+        """
         command = SmarterJournalCliCommands(self.logs.__name__)
         return self.json_response_ok(command=command, data={})
