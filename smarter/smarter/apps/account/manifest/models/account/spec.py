@@ -1,4 +1,4 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
 import os
 import zoneinfo
@@ -16,7 +16,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMAccountSpecConfig(AbstractSAMSpecBase):
-    """Smarter API Account Manifest Account.spec.config"""
+    """Smarter API Account Manifest Account.spec.config."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
 
@@ -77,12 +77,26 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
 
     @field_validator("currency")
     def validate_currency(cls, v):
+        """
+        Check that the currency is an ISO 4217 code, e.g. ``USD``.
+
+        :param v: The currency code.
+        :returns: The currency code.
+        :raises SmarterValueError: when it is not an ISO 4217 code.
+        """
         if not pycountry.currencies.get(alpha_3=v):
             raise SmarterValueError("Invalid ISO 4217 currency code. Use 3-letter code. Example: 'USD'")
         return v
 
     @field_validator("country")
     def validate_country(cls, v):
+        """
+        Check that the country is an ISO 3166 two- or three-letter code, e.g. ``US`` or ``USA``.
+
+        :param v: The country code.
+        :returns: The country code.
+        :raises SmarterValueError: when it is not an ISO 3166 code.
+        """
         if not pycountry.countries.get(alpha_2=v) and not pycountry.countries.get(alpha_3=v):
             raise SmarterValueError(
                 "Invalid ISO 3166 country code. Use 2-letter or 3-letter code. Example: 'US' or 'USA'"
@@ -91,6 +105,15 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
 
     @field_validator("language")
     def validate_language(cls, v):
+        """
+        Check that the language is a BCP 47 tag, e.g. ``en`` or ``en-US``.
+
+        The language must be an ISO 639 code, and the region, if any, an ISO 3166 two-letter code.
+
+        :param v: The language tag.
+        :returns: The language tag.
+        :raises SmarterValueError: when the language or the region is not valid.
+        """
         # Accept BCP 47 like 'en' or 'en-US', validate language and region (country) if present
         parts = v.split("-")
         lang_code = parts[0]
@@ -105,6 +128,13 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
 
     @field_validator("timezone")
     def validate_timezone(cls, v):
+        """
+        Check that the timezone is an IANA timezone, e.g. ``America/New_York``.
+
+        :param v: The timezone.
+        :returns: The timezone.
+        :raises SmarterValueError: when :class:`zoneinfo.ZoneInfo` does not know it.
+        """
         try:
             zoneinfo.ZoneInfo(v)
         except Exception as e:
@@ -113,7 +143,7 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
 
 
 class SAMAccountSpec(AbstractSAMSpecBase):
-    """Smarter API Account Manifest Account.spec"""
+    """Smarter API Account Manifest Account.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

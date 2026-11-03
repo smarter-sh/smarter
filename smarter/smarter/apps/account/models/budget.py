@@ -121,7 +121,17 @@ def period_start(period: str, when: datetime) -> datetime:
 
 
 def add_periods(period: str, start: datetime, periods: int) -> datetime:
-    """The beginning of the period that is periods after the one that begins at start."""
+    """
+    The beginning of the period that is ``periods`` after the one that begins at ``start``.
+
+    A month keeps the day of ``start``, clamped to the length of the new month.
+
+    :param period: A :class:`BudgetPeriod`: hour, day, week or month.
+    :param start: The beginning of a period.
+    :param periods: The number of periods to add.
+    :returns: The beginning of the later period.
+    :raises SmarterValueError: when the period is not one of these.
+    """
     if period == BudgetPeriod.HOUR:
         return start + timedelta(hours=periods)
     if period == BudgetPeriod.DAY:
@@ -165,7 +175,16 @@ def resolve_resource(resource_locator: str) -> Optional[TimestampedModel]:
 
 # pylint: disable=too-many-return-statements
 def is_visible(user_profile: "UserProfile", resource_locator: str) -> bool:
-    """Whether the user may see the budgets attached to a resource."""
+    """
+    Whether the user may see the budgets attached to a resource.
+
+    A superuser sees all. Anyone sees the budgets of their own UserProfile, and of resources they
+    own. A staff user also sees those of their Account, and of its UserProfiles and their resources.
+
+    :param user_profile: The UserProfile of the user.
+    :param resource_locator: The record locator of the resource.
+    :returns: True if the user may see them.
+    """
     user = user_profile.user
     if user.is_superuser:
         return True
@@ -257,6 +276,11 @@ class Budget(MetaDataModel):
         return str(self.name)
 
     def validate(self):
+        """
+        Validate the Budget: its limits may not be negative, and its warning threshold is at most 100.
+
+        :raises SmarterValueError: when a value is not valid.
+        """
         super().validate()
         if self.periodic_limit < 0 or self.absolute_limit < 0:
             raise SmarterValueError("Budget limits cannot be negative.")
@@ -348,6 +372,11 @@ class ResourceConstraint(TimestampedModel):
         return f"{self.budget} -> {self.resource_locator}"
 
     def validate(self):
+        """
+        Validate the ResourceConstraint: it needs a budget and a resource locator.
+
+        :raises SmarterValueError: when either is missing.
+        """
         super().validate()
         if self.budget_id is None:  # type: ignore[attr-defined]
             raise SmarterValueError("A resource constraint requires a budget.")
@@ -574,7 +603,11 @@ class ResourceLock(TimestampedModel):
     def message(self) -> str:
         """What people are told when the lock refuses their request."""
         budget = self.resource_constraint.budget
-        return (budget.message if budget else "") or self.reason or "A budget forbids more charges."
+        if budget and budget.message:
+            return budget.message
+        if self.reason:
+            return self.reason
+        return "A budget forbids more charges."
 
 
 def _percent(actual: Decimal, limit: Decimal) -> Optional[float]:
