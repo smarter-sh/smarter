@@ -417,7 +417,7 @@ pymysql==1.2.3
     # via -r smarter/requirements/in/base.in
 pynacl==1.6.2
     # via paramiko
-pypdf==6.21.1
+pypdf==6.21.4
     # via -r smarter/requirements/in/base.in
 python-crontab==3.4.0
     # via django-celery-beat
