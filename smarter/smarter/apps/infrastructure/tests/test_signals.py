@@ -186,6 +186,16 @@ class TestReceivers(InfrastructureTestBase):
             self.send(email_failed, subject="s", recipients=["a@example.com"], error="e")
             self.assertEqual(logger.error.call_count, 4)
 
+    def test_email_recipients_are_logged_masked(self):
+        """The email receivers never log a recipient's full address."""
+        with patch(f"{RECEIVERS}.logger") as logger:
+            self.send(email_sent, subject="s", recipients=["jane@example.com"])
+            self.send(email_failed, subject="s", recipients=["jane@example.com"], error="e")
+            self.send(email_sent, subject="s")
+        logged = str(logger.info.call_args_list) + str(logger.error.call_args_list)
+        self.assertIn("j****@example.com", logged)
+        self.assertNotIn("jane@example.com", logged)
+
     def test_authenticated_masks_the_account_id(self):
         """Only the last four characters of the account id are logged."""
         with patch(f"{RECEIVERS}.logger") as logger:
