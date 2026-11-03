@@ -3,7 +3,7 @@
 # The Smarter Project's GitHub repository smarter-sh/smarter, through the public tools of this
 # platform's MCPServer, which indexes the repository from GitHub every hour.
 # Repository: https://github.com/smarter-sh/smarter
-# Documentation: https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html
+# Documentation: https://docs.smarter.sh/smarter-platform/smarter-project-mcp-server.html
 #
 # The MCPServer serves its public tools at one endpoint per repository, so this client reads only
 # smarter-sh/smarter.
@@ -31,7 +31,7 @@ metadata:
     - github
     - code
   annotations:
-    - smarter.sh/mcpclient/documentation: https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html
+    - smarter.sh/mcpclient/documentation: https://docs.smarter.sh/smarter-platform/smarter-project-mcp-server.html
     - smarter.sh/mcpclient/repository: https://github.com/smarter-sh/smarter
 spec:
   config:

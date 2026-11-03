@@ -39,7 +39,7 @@ from smarter.apps.mcpserver.services.reading import (
     repository_overview,
 )
 from smarter.apps.mcpserver.services.repositories import (
-    SMARTER_PROJECT_DOCS_LATEST_URL,
+    SMARTER_PROJECT_DOCS_ROOT_URL,
     ProjectRepository,
     project_blog,
 )
@@ -178,7 +178,7 @@ class GetRepositoryOverviewTool(PublicTool):
         overview = (
             "# The Smarter Project's repositories\n\n"
             + table
-            + f"\n\nThe documentation, {SMARTER_PROJECT_DOCS_LATEST_URL}, is built from the smarter "
+            + f"\n\nThe documentation, {SMARTER_PROJECT_DOCS_ROOT_URL}, is built from the smarter "
             f"repository's docs/source. The blog, {blog_url}, is searched with search_blog. "
             "Name a repository to see its layout and README."
         )

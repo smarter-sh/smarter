@@ -206,7 +206,7 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
         description=(
             f"{class_identifier}.styles[object]. Optional. The look of the LLMClient's chat, in the Smarter "
             "workbench and on every page that embeds it: its logo, background image, fonts and colors. See "
-            "https://docs.smarter.sh/en/latest/smarter-resources/llmclient/styles.html"
+            "https://docs.smarter.sh/smarter-resources/llmclient/styles.html"
         ),
     )
 
@@ -222,7 +222,7 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
     plugins: Optional[List[str]] = Field(
         None,
         description=f"{class_identifier}.searchTerms[list]. Optional. The Plugins to add to the "
-        f"{MANIFEST_KIND}. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/plugins/ for more information.",
+        f"{MANIFEST_KIND}. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/smarter-resources/smarter-llmtool.html for more information.",
     )
     extensions: Optional[List[str]] = Field(
         None,

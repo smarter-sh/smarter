@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import Extensions from "@/components/Extensions/Component";
 
-const DOCS = "https://docs.smarter.sh/en/latest";
+const DOCS = "https://docs.smarter.sh";
 
 describe("Extensions", () => {
   it("shows the official extensions, and a manifest that uses one", () => {

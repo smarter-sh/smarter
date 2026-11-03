@@ -106,7 +106,7 @@ function Contribute() {
           {/* begin::Action */}
           <div className="mt-auto pt-7 z-index-2">
             <a
-              href="https://docs.smarter.sh/en/latest/smarter-framework/guides/contributing.html"
+              href="https://docs.smarter.sh/smarter-framework/guides/contributing.html"
               target="_blank"
               className="btn btn-sm fw-semibold me-2 contribute-btn"
             >

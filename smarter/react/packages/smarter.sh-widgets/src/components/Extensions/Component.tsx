@@ -18,7 +18,7 @@
 import "./styles.css";
 import { gettext, interpolateNodes } from "@smarter/common";
 
-const DOCS = "https://docs.smarter.sh/en/latest";
+const DOCS = "https://docs.smarter.sh";
 
 const EXTENSIONS = [
   {

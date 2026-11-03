@@ -30,7 +30,7 @@ from smarter.apps.mcpserver.protocol.tools.github import CreateIssueTool
 from smarter.apps.mcpserver.protocol.tools.public import RepositoryScope
 from smarter.apps.mcpserver.protocol.toolsets import PUBLIC_TOOL_CLASSES
 from smarter.apps.mcpserver.services.repositories import (
-    SMARTER_PROJECT_DOCS_LATEST_URL,
+    SMARTER_PROJECT_DOCS_ROOT_URL,
     ProjectRepository,
     project_blog,
     project_repositories,
@@ -206,7 +206,7 @@ class PublicEndpoint(MCPEndpointBase):
             blog_url = project_blog().url
             blog = BLOG_INSTRUCTIONS.format(blog_url=blog_url)
         instructions = INSTRUCTIONS.format(
-            subject=subject, docs_url=SMARTER_PROJECT_DOCS_LATEST_URL, repositories=repositories, blog=blog
+            subject=subject, docs_url=SMARTER_PROJECT_DOCS_ROOT_URL, repositories=repositories, blog=blog
         )
         if CreateIssueTool.name in self.tools:
             instructions += ISSUE_INSTRUCTIONS
