@@ -37,15 +37,26 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """Return the serializer's fields, all read-only."""
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
         return fields
 
     def get_document_count(self, obj: VectorstoreMeta) -> int:
+        """
+        Return the number of the vectorstore's documents.
+
+        :param obj: The vectorstore.
+        """
         return obj.documents.count()  # type: ignore[attr-defined]
 
     def get_snapshot_count(self, obj: VectorstoreMeta) -> int:
+        """
+        Return the number of the vectorstore's snapshots.
+
+        :param obj: The vectorstore.
+        """
         return obj.snapshots.count()  # type: ignore[attr-defined]
 
     def get_manifest_url(self, obj: VectorstoreMeta) -> str:

@@ -29,9 +29,23 @@ class InfrastructureResourceAdmin(SmarterSuperUserOnlyModelAdmin):
     readonly_fields = [field.name for field in InfrastructureResource._meta.fields]
 
     def has_add_permission(self, request, obj=None) -> bool:
+        """
+        Never allow adding a ledger row in the admin: the infrastructure services record them.
+
+        :param request: The admin request.
+        :param obj: The object, if any.
+        :returns: False.
+        """
         return False
 
     def has_change_permission(self, request, obj=None) -> bool:
+        """
+        Never allow changing a ledger row in the admin: the ledger is read-only.
+
+        :param request: The admin request.
+        :param obj: The object, if any.
+        :returns: False.
+        """
         return False
 
 

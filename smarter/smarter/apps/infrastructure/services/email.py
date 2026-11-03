@@ -27,6 +27,7 @@ import smtplib
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from email import encoders
+from email.message import Message
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -271,6 +272,10 @@ class SMTPEmailService(EmailService):
 
     @property
     def ready(self) -> bool:
+        """Whether SMTP is configured.
+
+        Always False in the unit tests, unless ``allow_in_tests``.
+        """
         if running_unit_tests() and not self.allow_in_tests:
             return False
         return bool(smarter_settings.smtp_is_configured)
@@ -346,22 +351,33 @@ class InMemoryEmailService(EmailService):
 
     @property
     def ready(self) -> bool:
+        """Whether the service is ready, as set in the constructor."""
         return self._ready
 
     def _deliver(self, message: MIMEMultipart, recipients: list[str], bcc: list[str]) -> None:
         if self.fail:
             raise EmailServiceError(self.fail)
         payload = message.get_payload()
-        body = payload[0].get_payload() if isinstance(payload, list) and payload else str(payload)
-        attachments = [
-            EmailAttachment(
+        # A multipart message's payload is its parts, of which the first is the body.
+        body = str(payload)
+        if isinstance(payload, list) and payload:
+            first_part = payload[0]
+            if isinstance(first_part, Message):
+                body = str(first_part.get_payload())
+        attachments: list[EmailAttachment] = []
+        for part in message.walk():
+            if part.get_content_disposition() != "attachment":
+                continue
+            # decode=True returns the attachment's bytes, or None for a part that has no payload.
+            content = part.get_payload(decode=True)
+            if not isinstance(content, bytes):
+                content = b""
+            attachment = EmailAttachment(
                 filename=str(part.get_filename()),
-                content=part.get_payload(decode=True),
+                content=content,
                 content_type=part.get_content_type(),
             )
-            for part in message.walk()
-            if part.get_content_disposition() == "attachment"
-        ]
+            attachments.append(attachment)
         self.outbox.append(
             SentEmail(
                 subject=str(message["Subject"]),
