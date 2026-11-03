@@ -20,7 +20,7 @@ What the Bot Is
 running on The Smarter Project's own platform. It acts as a staff engineer of the project, for
 people who want to understand, use, extend or contribute to Smarter.
 
-It answers from the :doc:`public tools of the platform's MCPServer <smarter-platform/smarter-project-mcp-server>`,
+It answers from the :ref:`public tools of the platform's MCPServer <mcpserver-public-tools>`,
 through the ``smarter_project`` MCPClient, not from memory. For each question it searches and reads the source code and documentation of
 every public repository of the `smarter-sh <https://github.com/smarter-sh>`__ GitHub organization,
 which include the platform, the command-line interface, the Python, Node.js and Go SDKs, the VS
