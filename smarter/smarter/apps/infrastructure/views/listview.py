@@ -91,7 +91,15 @@ def choices() -> dict[str, list[str]]:
 
 
 def positive_int(value: Any, default: int, maximum: Optional[int] = None) -> int:
-    """An integer of the request, from 1 up to ``maximum``, if any, or else ``default``."""
+    """
+    An integer of the request, from 1 up to ``maximum``, if any, or else ``default``.
+
+    :param value: The request's value, of any type.
+    :param default: The value to use when ``value`` is not an integer from 1 up to ``maximum``.
+        A boolean is not an integer here.
+    :param maximum: The largest value allowed, or None for no limit.
+    :returns: ``value``, or ``default``.
+    """
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         return default
     if maximum is not None and value > maximum:
@@ -110,6 +118,14 @@ class InfrastructureResourceListView(SmarterAuthenticatedNeverCachedWebView):
         return f"{self.formatted_text(__name__)}.{InfrastructureResourceListView.__name__}[{id(self)}]"
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the React app of the Infrastructure Resource list.
+
+        Only superusers may see it.
+
+        :param request: The request.
+        :returns: The page, or 403 Forbidden for a user who is not a superuser.
+        """
         if not request.user.is_superuser:  # type: ignore[union-attr]
             return SmarterHttpResponseForbidden(request=request, error_message=FORBIDDEN)
 
@@ -151,9 +167,16 @@ class InfrastructureResourceListApiView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
         return f"{self.formatted_text(__name__)}.{InfrastructureResourceListApiView.__name__}[{id(self)}]"
 
     def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return a page of the ledger's resources that match the filters in the JSON body, and a summary.
+
+        :param request: The request, whose JSON body has the filters, ``page`` and ``pageSize``.
+        :returns: The JSON response described above, or 403 Forbidden for a user who is not a superuser.
+        """
         if not request.user.is_superuser:  # type: ignore[union-attr]
             return JsonResponse({"error": FORBIDDEN}, status=HTTPStatus.FORBIDDEN)
         try:

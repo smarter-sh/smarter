@@ -92,6 +92,12 @@ class FaviconView(View):
     """View to serve the favicon.ico file."""
 
     def get(self, request, *args, **kwargs):
+        """
+        Return ``favicon.ico``.
+
+        :param request: The request.
+        :returns: The file.
+        """
         file_path = os.path.join("smarter", "static", "images", "logo", "favicon.ico")
         return FileResponse(open(file_path, "rb"), content_type="image/x-icon")
 
@@ -100,6 +106,12 @@ class HealthzView(View):
     """View to serve the healthz endpoint."""
 
     def get(self, request, *args, **kwargs):
+        """
+        Return ``OK``, as plain text.
+
+        :param request: The request.
+        :returns: The response.
+        """
         return HttpResponse("OK", content_type="text/plain")
 
 
@@ -116,5 +128,11 @@ class ReadinessView(View):
     """
 
     def get(self, request, *args, **kwargs):
+        """
+        Return ``OK``, as plain text.
+
+        :param request: The request.
+        :returns: The response.
+        """
         # LLMClientHelper(request=request)
         return HttpResponse("OK", content_type="text/plain")

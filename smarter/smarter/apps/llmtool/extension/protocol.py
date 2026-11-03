@@ -178,10 +178,16 @@ class SmarterExtensionTool:
     @classmethod
     def tool_description(cls) -> str:
         """The tool's description for the LLM: :attr:`description`, or the class docstring."""
-        text = cls.description or inspect.getdoc(cls) or ""
+        text = cls.description
+        if not text:
+            text = inspect.getdoc(cls)
+        if not text:
+            text = ""
         if not cls.description and inspect.getdoc(SmarterExtensionTool) == text:
             text = ""
-        return " ".join(text.split())[:MAX_DESCRIPTION_LENGTH]
+        words = text.split()
+        description = " ".join(words)
+        return description[:MAX_DESCRIPTION_LENGTH]
 
     @classmethod
     def parameters(cls) -> SmarterDictType:

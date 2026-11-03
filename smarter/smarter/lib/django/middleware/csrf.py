@@ -136,7 +136,8 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponseForbidden
+from django.http.response import HttpResponseBase
 from django.middleware.csrf import CsrfViewMiddleware, get_token
 from django.utils.functional import cached_property
 
@@ -274,18 +275,28 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
     @cached_property
     def allowed_origins_exact(self):
+        """The ``CSRF_TRUSTED_ORIGINS`` without a wildcard, which must match an origin exactly."""
         return {origin for origin in settings.CSRF_TRUSTED_ORIGINS if "*" not in origin}
 
     @cached_property
     def allowed_origin_subdomains(self):
+        """
+        The wildcard ``CSRF_TRUSTED_ORIGINS``, as a dict of scheme to the domains whose subdomains are trusted.
+
+        For example, ``https://*.example.com`` adds ``.example.com`` to the ``https`` list.
+        """
         allowed_origin_subdomains = defaultdict(list)
 
-        for parsed in (urlparse(origin) for origin in settings.CSRF_TRUSTED_ORIGINS if "*" in origin):
-            allowed_origin_subdomains[parsed.scheme].append(parsed.netloc.lstrip("*"))
+        for origin in settings.CSRF_TRUSTED_ORIGINS:
+            if "*" not in origin:
+                continue
+            parsed = urlparse(origin)
+            domain = parsed.netloc.lstrip("*")
+            allowed_origin_subdomains[parsed.scheme].append(domain)
 
         return allowed_origin_subdomains
 
-    def renews_csrf_cookie(self, request: ASGIRequest, response: HttpResponse) -> bool:
+    def renews_csrf_cookie(self, request: ASGIRequest, response: HttpResponseBase) -> bool:
         """
         Return whether a response should renew the CSRF cookie: a web console page for a signed-in user.
 
@@ -308,7 +319,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         user = getattr(request, "user", None)
         return bool(user is not None and user.is_authenticated)
 
-    def process_response(self, request: ASGIRequest, response: HttpResponse) -> HttpResponse:
+    def process_response(self, request: ASGIRequest, response: HttpResponseBase) -> HttpResponseBase:
         """
         Renew the CSRF cookie on a signed-in user's console pages, then let Django set it.
 

@@ -15,8 +15,9 @@ The models forbid extra fields: the api returns exactly what they declare. Addin
 backward compatible. Removing or renaming one is not.
 """
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import Field, JsonValue
@@ -181,6 +182,11 @@ class LLMClientApiGuardrailRef(AccountApiModel):
 
 LLMClientApiToolKind = Literal["Extension", "Plugin", "MCPClient", "Guardrail"]
 """What adds a tool to an LLMClient's prompts: an extension, or the linked resource's manifest kind."""
+
+LLMClientApiToolRef = Union[
+    LLMClientApiExtension, LLMClientApiPluginRef, LLMClientApiMCPClientRef, LLMClientApiGuardrailRef
+]
+"""A reference to what adds tools to an LLMClient: each has an ``id`` and a ``name``."""
 
 
 class LLMClientApiTool(AccountApiModel):
@@ -390,17 +396,20 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             LLMClientApiGuardrailRef.from_model(row)
             for row in LLMClientGuardrails.objects.filter(llmclient=llmclient).select_related("guardrail")
         ]
-        tools = [
-            LLMClientApiTool(id=item.id, name=item.name, kind=kind)
-            for kind, items in (
-                ("Extension", extensions),
-                ("Plugin", plugins),
-                ("MCPClient", mcpclients),
-                ("Guardrail", guardrails),
-            )
-            for item in items
-            if item.name
-        ]
+        # Typed, so that each group's kind stays a LLMClientApiToolKind, not a str.
+        tool_groups: tuple[tuple[LLMClientApiToolKind, Sequence[LLMClientApiToolRef]], ...] = (
+            ("Extension", extensions),
+            ("Plugin", plugins),
+            ("MCPClient", mcpclients),
+            ("Guardrail", guardrails),
+        )
+        tools = []
+        for kind, items in tool_groups:
+            for item in items:
+                if not item.name:
+                    continue
+                tool = LLMClientApiTool(id=item.id, name=item.name, kind=kind)
+                tools.append(tool)
         custom_domains = (
             LLMClientCustomDomain.objects.filter(id=llmclient.custom_domain_id)  # type: ignore[attr-defined]
             if llmclient.custom_domain_id  # type: ignore[attr-defined]

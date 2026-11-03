@@ -40,13 +40,25 @@ def extract_segments(payload: SmarterDictType, stage: GuardrailStage) -> list[Te
 
 
 def content_segments(content: Any, path: str) -> list[TextSegment]:
-    """Return the segments of a message's content: a string, or a list of parts."""
+    """
+    Return the segments of a message's content: a string, or a list of parts.
+
+    :param content: The message's ``content``: a string, a list of content parts, or anything else.
+    :param path: The path of ``content`` in the payload, e.g. ``messages[2].content``.
+    :returns: A segment for a non-empty string, or one for each non-empty ``text`` part of a list.
+        Empty for anything else.
+    """
     if isinstance(content, str):
-        return [TextSegment(path=path, text=content)] if content else []
+        if content:
+            return [TextSegment(path=path, text=content)]
+        return []
     segments = []
     if isinstance(content, list):
         for i, part in enumerate(content):
-            if isinstance(part, dict) and part.get("type") == "text" and isinstance(part.get("text"), str):
+            if not isinstance(part, dict):
+                continue
+            is_text_part = part.get("type") == "text" and isinstance(part.get("text"), str)
+            if is_text_part:
                 if part["text"]:
                     segments.append(TextSegment(path=f"{path}[{i}].text", text=part["text"]))
     return segments
@@ -96,7 +108,13 @@ def write_segment(payload: SmarterDictType, path: str, new_text: str) -> Smarter
 
 
 def read_segment(payload: SmarterDictType, path: str) -> str | None:
-    """Return the text at ``path``, or ``None`` if it does not resolve to a string."""
+    """
+    Return the text at ``path``, or ``None`` if it does not resolve to a string.
+
+    :param payload: A chat completion request or response.
+    :param path: A ``messages[0].content``-style path.
+    :returns: The string at ``path``, or None.
+    """
     node, key = resolve_path(payload, path)
     if node is None:
         return None

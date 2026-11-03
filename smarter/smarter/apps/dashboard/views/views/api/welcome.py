@@ -188,6 +188,12 @@ class WelcomeView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return the welcome dialog's content for the user.
+
+        :param request: The request.
+        :returns: The welcome response, as JSON, or ``401`` if not signed in.
+        """
         user = get_resolved_user(request.user)
         if not isinstance(user, User):
             return not_signed_in()
@@ -208,6 +214,15 @@ class WelcomeDismissView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Record that the user closed the welcome dialog, and whether it shows at startup.
+
+        Updates ``welcomed_at`` on the user's profiles, and sets the session's welcome flag.
+
+        :param request: The request, whose JSON body is a :class:`WelcomeDismissRequest`.
+        :returns: The :class:`WelcomeView` response; ``401`` if not signed in; ``400`` if the body is
+            invalid.
+        """
         user = get_resolved_user(request.user)
         if not isinstance(user, User):
             return not_signed_in()

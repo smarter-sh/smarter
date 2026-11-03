@@ -8,6 +8,7 @@ class SmarterExtensionException(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter Extension error"
 
 
@@ -16,6 +17,7 @@ class SmarterExtensionManifestError(SmarterExtensionException):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter Extension manifest error"
 
 
@@ -24,6 +26,7 @@ class SmarterExtensionArchiveError(SmarterExtensionException):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter Extension archive error"
 
 
@@ -32,6 +35,7 @@ class SmarterExtensionInstallError(SmarterExtensionException):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter Extension install error"
 
 
@@ -40,6 +44,7 @@ class SmarterExtensionLoadError(SmarterExtensionException):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter Extension load error"
 
 
@@ -48,6 +53,7 @@ class SmarterExtensionRegistryError(SmarterExtensionException):
 
     @property
     def get_formatted_err_message(self):
+        """The title of this kind of error, shown before its message."""
         return "Smarter Extension registry error"
 
 

@@ -63,6 +63,12 @@ class UserView(SmarterAdminWebView):
     template_path = "account/dashboard/user.html"
 
     def get_body_json(self, request):
+        """
+        Parse the request body as json, after replacing single quotes with double quotes.
+
+        :param request: The request.
+        :returns: The parsed body.
+        """
         return json.loads(request.body.decode("utf-8").replace("'", '"'))
 
     def _handle_create(self, request, data=None):
@@ -127,22 +133,50 @@ class UserView(SmarterAdminWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, user_id=None, **kwargs):
+        """
+        Create a user from the form, or update one.
+
+        :param request: The request, with the form's data.
+        :param user_id: The User's id, or None to create one.
+        :returns: A redirect to the new user, or a json response.
+        """
         data = request.POST
         if user_id is None:
             return self._handle_create(request, data=data)
         return self._handle_write(request, user_id=user_id, data=data)
 
     def patch(self, request, user_id, *args, **kwargs):
+        """
+        Update a user from the json body.
+
+        :param request: The request.
+        :param user_id: The User's id.
+        :returns: A json response.
+        """
         data = self.get_body_json(request)
         return self._handle_write(request, user_id=user_id, data=data)
 
     def put(self, request, *args, user_id=None, **kwargs):
+        """
+        Create a user from the json body, or update one.
+
+        :param request: The request.
+        :param user_id: The User's id, or None to create one.
+        :returns: A redirect to the new user, or a json response.
+        """
         data = self.get_body_json(request)
         if user_id is None:
             return self._handle_create(request, data=data)
         return self._handle_write(request, user_id=user_id, data=data)
 
     def delete(self, request, user_id, *args, **kwargs):
+        """
+        Delete a user of the request user's account, and its UserProfile, in one transaction.
+
+        :param request: The request.
+        :param user_id: The User's id.
+        :returns: A json response: 200, 403 or 404.
+        """
         user_profile = UserProfile.get_cached_object(user=request.user)
         if not user_profile:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "User profile not found."})

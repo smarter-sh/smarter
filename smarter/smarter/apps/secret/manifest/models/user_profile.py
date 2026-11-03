@@ -11,6 +11,12 @@ class UserProfileModel(SmarterBasePydanticModel):
 
     @classmethod
     def from_django(cls, django_model):
+        """
+        Build the model from a Django UserProfile, through :class:`UserProfileSerializer`.
+
+        :param django_model: The UserProfile.
+        :returns: The model.
+        """
         # Use the Django model serializer to serialize the model to a dictionary
         data = UserProfileSerializer(django_model).data
         return cls(**data)

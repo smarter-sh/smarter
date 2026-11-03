@@ -118,12 +118,14 @@ class LLMHostService:
 
     @property
     def cluster(self) -> ClusterBackend:
+        """The Kubernetes cluster, from :func:`~smarter.apps.llmhost.services.cluster.get_cluster` unless one was given."""
         if self._cluster is None:
             self._cluster = get_cluster()
         return self._cluster
 
     @property
     def provisioner(self) -> ComputeProvisioner:
+        """The :class:`~smarter.apps.llmhost.services.compute.ComputeProvisioner` of LLMHosts' node groups, on this service's cluster."""
         if self._provisioner is None:
             self._provisioner = ComputeProvisioner(cluster=self.cluster)
         return self._provisioner
@@ -133,11 +135,27 @@ class LLMHostService:
     def search_models(
         self, query: Optional[str] = None, task: Optional[str] = None, catalog: str = "huggingface", limit: int = 20
     ) -> list[ModelInfo]:
-        """Search a model catalog, most popular first."""
+        """
+        Search a model catalog, most popular first.
+
+        :param query: Text to search for. Optional.
+        :param task: A :class:`~smarter.apps.llmhost.manifest.enum.SAMLLMHostTask` value. Optional.
+        :param catalog: The catalog's name, e.g. ``huggingface`` or ``builtin``.
+        :param limit: The most models to return.
+        :returns: The matching models.
+        :raises LLMHostDiscoveryError: if the catalog does not exist, or is unavailable.
+        """
         return get_catalog(catalog).search(query=query, task=task, limit=limit)
 
     def get_model(self, repository: str, catalog: str = "huggingface") -> ModelInfo:
-        """Return a model's details from a catalog."""
+        """
+        Return a model's details from a catalog.
+
+        :param repository: The model's repository id.
+        :param catalog: The catalog's name, e.g. ``huggingface`` or ``builtin``.
+        :returns: The model.
+        :raises LLMHostDiscoveryError: if the catalog or the model does not exist, or the catalog is unavailable.
+        """
         return get_catalog(catalog).get(repository)
 
     def draft_manifest(
@@ -154,10 +172,12 @@ class LLMHostService:
 
         :param user_profile: Choose from the LLMHostComputes that this user may read. Defaults to the built-in ones.
         """
-        computes = computes_for(user_profile) if user_profile is not None else None
-        return draft_manifest(
-            self.get_model(repository, catalog), engine=engine, name=name, token_secret=token_secret, computes=computes
-        )
+        computes = None
+        if user_profile is not None:
+            computes = computes_for(user_profile)
+        model = self.get_model(repository, catalog)
+        manifest = draft_manifest(model, engine=engine, name=name, token_secret=token_secret, computes=computes)
+        return manifest
 
     # --- helpers -----------------------------------------------------------------
 
@@ -181,9 +201,16 @@ class LLMHostService:
 
     @staticmethod
     def default_hostname(llmhost: LLMHost, base_name: str) -> str:
-        """<base name>.<account number>.<environment API domain>, without a port, e.g. in local development."""
+        """
+        <base name>.<account number>.<environment API domain>, without a port, e.g. in local development.
+
+        :param llmhost: The LLMHost, whose owner's account number is part of the hostname.
+        :param base_name: The base name of its Kubernetes resources.
+        :returns: The hostname.
+        """
         domain = smarter_settings.environment_api_domain.split(":")[0]
-        return f"{base_name}.{llmhost.user_profile.account.account_number}.{domain}"
+        account_number = llmhost.user_profile.account.account_number
+        return f"{base_name}.{account_number}.{domain}"
 
     @staticmethod
     def compute_of(llmhost: LLMHost, spec: SAMLLMHostSpec) -> LLMHostCompute:
@@ -201,21 +228,33 @@ class LLMHostService:
             raise LLMHostConfigurationError(f"LLMHost {llmhost.name}: {e}") from e
 
     def context_for(self, llmhost: LLMHost, spec: Optional[SAMLLMHostSpec] = None) -> RenderContext:
-        """The render context of the LLMHost's Kubernetes resources."""
+        """
+        The render context of the LLMHost's Kubernetes resources.
+
+        Saves the LLMHost's compute, if it has none yet: see :meth:`compute_of`.
+
+        :param llmhost: The LLMHost.
+        :param spec: Its spec. Defaults to the stored spec.
+        :returns: The render context.
+        :raises LLMHostConfigurationError: if the spec is invalid, the LLMHost is not saved, or no compute fits it.
+        """
         spec = spec or self.spec_of(llmhost)
         base_name = self.base_name(llmhost)
         hostname = spec.network.hostname or self.default_hostname(llmhost, base_name)
+        ingress_hostname = hostname if spec.network.ingress else None
         compute = self.compute_of(llmhost, spec)
+        api_domain = smarter_settings.environment_api_domain.split(":")[0]
+        engine = get_engine(spec.engine.name)
         return RenderContext(
             base_name=base_name,
             namespace=self.cluster.namespace,
             spec=spec,
             served_name=llmhost.name,
             account_number=llmhost.user_profile.account.account_number,
-            hostname=hostname if spec.network.ingress else None,
-            cluster_issuer=smarter_settings.environment_api_domain.split(":")[0],
+            hostname=ingress_hostname,
+            cluster_issuer=api_domain,
             hf_token=bool(spec.model.tokenSecret),
-            api_key=get_engine(spec.engine.name).supports_api_key(),
+            api_key=engine.supports_api_key(),
             platform_name=smarter_settings.platform_name,
             compute=compute.name,
             compute_taint=compute.taint,
@@ -223,15 +262,31 @@ class LLMHostService:
 
     @staticmethod
     def find_secret(llmhost: LLMHost, name: str) -> Secret:
-        """A Smarter Secret that the LLMHost's owner may read: their own, else one shared with them."""
+        """
+        A Smarter Secret that the LLMHost's owner may read: their own, else one shared with them.
+
+        :param llmhost: The LLMHost.
+        :param name: The Secret's name.
+        :returns: The Secret.
+        :raises LLMHostConfigurationError: if the owner may read no Secret of that name.
+        """
         secret = Secret.objects.filter(user_profile=llmhost.user_profile, name=name).first()
         if secret is None:
-            secret = Secret.objects.with_read_permission_for(llmhost.user_profile.user).filter(name=name).first()  # type: ignore[attr-defined]
+            readable = Secret.objects.with_read_permission_for(llmhost.user_profile.user)  # type: ignore[attr-defined]
+            secret = readable.filter(name=name).first()
         if secret is None:
             raise LLMHostConfigurationError(f"Secret {name} of LLMHost {llmhost.name} does not exist.")
         return secret
 
     def secret_value(self, llmhost: LLMHost, name: str) -> str:
+        """
+        The decrypted value of a Smarter Secret that the LLMHost's owner may read.
+
+        :param llmhost: The LLMHost.
+        :param name: The Secret's name.
+        :returns: The value.
+        :raises LLMHostConfigurationError: if the Secret does not exist, or is empty or expired.
+        """
         value = self.find_secret(llmhost, name).get_secret()
         if not value:
             raise LLMHostConfigurationError(f"Secret {name} of LLMHost {llmhost.name} is empty or expired.")
@@ -425,7 +480,17 @@ class LLMHostService:
 
     @staticmethod
     def provisioning_status(llmhost: LLMHost, status: str, message: str) -> tuple[str, str]:
-        """``provisioning``, if the LLMHost's pods wait for a node that its compute's node group is adding, as of the compute's last reconcile."""
+        """
+        ``provisioning``, if the LLMHost's pods wait for a node that its compute's node group is adding, as of the compute's last reconcile.
+
+        Reads the compute's node group state from the database.
+
+        :param llmhost: The LLMHost.
+        :param status: The status observed in the cluster.
+        :param message: The status message observed in the cluster.
+        :returns: (status, message): ``provisioning`` and the compute's status message, or the
+            given status and message, unchanged.
+        """
         compute = llmhost.compute
         if status != Status.PENDING.value or compute is None:
             return status, message
@@ -468,11 +533,22 @@ class LLMHostService:
             )
 
     def logs(self, llmhost: LLMHost, tail: int = DEFAULT_LOG_LINES) -> str:
-        """The most recent log lines of the LLMHost's inference server."""
+        """
+        The most recent log lines of the LLMHost's inference server.
+
+        :param llmhost: The LLMHost.
+        :param tail: The most lines to return, clamped to between 1 and ``MAX_LOG_LINES``.
+        :returns: The log lines, or an empty string if there are none.
+        :raises LLMHostClusterError: if the cluster is unavailable.
+        :raises LLMHostConfigurationError: if the LLMHost is not saved.
+        """
         if not self.cluster.ready:
             raise LLMHostClusterError("The Kubernetes cluster is not available.")
-        tail = max(1, min(int(tail), MAX_LOG_LINES))
-        return self.cluster.logs(label_selector(self.base_name(llmhost)), container=CONTAINER_NAME, tail=tail) or ""
+        tail = min(int(tail), MAX_LOG_LINES)
+        tail = max(1, tail)
+        selector = label_selector(self.base_name(llmhost))
+        logs = self.cluster.logs(selector, container=CONTAINER_NAME, tail=tail)
+        return logs or ""
 
     def report(self, llmhosts: Iterable[LLMHost]) -> SmarterDictType:
         """Summarize LLMHosts' status, GPUs and cost.

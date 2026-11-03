@@ -364,6 +364,16 @@ class LLMClientDeploymentApiKeyCreateView(LLMClientDeploymentApiView):
     request_model = CreateApiKeyRequest
 
     def handle(self, request: HttpRequest, llmclient: LLMClient, body: Optional[BaseModel]) -> Optional[NewApiKey]:
+        """
+        Create a staff user's api key in the LLMClient's account, and attach it if asked and allowed.
+
+        :param request: The request.
+        :param llmclient: The LLMClient of the url.
+        :param body: The parsed request body.
+        :returns: The new api key's name and its secret, which is shown only once.
+        :raises DeploymentApiError: when the user is not staff or not in the LLMClient's account, or the name
+            is invalid or already used.
+        """
         assert isinstance(body, CreateApiKeyRequest)  # nosec B101: request_model is CreateApiKeyRequest.
         user = request.user
         if not user.is_staff:  # type: ignore[union-attr]
@@ -409,6 +419,15 @@ class LLMClientDeploymentApiKeyAttachView(LLMClientDeploymentApiView):
     request_model = AttachApiKeyRequest
 
     def handle(self, request: HttpRequest, llmclient: LLMClient, body: Optional[BaseModel]) -> Optional[NewApiKey]:
+        """
+        Attach one of the api keys that the user may manage to the LLMClient.
+
+        :param request: The request.
+        :param llmclient: The LLMClient of the url.
+        :param body: The parsed request body.
+        :returns: None.
+        :raises DeploymentApiError: when the user may not manage the LLMClient, or the api key is not found.
+        """
         assert isinstance(body, AttachApiKeyRequest)  # nosec B101: request_model is AttachApiKeyRequest.
         self.require_manage(request, llmclient)
         api_key = manageable_api_keys(request, llmclient).filter(key_id=body.key_id).first()
@@ -431,6 +450,15 @@ class LLMClientDeploymentApiKeyDetachView(LLMClientDeploymentApiView):
     """
 
     def handle(self, request: HttpRequest, llmclient: LLMClient, body: Optional[BaseModel]) -> Optional[NewApiKey]:
+        """
+        Detach the LLMClient's api key.
+
+        :param request: The request.
+        :param llmclient: The LLMClient of the url.
+        :param body: Unused: this request has no body.
+        :returns: None.
+        :raises DeploymentApiError: when the user may not manage the LLMClient.
+        """
         self.require_manage(request, llmclient)
         LLMClientAPIKey.detach(llmclient)
         logger.info("%s.handle() %s detached the api key of %s", self.formatted_class_name, request.user, llmclient)

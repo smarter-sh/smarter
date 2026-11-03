@@ -270,6 +270,10 @@ class SlackWebApiService(SlackService):
 
     @property
     def ready(self) -> bool:
+        """Whether a Slack bot token is configured.
+
+        Always False in the unit tests, unless ``allow_in_tests``.
+        """
         if running_unit_tests() and not self.allow_in_tests:
             return False
         return smarter_settings.slack_bot_token is not None
@@ -363,6 +367,7 @@ class InMemorySlackService(SlackService):
 
     @property
     def ready(self) -> bool:
+        """Whether the service is ready, as set in the constructor."""
         return self._ready
 
     @staticmethod

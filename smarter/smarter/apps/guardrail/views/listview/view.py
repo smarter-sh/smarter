@@ -45,6 +45,14 @@ class GuardrailListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the Guardrail list React app, with the settings it reads.
+
+        :param request: The request.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :returns: The rendered page.
+        """
         # pylint: disable=C0415
         from smarter.apps.guardrail.urls import GuardrailReverseNames
 

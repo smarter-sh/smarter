@@ -115,14 +115,15 @@ def to_camel_case(
     if isinstance(data, str):
         return _convert_snake_to_camel(data)
     elif isinstance(data, list):
-        return [
-            (
-                to_camel_case(item, convert_values=convert_values, is_recursive=is_recursive)
-                if isinstance(item, (dict, list)) and is_recursive
-                else _convert_snake_to_camel(item) if isinstance(item, str) and convert_values else item
-            )
-            for item in data
-        ]
+        converted_items = []
+        for item in data:
+            converted_item = item
+            if isinstance(item, (dict, list)) and is_recursive:
+                converted_item = to_camel_case(item, convert_values=convert_values, is_recursive=is_recursive)
+            elif isinstance(item, str) and convert_values:
+                converted_item = _convert_snake_to_camel(item)
+            converted_items.append(converted_item)
+        return converted_items
     elif isinstance(data, dict):
         retval = {}
         for key, value in data.items():
@@ -214,14 +215,15 @@ def to_snake_case(
     if isinstance(data, str):
         return _convert_camel_to_snake(data)
     elif isinstance(data, list):
-        return [
-            (
-                to_snake_case(item, convert_values=convert_values, is_recursive=is_recursive)
-                if isinstance(item, (dict, list)) and is_recursive
-                else _convert_camel_to_snake(item) if isinstance(item, str) and convert_values else item
-            )
-            for item in data
-        ]
+        converted_items = []
+        for item in data:
+            converted_item = item
+            if isinstance(item, (dict, list)) and is_recursive:
+                converted_item = to_snake_case(item, convert_values=convert_values, is_recursive=is_recursive)
+            elif isinstance(item, str) and convert_values:
+                converted_item = _convert_camel_to_snake(item)
+            converted_items.append(converted_item)
+        return converted_items
     elif isinstance(data, dict):
         retval = {}
         for key, value in data.items():

@@ -8,6 +8,7 @@ class SmarterMCPClientException(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter MCPClient error"
 
 
@@ -16,6 +17,7 @@ class SmarterMCPClientConfigurationError(SmarterMCPClientException):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter MCPClient configuration error"
 
 
@@ -24,6 +26,7 @@ class SmarterMCPClientConnectionError(SmarterMCPClientException):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter MCPClient connection error"
 
 
@@ -32,6 +35,7 @@ class SmarterMCPClientToolError(SmarterMCPClientException):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter MCPClient tool error"
 
 
@@ -40,4 +44,5 @@ class SmarterMCPClientPermissionError(SmarterMCPClientException):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter MCPClient permission error"

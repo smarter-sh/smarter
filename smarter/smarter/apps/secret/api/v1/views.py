@@ -51,10 +51,18 @@ class SecretView(SmarterAdminAPIView):
     serializer_class = SecretSerializer
 
     def get_queryset(self):
+        """The Secrets that belong to any of the requesting user's accounts."""
         return secrets_for_user(self.request.user)
 
     def get(self, request: Request, secret_id: int, *args, **kwargs):
-        """Return the Secret, without its value."""
+        """
+        Return the Secret, without its value.
+
+        :param request: The request.
+        :param secret_id: The Secret's id, from the url.
+        :returns: The Secret, as a :class:`SecretApiSecret`.
+        :raises Http404: when no Secret of the user's accounts has this id.
+        """
         secret = get_object_or_404(self.get_queryset(), pk=secret_id)
         return Response(SecretApiSecret.from_model(secret, request.user).model_dump(mode="json"))
 
@@ -77,9 +85,17 @@ class SecretListView(ContractListMixin, SmarterAdminListAPIView):
         return SecretApiSecret.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self):
+        """The Secrets that belong to any of the requesting user's accounts."""
         return secrets_for_user(self.request.user)
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Dispatch the request, and log it.
+
+        :param request: The request.
+        :returns: The response, or ``403`` when the request has no user, which makes an admin
+            decorator raise AttributeError.
+        """
         try:
             response = super().dispatch(request, *args, **kwargs)
         except AttributeError:

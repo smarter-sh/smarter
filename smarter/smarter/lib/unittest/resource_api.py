@@ -16,6 +16,7 @@ The requests authenticate with a session of the account's admin, who is a superu
 test_list_with_api_key authenticates with the api key of ApiV1TestBase instead.
 """
 
+from collections.abc import Callable
 from http import HTTPStatus
 
 from django.db import models
@@ -37,11 +38,21 @@ class ResourceApiTestMixin:
     id_kwarg: str
     resource_name_prefix = "test_resource_api"
 
+    #: unittest.TestCase.addCleanup(), which the test class that uses this mixin provides. Declared for type checkers.
+    addCleanup: Callable[..., None]
+
     @classmethod
     def create_resource(cls, name: str) -> models.Model:
+        """
+        Create and return the resource under test; subclasses implement it.
+
+        :param name: The resource's name.
+        :returns: The saved resource.
+        """
         raise NotImplementedError
 
     def setUp(self):
+        """Log an api client in as the admin user, and create the resource, which is deleted after the test."""
         super().setUp()  # type: ignore[misc]
         self.api_client = APIClient()
         self.api_client.force_login(self.admin_user)  # type: ignore[attr-defined]
@@ -51,9 +62,17 @@ class ResourceApiTestMixin:
         self.resource = self.create_resource(name)
 
     def url(self, name: str, **kwargs) -> str:
+        """
+        Reverse a url name of the app's namespace.
+
+        :param name: The url name.
+        :param kwargs: The url's keyword arguments.
+        :returns: The url path.
+        """
         return reverse(f"{self.reverse_names.namespace}:{name}", kwargs=kwargs or None)
 
     def detail_urls(self) -> dict[str, str]:
+        """Return the resource's detail urls, by hashed id and by id, keyed by a label."""
         return {
             "by hashed id": self.url(self.view_by_hashed_id, hashed_id=self.resource.hashed_id),  # type: ignore[attr-defined]
             "by id": self.url(self.view_by_id, **{self.id_kwarg: self.resource.pk}),
@@ -73,6 +92,7 @@ class ResourceApiTestMixin:
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])  # type: ignore[attr-defined]
 
     def test_list_anonymous(self):
+        """Test that the list view refuses an anonymous client."""
         response = APIClient().get(self.url(self.list_view))
         self.assertIn(response.status_code, (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN))  # type: ignore[attr-defined]
 
@@ -85,7 +105,10 @@ class ResourceApiTestMixin:
                 self.assertEqual(response.json()["name"], self.resource.name)  # type: ignore[attr-defined]
 
     def test_get_not_found(self):
-        response = self.api_client.get(self.url(self.view_by_hashed_id, hashed_id=self.model(id=999999999).hashed_id))  # type: ignore[attr-defined]
+        """Test that the detail view returns 404 for a hashed id that doesn't exist."""
+        missing_resource = self.model(id=999999999)
+        url = self.url(self.view_by_hashed_id, hashed_id=missing_resource.hashed_id)  # type: ignore[attr-defined]
+        response = self.api_client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)  # type: ignore[attr-defined]
 
     def test_post_invalid(self):

@@ -1,5 +1,7 @@
 """Account admin."""
 
+from django.contrib import admin
+
 from smarter.apps.dashboard.admin import (
     SmarterStaffOnlyModelAdmin,
     smarter_restricted_admin_site,
@@ -16,17 +18,23 @@ class SAMJournalAdmin(SmarterStaffOnlyModelAdmin):
     raw_id_fields = ("user",)
     ordering = ("-created_at",)
 
+    @admin.display(description="Thing", ordering="thing")
     def thing_display(self, obj):
+        """
+        Return the entry's thing, as its display label.
+
+        :param obj: The journal entry.
+        """
         return obj.get_thing_display()
 
-    thing_display.admin_order_field = "thing"
-    thing_display.short_description = "Thing"
-
+    @admin.display(description="Command", ordering="command")
     def command_display(self, obj):
-        return obj.get_command_display()
+        """
+        Return the entry's command, as its display label.
 
-    command_display.admin_order_field = "command"
-    command_display.short_description = "Command"
+        :param obj: The journal entry.
+        """
+        return obj.get_command_display()
 
 
 smarter_restricted_admin_site.register(SAMJournal, SAMJournalAdmin)

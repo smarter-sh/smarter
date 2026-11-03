@@ -118,9 +118,17 @@ ENGINE_RULES: dict[str, SmarterDictType] = {
 
 
 def engine_supports_task(engine: str, task: str) -> bool:
-    """Return whether an engine can serve a task."""
+    """
+    Return whether an engine can serve a task.
+
+    :param engine: A :class:`~smarter.apps.llmhost.manifest.enum.SAMLLMHostEngine` value.
+    :param task: A :class:`~smarter.apps.llmhost.manifest.enum.SAMLLMHostTask` value.
+    :returns: True if the engine serves any task, or this one.
+    """
     tasks = ENGINE_RULES[engine]["tasks"]
-    return tasks is None or task in tasks
+    if tasks is None:
+        return True
+    return task in tasks
 
 
 def engine_supports_api_key(engine: str) -> bool:
@@ -129,7 +137,15 @@ def engine_supports_api_key(engine: str) -> bool:
 
 
 def choice(value: Optional[str], choices: list[str], field: str) -> str:
-    """Return ``value``, lower cased, if it is one of ``choices``."""
+    """
+    Return the choice that ``value`` matches, case-insensitively.
+
+    :param value: The value. None is treated as an empty string.
+    :param choices: The permitted values.
+    :param field: The field's name, for the error message.
+    :returns: The matching choice, as it is spelled in ``choices``.
+    :raises SAMValidationError: if ``value`` is not one of ``choices``.
+    """
     value = str(value or "").strip().lower()
     lowered = {c.lower(): c for c in choices}
     if value not in lowered:
@@ -138,7 +154,14 @@ def choice(value: Optional[str], choices: list[str], field: str) -> str:
 
 
 def quantity(value: Optional[str], field: str) -> Optional[str]:
-    """Return ``value`` if it is a Kubernetes resource quantity, e.g. ``24Gi``."""
+    """
+    Return ``value`` if it is a Kubernetes resource quantity, e.g. ``24Gi``.
+
+    :param value: The value, or None.
+    :param field: The field's name, for the error message.
+    :returns: The value, stripped, or None if it is None.
+    :raises SAMValidationError: if ``value`` is not a Kubernetes quantity.
+    """
     if value is None:
         return None
     value = str(value).strip()
@@ -255,21 +278,49 @@ class SAMLLMHostModel(LLMHostBaseModel):
     @field_validator("source", mode="before")
     @classmethod
     def validate_source(cls, v: str) -> str:
+        """
+        Validate model.source: one of the model sources, case-insensitively.
+
+        :param v: The value.
+        :returns: The matching choice.
+        :raises SAMValidationError: if it is not one.
+        """
         return choice(v, SAMLLMHostModelSource.all(), "model.source")
 
     @field_validator("task", mode="before")
     @classmethod
     def validate_task(cls, v: str) -> str:
+        """
+        Validate model.task: one of the tasks, case-insensitively.
+
+        :param v: The value.
+        :returns: The matching choice.
+        :raises SAMValidationError: if it is not one.
+        """
         return choice(v, SAMLLMHostTask.all(), "model.task")
 
     @field_validator("quantization", mode="before")
     @classmethod
     def validate_quantization(cls, v: str) -> str:
+        """
+        Validate model.quantization: one of the quantizations, case-insensitively.
+
+        :param v: The value.
+        :returns: The matching choice.
+        :raises SAMValidationError: if it is not one.
+        """
         return choice(v, SAMLLMHostQuantization.all(), "model.quantization")
 
     @field_validator("repository")
     @classmethod
     def validate_repository(cls, v: str) -> str:
+        """
+        Validate model.repository: required, and free of whitespace and shell characters.
+
+        :param v: The value.
+        :returns: The repository, stripped.
+        :raises SAMValidationError: if it is empty, or contains whitespace or shell characters.
+        """
         v = (v or "").strip()
         if not v:
             raise SAMValidationError("model.repository: is required.")
@@ -280,6 +331,13 @@ class SAMLLMHostModel(LLMHostBaseModel):
     @field_validator("revision", "file", "servedName")
     @classmethod
     def validate_token(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate model.revision, model.file and model.servedName: free of whitespace and shell characters.
+
+        :param v: The value.
+        :returns: The value, stripped, or None if it is None or empty.
+        :raises SAMValidationError: if the value contains whitespace or shell characters.
+        """
         if v is None:
             return None
         v = str(v).strip()
@@ -394,16 +452,37 @@ class SAMLLMHostEngineConfig(LLMHostBaseModel):
     @field_validator("name", mode="before")
     @classmethod
     def validate_name(cls, v: str) -> str:
+        """
+        Validate engine.name: one of the engines, case-insensitively.
+
+        :param v: The value.
+        :returns: The matching choice.
+        :raises SAMValidationError: if it is not one.
+        """
         return choice(v, SAMLLMHostEngine.all(), "engine.name")
 
     @field_validator("apiFormat", mode="before")
     @classmethod
     def validate_api_format(cls, v: str) -> str:
+        """
+        Validate engine.apiFormat: one of the API formats, case-insensitively.
+
+        :param v: The value.
+        :returns: The matching choice.
+        :raises SAMValidationError: if it is not one.
+        """
         return choice(v, SAMLLMHostApiFormat.all(), "engine.apiFormat")
 
     @field_validator("args")
     @classmethod
     def validate_args(cls, v: list[str]) -> list[str]:
+        """
+        Validate engine.args: at most ``MAX_ARGS`` of them.
+
+        :param v: The value.
+        :returns: The arguments, as strings.
+        :raises SAMValidationError: if there are more.
+        """
         if len(v) > MAX_ARGS:
             raise SAMValidationError(f"engine.args: at most {MAX_ARGS} are permitted.")
         return [str(arg) for arg in v]
@@ -411,6 +490,13 @@ class SAMLLMHostEngineConfig(LLMHostBaseModel):
     @field_validator("env")
     @classmethod
     def validate_env(cls, v: dict[str, str]) -> dict[str, str]:
+        """
+        Validate engine.env: valid environment variable names, none with the reserved ``SMARTER_`` prefix.
+
+        :param v: The value.
+        :returns: The variables, with their values as strings.
+        :raises SAMValidationError: if a name is invalid, or reserved.
+        """
         for key in v:
             if not re.match(ENV_NAME_PATTERN, key):
                 raise SAMValidationError(f"engine.env: '{key}' is not a valid environment variable name.")
@@ -420,6 +506,12 @@ class SAMLLMHostEngineConfig(LLMHostBaseModel):
 
     @model_validator(mode="after")
     def validate_custom(self) -> "SAMLLMHostEngineConfig":
+        """
+        Validate the custom engine: it requires engine.image and engine.port, and only it takes engine.command.
+
+        :returns: The engine config.
+        :raises SAMValidationError: if a custom engine lacks an image or port, or another engine has a command.
+        """
         if self.name == SAMLLMHostEngine.CUSTOM.value and (not self.image or not self.port):
             raise SAMValidationError("engine.image and engine.port: are required when engine.name is custom.")
         if self.command is not None and self.name != SAMLLMHostEngine.CUSTOM.value:
@@ -483,6 +575,14 @@ class SAMLLMHostResources(LLMHostBaseModel):
     @field_validator("cpu", "memory", "shmSize")
     @classmethod
     def validate_quantity(cls, v: Optional[str], info) -> Optional[str]:
+        """
+        Validate resources.cpu, resources.memory and resources.shmSize: Kubernetes quantities.
+
+        :param v: The value.
+        :param info: Pydantic's validation info, which names the field.
+        :returns: The quantity, stripped, or None.
+        :raises SAMValidationError: if it is not a Kubernetes quantity.
+        """
         return quantity(v, f"resources.{info.field_name}")
 
 
@@ -522,11 +622,25 @@ class SAMLLMHostStorage(LLMHostBaseModel):
     @field_validator("size")
     @classmethod
     def validate_size(cls, v: str) -> str:
+        """
+        Validate storage.size: a Kubernetes quantity, e.g. ``50Gi``.
+
+        :param v: The value.
+        :returns: The size, stripped.
+        :raises SAMValidationError: if it is not one.
+        """
         return quantity(v, "storage.size")  # type: ignore[return-value]
 
     @field_validator("accessMode", mode="before")
     @classmethod
     def validate_access_mode(cls, v: str) -> str:
+        """
+        Validate storage.accessMode: one of the access modes, case-insensitively.
+
+        :param v: The value.
+        :returns: The matching choice.
+        :raises SAMValidationError: if it is not one.
+        """
         return choice(v, SAMLLMHostStorageAccessMode.all(), "storage.accessMode")
 
 
@@ -568,6 +682,13 @@ class SAMLLMHostNetwork(LLMHostBaseModel):
     @field_validator("hostname")
     @classmethod
     def validate_hostname(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate network.hostname: a valid hostname.
+
+        :param v: The value.
+        :returns: The hostname, stripped and lower cased, or None.
+        :raises SAMValidationError: if it is not one.
+        """
         if v is None:
             return None
         v = v.strip().lower()
@@ -620,6 +741,13 @@ class SAMLLMHostHealthCheck(LLMHostBaseModel):
     @field_validator("path")
     @classmethod
     def validate_path(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate healthCheck.path: it starts with ``/``.
+
+        :param v: The value.
+        :returns: The path, or None.
+        :raises SAMValidationError: if it does not.
+        """
         if v is not None and not v.startswith("/"):
             raise SAMValidationError("healthCheck.path: must start with /.")
         return v

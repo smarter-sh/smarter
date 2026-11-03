@@ -35,6 +35,12 @@ USER_UPDATE_FIELDS = ("username", "email", "first_name", "last_name", "is_active
 
 
 def validate_request_body(request: Request):
+    """
+    Check that the request body is a json dict with a ``username`` and a ``password``.
+
+    :param request: The request.
+    :returns: None if the body is valid, else a 400 :class:`JsonResponse` that explains why not.
+    """
     # do a cursory check of the request data
     logger.debug("%s.validate_request_body() - request body: %s", __name__, request.body)
     try:
@@ -57,6 +63,17 @@ def validate_request_body(request: Request):
 
 
 def eval_permissions(request, user_to_update: User, user_to_update_profile: Optional[UserProfile] = None):
+    """
+    Check that the request user may modify a user.
+
+    A superuser may modify anyone. Anyone else needs a UserProfile, and may only modify users of
+    their own Account; a non-staff user may only modify themself.
+
+    :param request: The request.
+    :param user_to_update: The User to modify.
+    :param user_to_update_profile: The UserProfile of ``user_to_update``, if it has one.
+    :returns: None if the request user may modify the user, else a 401 :class:`JsonResponse`.
+    """
     logger.debug("%s.eval_permissions() - request: %s", __name__, request)
     user = get_resolved_user(request.user)
     if user is None or not getattr(user, "is_authenticated", False):
@@ -86,6 +103,14 @@ def eval_permissions(request, user_to_update: User, user_to_update_profile: Opti
 
 
 def get_user_for_operation(request, user_id: int) -> tuple[User, UserProfile] | JsonResponse:
+    """
+    Look up a User and its UserProfile by the User's id.
+
+    :param request: The request, whose user must be a :class:`User`.
+    :param user_id: The User's id.
+    :returns: The User and its UserProfile, or a 401 or 400 :class:`JsonResponse` when the request
+        user is not a User, or the User or its UserProfile does not exist.
+    """
 
     if not isinstance(request.user, User):
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
@@ -118,7 +143,16 @@ def user_response(user) -> Response:
 
 # pylint: disable=too-many-return-statements
 def get_user(request, user_id: Optional[int] = None):
-    """Get a user's json representation, an :class:`AccountApiUserDetail`, by id."""
+    """
+    Get a user's json representation, an :class:`AccountApiUserDetail`, by id.
+
+    A superuser may get any user, a staff user the users of their own Account, and anyone else only
+    themself.
+
+    :param request: The request.
+    :param user_id: The User's id, or None for the request user.
+    :returns: The user's json response, or a 401 or 404 :class:`JsonResponse`.
+    """
     logger.debug("%s.get_user() - user_id: %s, request: %s", request, user_id, request)
     if user_id is None:
         logger.debug("UserListView.get_queryset() - returning current user: %s", request.user)
@@ -197,7 +231,16 @@ def create_user(request: Request):
 
 
 def update_user(request: Request, user_id: int):
-    """Update an account from a json representation in the body of the request."""
+    """
+    Update a user from a json representation in the body of the request.
+
+    Only the fields in ``USER_UPDATE_FIELDS`` are changed, and the request user needs the
+    permissions that :func:`eval_permissions` checks.
+
+    :param request: The request, whose body is a json dict of the fields to change.
+    :param user_id: The User's id.
+    :returns: The response: the updated user, or an error :class:`JsonResponse`.
+    """
     logger.debug("%s.update_user() - user_id: %s, request: %s", request, user_id, request)
     data: SmarterDictType
 
@@ -248,7 +291,13 @@ def update_user(request: Request, user_id: int):
 
 
 def delete_user(request: Request, user_id: Optional[int] = None):
-    """Delete a user by id."""
+    """
+    Delete a user and its UserProfile, in one transaction.
+
+    :param request: The request.
+    :param user_id: The User's id, or None for the request user.
+    :returns: A redirect to the parent url, or a 404, 401 or 500 :class:`JsonResponse`.
+    """
     logger.debug("%s.delete_user() - user_id: %s, request: %s", __name__, user_id, request)
     try:
         if user_id:
@@ -258,6 +307,10 @@ def delete_user(request: Request, user_id: Optional[int] = None):
     except User.DoesNotExist:
         logger.debug("%s.delete_user() - user not found for request: %s", __name__, request)
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
+
+    if not isinstance(user, User):
+        # an anonymous request user, which eval_permissions() would refuse as well.
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     forbidden = eval_permissions(request, user, UserProfile.objects.filter(user=user).first())
     if forbidden:
@@ -283,30 +336,64 @@ class UserView(AccountViewBase):
     """User view for smarter api."""
 
     def get(self, request, user_id: int):
+        """
+        Return a user as json, and send ``api_request_completed``.
+
+        :param request: The request.
+        :param user_id: The User's id.
+        :returns: The response of :func:`get_user`.
+        """
         logger.debug("%s.get() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
         response = get_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
 
     def post(self, request, user_id: Optional[int] = None):
+        """
+        Create a user from the request body, and send ``api_request_completed``.
+
+        :param request: The request.
+        :param user_id: Unused.
+        :returns: The response of :func:`create_user`.
+        """
         logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
         response = create_user(request)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
 
     def patch(self, request, user_id: int):
+        """
+        Update a user from the request body, and send ``api_request_completed``.
+
+        :param request: The request.
+        :param user_id: The User's id.
+        :returns: The response of :func:`update_user`.
+        """
         logger.debug("%s.patch() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
         response = update_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
 
     def delete(self, request, user_id):
+        """
+        Delete a user, and send ``api_request_completed``.
+
+        :param request: The request.
+        :param user_id: The User's id.
+        :returns: The response of :func:`delete_user`.
+        """
         logger.debug("%s.delete() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
         response = delete_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
 
     def handle_exception(self, exc):
+        """
+        Answer an Http404 with a json 404 response, and leave any other exception to DRF.
+
+        :param exc: The exception that the view raised.
+        :returns: The response.
+        """
         if isinstance(exc, Http404):
             logger.debug("%s.handle_exception() - Http404: %s", self.formatted_class_name, exc)
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -337,6 +424,11 @@ class UserListView(AccountListViewBase):
         )
 
     def get_queryset(self):
+        """
+        Return every User for a superuser, else the Users of the request user's Accounts.
+
+        :returns: The queryset, or an error :class:`Response` when the user or its UserProfile is not found.
+        """
         logger.debug("%s.get_queryset() - request: %s", self.formatted_class_name, self.request)
         user = get_resolved_user(self.request.user)
         if user is None:

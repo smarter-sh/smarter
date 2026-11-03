@@ -137,6 +137,15 @@ class SqlConnection(ConnectionBase):
 
         # pylint: disable=W0613
         def missing_host_key(self, client, hostname, key):
+            """
+            Append an unknown host key to the connection's ``ssh_known_hosts`` and save the connection.
+
+            Called by paramiko when the SSH server's host key is not known. Logs a warning.
+
+            :param client: The paramiko SSH client (unused).
+            :param hostname: The host whose key is unknown.
+            :param key: The host's public key.
+            """
             # Add the new host key to the known_hosts field
             new_entry = f"{hostname} {key.get_name()} {key.get_base64()}\n"
             if self.sql_connection.ssh_known_hosts:
@@ -727,10 +736,10 @@ class SqlConnection(ConnectionBase):
             # Convert to JSON string (optional)
             return json.dumps(result)
 
-        self.connected = isinstance(self.connection, BaseDatabaseWrapper)
-        if not self.connected:
-            return False
         query_connection = self.connection
+        self.connected = isinstance(query_connection, BaseDatabaseWrapper)
+        if not isinstance(query_connection, BaseDatabaseWrapper):
+            return False
         sql_connection_query_attempted.send(sender=self.__class__, connection=self, sql=sql, limit=limit)
         try:
             if limit is not None:

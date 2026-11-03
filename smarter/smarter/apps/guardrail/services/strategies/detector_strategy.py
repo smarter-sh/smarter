@@ -13,7 +13,15 @@ class DetectorStrategy(BaseGuardrailStrategy):
     """
 
     def evaluate(self, *, segment, guardrail, context: StrategyContext) -> StrategyMatch:
-        """Find everything that the Guardrail's detectors detect in the segment."""
+        """
+        Find everything that the Guardrail's detectors detect in the segment.
+
+        :param segment: The text segment.
+        :param guardrail: The Guardrail, which supplies the strategy's configuration.
+        :param context: Ambient evaluation context. Unused.
+        :returns: A triggered match, with what was detected, or an untriggered one.
+        :raises GuardrailConfigError: when the Guardrail has no detectors, or names an unknown one.
+        """
         detectors = list(guardrail.settings.get("detectors") or [])
         if not detectors:
             raise GuardrailConfigError(f"Guardrail '{guardrail.name}' uses strategy detector but has no detectors.")

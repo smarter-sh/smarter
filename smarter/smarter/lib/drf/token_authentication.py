@@ -43,6 +43,7 @@ class SmarterTokenAuthenticationError(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The error message prefix of token authentication errors."""
         return "Smarter Token Authentication error"
 
 

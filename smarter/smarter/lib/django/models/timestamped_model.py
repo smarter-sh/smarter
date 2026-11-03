@@ -5,7 +5,7 @@ import datetime
 import json
 import re
 from functools import cached_property
-from typing import Optional
+from typing import ClassVar, Optional
 
 from cache_results import cache_results
 from django.core.exceptions import ValidationError
@@ -85,7 +85,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
     _hash_regex = None
-    cache_expiration = smarter_settings.cache_expiration
+    #: Seconds that ``get_cached_object()`` caches a row, from ``smarter_settings.cache_expiration``.
+    cache_expiration: ClassVar[int] = smarter_settings.cache_expiration
+    #: The row's primary key, which Django adds to every concrete model. Declared, without a value,
+    #: only so that type checkers know it: Django ignores a bare annotation.
+    id: int
 
     # pylint: disable=missing-class-docstring
     class Meta:

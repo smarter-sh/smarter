@@ -25,7 +25,15 @@ logger_prefix = SmarterFormattedText.text(__name__)
 
 @receiver(image_search_plugin_request_started, dispatch_uid="image_search_plugin_request_started")
 def handle_image_search_plugin_request_started(sender, plugin: PluginBase, function_args=None, **kwargs):
-    """Handle ImageSearchPlugin request started signal."""
+    """
+    Handle ImageSearchPlugin request started signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param function_args: The arguments that the LLM called the tool with.
+    """
     logger.info(
         "%s.image_search_plugin_request_started() %s function_args: %s",
         logger_prefix,
@@ -36,7 +44,15 @@ def handle_image_search_plugin_request_started(sender, plugin: PluginBase, funct
 
 @receiver(image_search_plugin_authenticated, dispatch_uid="image_search_plugin_authenticated")
 def handle_image_search_plugin_authenticated(sender, plugin: PluginBase, **kwargs):
-    """Handle ImageSearchPlugin authenticated signal."""
+    """
+    Handle ImageSearchPlugin authenticated signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param kwargs: The signal's other arguments, of which ``provider`` are logged.
+    """
     logger.info(
         "%s.image_search_plugin_authenticated() %s provider: %s",
         logger_prefix,
@@ -47,7 +63,16 @@ def handle_image_search_plugin_authenticated(sender, plugin: PluginBase, **kwarg
 
 @receiver(image_search_plugin_authentication_failed, dispatch_uid="image_search_plugin_authentication_failed")
 def handle_image_search_plugin_authentication_failed(sender, plugin: PluginBase, error: str, **kwargs):
-    """Handle ImageSearchPlugin authentication failed signal."""
+    """
+    Handle ImageSearchPlugin authentication failed signal.
+
+    Logs it at WARNING.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param error: Why it failed.
+    :param kwargs: The signal's other arguments, of which ``provider`` are logged.
+    """
     logger.warning(
         "%s.image_search_plugin_authentication_failed() %s provider: %s error: %s",
         logger_prefix,
@@ -59,7 +84,17 @@ def handle_image_search_plugin_authentication_failed(sender, plugin: PluginBase,
 
 @receiver(image_search_plugin_responded, dispatch_uid="image_search_plugin_responded")
 def handle_image_search_plugin_responded(sender, plugin: PluginBase, response=None, cached: bool = False, **kwargs):
-    """Handle ImageSearchPlugin responded signal."""
+    """
+    Handle ImageSearchPlugin responded signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param response: The response, whose length in characters is logged.
+    :param cached: Whether the response was served from the cache.
+    :param kwargs: The signal's other arguments, of which ``query`` are logged.
+    """
     logger.info(
         "%s.image_search_plugin_responded() %s query: %s characters: %s cached: %s",
         logger_prefix,
@@ -72,13 +107,30 @@ def handle_image_search_plugin_responded(sender, plugin: PluginBase, response=No
 
 @receiver(image_search_plugin_failed, dispatch_uid="image_search_plugin_failed")
 def handle_image_search_plugin_failed(sender, plugin: PluginBase, error: str, **kwargs):
-    """Handle ImageSearchPlugin failed signal."""
+    """
+    Handle ImageSearchPlugin failed signal.
+
+    Logs it at WARNING.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param error: Why it failed.
+    """
     logger.warning("%s.image_search_plugin_failed() %s failed: %s", logger_prefix, plugin.name, error)
 
 
 @receiver(image_search_plugin_request_completed, dispatch_uid="image_search_plugin_request_completed")
 def handle_image_search_plugin_request_completed(sender, plugin: PluginBase, success: bool, duration: float, **kwargs):
-    """Handle ImageSearchPlugin request completed signal."""
+    """
+    Handle ImageSearchPlugin request completed signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param success: Whether the request succeeded.
+    :param duration: Seconds that the request took.
+    """
     logger.info(
         "%s.image_search_plugin_request_completed() %s success: %s duration: %.3fs",
         logger_prefix,

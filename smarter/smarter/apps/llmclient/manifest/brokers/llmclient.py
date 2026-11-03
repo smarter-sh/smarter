@@ -82,6 +82,7 @@ class SAMLLMClientBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """Return the error message prefix for LLMClient broker errors."""
         return "Smarter API LLMClient Manifest Broker Error"
 
 
@@ -788,17 +789,44 @@ class SAMLLMClientBroker(AbstractBroker):
             appInfoUrl="https://example.com/info",
             appFileAttachment=False,
         )
+        # The style models declare their defaults positionally, as Field(None, ...), which type
+        # checkers don't read as a default, so the unused settings are passed as None explicitly.
+        conversation_header = SAMLLMClientStylesConversationHeader(
+            backgroundColor="#1b1f3b",
+            color="#ffffff",
+            infoColor="#c0c4e0",
+            borderColor=None,
+        )
+        incoming_message = SAMLLMClientStylesMessage(
+            backgroundColor="#eef1ff",
+            color="#1b1f3b",
+            borderColor=None,
+            linkColor=None,
+        )
+        outgoing_message = SAMLLMClientStylesMessage(
+            backgroundColor="#ff5733",
+            color="#ffffff",
+            borderColor=None,
+            linkColor=None,
+        )
         styles = SAMLLMClientSpecConfigStyles(
             appLogoUrl="https://cdn.smarter.sh/images/logo/smarter-crop.png",
             appBackgroundImageUrl="https://cdn.smarter.sh/prompt-ui/background.png",
             appBackgroundImageSize="cover",
+            assistantAvatarUrl=None,
+            userAvatarUrl=None,
+            fontFamily=None,
             googleFont="Inter",
+            fontSize=None,
             borderRadius="14px",
-            conversationHeader=SAMLLMClientStylesConversationHeader(
-                backgroundColor="#1b1f3b", color="#ffffff", infoColor="#c0c4e0"
-            ),
-            incomingMessage=SAMLLMClientStylesMessage(backgroundColor="#eef1ff", color="#1b1f3b"),
-            outgoingMessage=SAMLLMClientStylesMessage(backgroundColor="#ff5733", color="#ffffff"),
+            mainContainer=None,
+            conversationHeader=conversation_header,
+            messageList=None,
+            incomingMessage=incoming_message,
+            outgoingMessage=outgoing_message,
+            messageInput=None,
+            buttons=None,
+            typingIndicator=None,
         )
         config = SAMLLMClientSpecConfig(prompt=prompt, styles=styles)
 
@@ -834,6 +862,18 @@ class SAMLLMClientBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=model.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        List the account's LLMClients that the user may see, optionally filtered by name and annotations.
+
+        Returns at most ``MAX_RESULTS`` LLMClients, ordered by name, each serialized with
+        :class:`~smarter.apps.llmclient.serializers.LLMClientSerializer` and camel-cased.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Query parameters: ``name`` and the annotation selector.
+        :returns: A response with the column titles and the serialized LLMClients.
+        :raises SAMLLMClientBrokerError: if an LLMClient fails to serialize.
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         data = []
@@ -1234,11 +1274,30 @@ class SAMLLMClientBroker(AbstractBroker):
         )
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not supported: the CLI does not prompt an LLMClient.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the LLMClient as a manifest.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :returns: A response whose data is the LLMClient's manifest dict.
+        :raises SAMBrokerErrorNotReady: if the broker has no name.
+        :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
+        :raises SAMLLMClientBrokerError: if the manifest cannot be built.
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
@@ -1333,6 +1392,19 @@ class SAMLLMClientBroker(AbstractBroker):
         return self.dependency_brokers_for(self.llmclient)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the LLMClient, after checking that no Orchestrator depends on it.
+
+        Invalidates the LLMClient's caches before the delete, while it still has an id.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :returns: A successful response with empty data.
+        :raises SAMBrokerErrorNotReady: if the broker has no name.
+        :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
+        :raises SAMLLMClientBrokerError: if the delete fails.
+        """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
@@ -1358,6 +1430,20 @@ class SAMLLMClientBroker(AbstractBroker):
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Set the LLMClient's ``deployed`` flag and save it.
+
+        When the flag changes, ``LLMClient.save()`` sends ``llmclient_deploy``, whose receiver queues the
+        ``deploy_default_api`` Celery task.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :returns: A successful response with empty data.
+        :raises SAMBrokerErrorNotReady: if the broker has no name.
+        :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
+        :raises SAMLLMClientBrokerError: if the save fails.
+        """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
@@ -1382,6 +1468,20 @@ class SAMLLMClientBroker(AbstractBroker):
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Clear the LLMClient's ``deployed`` flag and save it.
+
+        When the flag changes, ``LLMClient.save()`` sends ``llmclient_undeploy``, whose receiver queues the
+        ``undeploy_default_api`` Celery task.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :returns: A successful response with empty data.
+        :raises SAMBrokerErrorNotReady: if the broker has no name.
+        :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
+        :raises SAMLLMClientBrokerError: if the save fails.
+        """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
@@ -1406,6 +1506,14 @@ class SAMLLMClientBroker(AbstractBroker):
         raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an empty logs response: LLMClient logs are not implemented.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments (unused).
+        :param kwargs: Keyword arguments (unused).
+        :returns: A successful response whose data is an empty dict.
+        """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}
