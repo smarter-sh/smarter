@@ -42,4 +42,5 @@ Technical Reference
    account/serializers
    account/signals
    account/tasks
+   account/user_merge
    account/utils

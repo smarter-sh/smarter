@@ -71,6 +71,18 @@ class AccountRegisterView(SmarterNeverCachedWebView):
         email = forms.EmailField()
         password = forms.CharField(widget=forms.PasswordInput)
 
+        def clean_email(self) -> str:
+            """
+            Reject an email address that another user already has, in any case.
+
+            :returns: The email address.
+            :raises forms.ValidationError: when a user already has it.
+            """
+            email = self.cleaned_data["email"]
+            if User.objects.filter(email__iexact=email).exists():
+                raise forms.ValidationError(_("An account with this email address already exists. Please sign in."))
+            return email
+
     template_path = "account/authentication/sign-up.html"
 
     def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
