@@ -80,7 +80,7 @@ function VSCodeExtension() {
                   {gettext("Install")}
                 </a>
                 <a
-                  href="https://docs.smarter.sh/en/latest/smarter-framework/vs-code-extension.html"
+                  href="https://docs.smarter.sh/smarter-framework/vs-code-extension.html"
                   target="_blank"
                   className="btn btn-sm btn-light fw-semibold"
                 >

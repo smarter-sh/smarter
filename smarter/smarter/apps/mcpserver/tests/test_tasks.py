@@ -11,7 +11,7 @@ from smarter.apps.mcpserver.tasks import index_repository as index_repository_ta
 
 from .base_classes import COMMIT_SHA, MCPServerTestBase
 
-INDEXER_PATCH = "smarter.apps.mcpserver.tasks.indexer.index_repository"
+INDEXER_PATCH = "smarter.apps.mcpserver.tasks.github.index_repository"
 BLOG_INDEXER_PATCH = "smarter.apps.mcpserver.tasks.blog.index_blog"
 
 

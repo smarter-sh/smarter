@@ -64,9 +64,9 @@ This React component is built substantially with [Vite.js](https://github.com/sm
 
 ### Django Integration
 
-Be aware that there are many considerations for getting React to work inside a Django project. The web console's React apps, and how Django hosts them, are described in [React integration](https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration.html).
+Be aware that there are many considerations for getting React to work inside a Django project. The web console's React apps, and how Django hosts them, are described in [React integration](https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html).
 
-For a working example of Smarter Chat embedded in an ordinary web page, outside Django, see [smarter-sh/smarter.sh](https://github.com/smarter-sh/smarter.sh), the source of the project's website. It is not an example project, but its landing page runs four live integrations: four of the platform's built-in LLMClients (weather, math, smarter_sdk_guide and smarter_developer), each chatting live through Smarter Chat's embed script. Start with [src/common/chatbots.js](https://github.com/smarter-sh/smarter.sh/blob/main/src/common/chatbots.js), which lists the deployed LLMClients and loads the embed script from jsDelivr, and [src/components/site/SmarterChatEmbed.jsx](https://github.com/smarter-sh/smarter.sh/blob/main/src/components/site/SmarterChatEmbed.jsx), which renders each one as a `<smarter-chat>` element, with its own session cookie, after checking that the LLMClient answers. Each LLMClient's manifest allows `https://smarter.sh` in `spec.config.prompt.allowedOrigins`. The previous example, smarter-sh/web-integration-example, is archived. See also [Embedding Smarter Chat](https://docs.smarter.sh/en/latest/smarter-framework/smarter-chat/embedding.html).
+For a working example of Smarter Chat embedded in an ordinary web page, outside Django, see [smarter-sh/smarter.sh](https://github.com/smarter-sh/smarter.sh), the source of the project's website. It is not an example project, but its landing page runs four live integrations: four of the platform's built-in LLMClients (weather, math, smarter_sdk_guide and smarter_developer), each chatting live through Smarter Chat's embed script. Start with [src/common/chatbots.js](https://github.com/smarter-sh/smarter.sh/blob/main/src/common/chatbots.js), which lists the deployed LLMClients and loads the embed script from jsDelivr, and [src/components/site/SmarterChatEmbed.jsx](https://github.com/smarter-sh/smarter.sh/blob/main/src/components/site/SmarterChatEmbed.jsx), which renders each one as a `<smarter-chat>` element, with its own session cookie, after checking that the LLMClient answers. Each LLMClient's manifest allows `https://smarter.sh` in `spec.config.prompt.allowedOrigins`. The previous example, smarter-sh/web-integration-example, is archived. See also [Embedding Smarter Chat](https://docs.smarter.sh/smarter-framework/smarter-chat/embedding.html).
 
 ### Webapp design features
 
@@ -106,6 +106,6 @@ Cloud engineers:
 Optional requirements:
 
 - [OpenAI platform API key](https://platform.openai.com/).
-  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](https://docs.smarter.sh/en/latest/integrations/openai-api-getting-started-guide.html)_
+  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](https://docs.smarter.sh/integrations/openai-api-getting-started-guide.html)_
 - [Google Maps API key](https://developers.google.com/maps/documentation/geocoding/overview). This is used the OpenAI API Function Calling coding example, "[get_current_weather()](https://platform.openai.com/docs/guides/function-calling)".
 - [Pinecone API key](https://docs.pinecone.io/docs/quickstart). This is used for OpenAI API Embedding examples.

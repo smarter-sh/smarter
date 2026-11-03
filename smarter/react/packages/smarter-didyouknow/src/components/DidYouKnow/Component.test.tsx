@@ -5,7 +5,7 @@ import DidYouKnow from "@/components/DidYouKnow/Component";
 
 const withLink = {
   text: "Smarter has an MCP server.",
-  link: { label: "Read about it", url: "https://docs.smarter.sh/en/latest/" },
+  link: { label: "Read about it", url: "https://docs.smarter.sh/" },
 };
 
 describe("DidYouKnow", () => {

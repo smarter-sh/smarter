@@ -31,7 +31,7 @@ import wordpressLogo from "../../assets/wordpress.svg";
 
 // The Google Tag Manager logo and the illustration are the Keen theme's. They stay at their
 // /static/assets/ paths, which the page serves along with the Keen stylesheet.
-const DOCS = "https://docs.smarter.sh/en/latest/smarter-framework";
+const DOCS = "https://docs.smarter.sh/smarter-framework";
 
 const INTEGRATIONS = [
   {

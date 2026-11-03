@@ -6,7 +6,7 @@ export const projectVersion = packageJson.version;
 export const loggerPrefix = `[${platformName} ${projectName} v${projectVersion}]`;
 
 /** The documentation, and the other repositories, that the page links to. */
-const DOCS = "https://docs.smarter.sh/en/latest";
+const DOCS = "https://docs.smarter.sh";
 export const DOCS_URLS = {
   apiKeys: `${DOCS}/smarter-platform/api-keys.html`,
   budgets: `${DOCS}/smarter-resources/smarter-budget.html`,

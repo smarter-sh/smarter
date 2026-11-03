@@ -52,7 +52,7 @@ rules, its limits and its upgrade steps, and that is what the post is made of.
    one in a post is a support ticket.
 5. Find each feature's docs page under `docs/source/smarter-resources/` and
    link it as
-   `https://docs.smarter.sh/en/latest/smarter-resources/<page>.html`.
+   `https://docs.smarter.sh/smarter-resources/<page>.html`.
 6. If the user gives the previous release's post as a guide, fetch it. Keep
    its voice, and improve on it rather than copying it.
 

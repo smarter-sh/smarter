@@ -13,7 +13,7 @@ describe("Contribute", () => {
     ).toHaveLength(4);
     expect(within(contribute).getByRole("link", { name: "Contributing guide" })).toHaveAttribute(
       "href",
-      "https://docs.smarter.sh/en/latest/smarter-framework/guides/contributing.html",
+      "https://docs.smarter.sh/smarter-framework/guides/contributing.html",
     );
     expect(within(contribute).getByRole("link", { name: "Open issues" })).toHaveAttribute(
       "href",

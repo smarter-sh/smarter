@@ -309,7 +309,7 @@ class TestProviderPromptCache(SmarterTestBase):
             "mcp1_read": MagicMock(read_only=True, cacheable=True, mcpclient=MagicMock(cache_ttl=3600)),
             "mcp1_write": MagicMock(read_only=False, cacheable=False, mcpclient=MagicMock(cache_ttl=3600)),
             "mcp2_read": MagicMock(read_only=True, cacheable=True, mcpclient=MagicMock(cache_ttl=0)),
-            # a read-only tool of the platform's operations server, which answers for the user who is chatting.
+            # a read-only staff-only tool of the platform's MCPServer, which answers for the user who is chatting.
             "mcp3_read": MagicMock(read_only=True, cacheable=False, mcpclient=MagicMock(cache_ttl=3600)),
         }
         self.client.extension_toolkit = MagicMock()
