@@ -132,6 +132,14 @@ class GoogleOAuth2Multitenant(GoogleOAuth2):
     """Custom Google OAuth2 backend that also verifies payment status of the hosted platform."""
 
     def get_user_details(self, response):
+        """
+        Return the user's details from Google, or None if their hosted platform subscription is not paid.
+
+        An unpaid user gets an error message, and their session's ``account_status`` is set to ``inactive``.
+
+        :param response: The provider's user data.
+        :returns: The user details, or None.
+        """
         details = super().get_user_details(response)
         logger.debug("%s.get_user_details() Retrieved user details: %s", logger_prefix, details)
         if details is None:
@@ -156,6 +164,15 @@ class GithubOAuth2Multitenant(GithubOAuth2):
     """Custom GitHub OAuth2 backend that also verifies payment status of the hosted platform."""
 
     def get_user_details(self, response):
+        """
+        Return the user's details from GitHub, or None if their hosted platform subscription is not paid.
+
+        The payment check is skipped in the local environment. An unpaid user gets an error message,
+        and their session's ``account_status`` is set to ``inactive``.
+
+        :param response: The provider's user data.
+        :returns: The user details, or None.
+        """
         details = super().get_user_details(response)
         logger.debug("%s.get_user_details() Retrieved user details: %s", logger_prefix, details)
         if details is None:
@@ -183,6 +200,16 @@ class DjangoModelBackendMultitenant(ModelBackend):
     """Custom Django ModelBackend that also verifies payment status of the hosted platform."""
 
     def authenticate(self, request, username=None, password=None, **kwargs):
+        """
+        Authenticate with a username and password, then check the user's hosted platform subscription.
+
+        :param request: The request, or None.
+        :param username: The username.
+        :param password: The password.
+        :param kwargs: Passed to Django's ``ModelBackend.authenticate()``.
+        :returns: The user, None if the credentials are wrong, or a redirect to the inactive account
+            page if the subscription is not paid.
+        """
         user = super().authenticate(request, username, password, **kwargs)
         if user:
             # the authenticated user's own username: the username argument is whatever the caller

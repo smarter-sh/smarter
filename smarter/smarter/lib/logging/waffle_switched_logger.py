@@ -83,30 +83,81 @@ class WaffleSwitchedLoggerWrapper:
         return True
 
     def debug(self, msg: Any, *args, **kwargs):
+        """
+        Log at DEBUG if the condition allows it, or the level is at least ``REQUIRED_LOG_LEVEL``.
+
+        :param msg: The message, with %-style placeholders.
+        :param args: The message's arguments.
+        :param kwargs: Passed to the wrapped logger.
+        """
         if self.should_log(logging.DEBUG) or logging.DEBUG >= self.REQUIRED_LOG_LEVEL:
             self._logger.debug(msg, *args, **kwargs)
 
     def info(self, msg: Any, *args, **kwargs):
+        """
+        Log at INFO if the condition allows it, or the level is at least ``REQUIRED_LOG_LEVEL``.
+
+        :param msg: The message, with %-style placeholders.
+        :param args: The message's arguments.
+        :param kwargs: Passed to the wrapped logger.
+        """
         if self.should_log(logging.INFO) or logging.INFO >= self.REQUIRED_LOG_LEVEL:
             self._logger.info(msg, *args, **kwargs)
 
     def warning(self, msg: Any, *args, **kwargs):
+        """
+        Log at WARNING if the condition allows it, or the level is at least ``REQUIRED_LOG_LEVEL``.
+
+        :param msg: The message, with %-style placeholders.
+        :param args: The message's arguments.
+        :param kwargs: Passed to the wrapped logger.
+        """
         if self.should_log(logging.WARNING) or logging.WARNING >= self.REQUIRED_LOG_LEVEL:
             self._logger.warning(msg, *args, **kwargs)
 
     def error(self, msg: Any, *args, **kwargs):
+        """
+        Log at ERROR if the condition allows it, or the level is at least ``REQUIRED_LOG_LEVEL``.
+
+        :param msg: The message, with %-style placeholders.
+        :param args: The message's arguments.
+        :param kwargs: Passed to the wrapped logger.
+        """
         if self.should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
             self._logger.error(msg, *args, **kwargs)
 
     def critical(self, msg: Any, *args, **kwargs):
+        """
+        Log at CRITICAL if the condition allows it, or the level is at least ``REQUIRED_LOG_LEVEL``.
+
+        :param msg: The message, with %-style placeholders.
+        :param args: The message's arguments.
+        :param kwargs: Passed to the wrapped logger.
+        """
         if self.should_log(logging.CRITICAL) or logging.CRITICAL >= self.REQUIRED_LOG_LEVEL:
             self._logger.critical(msg, *args, **kwargs)
 
     def exception(self, msg: Any, *args, exc_info=True, **kwargs):
+        """
+        Log at ERROR, with the stack trace, if the condition allows it, or ERROR is at least ``REQUIRED_LOG_LEVEL``.
+
+        :param msg: The message, with %-style placeholders.
+        :param args: The message's arguments.
+        :param exc_info: Whether to log the current exception's stack trace.
+        :param kwargs: Passed to the wrapped logger.
+        """
         if self.should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
             self._logger.exception(msg, *args, exc_info=exc_info, **kwargs)
 
     def log(self, level: int, msg: Any, *args, **kwargs):
+        """
+        Log at ``level`` if the condition allows it, or the level is at least ``REQUIRED_LOG_LEVEL``.
+
+        :param level: The logging level, e.g. ``logging.INFO``.
+        :param msg: The message, with %-style placeholders.
+        :param args: The message's arguments.
+        :param kwargs: Passed to the wrapped logger.
+        """
         if self.should_log(level) or level >= self.REQUIRED_LOG_LEVEL:
             self._logger.log(level, msg, *args, **kwargs)
 

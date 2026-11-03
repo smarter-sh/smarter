@@ -17,9 +17,20 @@ class Command(SmarterCommand):
     help = "Write the JSON Schema of the Smarter Journal api contract."
 
     def add_arguments(self, parser):
+        """
+        Add the ``--output`` option.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("--output", default=SCHEMA_PATH, help="The file to write.")
 
     def handle(self, *args, **options):
+        """
+        Write the schema file, and print its path.
+
+        :param args: Unused.
+        :param options: The command's options, including ``output``.
+        """
         self.handle_begin()
         path = write_journal_contract_schema(options["output"])
         self.stdout.write(path)

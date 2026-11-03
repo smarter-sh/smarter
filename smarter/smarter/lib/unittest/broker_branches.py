@@ -37,6 +37,7 @@ class BrokerBranchesTestMixin:
     manifest_path: str
 
     def setUp(self):
+        """Build a request by the admin user, a loader of ``manifest_path``, and the broker under test."""
         super().setUp()  # type: ignore[misc]
         self.request = self.create_generic_request("/anywhere/")  # type: ignore[attr-defined]
         self.request.user = self.admin_user  # type: ignore[attr-defined]
@@ -44,12 +45,26 @@ class BrokerBranchesTestMixin:
         self.broker = self.broker_class(request=self.request, account=self.account, loader=self.loader)  # type: ignore[attr-defined]
 
     def patch_property(self, name: str, value) -> PropertyMock:
+        """
+        Patch a property of the broker class, until the end of the test.
+
+        :param name: The property's name.
+        :param value: The value the property returns.
+        :returns: The mock.
+        """
         patcher = patch.object(self.broker_class, name, new_callable=PropertyMock, return_value=value)
         mock = patcher.start()
         self.addCleanup(patcher.stop)  # type: ignore[attr-defined]
         return mock
 
     def patch_method(self, name: str, **kwargs) -> MagicMock:
+        """
+        Patch a method of the broker instance, until the end of the test.
+
+        :param name: The method's name.
+        :param kwargs: Passed to :func:`unittest.mock.patch.object`, e.g. ``return_value``.
+        :returns: The mock.
+        """
         patcher = patch.object(self.broker, name, **kwargs)
         mock = patcher.start()
         self.addCleanup(patcher.stop)  # type: ignore[attr-defined]
@@ -144,6 +159,15 @@ class BrokerBranchesTestMixin:
 
 
 def api_test_data(app: str, filename: str) -> str:
-    """Return the path of a manifest in an app's ``api/v1/views/tests/data`` folder."""
-    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    """
+    Return the path of a manifest in an app's ``api/v1/views/tests/data`` folder.
+
+    :param app: The app's folder name under ``smarter/apps``, e.g. ``secret``.
+    :param filename: The manifest's file name.
+    :returns: The absolute path.
+    """
+    this_file = os.path.abspath(__file__)
+    unittest_dir = os.path.dirname(this_file)
+    lib_dir = os.path.dirname(unittest_dir)
+    here = os.path.dirname(lib_dir)
     return os.path.join(here, "apps", app, "api", "v1", "views", "tests", "data", filename)
