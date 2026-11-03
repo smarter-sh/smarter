@@ -28,7 +28,8 @@ types-Markdown
 types-paramiko
 types-PyYAML
 types-requests
-django-stubs                       # Type annotations for Django
+celery-types                       # Type annotations for Celery, e.g. a task's .delay()
+django-stubs                     # Type annotations for Django
 djangorestframework-stubs          # type annotations for djangorestframework
 mypy_extensions                    # Type annotations for Python
 
