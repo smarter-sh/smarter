@@ -128,6 +128,17 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
             "wildcard. Example: ['https://www.example.com', 'http://localhost:5173']."
         ),
     )
+    staffOnly: bool = Field(
+        default=False,
+        description=(
+            f"{class_identifier}.staff_only[bool]. Optional. Whether only the platform's own staff may see and use "
+            "the llmclient: the staff users of the Smarter account that runs the platform, not the admins of other "
+            "accounts. Defaults to False. A staff-only llmclient is in no other user's lists, workbench or apis, "
+            "including at its deployed url, and only the platform's staff may apply one. Use it for an llmclient "
+            "whose tools read what only staff may see, e.g. an MCPClient of the platform's Smarter Operations MCP "
+            "server."
+        ),
+    )
 
     @field_validator("defaultSystemRole")
     @classmethod
