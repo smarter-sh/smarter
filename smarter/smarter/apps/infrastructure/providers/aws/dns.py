@@ -60,7 +60,14 @@ def to_record_set(record: DNSRecord) -> SmarterDictType:
 
 
 def to_zone(hosted_zone: SmarterDictType, delegation_set: Optional[SmarterDictType] = None) -> DNSZone:
-    """A Route53 hosted zone, and optionally its delegation set, as a :class:`DNSZone`."""
+    """
+    A Route53 hosted zone, and optionally its delegation set, as a :class:`DNSZone`.
+
+    :param hosted_zone: The hosted zone, as Route53 returns it, with its ``Id`` and ``Name``.
+    :param delegation_set: The zone's delegation set, whose ``NameServers`` are the zone's name
+        servers, or None, for a zone without name servers.
+    :returns: The zone.
+    """
     return DNSZone(
         id=hosted_zone_id(hosted_zone["Id"]),
         name=hosted_zone["Name"],
@@ -82,6 +89,7 @@ class Route53DNSService(DNSService):
 
     @property
     def ready(self) -> bool:
+        """Whether the AWS provider is ready, i.e. authenticated with AWS."""
         return self.provider.ready
 
     @property
