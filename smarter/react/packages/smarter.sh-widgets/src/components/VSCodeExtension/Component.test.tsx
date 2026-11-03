@@ -14,7 +14,7 @@ describe("VSCodeExtension", () => {
     expect(within(card).getByRole("link", { name: "Install" })).toHaveAttribute("href", MARKETPLACE);
     expect(within(card).getByRole("link", { name: "Documentation" })).toHaveAttribute(
       "href",
-      "https://docs.smarter.sh/en/latest/smarter-framework/vs-code-extension.html",
+      "https://docs.smarter.sh/smarter-framework/vs-code-extension.html",
     );
   });
 

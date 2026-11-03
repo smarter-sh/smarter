@@ -1,12 +1,16 @@
-"""Tests for smarter.apps.mcpserver.index.search."""
+"""Tests for smarter.apps.mcpserver.services.search."""
 
-from smarter.apps.mcpserver.index.search import (
+from smarter.apps.mcpserver.exceptions import SmarterMCPServerServiceError
+from smarter.apps.mcpserver.models import RepositoryFileKind
+from smarter.apps.mcpserver.services.search import (
     MAX_TERMS,
     matching_lines,
     query_terms,
+    search_blog,
+    search_code,
+    search_documentation,
     search_files,
 )
-from smarter.apps.mcpserver.models import RepositoryFileKind
 
 from .base_classes import COMMIT_SHA, DOCS_URL, MCPServerTestBase
 
@@ -93,3 +97,36 @@ class TestSearch(MCPServerTestBase):
         )
         self.assertEqual(passage[-1].text, "the match")
         self.assertEqual(passage[0].number, 29)
+
+
+class TestSearchServices(MCPServerTestBase):
+    """Test search_documentation, search_code and search_blog, which search only the indexes that are ready."""
+
+    def test_search_documentation(self):
+        """Only documentation is searched, and the repositories that are not indexed are named."""
+        results = search_documentation(self.repositories, "custom domain verification", limit=5)
+        self.assertTrue(results.hits)
+        for hit in results.hits:
+            self.assertEqual(hit.kind, RepositoryFileKind.DOCUMENTATION)
+        self.assertEqual(results.not_indexed, [self.unindexed_repository.name])
+        self.mock_index_task.delay.assert_called_once_with(self.unindexed_repository.name)
+
+    def test_search_code_under_a_folder(self):
+        """Only code under the folder is searched."""
+        results = search_code([self.docs_repository], "lookup_dns_records", limit=5, path="platform/apps")
+        self.assertTrue(results.hits)
+        for hit in results.hits:
+            self.assertEqual(hit.kind, RepositoryFileKind.CODE)
+            self.assertTrue(hit.path.startswith("platform/apps/"))
+        self.assertEqual(results.not_indexed, [])
+
+    def test_nothing_indexed(self):
+        """A search of repositories that are none of them indexed is a service error."""
+        with self.assertRaisesRegex(SmarterMCPServerServiceError, "has not been indexed yet"):
+            search_code([self.unindexed_repository], "apply", limit=5)
+
+    def test_search_blog(self):
+        """The blog's posts are searched."""
+        hits = search_blog("leaked passwords logs", limit=3)
+        self.assertTrue(hits)
+        self.assertEqual(hits[0].repository, self.blog.name)

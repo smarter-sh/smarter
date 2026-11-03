@@ -10,7 +10,8 @@ delegates route handling to app-specific URL modules.
 - ``llmclients/``: LLMClient CRUD and related operations.
 - ``cli/``: Brokered services for CLI workflows.
 - ``demos/``: Fictional data for the platform's example resources, e.g. the Stackademy course catalogue.
-- ``mcp/``: The Smarter Project MCP server, which reads the project's documentation and code.
+- ``mcp/``: The MCPServer's two endpoints: its public tools, which read the project's documentation
+  and code, and its staff-only tools, which read the platform's health, logs and users.
 - ``journal/``: Smarter Journal entries (superusers only).
 - ``connections/``: External connection integration endpoints.
 - ``plugins/``: Plugin management endpoints.

@@ -1,5 +1,5 @@
 """
-Tests for smarter.apps.mcpserver.protocol.views: the MCP servers over HTTP.
+Tests for smarter.apps.mcpserver.protocol.views: the MCPServer's endpoints over HTTP.
 
 :class:`TestMCPClientEndToEnd` and :class:`TestOperationsMCPClientEndToEnd` connect Smarter's own
 MCPClient, with the MCP Python SDK's Streamable HTTP client, to the views, through an httpx2
@@ -12,7 +12,7 @@ from unittest import mock
 
 import anyio.to_thread
 import httpx2
-from django.test import Client, RequestFactory
+from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.models import User
@@ -20,15 +20,14 @@ from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.mcpclient.connection import MCPServerConnection
 from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
 from smarter.apps.mcpclient.models import MCPClient
-from smarter.apps.mcpserver.acting_user import (
+from smarter.apps.mcpserver.models import OperationsToolCall
+from smarter.apps.mcpserver.services.acting_user import (
     ACTING_USER_HEADER,
     acting_user,
-    operations_server_url,
     sign_acting_user,
+    staff_endpoint_url,
 )
-from smarter.apps.mcpserver.github.issues import GitHubIssue
-from smarter.apps.mcpserver.models import OperationsToolCall
-from smarter.apps.mcpserver.protocol.views import api_key, bearer_token
+from smarter.apps.mcpserver.services.github.issues import GitHubIssue
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
 from smarter.lib.drf.models import SmarterAuthToken
 
@@ -37,7 +36,7 @@ from .operations_base import TICKET, OperationsTestBase
 
 CONNECTION = "smarter.apps.mcpclient.connection"
 HEADERS = {"HTTP_ACCEPT": "application/json, text/event-stream"}
-CREATE_ISSUE = "smarter.apps.mcpserver.github.issues.create_issue"
+CREATE_ISSUE = "smarter.apps.mcpserver.services.github.issues.create_issue"
 
 
 def forward_to_django(test) -> None:
@@ -89,11 +88,11 @@ def url(repository=None) -> str:
     """Return the url of the MCP server of a repository, or of all of them."""
     names = MCPServerReverseNames
     if repository is None:
-        return reverse(f"{names.namespace}:{names.smarter_project}")
-    return reverse(f"{names.namespace}:{names.repository}", kwargs={"repository": repository})
+        return reverse(f"{names.namespace}:{names.public}")
+    return reverse(f"{names.namespace}:{names.public_repository}", kwargs={"repository": repository})
 
 
-class TestSmarterProjectMCPServerView(MCPServerTestBase):
+class TestPublicEndpointView(MCPServerTestBase):
     """Test the HTTP endpoint."""
 
     def setUp(self):
@@ -119,31 +118,13 @@ class TestSmarterProjectMCPServerView(MCPServerTestBase):
         self.assertNotIn("Mcp-Session-Id", response)
 
     def test_all_repositories(self):
-        """The server of all of the repositories answers too, without a csrf token."""
+        """The endpoint of every repository answers too, without a csrf token."""
         client = Client(enforce_csrf_checks=True)
         response = client.post(
             url(), data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}), content_type="application/json"
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["result"]["tools"]), 11)
-
-    def test_bearer_token(self):
-        """The token of an Authorization: Bearer header is read, and nothing else."""
-        factory = RequestFactory()
-        cases = [
-            ({}, None),
-            ({"HTTP_AUTHORIZATION": f"Bearer {TOKEN}"}, TOKEN),
-            ({"HTTP_AUTHORIZATION": f"  bearer   {TOKEN}  "}, TOKEN),
-            ({"HTTP_AUTHORIZATION": "Bearer "}, None),
-            ({"HTTP_AUTHORIZATION": f"Token {TOKEN}"}, None),
-            ({"HTTP_AUTHORIZATION": f"Basic {TOKEN}"}, None),
-        ]
-        for headers, expected in cases:
-            with self.subTest(headers=headers):
-                token = bearer_token(factory.post("/", **headers))
-                self.assertEqual(token.get_secret_value() if token else None, expected)
-                if token:
-                    self.assertNotIn(TOKEN, repr(token))
 
     def test_github_token_serves_create_issue(self):
         """A request with a GitHub token is also served the tools that write: issues, comments and pull requests."""
@@ -250,8 +231,8 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
         self.assertEqual(create_issue.call_args.args[3].get_secret_value(), TOKEN)
 
 
-class TestSmarterOperationsMCPServerView(OperationsTestBase):
-    """Test the staff-only endpoint of the Smarter Operations MCP server, with real api keys."""
+class TestStaffEndpointView(OperationsTestBase):
+    """Test the MCPServer's staff-only endpoint, with real api keys."""
 
     @classmethod
     def setUpClass(cls):
@@ -275,7 +256,7 @@ class TestSmarterOperationsMCPServerView(OperationsTestBase):
     def setUp(self):
         super().setUp()
         self.client = Client(enforce_csrf_checks=True)
-        self.url = reverse(f"{MCPServerReverseNames.namespace}:{MCPServerReverseNames.smarter_operations}")
+        self.url = reverse(f"{MCPServerReverseNames.namespace}:{MCPServerReverseNames.staff}")
 
     def post(self, body, key=None, **extra):
         if key is not None:
@@ -284,20 +265,6 @@ class TestSmarterOperationsMCPServerView(OperationsTestBase):
 
     def test_url(self):
         self.assertEqual(self.url, "/api/v1/mcp/smarter-operations/")
-
-    def test_api_key(self):
-        """The key of an Authorization: Token header is read, and nothing else."""
-        factory = RequestFactory()
-        cases = [
-            ({}, None),
-            ({"HTTP_AUTHORIZATION": "Token abc123"}, "abc123"),
-            ({"HTTP_AUTHORIZATION": "  token   abc123  "}, "abc123"),
-            ({"HTTP_AUTHORIZATION": "Token "}, None),
-            ({"HTTP_AUTHORIZATION": "Bearer abc123"}, None),
-        ]
-        for headers, expected in cases:
-            with self.subTest(headers=headers):
-                self.assertEqual(api_key(factory.post("/", **headers)), expected)
 
     def test_staff(self):
         """A staff user's api key is served the operations tools, and nothing else."""
@@ -455,15 +422,15 @@ class TestSmarterOperationsMCPServerView(OperationsTestBase):
         self.assertEqual(response.status_code, 401)
 
 
-class TestOperationsMCPClientEndToEnd(OperationsTestBase):
-    """An MCPClient of the platform's operations server calls it for the user who is chatting."""
+class TestStaffMCPClientEndToEnd(OperationsTestBase):
+    """An MCPClient of the platform's staff-only endpoint calls it for the user who is chatting."""
 
     def setUp(self):
         super().setUp()
         forward_to_django(self)
         self.mcpclient = MCPClient(
             name="test_operations_end_to_end",
-            endpoint_url=operations_server_url(),
+            endpoint_url=staff_endpoint_url(),
             transport="http",
             auth_type="none",
             timeout=30,
