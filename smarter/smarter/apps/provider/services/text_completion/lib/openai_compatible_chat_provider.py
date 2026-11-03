@@ -117,6 +117,18 @@ is never sent otherwise, because older models such as gpt-4o-mini, and some Open
 providers, reject the parameter.
 """
 
+DEFAULT_TEMPERATURE_ONLY_MODELS: set[str] = set()
+"""
+Models that reject any temperature but their default when reasoning_effort is not sent.
+
+OpenAI returns a 400 for these models, e.g. "'temperature' does not support 0.2 with this model.
+Only the default (1) value is supported." Their reasoning runs at its default effort when a request
+omits reasoning_effort, such as the final answer after tool calls, and reasoning models accept only
+the default temperature. A model that fails this way at runtime is added to the set, and later
+requests to it that omit reasoning_effort omit temperature too, so each process pays for the failed
+request at most once per model.
+"""
+
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
@@ -1297,6 +1309,47 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             "input_text": self.input_text,
         }
 
+    def create_completion(self, completions_kwargs: SmarterDictType) -> ChatCompletion:
+        """
+        Send one request to v1/chat/completions.
+
+        Every request of a prompt goes through here.
+
+        Reasoning models accept only their default temperature when their reasoning runs at its
+        default effort, i.e. when the request omits reasoning_effort. Such requests omit temperature
+        for the models in :data:`DEFAULT_TEMPERATURE_ONLY_MODELS`. If another model rejects the
+        request's temperature, the request is retried once without it, and, when the request
+        omitted reasoning_effort, the model is added to the set.
+
+        :param completions_kwargs: The keyword arguments of ``openai.chat.completions.create()``.
+            temperature is removed from it when the model does not accept it.
+        :returns: The LLM's response.
+        :rtype: ChatCompletion
+        :raises openai.BadRequestError: When the provider rejects the request for another reason.
+        """
+        sends_reasoning_effort = _InternalKeys.REASONING_EFFORT_KEY in completions_kwargs
+        if not sends_reasoning_effort and self.model in DEFAULT_TEMPERATURE_ONLY_MODELS:
+            completions_kwargs.pop(_InternalKeys.TEMPERATURE_KEY, None)
+        try:
+            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+        except openai.BadRequestError as e:
+            sends_temperature = _InternalKeys.TEMPERATURE_KEY in completions_kwargs
+            if not sends_temperature:
+                raise
+            if e.param != _InternalKeys.TEMPERATURE_KEY:
+                raise
+            base_logger.warning(
+                "%s %s - model %s rejected temperature=%s. Retrying with its default temperature.",
+                self.formatted_class_name,
+                SmarterFormattedText.text("create_completion()"),
+                self.model,
+                completions_kwargs[_InternalKeys.TEMPERATURE_KEY],
+            )
+            if not sends_reasoning_effort:
+                DEFAULT_TEMPERATURE_ONLY_MODELS.add(str(self.model))
+            completions_kwargs.pop(_InternalKeys.TEMPERATURE_KEY)
+            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+
     def create_first_completion(self, completions_kwargs: SmarterDictType) -> ChatCompletion:
         """
         Send a request that offers the LLM its tools: the first, and the later rounds of tool calls.
@@ -1305,12 +1358,13 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         is 'none'. Requests with tools set reasoning_effort to 'none' for the models in
         :data:`TOOLS_REQUIRE_NO_REASONING_MODELS`. If another model rejects the request for that
         reason, it is retried once with reasoning_effort set to 'none' and the model is added to the set.
+        Each request is sent with :meth:`create_completion`.
         """
         has_tools = bool(completions_kwargs.get(_InternalKeys.TOOLS_KEY))
         if has_tools and self.model in TOOLS_REQUIRE_NO_REASONING_MODELS:
             completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
         try:
-            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+            return self.create_completion(completions_kwargs)
         except openai.BadRequestError as e:
             if (
                 not has_tools
@@ -1327,7 +1381,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             )
             TOOLS_REQUIRE_NO_REASONING_MODELS.add(str(self.model))
             completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
-            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+            return self.create_completion(completions_kwargs)
 
     def handler(
         self,
@@ -1582,7 +1636,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                         completions_kwargs[_InternalKeys.TOOL_CHOICE] = OPENAI_TOOL_CHOICE
                         response = self.create_first_completion(completions_kwargs)
                     else:
-                        response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+                        response = self.create_completion(completions_kwargs)
                     if not isinstance(response, ChatCompletion):
                         raise SmarterValueError(
                             f"{self.formatted_class_name}: second_response must be a ChatCompletion, got {type(response)}"

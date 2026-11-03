@@ -108,7 +108,7 @@ class TestCreateFirstCompletion(SmarterTestBase):
         self.assertEqual(create.call_args.kwargs["reasoning_effort"], REASONING_EFFORT_NONE)
 
     def test_other_bad_request_is_not_retried(self):
-        with patch(CREATE_PATCH, side_effect=bad_request("temperature")) as create:
+        with patch(CREATE_PATCH, side_effect=bad_request("max_completion_tokens")) as create:
             with self.assertRaises(openai.BadRequestError):
                 self.client.create_first_completion(self.kwargs(UNKNOWN_MODEL))
         create.assert_called_once()
@@ -118,6 +118,78 @@ class TestCreateFirstCompletion(SmarterTestBase):
         with patch(CREATE_PATCH, side_effect=bad_request("reasoning_effort")) as create:
             with self.assertRaises(openai.BadRequestError):
                 self.client.create_first_completion(self.kwargs("gpt-6-luna"))
+        create.assert_called_once()
+
+
+class TestCreateCompletion(SmarterTestBase):
+    """Test that temperature is omitted only for a model that accepts only its default temperature."""
+
+    def setUp(self):
+        super().setUp()
+        # the handler's other state is not needed to send a request
+        self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
+        models = patch.object(module, "DEFAULT_TEMPERATURE_ONLY_MODELS", {"gpt-6-luna"})
+        models.start()
+        self.addCleanup(models.stop)
+
+    def kwargs(self, model: str, reasoning_effort: bool = False) -> SmarterDictType:
+        self.client.model = model
+        kwargs = {"model": model, "messages": [{"role": "user", "content": "hi"}], "temperature": 0.2}
+        if reasoning_effort:
+            kwargs["reasoning_effort"] = REASONING_EFFORT_NONE
+        return kwargs
+
+    def test_known_model_omits_temperature(self):
+        with patch(CREATE_PATCH) as create:
+            self.client.create_completion(self.kwargs("gpt-6-luna"))
+        create.assert_called_once()
+        self.assertNotIn("temperature", create.call_args.kwargs)
+
+    def test_known_model_with_reasoning_effort_none_keeps_temperature(self):
+        with patch(CREATE_PATCH) as create:
+            self.client.create_completion(self.kwargs("gpt-6-luna", reasoning_effort=True))
+        self.assertEqual(create.call_args.kwargs["temperature"], 0.2)
+
+    def test_other_model_keeps_temperature(self):
+        with patch(CREATE_PATCH) as create:
+            self.client.create_completion(self.kwargs("gpt-4o-mini"))
+        self.assertEqual(create.call_args.kwargs["temperature"], 0.2)
+
+    def test_unknown_model_is_retried_and_remembered(self):
+        response = MagicMock()
+        with patch(CREATE_PATCH, side_effect=[bad_request("temperature"), response]) as create:
+            result = self.client.create_completion(self.kwargs(UNKNOWN_MODEL))
+        self.assertIs(result, response)
+        self.assertEqual(create.call_count, 2)
+        self.assertNotIn("temperature", create.call_args.kwargs)
+        self.assertIn(UNKNOWN_MODEL, module.DEFAULT_TEMPERATURE_ONLY_MODELS)
+
+        # the next request omits temperature up front
+        with patch(CREATE_PATCH) as create:
+            self.client.create_completion(self.kwargs(UNKNOWN_MODEL))
+        create.assert_called_once()
+        self.assertNotIn("temperature", create.call_args.kwargs)
+
+    def test_rejection_with_reasoning_effort_is_retried_but_not_remembered(self):
+        response = MagicMock()
+        with patch(CREATE_PATCH, side_effect=[bad_request("temperature"), response]) as create:
+            result = self.client.create_completion(self.kwargs(UNKNOWN_MODEL, reasoning_effort=True))
+        self.assertIs(result, response)
+        self.assertNotIn("temperature", create.call_args.kwargs)
+        self.assertNotIn(UNKNOWN_MODEL, module.DEFAULT_TEMPERATURE_ONLY_MODELS)
+
+    def test_other_bad_request_is_not_retried(self):
+        with patch(CREATE_PATCH, side_effect=bad_request("max_completion_tokens")) as create:
+            with self.assertRaises(openai.BadRequestError):
+                self.client.create_completion(self.kwargs(UNKNOWN_MODEL))
+        create.assert_called_once()
+        self.assertNotIn(UNKNOWN_MODEL, module.DEFAULT_TEMPERATURE_ONLY_MODELS)
+
+    def test_rejection_without_temperature_is_not_retried(self):
+        kwargs = self.kwargs("gpt-6-luna")
+        with patch(CREATE_PATCH, side_effect=bad_request("temperature")) as create:
+            with self.assertRaises(openai.BadRequestError):
+                self.client.create_completion(kwargs)
         create.assert_called_once()
 
 
