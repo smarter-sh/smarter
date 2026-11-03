@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.41.3...v0.41.4-alpha.1) (2026-11-03)
+
+### Bug Fixes
+
+* **infrastructure:** mask email recipients in the email service's and receivers' logs ([c8cd6af](https://github.com/smarter-sh/smarter/commit/c8cd6afc151f26a60685b0e66c94673c06ffba39)), closes [#911](https://github.com/smarter-sh/smarter/issues/911)
+
+### Refactoring
+
+* **mcpserver:** add a service layer, and stop naming two servers ([0005c29](https://github.com/smarter-sh/smarter/commit/0005c29a6bae2880311a9dbeddbd41e15261b41c))
+
 ## [0.41.3](https://github.com/smarter-sh/smarter/compare/v0.41.2...v0.41.3) (2026-11-03)
 
 ### Bug Fixes
