@@ -16,6 +16,17 @@ The console additionally provides a Smarter manifest drop zone to facilitate an 
 authoring workflow.
 
 
+Sign-in Page
+~~~~~~~~~~~~
+
+Beside the sign-in form, a small illustration shows a Smarter LLMClient and the plugin, guardrail,
+vectorstore and secret around it. On days worth celebrating, such as New Year's Day, Diwali, Pi Day,
+World Teachers' Day or a national holiday, it is decorated for the day, with a caption that links to
+a page about it. Visitors in different regions can see different decorations on the same day, by
+their browser's time zone. A platform administrator can choose another decoration for a day in the
+Django admin, and turn the feature off with the ``enable_doodle`` waffle switch. See
+:doc:`@smarter/doodle <../smarter-framework/developer-reference/react-integration/doodle>`.
+
 Console Dashboard
 ~~~~~~~~~~~~~~~~~
 

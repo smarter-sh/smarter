@@ -65,6 +65,9 @@ class SmarterWaffleSwitches:
     CONNECTION_LOGGING = "log_connection"
     """Enables logging throughout the smarter.app.connection namespace."""
 
+    DOODLE_LOGGING = "log_doodle"
+    """Enables logging throughout the smarter.app.doodle namespace."""
+
     GUARDRAIL_LOGGING = "log_guardrail"
     """Enables logging throughout the smarter.app.guardrail namespace."""
 
@@ -148,6 +151,27 @@ class SmarterWaffleSwitches:
 
     ENABLE_MIDDLEWARE_HTML_MINIFY = "enable_middleware_html_minify"
     """Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses."""
+
+    ENABLE_DOODLE = "enable_doodle"
+    """Enables the Doodle, the sign-in page's illustration of the day.
+
+    Inactive, the page shows the plain base scene.
+    """
+
+    ENABLE_DOODLE_ANIMATION = "enable_doodle_animation"
+    """Enables the Doodle's animations.
+
+    Inactive, every doodle is a still image.
+    """
+
+    ENABLE_DOODLE_CAPTION = "enable_doodle_caption"
+    """Enables the caption below a themed Doodle, e.g. Happy Diwali!, and its link."""
+
+    ENABLE_DOODLE_REGIONAL = "enable_doodle_regional"
+    """Enables regional doodles, by the browser's time zone.
+
+    Inactive, every visitor sees the global doodle.
+    """
 
     ENABLE_WEB_CONSOLE_DID_YOU_KNOW = "enable_web_console_did_you_know"
     """Enables the Did you know? note, a fact of the day about The Smarter Project, below the web console's title."""
@@ -267,6 +291,11 @@ class SmarterWaffleSwitches:
         CONNECTION_LOGGING: SmarterWaffleSwitch(
             name=CONNECTION_LOGGING,
             comment="Enables logging throughout the smarter.app.connection namespace.",
+            default=True,
+        ),
+        DOODLE_LOGGING: SmarterWaffleSwitch(
+            name=DOODLE_LOGGING,
+            comment="Enables logging throughout the smarter.app.doodle namespace.",
             default=True,
         ),
         GUARDRAIL_LOGGING: SmarterWaffleSwitch(
@@ -392,6 +421,32 @@ class SmarterWaffleSwitches:
         ENABLE_MIDDLEWARE_HTML_MINIFY: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_HTML_MINIFY,
             comment="Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses.",
+            default=True,
+        ),
+        ENABLE_DOODLE: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE,
+            comment=(
+                "Enables the Doodle, the sign-in page's illustration of the day. "
+                "Inactive, the page shows the plain base scene."
+            ),
+            default=True,
+        ),
+        ENABLE_DOODLE_ANIMATION: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_ANIMATION,
+            comment="Enables the Doodle's animations. Inactive, every doodle is a still image.",
+            default=True,
+        ),
+        ENABLE_DOODLE_CAPTION: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_CAPTION,
+            comment="Enables the caption below a themed Doodle, e.g. Happy Diwali!, and its link.",
+            default=True,
+        ),
+        ENABLE_DOODLE_REGIONAL: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_REGIONAL,
+            comment=(
+                "Enables regional doodles, by the browser's time zone. "
+                "Inactive, every visitor sees the global doodle."
+            ),
             default=True,
         ),
         ENABLE_WEB_CONSOLE_DID_YOU_KNOW: SmarterWaffleSwitch(

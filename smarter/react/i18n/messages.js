@@ -974,6 +974,8 @@ gettext("The first drafts of the Sphinx docstrings of Smarter's Python modules, 
 gettext("Agentic AI wrote more than 70% of Smarter's unit tests.");
 // Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
 gettext("Smarter's first commit was made in February 2023.");
+// Translators: used in react/packages/smarter-doodle/src/App.tsx
+gettext("Learn more");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("The publisher's trust badge");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/secrets.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
