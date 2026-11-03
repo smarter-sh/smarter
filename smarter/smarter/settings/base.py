@@ -125,7 +125,7 @@ affects the behavior for smarter-prompt React frontend applications making reque
 Modifications to this will require comensurate changes to the CORS headers sent by
 a Smarter Prompt host (e.g. AWS CloudFront distribution) to avoid CORS errors in browsers.
 
-See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
@@ -140,7 +140,7 @@ A list of non-standard HTTP headers that are allowed in cross-site HTTP requests
 Smarter
 Prompt frontends pass the Smarter API key in the 'x-api-key' header.
 
-See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 # Smarter React common custom headers. See smarter/react/packages/smarter-common/src/lib/django.tsx
@@ -158,7 +158,7 @@ A boolean that determines whether to allow cookies to be included in cross-site 
 
 Smarter defaults this to True to allow session cookies to be sent by smarter-prompt React frontends.
 
-See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.localhost:\d+$",
@@ -170,7 +170,7 @@ A list of regular expressions representing the origins that are allowed to make 
 
 Smarter uses this setting to restrict allowed origins for CORS requests from smarter-prompt React frontends.
 
-See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CORS_ALLOWED_ORIGINS = []
@@ -181,7 +181,7 @@ This is initialized here as an empty list
 because base_aws.py and other environment-specific settings files will append to this list based on derived
 settings values in smarter_settings.
 
-See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 # -------------------------------
@@ -200,7 +200,7 @@ See:
 
 - `Django reference: <https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-secure>`__
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -214,7 +214,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-name
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CSRF_COOKIE_SAMESITE = "lax"
@@ -228,7 +228,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-samesite
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CSRF_COOKIE_AGE = 60 * 60 * 24
@@ -244,7 +244,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-age
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CSRF_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
@@ -258,7 +258,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-domain
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 - smarter_settings.environment_platform_domain
 """
 
@@ -272,7 +272,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-path
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CSRF_COOKIE_HTTPONLY = False
@@ -287,7 +287,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-httponly
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
@@ -301,7 +301,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-header-name
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 CSRF_TRUSTED_ORIGINS = [
@@ -318,7 +318,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-trusted-origins
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 - smarter_settings.environment_platform_domain
 - smarter_settings.environment_api_domain
 """
@@ -333,7 +333,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-use-sessions
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 KNOX_TOKEN_MODEL = "knox.AuthToken"
@@ -359,7 +359,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-samesite
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 SESSION_COOKIE_SECURE = False
@@ -375,7 +375,7 @@ See:
 
 - `Django reference: <https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-secure>`__
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 SESSION_COOKIE_NAME = "sessionid"
@@ -389,7 +389,7 @@ See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-name
 - `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
-- `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
 SESSION_COOKIE_AGE = 1209600 * 2
@@ -1092,7 +1092,7 @@ authentication backend.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#authentication-backends
-- https://docs.smarter.sh/en/latest/developers/architecture/lib/drf.html
+- https://docs.smarter.sh/smarter-framework/developer-reference/lib/drf.html
 """
 
 SOCIAL_AUTH_CREATE_USERS = False

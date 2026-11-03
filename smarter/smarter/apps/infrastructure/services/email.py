@@ -21,6 +21,8 @@ Files are attached with :class:`EmailAttachment`:
 
     attachment = EmailAttachment(filename="job.log", content=log.encode("utf-8"))
     infrastructure.email.send_email(subject="Job log", body="Attached.", to="ops@example.com", attachments=[attachment])
+
+Recipients' addresses are never logged in full: they are masked with :func:`masked_recipients`.
 """
 
 import smtplib
@@ -31,10 +33,11 @@ from email.message import Message
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Callable, List, Optional, Union
+from typing import Callable, Iterable, List, Optional, Union
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import SmarterFormattedText
+from smarter.common.utils import mask_email
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -57,6 +60,28 @@ SMTP_ERRORS = (
     smtplib.SMTPServerDisconnected,
     smtplib.SMTPNotSupportedError,
 )
+
+
+def masked_recipients(recipients: Union[str, Iterable[str], None]) -> list[str]:
+    """
+    Return email addresses masked for the logs, with :func:`~smarter.common.utils.mask_email`.
+
+    Smarter's logs never hold a person's email address. The masked form, e.g.
+    ``j****@example.com``, still tells recipients apart by their first character and domain.
+
+    :param recipients: An address, a list or set of addresses, or None.
+    :returns: The masked addresses, in the order that they were given.
+    """
+    if recipients is None:
+        return []
+    if isinstance(recipients, str):
+        addresses = [recipients]
+    else:
+        addresses = list(recipients)
+    masked = []
+    for address in addresses:
+        masked.append(mask_email(str(address)))
+    return masked
 
 
 @dataclass(frozen=True)
@@ -117,13 +142,17 @@ class EmailService(InfrastructureService):
         elif isinstance(emails, list):
             mailto_list = emails
         else:
-            logger.warning("%s invalid email address list provided: %s", __name__, emails)
+            logger.warning("%s invalid email address list provided: %s", __name__, type(emails))
             return None
 
         valid_emails = [email for email in mailto_list if SmarterValidator.is_valid_email(email)]
         invalid_emails = set(mailto_list) - set(valid_emails)
         if invalid_emails and not quiet:
-            logger.warning("%s invalid email addresses were found in send list: %s", __name__, invalid_emails)
+            logger.warning(
+                "%s invalid email addresses were found in send list: %s",
+                __name__,
+                masked_recipients(invalid_emails),
+            )
         if not valid_emails:
             if not quiet:
                 logger.warning("%s no valid email addresses found in send list", __name__)
@@ -164,10 +193,14 @@ class EmailService(InfrastructureService):
         Log an email that was not sent because the service is not ready.
 
         :param subject: The email's subject.
-        :param to: The email's recipients.
+        :param to: The email's recipients, which are logged masked.
         """
         logger.warning(
-            "%s %s is not configured. Would have sent '%s' to: %s", self.formatted_class_name, self, subject, to
+            "%s %s is not configured. Would have sent '%s' to: %s",
+            self.formatted_class_name,
+            self,
+            subject,
+            masked_recipients(to),
         )
 
     @staticmethod
@@ -203,7 +236,8 @@ class EmailService(InfrastructureService):
 
         Failures are logged, and announced with
         :data:`~smarter.apps.infrastructure.signals.email_failed`, rather than raised, so that
-        email never breaks the request that sends it.
+        email never breaks the request that sends it. The recipients are logged masked, with
+        :func:`masked_recipients`.
 
         :param subject: The subject.
         :param body: The body, HTML if ``html`` is True.
@@ -227,8 +261,11 @@ class EmailService(InfrastructureService):
         recipients = self.validate_mail_list(emails=to, quiet=quiet)
         if not recipients:
             return False
+        logged_recipients = masked_recipients(recipients)
         if quiet:
-            logger.debug("%s quiet mode. Would have sent '%s' to: %s", self.formatted_class_name, subject, recipients)
+            logger.debug(
+                "%s quiet mode. Would have sent '%s' to: %s", self.formatted_class_name, subject, logged_recipients
+            )
             return False
 
         message = self.message(
@@ -244,12 +281,12 @@ class EmailService(InfrastructureService):
                 self.formatted_class_name,
                 subject,
                 message["From"],
-                recipients,
+                logged_recipients,
                 e,
             )
             self.send(email_failed, subject=subject, recipients=recipients, error=str(e))
             return False
-        logger.info("%s sent '%s' to %s", self.formatted_class_name, subject, recipients)
+        logger.info("%s sent '%s' to %s", self.formatted_class_name, subject, logged_recipients)
         self.send(email_sent, subject=subject, recipients=recipients)
         return True
 
@@ -286,13 +323,15 @@ class SMTPEmailService(EmailService):
 
         SMTP is optional, so this is logged for each email that is not sent, rather than raised.
         In the unit tests, where email is never sent, a one-line warning is logged instead.
+        The recipients are logged masked.
         """
         if running_unit_tests() and not self.allow_in_tests:
             super().log_not_sent(subject, to)
             return
+        logged_recipients = ", ".join(masked_recipients(to))
         logger.error(
             SmarterFormattedText.banner(
-                f"[EMAIL NOT SENT] SMTP is not configured, so '{subject}' was not sent to: {to}",
+                f"[EMAIL NOT SENT] SMTP is not configured, so '{subject}' was not sent to: {logged_recipients}",
                 "To send email, add your SMTP server's credentials to .env, and restart the platform:",
                 "",
                 "    SMARTER_SMTP_USERNAME=<your SMTP username>",
@@ -422,4 +461,5 @@ __all__ = [
     "SentEmail",
     "configure_email",
     "get_email",
+    "masked_recipients",
 ]

@@ -1,11 +1,11 @@
-"""Test smarter.apps.mcpserver.status.platform: the health checks, the Celery queues and the database's load."""
+"""Test smarter.apps.mcpserver.services.status.platform: the health checks, the Celery queues and the database's load."""
 
 from unittest import mock
 
 from amqp.exceptions import ChannelError
 
-from smarter.apps.mcpserver.status import platform
-from smarter.apps.mcpserver.status.platform import (
+from smarter.apps.mcpserver.services.status import platform
+from smarter.apps.mcpserver.services.status.platform import (
     as_number,
     database_load,
     health_checks,

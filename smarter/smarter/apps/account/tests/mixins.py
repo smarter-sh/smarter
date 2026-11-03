@@ -1,11 +1,25 @@
 """Unit test class."""
 
-from django.test import RequestFactory
+from datetime import datetime
+from typing import Optional
 
+from django.db import connection
+from django.test import RequestFactory
+from django.utils.crypto import get_random_string
+
+from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.user_merge import (
+    UNIQUE_EMAIL_INDEX,
+    create_unique_email_index,
+    drop_unique_email_index,
+)
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
+
+DUPLICATE_USERNAME_PREFIX = "test_duplicate_user_"
+"""The username prefix of the users that :class:`DuplicateUsersMixin` creates, so that they can be cleaned up."""
 
 logger = logging.getLogger(__name__)
 HERE = __name__
@@ -95,3 +109,69 @@ class TestAccountMixin(SmarterTestBase):
 
         factory = RequestFactory()
         return factory
+
+
+class DuplicateUsersMixin(TestAccountMixin):
+    """
+    Create users who share an email address, which the unique index on ``auth_user.email`` forbids.
+
+    The index is dropped for the test class, and created again afterwards. Every user that
+    :meth:`duplicate_user` created, and that a merge didn't delete, is deleted after each test.
+    """
+
+    @staticmethod
+    def unique_email_index_exists() -> bool:
+        """Return True if ``auth_user`` has the unique index on email addresses."""
+        with connection.cursor() as cursor:
+            cursor.execute("SHOW INDEX FROM auth_user WHERE Key_name = %s", [UNIQUE_EMAIL_INDEX])
+            rows = cursor.fetchall()
+        return len(rows) > 0
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        if cls.unique_email_index_exists():
+            with connection.schema_editor(atomic=False) as editor:
+                drop_unique_email_index(editor)
+
+    def tearDown(self):
+        User.objects.filter(username__startswith=DUPLICATE_USERNAME_PREFIX).delete()
+        super().tearDown()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            User.objects.filter(username__startswith=DUPLICATE_USERNAME_PREFIX).delete()
+            if not cls.unique_email_index_exists():
+                with connection.schema_editor(atomic=False) as editor:
+                    create_unique_email_index(editor)
+        finally:
+            super().tearDownClass()
+
+    def duplicate_user(
+        self,
+        email: str,
+        last_login: Optional[datetime] = None,
+        password: Optional[str] = None,
+        account: Optional[Account] = None,
+        with_profile: bool = True,
+    ) -> User:
+        """
+        Create a user, and a profile in ``account``.
+
+        :param email: The email address, which another user may already have.
+        :param last_login: When the user last signed in, or ``None`` if they never did.
+        :param password: The password, or ``None`` for an unusable one, as social sign-in leaves.
+        :param account: The profile's account. Default: the test class's account.
+        :param with_profile: Create the profile.
+        :returns: The user.
+        """
+        username = f"{DUPLICATE_USERNAME_PREFIX}{get_random_string(10).lower()}"
+        user = User.objects.create_user(username=username, email=email, password=password)
+        if last_login is not None:
+            user.last_login = last_login
+            user.save(update_fields=["last_login"])
+        if with_profile:
+            profile_account = account or self.account
+            UserProfile.objects.create(user=user, account=profile_account, is_test=True)
+        return user

@@ -3,7 +3,7 @@ Manifest templates: built-in manifests that name the platform that applies them.
 
 A manifest template is a ``*.yaml.tpl`` file, and a :class:`string.Template` string, whose
 placeholders are filled in from ``smarter_settings`` when it is applied. A built-in resource
-can so reach the platform it runs on, e.g. the Smarter Project MCP server, or the Stackademy
+can so reach the platform it runs on, e.g. the MCPServer's public endpoint, or the Stackademy
 test api, at ``https://alpha.platform.example.com`` in one environment, and at
 ``http://localhost:9357`` in local development, rather than at a hard-coded host.
 """

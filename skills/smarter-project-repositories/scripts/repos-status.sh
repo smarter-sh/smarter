@@ -6,7 +6,7 @@
 # usage, from the repository root:
 #   skills/smarter-project-repositories/scripts/repos-status.sh [repository ...]
 #
-# The repositories default to those of smarter.apps.mcpserver.repositories, except smarter itself.
+# The repositories default to those of smarter.apps.mcpserver.services.repositories, except smarter itself.
 # The checkouts default to the parent of this repository; set SMARTER_PROJECT_DIR to use another.
 set -uo pipefail
 

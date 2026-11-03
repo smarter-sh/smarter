@@ -63,8 +63,8 @@ class TestToSlack(unittest.TestCase):
 
     def test_link(self):
         self.assertEqual(
-            bot.to_slack("See [the docs](https://docs.smarter.sh/en/latest/)."),
-            "See <https://docs.smarter.sh/en/latest/|the docs>.",
+            bot.to_slack("See [the docs](https://docs.smarter.sh/)."),
+            "See <https://docs.smarter.sh/|the docs>.",
         )
 
     def test_bold(self):

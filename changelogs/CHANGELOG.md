@@ -6,6 +6,47 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.4](https://github.com/smarter-sh/smarter/compare/v0.41.3...v0.41.4) (2026-11-03)
+
+### Bug Fixes
+
+* **account:** merge users with the same email and make email unique ([c65bf6d](https://github.com/smarter-sh/smarter/commit/c65bf6dce8b98f17e349fd6ed0e0dcd66362251d)), closes [#914](https://github.com/smarter-sh/smarter/issues/914)
+* **helm:** stop Alloy redacting Secret names, masks and code ([dd25f72](https://github.com/smarter-sh/smarter/commit/dd25f72dfad7749ef65075c89777d3e8c1c61857)), closes [#913](https://github.com/smarter-sh/smarter/issues/913) [#898](https://github.com/smarter-sh/smarter/issues/898) [#913](https://github.com/smarter-sh/smarter/issues/913)
+* **infrastructure:** mask email recipients in the email service's and receivers' logs ([c8cd6af](https://github.com/smarter-sh/smarter/commit/c8cd6afc151f26a60685b0e66c94673c06ffba39)), closes [#911](https://github.com/smarter-sh/smarter/issues/911)
+* link to docs.smarter.sh pages at their current urls ([d7cb479](https://github.com/smarter-sh/smarter/commit/d7cb479f1f77b3769abd467f8bb8e67d736c874f))
+
+### Refactoring
+
+* **mcpserver:** add a service layer, and stop naming two servers ([0005c29](https://github.com/smarter-sh/smarter/commit/0005c29a6bae2880311a9dbeddbd41e15261b41c))
+
+## [0.41.4-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.41.4-alpha.3...v0.41.4-alpha.4) (2026-11-03)
+
+### Bug Fixes
+
+* **account:** merge users with the same email and make email unique ([c65bf6d](https://github.com/smarter-sh/smarter/commit/c65bf6dce8b98f17e349fd6ed0e0dcd66362251d)), closes [#914](https://github.com/smarter-sh/smarter/issues/914)
+
+## [0.41.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.41.4-alpha.2...v0.41.4-alpha.3) (2026-11-03)
+
+### Bug Fixes
+
+* **helm:** stop Alloy redacting Secret names, masks and code ([dd25f72](https://github.com/smarter-sh/smarter/commit/dd25f72dfad7749ef65075c89777d3e8c1c61857)), closes [#913](https://github.com/smarter-sh/smarter/issues/913) [#898](https://github.com/smarter-sh/smarter/issues/898) [#913](https://github.com/smarter-sh/smarter/issues/913)
+
+## [0.41.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.41.4-alpha.1...v0.41.4-alpha.2) (2026-11-03)
+
+### Bug Fixes
+
+* link to docs.smarter.sh pages at their current urls ([d7cb479](https://github.com/smarter-sh/smarter/commit/d7cb479f1f77b3769abd467f8bb8e67d736c874f))
+
+## [0.41.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.41.3...v0.41.4-alpha.1) (2026-11-03)
+
+### Bug Fixes
+
+* **infrastructure:** mask email recipients in the email service's and receivers' logs ([c8cd6af](https://github.com/smarter-sh/smarter/commit/c8cd6afc151f26a60685b0e66c94673c06ffba39)), closes [#911](https://github.com/smarter-sh/smarter/issues/911)
+
+### Refactoring
+
+* **mcpserver:** add a service layer, and stop naming two servers ([0005c29](https://github.com/smarter-sh/smarter/commit/0005c29a6bae2880311a9dbeddbd41e15261b41c))
+
 ## [0.41.3](https://github.com/smarter-sh/smarter/compare/v0.41.2...v0.41.3) (2026-11-03)
 
 ### Bug Fixes

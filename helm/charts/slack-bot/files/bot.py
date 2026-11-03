@@ -42,7 +42,7 @@ EMPTY_QUESTION = "Hi! Ask me a question about Smarter, and I'll answer in this t
 NEW_CONVERSATION = "OK, let's start a new conversation. What would you like to know?"
 
 # The workspace members' guide to the bot.
-GUIDE_URL = "https://docs.smarter.sh/en/latest/slack.html"
+GUIDE_URL = "https://docs.smarter.sh/slack.html"
 
 # Sent to new members, to people who open the bot's direct message for the first time, and in
 # reply to a message that is only one of HELP_WORDS. In Slack mrkdwn.

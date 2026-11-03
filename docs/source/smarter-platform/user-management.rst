@@ -16,6 +16,16 @@ Use the manage.py command to create new Accounts:
      --password "securepassword" \
      --admin
 
+An email address belongs to one user. The database rejects a second user with the same address,
+whatever its case, and sign-up in the web console says that the address already has an account.
+Users without an address, e.g. some who sign in with GitHub, are not affected. A platform that was
+installed before this rule merges its users who share an address when it upgrades: each address
+keeps the user who signed in most recently, and the other users' profiles, resources, api keys and
+social sign-ins are moved to it (see :doc:`/smarter-resources/account/user_merge`). The upgrade's
+migration logs each merge. To see beforehand what it will merge, run
+``python manage.py merge_duplicate_users --dry-run --verbose`` from the new version, against the
+database that it will upgrade: it changes nothing.
+
 If you have enabled `SMTP Email Services <smtp-email.html>`_, a `welcome email <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/account/email/welcome.html>`_
 will be sent to the new user with further instructions. Add ``--language`` with another language
 of the web console, ``es`` (Spanish), ``fr`` (French) or ``pt-br`` (Brazilian Portuguese), to set the

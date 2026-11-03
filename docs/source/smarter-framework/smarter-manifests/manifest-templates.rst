@@ -2,8 +2,8 @@ Manifest Templates
 ==================
 
 Some built-in resources have to reach the platform that they run on, rather than a fixed host.
-For example, the Smarter Project MCPClients read the Smarter Project MCP server of their own
-platform, and the Stackademy ApiConnection queries that platform's Stackademy course catalogue. A
+For example, the built-in ``smarter_project`` and ``smarter_operations`` MCPClients connect to the
+MCPServer of their own platform, and the Stackademy ApiConnection queries that platform's Stackademy course catalogue. A
 hard-coded host such as ``http://localhost:9357`` only works in local development.
 
 Such a manifest is a template: a ``*.yaml.tpl`` file, which is a Python :class:`string.Template`

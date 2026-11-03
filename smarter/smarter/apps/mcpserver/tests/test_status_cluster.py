@@ -1,8 +1,8 @@
-"""Test smarter.apps.mcpserver.status.cluster, with the in-memory test cluster."""
+"""Test smarter.apps.mcpserver.services.status.cluster, with the in-memory test cluster."""
 
 from datetime import datetime, timezone
 
-from smarter.apps.mcpserver.status.cluster import (
+from smarter.apps.mcpserver.services.status.cluster import (
     cluster_snapshot,
     mebibytes,
     parse_cpu,

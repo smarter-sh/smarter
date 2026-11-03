@@ -98,7 +98,7 @@ env:
   SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
   SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
   SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
-  # The Loki of the loki subchart, which the Smarter Operations MCP server's log tools query.
+  # The Loki of the loki subchart, which the MCPServer's staff-only log tools query.
   # Set it to "" with loki.enabled: false.
   SMARTER_LOKI_URL: "http://smarter-loki:3100"
   SMARTER_LOGIN_URL: "https://platform.example.com/login/"
@@ -565,7 +565,7 @@ grafana:
 # Pod logs: Loki stores them, Alloy collects them
 # ----------------------------------------------------------------------------
 # The last 72 hours of the logs of the app, the Celery workers, beat and MariaDB,
-# which the Smarter MCP Server's log tools search (smarter.apps.mcpserver.logs).
+# which the Smarter MCP Server's log tools search (smarter.apps.mcpserver.services.logs).
 #
 # - Loki runs as one pod (deploymentMode SingleBinary) with its chunks and index on
 #   its own gp3 volume. Nothing is sent to S3 or CloudWatch, which would add cost.
@@ -728,6 +728,8 @@ alloy:
         }
 
         // Each stage.replace replaces what its expression's capture group matched.
+        // Alloy's expressions are RE2: no lookahead or lookbehind. They are tested by
+        // helm/charts/smarter/tests/test_alloy_redact.py, which reads them from this file.
         loki.process "redact" {
           stage.replace {
             expression = "([\\w.+-]+@[\\w-]+\\.[\\w.-]+)"
@@ -737,8 +739,10 @@ alloy:
             expression = "\\b((?:\\d{1,3}\\.){3}\\d{1,3})\\b"
             replace    = "<ip>"
           }
+          // A token, but not code that calls something, e.g. the traceback source line
+          // stored_token = self.redis.get(self.name): the value must not run into a "(".
           stage.replace {
-            expression = "(?i)(?:bearer|token)[\"' :=]+([A-Za-z0-9._~+/-]{12,})"
+            expression = "(?i)(?:bearer|token)[\"' :=]+([A-Za-z0-9._~+/-]{12,})(?:[^A-Za-z0-9._~+/(-]|$)"
             replace    = "<redacted>"
           }
           stage.replace {
@@ -757,12 +761,15 @@ alloy:
             expression = "\\b(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,})"
             replace    = "<redacted>"
           }
+          // A password or api key, and the password of a url, but not a value that Smarter
+          // already masked: mask_string() and SqlConnection.get_connection_string() write
+          // masks that start with "*", e.g. "api_key": "****abcd" and mysql://user:******@host.
           stage.replace {
-            expression = "(?i)(?:password|passwd|secret|api_key|apikey)[\"']?\\s*[:=]\\s*[\"']?([^\\s\"',}]{4,})"
+            expression = "(?i)(?:password|passwd|secret|api_key|apikey)[\"']?\\s*[:=]\\s*[\"']?([^\\s\"',}*][^\\s\"',}]{3,})"
             replace    = "<redacted>"
           }
           stage.replace {
-            expression = "://[^:/\\s]+:([^@\\s]+)@"
+            expression = "://[^:/\\s]+:([^@\\s*][^@\\s]*)@"
             replace    = "<redacted>"
           }
           forward_to = [loki.write.default.receiver]

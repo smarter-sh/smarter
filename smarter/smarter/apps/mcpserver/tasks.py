@@ -1,5 +1,5 @@
 """
-Celery tasks of the MCPServer app, which keep the Smarter Project MCP server's indexes up to date.
+Celery tasks of the MCPServer app, which keep the MCPServer's index of the repositories and the blog up to date.
 
 - :func:`index_repository` brings one repository's index up to date. The MCP server's
   tools queue it for a repository that is not indexed yet.
@@ -19,13 +19,12 @@ of the task, so the tasks do not retry.
     be documented.
 """
 
-from smarter.apps.mcpserver.index import blog, indexer
+from smarter.apps.mcpserver.services.indexing import blog, github
+from smarter.apps.mcpserver.services.repositories import repository_names
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
-
-from .repositories import repository_names
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.MCPSERVER_LOGGING]
@@ -38,7 +37,7 @@ def index_repository(name: str, force: bool = False) -> str:
     """
     Bring a repository's index up to date with the latest commit of its branch.
 
-    Runs :func:`smarter.apps.mcpserver.index.indexer.index_repository` in the Celery worker.
+    Runs :func:`smarter.apps.mcpserver.services.indexing.github.index_repository` in the Celery worker.
     Side effects: a request to the GitHub api for the branch's latest commit and, when it has
     moved, a download of the repository's archive, and the replacement of its
     :class:`~smarter.apps.mcpserver.models.RepositoryFile` rows. The indexer then sends
@@ -51,7 +50,7 @@ def index_repository(name: str, force: bool = False) -> str:
     :rtype: str
     :raises SmarterMCPServerIndexError: If ``name`` is not a repository of The Smarter Project.
     """
-    index = indexer.index_repository(name, force=force)
+    index = github.index_repository(name, force=force)
     logger.info(
         "%s.index_repository() %s is %s at %s.",
         logger_prefix,
@@ -68,7 +67,7 @@ def index_blog(force: bool = False) -> str:
     """
     Bring the blog's index up to date with its published posts.
 
-    Runs :func:`smarter.apps.mcpserver.index.blog.index_blog` in the Celery worker. Side
+    Runs :func:`smarter.apps.mcpserver.services.indexing.blog.index_blog` in the Celery worker. Side
     effects: requests to the blog's WordPress REST api, one per 100 posts, and, when the posts
     changed, the replacement of the blog's
     :class:`~smarter.apps.mcpserver.models.RepositoryFile` rows and a signal that makes the

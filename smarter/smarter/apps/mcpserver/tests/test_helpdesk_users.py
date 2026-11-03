@@ -1,4 +1,4 @@
-"""Test smarter.apps.mcpserver.helpdesk.users, with the in-memory pod logs and throwaway users and journal rows."""
+"""Test smarter.apps.mcpserver.services.helpdesk.users, with the in-memory pod logs and throwaway users and journal rows."""
 
 from datetime import timedelta
 from http import HTTPStatus
@@ -13,7 +13,7 @@ from smarter.apps.infrastructure.services import (
     LogLine,
     configure_logs,
 )
-from smarter.apps.mcpserver.helpdesk.users import (
+from smarter.apps.mcpserver.services.helpdesk.users import (
     MULTITENANT_BACKEND,
     SupportSnapshot,
     error_details,
@@ -135,13 +135,13 @@ class TestSubscription(HelpdeskTestBase):
 
     def test_hosted(self):
         self.verify_payment_status.return_value = False
-        with mock.patch("smarter.apps.mcpserver.helpdesk.users.settings") as settings:
+        with mock.patch("smarter.apps.mcpserver.services.helpdesk.users.settings") as settings:
             settings.AUTHENTICATION_BACKENDS = [MULTITENANT_BACKEND]
             self.assertFalse(subscription_active(self.admin_user))
         self.verify_payment_status.assert_called_once_with(self.admin_user.get_username())
 
     def test_no_subscriptions(self):
-        with mock.patch("smarter.apps.mcpserver.helpdesk.users.settings") as settings:
+        with mock.patch("smarter.apps.mcpserver.services.helpdesk.users.settings") as settings:
             settings.AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
             self.assertIsNone(subscription_active(self.admin_user))
         self.verify_payment_status.assert_not_called()

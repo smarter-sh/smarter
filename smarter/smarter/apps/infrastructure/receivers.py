@@ -16,6 +16,7 @@ from typing import Optional
 
 from django.dispatch import receiver
 
+from smarter.apps.infrastructure.services.email import masked_recipients
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -353,7 +354,7 @@ def handle_infrastructure_operation_failed(sender, service, provider, operation=
 @receiver(email_sent, dispatch_uid="infrastructure_email_sent")
 def handle_email_sent(sender, service, provider, subject=None, recipients=None, **kwargs):
     """
-    Log that an email was sent.
+    Log that an email was sent. The recipients are logged masked, e.g. ``j****@example.com``.
 
     :param sender: The service's class.
     :param service: The service's name, e.g. ``dns``.
@@ -362,13 +363,14 @@ def handle_email_sent(sender, service, provider, subject=None, recipients=None, 
     :param recipients: The email's recipients.
     :param kwargs: The signal's other arguments.
     """
-    logger.info("%s sent '%s' to %s", _prefix("email_sent", service, provider), subject, recipients)
+    logged_recipients = masked_recipients(recipients)
+    logger.info("%s sent '%s' to %s", _prefix("email_sent", service, provider), subject, logged_recipients)
 
 
 @receiver(email_failed, dispatch_uid="infrastructure_email_failed")
 def handle_email_failed(sender, service, provider, subject=None, recipients=None, error=None, **kwargs):
     """
-    Log that an email could not be sent.
+    Log that an email could not be sent. The recipients are logged masked, e.g. ``j****@example.com``.
 
     :param sender: The service's class.
     :param service: The service's name, e.g. ``dns``.
@@ -378,6 +380,11 @@ def handle_email_failed(sender, service, provider, subject=None, recipients=None
     :param error: Why it failed.
     :param kwargs: The signal's other arguments.
     """
+    logged_recipients = masked_recipients(recipients)
     logger.error(
-        "%s could not send '%s' to %s: %s", _prefix("email_failed", service, provider), subject, recipients, error
+        "%s could not send '%s' to %s: %s",
+        _prefix("email_failed", service, provider),
+        subject,
+        logged_recipients,
+        error,
     )

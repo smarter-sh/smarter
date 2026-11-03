@@ -105,7 +105,7 @@ it.
 5. **Code samples** come from the repository, trimmed, with their path. Never
    write one from memory.
 6. **Links.** Docs pages
-   (`https://docs.smarter.sh/en/latest/<path>.html`, from the `.rst` under
+   (`https://docs.smarter.sh/<path>.html`, from the `.rst` under
    `docs/source/`), ADRs, skills and source files on GitHub
    (`https://github.com/smarter-sh/smarter/tree/main/...`), commits
    (`https://github.com/smarter-sh/smarter/commit/<sha>`), and external

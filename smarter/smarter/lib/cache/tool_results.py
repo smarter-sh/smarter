@@ -1,8 +1,8 @@
 """
 The one cache of tool call results.
 
-An LLM's tool call is answered by an MCP server, an Extension or the Smarter Project MCP
-server, and each caches the results it can with :func:`cached_tool_call`, so that the same
+An LLM's tool call is answered by an MCP server, an Extension or the public tools of the
+platform's own MCPServer, and each caches the results it can with :func:`cached_tool_call`, so that the same
 call, from any LLMClient or conversation, is answered without running the tool again. The
 rules live here, once:
 
