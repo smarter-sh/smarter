@@ -110,12 +110,14 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
 
     @property
     def backend(self) -> SmarterVectorstoreBackend:
+        """The vectorstore's backend, created when it is first used."""
         if self._backend is None:
             self._backend = get_backend(self.vectorstore)
         return self._backend
 
     @property
     def embeddings(self) -> Embeddings:
+        """The vectorstore's embeddings model, created when it is first used."""
         if self._embeddings is None:
             self._embeddings = get_embeddings(self.vectorstore)
         return self._embeddings
@@ -130,7 +132,12 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
     # state
     # -------------------------------------------------------------------------
     def set_status(self, status: str, message: str = "") -> None:
-        """Record the vectorstore's status, and send vectorstore_status_changed if it changed."""
+        """
+        Record the vectorstore's status, and send vectorstore_status_changed if it changed.
+
+        :param status: The new status.
+        :param message: Why, or an empty string.
+        """
         vectorstore = self.vectorstore
         previous = vectorstore.status
         vectorstore.status = status
@@ -230,6 +237,11 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         return vectorstore.status
 
     def refresh_stats(self) -> SmarterDictType:
+        """
+        Read the database's statistics, and save them, and the vector count, on the vectorstore.
+
+        :returns: The statistics.
+        """
         stats = self.backend.stats()
         self.vectorstore.stats = stats
         self.vectorstore.vector_count = int(stats.get("vector_count") or 0)
@@ -272,6 +284,11 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         vectorstore_destroyed.send(sender=self.__class__, vectorstore=vectorstore)
 
     def require_ready(self) -> None:
+        """
+        Require that the vectorstore is ready and active.
+
+        :raises VectorstoreServiceError: If it is not.
+        """
         if self.vectorstore.status != VectorstoreStatus.READY or not self.vectorstore.is_active:
             raise VectorstoreServiceError(
                 f"Vectorstore {self.vectorstore.name} is {self.vectorstore.status}, not ready. Deploy it first."
@@ -323,7 +340,9 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         return document, True
 
     def text_splitter(self) -> RecursiveCharacterTextSplitter:
-        embeddings_spec = (self.vectorstore.spec or {}).get("embeddings") or {}
+        """Return the text splitter of the spec's ``chunkSize`` and ``chunkOverlap``, or the defaults."""
+        spec = self.vectorstore.spec or {}
+        embeddings_spec = spec.get("embeddings") or {}
         return RecursiveCharacterTextSplitter(
             chunk_size=embeddings_spec.get("chunkSize") or DEFAULT_CHUNK_SIZE,
             chunk_overlap=embeddings_spec.get("chunkOverlap") or DEFAULT_CHUNK_OVERLAP,
@@ -365,7 +384,9 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             if not texts:
                 raise VectorstoreServiceError(f"{document.name} has no text to load.")
             backend = self._with_embeddings()
-            batch_size = ((self.vectorstore.spec or {}).get("embeddings") or {}).get("batchSize") or 64
+            spec = self.vectorstore.spec or {}
+            embeddings_spec = spec.get("embeddings") or {}
+            batch_size = embeddings_spec.get("batchSize") or 64
             ids = document.chunk_ids(len(texts))
             backend.upsert(ids=ids, texts=texts, metadatas=metadatas, batch_size=batch_size)
             if document.chunk_count > len(texts):
@@ -452,7 +473,10 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
 
         Failed snapshots are removed too.
         """
-        retention = retention or self.vectorstore.maintenance.get("snapshotRetention") or DEFAULT_SNAPSHOT_RETENTION
+        if not retention:
+            retention = self.vectorstore.maintenance.get("snapshotRetention")
+        if not retention:
+            retention = DEFAULT_SNAPSHOT_RETENTION
         snapshots = self.vectorstore.snapshots  # type: ignore[attr-defined]
         removed = 0
         for snapshot in snapshots.filter(status=VectorstoreSnapshotStatus.FAILED):
@@ -484,12 +508,23 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
     # maintenance
     # -------------------------------------------------------------------------
     def snapshot_due(self, now=None) -> bool:
+        """
+        Whether a scheduled snapshot is due: snapshots are enabled, and none was taken within the interval.
+
+        :param now: The time, or None for now.
+        :returns: True if one is due.
+        """
         maintenance = self.vectorstore.maintenance
         if not maintenance.get("snapshots", True):
             return False
         last = self.vectorstore.last_snapshot_at
         hours = maintenance.get("snapshotIntervalHours") or DEFAULT_SNAPSHOT_INTERVAL_HOURS
-        return last is None or (now or timezone.now()) - last >= timedelta(hours=hours)
+        if last is None:
+            return True
+        if now is None:
+            now = timezone.now()
+        due = now - last >= timedelta(hours=hours)
+        return due
 
     def stuck_documents(self, now=None):
         """Documents whose Celery task was lost: pending, loading or deleting for a while."""

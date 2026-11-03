@@ -195,7 +195,11 @@ class ExtensionAuthor(BaseModel):
     def __str__(self) -> str:
         if self.name and self.email:
             return f"{self.name} <{self.email}>"
-        return self.name or self.email or ""
+        if self.name:
+            return self.name
+        if self.email:
+            return self.email
+        return ""
 
 
 class ExtensionProject(BaseModel):
@@ -356,9 +360,7 @@ class ExtensionManifest(BaseModel):
         try:
             return cls(project=data["project"], smarter=smarter_table)
         except ValidationError as e:
-            problems = "; ".join(
-                f"{'.'.join(str(part) for part in error['loc'])}: {error['msg']}" for error in e.errors()
-            )
+            problems = describe_validation_errors(e)
             raise SmarterExtensionManifestError(f"pyproject.toml is not a valid extension manifest: {problems}") from e
 
     @property
@@ -429,6 +431,30 @@ def is_development_version(version: str) -> bool:
         return True
 
 
+def describe_validation_errors(error: ValidationError, whole_location: str = "") -> str:
+    """
+    Describe each problem of a Pydantic validation error, as one line for an error message.
+
+    Each problem is the field's dotted path, then Pydantic's message, and problems are separated
+    by semicolons, e.g. ``smarter.slug: String should match pattern ...; project.version: Field
+    required``.
+
+    :param error: Pydantic's validation error.
+    :param whole_location: The name to show for a problem of the whole value, which has no
+        field path, e.g. ``arguments``.
+    :returns: The problems, separated by semicolons.
+    """
+    problems = []
+    for problem in error.errors():
+        location_parts = [str(part) for part in problem["loc"]]
+        location = ".".join(location_parts)
+        if not location:
+            location = whole_location
+        problems.append(f"{location}: {problem['msg']}")
+    description = "; ".join(problems)
+    return description
+
+
 __all__ = [
     "ExtensionAuthor",
     "ExtensionManifest",
@@ -438,5 +464,6 @@ __all__ = [
     "ExtensionSmarterTable",
     "ExtensionSwitchSpec",
     "SettingValue",
+    "describe_validation_errors",
     "is_development_version",
 ]

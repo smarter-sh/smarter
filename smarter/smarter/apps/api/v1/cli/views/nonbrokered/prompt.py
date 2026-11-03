@@ -51,6 +51,7 @@ class APIV1CLIChatViewError(APIV1CLIViewError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter api v1 cli prompt error"
 
 
@@ -273,7 +274,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
 
     @property
     def prompt_history(self) -> Optional[PromptHistory]:
-
+        """The latest PromptHistory of :attr:`chat`, or None when there is no chat; cached once found."""
         if not self._chat_history:
             if self.chat:
                 self._chat_history = PromptHistory.objects.filter(prompt=self.chat).latest()
@@ -305,7 +306,15 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return self._messages
 
     def new_message_list_factory(self) -> list[dict[str, str]]:
+        """
+        Start a new message list: the system role, a welcome message if configured, and the prompt.
 
+        The system role is the LLMClient's ``default_system_role``, else the chat config's, else the
+        platform default. The welcome message is added only when the LLMClient has both an
+        ``app_welcome_message`` and ``app_example_prompts``, which it lists as bullet points.
+
+        :returns: The messages, in OpenAI's ``role``/``content`` format.
+        """
         logger.debug("%s.new_message_list_factory() called", self.formatted_class_name)
 
         system_dict: Optional[SmarterDictType] = None
@@ -324,7 +333,8 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         example_prompts: Optional[list[str]] = self.llmclient_config.get("app_example_prompts")
         if example_prompts and welcome_message:
             app_assistant: str = self.llmclient_config.get("app_assistant", "an llmclient")
-            bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts) if example_prompts else ""
+            bullet_lines = [f"    - {prompt}" for prompt in example_prompts]
+            bullet_points = "\n".join(bullet_lines)
             bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
             intro = f"I'm {app_assistant}, how can I assist you today?"
             welcome_dict = {
@@ -346,6 +356,11 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return retval
 
     def chat_request_body_factory(self) -> SmarterDictType:
+        """
+        Build the body of the request to the LLMClient's chat API.
+
+        :returns: The session key and :attr:`messages`.
+        """
         retval = {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
         logger.debug("%s.chat_request_body_factory() retval: %s", self.formatted_class_name, retval)
         return retval
@@ -387,6 +402,22 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return f"The prompt failed with status {response_data.get('statusCode', 'unknown')}."
 
     def handler(self, request, name, *args, **kwargs):
+        """
+        Send the cli's prompt to an LLMClient, and return its response.
+
+        Fetches the LLMClient's prompt config, which starts or resumes the chat session, and caches
+        its session key. Then posts the messages to the LLMClient's chat API with an internal
+        request, which sends a billable request to the LLM provider.
+
+        :param request: The cli's request.
+        :param name: The LLMClient's name.
+        :returns: The request body and the chat response, whose body is decoded from JSON; or an
+            error response with the provider's status when the prompt fails, or ``500`` when the
+            response has no body.
+        :raises APIV1CLIChatViewError: when the prompt config or chat views do not return JSON, or the
+            prompt config fails.
+        :raises APIV1CLIViewError: when the prompt config's content is missing or not JSON.
+        """
         # get the prompt configuration for the LLMClient (name)
         logger.debug(
             "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",

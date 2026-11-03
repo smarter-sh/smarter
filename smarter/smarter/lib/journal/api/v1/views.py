@@ -61,10 +61,20 @@ class SAMJournalView(SmarterAdminAPIView):
     serializer_class = SAMJournalSerializer
 
     def get_queryset(self) -> QuerySet[SAMJournal]:
+        """Return every journal entry with its user, newest first."""
         return journal_entries()
 
     def get(self, request: Request, key: str, *args, **kwargs):
-        """Return the journal entry."""
+        """
+        Return the journal entry, and send the ``journal_entry_accessed`` signal.
+
+        :param request: The request.
+        :param key: The journal entry's key.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :returns: The entry as a :class:`SAMJournalApiEntry` dict.
+        :raises Http404: If there is no entry with this key.
+        """
         journal = get_object_or_404(self.get_queryset(), key=key)
         journal_entry_accessed.send(sender=self.__class__, journal=journal, user=request.user)
         return Response(SAMJournalApiEntry.from_model(journal).model_dump(mode="json"))
@@ -91,6 +101,7 @@ class SAMJournalListView(SmarterAdminListAPIView):
     serializer_class = SAMJournalMiniSerializer
 
     def get_queryset(self) -> QuerySet[SAMJournal]:
+        """Return every journal entry with its user, newest first."""
         return journal_entries()
 
     def list(self, request: Request, *args, **kwargs):

@@ -258,21 +258,41 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return self.formatted_text(class_name)
 
     def process_response(self, request: HttpRequest, response):
+        """
+        Minify an html response's content, unless :meth:`should_skip` says not to.
 
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, minified or unchanged.
+        """
         if self.should_skip(request, response):
             return response
 
         return self.minify_response(response)
 
     async def async_process_response(self, request, response):
+        """
+        Async version of :meth:`process_response`; minification runs in a worker thread.
 
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, minified or unchanged.
+        """
         if self.should_skip(request, response):
             return response
 
         return await sync_to_async(self.minify_response)(response)
 
     def should_skip(self, request: HttpRequest, response) -> bool:
-        """Determine whether minification should be skipped."""
+        """
+        Determine whether minification should be skipped.
+
+        File, streaming and non-html responses, skipped paths, and empty content are skipped.
+
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: True if the response must be returned unchanged.
+        """
 
         if isinstance(response, FileResponse):
             return True

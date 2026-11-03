@@ -59,6 +59,7 @@ def configure_kubernetes(factory: Optional[Callable[[], KubernetesService]]) -> 
 
 
 def get_kubernetes() -> KubernetesService:
+    """Return the Kubernetes service: the one that :func:`configure_kubernetes` set, or the platform's."""
     return _kubernetes_factory() if _kubernetes_factory else infrastructure.kubernetes
 
 
@@ -95,6 +96,7 @@ class QdrantKubernetes:
 
     @property
     def labels(self) -> dict[str, str]:
+        """The labels of the Qdrant server's resources, which select them."""
         return {
             LABEL: self.name,
             "app.kubernetes.io/name": "qdrant",
@@ -104,7 +106,8 @@ class QdrantKubernetes:
 
     def render(self, api_key: str) -> list[SmarterDictType]:
         """The Secret, Service and StatefulSet of the Qdrant server."""
-        config = (self.vectorstore.spec or {}).get("selfHosted") or {}
+        spec = self.vectorstore.spec or {}
+        config = spec.get("selfHosted") or {}
         metadata = {"name": self.name, "namespace": self.namespace, "labels": self.labels}
         secret = {
             "apiVersion": "v1",
@@ -207,8 +210,11 @@ class QdrantKubernetes:
         if (status.get("readyReplicas") or 0) >= 1:
             return QdrantObservation(exists=True, ready=True, message="The Qdrant server is ready.")
         for pod in self.kubernetes.list_resources("pods", self.namespace, self.selector):
-            for container in (pod.get("status") or {}).get("containerStatuses") or []:
-                waiting = (container.get("state") or {}).get("waiting") or {}
+            pod_status = pod.get("status") or {}
+            container_statuses = pod_status.get("containerStatuses") or []
+            for container in container_statuses:
+                state = container.get("state") or {}
+                waiting = state.get("waiting") or {}
                 if waiting.get("reason") in ("CrashLoopBackOff", "ImagePullBackOff", "ErrImagePull"):
                     return QdrantObservation(
                         exists=True, ready=False, message=f"{waiting['reason']}: {waiting.get('message', '')}".strip()
@@ -229,6 +235,12 @@ class QdrantKubernetes:
         return self.kubernetes.delete_resources(DESTROY_KINDS, self.namespace, self.selector)
 
     def logs(self, tail: int = 200) -> Optional[str]:
+        """
+        Return the Qdrant server's recent logs.
+
+        :param tail: How many lines of each pod.
+        :returns: The logs, or None if they could not be read.
+        """
         return self.kubernetes.get_pod_logs(self.namespace, self.selector, container="qdrant", tail=tail)
 
 

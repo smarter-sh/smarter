@@ -74,11 +74,18 @@ def parse_annotation_selector(selector: AnnotationSelector) -> list[AnnotationRe
         return []
     if isinstance(selector, str):
         selector = [selector]
-    return [
-        item if isinstance(item, AnnotationRequirement) else parse_annotation_requirement(item)
-        for item in selector
-        if isinstance(item, AnnotationRequirement) or (isinstance(item, str) and item.strip())
-    ]
+    requirements = []
+    for item in selector:
+        if isinstance(item, AnnotationRequirement):
+            requirements.append(item)
+            continue
+        if not isinstance(item, str):
+            continue
+        if not item.strip():
+            continue
+        requirement = parse_annotation_requirement(item)
+        requirements.append(requirement)
+    return requirements
 
 
 def filter_by_annotations(queryset: QuerySetType, selector: AnnotationSelector) -> QuerySetType:

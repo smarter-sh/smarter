@@ -71,6 +71,12 @@ ResolvedUserType = Optional[Union[User, AbstractUser, AnonymousUser]]
 
 # pylint: disable=W0613
 def should_log_verbose(level) -> bool:
+    """
+    Whether to log verbosely, per ``smarter_settings.verbose_logging``.
+
+    :param level: The log level. Unused.
+    :returns: True if verbose logging is on.
+    """
     return smarter_settings.verbose_logging
 
 

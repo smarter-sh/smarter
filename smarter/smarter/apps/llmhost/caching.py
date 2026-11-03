@@ -83,6 +83,11 @@ def get_cached_llmhosts_owned_by_user_profile(user_profile: UserProfile) -> mode
 
 
 def invalidate_cached_llmhosts_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached LLMHosts that the given UserProfile owns.
+
+    :param user_profile: The user profile whose cache entry to invalidate.
+    """
     _get_cached_llmhosts_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -122,6 +127,11 @@ def get_cached_llmhosts_shared_with_user_profile(user_profile: UserProfile) -> m
 
 
 def invalidate_cached_llmhosts_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached LLMHosts shared with the given UserProfile.
+
+    :param user_profile: The user profile whose cache entry to invalidate.
+    """
     _get_cached_llmhosts_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -162,6 +172,11 @@ def get_cached_llmhosts_available_to_user_profile(user_profile: UserProfile) -> 
 
 
 def invalidate_cached_llmhosts_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached LLMHosts available to the given UserProfile.
+
+    :param user_profile: The user profile whose cache entry to invalidate.
+    """
     _get_cached_llmhosts_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -212,6 +227,11 @@ def get_cached_llmhost_computes_owned_by_user_profile(user_profile: UserProfile)
 
 
 def invalidate_cached_llmhost_computes_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached LLMHostComputes that the given UserProfile owns.
+
+    :param user_profile: The user profile whose cache entry to invalidate.
+    """
     _get_cached_llmhost_computes_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -228,6 +248,11 @@ def get_cached_llmhost_computes_shared_with_user_profile(user_profile: UserProfi
 
 
 def invalidate_cached_llmhost_computes_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached LLMHostComputes shared with the given UserProfile.
+
+    :param user_profile: The user profile whose cache entry to invalidate.
+    """
     _get_cached_llmhost_computes_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -246,6 +271,11 @@ def get_cached_llmhost_computes_available_to_user_profile(
 
 
 def invalidate_cached_llmhost_computes_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached LLMHostComputes available to the given UserProfile.
+
+    :param user_profile: The user profile whose cache entry to invalidate.
+    """
     _get_cached_llmhost_computes_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

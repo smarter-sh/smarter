@@ -67,6 +67,14 @@ class ProxyBaseModel(AbstractSAMSpecBase):
 
 
 def validate_header_name(name: str, field: str) -> str:
+    """
+    Strip an HTTP header name, and check that it is one.
+
+    :param name: The header name.
+    :param field: The manifest field, for the error message.
+    :returns: The stripped name.
+    :raises SAMValidationError: when it is not a valid HTTP header name.
+    """
     name = str(name).strip()
     if not HEADER_NAME.match(name):
         raise SAMValidationError(f"{field}: '{name}' is not a valid HTTP header name.")
@@ -74,6 +82,14 @@ def validate_header_name(name: str, field: str) -> str:
 
 
 def validate_header_value(value: str, field: str) -> str:
+    """
+    Check that an HTTP header value has no line breaks, which would allow header injection.
+
+    :param value: The header value.
+    :param field: The manifest field, for the error message.
+    :returns: The value, as a string.
+    :raises SAMValidationError: when it contains a carriage return or line feed.
+    """
     value = str(value)
     if "\r" in value or "\n" in value:
         raise SAMValidationError(f"{field}: header values may not contain line breaks.")
@@ -103,6 +119,15 @@ class SAMProxySpecAuth(ProxyBaseModel):
     @field_validator("header")
     @classmethod
     def validate_header(cls, v: str) -> str:
+        """
+        Check that ``auth.header`` is a header name that can carry an API key.
+
+        Hop-by-hop headers, ``Host``, ``Content-Length``, ``Content-Type`` and ``Cookie`` cannot.
+
+        :param v: The header name.
+        :returns: The stripped header name.
+        :raises SAMValidationError: when it is not a valid header name, or cannot carry an API key.
+        """
         v = validate_header_name(v, "auth.header")
         if v.lower() in HOP_BY_HOP_HEADERS or v.lower() in ("host", "content-length", "content-type", "cookie"):
             raise SAMValidationError(f"auth.header: '{v}' cannot carry an API key.")
@@ -111,6 +136,13 @@ class SAMProxySpecAuth(ProxyBaseModel):
     @field_validator("scheme")
     @classmethod
     def validate_scheme(cls, v: Optional[str]) -> str:
+        """
+        Normalize ``auth.scheme`` to a single word, or an empty string for none.
+
+        :param v: The scheme, e.g. ``Bearer``, or None.
+        :returns: The stripped scheme, or an empty string.
+        :raises SAMValidationError: when it is not a single word.
+        """
         v = str(v or "").strip()
         if v and not HEADER_NAME.match(v):
             raise SAMValidationError(f"auth.scheme: '{v}' must be a single word, e.g. Bearer, or empty.")
@@ -175,6 +207,13 @@ class SAMProxySpec(ProxyBaseModel):
     @field_validator("provider")
     @classmethod
     def validate_provider(cls, v: str) -> str:
+        """
+        Strip ``provider``, and check that it is a valid Provider name.
+
+        :param v: The Provider's name.
+        :returns: The stripped name.
+        :raises SAMValidationError: when it is not a valid name.
+        """
         v = str(v or "").strip()
         if not RESOURCE_NAME.match(v):
             raise SAMValidationError(f"provider: '{v}' is not a valid Provider name.")
@@ -183,6 +222,13 @@ class SAMProxySpec(ProxyBaseModel):
     @field_validator("apiKey")
     @classmethod
     def validate_api_key(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Strip ``apiKey``, and check that it is a Secret's name rather than a key.
+
+        :param v: The Secret's name, or None for the Provider's API key.
+        :returns: The stripped name, or None.
+        :raises SAMValidationError: when it is not a valid Secret name.
+        """
         if v is None:
             return None
         v = str(v).strip()
@@ -195,6 +241,14 @@ class SAMProxySpec(ProxyBaseModel):
     @field_validator("baseUrl")
     @classmethod
     def validate_base_url(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Check that ``baseUrl`` is a plain http(s) URL, and give it a trailing slash.
+
+        :param v: The URL, or None.
+        :returns: The URL with a trailing slash, or None when it is None or blank.
+        :raises SAMValidationError: when it is not http(s), has no host, or contains credentials, a query
+            or a fragment.
+        """
         if v is None or not str(v).strip():
             return None
         v = str(v).strip()
@@ -210,6 +264,13 @@ class SAMProxySpec(ProxyBaseModel):
     @field_validator("headers")
     @classmethod
     def validate_headers(cls, v: dict[str, str]) -> dict[str, str]:
+        """
+        Check the names and values of ``headers``, and reject reserved names.
+
+        :param v: The headers, by name.
+        :returns: The headers, with stripped names.
+        :raises SAMValidationError: when a name is invalid or reserved, or a value has a line break.
+        """
         retval = {}
         for name, value in (v or {}).items():
             name = validate_header_name(name, "headers")
@@ -223,6 +284,14 @@ class SAMProxySpec(ProxyBaseModel):
     @field_validator("allowedPaths")
     @classmethod
     def validate_allowed_paths(cls, v: list[str]) -> list[str]:
+        """
+        Normalize ``allowedPaths``, stripping whitespace and slashes, and reject invalid patterns.
+
+        :param v: The glob patterns.
+        :returns: The normalized patterns.
+        :raises SAMValidationError: when a pattern is empty, has invalid characters, contains ``://``, or
+            has an empty, ``.`` or ``..`` segment.
+        """
         retval = []
         for pattern in v or []:
             pattern = str(pattern).strip().strip("/")

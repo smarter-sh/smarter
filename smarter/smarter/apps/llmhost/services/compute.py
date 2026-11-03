@@ -137,7 +137,14 @@ def fits(pod: PodRequests, compute: LLMHostCompute) -> list[str]:
 
 
 def cost_per_hour(pod: PodRequests, compute: Optional[LLMHostCompute]) -> Optional[Decimal]:
-    """One replica's share of its node's price: the largest of its shares of the node's GPUs, CPU and memory, since that is what keeps the rest of the node from other pods."""
+    """
+    One replica's share of its node's price: the largest of its shares of the node's GPUs, CPU and memory, since that is what keeps the rest of the node from other pods.
+
+    :param pod: The replica's pod requests.
+    :param compute: The LLMHostCompute whose node runs the pod, or None.
+    :returns: Dollars per hour, at most the node's price, or None if there is no compute, or it
+        has no price.
+    """
     if compute is None or compute.price_per_hour is None:
         return None
     shares = [
@@ -146,7 +153,10 @@ def cost_per_hour(pod: PodRequests, compute: Optional[LLMHostCompute]) -> Option
     ]
     if compute.gpu_count:
         shares.append(Decimal(pod.gpus) / Decimal(compute.gpu_count))
-    return (min(max(shares), Decimal(1)) * compute.price_per_hour).quantize(Decimal("0.0001"))
+    largest_share = max(shares)
+    share = min(largest_share, Decimal(1))
+    cost = share * compute.price_per_hour
+    return cost.quantize(Decimal("0.0001"))
 
 
 def choose_compute(pod: PodRequests, computes: Iterable[LLMHostCompute]) -> LLMHostCompute:
@@ -238,7 +248,15 @@ def nodes_needed(pods: Iterable[PodRequests], compute: LLMHostCompute) -> int:
 
 
 def node_ready(node: SmarterDictType) -> bool:
-    for condition in node.get("status", {}).get("conditions", []) or []:
+    """
+    Whether a Node's Ready condition is True.
+
+    :param node: The Node, as a Kubernetes API dict.
+    :returns: True if it is ready, False if it is not, or reports no Ready condition.
+    """
+    status = node.get("status", {})
+    conditions = status.get("conditions", []) or []
+    for condition in conditions:
         if condition.get("type") == "Ready":
             return condition.get("status") == "True"
     return False
@@ -289,12 +307,14 @@ class ComputeProvisioner:
 
     @property
     def cluster(self) -> ClusterBackend:
+        """The Kubernetes cluster, from :func:`~smarter.apps.llmhost.services.cluster.get_cluster` unless one was given."""
         if self._cluster is None:
             self._cluster = get_cluster()
         return self._cluster
 
     @property
     def nodegroups(self) -> NodeGroupBackend:
+        """The cloud's node groups, from :func:`~smarter.apps.llmhost.services.nodegroups.get_nodegroups` unless one was given."""
         if self._nodegroups is None:
             self._nodegroups = get_nodegroups()
         return self._nodegroups

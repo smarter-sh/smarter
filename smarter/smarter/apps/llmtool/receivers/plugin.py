@@ -37,7 +37,14 @@ logger_prefix = SmarterFormattedText.text(__name__)
 
 @receiver(plugin_created, dispatch_uid="plugin_created")
 def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
-    """Handle plugin created signal."""
+    """
+    Handle plugin created signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    """
 
     logger.info("%s.plugin_created() %s for %s", logger_prefix, plugin.name, plugin.user_profile)
     logger.debug(
@@ -50,14 +57,28 @@ def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
 
 @receiver(plugin_cloned, dispatch_uid="plugin_cloned")
 def handle_plugin_cloned(sender, plugin: PluginBase, **kwargs):
-    """Handle plugin cloned signal."""
+    """
+    Handle plugin cloned signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    """
 
     logger.info("%s.plugin_cloned() %s data: %s", logger_prefix, plugin.name, plugin.data)
 
 
 @receiver(plugin_updated, dispatch_uid="plugin_updated")
 def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
-    """Handle plugin updated signal."""
+    """
+    Handle plugin updated signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    """
 
     logger.info("%s.plugin_updated() %s for %s", logger_prefix, plugin.name, plugin.user_profile)
     logger.debug(
@@ -70,7 +91,15 @@ def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
 
 @receiver(plugin_deleting, dispatch_uid="plugin_deleting")
 def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
-    """Handle plugin deleting signal."""
+    """
+    Handle plugin deleting signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param plugin_meta: The plugin's PluginMeta, whose name is logged.
+    """
     logger.info(
         "%s.plugin_deleting() %s is being deleted.",
         logger_prefix,
@@ -80,14 +109,30 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 
 @receiver(plugin_deleted, dispatch_uid="plugin_deleted")
 def handle_plugin_deleted(sender, plugin: PluginBase, plugin_name: str, **kwargs):
-    """Handle plugin deleted signal."""
+    """
+    Handle plugin deleted signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param plugin_name: The deleted plugin's name.
+    """
 
     logger.info("%s.plugin_deleted() %s", logger_prefix, plugin_name)
 
 
 @receiver(plugin_called, dispatch_uid="plugin_called")
 def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
-    """Handle plugin called signal."""
+    """
+    Handle plugin called signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param kwargs: The signal's other arguments, of which ``inquiry_type`` are logged.
+    """
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
 
@@ -96,7 +141,15 @@ def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
 
 @receiver(plugin_responded, dispatch_uid="plugin_responded")
 def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
-    """Handle plugin responded signal."""
+    """
+    Handle plugin responded signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param kwargs: The signal's other arguments, of which ``inquiry_type``, ``response``, ``inquiry_return`` are logged.
+    """
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
     # plugins send their response as ``response``.
@@ -166,7 +219,17 @@ def handle_plugin_selected(sender, *args, **kwargs):
 
 @receiver(search_term_matched, dispatch_uid="search_term_matched")
 def handle_search_term_matched(sender, prompt: str, search_term: str, method: str, matched_text=None, **kwargs):
-    """Handle search term matched signal."""
+    """
+    Handle search term matched signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param prompt: The user's prompt, which is logged at DEBUG only, because it is the user's conversation.
+    :param search_term: The plugin's search term that matched.
+    :param method: How it matched, e.g. ``thesaurus``.
+    :param matched_text: The text of the prompt that matched, if any.
+    """
     logger.info(
         "%s.search_term_matched() search_term: %s method: %s matched_text: %s",
         logger_prefix,

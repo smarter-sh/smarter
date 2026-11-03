@@ -88,9 +88,20 @@ class LLMClientView(ViewBase):
     llmclient_id: Optional[int] = None
 
     def get_queryset(self, *args, **kwargs):
+        """
+        Return a queryset of the view's LLMClient.
+
+        :returns: The LLMClient found by :meth:`initial`, as a one-row queryset.
+        """
         return LLMClient.objects.filter(id=self.llmclient.id)  # type: ignore[return-value]
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Pop ``hashed_id`` from the url kwargs, then dispatch the request.
+
+        :param request: The request.
+        :returns: The response.
+        """
         self.hashed_id = kwargs.pop("hashed_id", None)
         return super().dispatch(request, *args, **kwargs)
 
@@ -118,6 +129,14 @@ class LLMClientView(ViewBase):
             logger.debug("%s.initial() - %s %s", self.formatted_class_name, self.llmclient, self.user_profile)
 
     def get(self, request: Request, llmclient_id: Optional[int] = None):
+        """
+        Return the LLMClient as an :class:`~smarter.apps.llmclient.contract.models.LLMClientApiLLMClient`.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient. Unused: :meth:`initial` has already found it.
+        :returns: The LLMClient's json.
+        :raises NotFound: when the url identifies no LLMClient.
+        """
         if not self.llmclient:
             raise NotFound("LLMClient not found.")
         return Response(
@@ -126,14 +145,32 @@ class LLMClientView(ViewBase):
         )
 
     def post(self, request: Request, *args, **kwargs):
+        """
+        Create an LLMClient from the request's data, and redirect to its detail url.
+
+        :param request: The request, whose data are the LLMClient's field values.
+        :returns: A redirect to the new LLMClient, or a 400 response if it could not be created.
+        """
         try:
             data = request.data
+            if not isinstance(data, dict):
+                raise TypeError(f"Expected a JSON dict in request body but received {type(data)}")
             llmclient = LLMClient.objects.create(**data)
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(llmclient.id) + "/")  # type: ignore[return-value]
 
     def patch(self, request: Request, *args, llmclient_id: Optional[int] = None, **kwargs):
+        """
+        Set the request's fields on the LLMClient, save it, and redirect to its detail url.
+
+        Keys that are not attributes of the LLMClient are ignored.
+
+        :param request: The request, whose data is a json dict of field values.
+        :param llmclient_id: The id of the LLMClient. Unused: :meth:`initial` has already found it.
+        :returns: A redirect to the LLMClient; 404 if there is none; 400 if the data is not a dict or
+            fails validation; 500 if the save fails.
+        """
         llmclient: Optional[LLMClient] = None
         data: Optional[SmarterDictType] = None
 
@@ -142,12 +179,15 @@ class LLMClientView(ViewBase):
             return HttpResponseNotFound("LLMClient not found")
 
         try:
-            data = request.data
-            if not isinstance(data, dict):
+            request_data = request.data
+            if not isinstance(request_data, dict):
                 return JsonResponse(
-                    {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+                    {
+                        "error": f"Invalid request data. Expected a JSON dict in request body but received {type(request_data)}"
+                    },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+            data = request_data
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
@@ -166,6 +206,15 @@ class LLMClientView(ViewBase):
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, *args, llmclient_id: Optional[int] = None, **kwargs):
+        """
+        Delete the LLMClient, and redirect to the list url.
+
+        A superuser can delete any LLMClient by ``llmclient_id``; anyone else deletes the view's LLMClient.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :returns: A redirect to the list url, or a 500 response if the delete fails.
+        """
         if llmclient_id and self.is_superuser():
             llmclient = get_object_or_404(LLMClient, pk=llmclient_id)
         else:
@@ -190,6 +239,12 @@ class LLMClientListView(ListViewBase):
     llmclients: Optional[QuerySet[LLMClient]]
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Dispatch the request, then, if it succeeded, set ``llmclients`` to those the user can read.
+
+        :param request: The request.
+        :returns: The response.
+        """
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response
@@ -197,6 +252,11 @@ class LLMClientListView(ListViewBase):
         return response
 
     def get_queryset(self, *args, **kwargs):
+        """
+        Return the LLMClients that the user has read permission for.
+
+        :returns: The LLMClients.
+        """
         return LLMClient.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
 
     def item(self, row):
@@ -210,6 +270,15 @@ class LLMClientDeployView(ViewBase):
     serializer_class = LLMClientSerializer
 
     def post(self, request: Request, llmclient_id: int):
+        """
+        Mark the account's LLMClient deployed, and save it.
+
+        Saving it sends the LLMClient's signals, whose receivers deploy it.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :returns: An empty 200 response, or 400 if the save fails.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         try:
             llmclient.deployed = True
@@ -228,6 +297,14 @@ class LLMClientPluginView(ViewBase):
     serializer_class = LLMClientPluginSerializer
 
     def get(self, request: Request, llmclient_id: int, plugin_id: int):
+        """
+        Return a plugin of the account's LLMClient as an :class:`~smarter.apps.llmclient.contract.models.LLMClientApiPlugin`.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param plugin_id: The id of the LLMClientPlugin.
+        :returns: The plugin's json, or 404 if the LLMClient or plugin is not found.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         plugin = get_object_or_404(LLMClientPlugin, pk=plugin_id, llmclient=llmclient)
         return Response(
@@ -235,6 +312,13 @@ class LLMClientPluginView(ViewBase):
         )
 
     def post(self, request: Request, llmclient_id: int):
+        """
+        Add a plugin to the account's LLMClient, from the request's data, and redirect to it.
+
+        :param request: The request, whose data is passed to :meth:`LLMClientPlugin.load`.
+        :param llmclient_id: The id of the LLMClient.
+        :returns: A redirect to the new LLMClientPlugin, or a 400 response if it could not be loaded.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         try:
             data = request.data
@@ -244,6 +328,14 @@ class LLMClientPluginView(ViewBase):
         return HttpResponseRedirect(request.path_info + str(llmclient_plugin.id) + "/")  # type: ignore[return-value]
 
     def patch(self, request: Request, llmclient_id: int, plugin_id: int):
+        """
+        Reload a plugin of the account's LLMClient from the request's json body, and redirect to it.
+
+        :param request: The request, whose body is json.
+        :param llmclient_id: The id of the LLMClient.
+        :param plugin_id: The id of the LLMClientPlugin.
+        :returns: A redirect to the plugin, or a 400 response if the body is invalid.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         llmclient_plugin = get_object_or_404(LLMClientPlugin, pk=plugin_id, llmclient=llmclient)
         try:
@@ -256,6 +348,14 @@ class LLMClientPluginView(ViewBase):
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, llmclient_id: int, plugin_id: int):
+        """
+        Remove a plugin from the account's LLMClient, and redirect to the list url.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param plugin_id: The id of the LLMClientPlugin.
+        :returns: A redirect to the list url, or a 500 response if the delete fails.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         llmclient_plugin = get_object_or_404(LLMClientPlugin, pk=plugin_id, llmclient=llmclient)
         try:
@@ -273,6 +373,12 @@ class LLMClientPluginListView(ListViewBase):
     serializer_class = LLMClientPluginSerializer
 
     def get_queryset(self, *args, **kwargs):
+        """
+        Return the plugins of the account's LLMClient named by the url's ``llmclient_id``.
+
+        :returns: The LLMClientPlugin rows.
+        :raises Http404: when the account has no such LLMClient.
+        """
         llmclient_id = self.kwargs.get("llmclient_id")
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         return LLMClientPlugin.objects.filter(llmclient=llmclient)
@@ -293,11 +399,28 @@ class LLMClientAPIKeyView(ViewBase):
     serializer_class = LLMClientAPIKeySerializer
 
     def get(self, request: Request, llmclient_id: int, apikey_id: int):
+        """
+        Return an api key of the account's LLMClient as an :class:`~smarter.apps.llmclient.contract.models.LLMClientApiKey`.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param apikey_id: The id of the LLMClientAPIKey.
+        :returns: The api key's json, or 404 if the LLMClient or api key is not found.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         api_key = get_object_or_404(LLMClientAPIKey, pk=apikey_id, llmclient=llmclient)
         return Response(LLMClientApiKey.from_model(api_key).model_dump(mode="json"), status=HTTPStatus.OK)
 
     def post(self, request: Request, llmclient_id: int, apikey_id: Optional[int] = None):
+        """
+        Link a SmarterAuthToken to the account's LLMClient, and redirect to the new link.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param apikey_id: The primary key of the SmarterAuthToken.
+        :returns: A redirect to the new LLMClientAPIKey; 404 if the LLMClient or token is not found;
+            400 if the link could not be created.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         api_key = get_object_or_404(SmarterAuthToken, pk=apikey_id)
         try:
@@ -307,6 +430,14 @@ class LLMClientAPIKeyView(ViewBase):
         return HttpResponseRedirect(request.path_info + str(llmclient_api_key.id) + "/")  # type: ignore[return-value]
 
     def delete(self, request: Request, llmclient_id: int, apikey_id: int):
+        """
+        Unlink an api key from the account's LLMClient, and redirect to the list url.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param apikey_id: The id of the LLMClientAPIKey.
+        :returns: A redirect to the list url, or a 500 response if the delete fails.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         llmclient_api_key = get_object_or_404(LLMClientAPIKey, pk=apikey_id, llmclient=llmclient)
         try:
@@ -325,6 +456,12 @@ class LLMClientAPIKeyListView(ListViewBase):
     contract_model = LLMClientApiKey
 
     def get_queryset(self, *args, **kwargs):
+        """
+        Return the api keys of the account's LLMClient named by the url's ``llmclient_id``.
+
+        :returns: The LLMClientAPIKey rows, with their tokens.
+        :raises Http404: when the account has no such LLMClient.
+        """
         llmclient_id = self.kwargs.get("llmclient_id")
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         return LLMClientAPIKey.objects.filter(llmclient=llmclient).select_related("api_key")
@@ -341,6 +478,14 @@ class LLMClientCustomDomainView(ViewBase):
     serializer_class = LLMClientCustomDomainSerializer
 
     def get(self, request: Request, llmclient_id: int, customdomain_id: int):
+        """
+        Return the account LLMClient's custom domain as an :class:`~smarter.apps.llmclient.contract.models.LLMClientApiCustomDomain`.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param customdomain_id: The id of the LLMClientCustomDomain.
+        :returns: The custom domain's json, or 404 if the LLMClient does not use that domain.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         custom_domain = get_object_or_404(LLMClientCustomDomain, pk=customdomain_id, llmclient=llmclient)
         return Response(
@@ -348,7 +493,17 @@ class LLMClientCustomDomainView(ViewBase):
         )
 
     def post(self, request: Request, llmclient_id: int, customdomain_id: int):
-        """Attach the custom domain to the LLMClient, through LLMClient.custom_domain."""
+        """
+        Attach the custom domain to the LLMClient, through LLMClient.custom_domain.
+
+        If the LLMClient is deployed and the domain is verified, queues
+        :func:`~smarter.apps.llmclient.tasks.deploy_custom_api` to serve it on its custom host.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient, which must belong to the user's account.
+        :param customdomain_id: The id of the LLMClientCustomDomain.
+        :returns: A redirect to the request's url, or a 409 response if another LLMClient uses the domain.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         custom_domain = get_object_or_404(LLMClientCustomDomain, pk=customdomain_id)
         # LLMClient.custom_domain is one-to-one, so a domain belongs to at most one LLMClient.
@@ -387,6 +542,12 @@ class LLMClientCustomDomainListView(ListViewBase):
     contract_model = LLMClientApiCustomDomain
 
     def get_queryset(self, *args, **kwargs):
+        """
+        Return the custom domain of the account's LLMClient named by the url's ``llmclient_id``.
+
+        :returns: The LLMClientCustomDomain rows, zero or one.
+        :raises Http404: when the account has no such LLMClient.
+        """
         llmclient_id = self.kwargs.get("llmclient_id")
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         return LLMClientCustomDomain.objects.filter(llmclient=llmclient)
@@ -403,6 +564,14 @@ class LLMClientExtensionsView(ViewBase):
     serializer_class = LLMClientExtensionsSerializer
 
     def get(self, request: Request, llmclient_id: int, extension_id: int):
+        """
+        Return an extension of the account's LLMClient as an :class:`~smarter.apps.llmclient.contract.models.LLMClientApiExtension`.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param extension_id: The id of the LLMClientExtensions link row.
+        :returns: The extension's json, or 404 if the LLMClient or link is not found.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         link = get_object_or_404(
             LLMClientExtensions.objects.select_related("extension"), pk=extension_id, llmclient=llmclient
@@ -410,6 +579,14 @@ class LLMClientExtensionsView(ViewBase):
         return Response(LLMClientApiExtension.from_model(link).model_dump(mode="json"), status=HTTPStatus.OK)
 
     def delete(self, request: Request, llmclient_id: int, extension_id: int):
+        """
+        Remove an extension from the account's LLMClient, and redirect to the list url.
+
+        :param request: The request.
+        :param llmclient_id: The id of the LLMClient.
+        :param extension_id: The id of the LLMClientExtensions link row.
+        :returns: A redirect to the list url, or a 500 response if the delete fails.
+        """
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         link = get_object_or_404(LLMClientExtensions, pk=extension_id, llmclient=llmclient)
         try:
@@ -428,6 +605,12 @@ class LLMClientExtensionsListView(ListViewBase):
     contract_model = LLMClientApiExtension
 
     def get_queryset(self, *args, **kwargs):
+        """
+        Return the extensions of the account's LLMClient named by the url's ``llmclient_id``, sorted by slug.
+
+        :returns: The LLMClientExtensions rows, with their Extensions.
+        :raises Http404: when the account has no such LLMClient.
+        """
         llmclient_id = self.kwargs.get("llmclient_id")
         llmclient = get_object_or_404(LLMClient, pk=llmclient_id, user_profile__account=self.account)
         return (

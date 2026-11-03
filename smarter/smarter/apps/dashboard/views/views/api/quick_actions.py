@@ -131,6 +131,12 @@ class QuickActionsView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return the dashboard's quick actions, including the superuser-only ones for superusers.
+
+        :param request: The request.
+        :returns: The quick actions, as a JSON list.
+        """
         user = get_resolved_user(request.user)
         is_superuser = bool(user and user.is_superuser)
         return JsonResponse(get_quick_actions(is_superuser=is_superuser), status=HTTPStatus.OK, safe=False)

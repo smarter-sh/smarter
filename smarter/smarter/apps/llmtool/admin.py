@@ -41,6 +41,13 @@ class PluginSelectorInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -52,6 +59,13 @@ class PluginPromptInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -67,6 +81,13 @@ class PluginDataInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -82,6 +103,13 @@ class PluginDataApiInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -97,6 +125,13 @@ class PluginDataSqlInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -112,6 +147,13 @@ class PluginDataSkillInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -127,6 +169,13 @@ class PluginDataWebsearchInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -142,6 +191,13 @@ class PluginDataImageSearchInline(admin.StackedInline):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
 
@@ -157,6 +213,12 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
     model = PluginMeta
 
     def plugin_name(self, obj):
+        """
+        Return the plugin's name with a space before each capital letter, for the list display.
+
+        :param obj: The PluginMeta.
+        :returns: The name, e.g. ``Everlasting Gobstopper`` for ``EverlastingGobstopper``.
+        """
         name = obj.name
         formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
         return formatted_name
@@ -165,6 +227,13 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -194,6 +263,12 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
     model = PluginMeta
 
     def plugin_name(self, obj):
+        """
+        Return the plugin's name with a space before each capital letter, for the list display.
+
+        :param obj: The PluginMeta.
+        :returns: The name, e.g. ``Everlasting Gobstopper`` for ``EverlastingGobstopper``.
+        """
         name = obj.name
         formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
         return formatted_name
@@ -202,6 +277,13 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -232,6 +314,12 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
     model = PluginMeta
 
     def plugin_name(self, obj):
+        """
+        Return the plugin's name with a space before each capital letter, for the list display.
+
+        :param obj: The PluginMeta.
+        :returns: The name, e.g. ``Everlasting Gobstopper`` for ``EverlastingGobstopper``.
+        """
         name = obj.name
         formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
         return formatted_name
@@ -240,6 +328,13 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -269,6 +364,12 @@ class PluginSkillAdmin(SmarterCustomerModelAdmin):
     model = PluginMeta
 
     def plugin_name(self, obj):
+        """
+        Return the plugin's name with a space before each capital letter, for the list display.
+
+        :param obj: The PluginMeta.
+        :returns: The name, e.g. ``Everlasting Gobstopper`` for ``EverlastingGobstopper``.
+        """
         name = obj.name
         formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
         return formatted_name
@@ -277,6 +378,13 @@ class PluginSkillAdmin(SmarterCustomerModelAdmin):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -306,6 +414,12 @@ class PluginWebsearchAdmin(SmarterCustomerModelAdmin):
     model = PluginMeta
 
     def plugin_name(self, obj):
+        """
+        Return the plugin's name with a space before each capital letter, for the list display.
+
+        :param obj: The PluginMeta.
+        :returns: The name, e.g. ``Everlasting Gobstopper`` for ``EverlastingGobstopper``.
+        """
         name = obj.name
         formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
         return formatted_name
@@ -314,6 +428,13 @@ class PluginWebsearchAdmin(SmarterCustomerModelAdmin):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -343,6 +464,12 @@ class PluginImageSearchAdmin(SmarterCustomerModelAdmin):
     model = PluginMeta
 
     def plugin_name(self, obj):
+        """
+        Return the plugin's name with a space before each capital letter, for the list display.
+
+        :param obj: The PluginMeta.
+        :returns: The name, e.g. ``Everlasting Gobstopper`` for ``EverlastingGobstopper``.
+        """
         name = obj.name
         formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
         return formatted_name
@@ -351,6 +478,13 @@ class PluginImageSearchAdmin(SmarterCustomerModelAdmin):
 
     # pylint: disable=W0212
     def get_readonly_fields(self, request: ASGIRequest, obj=None):
+        """
+        Make every field of the model read-only.
+
+        :param request: The admin request.
+        :param obj: The object being edited, or None when adding one.
+        :returns: The names of all of the model's fields.
+        """
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -404,6 +538,8 @@ class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
 
 # Plugin Models
 class PluginMetaStatic(PluginMeta):
+    """A proxy of PluginMeta, so that the admin site lists static plugins on their own page."""
+
     class Meta:
         proxy = True
         verbose_name = "Plugin Meta (Static)"
@@ -411,6 +547,8 @@ class PluginMetaStatic(PluginMeta):
 
 
 class PluginMetaApi(PluginMeta):
+    """A proxy of PluginMeta, so that the admin site lists API plugins on their own page."""
+
     class Meta:
         proxy = True
         verbose_name = "Plugin Meta (API)"
@@ -418,6 +556,8 @@ class PluginMetaApi(PluginMeta):
 
 
 class PluginMetaSql(PluginMeta):
+    """A proxy of PluginMeta, so that the admin site lists SQL plugins on their own page."""
+
     class Meta:
         proxy = True
         verbose_name = "Plugin Meta (SQL)"
@@ -425,6 +565,8 @@ class PluginMetaSql(PluginMeta):
 
 
 class PluginMetaSkill(PluginMeta):
+    """A proxy of PluginMeta, so that the admin site lists skill plugins on their own page."""
+
     class Meta:
         proxy = True
         verbose_name = "Plugin Meta (Skill)"
@@ -432,6 +574,8 @@ class PluginMetaSkill(PluginMeta):
 
 
 class PluginMetaWebsearch(PluginMeta):
+    """A proxy of PluginMeta, so that the admin site lists web search plugins on their own page."""
+
     class Meta:
         proxy = True
         verbose_name = "Plugin Meta (Websearch)"
@@ -439,6 +583,8 @@ class PluginMetaWebsearch(PluginMeta):
 
 
 class PluginMetaImageSearch(PluginMeta):
+    """A proxy of PluginMeta, so that the admin site lists image search plugins on their own page."""
+
     class Meta:
         proxy = True
         verbose_name = "Plugin Meta (Image Search)"

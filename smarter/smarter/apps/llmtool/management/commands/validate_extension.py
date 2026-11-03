@@ -18,9 +18,20 @@ class Command(SmarterCommand):
     )
 
     def add_arguments(self, parser):
+        """
+        Add the ``path`` argument.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("path", type=str, help="The extension's source directory, or its .zip archive.")
 
     def handle(self, *args, **options):
+        """
+        Validate the extension, load its code, print each tool's definition, then unload it.
+
+        :param args: Unused.
+        :param options: The parsed command line options.
+        """
         self.handle_begin()
         path = Path(options["path"])
         try:

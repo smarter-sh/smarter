@@ -296,14 +296,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # ----------------------------------------------------------------------
         # the request can also be a DRF Request or a PreparedRequest, which SmarterRequestMixin accepts
         # although it annotates only HttpRequest. See params.
-        request = cast(
-            Optional[HttpRequest],
-            request
-            or kwargs.pop("request", None)
-            or next(
-                (arg for arg in args if isinstance(arg, (Request, HttpRequest, ASGIRequest, PreparedRequest))), None
-            ),
-        )
+        # kwargs["request"] is popped only when the request parameter is empty.
+        if not request:
+            request = kwargs.pop("request", None)
+        if not request:
+            request_types = (Request, HttpRequest, ASGIRequest, PreparedRequest)
+            found_request = next((arg for arg in args if isinstance(arg, request_types)), None)
+            request = cast(Optional[HttpRequest], found_request)
         user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
         account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
         user_profile = kwargs.pop("user_profile", None) or next(
@@ -318,15 +317,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # if provided, otherwise attempt to initialize the SAMLoader from
         # the params, which in turn will lazily load the manifest if/when needed.
         # ----------------------------------------------------------------------
-        manifest = (
-            manifest
-            or kwargs.pop("manifest", manifest)
-            or next((arg for arg in args if isinstance(arg, AbstractSAMBase)), None)
-        )
+        if not manifest:
+            manifest = kwargs.pop("manifest", manifest)
+        if not manifest:
+            manifest = next((arg for arg in args if isinstance(arg, AbstractSAMBase)), None)
         if manifest:
             self.manifest_setter(manifest)
 
-        loader = loader or kwargs.pop("loader", None) or next((arg for arg in args if isinstance(arg, SAMLoader)), None)
+        if not loader:
+            loader = kwargs.pop("loader", None)
+        if not loader:
+            loader = next((arg for arg in args if isinstance(arg, SAMLoader)), None)
         if loader:
             self.loader = loader
         else:
@@ -349,7 +350,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not self._manifest and not self._loader:
             self.orm_meta_instance_setter()
 
-        self._validated = bool(self._manifest) or bool(self._loader and self._loader.ready) or bool(self._orm_instance)
+        # evaluated in order, and only as far as needed, because SAMLoader.ready may parse the manifest.
+        if self._manifest:
+            self._validated = True
+        elif self._loader and self._loader.ready:
+            self._validated = True
+        else:
+            self._validated = bool(self._orm_instance)
 
         # ----------------------------------------------------------------------
         # log initialization state.
@@ -639,6 +646,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     def is_valid(self) -> bool:
+        """True if the broker has a manifest, a ready loader, or an ORM instance."""
         return self._validated
 
     @property
@@ -1598,7 +1606,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The name, or None if the resource has neither a name nor a slug.
         :rtype: Optional[str]
         """
-        return getattr(instance, "name", None) or getattr(instance, "slug", None) or None
+        name = getattr(instance, "name", None)
+        if name:
+            return name
+        slug = getattr(instance, "slug", None)
+        if slug:
+            return slug
+        return None
 
     @staticmethod
     def dependency_tree_owner(instance: models.Model) -> Optional[str]:
@@ -1925,13 +1939,18 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             with context:
                 cls._pydantic_model.model_validate(manifest)
         except ValidationError as e:
-            return [
-                {"loc": [str(part) for part in error["loc"]], "message": error["msg"], "type": error["type"]}
-                for error in e.errors()
-            ]
+            errors = []
+            for error in e.errors():
+                loc = [str(part) for part in error["loc"]]
+                errors.append({"loc": loc, "message": error["msg"], "type": error["type"]})
+            return errors
         # pylint: disable=broad-except
         except Exception as e:
-            message = getattr(e, "message", None) or str(e) or type(e).__name__
+            message = getattr(e, "message", None)
+            if not message:
+                message = str(e)
+            if not message:
+                message = type(e).__name__
             return [{"loc": [], "message": message, "type": type(e).__name__}]
         return []
 
@@ -2499,43 +2518,115 @@ class BrokerNotImplemented(AbstractBroker):
 
     @property
     def ORMModelClass(self) -> Type[MetaDataWithOwnershipModel]:
+        """
+        Not implemented.
+
+        :raises SAMBrokerErrorNotImplemented: Always.
+        """
         raise SAMBrokerErrorNotImplemented(
             message="Subclasses must implement the ORMModelClass", thing=self.thing, command=None
         )
 
     @property
     def SerializerClass(self) -> Type[ModelSerializer]:
+        """
+        Not implemented.
+
+        :raises SAMBrokerErrorNotImplemented: Always.
+        """
         raise SAMBrokerErrorNotImplemented(
             message="Subclasses must implement the SerializerClass", thing=self.thing, command=None
         )
 
     @property
     def manifest(self) -> Optional[Union[AbstractSAMBase, SmarterDictType]]:
+        """
+        Not implemented.
+
+        :raises SAMBrokerErrorNotImplemented: Always.
+        """
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
     def prompt(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.prompt`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().prompt(request, *args, **kwargs)
 
     def dependencies(self) -> List[SAMDependency]:
+        """Delegate to :meth:`AbstractBroker.dependencies`."""
         return super().dependencies()
 
     def delete(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.delete`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().delete(request, *args, **kwargs)
 
     def deploy(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.deploy`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().deploy(request, *args, **kwargs)
 
     def describe(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.describe`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().describe(request, *args, **kwargs)
 
     def example_manifest(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.example_manifest`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().example_manifest(request, *args, **kwargs)
 
     def get(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.get`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().get(request, *args, **kwargs)
 
     def logs(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.logs`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().logs(request, *args, **kwargs)
 
     def undeploy(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.undeploy`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
         return super().undeploy(request, *args, **kwargs)

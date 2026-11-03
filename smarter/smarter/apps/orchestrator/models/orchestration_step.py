@@ -24,6 +24,8 @@ class OrchestrationStep(TimestampedModel):
     """
 
     class StepStatus(models.TextChoices):
+        """The outcome of an orchestration step."""
+
         SUCCEEDED = "succeeded", "Succeeded"
         FAILED = "failed", "Failed"
         SKIPPED = "skipped", "Skipped"

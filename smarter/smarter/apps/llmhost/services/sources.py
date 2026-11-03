@@ -66,6 +66,8 @@ class ModelSource(ABC):
 
         :param model: The spec's model block.
         :param slug: A DNS-safe name of the LLMHost, for local paths.
+        :returns: Where, and how, the engine loads the model.
+        :raises LLMHostConfigurationError: if the model block is incomplete for the source.
         """
 
 
@@ -75,9 +77,15 @@ class HuggingFaceSource(ModelSource):
     name = SAMLLMHostModelSource.HUGGINGFACE.value
 
     def resolve(self, model: SAMLLMHostModel, slug: str) -> ResolvedModel:
-        return ResolvedModel(
-            source=self.name, reference=model.repository, revision=model.revision or "main", file=model.file
-        )
+        """
+        Resolve the model to its repository, at model.revision, else ``main``, which the engine downloads.
+
+        :param model: The spec's model block.
+        :param slug: A DNS-safe name of the LLMHost, for local paths.
+        :returns: The remote model.
+        """
+        revision = model.revision or "main"
+        return ResolvedModel(source=self.name, reference=model.repository, revision=revision, file=model.file)
 
 
 class OllamaSource(ModelSource):
@@ -86,11 +94,19 @@ class OllamaSource(ModelSource):
     name = SAMLLMHostModelSource.OLLAMA.value
 
     def resolve(self, model: SAMLLMHostModel, slug: str) -> ResolvedModel:
+        """
+        Resolve the model to its Ollama tag, model.repository.
+
+        :param model: The spec's model block.
+        :param slug: A DNS-safe name of the LLMHost, for local paths.
+        :returns: The remote model.
+        """
         return ResolvedModel(source=self.name, reference=model.repository)
 
 
 class S3Source(ModelSource):
-    """An S3 prefix, synced to the model volume by an init container.
+    """
+    An S3 prefix, synced to the model volume by an init container.
 
     Credentials come from the pod's service account.
     """
@@ -98,6 +114,13 @@ class S3Source(ModelSource):
     name = SAMLLMHostModelSource.S3.value
 
     def resolve(self, model: SAMLLMHostModel, slug: str) -> ResolvedModel:
+        """
+        Resolve the model to a directory on the model volume, which an init container syncs from the S3 prefix.
+
+        :param model: The spec's model block.
+        :param slug: A DNS-safe name of the LLMHost, for local paths.
+        :returns: The local model, with its init container.
+        """
         target = posixpath.join(LOCAL_MODELS_PATH, slug)
         init = {
             "name": "download-model",
@@ -114,8 +137,17 @@ class UrlSource(ModelSource):
     name = SAMLLMHostModelSource.URL.value
 
     def resolve(self, model: SAMLLMHostModel, slug: str) -> ResolvedModel:
+        """
+        Resolve the model to a file on the model volume, which an init container downloads with curl, unless it is there.
+
+        :param model: The spec's model block.
+        :param slug: A DNS-safe name of the LLMHost, for local paths.
+        :returns: The local model, with its init container.
+        :raises LLMHostConfigurationError: if model.file is not set, and the URL has no file name.
+        """
         target = posixpath.join(LOCAL_MODELS_PATH, slug)
-        filename = model.file or posixpath.basename(urlparse(model.repository).path)
+        url_path = urlparse(model.repository).path
+        filename = model.file or posixpath.basename(url_path)
         if not filename:
             raise LLMHostConfigurationError(f"model.file: is required, because {model.repository} has no file name.")
         path = posixpath.join(target, filename)
@@ -138,6 +170,13 @@ class PvcSource(ModelSource):
     name = SAMLLMHostModelSource.PVC.value
 
     def resolve(self, model: SAMLLMHostModel, slug: str) -> ResolvedModel:
+        """
+        Resolve the model to model.repository, a path on the mounted volume.
+
+        :param model: The spec's model block.
+        :param slug: A DNS-safe name of the LLMHost, for local paths.
+        :returns: The local model.
+        """
         return ResolvedModel(
             source=self.name,
             reference=posixpath.join(MODELS_MOUNT_PATH, model.repository),
@@ -152,7 +191,14 @@ SOURCES: dict[str, ModelSource] = {
 
 
 def resolve_model(model: SAMLLMHostModel, slug: str) -> ResolvedModel:
-    """Resolve ``spec.model`` with its source."""
+    """
+    Resolve ``spec.model`` with its source.
+
+    :param model: The spec's model block.
+    :param slug: A DNS-safe name of the LLMHost, for local paths.
+    :returns: Where, and how, the engine loads the model.
+    :raises LLMHostConfigurationError: if the source is not supported, or the model block is incomplete for it.
+    """
     try:
         source = SOURCES[model.source]
     except KeyError as e:

@@ -40,12 +40,31 @@ class OrchestratorAdmin(SmarterCustomerModelAdmin):
     ordering = ["-updated_at"]
 
     def ready(self, obj: Orchestrator) -> bool:
+        """
+        Whether the Orchestrator is ready, for the admin list.
+
+        :param obj: The Orchestrator.
+        :returns: The Orchestrator's ``ready`` property.
+        """
         return obj.ready
 
     def mode(self, obj: Orchestrator) -> str:
+        """
+        The Orchestrator's mode for its url, for the admin list.
+
+        :param obj: The Orchestrator.
+        :returns: ``obj.mode(obj.url)``.
+        """
         return obj.mode(obj.url)  # type: ignore
 
     def get_queryset(self, request):
+        """
+        Restrict the admin list to the Orchestrators that the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The Orchestrators with ownership permission for the user, or an empty queryset if the
+            request has no resolved user.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):

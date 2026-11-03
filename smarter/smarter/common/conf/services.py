@@ -50,6 +50,13 @@ class Services:
 
     @classmethod
     def is_connected_to_aws(cls) -> bool:
+        """
+        Whether AWS credentials are available and work.
+
+        Calls ``sts.get_caller_identity()``.
+
+        :returns: True if the call succeeds.
+        """
 
         try:
             logger.debug(

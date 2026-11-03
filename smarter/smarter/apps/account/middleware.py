@@ -71,6 +71,7 @@ class SmarterUserProfileSelectionMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
+        """The class name, with the instance id, formatted for log messages."""
         class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 

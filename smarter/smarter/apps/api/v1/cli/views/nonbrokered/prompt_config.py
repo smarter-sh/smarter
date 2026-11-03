@@ -54,8 +54,14 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
 
     @csrf_exempt
     def post(self, request: "HttpRequest", name: str, *args, **kwargs):
-        """Handle POST requests for prompt config."""
+        """
+        Return the LLMClient's prompt config, and cache its chat session key for the cli client.
 
+        :param request: The cli's request.
+        :param name: The LLMClient's name.
+        :returns: The prompt config view's response.
+        :raises APIV1CLIViewError: when the response is not a JSON object whose ``data`` is an object.
+        """
         logger.debug(
             "%s.post() called for prompt %s with %s, args %s, kwargs %s",
             self.formatted_class_name,
