@@ -2,8 +2,11 @@
 
 from unittest.mock import patch
 
+from django.contrib.auth.models import AnonymousUser
+
 from smarter.apps.account import utils
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.tests.factories import platform_staff_profile_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import SmarterCachedObjects, smarter_cached_objects
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
@@ -279,3 +282,40 @@ class TestAccountUtilsBranches(TestAccountMixin):
         with patch.object(UserProfile.objects, "filter", return_value=["not a user profile"]):
             with self.assertRaises(SmarterConfigurationError):
                 utils.get_cached_account_for_user(invalidate=True, user=user)
+
+
+class TestIsPlatformStaff(TestAccountMixin):
+    """Test is_platform_staff(): the active staff users of the Smarter account, and nobody else."""
+
+    def test_smarter_admin(self):
+        self.assertTrue(utils.is_platform_staff(smarter_cached_objects.smarter_admin))
+
+    def test_admin_of_another_account(self):
+        """Staff, and a superuser, of their own account only."""
+        self.assertTrue(self.admin_user.is_staff)
+        self.assertFalse(utils.is_platform_staff(self.admin_user))
+
+    def test_staff_with_a_smarter_account_profile(self):
+        profile = platform_staff_profile_factory(self.admin_user)
+        try:
+            self.assertTrue(utils.is_platform_staff(self.admin_user))
+            User.objects.filter(pk=self.admin_user.pk).update(is_active=False)
+            self.admin_user.refresh_from_db()
+            self.assertFalse(utils.is_platform_staff(self.admin_user))
+        finally:
+            User.objects.filter(pk=self.admin_user.pk).update(is_active=True)
+            self.admin_user.refresh_from_db()
+            profile.delete()
+
+    def test_user_who_signed_up(self):
+        """A user who signed up joins the Smarter account, but not as staff."""
+        profile = platform_staff_profile_factory(self.non_admin_user)
+        try:
+            self.assertFalse(utils.is_platform_staff(self.non_admin_user))
+        finally:
+            profile.delete()
+
+    def test_not_a_user(self):
+        for value in (None, AnonymousUser(), "admin"):
+            with self.subTest(value=value):
+                self.assertFalse(utils.is_platform_staff(value))

@@ -8,8 +8,10 @@ need to answer help desk questions like "my login isn't working", "why is Smarte
 "my prompt says there was a system error" or "is there something wrong with EKS right now?": the
 platform's health now, its pod logs, for the last 72 hours, and the state of one user's account.
 
-Its data is not public, so it serves only the platform's active staff users, and records every tool
-call in an audit trail.
+Its data is not public, so it serves only the platform's staff, and records every tool call in an
+audit trail. The platform's staff are the active staff users of the Smarter account, which runs the
+platform. The admin of any other account is staff of that account only, even as a superuser, and the
+server refuses them.
 
 Endpoint
 --------
@@ -17,11 +19,17 @@ Endpoint
 The server is mounted at ``/api/v1/mcp/smarter-operations/`` of the platform's own domain. It speaks
 the same stateless Streamable HTTP as the Smarter Project MCP Server: only POST, and no session.
 
-Every request must carry the :doc:`api key <api-keys>` of an active staff user, in an
-``Authorization: Token <key>`` header. A request without a valid, active key is answered
-``401 Unauthorized``, and one whose user is not an active staff user ``403 Forbidden``, before the
-server reads it. Only staff users can have api keys, but a user may stop being staff after their key
-was created.
+Every request must come from one of the platform's staff, in one of two ways:
+
+- the :doc:`api key <api-keys>` of a staff user, in an ``Authorization: Token <key>`` header, e.g.
+  from Claude Code, or
+- an ``X-Smarter-Acting-User`` header that the platform signed itself, for the staff user who is
+  chatting with an LLMClient that has an MCPClient of this server, such as Smarter Sysadmin. See
+  `Smarter Sysadmin`_ below.
+
+A request without a valid, active key or signed header is answered ``401 Unauthorized``, and one whose
+user is not one of the platform's staff ``403 Forbidden``, before the server reads it. Only staff users
+can have api keys, but a user may stop being staff after their key was created.
 
 Connecting Claude Code
 ----------------------
@@ -103,6 +111,30 @@ with a keyed hash of the email address, not the address: see
 While the platform has no log store, for example in local development, where ``SMARTER_LOKI_URL`` is
 empty, the tools answer that they are not available.
 
+Smarter Sysadmin
+----------------
+
+Every platform has a built-in LLMClient for its staff, ``smarter_sysadmin``, whose chat in the Prompt
+Engineer Workbench answers help desk and operations questions with this server's tools, and explains
+what it finds from the code with the :doc:`Smarter Project MCP Server <smarter-project-mcp-server>`.
+Its MCPClient, ``smarter_operations``, needs no Secret: an MCPClient's credential would be the same for
+everyone who chats, so the platform says who is chatting itself.
+
+- The prompt api records who sent each prompt. A prompt runs as its LLMClient's owner, but the person
+  who sent it is the acting user of its MCP calls.
+- When an MCPClient calls this platform's own operations server, and no other server, the platform adds
+  an ``X-Smarter-Acting-User`` header: the user's id, signed with the platform's secret key, which
+  expires after five minutes. A manifest can't set this header.
+- The server checks the signature, then that the user is one of the platform's staff, and records each
+  tool call under them. A request that the platform signs for nobody in particular, such as the
+  background refresh of an MCPClient's tools, may list the tools, but not call them.
+- The results are never cached, so that every call is answered, and recorded, for the person who made
+  it.
+
+``smarter_sysadmin`` is also a :doc:`staff-only LLMClient <../smarter-resources/smarter-llmclient>`:
+nobody else can see it. It is applied to the Smarter account only, and never deployed. Use it in the
+workbench.
+
 Audit Trail
 -----------
 
@@ -133,6 +165,7 @@ Technical Reference
    :maxdepth: 1
 
    smarter-operations-mcp-server/operations-server
+   smarter-operations-mcp-server/acting-user
    smarter-operations-mcp-server/operations-tools
    smarter-operations-mcp-server/status-tools
    smarter-operations-mcp-server/status-cluster

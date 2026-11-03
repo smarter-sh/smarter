@@ -45,6 +45,11 @@ from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 
 from smarter.apps.llmtool.plugin.safe_http import is_loopback_host, validate_public_url
+from smarter.apps.mcpserver.acting_user import (
+    ACTING_USER_HEADER,
+    acting_user_headers,
+    current_acting_user,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.const import VERSION, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
@@ -284,6 +289,9 @@ class MCPServerConnection:
 
     def __init__(self, mcpclient: MCPClient):
         self.mcpclient = mcpclient
+        # kept now, in the caller's thread: the async calls may run in a thread of their own, which
+        # a context variable doesn't follow.
+        self.acting_user = current_acting_user()
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} mcpclient={self.mcpclient.name}>"
@@ -316,15 +324,26 @@ class MCPServerConnection:
         """
         Return the HTTP headers to send to the MCP server: its custom headers, and its credential.
 
+        A request to this platform's own Smarter Operations MCP server also carries the signed
+        acting user, the user who is chatting, from
+        :func:`~smarter.apps.mcpserver.acting_user.acting_user_headers`. No other server gets it.
+
         :raises SmarterMCPClientConfigurationError: If the credential is missing.
         """
-        headers = {str(k): str(v) for k, v in (self.mcpclient.headers or {}).items()}
+        headers: dict[str, str] = {}
+        for name, value in (self.mcpclient.headers or {}).items():
+            # only the platform sets the acting user, whatever the case of a stored header's name.
+            if str(name).lower() == ACTING_USER_HEADER.lower():
+                continue
+            headers[str(name)] = str(value)
         headers["User-Agent"] = USER_AGENT
         auth_type = self.mcpclient.auth_type or MCPAuthType.NONE
         if auth_type == MCPAuthType.API_KEY:
             headers[self.mcpclient.api_key_header or "X-API-Key"] = self.credential()
         elif auth_type in (MCPAuthType.BEARER_TOKEN, MCPAuthType.OAUTH2):
             headers["Authorization"] = f"Bearer {self.credential()}"
+        signed = acting_user_headers(self.mcpclient.endpoint_url, self.acting_user)
+        headers.update(signed)
         return headers
 
     def server_target(self, http_client: httpx2.AsyncClient) -> Transport:

@@ -350,6 +350,44 @@ class TestLoadFromGithub(TestAccountMixin):
         self.assertIn('"deployed": true', apply.call_args.kwargs["manifest"])
         deploy_llmclient.assert_called_once_with("c", self.user_profile)
 
+    def test_staff_only_llmclient_is_not_copied_into_another_account(self):
+        """A staff-only LLMClient belongs to the Smarter account: another account doesn't get a copy."""
+        spec = "  config:\n    prompt:\n      staffOnly: true\n"
+        self.use_repo(self.repo({"llm-clients/c.yaml": manifest("LLMClient", "c", spec)}))
+        with (
+            patch.object(Command, "missing_extensions", return_value=[]),
+            patch.object(Command, "apply", return_value=None) as apply,
+        ):
+            output = self.run_command(deploy=True)
+        apply.assert_not_called()
+        self.assertIn("a staff-only LLMClient belongs to the Smarter account only", output)
+
+    def test_staff_only_llmclient_is_applied_to_the_smarter_account_and_not_deployed(self):
+        spec = "  config:\n    prompt:\n      staffOnly: true\n"
+        self.use_repo(self.repo({"llm-clients/c.yaml": manifest("LLMClient", "c", spec)}))
+        with (
+            patch(f"{MODULE}.smarter_cached_objects", MagicMock(smarter_account=self.account)),
+            patch.object(Command, "missing_extensions", return_value=[]),
+            patch.object(Command, "deploy_llmclient", return_value=True) as deploy_llmclient,
+            patch.object(Command, "apply", return_value=None) as apply,
+        ):
+            output = self.run_command(deploy=True)
+        apply.assert_called_once()
+        deploy_llmclient.assert_not_called()
+        self.assertIn("Did not deploy LLMClient c: it is staff-only.", output)
+
+    def test_is_staff_only(self):
+        cases = [
+            ({}, False),
+            ({"spec": None}, False),
+            ({"spec": {"config": {"prompt": {"staffOnly": False}}}}, False),
+            ({"spec": {"config": {"prompt": {"staffOnly": "true"}}}}, False),
+            ({"spec": {"config": {"prompt": {"staffOnly": True}}}}, True),
+        ]
+        for value, expected in cases:
+            with self.subTest(value=value):
+                self.assertEqual(Command.is_staff_only(value), expected)
+
     def test_llmclient_that_fails_to_deploy_is_a_failure(self):
         self.use_repo(self.repo({"llm-clients/c.yaml": manifest("LLMClient", "c")}))
         with (

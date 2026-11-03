@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 20:56+0000\n"
+"POT-Creation-Date: 2026-11-02 22:51+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -263,7 +263,7 @@ msgstr ""
 msgid "Delete: Delete this authtoken resource"
 msgstr "Eliminar: elimina este recurso AuthToken"
 
-#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
 msgid "Budgets"
 msgstr "Presupuestos"
 
@@ -7399,7 +7399,7 @@ msgstr "Tus proxies"
 msgid "Shared Proxies"
 msgstr "Proxies compartidos"
 
-#. Translators: used in react/packages/smarter-proxy-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+#. Translators: used in react/packages/smarter-proxy-list/src/App.tsx
 msgid "Proxies"
 msgstr "Proxies"
 
@@ -9820,6 +9820,54 @@ msgstr "secret.yaml"
 
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid ""
+"Help desk tools for staff: pod logs, platform health and a user's sign-in "
+"problems"
+msgstr ""
+"Herramientas de soporte para el personal: registros de los pods, estado de "
+"la plataforma y problemas de inicio de sesión de un usuario"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Slack Bot"
+msgstr "Bot de Slack"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Answer questions in your Slack workspace with any deployed LLMClient"
+msgstr ""
+"Responde preguntas en tu espacio de trabajo de Slack con cualquier LLMClient "
+"desplegado"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Global Search"
+msgstr "Búsqueda global"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"Find any resource from the dashboard, and narrow lists by tag or annotation"
+msgstr ""
+"Encuentra cualquier recurso desde el panel, y filtra las listas por etiqueta "
+"o anotación"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Workbench Architecture"
+msgstr "Arquitectura del workbench"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
+"See an LLMClient's tools, plugins and guardrails as a tree, beside its chat"
+msgstr ""
+"Ve las herramientas, plugins y guardrails de un LLMClient como un árbol, "
+"junto a su chat"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Languages"
+msgstr "Idiomas"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Use the web console in English, Spanish, French or Brazilian Portuguese"
+msgstr "Usa la consola web en inglés, español, francés o portugués de Brasil"
+
+#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid ""
 "Install signed, third-party LLM tools from the Smarter Extension registry"
 msgstr ""
 "Instala herramientas LLM de terceros, firmadas, desde el registro de Smarter "
@@ -9871,38 +9919,6 @@ msgid ""
 msgstr ""
 "Sirve LLMClients desde tu propio dominio de marca, administrado con un "
 "manifiesto SAM"
-
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid "Manifest Editor"
-msgstr "Editor de manifiestos"
-
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid "Edit, validate, save, clone and delete manifests in the web console"
-msgstr "Edita, valida, guarda, clona y elimina manifiestos en la consola web"
-
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid "Enforce spending limits on any resource, with budget vs actual charts"
-msgstr ""
-"Aplica límites de gasto a cualquier recurso, con gráficos de presupuesto vs. "
-"real"
-
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid "Run open-weight LLMs on your own Kubernetes cluster"
-msgstr "Ejecuta LLM de pesos abiertos en tu propio clúster de Kubernetes"
-
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets"
-msgstr ""
-"Reenvía solicitudes a las API de proveedores de LLM, con las claves "
-"guardadas como Smarter Secrets"
-
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid ""
-"Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone"
-msgstr ""
-"Administra bases de datos vectoriales para RAG: Qdrant autoalojado, Qdrant "
-"Cloud y Pinecone"
 
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "What's New"
@@ -10199,6 +10215,35 @@ msgstr "La confirmación de la contraseña es obligatoria"
 #. Translators: used in smarter/static/js/coming-soon.js
 msgid "Added"
 msgstr "Agregado"
+
+#~ msgid "Manifest Editor"
+#~ msgstr "Editor de manifiestos"
+
+#~ msgid "Edit, validate, save, clone and delete manifests in the web console"
+#~ msgstr ""
+#~ "Edita, valida, guarda, clona y elimina manifiestos en la consola web"
+
+#~ msgid ""
+#~ "Enforce spending limits on any resource, with budget vs actual charts"
+#~ msgstr ""
+#~ "Aplica límites de gasto a cualquier recurso, con gráficos de presupuesto "
+#~ "vs. real"
+
+#~ msgid "Run open-weight LLMs on your own Kubernetes cluster"
+#~ msgstr "Ejecuta LLM de pesos abiertos en tu propio clúster de Kubernetes"
+
+#~ msgid ""
+#~ "Pass requests through to LLM provider APIs, with keys kept as Smarter "
+#~ "Secrets"
+#~ msgstr ""
+#~ "Reenvía solicitudes a las API de proveedores de LLM, con las claves "
+#~ "guardadas como Smarter Secrets"
+
+#~ msgid ""
+#~ "Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone"
+#~ msgstr ""
+#~ "Administra bases de datos vectoriales para RAG: Qdrant autoalojado, "
+#~ "Qdrant Cloud y Pinecone"
 
 #~ msgid ""
 #~ "The web origins, besides the llmclient's own hosts, that may call its api "

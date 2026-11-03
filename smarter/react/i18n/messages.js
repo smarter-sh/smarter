@@ -114,7 +114,7 @@ gettext("Rename: Rename this authtoken resource");
 gettext("Delete: You can't delete this authtoken, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this authtoken resource");
-// Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+// Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
 gettext("Budgets");
 // Translators: used in react/packages/smarter-budget-list/src/App.tsx
 gettext("A Budget is a set of spending limits, in USD or in tokens, per hour, day, week or month, and in total. It is enforced on each of the resources it is attached to: users, accounts, LLMClients, Providers, Proxies, LLMHost computes, plugins and more. When a resource's spending reaches a limit, its requests are refused with the budget's message, for example in the chat window, until the billing period renews. Superusers manage budgets with Budget manifests.");
@@ -3027,7 +3027,7 @@ gettext("Delete: Delete this provider resource");
 gettext("Your Proxies");
 // Translators: used in react/packages/smarter-proxy-list/src/App.tsx
 gettext("Shared Proxies");
-// Translators: used in react/packages/smarter-proxy-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+// Translators: used in react/packages/smarter-proxy-list/src/App.tsx
 gettext("Proxies");
 // Translators: used in react/packages/smarter-proxy-list/src/App.tsx
 gettext("A Proxy gives passthrough access to an LLM provider's API, e.g. OpenAI's or Anthropic's, with an API key that Smarter keeps as a Secret. Use the provider's own SDK, with the Proxy's URL as its base URL and a Smarter API key in place of the provider's: requests and responses pass through unchanged, the provider's API key is never exposed, and token usage is charged to your account.");
@@ -4035,6 +4035,24 @@ gettext("Example manifest with a validation problem");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 gettext("secret.yaml");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Help desk tools for staff: pod logs, platform health and a user's sign-in problems");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Slack Bot");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Answer questions in your Slack workspace with any deployed LLMClient");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Global Search");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Find any resource from the dashboard, and narrow lists by tag or annotation");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Workbench Architecture");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("See an LLMClient's tools, plugins and guardrails as a tree, beside its chat");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Languages");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+gettext("Use the web console in English, Spanish, French or Brazilian Portuguese");
+// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Install signed, third-party LLM tools from the Smarter Extension registry");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Answers about The Smarter Project, from its own code and docs, for any MCP client");
@@ -4052,18 +4070,6 @@ gettext("Infrastructure Manager");
 gettext("Manage and monitor your cloud infrastructure from the web console");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Serve LLMClients from your own branded domain, managed with a SAM manifest");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-gettext("Manifest Editor");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-gettext("Edit, validate, save, clone and delete manifests in the web console");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-gettext("Enforce spending limits on any resource, with budget vs actual charts");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-gettext("Run open-weight LLMs on your own Kubernetes cluster");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-gettext("Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-gettext("Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("What's New");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx

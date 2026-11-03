@@ -960,8 +960,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         Return whether a tool call leaves the prompt's answer cacheable.
 
-        A call is cacheable if its own result is cached, or could be: a read-only MCP tool or
-        resource read, an extension tool that sets ``cache_ttl``, or a plugin, whose remote
+        A call is cacheable if its own result is cached, or could be: a cacheable MCP tool or
+        resource read (one that only reads, from a server other than this platform's Smarter
+        Operations MCP server), an extension tool that sets ``cache_ttl``, or a plugin, whose remote
         calls are cached, unless it is an ApiPlugin that sends anything but GET. A call that
         returned nothing, or an error by :func:`~smarter.lib.cache.tool_results.is_error_result`,
         such as a budget refusal, is not.
@@ -978,7 +979,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             return function.tool.cache_ttl > 0
         if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
             function = self.mcp_toolkit.functions[function_name]
-            return function.read_only and bool(function.mcpclient.cache_ttl)
+            return function.cacheable and bool(function.mcpclient.cache_ttl)
         if plugin is not None:
             method = getattr(plugin.plugin_data, "method", None)
             return not method or str(method).upper() == "GET"

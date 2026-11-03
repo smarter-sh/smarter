@@ -691,6 +691,34 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     return [user_profile, account_admin, smarter_cached_objects.smarter_admin_user_profile]
 
 
+def is_platform_staff(user: Optional[object]) -> bool:
+    """
+    Return whether a user is one of the platform's own staff: an active staff user of the Smarter account.
+
+    ``User.is_staff`` alone means that a user administers their own account, so every customer
+    account's admin has it, and some of them are superusers too. The platform's staff are the
+    staff users of the Smarter account (``SMARTER_ACCOUNT_NUMBER``), which runs the platform. Users
+    who sign up themselves also join the Smarter account, but not as staff.
+
+    This is a security check, so it is never cached: a user who stops being staff, or leaves the
+    Smarter account, loses access at once.
+
+    **Side effects:** one database query, for the user's profile in the Smarter account.
+
+    :param user: The user, or anything else, e.g. ``AnonymousUser`` or None, which is not staff.
+    :returns: True if the user is active, staff, and has a profile in the Smarter account.
+    """
+    if not isinstance(user, User):
+        return False
+    if not user.is_active:
+        return False
+    if not user.is_staff:
+        return False
+    smarter_account = smarter_cached_objects.smarter_account
+    in_smarter_account = UserProfile.objects.filter(user=user, account=smarter_account).exists()
+    return in_smarter_account
+
+
 __all__ = [
     "get_cached_default_account",
     "get_cached_account_for_user",
@@ -702,4 +730,5 @@ __all__ = [
     "get_users_for_account",
     "get_user_profiles_for_account",
     "valid_resource_owners_for_user",
+    "is_platform_staff",
 ]

@@ -170,7 +170,15 @@ class TestMCPClientManifest(SmarterTestBase):
     def test_headers(self):
         """Test that custom headers are validated, and credential and transport headers are reserved."""
         self.assertEqual(self.config(headers={"X-Toolsets": "repos"}).headers, {"X-Toolsets": "repos"})
-        for name in ("Authorization", "authorization", "Cookie", "Host", "Mcp-Session-Id", "Content-Type"):
+        for name in (
+            "Authorization",
+            "authorization",
+            "Cookie",
+            "Host",
+            "Mcp-Session-Id",
+            "Content-Type",
+            "X-Smarter-Acting-User",
+        ):
             with self.subTest(name=name):
                 self.assertInvalid(headers={name: "value"})
         self.assertInvalid(headers={"Bad Header": "value"})
