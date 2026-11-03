@@ -1,7 +1,7 @@
 Acting User
 ===========
 
-.. automodule:: smarter.apps.mcpserver.acting_user
+.. automodule:: smarter.apps.mcpserver.services.acting_user
     :members:
     :undoc-members:
     :show-inheritance:

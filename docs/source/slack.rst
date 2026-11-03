@@ -20,8 +20,8 @@ What the Bot Is
 running on The Smarter Project's own platform. It acts as a staff engineer of the project, for
 people who want to understand, use, extend or contribute to Smarter.
 
-It answers from the :doc:`Smarter Project MCP Server <smarter-platform/smarter-project-mcp-server>`,
-not from memory. For each question it searches and reads the source code and documentation of
+It answers from the :doc:`public tools of the platform's MCPServer <smarter-platform/smarter-project-mcp-server>`,
+through the ``smarter_project`` MCPClient, not from memory. For each question it searches and reads the source code and documentation of
 every public repository of the `smarter-sh <https://github.com/smarter-sh>`__ GitHub organization,
 which include the platform, the command-line interface, the Python, Node.js and Go SDKs, the VS
 Code extension, Smarter Chat and its integrations, the cloud infrastructure, the example manifests
@@ -100,7 +100,7 @@ examples:
 - How does Smarter keep passwords and API keys out of its logs?
 - Write an MCPClient manifest for an MCP server that needs an API key.
 - How do I add a Smarter chatbot to my WordPress site?
-- Write me a manifest for an LLMClient that uses the Smarter Project MCP server to answer questions
+- Write me a manifest for an LLMClient that uses the smarter_project MCPClient to answer questions
   about the Smarter codebase.
 - What changed in the last release of the command-line interface?
 - Which file handles the deployment of an LLMClient, and what does it create in Kubernetes?

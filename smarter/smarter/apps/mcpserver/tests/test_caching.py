@@ -1,11 +1,14 @@
-"""Tests for smarter.apps.mcpserver.caching."""
+"""Tests for smarter.apps.mcpserver.protocol.caching."""
 
 from unittest import mock
 
-from smarter.apps.mcpserver import caching
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
-from smarter.apps.mcpserver.index.tools import SearchCodeTool, SearchDocumentationTool
-from smarter.apps.mcpserver.protocol.tools import SmarterProjectScope
+from smarter.apps.mcpserver.protocol import caching
+from smarter.apps.mcpserver.protocol.tools.public import RepositoryScope
+from smarter.apps.mcpserver.protocol.tools.search import (
+    SearchCodeTool,
+    SearchDocumentationTool,
+)
 from smarter.apps.mcpserver.receivers import handle_mcpserver_repository_indexed
 
 from .base_classes import MCPServerTestBase
@@ -14,8 +17,8 @@ from .base_classes import MCPServerTestBase
 class TestCaching(MCPServerTestBase):
     """Test that the MCP server's tool results are cached until an index changes."""
 
-    def scope(self) -> SmarterProjectScope:
-        return SmarterProjectScope(repository=self.code_repository, repositories=(self.code_repository,))
+    def scope(self) -> RepositoryScope:
+        return RepositoryScope(repository=self.code_repository, repositories=(self.code_repository,))
 
     def test_a_result_is_cached_by_its_arguments(self):
         """The same call runs the tool once, and other arguments run it again."""
@@ -29,7 +32,7 @@ class TestCaching(MCPServerTestBase):
 
     def test_tools_and_scopes_have_their_own_results(self):
         """Two tools with the same arguments, or one tool of two scopes, are cached separately."""
-        everything = SmarterProjectScope(repository=None, repositories=self.repositories)
+        everything = RepositoryScope(repository=None, repositories=self.repositories)
         with (
             mock.patch.object(SearchCodeTool, "run", autospec=True, side_effect=SearchCodeTool.run) as code,
             mock.patch.object(

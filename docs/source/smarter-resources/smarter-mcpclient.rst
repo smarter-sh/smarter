@@ -240,10 +240,13 @@ manifests for popular remote MCP servers.
      - http
      - bearer_token
 
-The ``smarter_project`` and ``smarter_project_github*`` MCPClients read the platform's own
-:doc:`Smarter Project MCP server <../smarter-platform/smarter-project-mcp-server>`, which searches
-and reads The Smarter Project's documentation and source code. Their manifests are templates,
-``*.yaml.tpl``, whose ``endpointUrl`` names the domain of the platform that applies them.
+Smarter's built-in MCPClients each give LLMClients a collection of the tools of the platform's own
+MCPServer, the one MCP server that every Smarter platform runs. ``smarter_project`` and
+``smarter_project_github*`` connect to its :doc:`public endpoint <../smarter-platform/smarter-project-mcp-server>`,
+whose tools search and read The Smarter Project's documentation and source code, and
+``smarter_operations`` connects to its :doc:`staff-only endpoint <../smarter-platform/smarter-operations-mcp-server>`,
+whose tools read the platform's health, pod logs and users, for its staff only. Their manifests are
+templates, ``*.yaml.tpl``, whose ``endpointUrl`` names the domain of the platform that applies them.
 
 For example, DeepWiki's MCP server requires no authentication:
 

@@ -1,7 +1,7 @@
 """
 Django admin of the MCPServer app: the audit trail of the operations tools, for superusers, read-only.
 
-Every call to a tool of the Smarter Operations MCP server
+Every call to a staff-only tool of the MCPServer
 (:mod:`smarter.apps.mcpserver.protocol.operations`) is recorded as an
 :class:`~smarter.apps.mcpserver.models.OperationsToolCall`. This module registers that model on
 the restricted admin site, so that a superuser can see who called which tool, for which help desk
@@ -28,7 +28,7 @@ from .models import OperationsToolCall
 
 class OperationsToolCallAdmin(SmarterSuperUserOnlyModelAdmin):
     """
-    The admin of the audit trail of the Smarter Operations MCP server's tools.
+    The admin of the audit trail of the MCPServer's staff-only tools.
 
     The server writes a row on every tool call, so the admin is read-only: every field is
     read-only, and rows cannot be added or changed. Only superusers see it, through

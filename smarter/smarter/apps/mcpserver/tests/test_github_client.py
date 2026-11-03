@@ -1,4 +1,4 @@
-"""Tests for smarter.apps.mcpserver.github.client.
+"""Tests for smarter.apps.mcpserver.services.github.client.
 
 GitHub is never contacted: requests.request is replaced.
 """
@@ -10,22 +10,22 @@ import requests
 from pydantic import SecretStr
 from requests.structures import CaseInsensitiveDict
 
-from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
-from smarter.apps.mcpserver.github import client
-from smarter.apps.mcpserver.github.client import (
+from smarter.apps.mcpserver.exceptions import SmarterMCPServerServiceError
+from smarter.apps.mcpserver.services.github import client
+from smarter.apps.mcpserver.services.github.client import (
     explain_failure,
     github_request,
     optional_token,
     refuse_secrets,
     validate_token,
 )
-from smarter.apps.mcpserver.repositories import ProjectRepository
+from smarter.apps.mcpserver.services.repositories import ProjectRepository
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import TOKEN
 
-REQUEST = "smarter.apps.mcpserver.github.client.requests.request"
+REQUEST = "smarter.apps.mcpserver.services.github.client.requests.request"
 
 
 def response(
@@ -60,20 +60,20 @@ class TestGitHub(SmarterTestBase):
     def test_missing_token(self):
         """Without a token, the error says which token is needed, and where."""
         for token in (None, SecretStr(""), SecretStr("   ")):
-            with self.subTest(token=token), self.assertRaises(SmarterMCPServerToolError) as context:
+            with self.subTest(token=token), self.assertRaises(SmarterMCPServerServiceError) as context:
                 validate_token(token)
             self.assertIn("Authorization: Bearer", context.exception.message)
 
     def test_fine_grained_token(self):
         """A fine-grained token is refused, with the reason."""
-        with self.assertRaises(SmarterMCPServerToolError) as context:
+        with self.assertRaises(SmarterMCPServerServiceError) as context:
             validate_token(SecretStr("github_pat_" + "x" * 40))
         self.assertIn("fine-grained", context.exception.message)
 
     def test_not_a_github_token(self):
         """Anything else, e.g. a Smarter api key, is refused."""
         for token in ("not-a-token", "ghp_short", "ghp_" + "x" * 36 + "!"):
-            with self.subTest(token=token), self.assertRaises(SmarterMCPServerToolError) as context:
+            with self.subTest(token=token), self.assertRaises(SmarterMCPServerServiceError) as context:
                 validate_token(SecretStr(token))
             self.assertIn("classic personal access token", context.exception.message)
 
@@ -108,7 +108,7 @@ class TestGitHub(SmarterTestBase):
         """A network error is explained, without the token, and logged without it."""
         error = requests.exceptions.ConnectionError(f"failed with {TOKEN}")
         with mock.patch(REQUEST, side_effect=error), mock.patch.object(client, "logger") as logger:
-            with self.assertRaises(SmarterMCPServerToolError) as context:
+            with self.assertRaises(SmarterMCPServerServiceError) as context:
                 github_request("GET", "/search/issues", TOKEN)
         self.assertEqual(context.exception.message, "GitHub could not be reached. Try again later.")
         self.assertNotIn(TOKEN, str(logger.method_calls))
@@ -165,7 +165,7 @@ class TestGitHub(SmarterTestBase):
 
     def test_refuse_the_callers_token(self):
         """The caller's own token is refused, and never quoted."""
-        with self.assertRaises(SmarterMCPServerToolError) as context:
+        with self.assertRaises(SmarterMCPServerServiceError) as context:
             refuse_secrets(TOKEN, "title", f"the header was Bearer {TOKEN}.")
         self.assertIn("caller's GitHub token", context.exception.message)
         self.assertNotIn(TOKEN, context.exception.message)
@@ -179,7 +179,7 @@ class TestGitHub(SmarterTestBase):
             "private_key": "-----BEGIN " + "RSA PRIVATE KEY-----\nabc\n-----END RSA PRIVATE KEY-----",
         }
         for label, secret in secrets.items():
-            with self.subTest(label=label), self.assertRaises(SmarterMCPServerToolError) as context:
+            with self.subTest(label=label), self.assertRaises(SmarterMCPServerServiceError) as context:
                 refuse_secrets(TOKEN, "ok", f"the log said {secret} here")
             self.assertIn(label, context.exception.message)
             self.assertNotIn(secret, context.exception.message)

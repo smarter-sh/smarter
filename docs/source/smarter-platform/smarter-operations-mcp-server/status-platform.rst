@@ -1,7 +1,7 @@
 Backing Services
 ================
 
-.. automodule:: smarter.apps.mcpserver.status.platform
+.. automodule:: smarter.apps.mcpserver.services.status.platform
     :members:
     :undoc-members:
     :show-inheritance:

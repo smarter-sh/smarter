@@ -1,11 +1,12 @@
 """
-URL configuration of the MCPServer app: the endpoints of its MCP servers.
+URL configuration of the MCPServer app: the endpoints of the MCP server.
 
-These are mounted at ``/api/v1/mcp/``, in the ``api:v1:mcpserver`` namespace:
+The MCPServer serves its tools at two endpoints, mounted at ``/api/v1/mcp/``, in the
+``api:v1:mcpserver`` namespace:
 
-- ``smarter-project/``: the Smarter Project MCP server, over every repository and the blog.
-- ``smarter-project/<repository>/``: the same server, over one repository, e.g. ``smarter-cli``.
-- ``smarter-operations/``: the Smarter Operations MCP server, for the platform's staff.
+- ``smarter-project/``: the public tools, over every repository of The Smarter Project and its blog.
+- ``smarter-project/<repository>/``: the public tools, over one repository, e.g. ``smarter-cli``.
+- ``smarter-operations/``: the staff-only tools, for the platform's staff.
 
 See :mod:`smarter.apps.mcpserver.protocol.views`.
 
@@ -21,7 +22,7 @@ from django.urls import path
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
-from .protocol.views import SmarterOperationsMCPServerView, SmarterProjectMCPServerView
+from .protocol.views import PublicEndpointView, StaffEndpointView
 
 app_name = namespace
 """The app's url namespace, ``mcpserver``."""
@@ -39,33 +40,33 @@ class MCPServerReverseNames:
     .. code-block:: python
 
         from django.urls import reverse
-        url = reverse(f"{MCPServerReverseNames.namespace}:{MCPServerReverseNames.repository}", kwargs={"repository": "smarter-cli"})
+        url = reverse(f"{MCPServerReverseNames.namespace}:{MCPServerReverseNames.public_repository}", kwargs={"repository": "smarter-cli"})
     """
 
     #: The app's full namespace, under the api's.
     namespace = "api:v1:mcpserver"
 
-    #: The Smarter Project MCP server, over every repository.
-    smarter_project = to_snake_case(SmarterProjectMCPServerView.__name__)
+    #: The endpoint of the public tools, over every repository.
+    public = to_snake_case(PublicEndpointView.__name__)
 
-    #: The Smarter Project MCP server, over one repository, whose name is the ``repository`` kwarg.
-    repository = to_snake_case(SmarterProjectMCPServerView.__name__) + "_repository"
+    #: The endpoint of the public tools, over one repository, whose name is the ``repository`` kwarg.
+    public_repository = to_snake_case(PublicEndpointView.__name__) + "_repository"
 
-    #: The Smarter Operations MCP server.
-    smarter_operations = to_snake_case(SmarterOperationsMCPServerView.__name__)
+    #: The endpoint of the staff-only tools.
+    staff = to_snake_case(StaffEndpointView.__name__)
 
 
 urlpatterns = [
-    path("smarter-project/", SmarterProjectMCPServerView.as_view(), name=MCPServerReverseNames.smarter_project),
+    path("smarter-project/", PublicEndpointView.as_view(), name=MCPServerReverseNames.public),
     path(
         "smarter-project/<str:repository>/",
-        SmarterProjectMCPServerView.as_view(),
-        name=MCPServerReverseNames.repository,
+        PublicEndpointView.as_view(),
+        name=MCPServerReverseNames.public_repository,
     ),
     path(
         "smarter-operations/",
-        SmarterOperationsMCPServerView.as_view(),
-        name=MCPServerReverseNames.smarter_operations,
+        StaffEndpointView.as_view(),
+        name=MCPServerReverseNames.staff,
     ),
 ]
-"""The MCP servers' endpoints."""
+"""The MCPServer's endpoints."""

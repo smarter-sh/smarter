@@ -1,7 +1,7 @@
 GitHub Issues
 =============
 
-.. automodule:: smarter.apps.mcpserver.github.issues
+.. automodule:: smarter.apps.mcpserver.services.github.issues
     :members:
     :undoc-members:
     :show-inheritance:

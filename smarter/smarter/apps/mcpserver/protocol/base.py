@@ -1,15 +1,17 @@
 """
-The Model Context Protocol, over Streamable HTTP, in Django: what every MCP server of the app shares.
+The Model Context Protocol, over Streamable HTTP, in Django: what both of the MCPServer's endpoints share.
 
-:class:`MCPServerBase` answers the JSON-RPC messages of one POST request, and :class:`MCPToolBase`
-is the base class of a tool. A server names itself, describes itself, gives its instructions, and
+:class:`MCPEndpointBase` answers the JSON-RPC messages of one POST request, and :class:`MCPToolBase`
+is the base class of a tool. An endpoint names itself, describes itself, gives its instructions, and
 holds its tools. Everything else, the ``initialize`` handshake, ``ping``, ``tools/list`` and
-``tools/call``, JSON-RPC batches and errors, is here. The app's servers:
+``tools/call``, JSON-RPC batches and errors, is here. The MCPServer's endpoints:
 
-- :class:`~smarter.apps.mcpserver.protocol.server.SmarterProjectMCPServer`: the public server of The
+- :class:`~smarter.apps.mcpserver.protocol.public.PublicEndpoint`: the public tools, of The
   Smarter Project's repositories, documentation and blog.
-- :class:`~smarter.apps.mcpserver.protocol.operations_server.SmarterOperationsMCPServer`: the
-  staff-only server of this platform's operations: its logs, its health and its users.
+- :class:`~smarter.apps.mcpserver.protocol.staff.StaffEndpoint`: the staff-only tools, of this
+  platform's operations: its logs, its health and its users.
+
+To an MCP client, each endpoint is an MCP server, with its own name in the ``initialize`` result.
 
 The server speaks the ``initialize`` handshake of every protocol version that the MCP Python SDK
 negotiates (:data:`mcp_types.version.HANDSHAKE_PROTOCOL_VERSIONS`):
@@ -51,7 +53,10 @@ import mcp_types
 from mcp_types.version import HANDSHAKE_PROTOCOL_VERSIONS, LATEST_HANDSHAKE_VERSION
 from pydantic import BaseModel, JsonValue, ValidationError
 
-from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
+from smarter.apps.mcpserver.exceptions import (
+    SmarterMCPServerServiceError,
+    SmarterMCPServerToolError,
+)
 from smarter.apps.mcpserver.signals import mcpserver_called, mcpserver_tool_called
 from smarter.common.const import VERSION
 from smarter.lib import logging
@@ -145,17 +150,30 @@ def invalid_arguments(tool_name: str, error: ValidationError) -> SmarterMCPServe
     return SmarterMCPServerToolError(f"invalid arguments for {tool_name}: {description}")
 
 
+def tool_error(error: SmarterMCPServerServiceError) -> SmarterMCPServerToolError:
+    """
+    Return the tool error for a service's error, for the LLM to read.
+
+    The services of :mod:`smarter.apps.mcpserver.services` know nothing of MCP, and raise
+    :class:`~smarter.apps.mcpserver.exceptions.SmarterMCPServerServiceError`, whose message is
+    written for the caller. A tool turns it into the error that the endpoint returns to the LLM as
+    the tool's result, with ``isError`` set.
+
+    :param error: The service's error.
+    :returns: The tool error, with the same message, for the caller to raise ``from error``.
+    """
+    return SmarterMCPServerToolError(error.message)
+
+
 class MCPToolBase(ABC):
     """
-    A tool of an MCP server: a name, a description, and a Pydantic model of its arguments.
+    A tool of the MCPServer: a name, a description, and a Pydantic model of its arguments.
 
     The tool's MCP ``inputSchema`` is generated from :attr:`arguments_model`, and :meth:`call`
     returns its result as Markdown text for the LLM. A subclass sets the class attributes, and
     implements :meth:`call`. The two families of tools are
-    :class:`~smarter.apps.mcpserver.protocol.tools.SmarterProjectTool`, of the public Smarter
-    Project MCP server, and
-    :class:`~smarter.apps.mcpserver.protocol.operations_tools.SmarterOperationsTool`, of the
-    staff-only Smarter Operations MCP server.
+    :class:`~smarter.apps.mcpserver.protocol.tools.public.PublicTool`, the public tools, and
+    :class:`~smarter.apps.mcpserver.protocol.tools.staff.StaffTool`, the staff-only tools.
     """
 
     name: ClassVar[str]
@@ -238,7 +256,7 @@ class MCPToolBase(ABC):
         """
 
 
-class MCPServerBase(ABC):
+class MCPEndpointBase(ABC):
     """
     An MCP server: answers the JSON-RPC messages of one POST request with its :attr:`tools`.
 
@@ -260,7 +278,7 @@ class MCPServerBase(ABC):
     """The server's tools, by their name, in the order that ``tools/list`` lists them."""
 
     def __repr__(self) -> str:
-        """Return the server's class and name, e.g. ``<SmarterProjectMCPServer name=smarter-project>``."""
+        """Return the server's class and name, e.g. ``<PublicEndpoint name=smarter-project>``."""
         return f"<{self.__class__.__name__} name={self.name}>"
 
     @property
@@ -515,8 +533,9 @@ __all__ = [
     "MAX_BATCH_SIZE",
     "SERVER_VERSION",
     "JsonRpcResponse",
-    "MCPServerBase",
+    "MCPEndpointBase",
     "MCPToolBase",
     "invalid_arguments",
     "simplify_schema",
+    "tool_error",
 ]

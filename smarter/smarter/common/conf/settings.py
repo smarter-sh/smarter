@@ -1937,7 +1937,7 @@ class Settings(BaseSettings):
     The base url of the `Loki <https://grafana.com/oss/loki/>`__ that stores the last 72 hours of the platform's pod logs.
 
     The Helm chart runs Loki in the platform's namespace, and sets this to its Service, e.g.
-    ``http://smarter-loki:3100``. The Smarter Operations MCP server's log tools query it, through
+    ``http://smarter-loki:3100``. The MCPServer's staff-only log tools query it, through
     :data:`smarter.apps.infrastructure.services.infrastructure` ``.logs``. While it is empty, e.g. in
     local development, the log tools say that there is no log store.
     :type: str
@@ -1965,13 +1965,13 @@ class Settings(BaseSettings):
     mcpserver_rate_limit: int = Field(
         settings_defaults.MCPSERVER_RATE_LIMIT,
         ge=0,
-        description="The maximum number of requests per minute that one client IP address may send to the Smarter Project MCP server. 0 disables the limit.",
+        description="The maximum number of requests per minute that one client IP address may send to the MCPServer's endpoints. 0 disables the limit.",
         title="MCP Server Rate Limit",
     )
     """
-    The maximum number of requests per minute that one client IP address may send to the Smarter Project MCP server.
+    The maximum number of requests per minute that one client IP address may send to the MCPServer's endpoints.
 
-    The MCP server, :mod:`smarter.apps.mcpserver`, requires no authentication, so the limit
+    The MCPServer, :mod:`smarter.apps.mcpserver`, serves its public tools without authentication, so the limit
     protects the platform's database from a client that floods it. Requests beyond the limit
     are answered ``429 Too Many Requests`` until the minute ends. The platform's own
     MCPClients count too: they connect from the platform's egress addresses, and each tool

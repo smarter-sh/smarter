@@ -1,7 +1,7 @@
 Repositories
 ============
 
-.. automodule:: smarter.apps.mcpserver.repositories
+.. automodule:: smarter.apps.mcpserver.services.repositories
     :members:
     :undoc-members:
     :show-inheritance:
