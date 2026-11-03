@@ -12,7 +12,7 @@ describe("Cli", () => {
     expect(within(cli).getByRole("link", { name: "Download" })).toHaveAttribute("href", "https://smarter.sh/cli/");
     expect(within(cli).getByRole("link", { name: "Documentation" })).toHaveAttribute(
       "href",
-      "https://docs.smarter.sh/en/latest/smarter-framework/smarter-cli.html",
+      "https://docs.smarter.sh/smarter-framework/smarter-cli.html",
     );
   });
 

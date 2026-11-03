@@ -26,10 +26,10 @@ const DOCS_BASE_URL = "https://docs.smarter.sh";
 
 const FEATURES: Feature[] = [
   {
-    name: "Smarter Operations MCP Server",
+    name: "MCPServer: Staff-Only Tools",
     version: "0.41",
     description: gettext("Help desk tools for staff: pod logs, platform health and a user's sign-in problems"),
-    docsPath: "smarter-platform/smarter-operations-mcp-server.html",
+    docsPath: "smarter-platform/mcpserver.html#staff-only-tools",
   },
   {
     name: gettext("Slack Bot"),
@@ -62,10 +62,10 @@ const FEATURES: Feature[] = [
     docsPath: "smarter-platform/extensions.html",
   },
   {
-    name: "Smarter MCP Server",
+    name: "MCPServer: Public Tools",
     version: "0.24",
     description: gettext("Answers about The Smarter Project, from its own code and docs, for any MCP client"),
-    docsPath: "smarter-platform/smarter-project-mcp-server.html",
+    docsPath: "smarter-platform/mcpserver.html#public-tools",
   },
   {
     name: "OpenAPI",

@@ -6,7 +6,7 @@ export const projectVersion = packageJson.version;
 export const loggerPrefix = `[${platformName} ${projectName} v${projectVersion}]`;
 
 /** The documentation that the page links to. */
-export const DOCS = "https://docs.smarter.sh/en/latest";
+export const DOCS = "https://docs.smarter.sh";
 export const DOCS_URLS = {
   manifests: `${DOCS}/smarter-framework/smarter-manifests.html`,
   dependencyTrees: `${DOCS}/smarter-framework/smarter-manifests/record-locators.html`,

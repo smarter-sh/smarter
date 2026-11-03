@@ -121,7 +121,7 @@ function Sdk({ openapiUrl = OPENAPI_URL, className = "col-xl-4" }: SdkProps) {
             {/* begin::Action */}
             <div className="d-flex flex-wrap gap-2 mt-auto pt-7 z-index-2">
               <a
-                href="https://docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html"
+                href="https://docs.smarter.sh/smarter-framework/apis-and-sdks.html"
                 target="_blank"
                 className="btn btn-sm btn-danger fw-semibold"
               >

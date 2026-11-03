@@ -27,12 +27,12 @@ MODULE = "smarter.apps.mcpserver.services.acting_user"
 class TestActingUser(TestAccountMixin):
     """Test signing, verifying and scoping the acting user."""
 
-    def test_operations_server_url(self):
+    def test_staff_endpoint_url(self):
         url = staff_endpoint_url()
         self.assertTrue(url.startswith(smarter_settings.environment_url))
         self.assertTrue(url.endswith("/api/v1/mcp/smarter-operations/"))
 
-    def test_is_operations_server_url(self):
+    def test_is_staff_endpoint_url(self):
         """Only this platform's own staff-only endpoint matches: scheme, host, port and path."""
         url = staff_endpoint_url()
         self.assertTrue(is_staff_endpoint_url(url))

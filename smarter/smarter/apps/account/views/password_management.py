@@ -91,10 +91,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         except User.DoesNotExist:
             # Do not reveal if the email is not in the system.
             return HttpResponse("", status=HTTPStatus.OK.value)
-        except User.MultipleObjectsReturned:
-            # In the rare case that multiple users have the same email, we can still send the reset email to one of them.
-            logger.warning("Multiple users found with email %s. Sending password reset email to one of them.", email)
-            user = User.objects.filter(email=email).first()
+        # an email address belongs to one user: migration account.0012_unique_user_email made it unique.
 
         self.password_reset_link = self.generate_password_reset_link(request, user)
         context = {"password_reset": {"url": self.password_reset_link}}

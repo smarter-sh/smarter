@@ -5,7 +5,7 @@
 # documentation, https://docs.smarter.sh, the command-line interface, the Python, Node.js and Go
 # SDKs, the VS Code extension, the SmarterChat component, the quick start, and the cloud
 # infrastructure.
-# Documentation: https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html
+# Documentation: https://docs.smarter.sh/smarter-platform/smarter-project-mcp-server.html
 #
 # Its tools take a repository argument, and the search tools search every repository when it is
 # omitted. To read one repository only, use one of the smarter-project-github*.yaml.tpl manifests.
@@ -30,7 +30,7 @@ metadata:
     - github
     - code
   annotations:
-    - smarter.sh/mcpclient/documentation: https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html
+    - smarter.sh/mcpclient/documentation: https://docs.smarter.sh/smarter-platform/smarter-project-mcp-server.html
     - smarter.sh/mcpclient/repository: https://github.com/smarter-sh
 spec:
   config:

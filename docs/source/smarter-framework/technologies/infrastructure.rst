@@ -58,7 +58,7 @@ The Services
 - ``logs``: the last 72 hours of the platform's pod logs, from the Loki that the Helm chart runs,
   at ``SMARTER_LOKI_URL``. A query is structured, not LogQL: the service escapes every value, so
   that a caller, such as an LLM's tool call, cannot inject a query of its own. The
-  :doc:`MCPServer's staff-only tools <../../smarter-platform/smarter-operations-mcp-server>` read it.
+  :ref:`MCPServer's staff-only tools <mcpserver-staff-only-tools>` read it.
 - ``provider``: the cloud provider itself, for example its account identity, and a
   description of the Kubernetes cluster for the ``status`` API.
 

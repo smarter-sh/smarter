@@ -2,7 +2,7 @@
 
 from unittest import mock
 
-from smarter.apps.account.models import User
+from smarter.apps.account.tests.mixins import DuplicateUsersMixin
 from smarter.apps.infrastructure.services import InMemoryLogService, configure_logs
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerToolError
 from smarter.apps.mcpserver.protocol.tools.helpdesk import (
@@ -56,12 +56,6 @@ class TestUserSupportSnapshotTool(HelpdeskTestBase):
         self.social_user.save()
         self.assertIn("Nothing in particular: check platform_status", self.snapshot(email=SOCIAL_EMAIL))
 
-    def test_two_users_and_subscription(self):
-        twin = User.objects.create(username="test_helpdesk_twin", email=SOCIAL_EMAIL.upper())
-        self.addCleanup(twin.delete)
-        text = self.snapshot(email=SOCIAL_EMAIL)
-        self.assertIn("- 2 users have this address. This is the first of them.", text)
-
     def test_logs_not_available(self):
         configure_logs(lambda: InMemoryLogService(ready=False))
         text = self.snapshot(email=self.admin_user.email)
@@ -81,6 +75,22 @@ class TestUserSupportSnapshotTool(HelpdeskTestBase):
             text = self.snapshot(email=self.admin_user.email)
         self.assertIn("- Subscription active: NO", text)
         self.assertIn("subscription is not active", text)
+
+
+class TestUserSupportSnapshotDuplicates(DuplicateUsersMixin, HelpdeskTestBase):
+    """
+    Test user_support_snapshot on a platform that still has users who share an address.
+
+    The unique index on ``auth_user.email`` forbids them, so this only happens before the
+    upgrade's merge migration runs.
+    """
+
+    def test_two_users(self):
+        self.duplicate_user(SOCIAL_EMAIL.upper(), with_profile=False)
+        text = UserSupportSnapshotTool(self.admin_user).call(
+            {"ticket": TICKET, "verified_by": VERIFIED, "email": SOCIAL_EMAIL}
+        )
+        self.assertIn("- 2 users have this address. This is the first of them.", text)
 
 
 class TestCheckReplyTool(HelpdeskTestBase):

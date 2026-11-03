@@ -37,7 +37,7 @@ Prerequisites
 -------------
 
 * The Smarter platform is installed and reachable (see the
-  `Smarter Installation Guide <https://docs.smarter.sh/en/latest/smarter-platform/installation.html>`__).
+  `Smarter Installation Guide <https://docs.smarter.sh/smarter-platform/installation.html>`__).
 * The Smarter CLI (``smarter``) is installed and configured.
   Verify with:
 
@@ -550,8 +550,8 @@ Troubleshooting
 See Also
 --------
 
-* `Smarter Provider Reference <https://docs.smarter.sh/en/latest/smarter-resources/smarter-provider.html>`__
-* `Smarter CLI Reference <https://docs.smarter.sh/en/latest/smarter-framework/smarter-cli.html>`__
+* `Smarter Provider Reference <https://docs.smarter.sh/smarter-resources/smarter-provider.html>`__
+* `Smarter CLI Reference <https://docs.smarter.sh/smarter-framework/smarter-cli.html>`__
 * `Smarter Manifest Examples <https://ubc.smarter.sh/docs/manifests/>`__
 * `Claude Code Documentation <https://docs.anthropic.com/en/docs/claude-code>`__
 * `Anthropic API Reference <https://docs.anthropic.com/>`__
