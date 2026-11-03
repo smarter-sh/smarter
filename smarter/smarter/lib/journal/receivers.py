@@ -29,7 +29,14 @@ module_prefix = __name__
 
 @receiver(post_save, sender=SAMJournal)
 def samjournal_post_save(sender, instance: SAMJournal, created, **kwargs):
-    """Signal receiver for created/saved of SAMJournal model."""
+    """
+    Signal receiver for created/saved of SAMJournal model: log the entry at DEBUG.
+
+    :param sender: The SAMJournal model.
+    :param instance: The saved entry.
+    :param created: True if the entry was created.
+    :param kwargs: The rest of the signal's arguments.
+    """
     logger.debug(
         "%s SAMJournal: %s, thing: %s, command: %s, status_code: %s, created: %s",
         f"{SmarterFormattedText.text(module_prefix)}.samjournal_post_save()",
@@ -43,7 +50,13 @@ def samjournal_post_save(sender, instance: SAMJournal, created, **kwargs):
 
 @receiver(post_delete, sender=SAMJournal)
 def samjournal_post_delete(sender, instance: SAMJournal, **kwargs):
-    """Signal receiver for deleted of SAMJournal model."""
+    """
+    Signal receiver for deleted of SAMJournal model: log the entry's key at DEBUG.
+
+    :param sender: The SAMJournal model.
+    :param instance: The deleted entry.
+    :param kwargs: The rest of the signal's arguments.
+    """
     logger.debug(
         "%s SAMJournal: %s",
         f"{SmarterFormattedText.text(module_prefix)}.samjournal_post_delete()",
@@ -53,7 +66,13 @@ def samjournal_post_delete(sender, instance: SAMJournal, **kwargs):
 
 @receiver(journal_entry_created)
 def journal_entry_created_receiver(sender, journal: SAMJournal, **kwargs):
-    """Signal receiver for journal_entry_created signal."""
+    """
+    Signal receiver for journal_entry_created signal: log the entry at DEBUG.
+
+    :param sender: The class that sent the signal.
+    :param journal: The new entry.
+    :param kwargs: The rest of the signal's arguments.
+    """
     logger.debug(
         "%s sender: %s, journal: %s, thing: %s, command: %s, status_code: %s",
         f"{SmarterFormattedText.text(module_prefix)}.journal_entry_created()",
@@ -90,7 +109,14 @@ def journal_entry_failed_receiver(sender, user, thing, command, status, request,
 
 @receiver(journal_entry_accessed)
 def journal_entry_accessed_receiver(sender, journal: SAMJournal, user, **kwargs):
-    """Signal receiver for journal_entry_accessed signal."""
+    """
+    Signal receiver for journal_entry_accessed signal: log the access at DEBUG.
+
+    :param sender: The class that sent the signal.
+    :param journal: The entry that was read.
+    :param user: The user who read it.
+    :param kwargs: The rest of the signal's arguments.
+    """
     logger.debug(
         "%s sender: %s, journal: %s, user: %s",
         f"{SmarterFormattedText.text(module_prefix)}.journal_entry_accessed()",
@@ -102,7 +128,14 @@ def journal_entry_accessed_receiver(sender, journal: SAMJournal, user, **kwargs)
 
 @receiver(journal_entries_listed)
 def journal_entries_listed_receiver(sender, user, count, **kwargs):
-    """Signal receiver for journal_entries_listed signal."""
+    """
+    Signal receiver for journal_entries_listed signal: log the listing at DEBUG.
+
+    :param sender: The class that sent the signal.
+    :param user: The user who listed the entries.
+    :param count: The number of entries listed.
+    :param kwargs: The rest of the signal's arguments.
+    """
     logger.debug(
         "%s sender: %s, user: %s, count: %s",
         f"{SmarterFormattedText.text(module_prefix)}.journal_entries_listed()",

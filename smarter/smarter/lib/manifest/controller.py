@@ -73,14 +73,17 @@ class AbstractController(abc.ABC, AccountMixin):
     @property
     @abc.abstractmethod
     def manifest(self) -> AbstractSAMBase:
+        """The Pydantic manifest of the controlled resource; subclasses implement it."""
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def map(self):
+        """The mapping from manifest kinds to the classes that handle them; subclasses implement it."""
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def obj(self) -> Any:
+        """The object that handles the manifest's kind, from :attr:`map`; subclasses implement it."""
         raise NotImplementedError

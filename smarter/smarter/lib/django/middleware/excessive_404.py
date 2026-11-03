@@ -226,12 +226,28 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         return self.formatted_text(class_name)
 
     async def async_process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """Async entry point for ASGI deployments."""
+        """
+        Async entry point for ASGI deployments: count anonymous 404s per client ip, and block excessive ones.
+
+        Unlike :meth:`process_response`, it does not check the ``ENABLE_MIDDLEWARE_EXCESSIVE_404`` switch.
+
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, or a 403 response when the client has exceeded the throttle limit.
+        """
 
         return self._process_response(request, response)
 
     def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """Sync response middleware entry point."""
+        """
+        Sync entry point: count anonymous 404s per client ip, and block excessive ones.
+
+        It does nothing unless the ``ENABLE_MIDDLEWARE_EXCESSIVE_404`` waffle switch is active.
+
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, or a 403 response when the client has exceeded the throttle limit.
+        """
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
@@ -297,6 +313,12 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
     @classmethod
     def get_throttle_key(cls, client_ip: str) -> str:
+        """
+        Return the cache key of a client's 404 counter.
+
+        :param client_ip: The client's ip address.
+        :returns: The cache key.
+        """
         return f"excessive_404_throttle:{client_ip}"
 
     def increment_throttle(self, throttle_key: str) -> None:
@@ -325,7 +347,13 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         client_ip: str,
         blocked_count: int,
     ) -> None:
-        """Sample logs to reduce spam during bot scans."""
+        """
+        Log a 404 probe at DEBUG, sampled every ``LOG_SAMPLE_RATE`` counts to reduce spam during bot scans.
+
+        :param request: The request.
+        :param client_ip: The client's ip address.
+        :param blocked_count: The client's 404 count before this one.
+        """
 
         if blocked_count % self.LOG_SAMPLE_RATE != 0:
             return
