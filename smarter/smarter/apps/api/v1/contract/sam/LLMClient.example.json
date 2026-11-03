@@ -39,6 +39,7 @@
         "defaultTemperature": 1.0,
         "deployed": false,
         "provider": "openai",
+        "staffOnly": false,
         "subdomain": null
       },
       "styles": {
