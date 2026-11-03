@@ -50,6 +50,12 @@ class GettingStartedView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return the user's getting-started steps, and whether each is done.
+
+        :param request: The request.
+        :returns: The steps, as JSON, in the shape the class docstring shows.
+        """
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         steps = []

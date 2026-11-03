@@ -2,8 +2,7 @@
 """Account admin."""
 
 from django import forms
-
-# from django.contrib import admin
+from django.contrib import admin
 from django.http.request import HttpRequest
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -82,6 +81,12 @@ class SecretAdminForm(forms.ModelForm):
         return cleaned_data
 
     def clean_value(self):
+        """
+        Check that the submitted secret value, if any, is a string.
+
+        :returns: The value.
+        :raises forms.ValidationError: when the value is not a string.
+        """
         value = self.cleaned_data.get("value")
         if value and not isinstance(value, str):
             raise forms.ValidationError("The value must be a string.")
@@ -122,13 +127,30 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     list_display = ("user_profile", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at")
 
     def changelist_view(self, request, extra_context=None):
+        """
+        Remember the request, for :meth:`display_value`, then render the list.
+
+        :param request: The admin request.
+        :param extra_context: Extra template context.
+        :returns: The rendered list.
+        """
         self.request = request
         return super().changelist_view(request, extra_context=extra_context)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
+        """
+        Remember the request, for :meth:`display_value`, then render the change form.
+
+        :param request: The admin request.
+        :param object_id: The Secret's id.
+        :param form_url: The form's action url.
+        :param extra_context: Extra template context.
+        :returns: The rendered change form.
+        """
         self.request = request
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
+    @admin.display(description="Value")
     def display_value(self, obj: Secret):
         """Display the secret value as '********' for users who do not have permission to view it."""
 
@@ -187,9 +209,15 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
 
         return self.mask_string(retval)
 
-    display_value.short_description = "Value"
-
     def get_form(self, request, obj=None, change=False, **kwargs):
+        """
+        Return the admin form class, subclassed to pass the requesting user to the form.
+
+        :param request: The admin request.
+        :param obj: The Secret being changed, or None when adding one.
+        :param change: True when changing an existing Secret.
+        :returns: The form class.
+        """
         # Get the base form class
         form = super().get_form(request, obj, change=change, **kwargs)
 
@@ -203,12 +231,28 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
         return CustomForm
 
     def save_model(self, request: HttpRequest, obj: Secret, form: SecretAdminForm, change):
+        """
+        Encrypt the submitted value, if any, into the Secret, then save it.
+
+        A blank value leaves the stored encrypted value as it is.
+
+        :param request: The admin request.
+        :param obj: The Secret.
+        :param form: The submitted form.
+        :param change: True when changing an existing Secret.
+        """
         value = form.cleaned_data.get("value")
         if value:
             obj.encrypted_value = Secret.encrypt(value=value)
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request: HttpRequest):
+        """
+        Restrict the admin list to the Secrets that the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The Secrets, or an empty queryset if the request has no resolved user.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
