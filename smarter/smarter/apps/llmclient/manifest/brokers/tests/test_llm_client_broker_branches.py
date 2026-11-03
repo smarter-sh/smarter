@@ -204,6 +204,20 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
             with self.assertRaises(SAMLLMClientBrokerError):
                 broker.apply(self.request)
 
+    def test_apply_staff_only(self):
+        """Only the platform's staff may apply a staff-only LLMClient, and staffOnly is stored."""
+        self._manifest_filespec = self.get_data_full_filepath("llm_client_staff_only.yaml")
+        broker = self.broker
+        self.assertTrue(broker.manifest.spec.config.prompt.staffOnly)  # type: ignore[union-attr]
+        with patch(f"{MODULE}.is_platform_staff", return_value=False):
+            with self.assertRaisesRegex(SAMLLMClientBrokerError, "Only the platform's staff"):
+                broker.apply(self.request)
+        with patch(f"{MODULE}.is_platform_staff", return_value=True):
+            broker.apply(self.request)
+        llmclient = LLMClient.objects.get(pk=broker.llmclient.pk)  # type: ignore[union-attr]
+        self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
+        self.assertTrue(llmclient.staff_only)
+
     def test_manifest_to_django_orm_config_that_is_not_a_dict(self):
         broker = self.broker
         base_class = next(c for c in SAMLLMClientBroker.__mro__[1:] if "manifest_to_django_orm" in vars(c))

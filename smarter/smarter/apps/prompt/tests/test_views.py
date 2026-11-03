@@ -15,7 +15,10 @@ import yaml
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    platform_staff_profile_factory,
+)
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.urls import GuardrailReverseNames
@@ -533,6 +536,17 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertEqual(response["X-Frame-Options"], "DENY")
         self.assertIn("dashboard/base.html", [template.name for template in response.templates])
+
+    def test_staff_only(self):
+        """A staff-only LLMClient has no configuration for anyone but the platform's staff."""
+        staff_only = self.throwaway("staff_only")
+        LLMClient.objects.filter(pk=staff_only.pk).update(staff_only=True)
+        url = self.url("config_by_hashed_id", hashed_id=staff_only.hashed_id)
+        self.assertEqual(self.client.post(url).status_code, HTTPStatus.NOT_FOUND)
+        profile = platform_staff_profile_factory(self.admin_user)
+        self.addCleanup(profile.delete)
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
 
     def test_workbench_and_config_not_found(self):
         """Test that the workbench page and config api are a 404 for an unknown LLMClient."""

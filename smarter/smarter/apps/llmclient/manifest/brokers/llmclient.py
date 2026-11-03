@@ -11,6 +11,7 @@ from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager, _TaggableManager
 
 from smarter.apps.account.utils import (
+    is_platform_staff,
     smarter_cached_objects,
     valid_resource_owners_for_user,
 )
@@ -916,6 +917,14 @@ class SAMLLMClientBroker(AbstractBroker):
         if not self.manifest.spec:
             raise SAMBrokerErrorNotReady(
                 f"{self.kind} {self.name} manifest spec not found", thing=self.kind, command=command
+            )
+        if self.manifest.spec.config.prompt.staffOnly and not is_platform_staff(self.user):
+            # anyone else would hide the llmclient from themselves, and from their own account.
+            raise SAMLLMClientBrokerError(
+                f"Only the platform's staff may apply a staff-only {self.kind}: remove spec.config.prompt.staffOnly, "
+                "or set it to false.",
+                thing=self.kind,
+                command=command,
             )
         if self.manifest.metadata.name != self.name:
             # the manifest's metadata validator stores names in snake_case, e.g. 'My Client' as

@@ -23,6 +23,7 @@ import copy
 import os
 from datetime import datetime, timedelta, timezone
 
+from smarter.apps.account.tests.factories import platform_staff_profile_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.infrastructure.providers import configure_provider
 from smarter.apps.infrastructure.providers.memory import InMemoryProvider
@@ -87,7 +88,22 @@ def cluster_items(now: datetime) -> dict[str, list[SmarterDictType]]:
 
 
 class OperationsTestBase(TestAccountMixin):
-    """The in-memory logs, cluster and cloud provider, and the audit rows cleaned up."""
+    """
+    The in-memory logs, cluster and cloud provider, and the audit rows cleaned up.
+
+    The account mixin's admin user is staff of its own test account. A profile in the Smarter
+    account makes them one of the platform's staff, as the server requires.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.platform_staff_profile = platform_staff_profile_factory(cls.admin_user)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.platform_staff_profile.delete()
+        super().tearDownClass()
 
     def setUp(self):
         super().setUp()

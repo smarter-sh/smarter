@@ -334,6 +334,9 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
     app_file_attachment: Optional[bool] = Field(None, description="LLMClient.app_file_attachment.")
     styles: Optional[dict[str, JsonValue]] = Field(None, description="LLMClient.styles: the chat's CSS styles.")
     allowed_origins: list[str] = Field(..., description="LLMClient.allowed_origins: the CORS origins of its pages.")
+    staff_only: bool = Field(
+        ..., description="LLMClient.staff_only: whether only the platform's own staff may see and use it."
+    )
     dns_verification_status: Optional[LLMClientApiDnsVerificationStatus] = Field(
         None, description="LLMClient.dns_verification_status."
     )
@@ -458,6 +461,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             app_file_attachment=llmclient.app_file_attachment,
             styles=llmclient.styles,
             allowed_origins=llmclient.allowed_origins,
+            staff_only=llmclient.staff_only,
             dns_verification_status=llmclient.dns_verification_status,  # type: ignore[arg-type]
             tls_certificate_issuance_status=llmclient.tls_certificate_issuance_status,  # type: ignore[arg-type]
             subdomain=llmclient.subdomain_id,  # type: ignore[attr-defined]

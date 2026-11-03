@@ -302,13 +302,15 @@ class TestProviderPromptCache(SmarterTestBase):
         self.assertIsNone(get_cached_prompt_response(self.client.prompt_cache_key))  # type: ignore[arg-type]
 
     def test_tool_call_is_cacheable(self):
-        """Read-only MCP tools, extension tools with cache_ttl and GET plugins keep the answer cacheable."""
+        """Cacheable MCP tools, extension tools with cache_ttl and GET plugins keep the answer cacheable."""
         self.client.mcp_toolkit = MagicMock()
         self.client.mcp_toolkit.is_mcp_function.side_effect = lambda name: name.startswith("mcp")
         self.client.mcp_toolkit.functions = {
-            "mcp1_read": MagicMock(read_only=True, mcpclient=MagicMock(cache_ttl=3600)),
-            "mcp1_write": MagicMock(read_only=False, mcpclient=MagicMock(cache_ttl=3600)),
-            "mcp2_read": MagicMock(read_only=True, mcpclient=MagicMock(cache_ttl=0)),
+            "mcp1_read": MagicMock(read_only=True, cacheable=True, mcpclient=MagicMock(cache_ttl=3600)),
+            "mcp1_write": MagicMock(read_only=False, cacheable=False, mcpclient=MagicMock(cache_ttl=3600)),
+            "mcp2_read": MagicMock(read_only=True, cacheable=True, mcpclient=MagicMock(cache_ttl=0)),
+            # a read-only tool of the platform's operations server, which answers for the user who is chatting.
+            "mcp3_read": MagicMock(read_only=True, cacheable=False, mcpclient=MagicMock(cache_ttl=3600)),
         }
         self.client.extension_toolkit = MagicMock()
         self.client.extension_toolkit.is_extension_function.side_effect = lambda name: name.startswith("ext")
@@ -323,6 +325,7 @@ class TestProviderPromptCache(SmarterTestBase):
             ("mcp1_read", "result", None, True),
             ("mcp1_write", "result", None, False),
             ("mcp2_read", "result", None, False),
+            ("mcp3_read", "result", None, False),
             ("mcp1_read", "Error: the server is down", None, False),
             ("ext_cached", {"forecast": "sunny"}, None, True),
             ("ext_cached", {"error": "no such city"}, None, False),

@@ -134,6 +134,10 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             - Owned by their Account admin UserProfile, OR
             - Owned by the Smarter admin UserProfile.
 
+        - Last, the model may hide some of these from the user, with its
+          :meth:`MetaDataWithOwnershipModel.restrict_readable`, e.g. an LLMClient that only the
+          platform's staff may use.
+
         :param user: :class:`django.contrib.auth.models.User`
             The user to check.
         :returns: :class:`django.db.models.QuerySet`
@@ -211,12 +215,13 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             qs = qs | _get_for_user_profile(request_user_profile)
 
         qs_distinct = qs.distinct()
+        restricted = self.model.restrict_readable(qs_distinct, user)
         logger.debug(
             "%s final queryset for user: %s",
             logger_prefix,
             user,
         )
-        return qs_distinct
+        return restricted
 
     def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
@@ -502,6 +507,25 @@ class MetaDataWithOwnershipModel(MetaDataModel):
     objects: MetaDataWithOwnershipModelManager = MetaDataWithOwnershipModelManager()
 
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    @classmethod
+    def restrict_readable(
+        cls, queryset: "SmarterQuerySetWithPermissions[Any]", user: User
+    ) -> "SmarterQuerySetWithPermissions[Any]":
+        """
+        Hide rows that a user may not read, although their owner would let them.
+
+        :meth:`SmarterQuerySetWithPermissions.with_read_permission_for` calls it last, after it has
+        found the rows of the user's own account and of the Smarter account. Most kinds hide
+        nothing, and return the queryset as it is. A kind with rows for some users only overrides
+        it, e.g. :meth:`smarter.apps.llmclient.models.LLMClient.restrict_readable`, which hides an
+        LLMClient that only the platform's staff may use.
+
+        :param queryset: The rows that the user's account and the Smarter account let them read.
+        :param user: The user.
+        :returns: The rows that the user may read.
+        """
+        return queryset
 
     def authorize(self) -> None:
         """
