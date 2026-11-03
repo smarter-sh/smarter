@@ -1,0 +1,12 @@
+slug: international-day-of-education
+name: International Day of Education
+category: observance
+caption: Happy International Day of Education!
+alt_text: A Smarter LLMClient wears a graduation cap, beside a stack of books.
+link_url: https://en.wikipedia.org/wiki/International_Day_of_Education
+priority: 50
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 1
+  day: 24

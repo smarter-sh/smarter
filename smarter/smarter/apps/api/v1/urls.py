@@ -14,6 +14,7 @@ delegates route handling to app-specific URL modules.
   and code, and its staff-only tools, which read the platform's health, logs and users.
 - ``journal/``: Smarter Journal entries (superusers only).
 - ``connections/``: External connection integration endpoints.
+- ``doodles/``: The sign-in page's doodle of the day, and its artwork (public).
 - ``plugins/``: Plugin management endpoints.
 - ``prompts/``: Prompt and interaction endpoints.
 - ``providers/``: Provider integration endpoints.
@@ -39,6 +40,8 @@ from smarter.apps.api.v1.demos import urls as demos_urls
 from smarter.apps.api.v1.tests import urls as tests_urls
 from smarter.apps.connection.api.v1 import urls as connection_urls
 from smarter.apps.connection.const import namespace as connnection_namespace
+from smarter.apps.doodle.api.v1 import urls as doodle_urls
+from smarter.apps.doodle.const import namespace as doodle_namespace
 from smarter.apps.guardrail.api.v1 import urls as guardrail_urls
 from smarter.apps.guardrail.const import namespace as guardrail_namespace
 from smarter.apps.llmclient.api.v1 import urls as llmclient_urls
@@ -93,6 +96,7 @@ urlpatterns = [
     path("cli/", include(cli_urls, namespace=cli_namespace)),
     path("demos/", include(demos_urls, namespace=demos_namespace)),
     path("connections/", include(connection_urls, namespace=connnection_namespace)),
+    path("doodles/", include(doodle_urls, namespace=doodle_namespace)),
     path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("journal/", include(journal_urls, namespace=journal_namespace)),
     path("orchestrators/", include(orchestrator_urls, namespace=orchestrator_namespace)),
