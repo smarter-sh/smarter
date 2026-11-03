@@ -97,7 +97,14 @@ class ExtensionInstaller:
     def context(
         self, extension: Extension, manifest: ExtensionManifest, previous_version: Optional[str] = None
     ) -> LifecycleContext:
-        """Return the context of a lifecycle hook."""
+        """
+        Return the context of a lifecycle hook.
+
+        :param extension: The extension.
+        :param manifest: The manifest of the version that the hook belongs to.
+        :param previous_version: The version that was installed before, for an update or a roll back.
+        :returns: The context, with the extension's resolved settings, and the platform's admin user profile.
+        """
         return LifecycleContext(
             extension=extension,
             version=manifest.version,
@@ -427,7 +434,14 @@ class ExtensionInstaller:
         return extension.installed_version.parsed_manifest
 
     def record_failure(self, extension: Extension, message: str) -> None:
-        """Disable an extension, and record why."""
+        """
+        Disable an extension, and record why.
+
+        Saves the extension, logs the error, and sends ``extension_disabled``.
+
+        :param extension: The extension.
+        :param message: Why it failed, which is saved as its ``error``.
+        """
         logger.error("%s %s", self.formatted_class_name, message)
         extension.enabled = False
         extension.error = message

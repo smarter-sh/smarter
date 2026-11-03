@@ -13,6 +13,12 @@ class Command(SmarterCommand):
     )
 
     def handle(self, *args, **options):
+        """
+        Write the Extensions api's JSON Schema to ``SCHEMA_PATH``, and print its path.
+
+        :param args: Unused.
+        :param options: The parsed command line options.
+        """
         self.handle_begin()
         SCHEMA_PATH.write_text(contract_schema_json(), encoding="utf-8")
         self.stdout.write(str(SCHEMA_PATH))

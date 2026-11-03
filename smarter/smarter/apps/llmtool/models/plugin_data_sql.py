@@ -57,6 +57,8 @@ class PluginDataSql(PluginDataBase):
 
     # pylint: disable=C0115
     class DataTypes:
+        """The JSON Schema type names of a sql plugin's parameters."""
+
         STR = "string"
         NUMBER = "number"
         INT = "integer"
@@ -67,6 +69,7 @@ class PluginDataSql(PluginDataBase):
 
         @classmethod
         def all(cls) -> list[str]:
+            """Return every data type."""
             return [cls.STR, cls.NUMBER, cls.INT, cls.BOOL, cls.OBJECT, cls.ARRAY, cls.NULL]
 
     connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
@@ -81,12 +84,19 @@ class PluginDataSql(PluginDataBase):
     )
 
     def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
+        """
+        Return the sql plugin's parameters, and its SQL query with the parameters' values in place of its placeholders.
+
+        :param params: The values of the query's parameters, by name.
+        :returns: The sql plugin's data.
+        """
         return {
             "parameters": self.parameters,
             "sql_query": self.prepare_sql(params=params),
         }
 
     def are_test_values_pydantic(self) -> bool:
+        """Return whether ``test_values`` is a list of dicts that each have a ``name`` and a ``value``."""
         if not isinstance(self.test_values, list):
             return False
         return all(isinstance(tv, dict) and "name" in tv and "value" in tv for tv in self.test_values)  # type: ignore  # pylint: disable=not-an-iterable
@@ -169,6 +179,12 @@ class PluginDataSql(PluginDataBase):
                 raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
 
     def validate(self) -> bool:
+        """
+        Validate the test values, that each parameter has one, and that each of the query's placeholders is a parameter.
+
+        :returns: True.
+        :raises SmarterValueError: If any of them is not valid.
+        """
         super().validate()
         self.validate_test_values()
         self.validate_all_parameters_in_test_values()
@@ -285,7 +301,7 @@ class PluginDataSql(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        retval: "PluginDataSql"
+        retval: Optional["PluginDataSql"] = None
         if pk:
             retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
