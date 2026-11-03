@@ -356,7 +356,7 @@
       "type": "object"
     },
     "SAMSqlConnectionSpec": {
-      "description": "Smarter API Sql Connection Manifest Connection.spec",
+      "description": "Smarter API Sql Connection Manifest Connection.spec.",
       "properties": {
         "connection": {
           "$ref": "#/$defs/Connection",
