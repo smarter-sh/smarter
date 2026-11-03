@@ -13,8 +13,8 @@ helper, :meth:`~smarter.apps.infrastructure.providers.aws.helpers.eks.AWSEks.get
 Each part is read on its own: a part that cannot be read, e.g. because the platform's cloud credentials
 may not list insights, is named in :attr:`ClusterHealth.errors`, and the other parts are still returned.
 
-The Smarter Operations MCP server's ``eks_status`` tool
-(:class:`~smarter.apps.mcpserver.status.tools.EksStatusTool`) reports it.
+The MCPServer's staff-only ``eks_status`` tool
+(:class:`~smarter.apps.mcpserver.protocol.tools.status.EksStatusTool`) reports it.
 """
 
 import re

@@ -32,7 +32,7 @@ of resource.
    * - ``smarter/mcp-clients/``
      - :doc:`MCPClients </smarter-resources/smarter-mcpclient>` for public MCP servers, and, as
        :doc:`manifest templates <manifest-templates>`, ``*.yaml.tpl``, for the
-       :doc:`Smarter Project MCP server </smarter-platform/smarter-project-mcp-server>`.
+       built-in MCPClients of the platform's own :doc:`MCPServer </smarter-platform/smarter-project-mcp-server>`.
    * - ``smarter/proxies/``
      - :doc:`Proxies </smarter-resources/smarter-proxy>`, one per built-in Provider.
    * - ``smarter/llmhosts/``, ``smarter/llmhost-computes/``

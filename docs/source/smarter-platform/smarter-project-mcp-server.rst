@@ -1,17 +1,23 @@
-Smarter Project MCP Server
-==========================
+MCPServer: Public Tools
+=======================
 
-Every Smarter platform runs a `Model Context Protocol <https://modelcontextprotocol.io>`__
-server, over Streamable HTTP, for The Smarter Project. It does two things:
+Every Smarter platform runs one `Model Context Protocol <https://modelcontextprotocol.io>`__
+server, over Streamable HTTP: **the MCPServer**, the Django app ``smarter.apps.mcpserver``. It
+serves its tools at two endpoints. This page describes its **public endpoint**,
+``/api/v1/mcp/smarter-project/``, and the public tools that it serves to anyone. The other
+endpoint, ``/api/v1/mcp/smarter-operations/``, serves the platform's staff only: see
+:doc:`MCPServer: Staff-Only Tools <smarter-operations-mcp-server>`.
 
-- **Technical questions.** It answers questions about Smarter from its own source code,
-  documentation and blog, and checks the manifests that an LLM writes against the platform's own
-  validation. Anyone may use it, without authentication.
-- **GitHub operations.** It searches the project's GitHub issues, and, for a user who sends
-  their own GitHub token, opens issues and comments on them under that user's account. See
+The public tools do two things:
+
+- **Technical questions.** They answer questions about Smarter from its own source code,
+  documentation and blog, and check the manifests that an LLM writes against the platform's own
+  validation. Anyone may use them, without authentication.
+- **GitHub operations.** They search the project's GitHub issues, and, for a user who sends
+  their own GitHub token, open issues and comment on them under that user's account. See
   `GitHub Issues`_.
 
-It reads every public repository of the `smarter-sh <https://github.com/smarter-sh>`__ GitHub organization: the
+The public tools read every public repository of the `smarter-sh <https://github.com/smarter-sh>`__ GitHub organization: the
 platform and its documentation, the command-line interface, the Python, Node.js and Go SDKs,
 the VS Code extension, the SmarterChat component, the quick start, the cloud infrastructure,
 the example manifests, Stackademy, the Smarter Chat integrations for WordPress, Drupal, Shopify,
@@ -20,18 +26,21 @@ and the cache-results and smarter-types packages. It also reads the project's bl
 whose release announcements and articles explain what changed in each version, and how and why
 Smarter was built.
 
-Its main clients are the platform's own built-in :doc:`MCPClients <../smarter-resources/smarter-mcpclient>`,
-``smarter_project`` and ``smarter_project_github*``, which give LLMClients such as ``smarter``,
-``smarter_developer`` and ``smarter_sdk_guide`` their answers about Smarter. Any other MCP client
-can use it too, e.g. Claude Code, an IDE, or another platform's MCPClient.
+Their main clients are the platform's own built-in :doc:`MCPClients <../smarter-resources/smarter-mcpclient>`:
+``smarter_project``, which connects to the public endpoint and offers a collection of its tools, and
+``smarter_project_github*``, which each connect to the endpoint of one repository. They give
+LLMClients such as ``smarter``, ``smarter_developer`` and ``smarter_sdk_guide`` their answers about
+Smarter. Any other MCP client can use the public endpoint too, e.g. Claude Code, an IDE, or another
+platform's MCPClient.
 
-It is an internal platform service, not a resource: there is no manifest to apply, and
+The MCPServer is an internal platform service, not a resource: there is no manifest to apply, and
 nothing to configure.
 
 Endpoints
 ---------
 
-The server is mounted under ``/api/v1/mcp/`` of the platform's own domain:
+The MCPServer is mounted under ``/api/v1/mcp/`` of the platform's own domain. Its public tools are
+served at:
 
 .. list-table::
    :header-rows: 1
@@ -52,12 +61,12 @@ The repositories are ``smarter``, ``smarter-cli``, ``smarter-python``, ``smarter
 ``smarter-shopify``, ``smarter-gtm-template``, ``smarter-docs-site-generators``,
 ``extensions-registry``, ``smarter-extension-calculator``, ``smarter-extension-date-calculator``,
 ``smarter-extension-weather``, ``cache-results`` and ``smarter-types``, as declared in
-:mod:`smarter.apps.mcpserver.repositories`. ``smarter`` includes Smarter Chat, the
+:mod:`smarter.apps.mcpserver.services.repositories`. ``smarter`` includes Smarter Chat, the
 ``@smarter.sh/ui-chat`` npm package.
 
-The server requires no authentication. Its tools read public repositories, except
-``create_issue`` and ``comment_on_issue``, which a client gets only by sending the user's own
-GitHub token: see `GitHub Issues`_. It is stateless: it answers every POST with ``application/json``, issues no ``Mcp-Session-Id``, and
+The public endpoint requires no authentication. Its tools read public repositories, except
+``create_issue``, ``comment_on_issue``, ``close_issue`` and ``create_pull_request``, which a client
+gets only by sending the user's own GitHub token: see `GitHub Issues`_. It is stateless: it answers every POST with ``application/json``, issues no ``Mcp-Session-Id``, and
 answers GET and DELETE with ``405 Method Not Allowed``, so any of the platform's pods can answer
 any request. It speaks the ``initialize`` handshake of protocol versions 2024-11-05 through
 2025-11-25.
@@ -67,7 +76,7 @@ Because it requires no authentication, each client IP address may send at most
 Many Requests``, with a ``Retry-After`` header, beyond that. The platform's own MCPClients count
 too: they connect from the platform's egress addresses, and each tool call is about three
 requests, so a busy platform may need a higher limit. ``0`` disables it. See
-:mod:`smarter.apps.mcpserver.ratelimit`.
+:mod:`smarter.apps.mcpserver.protocol.ratelimit`.
 
 To try it, list its tools with curl:
 
@@ -113,12 +122,12 @@ tools link to the post.
    * - ``get_manifest_schema``
      - A resource kind's example manifest, in YAML, and every field of its manifest: its path, type,
        whether it is required, its default and its description. Without a kind, the list of kinds.
-       Every server serves it.
+       Every public endpoint serves it.
    * - ``validate_manifest``
      - Validates a manifest, in YAML or JSON, with the platform's own validation, without applying
-       it: whether it is valid, and each error with the path of its field. Every server serves it.
+       it: whether it is valid, and each error with the path of its field. Every public endpoint serves it.
    * - ``search_blog``
-     - Ranked passages of the blog's posts. Only the server of every repository serves it.
+     - Ranked passages of the blog's posts. Only the endpoint of every repository serves it.
    * - ``read_blog_post``
      - A post of the blog, by its path or url, with line numbers, 400 lines at a time.
    * - ``search_issues``
@@ -146,13 +155,13 @@ tools link to the post.
 ``get_manifest_schema`` reads the platform's own JSON Schemas and example manifests, which are
 committed with the :doc:`api contract </smarter-framework/smarter-api/api-contract>`, so it
 describes exactly the manifests that the platform accepts. A schema is too large and nested for
-an LLM to read well, so :func:`smarter.apps.mcpserver.manifests.schemas.manifest_fields` flattens it into
-one line per field, without the read-only ``status``. The server's instructions tell the LLM to
+an LLM to read well, so :func:`smarter.apps.mcpserver.services.manifests.manifest_fields` flattens it into
+one line per field, without the read-only ``status``. The public endpoint's instructions tell the LLM to
 call it before writing, fixing or explaining a manifest.
 
 ``validate_manifest`` then checks the manifest that the LLM wrote, with
 :func:`smarter.apps.api.v1.cli.validation.validate_manifest`, the validation of ``smarter
-validate`` and the first step of ``smarter apply``, and the server's instructions tell the LLM to
+validate`` and the first step of ``smarter apply``, and the public endpoint's instructions tell the LLM to
 fix what it reports before it gives the manifest to the user. Because anyone may call it, it skips
 the checks that make requests, e.g. that an image url responds, and refuses YAML aliases and
 manifests longer than 50,000 characters. A valid manifest may still be refused by ``apply`` for
@@ -161,11 +170,11 @@ something outside of it, e.g. a Secret that it names does not exist.
 A search ranks files in the database, without embeddings. A quoted phrase is one search term,
 and so is an identifier such as ``smarter_settings.environment_platform_domain``. Each term counts
 for more the rarer it is, and a term in a file's path or title counts for more than one in its
-text. See :mod:`smarter.apps.mcpserver.index.search`.
+text. See :mod:`smarter.apps.mcpserver.services.search`.
 
-The server's instructions, which MCPClients with ``includeInstructions: true`` add to the
+The public endpoint's instructions, which MCPClients with ``includeInstructions: true`` add to the
 LLM's system prompt, tell the LLM to answer from the tools rather than from memory, and to cite
-its sources. The server of every repository also tells it to search the blog together with the
+its sources. The endpoint of every repository also tells it to search the blog together with the
 documentation for why and how questions, e.g. how the platform keeps passwords out of its logs,
 because a post often explains a design, and its limits, more completely than the reference
 documentation does.
@@ -173,8 +182,8 @@ documentation does.
 The Index
 ---------
 
-The server reads its own index of the repositories, in the platform's database, rather than
-GitHub, so that a tool call costs one or two queries. :func:`smarter.apps.mcpserver.index.indexer.index_repository`
+The MCPServer reads its own index of the repositories, in the platform's database, rather than
+GitHub, so that a tool call costs one or two queries. :func:`smarter.apps.mcpserver.services.indexing.github.index_repository`
 keeps each repository's index up to date with its ``main`` branch:
 
 1. It asks the GitHub api for the branch's latest commit. A repository that has not changed costs
@@ -193,7 +202,8 @@ keeps each repository's index up to date with its ``main`` branch:
 Celery Beat runs :func:`~smarter.apps.mcpserver.tasks.index_repositories` hourly, on the
 platform's operational queue, and ``manage.py initialize_platform`` queues it, so a new platform
 is indexed within minutes of being initialized. A tool that is called on a repository that is not
-indexed yet says so, and queues the repository. To index the repositories now:
+indexed yet says so, and queues the repository: see
+:mod:`smarter.apps.mcpserver.services.indexing.indexes`. To index the repositories now:
 
 .. code-block:: console
 
@@ -201,12 +211,12 @@ indexed yet says so, and queues the repository. To index the repositories now:
     python manage.py index_smarter_project --repository smarter-cli --force
     python manage.py index_smarter_project --queue
 
-The blog is indexed the same way, by :func:`smarter.apps.mcpserver.index.blog.index_blog`, from its
+The blog is indexed the same way, by :func:`smarter.apps.mcpserver.services.indexing.blog.index_blog`, from its
 public WordPress REST api, ``/wp-json/wp/v2/posts``, 100 posts a request. Each published post
 becomes one file of the index, its html converted to Markdown-like text, under its permalink's
 path, e.g. ``2026/10/26/release-smarter-api-v0-6``. Its illustrations become Markdown images,
 ``![description](url)``, followed by their full alt text, which is what tells the LLM what an
-image shows. The server's instructions tell the LLM to include an illustration in its answer
+image shows. The public endpoint's instructions tell the LLM to include an illustration in its answer
 when it shows what the user asked about, and Smarter Chat displays it. The posts are fingerprinted by their ids and
 modification times, and a blog whose posts have not changed is not stored again.
 :func:`~smarter.apps.mcpserver.tasks.index_repositories` queues it with the repositories, and
@@ -220,10 +230,10 @@ The indexes are the ``RepositoryIndex`` and ``RepositoryFile`` rows of the Djang
 *MCPServer* app, which shows each repository's commit, file count and last error.
 
 Because the data changes only when an index does, each tool call's result is cached for an hour, by
-the server, the tool and its arguments, so a repeated search or read costs no query at all. A
+the endpoint's scope, the tool and its arguments, so a repeated search or read costs no query at all. A
 repository or blog that is indexed again starts a new index generation, which is part of every
 cached result's key, so new files and posts are found at once rather than an hour later. Errors are
-never cached. See :mod:`smarter.apps.mcpserver.caching`. The server marks every tool but
+never cached. See :mod:`smarter.apps.mcpserver.protocol.caching`. The MCPServer marks every public tool but
 the four that write to GitHub read-only, so an MCPClient that calls it caches the
 results on its side too.
 
@@ -237,12 +247,12 @@ every repository with ``org:smarter-sh``. Anyone may call it: a request without 
 searches anonymously, and GitHub allows anonymous clients 10 searches a minute for each IP address,
 which the platform's users share, so a busy platform's anonymous searches may be refused for a
 minute. A classic token, when the client sends one, raises that limit to 30 for its owner. See
-:mod:`smarter.apps.mcpserver.github.issues`.
+:mod:`smarter.apps.mcpserver.services.github.issues`.
 
 ``create_issue`` lets an LLM report a bug or request a feature in a repository of The Smarter
 Project, e.g. after it has found the cause of a problem in the code, and ``comment_on_issue`` lets it
 add to an existing issue instead, e.g. another way to reproduce a bug. ``read_issue`` shows the LLM
-what an issue and its latest comments already say. The server's instructions tell the LLM to call
+what an issue and its latest comments already say. The public endpoint's instructions tell the LLM to call
 ``search_issues`` first, to comment rather than open an issue twice, and to comment only with
 something that the issue does not already say. ``create_issue`` takes optional ``labels``, e.g.
 ``bug``: GitHub creates a label that the repository does not have, and drops the labels of a user
@@ -272,19 +282,19 @@ With an MCPClient, set ``authType: bearer_token``, and put the token in a :doc:`
 token, so the LLMClients that use them cannot write issues. An MCPClient that is shared writes every
 issue and comment under the account of its Secret's token.
 
-The server sends the token only to ``api.github.com``, and never logs, caches or stores it, nor
+The MCPServer sends the token only to ``api.github.com``, and never logs, caches or stores it, nor
 passes it to the LLM. ``search_issues`` and ``read_issue`` send only a classic token, so that a
 secret that is not GitHub's never reaches GitHub. Everything that the tools write is public, so they
 refuse a title, body, comment or file that holds the user's own token, or any credential that the
 :doc:`Guardrail's <../smarter-resources/smarter-guardrail>` secret detectors recognize: api keys, AWS
-access keys, JWTs and private keys. See :func:`smarter.apps.mcpserver.github.client.refuse_secrets`.
+access keys, JWTs and private keys. See :func:`smarter.apps.mcpserver.services.github.client.refuse_secrets`.
 The tools that write are annotated as such, so MCP clients may ask the user before they call them, and their results are never cached,
-by the server or by an MCPClient. The server's instructions tell the LLM to call them only when the
-user asks, after showing them exactly what it will write. Each issue and comment ends with a line
-that says it was written with the Smarter Project MCP server. GitHub's errors, e.g. a token without
+by the MCPServer or by an MCPClient. The public endpoint's instructions tell the LLM to call them only when the
+user asks, after showing them exactly what it will write. Each issue, comment and pull request ends with a
+line that says it was written with Smarter's MCPServer. GitHub's errors, e.g. a token without
 the ``public_repo`` scope, a locked issue, or a repository whose issues are turned off, are
-explained to the LLM. See :mod:`smarter.apps.mcpserver.github.client` and
-:mod:`smarter.apps.mcpserver.github.issues`.
+explained to the LLM. See :mod:`smarter.apps.mcpserver.services.github.client` and
+:mod:`smarter.apps.mcpserver.services.github.issues`.
 
 Pull Requests
 -------------
@@ -302,7 +312,7 @@ cannot push to ``main`` or to anyone's work. It refuses a file under ``.github/`
 workflow that a pull request changes may run with the repository's secrets, and GitHub refuses
 workflow changes without the ``workflow`` scope anyway. A pull request changes at most 20 files. If
 GitHub creates the branch but refuses the pull request, the error gives the branch's url and tells
-the LLM not to try again. See :mod:`smarter.apps.mcpserver.github.pulls`.
+the LLM not to try again. See :mod:`smarter.apps.mcpserver.services.github.pulls`.
 
 Daily Pod Log Review
 --------------------
@@ -327,12 +337,12 @@ against the code of the deployed release, and then:
 Claude Code is the author of each issue, comment and pull request, and of the pull request's commit;
 GitHub shows them under the account of the workflow's ``PAT`` secret. Because anyone can put text
 into a log, the workflow treats the logs as untrusted: Claude holds no credential, its tools are
-read-only except the MCP server's GitHub tools, it has no network or cluster access, each run has
+read-only except the MCPServer's GitHub tools, it has no network or cluster access, each run has
 limits on what it writes and spends, and a dry run writes nothing. Nothing from the logs is printed
 in the workflow's public log, except Claude's summary, which follows the same rules as the issues.
 When a run writes to GitHub, the workflow posts one message to the Slack channel ``#smarter`` that
 lists each issue opened, commented on or closed, and each pull request, with its link, taken from
-the MCP server's results rather than from Claude's summary. When a run finds nothing that needs a
+the MCPServer's results rather than from Claude's summary. When a run finds nothing that needs a
 maintainer, it posts a clean bill of health instead: the number of pods, their restarts and the
 deployed release, taken from the cluster's inventory. Its Python scripts are in smarter-sh/automation's
 ``scripts/`` folder (``pod_log_redact.py``, ``pod_log_review.py`` and
@@ -342,10 +352,21 @@ this repository's ``skills/smarter-pod-log-review/scripts/``. Both are as useful
 The Built-in MCPClients
 -----------------------
 
-The ``smarter_project`` and ``smarter_project_github*`` MCPClients, which ``manage.py
-initialize_platform`` applies from the :doc:`example manifests repository
-</smarter-framework/smarter-manifests/example-manifests>`, read the MCP server of the platform that
-applies them. Their manifests, in its ``mcp-clients/`` folder, are templates, ``*.yaml.tpl``, whose
+Smarter's built-in MCPClients each give LLMClients a collection of the MCPServer's tools. They are
+applied by ``manage.py initialize_platform`` from the :doc:`example manifests repository
+</smarter-framework/smarter-manifests/example-manifests>`, and connect to the MCPServer of the
+platform that applies them:
+
+- ``smarter_project`` connects to the public endpoint, ``/api/v1/mcp/smarter-project/``, and
+  allows eight of its read-only tools: ``get_repository_overview``, ``search_documentation``,
+  ``search_code``, ``read_file``, ``list_files``, ``get_manifest_schema``, ``search_blog`` and
+  ``read_blog_post``.
+- ``smarter_project_github*`` each connect to the public endpoint of one repository, e.g.
+  ``/api/v1/mcp/smarter-project/smarter-cli/``.
+- ``smarter_operations`` connects to the staff-only endpoint. See :doc:`MCPServer: Staff-Only
+  Tools <smarter-operations-mcp-server>`.
+
+Their manifests, in its ``mcp-clients/`` folder, are templates, ``*.yaml.tpl``, whose
 ``endpointUrl`` is filled in when they are applied:
 
 .. code-block:: yaml
@@ -369,54 +390,64 @@ and the command line, are built on them, in its ``llm-clients/`` folder.
 
 .. note::
 
-    **Experimental.** The Smarter Project MCP server was designed and coded by Claude Code
+    **Experimental.** The MCPServer was designed and coded by Claude Code
     (Anthropic's Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental.
 
 Technical Reference
 -------------------
+
+The MCPServer has a service layer, :mod:`smarter.apps.mcpserver.services`, which knows nothing of
+the Model Context Protocol and is what other apps import, and a protocol layer,
+:mod:`smarter.apps.mcpserver.protocol`, whose tools are thin adapters of the services. The pages
+below cover the public endpoint and the parts that both endpoints share. The staff-only
+endpoint's own modules are under :doc:`MCPServer: Staff-Only Tools <smarter-operations-mcp-server>`.
 
 .. toctree::
    :maxdepth: 1
    :caption: Protocol
 
    smarter-project-mcp-server/views
+   smarter-project-mcp-server/auth
    smarter-project-mcp-server/base
-   smarter-project-mcp-server/server
-   smarter-project-mcp-server/tools
+   smarter-project-mcp-server/public-endpoint
+   smarter-project-mcp-server/toolsets
+   smarter-project-mcp-server/ratelimit
+   smarter-project-mcp-server/caching
 
 .. toctree::
    :maxdepth: 1
-   :caption: Index
+   :caption: Public Tools
 
-   smarter-project-mcp-server/indexer
-   smarter-project-mcp-server/blog
-   smarter-project-mcp-server/search
-   smarter-project-mcp-server/index-tools
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Manifests
-
-   smarter-project-mcp-server/manifests
+   smarter-project-mcp-server/public-tools
+   smarter-project-mcp-server/search-tools
+   smarter-project-mcp-server/reading-tools
+   smarter-project-mcp-server/markdown-tools
    smarter-project-mcp-server/manifest-tools
-
-.. toctree::
-   :maxdepth: 1
-   :caption: GitHub
-
-   smarter-project-mcp-server/github
-   smarter-project-mcp-server/issues
-   smarter-project-mcp-server/pulls
    smarter-project-mcp-server/github-tools
 
 .. toctree::
    :maxdepth: 1
-   :caption: Shared
+   :caption: Services
 
+   smarter-project-mcp-server/services
    smarter-project-mcp-server/repositories
+   smarter-project-mcp-server/indexer
+   smarter-project-mcp-server/blog
+   smarter-project-mcp-server/indexes
+   smarter-project-mcp-server/search
+   smarter-project-mcp-server/reading
+   smarter-project-mcp-server/manifests
+   smarter-project-mcp-server/github
+   smarter-project-mcp-server/issues
+   smarter-project-mcp-server/pulls
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Django App
+
    smarter-project-mcp-server/models
    smarter-project-mcp-server/tasks
    smarter-project-mcp-server/signals
    smarter-project-mcp-server/receivers
-   smarter-project-mcp-server/ratelimit
    smarter-project-mcp-server/exceptions
+   smarter-project-mcp-server/management-command

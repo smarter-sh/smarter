@@ -153,8 +153,8 @@ class TestMCPToolkit(MCPClientTestBase):
         self.assertTrue(toolkit.functions[f"mcp{self.mcpclient.id}_read_resource"].cacheable)
 
     def test_operations_server_tools_are_never_cached(self):
-        """The platform's operations server answers for the user who is chatting, and audits every call: never cached."""
-        with mock.patch("smarter.apps.mcpclient.toolkit.is_operations_server_url", return_value=True):
+        """The platform's staff-only MCPServer endpoint answers for the user who is chatting, and audits every call: never cached."""
+        with mock.patch("smarter.apps.mcpclient.toolkit.is_staff_endpoint_url", return_value=True):
             toolkit = self.load()
         name = self.function_name(toolkit, "echo")
         self.assertTrue(toolkit.functions[name].read_only)

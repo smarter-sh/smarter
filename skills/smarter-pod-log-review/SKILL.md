@@ -134,8 +134,8 @@ smarter-sh/automation's `.github/workflows/podLogReview.yml` runs this skill eve
 prod, and by hand against any environment: it downloads and redacts the logs with the scripts
 above, then runs Claude Code in a checkout of this repository. Claude follows automation's
 `.github/prompts/pod-log-review.md` and turns each actionable finding into a GitHub
-issue, a comment with new evidence, a closed issue, or a draft fix, through the Smarter Project MCP
-server's GitHub tools. Change what the review does in the prompt file, and what it can do in
+issue, a comment with new evidence, a closed issue, or a draft fix, through the MCPServer's public
+GitHub tools. Change what the review does in the prompt file, and what it can do in
 automation's `.github/prompts/pod-log-review.settings.json` (Claude Code's permission rules). Both treat the
 logs as untrusted data. The rules match command text, so they are not the security boundary: the
 workflow also blocks reads outside the smarter checkout, the log folder and the prompts folder, and Harden-Runner blocks
@@ -145,7 +145,7 @@ in `scripts/tests`: `pod_log_review.py` runs Claude Code, retries
 once after a transient API error if nothing was written yet, and writes the run's summary. After
 the review, `pod_log_review_slack.py` posts one message to the Slack channel
 `#smarter` that lists each issue the run opened, commented on or closed, and each pull request,
-taken from the MCP server's tool results in Claude's `stream-json` output, never from Claude's own
+taken from the MCPServer's tool results in Claude's `stream-json` output, never from Claude's own
 summary. A run that wrote nothing, finished without an error, and whose final answer ends with the
 exact line `Verdict: healthy` posts a clean bill of health instead: pods, restarts and release,
 read from the kubectl inventory in the log folder. That fixed verdict is the only thing taken from

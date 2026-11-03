@@ -4,7 +4,7 @@ The Slack Bot
 The Smarter Helm chart can run an optional Slack bot, which answers questions in a Slack workspace
 with a deployed :doc:`LLMClient <../../smarter-resources/smarter-llmclient>`. The Smarter Project
 uses it to bring ``smarter_developer``, the LLMClient that answers from the
-:doc:`Smarter Project MCP Server <../../smarter-platform/smarter-project-mcp-server>`, into its own
+:doc:`MCPServer's public tools <../../smarter-platform/smarter-project-mcp-server>`, into its own
 Slack workspace, but any deployed LLMClient that doesn't require an api key works.
 
 People talk to the bot in two ways:
