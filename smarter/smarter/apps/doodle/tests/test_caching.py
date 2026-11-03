@@ -64,6 +64,17 @@ class TestDoodleCaching(DoodleTestMixin):
         self.assertEqual(result.ai_credit, "chosen")
         doodle_of_the_day.invalidate(day, DoodleRegion.EUROPE)
 
+    def test_the_default_that_the_editor_chose_is_the_default(self):
+        day = QUIET_DAY.isoformat()
+        doodle = plan_doodle(QUIET_DAY, DoodleRegion.MX)
+        Doodle.objects.filter(pk=doodle.pk).update(source=DoodleSource.LLM)
+        self.addCleanup(Doodle.objects.filter(pk=doodle.pk).delete)
+        doodle_of_the_day.invalidate(day, DoodleRegion.MX)
+        result = doodle_of_the_day(day, DoodleRegion.MX)
+        self.assertTrue(result.is_default)
+        self.assertEqual(result.ai_credit, "")
+        doodle_of_the_day.invalidate(day, DoodleRegion.MX)
+
     def test_artwork_svg_is_cached(self):
         theme = self.theme("christmas")
         self.assertEqual(artwork_svg(theme.artwork.sha256), theme.artwork.svg)

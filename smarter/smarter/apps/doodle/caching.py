@@ -18,9 +18,14 @@ from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .const import ARTWORK_CACHE_MAX_AGE, BASE_SCENE_STATIC_PATH, DOODLE_CACHE_TIMEOUT
+from .const import (
+    ARTWORK_CACHE_MAX_AGE,
+    BASE_SCENE_STATIC_PATH,
+    DEFAULT_THEME_SLUG,
+    DOODLE_CACHE_TIMEOUT,
+)
 from .contract.models import DoodleOfTheDay
-from .models import Doodle, DoodleArtwork, DoodleSource, DoodleTheme
+from .models import Doodle, DoodleArtwork, DoodleTheme
 from .planner import candidates, default_theme
 
 logger = logging.getSmarterLogger(
@@ -56,7 +61,8 @@ def doodle_from_row(doodle: Doodle, region: str) -> DoodleOfTheDay:
     :returns: The doodle of the day.
     :rtype: DoodleOfTheDay
     """
-    is_default = doodle.source == DoodleSource.DEFAULT
+    # the editor may choose the default too, so it is the theme, not the source, that says.
+    is_default = doodle.theme.slug == DEFAULT_THEME_SLUG
     return DoodleOfTheDay(
         date=doodle.date.isoformat(),
         region=region,

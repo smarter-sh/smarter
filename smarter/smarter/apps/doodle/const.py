@@ -1,6 +1,7 @@
 """Constants for the doodle app."""
 
 import os
+from typing import Literal
 
 namespace = "doodle"
 
@@ -64,3 +65,6 @@ MAX_GENERATED_SVG_LENGTH = 40_000
 
 LEARN_HOW_URL = "https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration/doodle.html"
 """Where the credit of a doodle that a Smarter AI application chose or drew links to: how it works."""
+
+DoodleAiCredit = Literal["", "chosen", "drawn"]
+"""What a Smarter AI application did for a doodle: chose it, drew it too, or nothing."""

@@ -16,7 +16,7 @@ from django.db import models
 from smarter.lib.django.models import TimestampedModel
 
 from .artwork import svg_sha256
-from .const import DEFAULT_THEME_SLUG
+from .const import DEFAULT_THEME_SLUG, DoodleAiCredit
 from .regions import DoodleRegion
 from .schedule import DoodleSchedule
 
@@ -156,13 +156,13 @@ class Doodle(TimestampedModel):
         return f"{self.date} {self.region} {self.theme}"
 
     @property
-    def ai_credit(self) -> str:
+    def ai_credit(self) -> DoodleAiCredit:
         """
         What a Smarter AI application did for the doodle, for the credit below it.
 
         :returns: ``drawn`` if the Smarter Doodle Artist drew its artwork, ``chosen`` if the Smarter
             Doodle Editor chose its catalog theme, or an empty string. Never for the plain default.
-        :rtype: str
+        :rtype: DoodleAiCredit
         """
         if self.source != DoodleSource.LLM:
             return ""
