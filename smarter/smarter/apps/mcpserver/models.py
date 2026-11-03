@@ -8,7 +8,7 @@ built by :func:`smarter.apps.mcpserver.services.indexing.github.index_repository
 repository's branch moves to a new commit.
 
 :class:`OperationsToolCall` records every call to a staff-only tool of the MCPServer
-(:mod:`smarter.apps.mcpserver.protocol.operations`): who called it, for which help desk ticket,
+(:mod:`smarter.apps.mcpserver.protocol.staff`): who called it, for which help desk ticket,
 with which arguments, and whether it failed. The tools read logs and users' data, so each call
 is kept until a superuser deletes it.
 

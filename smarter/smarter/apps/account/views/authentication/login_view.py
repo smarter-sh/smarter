@@ -257,8 +257,9 @@ class LoginView(SmarterNeverCachedWebView):
                     e,
                     traceback.format_exc(),
                 )
+                # the exception's text is logged above, and never shown to the client.
                 return SmarterHttpResponseServerError(
-                    request=request, error_message=_("An unknown error occurred %(error)s") % {"error": e}
+                    request=request, error_message=_("An unknown error occurred. Please try again later.")
                 )
         log_login_failure(request.POST.get("email"), LoginFailure.INVALID_FORM)
         logger.debug(

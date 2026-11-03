@@ -191,7 +191,11 @@ hours of the logs of the app, the Celery workers, beat and MariaDB, in
   namespace, and labels each line with its ``component`` (``smarter``, ``smarter-worker``,
   ``smarter-worker-infrastructure``, ``smarter-beat`` or ``mariadb``), ``pod`` and ``container``.
 - Before a line is stored, Alloy replaces email addresses, IP addresses, bearer tokens, api keys,
-  JWTs and passwords with ``<email>``, ``<ip>`` or ``<redacted>``.
+  JWTs and passwords with ``<email>``, ``<ip>`` or ``<redacted>``. It leaves what is not a
+  credential: a value that Smarter already masked, such as ``"api_key": "****abcd"`` or
+  ``mysql://user:******@host``, and code that calls something, such as a traceback's source line
+  ``stored_token = self.redis.get(self.name)``. Its rules are ``loki.process "redact"`` in the Helm
+  chart's ``values.yaml``, and ``helm/charts/smarter/tests/test_alloy_redact.py`` tests them.
 - Loki (``smarter-loki``) runs as one pod, with its data on its own 10Gi gp3 volume, and deletes
   logs older than 72 hours. Nothing is sent to S3 or CloudWatch. It has no authentication, and only
   the pods of the namespace can reach it, on port 3100.
@@ -202,7 +206,7 @@ the application group reach Loki, see ``network_policy.tf`` in
 `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__.
 
 The platform's staff, and their AI agents, search these logs with the
-:doc:`MCPServer's staff-only tools <../../smarter-platform/smarter-operations-mcp-server>`. You can also
+:ref:`MCPServer's staff-only tools <mcpserver-staff-only-tools>`. You can also
 query Loki from a pod in the namespace with `LogQL <https://grafana.com/docs/loki/latest/query/>`__,
 e.g. the errors of the Celery workers in the last hour:
 

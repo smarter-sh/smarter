@@ -141,7 +141,7 @@ Only the platform's staff may apply a manifest with ``staffOnly: true``.
 
 The built-in ``smarter_sysadmin`` LLMClient, Smarter Sysadmin, is staff-only. It answers help desk and
 operations questions with the
-:doc:`MCPServer's staff-only tools <../smarter-platform/smarter-operations-mcp-server>`, whose endpoint also
+:ref:`MCPServer's staff-only tools <mcpserver-staff-only-tools>`, whose endpoint also
 refuses everyone but the platform's staff, so the two checks protect each other. ``initialize_platform``
 applies it to the Smarter account only: it is never copied into other accounts, and never deployed.
 

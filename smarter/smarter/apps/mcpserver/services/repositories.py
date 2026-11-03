@@ -34,8 +34,8 @@ GITHUB_CODELOAD_URL = "https://codeload.github.com"
 SMARTER_PROJECT_GITHUB_ORGANIZATION = "smarter-sh"
 """The GitHub organization that owns The Smarter Project's repositories."""
 
-SMARTER_PROJECT_DOCS_LATEST_URL = f"{SMARTER_PROJECT_DOCS_URL}/en/latest/"
-"""The latest version of the Sphinx documentation, built from the smarter repository's docs/source."""
+SMARTER_PROJECT_DOCS_ROOT_URL = f"{SMARTER_PROJECT_DOCS_URL}/"
+"""The root of the Sphinx documentation, built from the smarter repository's docs/source, which page paths are joined to."""
 
 DOCUMENTATION_PAGE_EXTENSIONS = (".rst", ".md")
 """The extensions of Sphinx source files, which are published as html pages."""
@@ -153,7 +153,7 @@ class ProjectRepository(BaseModel):
         Return the url of the published documentation page that a source file becomes.
 
         :param path: The file's path in the repository, e.g. ``docs/source/smarter-resources/smarter-mcpclient.rst``.
-        :returns: The page's url, e.g. ``https://docs.smarter.sh/en/latest/smarter-resources/smarter-mcpclient.html``,
+        :returns: The page's url, e.g. ``https://docs.smarter.sh/smarter-resources/smarter-mcpclient.html``,
             or None if the file is not a page of the repository's published documentation.
         """
         if not self.docs_root or not self.docs_url:
@@ -181,7 +181,7 @@ SMARTER_PROJECT_REPOSITORIES: tuple[ProjectRepository, ...] = (
             f"{SMARTER_PROJECT_DOCS_URL}, in docs/source."
         ),
         docs_root="docs/source",
-        docs_url=SMARTER_PROJECT_DOCS_LATEST_URL,
+        docs_url=SMARTER_PROJECT_DOCS_ROOT_URL,
     ),
     ProjectRepository(
         name="smarter-cli",

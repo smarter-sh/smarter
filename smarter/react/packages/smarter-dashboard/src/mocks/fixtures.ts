@@ -89,7 +89,7 @@ export const myResources = {
   llmhosts_qty: 0,
   llmhosts_url: "/llmhost/",
   extensions_qty: 3,
-  extensions_url: "https://docs.smarter.sh/en/latest/smarter-platform/extensions.html",
+  extensions_url: "https://docs.smarter.sh/smarter-platform/extensions.html",
 };
 
 export const serviceHealth = {

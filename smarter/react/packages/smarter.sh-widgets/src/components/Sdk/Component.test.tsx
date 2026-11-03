@@ -31,7 +31,7 @@ describe("Sdk", () => {
     render(<Sdk />);
     expect(screen.getByRole("link", { name: "Documentation" })).toHaveAttribute(
       "href",
-      "https://docs.smarter.sh/en/latest/smarter-framework/apis-and-sdks.html",
+      "https://docs.smarter.sh/smarter-framework/apis-and-sdks.html",
     );
     expect(screen.getByRole("link", { name: "API reference" })).toHaveAttribute("href", "/docs/openapi/");
     expect(screen.getByRole("link", { name: "SDK source code" })).toHaveAttribute(
