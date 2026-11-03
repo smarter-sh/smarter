@@ -14,11 +14,13 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import StreamingHttpResponse
 from django.test import RequestFactory, override_settings
 
+from smarter.apps.account.tests.factories import platform_staff_profile_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.api.v1.views.base import LLMClientApiBaseViewSet
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.mcpserver.acting_user import current_acting_user
 from smarter.apps.prompt.contract.models import (
     PromptChatApiErrorResponse,
     PromptChatApiPromptResponse,
@@ -333,6 +335,46 @@ class TestLLMClientApiForDeployedHosts(TestAccountMixin):
         response, handler = self.post(user=self.admin_user)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         handler.assert_called_once()
+
+    def test_staff_only_llmclient(self):
+        """Only the platform's staff may prompt a staff-only LLMClient: anyone else is told it doesn't exist."""
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(staff_only=True)
+        for user in (None, self.admin_user, self.non_admin_user):
+            with self.subTest(user=user):
+                response, handler = self.post(user=user)
+                self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:500])
+                handler.assert_not_called()
+        profile = platform_staff_profile_factory(self.admin_user)
+        self.addCleanup(profile.delete)
+        response, handler = self.post(user=self.admin_user)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        handler.assert_called_once()
+
+    def test_the_prompt_runs_for_its_sender(self):
+        """The prompt runs as the LLMClient's owner, but its MCP servers learn who sent it."""
+        acting_users = []
+
+        def handler(*args, **kwargs):
+            acting_users.append(current_acting_user())
+            return TestLLMClientApiBaseViewSet.lambda_response(TestLLMClientApiBaseViewSet.COMPLETION)
+
+        request = RequestFactory().post(
+            "/prompt/",
+            data=json.dumps({"messages": [{"role": "user", "content": "hello"}]}),
+            content_type="application/json",
+            HTTP_HOST=self.host,
+        )
+        request.user = self.non_admin_user
+        with (
+            override_settings(ALLOWED_HOSTS=["*"]),
+            patch(HARNESS) as harness,
+            patch("smarter.apps.llmclient.receivers.create_llmclient_request"),
+        ):
+            harness.get_smarter_harness.return_value = MagicMock(side_effect=handler)
+            response = DefaultLLMClientApiView.as_view()(request)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertEqual(acting_users, [self.non_admin_user])
+        self.assertIsNone(current_acting_user())
 
     def test_anonymous_prompt_of_an_undeployed_llmclient_is_not_found(self):
         LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=False)

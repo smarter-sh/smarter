@@ -12,6 +12,7 @@ from django.http import (
 from pydantic import ValidationError
 
 from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.utils import is_platform_staff
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientExtensions,
@@ -671,6 +672,9 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         # for the device.
         if not self.llmclient:
             # before the session, which requires an LLMClient.
+            return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
+        if self.llmclient.staff_only and not is_platform_staff(get_resolved_user(request.user)):
+            # a 404, as for an LLMClient that doesn't exist, so that it can't be discovered.
             return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
         self.session = SmarterPromptSession(request, session_key=self.session_key, llmclient=self.llmclient)
         # a new chat's session key is created here, so the request's later log records carry it,

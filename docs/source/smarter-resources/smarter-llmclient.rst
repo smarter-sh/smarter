@@ -119,6 +119,32 @@ has an api key, the page must send one; without api keys, the LLMClient is publi
 are charged to its owner. See
 :doc:`Embedding Smarter Chat <../smarter-framework/smarter-chat/embedding>`.
 
+Staff-Only LLMClients
+---------------------
+
+Some LLMClients are for the platform's own staff, because their tools read what nobody else may see,
+such as the platform's pod logs and its users' accounts. ``spec.config.prompt.staffOnly`` makes an
+LLMClient visible and usable by the platform's staff only:
+
+.. code-block:: yaml
+
+  spec:
+    config:
+      prompt:
+        staffOnly: true
+
+The platform's staff are the active staff users of the Smarter account, which runs the platform. An
+account admin is staff of their own account only, and is not one of them, even as a superuser. Every
+other user is told that a staff-only LLMClient doesn't exist: it is in none of their lists, its
+workbench and configuration answer ``404 Not Found``, and so do its prompt api and its deployed url.
+Only the platform's staff may apply a manifest with ``staffOnly: true``.
+
+The built-in ``smarter_sysadmin`` LLMClient, Smarter Sysadmin, is staff-only. It answers help desk and
+operations questions with the platform's
+:doc:`Smarter Operations MCP Server <../smarter-platform/smarter-operations-mcp-server>`, which also
+refuses everyone but the platform's staff, so the two checks protect each other. ``initialize_platform``
+applies it to the Smarter account only: it is never copied into other accounts, and never deployed.
+
 Styling the Chat
 ----------------
 

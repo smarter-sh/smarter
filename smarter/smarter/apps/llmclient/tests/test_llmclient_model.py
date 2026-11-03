@@ -8,6 +8,7 @@ from django.urls import get_urlconf, set_urlconf
 from smarter.apps.account.tests.factories import (
     factory_account_teardown,
     mortal_user_factory,
+    platform_staff_profile_factory,
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.guardrail.tests.base_classes import GuardrailTestBase
@@ -154,3 +155,33 @@ class TestLLMClientClone(MCPClientTestBase, GuardrailTestBase):
             self.links(clone),
             {"plugins": [], "mcpclients": [], "guardrails": [], "extensions": [self.public_extension.slug]},
         )
+
+
+class TestLLMClientStaffOnly(TestAccountMixin):
+    """Test that a staff-only LLMClient is readable by the platform's staff only."""
+
+    def setUp(self):
+        super().setUp()
+        self.llmclient = LLMClient.objects.create(
+            name=f"test_llmclient_staff_only_{self.hash_suffix}", user_profile=self.user_profile
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
+
+    def readable_by(self, user) -> bool:
+        return LLMClient.objects.with_read_permission_for(user).filter(pk=self.llmclient.pk).exists()
+
+    def test_an_llmclient_that_is_not_staff_only(self):
+        self.assertFalse(self.llmclient.staff_only)
+        self.assertTrue(self.readable_by(self.admin_user))
+        self.assertTrue(self.readable_by(self.non_admin_user))
+
+    def test_hidden_from_everyone_else(self):
+        """Even its owner, a superuser of their own account, can't read it unless they are platform staff."""
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(staff_only=True)
+        self.assertTrue(self.admin_user.is_superuser)
+        self.assertFalse(self.readable_by(self.admin_user))
+        self.assertFalse(self.readable_by(self.non_admin_user))
+        profile = platform_staff_profile_factory(self.admin_user)
+        self.addCleanup(profile.delete)
+        self.assertTrue(self.readable_by(self.admin_user))
+        self.assertFalse(self.readable_by(self.non_admin_user))

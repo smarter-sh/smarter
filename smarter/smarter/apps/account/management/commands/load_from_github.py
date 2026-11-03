@@ -41,7 +41,10 @@ from smarter.apps.account.repository_scripts import (
     script_environment,
     scripts_config_path,
 )
-from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    smarter_cached_objects,
+)
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.tasks import deploy_default_api
@@ -450,6 +453,23 @@ class Command(SmarterCommand):
         return None
 
     @staticmethod
+    def is_staff_only(manifest: SmarterDictType) -> bool:
+        """
+        Return whether an LLMClient manifest is staff-only, ``spec.config.prompt.staffOnly``.
+
+        A staff-only LLMClient, e.g. ``smarter_sysadmin``, is applied to the Smarter account only,
+        never copied into another account by ``initialize_account``, and never deployed.
+
+        :param manifest: The LLMClient manifest, as a dict.
+        :returns: True if it is staff-only.
+        """
+        spec = manifest.get("spec") or {}
+        config = spec.get("config") or {}
+        prompt = config.get("prompt") or {}
+        staff_only = prompt.get("staffOnly") is True
+        return staff_only
+
+    @staticmethod
     def keep_deployed(manifest: SmarterDictType, user_profile: UserProfile) -> SmarterDictType:
         """
         Return a copy of an LLMClient manifest whose ``deployed`` is that of the LLMClient that exists, if any.
@@ -563,6 +583,12 @@ class Command(SmarterCommand):
                     "nothing, would detach the resources attached to it since it was created."
                 )
                 continue
+            if item.kind == SAMKinds.LLM_CLIENT.value and self.is_staff_only(manifest):
+                if user_profile.account != smarter_cached_objects.smarter_account:
+                    self.stdout.write(
+                        f"Skipped {item.path}: a staff-only LLMClient belongs to the Smarter account only."
+                    )
+                    continue
             if item.kind == SAMKinds.LLM_CLIENT.value:
                 missing = self.missing_extensions(manifest.get("spec", {}).get("extensions") or [])
                 if missing:
@@ -581,6 +607,10 @@ class Command(SmarterCommand):
             if item.filespec in self.skipped:
                 continue
             self.stdout.write(f"Applied {item.kind} {item.name}, from {item.path}.")
+            if deploy and item.kind == SAMKinds.LLM_CLIENT.value and self.is_staff_only(manifest):
+                # its staff use it in the workbench, and a deployed url would only answer them anyway.
+                self.stdout.write(f"Did not deploy LLMClient {item.name}: it is staff-only.")
+                continue
             if deploy and item.kind == SAMKinds.LLM_CLIENT.value and not self.deploy_llmclient(item.name, user_profile):
                 failed.append(f"{item.path}: LLMClient {item.name} failed to deploy.")
         return failed

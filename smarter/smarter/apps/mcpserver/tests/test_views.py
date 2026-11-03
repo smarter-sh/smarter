@@ -1,9 +1,10 @@
 """
-Tests for smarter.apps.mcpserver.protocol.views: the MCP server over HTTP.
+Tests for smarter.apps.mcpserver.protocol.views: the MCP servers over HTTP.
 
-:class:`TestMCPClientEndToEnd` connects Smarter's own MCPClient, with the MCP Python SDK's
-Streamable HTTP client, to the view, through an httpx2 transport that hands each request to
-Django's test client. The network is never used.
+:class:`TestMCPClientEndToEnd` and :class:`TestOperationsMCPClientEndToEnd` connect Smarter's own
+MCPClient, with the MCP Python SDK's Streamable HTTP client, to the views, through an httpx2
+transport that hands each request to Django's test client, :func:`forward_to_django`. The network
+is never used.
 """
 
 import json
@@ -15,9 +16,18 @@ from django.test import Client, RequestFactory
 from django.urls import reverse
 
 from smarter.apps.account.models import User
+from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.mcpclient.connection import MCPServerConnection
+from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
 from smarter.apps.mcpclient.models import MCPClient
+from smarter.apps.mcpserver.acting_user import (
+    ACTING_USER_HEADER,
+    acting_user,
+    operations_server_url,
+    sign_acting_user,
+)
 from smarter.apps.mcpserver.github.issues import GitHubIssue
+from smarter.apps.mcpserver.models import OperationsToolCall
 from smarter.apps.mcpserver.protocol.views import api_key, bearer_token
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
 from smarter.lib.drf.models import SmarterAuthToken
@@ -28,6 +38,51 @@ from .operations_base import TICKET, OperationsTestBase
 CONNECTION = "smarter.apps.mcpclient.connection"
 HEADERS = {"HTTP_ACCEPT": "application/json, text/event-stream"}
 CREATE_ISSUE = "smarter.apps.mcpserver.github.issues.create_issue"
+
+
+def forward_to_django(test) -> None:
+    """
+    Make an MCPClient's http requests go to Django's test client, for the rest of a test.
+
+    Every request header is forwarded, e.g. ``Authorization`` and ``X-Smarter-Acting-User``.
+
+    :param test: The test case, whose cleanups stop the patches.
+    """
+    django_client = Client()
+
+    async def handler(request: httpx2.Request) -> httpx2.Response:
+        def forward():
+            extra = {}
+            for name, value in request.headers.items():
+                # the test client sets its own host, and the content's type and length.
+                if name.lower() in ("host", "content-type", "content-length"):
+                    continue
+                meta_name = "HTTP_" + name.upper().replace("-", "_")
+                extra[meta_name] = value
+            return django_client.generic(
+                request.method,
+                request.url.raw_path.decode(),
+                data=request.content,
+                content_type=request.headers.get("content-type", ""),
+                **extra,
+            )
+
+        response = await anyio.to_thread.run_sync(forward)
+        return httpx2.Response(
+            response.status_code,
+            headers={"content-type": response.get("Content-Type", "application/json")},
+            content=response.content,
+        )
+
+    def http_client(headers=None, timeout=None, auth=None):
+        return httpx2.AsyncClient(transport=httpx2.MockTransport(handler), headers=headers, timeout=timeout, auth=auth)
+
+    for patcher in (
+        mock.patch(f"{CONNECTION}.validate_public_url"),
+        mock.patch(f"{CONNECTION}.guarded_http_client", http_client),
+    ):
+        patcher.start()
+        test.addCleanup(patcher.stop)
 
 
 def url(repository=None) -> str:
@@ -140,41 +195,7 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
 
     def setUp(self):
         super().setUp()
-        django_client = Client()
-
-        async def handler(request: httpx2.Request) -> httpx2.Response:
-            def forward():
-                return django_client.generic(
-                    request.method,
-                    request.url.raw_path.decode(),
-                    data=request.content,
-                    content_type=request.headers.get("content-type", ""),
-                    HTTP_ACCEPT=request.headers.get("accept", ""),
-                    **(
-                        {"HTTP_AUTHORIZATION": request.headers["authorization"]}
-                        if "authorization" in request.headers
-                        else {}
-                    ),
-                )
-
-            response = await anyio.to_thread.run_sync(forward)
-            return httpx2.Response(
-                response.status_code,
-                headers={"content-type": response.get("Content-Type", "application/json")},
-                content=response.content,
-            )
-
-        def http_client(headers=None, timeout=None, auth=None):
-            return httpx2.AsyncClient(
-                transport=httpx2.MockTransport(handler), headers=headers, timeout=timeout, auth=auth
-            )
-
-        for patcher in (
-            mock.patch(f"{CONNECTION}.validate_public_url"),
-            mock.patch(f"{CONNECTION}.guarded_http_client", http_client),
-        ):
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        forward_to_django(self)
 
     def connection(self, repository=None, auth_type="none") -> MCPServerConnection:
         mcpclient = MCPClient(
@@ -359,3 +380,115 @@ class TestSmarterOperationsMCPServerView(OperationsTestBase):
             response = self.post({"jsonrpc": "2.0", "id": 1, "method": "ping"}, key=self.staff_key)
         self.assertEqual(response.status_code, 429)
         self.assertIn("Retry-After", response)
+
+    def test_admin_of_another_account(self):
+        """The admin of a customer's account is staff of that account only, even as a superuser: forbidden."""
+        customer_admin, customer_account, customer_profile = admin_user_factory()
+        _, customer_key = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user_profile=customer_profile, name="test_operations_customer", user=customer_admin, description="test"
+        )
+        try:
+            self.assertTrue(customer_admin.is_staff)
+            self.assertTrue(customer_admin.is_superuser)
+            response = self.post({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, key=customer_key)
+        finally:
+            # not factory_account_teardown(), which deletes every test user, including this class's.
+            SmarterAuthToken.objects.filter(user=customer_admin).delete()
+            customer_profile.delete()
+            customer_admin.delete()
+            customer_account.delete()
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn(b'"result"', response.content)
+
+    def post_as(self, body, value: str):
+        """Post with a signed acting user, and no api key."""
+        header = "HTTP_" + ACTING_USER_HEADER.upper().replace("-", "_")
+        return self.post(body, **{header: value})
+
+    def test_acting_user(self):
+        """A tool call that the platform signed for a staff user is served, and recorded under them."""
+        body = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {"name": "search_logs", "arguments": {"ticket": TICKET, "contains": ["timeout"]}},
+        }
+        response = self.post_as(body, sign_acting_user(self.admin_user))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("timeout talking to provider", response.json()["result"]["content"][0]["text"])
+        self.assertEqual(self.audit_rows().first().ticket, TICKET)
+
+    def test_acting_user_for_nobody(self):
+        """The platform's own request for nobody may list the tools, but not call one, and nothing is recorded."""
+        signed = sign_acting_user(None)
+        listed = self.post_as({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, signed)
+        self.assertEqual(listed.status_code, 200)
+        self.assertIn("search_logs", [tool["name"] for tool in listed.json()["result"]["tools"]])
+        last_id = OperationsToolCall.objects.order_by("-id").values_list("id", flat=True).first() or 0
+        body = {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {"name": "search_logs", "arguments": {"ticket": TICKET}},
+        }
+        called = self.post_as(body, signed)
+        result = called.json()["result"]
+        self.assertTrue(result["isError"])
+        self.assertIn("requires a staff user", result["content"][0]["text"])
+        self.assertFalse(OperationsToolCall.objects.filter(id__gt=last_id).exists())
+
+    def test_acting_user_refused(self):
+        """A value that the platform didn't sign is 401; one for a user who isn't platform staff is 403."""
+        ping = {"jsonrpc": "2.0", "id": 1, "method": "ping"}
+        unsigned = self.post_as(ping, f"{self.admin_user.pk}")
+        self.assertEqual(unsigned.status_code, 401)
+        not_staff = self.post_as(ping, sign_acting_user(self.non_admin_user))
+        self.assertEqual(not_staff.status_code, 403)
+        missing = User(pk=10**9, username="nobody")
+        deleted = self.post_as(ping, sign_acting_user(missing))
+        self.assertEqual(deleted.status_code, 403)
+
+    def test_acting_user_wins_over_an_api_key(self):
+        """A signed acting user is checked, not an api key beside it: an unsigned value is refused, whatever the key."""
+        header = "HTTP_" + ACTING_USER_HEADER.upper().replace("-", "_")
+        response = self.post({"jsonrpc": "2.0", "id": 1, "method": "ping"}, key=self.staff_key, **{header: "forged"})
+        self.assertEqual(response.status_code, 401)
+
+
+class TestOperationsMCPClientEndToEnd(OperationsTestBase):
+    """An MCPClient of the platform's operations server calls it for the user who is chatting."""
+
+    def setUp(self):
+        super().setUp()
+        forward_to_django(self)
+        self.mcpclient = MCPClient(
+            name="test_operations_end_to_end",
+            endpoint_url=operations_server_url(),
+            transport="http",
+            auth_type="none",
+            timeout=30,
+            allowed_tools=[],
+        )
+
+    def test_discover_for_nobody(self):
+        """The catalog, e.g. of the background refresh, is read for nobody in particular."""
+        catalog = MCPServerConnection(self.mcpclient).discover()
+        self.assertEqual(catalog.server_name, "smarter-operations")
+        self.assertIn("platform_status", [tool.name for tool in catalog.tools])
+
+    def test_call_tool_as_staff(self):
+        with acting_user(self.admin_user):
+            connection = MCPServerConnection(self.mcpclient)
+        result = connection.call_tool("search_logs", {"ticket": TICKET, "contains": ["timeout"]})
+        self.assertFalse(result.is_error)
+        self.assertIn("timeout talking to provider", result.text)
+        self.assertEqual(self.audit_rows().first().ticket, TICKET)
+
+    def test_call_tool_as_someone_else(self):
+        """A user who is not platform staff gets an error, and the tool never runs."""
+        with acting_user(self.non_admin_user):
+            connection = MCPServerConnection(self.mcpclient)
+        last_id = OperationsToolCall.objects.order_by("-id").values_list("id", flat=True).first() or 0
+        with self.assertRaises(SmarterMCPClientConnectionError):
+            connection.call_tool("search_logs", {"ticket": TICKET})
+        self.assertFalse(OperationsToolCall.objects.filter(id__gt=last_id).exists())

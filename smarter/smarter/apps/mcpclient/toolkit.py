@@ -29,6 +29,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from smarter.apps.mcpserver.acting_user import is_operations_server_url
 from smarter.lib import logging
 from smarter.lib.cache.tool_results import cached_tool_call
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -79,9 +80,13 @@ class MCPFunction:
     kind: str
     tool_name: Optional[str] = None
     read_only: bool = False
-    """Whether the call only reads: a resource read, or a tool that the server marks ``readOnlyHint``.
+    """Whether the call only reads: a resource read, or a tool that the server marks ``readOnlyHint``."""
+    cacheable: bool = False
+    """Whether the call's results may be cached.
 
-    Its results are cached.
+    It may if it only reads, and its server is not this platform's Smarter Operations MCP server,
+    whose results depend on who is chatting, and whose every call must reach its audit trail. See
+    :func:`~smarter.apps.mcpserver.acting_user.is_operations_server_url`.
     """
 
 
@@ -172,15 +177,18 @@ class MCPToolkit:
                 logger.warning("%s.load() skipping MCPClient %s: %s", self.formatted_class_name, mcpclient.name, e)
                 continue
             self.connected.append(mcpclient)
+            acts_for_user = is_operations_server_url(mcpclient.endpoint_url)
             for tool in catalog.tools:
                 if not is_tool_allowed(mcpclient, tool.name):
                     continue
+                read_only = tool.read_only is True
                 function = MCPFunction(
                     name=self.function_name(mcpclient, tool.name),
                     mcpclient=mcpclient,
                     kind=TOOL,
                     tool_name=tool.name,
-                    read_only=tool.read_only is True,
+                    read_only=read_only,
+                    cacheable=read_only and not acts_for_user,
                 )
                 label = tool.title or tool.name
                 description = f"{label}, from the {mcpclient.name} MCP server. {tool.description}".strip()
@@ -191,6 +199,7 @@ class MCPToolkit:
                     mcpclient=mcpclient,
                     kind=READ_RESOURCE,
                     read_only=True,
+                    cacheable=not acts_for_user,
                 )
                 patterns = ", ".join(mcpclient.allowed_resources)
                 description = (
@@ -237,7 +246,7 @@ class MCPToolkit:
         Errors, including an unreachable server and errors that the tool reports, are
         returned as text that begins with ``Error:``, so that the LLM can recover.
 
-        A read-only call (see :attr:`MCPFunction.read_only`) is cached for the MCPClient's
+        A cacheable call (see :attr:`MCPFunction.cacheable`) is cached for the MCPClient's
         ``cache_ttl`` seconds, by :func:`~smarter.lib.cache.tool_results.cached_tool_call`.
         Errors are never cached. A cached result sends ``mcpclient_tool_responded``, or
         ``mcpclient_resource_read``, with ``cached=True``.
@@ -264,9 +273,10 @@ class MCPToolkit:
                 raise SmarterMCPClientToolError(result.text)
             return result.text
 
-        # a call that may change something is never cached. Changing how the MCPClient connects
-        # changes its fingerprint, and so the key.
-        timeout = mcpclient.cache_ttl if function.read_only else 0
+        # a call that may change something, or that this platform's operations server answers for
+        # the user who is chatting, is never cached. Changing how the MCPClient connects changes its
+        # fingerprint, and so the key.
+        timeout = mcpclient.cache_ttl if function.cacheable else 0
         key = (mcpclient.pk, mcpclient.fingerprint, function.kind, target)
         try:
             result = cached_tool_call(TOOL_CACHE_NAMESPACE, key, arguments, timeout, run)
