@@ -1,11 +1,11 @@
 /** The documentation, repositories and packages that the facts link to. */
-const DOCS = "https://docs.smarter.sh/en/latest";
+const DOCS = "https://docs.smarter.sh";
 export const DOCS_URLS = {
   home: `${DOCS}/`,
   adr: `${DOCS}/adr.html`,
   adrDocker: `${DOCS}/adr/002-docker.html`,
   adrTwelveFactor: `${DOCS}/adr/004-12-factor.html`,
-  cacheResults: `${DOCS}/smarter-framework/developer-reference/lib/caching/cache_results.html`,
+  cacheResults: `${DOCS}/smarter-framework/developer-reference/lib/caching.html`,
   pydantic: `${DOCS}/adr/031-pydantic-over-json.html`,
   chat: `${DOCS}/smarter-framework/smarter-chat.html`,
   cli: `${DOCS}/smarter-framework/smarter-cli.html`,
@@ -19,7 +19,7 @@ export const DOCS_URLS = {
   vscode: `${DOCS}/smarter-framework/vs-code-extension.html`,
   waffle: `${DOCS}/smarter-framework/developer-reference/lib/django/waffle.html`,
   manifests: `${DOCS}/smarter-framework/smarter-manifests.html`,
-  mcpServer: `${DOCS}/smarter-platform/smarter-project-mcp-server.html`,
+  mcpServer: `${DOCS}/smarter-platform/mcpserver.html`,
   openapi: `${DOCS}/smarter-framework/smarter-openapi.html`,
   react: `${DOCS}/smarter-framework/developer-reference/react-integration.html`,
   sdks: `${DOCS}/smarter-framework/apis-and-sdks.html`,

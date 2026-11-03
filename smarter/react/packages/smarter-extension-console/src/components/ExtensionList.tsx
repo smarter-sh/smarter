@@ -20,7 +20,7 @@ import type {
 
 type Tab = "installed" | "browse";
 
-const DOCS_URL = "https://docs.smarter.sh/en/latest/smarter-platform/extensions.html";
+const DOCS_URL = "https://docs.smarter.sh/smarter-platform/extensions.html";
 const HELP_TEXT = gettext(
   "Extensions are Python packages that add tools to the LLMs of this platform. Install them from the signed Smarter " +
     "Extension registry, or upload an archive, then configure and enable them. An extension's code runs with full " +

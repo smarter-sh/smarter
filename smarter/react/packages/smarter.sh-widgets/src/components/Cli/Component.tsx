@@ -86,7 +86,7 @@ function Cli({ className = "col-xl-4" }: CliProps) {
                 {gettext("Download")}
               </a>
               <a
-                href="https://docs.smarter.sh/en/latest/smarter-framework/smarter-cli.html"
+                href="https://docs.smarter.sh/smarter-framework/smarter-cli.html"
                 target="_blank"
                 className="btn btn-sm btn-light fw-semibold"
               >

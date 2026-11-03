@@ -134,8 +134,7 @@ export function makePage(overrides: Partial<LLMClientDeploymentPage> = {}): LLMC
       owner: "Ada Lovelace (admin)",
       canEdit: true,
       llmclientListUrl: "/workbench/",
-      ownershipDocsUrl:
-        "https://docs.smarter.sh/en/latest/smarter-resources/account/models/metadata_with_ownership.html",
+      ownershipDocsUrl: "https://docs.smarter.sh/smarter-resources/account/models/metadata_with_ownership.html",
     },
     apiKeys: makeApiKeys(),
     ...overrides,
