@@ -75,6 +75,7 @@ class SmarterChatappViewError(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The fixed error message prefix of the chatapp views."""
         return "Smarter Chatapp error"
 
 
@@ -180,14 +181,17 @@ class SmarterPromptSession(SmarterHelperMixin):
 
     @property
     def llmclient(self):
+        """The LLMClient of the session."""
         return self._llmclient
 
     @property
     def prompt(self):
+        """The Prompt of the session."""
         return self._chat
 
     @property
     def chat_helper(self):
+        """The PromptHelper of the session."""
         return self._chat_helper
 
     def clean_url(self, url: str) -> str:

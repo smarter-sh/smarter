@@ -85,7 +85,14 @@ module_prefix = __name__
 
 @receiver(plugin_deleting, dispatch_uid=module_prefix + ".plugin_deleting")
 def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
-    """Handle plugin deleting signal."""
+    """
+    Log that a plugin is being deleted.
+
+    :param sender: The signal's sender.
+    :param plugin: The plugin being deleted.
+    :param plugin_meta: The plugin's metadata, whose name is logged.
+    :param kwargs: Other signal arguments (unused).
+    """
     logger.info(
         "%s %s is being deleted. Pruning its usage records.",
         f"{logging.SmarterFormattedText.text(module_prefix)}.plugin_deleting",
@@ -103,7 +110,16 @@ def handle_llmclient_deploy_failed(sender, **kwargs):
 
 @receiver(post_save, sender=LLMClient)
 def llmclient_saved(sender, instance: LLMClient, created: bool, **kwargs):
-    """Create the default API for the llmclient."""
+    """
+    Invalidate the LLMClient's cached host lookups, and log its creation or update.
+
+    At DEBUG level, also logs the serialized LLMClient.
+
+    :param sender: The model class, ``LLMClient``.
+    :param instance: The saved LLMClient.
+    :param created: True if the LLMClient was created, False if it was updated.
+    :param kwargs: Other signal arguments (unused).
+    """
 
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_saved()"
     # its hosts may have changed, e.g. when it is renamed.
@@ -116,7 +132,16 @@ def llmclient_saved(sender, instance: LLMClient, created: bool, **kwargs):
 
 @receiver(pre_delete, sender=LLMClient)
 def llmclient_deleted(sender, instance: LLMClient, **kwargs):
-    """Delete the default API for the llmclient."""
+    """
+    Invalidate the LLMClient's cached host lookups, and queue the deletion of its default API.
+
+    The ``delete_default_api`` Celery task is queued when the transaction commits, so a rolled-back
+    deletion deletes no resources.
+
+    :param sender: The model class, ``LLMClient``.
+    :param instance: The LLMClient being deleted.
+    :param kwargs: Other signal arguments (unused).
+    """
     llmclient: LLMClient = instance
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_deleted()"
     logger.info("%s %s", prefix, instance.url)
@@ -152,14 +177,27 @@ for _tool_link in (LLMClientPlugin, LLMClientExtensions, LLMClientMCPClients):
 
 @receiver(pre_delete, sender=LLMClientPlugin)
 def llmclient_plugin_deleted(sender, instance: LLMClientPlugin, **kwargs):
-    """Log deletion of LLMClientPlugin."""
+    """
+    Log the deletion of an LLMClientPlugin.
+
+    :param sender: The model class, ``LLMClientPlugin``.
+    :param instance: The LLMClientPlugin being deleted.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_plugin_deleted()"
     logger.info("%s deleting plugin %s for llmclient %s", prefix, instance.plugin_meta, instance.llmclient)
 
 
 @receiver(post_save, sender=LLMClientCustomDomain)
 def llmclient_custom_domain_saved(sender, instance: LLMClientCustomDomain, created: bool, **kwargs):
-    """Log creation or update of LLMClientCustomDomain."""
+    """
+    Log the creation or update of an LLMClientCustomDomain, with its domain name.
+
+    :param sender: The model class, ``LLMClientCustomDomain``.
+    :param instance: The saved LLMClientCustomDomain.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_custom_domain_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.domain_name)
@@ -169,7 +207,14 @@ def llmclient_custom_domain_saved(sender, instance: LLMClientCustomDomain, creat
 
 @receiver(post_save, sender=LLMClientCustomDomainDNS)
 def llmclient_custom_domain_dns_saved(sender, instance: LLMClientCustomDomainDNS, created: bool, **kwargs):
-    """Log creation or update of LLMClientCustomDomainDNS."""
+    """
+    Log the creation or update of an LLMClientCustomDomainDNS, with its custom domain's name.
+
+    :param sender: The model class, ``LLMClientCustomDomainDNS``.
+    :param instance: The saved LLMClientCustomDomainDNS.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_custom_domain_dns_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.custom_domain.domain_name)
@@ -179,7 +224,14 @@ def llmclient_custom_domain_dns_saved(sender, instance: LLMClientCustomDomainDNS
 
 @receiver(post_save, sender=LLMClientAPIKey)
 def llmclient_api_key_saved(sender, instance: LLMClientAPIKey, created: bool, **kwargs):
-    """Log creation or update of LLMClientAPIKey."""
+    """
+    Log the creation or update of an LLMClientAPIKey, with its API key.
+
+    :param sender: The model class, ``LLMClientAPIKey``.
+    :param instance: The saved LLMClientAPIKey.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_api_key_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.api_key)
@@ -189,7 +241,14 @@ def llmclient_api_key_saved(sender, instance: LLMClientAPIKey, created: bool, **
 
 @receiver(post_save, sender=LLMClientPlugin)
 def llmclient_plugin_saved(sender, instance: LLMClientPlugin, created: bool, **kwargs):
-    """Log creation or update of LLMClientPlugin."""
+    """
+    Log the creation or update of an LLMClientPlugin, with its plugin's name.
+
+    :param sender: The model class, ``LLMClientPlugin``.
+    :param instance: The saved LLMClientPlugin.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_plugin_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.plugin_meta.name)
@@ -199,7 +258,14 @@ def llmclient_plugin_saved(sender, instance: LLMClientPlugin, created: bool, **k
 
 @receiver(post_save, sender=LLMClientExtensions)
 def llmclient_extensions_saved(sender, instance: LLMClientExtensions, created: bool, **kwargs):
-    """Log creation or update of LLMClientExtensions."""
+    """
+    Log the creation or update of an LLMClientExtensions, with its extension's slug.
+
+    :param sender: The model class, ``LLMClientExtensions``.
+    :param instance: The saved LLMClientExtensions.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_extensions_saved()"
     if created:
         logger.info("%s created %s", prefix, instance.extension.slug)
@@ -209,7 +275,14 @@ def llmclient_extensions_saved(sender, instance: LLMClientExtensions, created: b
 
 @receiver(post_save, sender=LLMClientRequests)
 def llmclient_requests_saved(sender, instance: LLMClientRequests, created: bool, **kwargs):
-    """Log creation or update of LLMClientRequests."""
+    """
+    Log the creation or update of an LLMClientRequests, with its masked session key.
+
+    :param sender: The model class, ``LLMClientRequests``.
+    :param instance: The saved LLMClientRequests.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_requests_saved()"
     if created:
         logger.info("%s created session %s", prefix, mask_identifier(instance.session_key))
@@ -238,7 +311,13 @@ def handle_llmclient_deploy_status_changed(sender, **kwargs):
 
 @receiver(llmclient_undeploy, dispatch_uid="llmclient_undeploy")
 def handle_llmclient_undeploy(sender, llmclient: Optional[LLMClient] = None, **kwargs):
-    """Handle llmclient_undeploy signal."""
+    """
+    Queue the ``undeploy_default_api`` Celery task for the LLMClient.
+
+    :param sender: The signal's sender.
+    :param llmclient: The LLMClient to undeploy. If None, only a log message is written.
+    :param kwargs: Other signal arguments (unused).
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_undeploy()"
 
     logger.info("%s %s", prefix, llmclient if llmclient else "No llmclient instance provided")
@@ -619,7 +698,13 @@ def handle_post_deploy_custom_api(sender, **kwargs):
 
 @receiver(broker_ready, dispatch_uid="broker_ready")
 def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
-    """Handle broker ready signal."""
+    """
+    Log, at DEBUG level, that a manifest broker is ready.
+
+    :param sender: The signal's sender.
+    :param broker: The broker that is ready.
+    :param kwargs: Other signal arguments (unused).
+    """
     logger.debug(
         "%s %s %s for %s is ready.",
         f"{logging.SmarterFormattedText.text(module_prefix)}.broker_ready()",

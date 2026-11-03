@@ -63,6 +63,12 @@ class SAMJournal(models.Model):
     status_code = models.PositiveSmallIntegerField(default=200)
 
     def save(self, *args, **kwargs):
+        """
+        Save the entry, giving it a random 64-character key if it has none.
+
+        :param args: Passed to Django's ``save()``.
+        :param kwargs: Passed to Django's ``save()``.
+        """
         if not self.key:
             self.key = hash_factory(length=64)
         super().save(*args, **kwargs)

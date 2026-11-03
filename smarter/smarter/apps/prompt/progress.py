@@ -208,7 +208,15 @@ def _sse(event: Optional[str], data: JsonValue) -> str:
 
 @receiver(chat_request, dispatch_uid="smarter.apps.prompt.progress.chat_request")
 def handle_chat_request(sender, iteration: Optional[int] = None, **kwargs):
-    """A request to the LLM: the prompt itself, or the results of its tool calls."""
+    """
+    A request to the LLM: the prompt itself, or the results of its tool calls.
+
+    Emits an ``LLM_REQUEST`` progress event.
+
+    :param sender: The object that sent the signal.
+    :param iteration: The request's iteration: 1 for the prompt, more than 1 for tool results.
+    :param kwargs: Other signal arguments, unused.
+    """
     if iteration and iteration > 1:
         emit(PromptProgressEvents.LLM_REQUEST, "Sending the tool results to the LLM", iteration=iteration)
     else:
@@ -256,7 +264,13 @@ def handle_llm_tool_responded(
 
 @receiver(chat_plugin_called, dispatch_uid="smarter.apps.prompt.progress.chat_plugin_called")
 def handle_chat_plugin_called(sender, plugin: Optional["PluginBase"] = None, **kwargs):
-    """The LLM called a plugin."""
+    """
+    The LLM called a plugin: emit a ``PLUGIN_CALLED`` progress event.
+
+    :param sender: The object that sent the signal.
+    :param plugin: The plugin that was called.
+    :param kwargs: Other signal arguments, unused.
+    """
     name = str(getattr(plugin, "name", "") or "")
     emit(PromptProgressEvents.PLUGIN_CALLED, f"Running plugin {name}", plugin=name)
 
@@ -265,7 +279,15 @@ def handle_chat_plugin_called(sender, plugin: Optional["PluginBase"] = None, **k
 def handle_mcpclient_tool_called(
     sender, mcpclient: Optional["MCPClient"] = None, tool_name: str = "", arguments: Any = None, **kwargs
 ):
-    """The LLM called an MCP server's tool."""
+    """
+    The LLM called an MCP server's tool: emit an ``MCP_TOOL_CALLED`` progress event.
+
+    :param sender: The object that sent the signal.
+    :param mcpclient: The MCPClient of the server whose tool was called.
+    :param tool_name: The tool's name.
+    :param arguments: The tool call's arguments.
+    :param kwargs: Other signal arguments, unused.
+    """
     server = str(getattr(mcpclient, "name", "") or "")
     emit(
         PromptProgressEvents.MCP_TOOL_CALLED,
@@ -278,7 +300,14 @@ def handle_mcpclient_tool_called(
 
 @receiver(mcpclient_tool_responded, dispatch_uid="smarter.apps.prompt.progress.mcpclient_tool_responded")
 def handle_mcpclient_tool_responded(sender, mcpclient: Optional["MCPClient"] = None, tool_name: str = "", **kwargs):
-    """An MCP server's tool returned a result."""
+    """
+    An MCP server's tool returned a result: emit an ``MCP_TOOL_RESPONDED`` progress event.
+
+    :param sender: The object that sent the signal.
+    :param mcpclient: The MCPClient of the server whose tool responded.
+    :param tool_name: The tool's name.
+    :param kwargs: Other signal arguments; ``is_error`` says whether the result is an error.
+    """
     server = str(getattr(mcpclient, "name", "") or "")
     emit(
         PromptProgressEvents.MCP_TOOL_RESPONDED,
@@ -293,7 +322,15 @@ def handle_mcpclient_tool_responded(sender, mcpclient: Optional["MCPClient"] = N
 def handle_mcpclient_tool_failed(
     sender, mcpclient: Optional["MCPClient"] = None, tool_name: str = "", error: str = "", **kwargs
 ):
-    """An MCP server's tool could not be called."""
+    """
+    An MCP server's tool could not be called: emit an ``MCP_TOOL_FAILED`` progress event.
+
+    :param sender: The object that sent the signal.
+    :param mcpclient: The MCPClient of the server whose tool failed.
+    :param tool_name: The tool's name.
+    :param error: The error message.
+    :param kwargs: Other signal arguments, unused.
+    """
     server = str(getattr(mcpclient, "name", "") or "")
     emit(
         PromptProgressEvents.MCP_TOOL_FAILED,

@@ -60,6 +60,14 @@ class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Clone the vectorstore that the user may read, as ``new_name``, and invalidate the user's cached vectorstores.
+
+        :param request: The request.
+        :param kwargs: The url's ``vectorstore_id`` and ``new_name``.
+        :returns: The clone, 400 if ``new_name`` is empty, 404 if the vectorstore is not found, or 409 if
+            the user has a vectorstore named ``new_name``.
+        """
         vectorstore_id = kwargs.get("vectorstore_id")
         new_name = self.to_snake_case(str(kwargs.get("new_name") or "").strip())
         if not new_name:
@@ -78,7 +86,6 @@ class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         with transaction.atomic():
             clone = VectorstoreMeta.objects.get(pk=source.pk)
             clone.pk = None
-            clone.id = None
             clone.name = new_name
             clone.user_profile = self.user_profile
             for field, value in STATE_FIELDS.items():
@@ -96,6 +103,14 @@ class VectorstoreListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     """Destroy a vectorstore's database and data, unless deletionProtection is enabled, then delete it."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Destroy the database of the vectorstore that the user owns, if it was deployed, then delete it and its API key Secret.
+
+        :param request: The request.
+        :param kwargs: The url's ``vectorstore_id``.
+        :returns: A message, 404 if the vectorstore is not found, or 400 if it could not be deleted, e.g.
+            because of deletionProtection.
+        """
         vectorstore_id = kwargs.get("vectorstore_id")
         vectorstore = (
             VectorstoreMeta.objects.with_ownership_permission_for(self.user_profile.user)  # type: ignore
@@ -126,6 +141,14 @@ class VectorstoreListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Rename the vectorstore that the user owns to ``new_name``, and invalidate the user's cached vectorstores.
+
+        :param request: The request.
+        :param kwargs: The url's ``vectorstore_id`` and ``new_name``.
+        :returns: The vectorstore, 400 if ``new_name`` is empty, 404 if the vectorstore is not found, or
+            409 if a vectorstore named ``new_name`` exists.
+        """
         vectorstore_id = kwargs.get("vectorstore_id")
         new_name = self.to_snake_case(str(kwargs.get("new_name") or "").strip())
         if not new_name:

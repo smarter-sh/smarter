@@ -154,6 +154,12 @@ class Brokers:
 
     @classmethod
     def to_camel_case(cls, snake_str):
+        """
+        Convert a snake_case string to camelCase, e.g. ``chat_history`` to ``chatHistory``.
+
+        :param snake_str: The snake_case string.
+        :returns: The camelCase string.
+        """
         components = snake_str.split("_")
         return components[0] + "".join(x.title() for x in components[1:])
 
@@ -185,6 +191,7 @@ class Brokers:
 
     @classmethod
     def all_brokers(cls) -> list[str]:
+        """The kinds of every registered broker."""
         return list(cls._brokers.keys())
 
     @classmethod

@@ -74,17 +74,39 @@ class GuardrailClient(Protocol):
     """The LLM provider calls of the scored strategies."""
 
     def embed(self, texts: list[str], *, model: str) -> list[list[float]]:
-        """Return an embedding vector for each text."""
+        """
+        Return an embedding vector for each text.
+
+        :param texts: The texts to embed.
+        :param model: The embedding model.
+        :returns: One vector per text, in the order of ``texts``.
+        :raises GuardrailProviderError: when the provider call fails.
+        """
         # pylint: disable=W2301
         ...
 
     def moderate(self, text: str, *, model: str) -> ModerationResult:
-        """Return a moderation model's category scores for text."""
+        """
+        Return a moderation model's category scores for text.
+
+        :param text: The text to moderate.
+        :param model: The moderation model.
+        :returns: The score of each category, and the categories the model flagged.
+        :raises GuardrailProviderError: when the provider call fails.
+        """
         # pylint: disable=W2301
         ...
 
     def judge(self, prompt: str, *, model: str, temperature: float = 0.0) -> JudgeVerdict:
-        """Run a judge prompt, and return its verdict."""
+        """
+        Run a judge prompt, and return its verdict.
+
+        :param prompt: The rendered judge prompt.
+        :param model: The chat model that judges.
+        :param temperature: The sampling temperature.
+        :returns: The judge's verdict.
+        :raises GuardrailProviderError: when the provider call fails, or its reply is not a valid verdict.
+        """
         # pylint: disable=W2301
         ...
 
@@ -126,23 +148,54 @@ class OpenAIGuardrailClient:
         self._client = openai.OpenAI(api_key=api_key, base_url=base_url, timeout=CLIENT_TIMEOUT, max_retries=1)
 
     def embed(self, texts: list[str], *, model: str) -> list[list[float]]:
+        """
+        Return an embedding vector for each text, from the API's embeddings endpoint.
+
+        :param texts: The texts to embed.
+        :param model: The embedding model.
+        :returns: One vector per text, in the order of ``texts``.
+        :raises GuardrailProviderError: when the API call fails.
+        """
         try:
             response = self._client.embeddings.create(model=model, input=texts)
         except openai.OpenAIError as e:
             raise GuardrailProviderError(f"The embeddings call failed: {e}") from e
-        return [list(item.embedding) for item in sorted(response.data, key=lambda item: item.index)]
+        items_in_order = sorted(response.data, key=lambda item: item.index)
+        vectors = []
+        for item in items_in_order:
+            vectors.append(list(item.embedding))
+        return vectors
 
     def moderate(self, text: str, *, model: str) -> ModerationResult:
+        """
+        Return a moderation model's category scores for text, from the API's moderations endpoint.
+
+        :param text: The text to moderate.
+        :param model: The moderation model.
+        :returns: The score of each category, and the categories the model flagged.
+        :raises GuardrailProviderError: when the API call fails.
+        """
         try:
             response = self._client.moderations.create(model=model, input=text)
         except openai.OpenAIError as e:
             raise GuardrailProviderError(f"The moderation call failed: {e}") from e
         result = response.results[0]
-        scores = {name: float(score) for name, score in result.category_scores.model_dump(by_alias=True).items()}
-        flagged = [name for name, value in result.categories.model_dump(by_alias=True).items() if value]
+        category_scores = result.category_scores.model_dump(by_alias=True)
+        scores = {name: float(score) for name, score in category_scores.items()}
+        categories = result.categories.model_dump(by_alias=True)
+        flagged = [name for name, value in categories.items() if value]
         return ModerationResult(scores=scores, flagged=flagged)
 
     def judge(self, prompt: str, *, model: str, temperature: float = 0.0) -> JudgeVerdict:
+        """
+        Run a judge prompt as a chat completion in JSON mode, and return its verdict.
+
+        :param prompt: The rendered judge prompt, sent as the user message after ``JUDGE_SYSTEM_MESSAGE``.
+        :param model: The chat model that judges.
+        :param temperature: The sampling temperature.
+        :returns: The judge's verdict.
+        :raises GuardrailProviderError: when the API call fails, or its reply is not a valid verdict.
+        """
         try:
             response = self._client.chat.completions.create(
                 model=model,

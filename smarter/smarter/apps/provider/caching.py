@@ -81,6 +81,11 @@ def get_cached_providers_owned_by_user_profile(user_profile: UserProfile) -> mod
 
 
 def invalidate_cached_providers_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of Providers owned by the given UserProfile.
+
+    :param user_profile: The user profile whose cached Providers should be invalidated.
+    """
     _get_cached_providers_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -120,6 +125,11 @@ def get_cached_providers_shared_with_user_profile(user_profile: UserProfile) -> 
 
 
 def invalidate_cached_providers_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of Providers shared with the given UserProfile.
+
+    :param user_profile: The user profile whose cached Providers should be invalidated.
+    """
     _get_cached_providers_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -160,6 +170,11 @@ def get_cached_providers_available_to_user_profile(user_profile: UserProfile) ->
 
 
 def invalidate_cached_providers_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of Providers available to the given UserProfile.
+
+    :param user_profile: The user profile whose cached Providers should be invalidated.
+    """
     _get_cached_providers_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

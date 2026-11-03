@@ -16,6 +16,7 @@ observed state.
 """
 
 import re
+from typing import cast
 
 from django.db import models
 
@@ -39,6 +40,7 @@ class LLMHostComputeNodeGroupStatus:
 
     @classmethod
     def failed(cls) -> list[str]:
+        """The statuses of a node group that failed, and needs attention."""
         return [cls.CREATE_FAILED, cls.DELETE_FAILED, cls.DEGRADED]
 
 
@@ -88,15 +90,27 @@ class LLMHostCompute(MetaDataWithOwnershipModel):
         return f"{self.name}"
 
     def clone(self, new_name=None, new_version=None, user_profile=None) -> "LLMHostCompute":
-        """Clone the LLMHostCompute's spec, but not its node group: the clone is a new kind of node, whose node group Smarter creates when an LLMHost first needs one of its nodes."""
-        clone = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)
+        """
+        Clone the LLMHostCompute's spec, but not its node group: the clone is a new kind of node, whose node group Smarter creates when an LLMHost first needs one of its nodes.
+
+        The clone's observed state is reset, and it is saved.
+
+        :param new_name: The clone's name. Defaults to the original's, suffixed with " (clone)".
+        :param new_version: The clone's version. Defaults to the original's.
+        :param user_profile: The clone's owner. Defaults to the original's.
+        :returns: The saved clone.
+        """
+        # The base class builds the clone with self.__class__, so it is an LLMHostCompute.
+        clone = cast(
+            "LLMHostCompute", super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)
+        )
         clone.nodegroup_status = LLMHostComputeNodeGroupStatus.ABSENT
         clone.desired_nodes = 0
         clone.ready_nodes = 0
         clone.status_message = ""
         clone.last_reconciled_at = None
         clone.save()
-        return clone  # type: ignore[return-value]
+        return clone
 
     def rename(self, new_name: str) -> "LLMHostCompute":
         """
@@ -115,6 +129,7 @@ class LLMHostCompute(MetaDataWithOwnershipModel):
 
     @property
     def has_gpu(self) -> bool:
+        """Whether the node has at least one GPU."""
         return self.gpu_count > 0
 
     @property
@@ -129,24 +144,31 @@ class LLMHostCompute(MetaDataWithOwnershipModel):
 
     @property
     def gpu_resource(self) -> str:
-        return (self.node_spec.get("gpu") or {}).get("resource") or "nvidia.com/gpu"
+        """The Kubernetes extended resource name of the node's GPUs, from spec.node.gpu.resource, else ``nvidia.com/gpu``."""
+        gpu = self.node_spec.get("gpu") or {}
+        resource = gpu.get("resource") or "nvidia.com/gpu"
+        return resource
 
     @property
     def disk_size_gb(self) -> int:
+        """The node's disk size in GiB, from spec.node.diskSizeGb, else 100."""
         return int(self.node_spec.get("diskSizeGb") or 100)
 
     @property
     def capacity_type(self) -> str:
+        """The node's capacity type, e.g. ``ON_DEMAND`` (the default) or ``SPOT``, from spec.node.capacityType."""
         return self.node_spec.get("capacityType") or "ON_DEMAND"
 
     @property
     def ami_type(self) -> str:
+        """The node's AMI type, from spec.node.amiType, else the AL2023 NVIDIA or standard x86_64 AMI."""
         if self.node_spec.get("amiType"):
             return self.node_spec["amiType"]
         return "AL2023_x86_64_NVIDIA" if self.has_gpu else "AL2023_x86_64_STANDARD"
 
     @property
     def subnet_ids(self) -> list[str]:
+        """The node group's subnet ids, from spec.nodeGroup.subnetIds, or an empty list."""
         return list(self.nodegroup_spec.get("subnetIds") or [])
 
     @property

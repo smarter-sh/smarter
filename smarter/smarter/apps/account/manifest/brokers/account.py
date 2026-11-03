@@ -66,6 +66,7 @@ class SAMAccountBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The label of this error, used in its string form."""
         return "Smarter API Account Manifest Broker Error"
 
 
@@ -882,11 +883,16 @@ class SAMAccountBroker(AbstractBroker):
         account = self.brokered_account
         if not account:
             return []
-        return [
-            self.dependency_broker(kind, user_profile.user, name=user_profile.user.username, user_profile=user_profile)  # type: ignore[arg-type]
-            for kind, user_profiles in self.dependents(account)
-            for user_profile in user_profiles
-        ]
+        retval: List[SAMDependency] = []
+        for kind, user_profiles in self.dependents(account):
+            for user_profile in user_profiles:
+                # dependents() returns only UserProfiles, typed as plain Models.
+                if not isinstance(user_profile, UserProfile):
+                    continue
+                user = user_profile.user
+                broker = self.dependency_broker(kind, user, name=user.username, user_profile=user_profile)  # type: ignore[arg-type]
+                retval.append(broker)
+        return retval
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

@@ -107,7 +107,7 @@
       "type": "object"
     },
     "SAMApiConnectionSpec": {
-      "description": "Smarter API Api Connection Manifest ApiConnection.spec",
+      "description": "Smarter API Api Connection Manifest ApiConnection.spec.",
       "properties": {
         "connection": {
           "$ref": "#/$defs/ApiConnection",

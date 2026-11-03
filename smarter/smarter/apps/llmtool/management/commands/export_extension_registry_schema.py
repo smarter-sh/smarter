@@ -14,6 +14,12 @@ class Command(SmarterCommand):
     )
 
     def handle(self, *args, **options):
+        """
+        Write the registry index's JSON Schema to ``INDEX_SCHEMA_PATH``, and print its path.
+
+        :param args: Unused.
+        :param options: The parsed command line options.
+        """
         self.handle_begin()
         INDEX_SCHEMA_PATH.write_text(json.dumps(index_json_schema(), indent=2) + "\n", encoding="utf-8")
         self.stdout.write(str(INDEX_SCHEMA_PATH))

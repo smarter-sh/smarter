@@ -141,10 +141,22 @@ class SmarterCommand(BaseCommand):
         err: Optional[Exception] = None,
         msg: Optional[str] = None,
     ):
+        """
+        Log that the command failed, and exit with status 1 if there was an error.
+
+        The stack trace of the exception being handled is logged too, when ``err`` is given.
+
+        :param err: The exception that made the command fail, if any.
+        :param msg: An optional message to log first.
+        :raises SystemExit: With status 1, when ``err`` is given.
+        """
         logger.error("-" * 80)
         if msg:
             logger.error("%s", msg)
-        msg = f"{self.__module__} failed" + (f" with error: {err}" if err else ".")
+        if err:
+            msg = f"{self.__module__} failed with error: {err}"
+        else:
+            msg = f"{self.__module__} failed."
         logger.error("%s", msg)
         if err:
             tb = traceback.format_exc()
@@ -180,7 +192,16 @@ class SmarterCommand(BaseCommand):
             sys.exit(1)
 
     def create_parser(self, prog_name, subcommand, **kwargs):
-        """Create and return the ``ArgumentParser`` which will be used to parse the arguments to this command."""
+        """
+        Create and return the ``ArgumentParser`` which will be used to parse the arguments to this command.
+
+        It adds the ``--settings_output`` flag to Django's parser.
+
+        :param prog_name: The program name, e.g. ``manage.py``.
+        :param subcommand: The command's name.
+        :param kwargs: Passed to Django's ``create_parser()``.
+        :returns: The parser.
+        """
         parser = super().create_parser(prog_name, subcommand, **kwargs)
         parser.add_argument(
             "--settings_output",

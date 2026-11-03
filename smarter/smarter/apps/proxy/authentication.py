@@ -64,6 +64,14 @@ class SmarterProxyAuthentication(BaseAuthentication):
     """
 
     def authenticate(self, request: Request) -> Optional[tuple[User, SmarterAuthToken]]:
+        """
+        Authenticate the request by the Smarter API key in its headers.
+
+        :param request: The request.
+        :returns: The user and token, or None when the request carries no API key, so that other
+            authenticators may try.
+        :raises AuthenticationFailed: when the key does not exist or is inactive.
+        """
         api_key = get_api_key(request)
         if not api_key:
             return None

@@ -39,6 +39,12 @@ class ProxyApiViewBase(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_user_profile(self, request: Request) -> UserProfile:
+        """
+        Return the authenticated user's profile, from the cache.
+
+        :param request: The authenticated request.
+        :returns: The user's UserProfile.
+        """
         return UserProfile.get_cached_object(user=request.user)  # type: ignore[arg-type]
 
 
@@ -46,8 +52,15 @@ class ProxyListView(ProxyApiViewBase):
     """The Proxies that the caller may use, with their URLs."""
 
     def get(self, request: Request, *args, **kwargs):
+        """
+        Return the Proxies that the caller may use, ordered by name.
+
+        :param request: The authenticated request.
+        :returns: A :class:`ProxyApiProxies` document, as JSON.
+        """
         user_profile = self.get_user_profile(request)
-        proxies = [ProxyApiProxy.from_model(proxy, request) for proxy in proxies_for(user_profile).order_by("name")]
+        usable_proxies = proxies_for(user_profile).order_by("name")
+        proxies = [ProxyApiProxy.from_model(proxy, request) for proxy in usable_proxies]
         return JsonResponse(ProxyApiProxies(proxies=proxies).model_dump(mode="json"))
 
 
@@ -63,6 +76,16 @@ class ProxyPassthroughView(ProxyApiViewBase):
     http_method_names = ["get", "post", "put", "patch", "delete", "head", "options"]
 
     def passthrough(self, request: Request, name: str, path: str = "") -> HttpResponseBase:
+        """
+        Forward the request to the named Proxy's provider, and return the provider's response.
+
+        :param request: The authenticated request, whose method, query string, headers and body are
+            forwarded.
+        :param name: The Proxy's name, from the url.
+        :param path: The provider API path after the Proxy's name, from the url.
+        :returns: The provider's response, or a JSON error response when the Proxy cannot be resolved
+            or the forward fails with a :class:`ProxyError`.
+        """
         try:
             user_profile = self.get_user_profile(request)
             proxy = resolve_proxy(name, user_profile)
@@ -77,18 +100,58 @@ class ProxyPassthroughView(ProxyApiViewBase):
             return JsonResponse(e.to_dict(), status=e.status)
 
     def get(self, request: Request, name: str, path: str = "", *args, **kwargs):
+        """
+        Forward a GET request: see :meth:`passthrough`.
+
+        :param request: The request.
+        :param name: The Proxy's name.
+        :param path: The provider API path.
+        :returns: The provider's response.
+        """
         return self.passthrough(request, name, path)
 
     def post(self, request: Request, name: str, path: str = "", *args, **kwargs):
+        """
+        Forward a POST request: see :meth:`passthrough`.
+
+        :param request: The request.
+        :param name: The Proxy's name.
+        :param path: The provider API path.
+        :returns: The provider's response.
+        """
         return self.passthrough(request, name, path)
 
     def put(self, request: Request, name: str, path: str = "", *args, **kwargs):
+        """
+        Forward a PUT request: see :meth:`passthrough`.
+
+        :param request: The request.
+        :param name: The Proxy's name.
+        :param path: The provider API path.
+        :returns: The provider's response.
+        """
         return self.passthrough(request, name, path)
 
     def patch(self, request: Request, name: str, path: str = "", *args, **kwargs):
+        """
+        Forward a PATCH request: see :meth:`passthrough`.
+
+        :param request: The request.
+        :param name: The Proxy's name.
+        :param path: The provider API path.
+        :returns: The provider's response.
+        """
         return self.passthrough(request, name, path)
 
     def delete(self, request: Request, name: str, path: str = "", *args, **kwargs):
+        """
+        Forward a DELETE request: see :meth:`passthrough`.
+
+        :param request: The request.
+        :param name: The Proxy's name.
+        :param path: The provider API path.
+        :returns: The provider's response.
+        """
         return self.passthrough(request, name, path)
 
 

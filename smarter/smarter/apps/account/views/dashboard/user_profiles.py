@@ -136,6 +136,12 @@ class UserProfilesView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     def post(self, request, *args, **kwargs) -> http.JsonResponse:
+        """
+        Return the user's UserProfiles, and which one is current.
+
+        :param request: The request.
+        :returns: A json response, or a 401 one when no user is signed in.
+        """
         user = get_resolved_user(request.user)
         if not isinstance(user, User):
             return not_signed_in()
@@ -159,6 +165,15 @@ class UserProfileSelectView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     def post(self, request, *args, **kwargs) -> http.JsonResponse:
+        """
+        Choose one of the user's UserProfiles for this session.
+
+        The choice is stored in the session.
+
+        :param request: The request, whose json body has the ``user_profile_id``.
+        :returns: A json response with the user's UserProfiles: 200, or 400 for an invalid body, or 404
+            for a UserProfile that isn't the user's.
+        """
         user = get_resolved_user(request.user)
         if not isinstance(user, User):
             return not_signed_in()

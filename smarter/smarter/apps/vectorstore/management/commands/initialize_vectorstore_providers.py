@@ -40,16 +40,26 @@ class Command(SmarterCommand):
     def connection(
         self, user_profile: UserProfile, name: str, base_url: str, secret_name: str, api_key: str, description: str
     ) -> ApiConnection:
-        """Create or update a Secret with an API key, and an ApiConnection that uses it."""
-        secret = Secret.objects.filter(user_profile=user_profile, name=secret_name).first() or Secret(
-            user_profile=user_profile, name=secret_name
-        )
+        """
+        Create or update a Secret with an API key, and an ApiConnection that uses it.
+
+        :param user_profile: The owner.
+        :param name: The ApiConnection's name.
+        :param base_url: The provider's API url.
+        :param secret_name: The Secret's name.
+        :param api_key: The API key, which is encrypted in the Secret.
+        :param description: The provider's name, e.g. ``Pinecone``.
+        :returns: The ApiConnection.
+        """
+        secret = Secret.objects.filter(user_profile=user_profile, name=secret_name).first()
+        if secret is None:
+            secret = Secret(user_profile=user_profile, name=secret_name)
         secret.description = f"The API key of {description}."
         secret.encrypted_value = Secret.encrypt(api_key)
         secret.save()
-        connection = ApiConnection.objects.filter(user_profile=user_profile, name=name).first() or ApiConnection(
-            user_profile=user_profile, name=name
-        )
+        connection = ApiConnection.objects.filter(user_profile=user_profile, name=name).first()
+        if connection is None:
+            connection = ApiConnection(user_profile=user_profile, name=name)
         connection.kind = SAMKinds.API_CONNECTION.value
         connection.description = description
         connection.base_url = base_url
@@ -67,6 +77,16 @@ class Command(SmarterCommand):
         secret_name: str,
         description: str,
     ) -> None:
+        """
+        Create the ApiConnection of a provider, if its API key's environment variable and url are set.
+
+        :param user_profile: The owner, the platform's admin.
+        :param name: The ApiConnection's name.
+        :param url: The provider's API url, or None.
+        :param api_key_var: The name of the environment variable with the API key.
+        :param secret_name: The name of the Secret that holds the API key.
+        :param description: The provider's name, e.g. ``Pinecone``.
+        """
         api_key = os.environ.get(api_key_var)
         if not api_key or not url:
             self.stdout.write(self.style.WARNING(f"Skipped {description}: {api_key_var} is not set."))
@@ -75,6 +95,12 @@ class Command(SmarterCommand):
         self.stdout.write(self.style.SUCCESS(f"Created the ApiConnection {name}, for {description}."))
 
     def handle(self, *args, **options):
+        """
+        Create the ApiConnections of Pinecone and Qdrant Cloud, skipping each whose environment is not set.
+
+        :param args: Unused.
+        :param options: Unused.
+        """
         self.handle_begin()
         user_profile = smarter_cached_objects.smarter_admin_user_profile
         try:

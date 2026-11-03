@@ -79,7 +79,15 @@ REGEX_FLAGS = ("IGNORECASE", "MULTILINE", "DOTALL")
 
 
 def choice(value: Optional[str], choices: list[str], field: str) -> str:
-    """Return a lower cased value, if it is one of ``choices``."""
+    """
+    Return a lower cased value, if it is one of ``choices``.
+
+    :param value: The value to check. None is treated as an empty string.
+    :param choices: The allowed lower case values.
+    :param field: The field name, for the error message.
+    :returns: The value, stripped and lower cased.
+    :raises SAMValidationError: when the value is not one of ``choices``.
+    """
     value = str(value or "").strip().lower()
     if value not in choices:
         raise SAMValidationError(f"{field}: must be one of {choices}, not '{value}'.")
@@ -229,31 +237,73 @@ class SAMGuardrailSpecConfig(AbstractSAMSpecBase):
     @field_validator("stage", mode="before")
     @classmethod
     def validate_stage(cls, v: str) -> str:
+        """
+        Lower case ``stage`` and check that it is one of :class:`SAMGuardrailStage`'s values.
+
+        :param v: The raw value.
+        :returns: The lower cased value.
+        :raises SAMValidationError: when it is not a valid stage.
+        """
         return choice(v, SAMGuardrailStage.all(), "stage")
 
     @field_validator("category", mode="before")
     @classmethod
     def validate_category(cls, v: str) -> str:
+        """
+        Lower case ``category`` and check that it is one of :class:`SAMGuardrailCategory`'s values.
+
+        :param v: The raw value.
+        :returns: The lower cased value.
+        :raises SAMValidationError: when it is not a valid category.
+        """
         return choice(v, SAMGuardrailCategory.all(), "category")
 
     @field_validator("strategy", mode="before")
     @classmethod
     def validate_strategy(cls, v: str) -> str:
+        """
+        Lower case ``strategy`` and check that it is one of :class:`SAMGuardrailStrategy`'s values.
+
+        :param v: The raw value.
+        :returns: The lower cased value.
+        :raises SAMValidationError: when it is not a valid strategy.
+        """
         return choice(v, SAMGuardrailStrategy.all(), "strategy")
 
     @field_validator("action", mode="before")
     @classmethod
     def validate_action(cls, v: str) -> str:
+        """
+        Lower case ``action`` and check that it is one of :class:`SAMGuardrailAction`'s values.
+
+        :param v: The raw value.
+        :returns: The lower cased value.
+        :raises SAMValidationError: when it is not a valid action.
+        """
         return choice(v, SAMGuardrailAction.all(), "action")
 
     @field_validator("mode", mode="before")
     @classmethod
     def validate_mode(cls, v: str) -> str:
+        """
+        Lower case ``mode`` and check that it is one of :class:`SAMGuardrailMode`'s values.
+
+        :param v: The raw value.
+        :returns: The lower cased value.
+        :raises SAMValidationError: when it is not a valid mode.
+        """
         return choice(v, SAMGuardrailMode.all(), "mode")
 
     @field_validator("flags")
     @classmethod
     def validate_flags(cls, v: Optional[list[str]]) -> list[str]:
+        """
+        Upper case the regex ``flags`` and check that each is in ``REGEX_FLAGS``.
+
+        :param v: The flag names, or None.
+        :returns: The upper cased flag names, or an empty list.
+        :raises SAMValidationError: when a flag is not in ``REGEX_FLAGS``.
+        """
         flags = [str(flag).upper() for flag in (v or [])]
         for flag in flags:
             if flag not in REGEX_FLAGS:
@@ -263,6 +313,12 @@ class SAMGuardrailSpecConfig(AbstractSAMSpecBase):
     @field_validator("keywords", "referenceTexts")
     @classmethod
     def validate_texts(cls, v: Optional[list[str]]) -> list[str]:
+        """
+        Strip ``keywords`` or ``referenceTexts``, dropping empty and duplicate entries.
+
+        :param v: The texts, or None.
+        :returns: The stripped, unique, non-empty texts, in their original order.
+        """
         texts = []
         for text in v or []:
             text = str(text).strip()
@@ -273,16 +329,37 @@ class SAMGuardrailSpecConfig(AbstractSAMSpecBase):
     @field_validator("detectors")
     @classmethod
     def validate_detectors(cls, v: Optional[list[str]]) -> list[str]:
+        """
+        Lower case each of ``detectors`` and check that it is a :class:`SAMGuardrailDetector` value.
+
+        :param v: The detector names, or None.
+        :returns: The lower cased detector names, or an empty list.
+        :raises SAMValidationError: when a detector is not valid.
+        """
         return [choice(detector, SAMGuardrailDetector.all(), "detectors") for detector in v or []]
 
     @field_validator("categories")
     @classmethod
     def validate_categories(cls, v: Optional[list[str]]) -> list[str]:
+        """
+        Lower case each of ``categories`` and check that it is a :class:`SAMGuardrailModerationCategory` value.
+
+        :param v: The moderation category names, or None.
+        :returns: The lower cased category names, or an empty list.
+        :raises SAMValidationError: when a category is not valid.
+        """
         return [choice(category, SAMGuardrailModerationCategory.all(), "categories") for category in v or []]
 
     @field_validator("message")
     @classmethod
     def validate_message(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Check the length of ``message``, and turn an empty message into None.
+
+        :param v: The message shown when the guardrail blocks, or None.
+        :returns: The message, or None when it is empty.
+        :raises SAMValidationError: when it is longer than ``MAX_MESSAGE_LENGTH``.
+        """
         if v and len(v) > MAX_MESSAGE_LENGTH:
             raise SAMValidationError(f"message: must be at most {MAX_MESSAGE_LENGTH} characters.")
         return v or None

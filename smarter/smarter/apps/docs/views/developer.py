@@ -103,6 +103,12 @@ class DeveloperDocsReadme(MarkdownBaseView):
     """Developer README.md view."""
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Render ``README.md``.
+
+        :param request: The request.
+        :returns: The rendered page.
+        """
         self.markdown_file = "README.md"
         return super().dispatch(request, *args, **kwargs)
 
@@ -111,6 +117,12 @@ class DeveloperDocsChangelog(MarkdownBaseView):
     """Developer CHANGELOG.md view."""
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Render ``CHANGELOG.md``.
+
+        :param request: The request.
+        :returns: The rendered page.
+        """
         self.markdown_file = "CHANGELOG.md"
         return super().dispatch(request, *args, **kwargs)
 
@@ -119,5 +131,11 @@ class DeveloperDocsCodeOfConduct(MarkdownBaseView):
     """Developer CODE_OF_CONDUCT.md view."""
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Render ``CODE_OF_CONDUCT.md``.
+
+        :param request: The request.
+        :returns: The rendered page.
+        """
         self.markdown_file = "CODE_OF_CONDUCT.md"
         return super().dispatch(request, *args, **kwargs)

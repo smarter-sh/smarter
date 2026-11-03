@@ -84,6 +84,12 @@ class ProfileImageView(SmarterAuthenticatedNeverCachedWebView):
         return http.JsonResponse(status=HTTPStatus.OK.value, data={"profile_image_url": url})
 
     def post(self, request, *args, **kwargs):
+        """
+        Save an uploaded profile image, and delete the previous one from storage.
+
+        :param request: The request, whose files hold the image.
+        :returns: A json response with the image's url, or the form's errors with status 400.
+        """
         user_profile = self.own_user_profile(request)
         previous = user_profile.profile_image.name if user_profile.profile_image else None
         form = ProfileImageForm(request.POST, request.FILES, instance=user_profile)
@@ -102,6 +108,12 @@ class ProfileImageView(SmarterAuthenticatedNeverCachedWebView):
         return self._response(request, user_profile)
 
     def delete(self, request, *args, **kwargs):
+        """
+        Delete the user's profile image, if any.
+
+        :param request: The request.
+        :returns: A json response with the url of the image now shown.
+        """
         user_profile = self.own_user_profile(request)
         if user_profile.profile_image:
             user_profile.profile_image.delete(save=True)

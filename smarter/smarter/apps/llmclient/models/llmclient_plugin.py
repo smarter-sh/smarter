@@ -65,11 +65,15 @@ class LLMClientPlugin(TimestampedModel):
 
     #: The LLMClient instance associated with this plugin.
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE)
+    #: The LLMClient's id: the foreign key's column, which Django adds. Declared for type checkers.
+    llmclient_id: int
 
     #: The metadata for the plugin associated with the LLMClient.
     plugin_meta = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
+        url = "undefined llmclient"
+        plugin_name = "undefined plugin"
         try:
             url = self.llmclient.url if self.llmclient else "undefined llmclient"
             plugin_name = self.plugin_meta.name if self.plugin_meta else "undefined plugin"
@@ -95,6 +99,7 @@ class LLMClientPlugin(TimestampedModel):
             raise SmarterValueError("LLMClientPlugin.plugin() failed to find admin user for llmclient account")
         user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
 
+        # pylint: disable=W0613
         @cache_results()
         def get_cached_plugin_controller(
             account_id: int,
@@ -269,6 +274,12 @@ class LLMClientPlugin(TimestampedModel):
 
     @classmethod
     def plugins_json(cls, llmclient: LLMClient) -> List[SmarterDictType]:
+        """
+        Return the LLMClient's plugins as JSON-serializable dicts.
+
+        :param llmclient: The LLMClient whose plugins to return.
+        :returns: The ``to_json()`` of each plugin that :meth:`plugins` loads.
+        """
         retval = []
         for plugin in cls.plugins(llmclient):
             retval.append(plugin.to_json())

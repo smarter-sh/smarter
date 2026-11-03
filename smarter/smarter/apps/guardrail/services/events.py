@@ -46,17 +46,25 @@ def mask(text: str, category: str) -> str:
 
 
 def excerpt(finding: GuardrailFinding, segment_text: Optional[str]) -> Optional[str]:
-    """Return the excerpt of a finding, for its event: its matches, or the segment, masked for the ``pii`` and ``secrets`` categories."""
+    """
+    Return the excerpt of a finding, for its event: its matches, or the segment, masked for the ``pii`` and ``secrets`` categories.
+
+    :param finding: The finding, whose first ``MAX_EXCERPT_MATCHES`` matches are excerpted.
+    :param segment_text: The text of the segment the finding is about, used when the finding has
+        no matches.
+    :returns: The excerpt, at most ``MAX_EXCERPT_LENGTH`` characters, or None when the finding has
+        no matches and the segment is empty.
+    """
     if finding.matches:
-        parts = [
-            (
-                f"{match.label}: {mask(match.text, finding.category)}"
-                if match.label
-                else mask(match.text, finding.category)
-            )
-            for match in finding.matches[:MAX_EXCERPT_MATCHES]
-        ]
-        return "; ".join(parts)[:MAX_EXCERPT_LENGTH]
+        parts = []
+        for match in finding.matches[:MAX_EXCERPT_MATCHES]:
+            masked_text = mask(match.text, finding.category)
+            if match.label:
+                parts.append(f"{match.label}: {masked_text}")
+            else:
+                parts.append(masked_text)
+        joined = "; ".join(parts)
+        return joined[:MAX_EXCERPT_LENGTH]
     if not segment_text:
         return None
     if finding.category in (GuardrailCategory.PII, GuardrailCategory.SECRETS):

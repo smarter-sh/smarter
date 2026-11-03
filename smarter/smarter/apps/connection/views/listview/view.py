@@ -43,6 +43,14 @@ class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the connection list React app.
+
+        :param request: The HTTP request.
+        :param args: Positional arguments from the url.
+        :param kwargs: Keyword arguments from the url.
+        :returns: The rendered page, whose context gives the React app its root element id, cookie names and api url.
+        """
         # pylint: disable=C0415
         from smarter.apps.connection.urls import ConnectionReverseNames
 

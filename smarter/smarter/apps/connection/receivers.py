@@ -45,7 +45,14 @@ prefix = SmarterFormattedText.text(__name__) + "."
 # ------------------------------------------------------------------------------
 @receiver(post_save, sender=ApiConnection)
 def handle_api_connection_saved(sender, instance, created, **kwargs):
-    """Handle API connection saved signal."""
+    """
+    Log that an ApiConnection was created or updated, and its whole row at DEBUG level.
+
+    :param sender: The class that sent the signal.
+    :param instance: The ApiConnection that was saved.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%shandle_api_connection_saved() ApiConnection %s %s",
@@ -60,7 +67,14 @@ def handle_api_connection_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=SqlConnection)
 def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwargs):
-    """Handle SQL connection saved signal."""
+    """
+    Log that a SqlConnection was created or updated, and its whole row at DEBUG level.
+
+    :param sender: The class that sent the signal.
+    :param instance: The SqlConnection that was saved.
+    :param created: True if the row was created, False if it was updated.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     user_profile = str(instance.user_profile) if instance.user_profile else "(user_profile is missing)"
     logger.info(
@@ -84,7 +98,13 @@ def masked_dict(dic: SmarterDictType) -> SmarterDictType:
 
 @receiver(sql_connection_attempted, dispatch_uid="sql_connection_attempted")
 def handle_sql_connection_attempted(sender, connection: SqlConnection, **kwargs):
-    """Handle SQL connection attempted signal."""
+    """
+    Log a SQL connection attempt, with the masked connection string.
+
+    :param sender: The class that sent the signal.
+    :param connection: The SqlConnection.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s",
@@ -95,7 +115,13 @@ def handle_sql_connection_attempted(sender, connection: SqlConnection, **kwargs)
 
 @receiver(sql_connection_success, dispatch_uid="sql_connection_success")
 def handle_sql_connection_success(sender, connection: SqlConnection, **kwargs):
-    """Handle SQL connection success signal."""
+    """
+    Log that a SQL connection succeeded and is ready.
+
+    :param sender: The class that sent the signal.
+    :param connection: The SqlConnection.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s is %s",
@@ -107,7 +133,13 @@ def handle_sql_connection_success(sender, connection: SqlConnection, **kwargs):
 
 @receiver(sql_connection_validated, dispatch_uid="sql_connection_validated")
 def handle_sql_connection_validated(sender, connection: SqlConnection, **kwargs):
-    """Handle SQL connection validated signal."""
+    """
+    Log that a SQL connection was validated.
+
+    :param sender: The class that sent the signal.
+    :param connection: The SqlConnection.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s",
@@ -136,7 +168,15 @@ def handle_sql_connection_failed(sender, connection: SqlConnection, error: str, 
 
 @receiver(sql_connection_query_attempted, dispatch_uid="sql_connection_query_attempted")
 def handle_sql_connection_query_attempted(sender, connection: SqlConnection, sql: str, limit: int, **kwargs):
-    """Handle SQL connection query attempted signal."""
+    """
+    Log a SQL query attempt, with its SQL and row limit.
+
+    :param sender: The class that sent the signal.
+    :param connection: The SqlConnection.
+    :param sql: The SQL query.
+    :param limit: The row limit of the query.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s - sql: %s - limit: %s",
@@ -149,7 +189,15 @@ def handle_sql_connection_query_attempted(sender, connection: SqlConnection, sql
 
 @receiver(sql_connection_query_success, dispatch_uid="sql_connection_query_success")
 def handle_sql_connection_query_success(sender, connection: SqlConnection, sql: str, limit: int, **kwargs):
-    """Handle SQL connection query success signal."""
+    """
+    Log a successful SQL query, with its SQL and row limit.
+
+    :param sender: The class that sent the signal.
+    :param connection: The SqlConnection.
+    :param sql: The SQL query.
+    :param limit: The row limit of the query.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s - sql: %s - limit: %s",
@@ -181,7 +229,13 @@ def handle_sql_connection_query_failed(sender, connection: SqlConnection, sql: s
 
 @receiver(api_connection_attempted, dispatch_uid="api_connection_attempted")
 def handle_api_connection_attempted(sender, connection: ApiConnection, **kwargs):
-    """Handle API connection attempted signal."""
+    """
+    Log an API connection attempt.
+
+    :param sender: The class that sent the signal.
+    :param connection: The ApiConnection.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s",
@@ -192,7 +246,13 @@ def handle_api_connection_attempted(sender, connection: ApiConnection, **kwargs)
 
 @receiver(api_connection_success, dispatch_uid="api_connection_success")
 def handle_api_connection_success(sender, connection: ApiConnection, **kwargs):
-    """Handle API connection success signal."""
+    """
+    Log that an API connection succeeded and is ready.
+
+    :param sender: The class that sent the signal.
+    :param connection: The ApiConnection.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s is %s",
@@ -204,7 +264,14 @@ def handle_api_connection_success(sender, connection: ApiConnection, **kwargs):
 
 @receiver(api_connection_failed, dispatch_uid="api_connection_failed")
 def handle_api_connection_failed(sender, connection: ApiConnection, error: Optional[Exception] = None, **kwargs):
-    """Handle API connection failed signal."""
+    """
+    Log, at INFO level, that an API connection failed and is not ready.
+
+    :param sender: The class that sent the signal.
+    :param connection: The ApiConnection.
+    :param error: The exception, if any. It is not logged.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s is %s",
@@ -216,7 +283,13 @@ def handle_api_connection_failed(sender, connection: ApiConnection, error: Optio
 
 @receiver(api_connection_query_attempted, dispatch_uid="api_connection_query_attempted")
 def handle_api_connection_query_attempted(sender, connection: ApiConnection, **kwargs):
-    """Handle API connection query attempted signal."""
+    """
+    Log an API query attempt.
+
+    :param sender: The class that sent the signal.
+    :param connection: The ApiConnection.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s",
@@ -229,7 +302,14 @@ def handle_api_connection_query_attempted(sender, connection: ApiConnection, **k
 def handle_api_connection_query_success(
     sender, connection: ApiConnection, response: Optional[Response] = None, **kwargs
 ):
-    """Handle API connection query success signal."""
+    """
+    Log a successful API query, with its JSON response body.
+
+    :param sender: The class that sent the signal.
+    :param connection: The ApiConnection.
+    :param response: The HTTP response, or None.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s - response: %s",
@@ -243,7 +323,15 @@ def handle_api_connection_query_success(
 def handle_api_connection_query_failed(
     sender, connection: ApiConnection, response: Optional[Response] = None, error: Optional[Exception] = None, **kwargs
 ):
-    """Handle API connection query failed signal."""
+    """
+    Log, at INFO level, a failed API query, with its JSON response body and error.
+
+    :param sender: The class that sent the signal.
+    :param connection: The ApiConnection.
+    :param response: The HTTP response, or None.
+    :param error: The exception, or None.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
 
     logger.info(
         "%s %s - response: %s - error: %s",
@@ -263,7 +351,13 @@ def handle_api_connection_query_failed(
 
 @receiver(pre_delete, sender=ApiConnection)
 def handle_api_connection_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for ApiConnection."""
+    """
+    Log that an ApiConnection is about to be deleted.
+
+    :param sender: The class that sent the signal.
+    :param instance: The ApiConnection being deleted.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
     logger.info(
         "%s %s deleting.",
         prefix + "ApiConnection().pre_delete()",
@@ -273,7 +367,13 @@ def handle_api_connection_pre_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=SqlConnection)
 def handle_sql_connection_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for SqlConnection."""
+    """
+    Log that a SqlConnection is about to be deleted.
+
+    :param sender: The class that sent the signal.
+    :param instance: The SqlConnection being deleted.
+    :param kwargs: Other keyword arguments sent with the signal.
+    """
     logger.info(
         "%s %s deleting.",
         prefix + "SqlConnection().pre_delete()",

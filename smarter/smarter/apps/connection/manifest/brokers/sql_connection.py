@@ -489,12 +489,12 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._password_secret:
             return self._password_secret
+        name = None
         try:
-            name = (
-                self.manifest.spec.connection.password
-                if self.manifest
-                else self.connection.password.name if self.connection else None
-            )
+            if self.manifest:
+                name = self.manifest.spec.connection.password
+            elif self.connection:
+                name = self.connection.password.name
             self._password_secret = Secret.objects.filter(name=name).with_read_permission_for(self.user).first()  # type: ignore
             if not self._password_secret:
                 raise Secret.DoesNotExist()
@@ -546,14 +546,12 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._proxy_password_secret:
             return self._proxy_password_secret
+        name = None
         try:
-            name = (
-                self.manifest.spec.connection.proxyPassword
-                if self.manifest
-                else (
-                    self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
-                )
-            )
+            if self.manifest:
+                name = self.manifest.spec.connection.proxyPassword
+            elif self.connection and self.connection.proxy_password:
+                name = self.connection.proxy_password.name
             if not name:
                 # a connection need not use a proxy.
                 return None

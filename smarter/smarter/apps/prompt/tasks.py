@@ -41,6 +41,16 @@ module_prefix = "smarter.apps.prompt.tasks."
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_prompt_history(prompt_id, request, response, messages):
+    """
+    Celery task: save a PromptHistory row for a finished prompt.
+
+    Logs an error and saves nothing if the Prompt does not exist.
+
+    :param prompt_id: The id of the Prompt.
+    :param request: The request sent to the LLM, as JSON.
+    :param response: The LLM's response, as JSON.
+    :param messages: The conversation's messages.
+    """
     logger.debug("%s prompt_id: %s", SmarterFormattedText.text(module_prefix + "create_prompt_history()"), prompt_id)
     try:
         prompt = Prompt.objects.get(id=prompt_id)
@@ -88,7 +98,17 @@ def create_prompt(session_key, llmclient_id):
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, function_args, request, response):
-    """Create prompt tool call history record."""
+    """
+    Celery task: save a PromptToolCall row for a tool call made during a prompt.
+
+    :param prompt_id: The id of the Prompt.
+    :param plugin_meta_id: The id of the called plugin's PluginMeta, or None for a tool that is not a plugin.
+    :param function_name: The called function's name.
+    :param function_args: The function's arguments.
+    :param request: The tool call's request.
+    :param response: The tool's response.
+    :raises SmarterValueError: when the Prompt, or a given PluginMeta, does not exist.
+    """
     logger.debug("%s", SmarterFormattedText.text(module_prefix + "create_prompt_tool_call_history()"))
     prompt = None
     plugin_meta = None

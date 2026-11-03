@@ -75,6 +75,33 @@ git ls-files --others --exclude-standard | xargs pre-commit run --files   # new 
 - For React alone: `make react-lint` (Prettier check, ESLint, `tsc`), as CI's
   `react` job does.
 
+## Type errors (pyright and Pylance)
+
+None of the hooks checks types, so a change can pass pre-commit and still show type errors in
+VS Code, whose Pylance is built on pyright. The repository has a backlog of pyright errors, so
+check only the errors that your change adds:
+
+```console
+python3 -I scripts/pyright_new_errors.py                 # Python files changed since HEAD
+python3 -I scripts/pyright_new_errors.py --base alpha    # ... since another commit
+```
+
+It runs pyright (pinned, with `npx`) on the files in the working tree and as they were at the
+base, matches errors by file, rule and message (lines move), and prints only the new ones, with
+their lines. Exit code 1 means the change added an error: fix it before finishing. It also says
+how many old errors the change fixed.
+
+- The rules are in `pyproject.toml`'s `[tool.pyright]`, which Pylance reads too. The two override
+  checks are off, because they fire on correct idioms: every nested `class Meta`, and SAM brokers
+  that narrow `AbstractBroker`'s attributes to their own kind's types.
+- Fix a type error properly: narrow with `is None` or `isinstance` on a local variable (pyright
+  doesn't narrow properties), correct a wrong annotation, or declare an attribute that Django adds
+  at runtime (a foreign key's `<name>_id`) as a bare annotation with a `#:` comment. A model's `id`
+  is declared on `TimestampedModel`. Use `cast()` or `# pyright: ignore[<rule>]` only with a
+  comment that says why.
+- A function decorated with `@cache_results` has no typed `.invalidate()` yet; that is fixed in
+  the cache-results package, not here.
+
 ## Principles
 
 - Match the surrounding code: its naming, comment density, logging style

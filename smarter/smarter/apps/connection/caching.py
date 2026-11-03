@@ -81,6 +81,11 @@ def get_cached_connections_owned_by_user_profile(user_profile: UserProfile) -> m
 
 
 def invalidate_cached_connections_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of Connections owned by the given UserProfile.
+
+    :param user_profile: The user profile whose cached owned Connections should be invalidated.
+    """
     _get_cached_connections_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -120,6 +125,11 @@ def get_cached_connections_shared_with_user_profile(user_profile: UserProfile) -
 
 
 def invalidate_cached_connections_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of Connections shared with the given UserProfile.
+
+    :param user_profile: The user profile whose cached shared Connections should be invalidated.
+    """
     _get_cached_connections_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -160,6 +170,11 @@ def get_cached_connections_available_to_user_profile(user_profile: UserProfile) 
 
 
 def invalidate_cached_connections_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of Connections available to the given UserProfile.
+
+    :param user_profile: The user profile whose cached available Connections should be invalidated.
+    """
     _get_cached_connections_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

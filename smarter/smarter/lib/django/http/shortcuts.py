@@ -82,7 +82,11 @@ class SmarterHttpResponse(HttpResponse):
 
 
 class SmarterHttpErrorResponse(SmarterHttpResponse):
-    pass
+    """
+    Base class of the Smarter html error responses, e.g. :class:`SmarterHttpResponseBadRequest`.
+
+    It adds nothing to :class:`SmarterHttpResponse`; it lets callers tell an error page from a normal one.
+    """
 
 
 class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):

@@ -192,6 +192,11 @@ class Command(SmarterCommand):
     )
 
     def add_arguments(self, parser):
+        """
+        Add the command's options: the log file, the job, its exit status, the recipient and the Slack channel.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("--file", type=str, required=True, help="The log file.")
         parser.add_argument("--job", type=str, default="job", help="The job's name, for the subject.")
         parser.add_argument("--status", type=int, default=0, help="The job's exit status. 0 is success.")
@@ -229,6 +234,15 @@ class Command(SmarterCommand):
 
     # pylint: disable=too-many-locals
     def handle(self, *args, **options):
+        """
+        Email the job's redacted log, attached, linked, or as its last lines, and optionally post it to Slack.
+
+        A log larger than ``--max-attachment-bytes`` is saved to public file storage and linked. Failures
+        to save, email, or post are logged and reported.
+
+        :param args: Unused.
+        :param options: The command's options, see :meth:`add_arguments`.
+        """
         self.handle_begin()
         job = options["job"]
         status = options["status"]
@@ -237,6 +251,7 @@ class Command(SmarterCommand):
 
         log: Optional[list[str]] = None
         read_error = ""
+        note = ""
         try:
             log = redact(Path(options["file"]).read_text(encoding="utf-8", errors="replace")).splitlines()
         except OSError as e:

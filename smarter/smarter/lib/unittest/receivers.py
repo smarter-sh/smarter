@@ -21,6 +21,7 @@ class ReceiversTestMixin:
     skip: tuple[str, ...] = ()
 
     def setUp(self):
+        """Patch ``Task.apply_async``, and every Celery task in the receivers module, until the end of the test."""
         super().setUp()  # type: ignore[misc]
         # no receiver may queue a task, however it imports it.
         patcher = patch("celery.app.task.Task.apply_async")
@@ -33,6 +34,11 @@ class ReceiversTestMixin:
                 self.addCleanup(patcher.stop)  # type: ignore[attr-defined]
 
     def receivers(self) -> Iterator[tuple[str, Callable]]:
+        """
+        Yield the name and function of each receiver defined in the module, whose first parameter is ``sender``.
+
+        Receivers named in ``skip`` are left out.
+        """
         for name, function in inspect.getmembers(self.receivers_module, inspect.isfunction):
             if function.__module__ != self.receivers_module.__name__ or name in self.skip:
                 continue
@@ -41,6 +47,14 @@ class ReceiversTestMixin:
                 yield name, function
 
     def mock_arguments(self, function: Callable) -> SmarterDictType:
+        """
+        Return a mock keyword argument for each named parameter of a receiver, except ``sender``.
+
+        ``created`` is True; every other argument is a :class:`~unittest.mock.MagicMock`.
+
+        :param function: The receiver.
+        :returns: The keyword arguments.
+        """
         arguments = {}
         for name, parameter in inspect.signature(function).parameters.items():
             if name == "sender" or parameter.kind in (parameter.VAR_KEYWORD, parameter.VAR_POSITIONAL):
@@ -54,6 +68,7 @@ class ReceiversTestMixin:
     sender = Sender
 
     def test_receivers(self):
+        """Each receiver runs with mock arguments, and with ``created`` False when it takes it."""
         receivers = list(self.receivers())
         self.assertTrue(receivers)  # type: ignore[attr-defined]
         for name, function in receivers:

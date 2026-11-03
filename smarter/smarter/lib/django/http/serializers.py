@@ -139,23 +139,48 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
         model = HttpRequest
 
     def to_representation(self, instance):
+        """
+        Serialize the request, adding its absolute ``url``.
+
+        :param instance: The request.
+        :returns: The serialized request.
+        """
         ret = super().to_representation(instance)
         ret["url"] = self.get_url(instance)
         return ret
 
     def get_url(self, obj):
+        """
+        Return the absolute url of ``obj.request``.
+
+        :param obj: An object with a ``request`` attribute.
+        :returns: The absolute url, or None if there is no request or it can't build one.
+        """
         if obj and hasattr(obj, "request") and obj.request:
             _url = obj.request.build_absolute_uri() if hasattr(obj.request, "build_absolute_uri") else None
             return _url
         return None
 
     def create(self, validated_data) -> HttpRequest:
+        """
+        Build a new, unsaved :class:`~django.http.HttpRequest` from the validated data.
+
+        :param validated_data: The request attributes to set.
+        :returns: The request.
+        """
         req = HttpRequest()
         for attr, value in validated_data.items():
             setattr(req, attr, value)
         return req
 
     def update(self, instance: HttpRequest, validated_data):
+        """
+        Set the validated data's attributes on an existing request.
+
+        :param instance: The request to change.
+        :param validated_data: The request attributes to set.
+        :returns: The same request.
+        """
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         return instance
@@ -232,6 +257,12 @@ class HttpAuthenticatedRequestSerializer(HttpAnonymousRequestSerializer):
         model = HttpRequest
 
     def to_representation(self, instance):
+        """
+        Serialize the request, replacing the serialized ``user`` with its username.
+
+        :param instance: The request.
+        :returns: The serialized request.
+        """
         ret = super().to_representation(instance)
         ret["user"] = ret["user"]["username"]
         return ret

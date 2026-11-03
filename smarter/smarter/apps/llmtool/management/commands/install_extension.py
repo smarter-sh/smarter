@@ -20,6 +20,11 @@ class Command(SmarterCommand):
     )
 
     def add_arguments(self, parser):
+        """
+        Add the ``path``, ``--registry``, ``--extension-version`` and ``--enable`` arguments.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("path", type=str, nargs="?", help="The extension's .zip archive or source directory.")
         parser.add_argument("--registry", type=str, help="Install this slug from the extension registry instead.")
         parser.add_argument(
@@ -30,6 +35,12 @@ class Command(SmarterCommand):
         parser.add_argument("--enable", action="store_true", help="Enable the extension after installing it.")
 
     def handle(self, *args, **options):
+        """
+        Install the extension from the registry, an archive, or a source directory, as the platform admin, and optionally enable it.
+
+        :param args: Unused.
+        :param options: The parsed command line options.
+        """
         self.handle_begin()
         user = smarter_cached_objects.smarter_admin
         try:

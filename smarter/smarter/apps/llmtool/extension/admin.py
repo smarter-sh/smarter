@@ -23,7 +23,14 @@ BADGE_COLORS = {"official": "#0b6e4f", "verified": "#1f5fbf", "community": "#6c7
 
 
 def badge_html(badge: str, label: str) -> str:
-    """Return a trust badge as a small colored label."""
+    """
+    Return a trust badge as a small colored label.
+
+    :param badge: The trust badge, e.g. ``official``, which picks the label's color. An unknown
+        badge is gray.
+    :param label: The label's text, escaped by ``format_html``.
+    :returns: The label's html.
+    """
     return format_html(
         '<span style="background:{};color:#fff;border-radius:4px;padding:1px 6px;font-size:11px;white-space:nowrap">{}</span>',
         BADGE_COLORS.get(badge, "#6c757d"),
@@ -38,9 +45,23 @@ class ReadOnlyInline(admin.TabularInline):
     can_delete = False
 
     def has_add_permission(self, request, obj=None):
+        """
+        Deny adding rows.
+
+        :param request: The admin request.
+        :param obj: The parent object being edited.
+        :returns: False.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
+        """
+        Deny changing rows.
+
+        :param request: The admin request.
+        :param obj: The parent object being edited.
+        :returns: False.
+        """
         return False
 
 
@@ -67,9 +88,25 @@ class UpdateAvailableFilter(admin.SimpleListFilter):
     parameter_name = "update_available"
 
     def lookups(self, request, model_admin):
+        """
+        Offer the one choice, ``yes``.
+
+        :param request: The admin request.
+        :param model_admin: The model admin.
+        :returns: The filter's choices.
+        """
         return (("yes", "Yes"),)
 
     def queryset(self, request, queryset):
+        """
+        Keep only the extensions with an update available, when ``yes`` is chosen.
+
+        ``update_available`` is a property, not a field, so each extension is checked in Python.
+
+        :param request: The admin request.
+        :param queryset: The extensions.
+        :returns: The filtered extensions, or all of them when the filter is not chosen.
+        """
         if self.value() == "yes":
             return queryset.filter(pk__in=[extension.pk for extension in queryset if extension.update_available])
         return queryset
@@ -113,28 +150,34 @@ class ExtensionAdmin(SmarterSuperUserOnlyModelAdmin):
     # -------------------------------------------------------------------------
     @admin.display(description="installed")
     def installed(self, obj: Extension) -> str:
+        """Return the installed version, or ``-``."""
         return obj.installed_version.version if obj.installed_version else "-"
 
     @admin.display(description="update")
     def update(self, obj: Extension) -> str:
+        """Return the registry's newer version, highlighted, or ``-`` if no update is available."""
         if obj.update_available:
             return format_html('<strong style="color:#b8860b">{} available</strong>', obj.latest_version)
         return "-"
 
     @admin.display(description="trust", ordering="trust_badge")
     def badge(self, obj: Extension) -> str:
+        """Return the extension's trust badge as a colored label."""
         return badge_html(obj.trust_badge, obj.get_trust_badge_display())  # type: ignore[attr-defined]
 
     @admin.display(description="error", boolean=True)
     def has_error(self, obj: Extension) -> bool:
+        """Return whether the extension has an error."""
         return bool(obj.error)
 
     @admin.display(description="console")
     def manage(self, obj: Extension) -> str:
+        """Return a link to the extension's page in the web console."""
         return format_html('<a href="{}">Manage</a>', detail_url(obj.slug))
 
     @admin.display(description="documentation")
     def documentation(self, obj: Extension) -> str:
+        """Return the installed version's rendered documentation, or ``-``."""
         if obj.installed_version is None:
             return "-"
         # docs_html is rendered with raw html and file inclusion disabled: see .docs.
@@ -144,20 +187,61 @@ class ExtensionAdmin(SmarterSuperUserOnlyModelAdmin):
     # permissions: extensions are managed in the web console
     # -------------------------------------------------------------------------
     def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
+        """
+        Deny adding extensions here: they are installed in the web console.
+
+        :param request: The admin request.
+        :param obj: Unused.
+        :returns: False.
+        """
         return False
 
     def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
+        """
+        Deny changing extensions here: they are configured in the web console.
+
+        :param request: The admin request.
+        :param obj: The extension.
+        :returns: False.
+        """
         return False
 
     def has_delete_permission(self, request: HttpRequest, obj=None) -> bool:
+        """
+        Deny deleting extensions here: they are uninstalled in the web console.
+
+        :param request: The admin request.
+        :param obj: The extension.
+        :returns: False.
+        """
         return False
 
     def change_view(self, request: HttpRequest, object_id: str, form_url: str = "", extra_context=None):
+        """
+        Show an extension, with ``console_url``, the link to its page in the web console, in the template context.
+
+        :param request: The admin request.
+        :param object_id: The extension's primary key.
+        :param form_url: The form's url.
+        :param extra_context: More template context.
+        :returns: The response.
+        """
         extension = Extension.objects.filter(pk=object_id).first()
-        extra_context = {**(extra_context or {}), "console_url": detail_url(extension.slug) if extension else None}
+        if extension:
+            console_url = detail_url(extension.slug)
+        else:
+            console_url = None
+        extra_context = {**(extra_context or {}), "console_url": console_url}
         return super().change_view(request, object_id, form_url, extra_context)
 
     def changelist_view(self, request: HttpRequest, extra_context=None):
+        """
+        List the extensions, with ``console_url``, the web console's Extensions page, in the template context.
+
+        :param request: The admin request.
+        :param extra_context: More template context.
+        :returns: The response.
+        """
         extra_context = {**(extra_context or {}), "console_url": list_url()}
         return super().changelist_view(request, extra_context)
 

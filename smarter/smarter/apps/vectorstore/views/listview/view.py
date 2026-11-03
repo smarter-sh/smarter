@@ -45,6 +45,12 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the React app of the Vectorstore list.
+
+        :param request: The request.
+        :returns: The page.
+        """
         # pylint: disable=C0415
         from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 

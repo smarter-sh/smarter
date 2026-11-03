@@ -53,6 +53,7 @@ class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message prefix of this broker's errors."""
         return "Smarter API SmarterAuthToken Manifest Broker Error"
 
 
@@ -248,6 +249,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     ###########################################################################
     @property
     def kind(self) -> str:
+        """The manifest kind this broker handles, ``SmarterAuthToken``."""
         return MANIFEST_KIND
 
     @property
@@ -368,6 +370,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
     @property
     def ORMModelClass(self) -> Type[SmarterAuthToken]:
+        """The Django model of this broker's resource, :class:`~smarter.lib.drf.models.SmarterAuthToken`."""
         return SmarterAuthToken
 
     @property
@@ -477,6 +480,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return super().cache_invalidations()
 
     def example_manifest(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an example SmarterAuthToken manifest.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :returns: The journaled response, with the example manifest as its data.
+        """
         logger.debug("%s.example_manifest() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -498,6 +509,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        List the user's SmarterAuthTokens, or the one named in ``kwargs``, filtered by annotation selector.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :returns: The journaled response, with the column titles and one item per token.
+        :raises SAMSmarterAuthTokenBrokerError: If a token can't be serialized.
+        """
         logger.debug("%s.get() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -653,12 +673,30 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: a SmarterAuthToken can't be prompted.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :raises SAMBrokerErrorNotImplemented: Always.
+        """
         logger.debug("%s.prompt() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the named SmarterAuthToken as a manifest.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :returns: The journaled response, with the manifest as its data.
+        :raises SAMSmarterAuthTokenBrokerError: If the manifest can't be built.
+        :raises SAMBrokerErrorNotReady: If there is no such token.
+        """
         logger.debug(
             "%s.describe() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -716,6 +754,16 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.dependency_brokers_for(self.smarter_auth_token)
 
     def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the named SmarterAuthToken from the database; only staff users may.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :returns: The journaled response, with empty data.
+        :raises SAMSmarterAuthTokenBrokerError: If the user is not staff, or the delete fails.
+        :raises SAMBrokerErrorNotReady: If there is no such token.
+        """
         logger.debug(
             "%s.delete() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -749,6 +797,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
     def deploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Activate the named SmarterAuthToken, saving it if it was inactive.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :returns: The journaled response, with the command result.
+        :raises SAMBrokerErrorNotReady: If there is no such token.
+        """
         logger.debug(
             "%s.deploy() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -780,6 +837,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def undeploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Deactivate the named SmarterAuthToken, saving it if it was active.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :returns: The journaled response, with the command result.
+        :raises SAMBrokerErrorNotReady: If there is no such token.
+        """
         logger.debug(
             "%s.undeploy() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -797,6 +863,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def logs(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: a SmarterAuthToken has no logs.
+
+        :param request: The request.
+        :param args: Positional arguments, unused.
+        :param kwargs: Keyword arguments from the cli api url.
+        :raises SAMBrokerErrorNotImplemented: Always.
+        """
         logger.debug("%s.logs() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)

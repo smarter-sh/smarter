@@ -45,6 +45,14 @@ class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the API key list React app, with its configuration in the context.
+
+        :param request: The request.
+        :param args: Positional arguments from the url, unused.
+        :param kwargs: Keyword arguments from the url, unused.
+        :returns: The rendered page.
+        """
         # pylint: disable=C0415
         from smarter.lib.drf.urls import AuthTokenReverseNames
 

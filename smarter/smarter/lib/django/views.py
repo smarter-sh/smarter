@@ -220,6 +220,12 @@ class SmarterWebXmlView(SmarterView):
     """Base view for smarter xml web views."""
 
     def get(self, request):
+        """
+        Render ``template_path`` with the view's context.
+
+        :param request: The request.
+        :returns: The rendered response.
+        """
         return render(request=request, template_name=self.template_path, context=self.context)
 
     @property
@@ -233,6 +239,12 @@ class SmarterWebTxtView(SmarterView):
     """Base view for smarter text web views."""
 
     def get(self, request):
+        """
+        Render ``template_path`` without comments and minified, as ``text/plain``.
+
+        :param request: The request.
+        :returns: The text response, or a 500 response if rendering failed.
+        """
         minified_html = self.render_clean_html(request, template_path=self.template_path, context=self.context)
         if isinstance(minified_html, HttpResponse):
             return minified_html
@@ -502,6 +514,16 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
+        """
+        Redirect anonymous users to the login page and non-staff users to the admin login, then dispatch.
+
+        The response varies on the ``Cookie`` header.
+
+        :param request: The request.
+        :param args: Passed to the view.
+        :param kwargs: Passed to the view.
+        :returns: The view's response, or a redirect that expires the cache.
+        """
         # Enforce login_required
         user = getattr(request, "user", None)
         if not (user and getattr(user, "is_authenticated", False)):

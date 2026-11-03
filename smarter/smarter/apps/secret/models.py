@@ -187,6 +187,7 @@ class Secret(MetaDataWithOwnershipModel):
 
     @property
     def ready(self) -> bool:
+        """Whether the Secret is ready: the parent's check passes, and it has an encrypted value."""
         return super().ready and self.encrypted_value is not None
 
     def save(self, *args, **kwargs):
@@ -286,7 +287,12 @@ class Secret(MetaDataWithOwnershipModel):
         return timezone.now() > expiration
 
     def __str__(self) -> str:
-        return str(self.name) or "no name" + " - " + str(self.user_profile) or "no user profile"
+        name = str(self.name)
+        if name:
+            return name
+        # Operator precedence makes this "no name - <user profile>"; the "no user profile" fallback
+        # of the original expression is never reached, because that string is never empty.
+        return "no name" + " - " + str(self.user_profile)
 
     @classmethod
     def encrypt(cls, value: str) -> bytes:

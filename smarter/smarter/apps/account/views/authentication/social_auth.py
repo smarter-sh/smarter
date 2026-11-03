@@ -1,6 +1,4 @@
-"""
-Django Account Authentication Social Auth views.
-"""
+"""Django Account Authentication Social Auth views."""
 
 from django.http import HttpResponse
 
@@ -21,6 +19,12 @@ class SocialAuthAlreadyAssociatedView(SmarterNeverCachedWebView):
     template_path = "account/authentication/social-auth-already-associated.html"
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Render the page that says the social account belongs to another user.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         logger.debug(
             "%s.SocialAuthAlreadyAssociatedView.get() called with request type: %s %s, args: %s, kwargs: %s",
             self.formatted_class_name,

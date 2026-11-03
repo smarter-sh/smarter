@@ -104,6 +104,13 @@ class HasStackademyBearerToken(BasePermission):
     """Allow only the requests that :class:`StackademyBearerAuthentication` authenticated."""
 
     def has_permission(self, request, view) -> bool:
+        """
+        Whether the request was authenticated by a Stackademy bearer token.
+
+        :param request: The request.
+        :param view: The view.
+        :returns: True when the request has an auth token.
+        """
         return request.auth is not None
 
 

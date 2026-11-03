@@ -198,7 +198,13 @@ def result_of(row: dict, fallback_url: str, detail_url: Optional[str] = None) ->
     :param detail_url: Its list, with its detail open.
     :returns: The result.
     """
-    url = detail_url or row.get("manifest_url") or row.get("manifestUrl") or fallback_url
+    url = detail_url
+    if not url:
+        url = row.get("manifest_url")
+    if not url:
+        url = row.get("manifestUrl")
+    if not url:
+        url = fallback_url
     return GlobalSearchResult(
         name=str(row.get("name") or ""),
         description=str(row.get("description") or ""),

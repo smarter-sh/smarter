@@ -89,6 +89,11 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
     @property
     def ORMModelClass(self) -> Type[ConnectionBase]:
+        """
+        Return the Django ORM model class of the connection; subclasses must implement it.
+
+        :raises NotImplementedError: always, in this base class.
+        """
         raise NotImplementedError(f"{self.formatted_class_name}.ORMModelClass must be implemented in the subclass.")
 
     @property

@@ -25,13 +25,29 @@ logger_prefix = SmarterFormattedText.text(__name__)
 
 @receiver(sql_plugin_request_started, dispatch_uid="sql_plugin_request_started")
 def handle_sql_plugin_request_started(sender, plugin: PluginBase, function_args=None, **kwargs):
-    """Handle SqlPlugin request started signal."""
+    """
+    Handle SqlPlugin request started signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param function_args: The arguments that the LLM called the tool with.
+    """
     logger.info("%s.sql_plugin_request_started() %s function_args: %s", logger_prefix, plugin.name, function_args)
 
 
 @receiver(sql_plugin_authenticated, dispatch_uid="sql_plugin_authenticated")
 def handle_sql_plugin_authenticated(sender, plugin: PluginBase, **kwargs):
-    """Handle SqlPlugin authenticated signal."""
+    """
+    Handle SqlPlugin authenticated signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param kwargs: The signal's other arguments, of which ``connection`` are logged.
+    """
     logger.info(
         "%s.sql_plugin_authenticated() %s connection: %s",
         logger_prefix,
@@ -42,7 +58,16 @@ def handle_sql_plugin_authenticated(sender, plugin: PluginBase, **kwargs):
 
 @receiver(sql_plugin_authentication_failed, dispatch_uid="sql_plugin_authentication_failed")
 def handle_sql_plugin_authentication_failed(sender, plugin: PluginBase, error: str, **kwargs):
-    """Handle SqlPlugin authentication failed signal."""
+    """
+    Handle SqlPlugin authentication failed signal.
+
+    Logs it at WARNING.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param error: Why it failed.
+    :param kwargs: The signal's other arguments, of which ``connection`` are logged.
+    """
     logger.warning(
         "%s.sql_plugin_authentication_failed() %s connection: %s error: %s",
         logger_prefix,
@@ -54,7 +79,17 @@ def handle_sql_plugin_authentication_failed(sender, plugin: PluginBase, error: s
 
 @receiver(sql_plugin_responded, dispatch_uid="sql_plugin_responded")
 def handle_sql_plugin_responded(sender, plugin: PluginBase, response=None, cached: bool = False, **kwargs):
-    """Handle SqlPlugin responded signal."""
+    """
+    Handle SqlPlugin responded signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param response: The response, whose length in characters is logged.
+    :param cached: Whether the response was served from the cache.
+    :param kwargs: The signal's other arguments, of which ``sql`` are logged.
+    """
     logger.info(
         "%s.sql_plugin_responded() %s sql: %s characters: %s cached: %s",
         logger_prefix,
@@ -67,13 +102,30 @@ def handle_sql_plugin_responded(sender, plugin: PluginBase, response=None, cache
 
 @receiver(sql_plugin_failed, dispatch_uid="sql_plugin_failed")
 def handle_sql_plugin_failed(sender, plugin: PluginBase, error: str, **kwargs):
-    """Handle SqlPlugin failed signal."""
+    """
+    Handle SqlPlugin failed signal.
+
+    Logs it at WARNING.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param error: Why it failed.
+    """
     logger.warning("%s.sql_plugin_failed() %s failed: %s", logger_prefix, plugin.name, error)
 
 
 @receiver(sql_plugin_request_completed, dispatch_uid="sql_plugin_request_completed")
 def handle_sql_plugin_request_completed(sender, plugin: PluginBase, success: bool, duration: float, **kwargs):
-    """Handle SqlPlugin request completed signal."""
+    """
+    Handle SqlPlugin request completed signal.
+
+    Logs it at INFO.
+
+    :param sender: The class that sent the signal.
+    :param plugin: The plugin.
+    :param success: Whether the request succeeded.
+    :param duration: Seconds that the request took.
+    """
     logger.info(
         "%s.sql_plugin_request_completed() %s success: %s duration: %.3fs",
         logger_prefix,

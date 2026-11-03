@@ -91,7 +91,7 @@
       "type": "object"
     },
     "SAMAccountSpec": {
-      "description": "Smarter API Account Manifest Account.spec",
+      "description": "Smarter API Account Manifest Account.spec.",
       "properties": {
         "config": {
           "$ref": "#/$defs/SAMAccountSpecConfig",
@@ -105,7 +105,7 @@
       "type": "object"
     },
     "SAMAccountSpecConfig": {
-      "description": "Smarter API Account Manifest Account.spec.config",
+      "description": "Smarter API Account Manifest Account.spec.config.",
       "properties": {
         "address1": {
           "anyOf": [

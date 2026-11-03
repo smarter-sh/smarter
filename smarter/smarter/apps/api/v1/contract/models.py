@@ -378,19 +378,20 @@ class OpenApiParameter(OpenApiModel):
     """A path, query or header parameter of an operation."""
 
     name: str
-    in_: Literal["path", "query", "header"] = Field(..., alias="in")
+    in_: Literal["path", "query", "header"] = Field(..., validation_alias="in", serialization_alias="in")
     description: Optional[str] = None
     required: bool = False
-    schema_: OpenApiSchema = Field(..., alias="schema")
+    schema_: OpenApiSchema = Field(..., validation_alias="schema", serialization_alias="schema")
 
 
 class OpenApiMediaType(OpenApiModel):
     """The schema of a request's or response's body, in one media type."""
 
-    schema_: OpenApiSchema = Field(..., alias="schema")
+    schema_: OpenApiSchema = Field(..., validation_alias="schema", serialization_alias="schema")
     x_smarter_events: Optional[dict[str, OpenApiSchema]] = Field(
-        None,
-        alias="x-smarter-events",
+        default=None,
+        validation_alias="x-smarter-events",
+        serialization_alias="x-smarter-events",
         description="For text/event-stream: the schema of each event's data, by the event's name. OpenAPI 3.1 has "
         "no field for it, so it is an extension.",
     )
@@ -422,7 +423,7 @@ class OpenApiOperation(OpenApiModel):
     requestBody: Optional[OpenApiRequestBody] = None
     responses: dict[str, OpenApiResponse]
     security: Optional[list[dict[str, list[str]]]] = Field(
-        None, description="Overrides the document's security. An empty list makes the operation public."
+        default=None, description="Overrides the document's security. An empty list makes the operation public."
     )
 
 
@@ -439,7 +440,7 @@ class OpenApiSecurityScheme(OpenApiModel):
 
     type: Literal["apiKey"] = "apiKey"
     name: str
-    in_: Literal["header"] = Field("header", alias="in")
+    in_: Literal["header"] = Field(default="header", validation_alias="in", serialization_alias="in")
     description: Optional[str] = None
 
 

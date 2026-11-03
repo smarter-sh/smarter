@@ -18,5 +18,12 @@ class SmarterChatApiViewSet(SmarterAuthenticatedAPIView):
     provider_name: str
 
     def setup(self, request: Request, *args, **kwargs):
+        """
+        Set up the view, and move the url's ``provider_name`` from ``self.kwargs`` to ``self.provider_name``.
+
+        :param request: The request.
+        :param args: Positional arguments passed to the parent's ``setup()``.
+        :param kwargs: The url's keyword arguments, including ``provider_name``.
+        """
         super().setup(request, *args, **kwargs)
         self.provider_name = self.kwargs.pop("provider_name")

@@ -39,6 +39,12 @@ class Command(SmarterCommand):
         )
 
     def validate_regex(self, regex):
+        """
+        Whether a string is a valid regular expression.
+
+        :param regex: The regular expression.
+        :returns: True if :func:`re.compile` accepts it.
+        """
         try:
             re.compile(regex)
             return True

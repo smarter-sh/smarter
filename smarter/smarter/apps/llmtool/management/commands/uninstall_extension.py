@@ -13,9 +13,20 @@ class Command(SmarterCommand):
     help = "Uninstall a Smarter Extension: its SAM resources, waffle switches, settings, versions and LLMClient links."
 
     def add_arguments(self, parser):
+        """
+        Add the ``slug`` argument.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("slug", type=str, help="The extension's slug.")
 
     def handle(self, *args, **options):
+        """
+        Uninstall the extension, as the platform admin.
+
+        :param args: Unused.
+        :param options: The parsed command line options.
+        """
         self.handle_begin()
         slug = options["slug"]
         extension = Extension.objects.filter(slug=slug).first()

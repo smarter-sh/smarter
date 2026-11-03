@@ -72,6 +72,13 @@ class SAMOrchestratorSpecConfig(BaseModel):
     @field_validator("harnesses")
     @classmethod
     def validate_unique_llmclients(cls, v: list[SAMOrchestratorHarnessConfig]) -> list[SAMOrchestratorHarnessConfig]:
+        """
+        Reject harnesses that name the same LLMClient more than once.
+
+        :param v: The harnesses.
+        :returns: The harnesses, unchanged.
+        :raises ValueError: when an ``llmClientName`` appears more than once.
+        """
         # Mirrors the model's unique_together on (orchestrator, llmclient) —
         # the same LLMClient can't be attached to an Orchestrator twice.
         names = [harness.llmClientName for harness in v]
@@ -82,6 +89,15 @@ class SAMOrchestratorSpecConfig(BaseModel):
 
     @model_validator(mode="after")
     def validate_strategy_role_requirements(self) -> "SAMOrchestratorSpecConfig":
+        """
+        Check that the harnesses suit the strategy.
+
+        ``supervisor`` needs a ``planner`` harness, ``router`` needs a ``router`` harness, and ``debate``
+        and ``voting`` need at least two harnesses.
+
+        :returns: The config, unchanged.
+        :raises ValueError: when the harnesses do not meet the strategy's requirement.
+        """
         roles = {harness.role for harness in self.harnesses}
         if self.strategy == OrchestrationStrategy.SUPERVISOR and HarnessRole.PLANNER not in roles:
             raise ValueError("strategy 'supervisor' requires at least one harness with role 'planner'.")

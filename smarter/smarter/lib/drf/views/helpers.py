@@ -21,6 +21,13 @@ class UnauthenticatedPermissionClass(BasePermission):
 
     # pylint: disable=unused-argument
     def has_all_permission(self, request: Request, view) -> bool:
+        """
+        Allow every request.
+
+        :param request: The request.
+        :param view: The view.
+        :returns: Always True.
+        """
         return True
 
 
@@ -29,11 +36,18 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
 
     @property
     def formatted_class_name(self) -> str:
+        """The permission class's dotted name, formatted for log messages."""
         class_name = f"{__name__}.{self.__class__.__name__}"
         return SmarterFormattedText.text(class_name)
 
     def has_all_permission(self, request: Request, view) -> bool:
-        """Allows internal view access to authenticated users and internal API requests."""
+        """
+        Allows internal view access to authenticated users and internal API requests.
+
+        :param request: The request.
+        :param view: The view.
+        :returns: True only for an authenticated request flagged as an internal api request.
+        """
         if is_authenticated_request(request) and getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False):
             logger.info(
                 "%s.has_all_permission() - internal api request. Overriding permission: %s",

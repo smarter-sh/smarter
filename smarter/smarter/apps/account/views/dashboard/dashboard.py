@@ -14,6 +14,12 @@ class OverviewView(SmarterAuthenticatedWebView):
     template_path = "account/dashboard/overview.html"
 
     def get(self, request):
+        """
+        Render the page.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         context = {}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
@@ -25,6 +31,12 @@ class ActivityView(SmarterAuthenticatedWebView):
     template_path = "account/dashboard/activity.html"
 
     def get(self, request):
+        """
+        Render the page.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         context = {}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
@@ -36,6 +48,12 @@ class StatementsView(SmarterAuthenticatedWebView):
     template_path = "account/dashboard/statements.html"
 
     def get(self, request):
+        """
+        Render the page.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         context = {}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
@@ -47,5 +65,11 @@ class LogsView(SmarterAuthenticatedWebView):
     template_path = "account/dashboard/logs.html"
 
     def get(self, request):
+        """
+        Render the page.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         context = {}
         return self.clean_http_response(request, template_path=self.template_path, context=context)

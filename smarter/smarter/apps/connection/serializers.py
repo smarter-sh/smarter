@@ -21,10 +21,16 @@ from smarter.apps.connection.models import (
 
 
 def is_sphinx_build():
+    """
+    Return True when the module is being imported by a Sphinx build.
+
+    :returns: True if ``sphinx`` is in ``sys.modules``.
+    """
     return "sphinx" in sys.modules
 
 
 class ConnectionSerializer(MetaDataWithOwnershipModelSerializer):
+    """Serializer for ConnectionBase, with the metadata and ownership fields common to every connection kind."""
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):

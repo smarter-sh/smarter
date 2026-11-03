@@ -124,6 +124,12 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
     """Customized Django Admin console model class that provides access to customers."""
 
     def has_module_permission(self, request: ASGIRequest) -> bool:
+        """
+        Show the app's module to any authenticated user.
+
+        :param request: The admin request.
+        :returns: True if the request's resolved user is an authenticated User.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_module_permission()"
         if not isinstance(user, User):
@@ -199,13 +205,25 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
         return smarter_is_staff(request)
 
     def has_view_permission(self, request: ASGIRequest, obj=None):
-        """Override the default view permission logic to restrict access to staff users and superusers only."""
+        """
+        Override the default view permission logic to restrict access to staff users and superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         if not smarter_is_staff(request):
             return False
         return smarter_has_ud_permission(request, obj)
 
     def has_add_permission(self, request: ASGIRequest, obj=None) -> bool:
-        """Override the default add permission logic to restrict access to superusers only."""
+        """
+        Override the default add permission logic to restrict access to superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterStaffOnlyModelAdmin.has_add_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
@@ -214,13 +232,25 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
         return user.is_superuser
 
     def has_change_permission(self, request: ASGIRequest, obj=None) -> bool:
-        """Override the default change permission logic to restrict access to staff users and superusers only."""
+        """
+        Override the default change permission logic to restrict access to staff users and superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         if not smarter_is_staff(request):
             return False
         return smarter_has_ud_permission(request, obj)
 
     def has_delete_permission(self, request: ASGIRequest, obj=None) -> bool:
-        """Override the default delete permission logic to restrict access to staff users and superusers only."""
+        """
+        Override the default delete permission logic to restrict access to staff users and superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         if not smarter_is_staff(request):
             return False
         return smarter_has_ud_permission(request, obj)
@@ -236,7 +266,13 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         return request.user.is_superuser  # type: ignore
 
     def has_view_permission(self, request: ASGIRequest, obj=None):
-        """Override the default view permission logic to restrict access to superusers only."""
+        """
+        Override the default view permission logic to restrict access to superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_view_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
@@ -245,7 +281,13 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         return user.is_superuser
 
     def has_add_permission(self, request: ASGIRequest, obj=None) -> bool:
-        """Override the default add permission logic to restrict access to superusers only."""
+        """
+        Override the default add permission logic to restrict access to superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_add_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
@@ -254,7 +296,13 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         return user.is_superuser
 
     def has_change_permission(self, request: ASGIRequest, obj=None) -> bool:
-        """Override the default change permission logic to restrict access to superusers only."""
+        """
+        Override the default change permission logic to restrict access to superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_change_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
@@ -263,7 +311,13 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         return user.is_superuser
 
     def has_delete_permission(self, request: ASGIRequest, obj=None) -> bool:
-        """Override the default delete permission logic to restrict access to superusers only."""
+        """
+        Override the default delete permission logic to restrict access to superusers only.
+
+        :param request: The admin request.
+        :param obj: The object, or None for the model as a whole.
+        :returns: True if the user has the permission.
+        """
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_delete_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
@@ -276,12 +330,27 @@ class RestrictedAdminSite(admin.AdminSite):
     """Custom admin site that restricts access to certain apps and models and modifies the admin console header title."""
 
     def has_all_permission(self, request):
+        """
+        Whether the request's user is authenticated.
+
+        :param request: The admin request.
+        :returns: True if the user is authenticated.
+        """
         return request.user.is_authenticated
 
     role: str = "customer"
     site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"
 
     def each_context(self, request: ASGIRequest):
+        """
+        Set the site's role and header from the user, then return the admin's template context.
+
+        The role is ``guest``, ``unknown``, ``superuser``, ``account admin`` (staff), or
+        ``customer - <first name> <last name>``.
+
+        :param request: The admin request.
+        :returns: The template context of every admin page.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         if isinstance(user, AnonymousUser) or not getattr(user, "is_authenticated", False):
             self.role = "guest"
@@ -296,12 +365,13 @@ class RestrictedAdminSite(admin.AdminSite):
         elif user.is_staff:
             self.role = "account admin"
         else:
-            self.role = (
-                "customer - "
-                + (user.first_name if user.first_name else "")
-                + " "
-                + (user.last_name if user.last_name else "")
-            )
+            first_name = user.first_name
+            if not first_name:
+                first_name = ""
+            last_name = user.last_name
+            if not last_name:
+                last_name = ""
+            self.role = "customer - " + first_name + " " + last_name
         self.site_header = "Smarter Admin Console v" + __version__ + " (" + self.role + ")"
 
         context = super().each_context(request)

@@ -113,9 +113,12 @@ def cached_property_names(cls: type) -> frozenset[str]:
     :param cls: The class.
     :returns: The attribute names.
     """
-    return frozenset(
-        name for klass in cls.__mro__ for name, value in vars(klass).items() if isinstance(value, cached_property)
-    )
+    names = set()
+    for klass in cls.__mro__:
+        for name, value in vars(klass).items():
+            if isinstance(value, cached_property):
+                names.add(name)
+    return frozenset(names)
 
 
 class SmarterRequestMixin(AccountMixin):
@@ -383,6 +386,13 @@ class SmarterRequestMixin(AccountMixin):
 
     @smarter_request.setter
     def smarter_request(self, request: SmarterRequestType):
+        """
+        Set the request, clear the cached properties and parsed data, and resolve the request's user.
+
+        :param request: The request, or None.
+        :raises SmarterValueError: If the request's absolute url can't be built, or its user differs
+            from the user already set.
+        """
         self.clear_cached_properties()
         self._smarter_request = request
         self._data = None
@@ -1052,11 +1062,12 @@ class SmarterRequestMixin(AccountMixin):
 
         if body_str is not None:
             try:
-                self._data = (
-                    body_str
-                    if isinstance(body_str, (dict, list))
-                    else json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
-                )  # type: ignore
+                if isinstance(body_str, (dict, list)):
+                    self._data = body_str  # type: ignore
+                elif isinstance(body_str, (str, bytearray, bytes)):
+                    self._data = json.loads(body_str)
+                else:
+                    self._data = None
             except json.JSONDecodeError:
                 try:
                     if isinstance(body_str, bytearray):

@@ -295,7 +295,13 @@ def install_from_registry(slug: str, version: Optional[str] = None, user: Option
 
 
 def record_latest(extension: Extension, entry: Optional[RegistryExtension]) -> None:
-    """Record an extension's newest compatible version in the registry, and when it was checked."""
+    """
+    Record an extension's newest compatible version in the registry, and when it was checked.
+
+    :param extension: The extension, which is saved.
+    :param entry: The extension's registry entry, or None if the registry does not list it, which
+        records no latest version.
+    """
     latest = entry.latest_compatible() if entry else None
     extension.latest_version = latest.version if latest else ""
     extension.latest_checked_at = timezone.now()

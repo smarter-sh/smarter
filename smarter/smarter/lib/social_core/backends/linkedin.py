@@ -53,6 +53,8 @@ class LinkedinOpenIdConnect(OpenIdConnectAuth):
 
 
 class LinkedinOAuth2(BaseOAuth2):
+    """Python-social-auth backend for signing in with LinkedIn, by OAuth2 with the OpenID Connect scopes."""
+
     name = "linkedin-oauth2"
     AUTHORIZATION_URL = "https://www.linkedin.com/oauth/v2/authorization"
     ACCESS_TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
@@ -71,20 +73,39 @@ class LinkedinOAuth2(BaseOAuth2):
     ]
 
     def user_details_url(self):
+        """Return the userinfo url, projecting ``id``, ``firstName``, ``lastName`` and the ``FIELD_SELECTORS`` setting."""
+        extra_field_selectors = self.setting("FIELD_SELECTORS", [])
+        # a FIELD_SELECTORS setting of None means no extra fields.
+        if extra_field_selectors is None:
+            extra_field_selectors = []
         # use set() since LinkedIn fails when values are duplicated
-        fields_selectors = list(set(["id", "firstName", "lastName"] + self.setting("FIELD_SELECTORS", [])))
+        unique_field_selectors = set(["id", "firstName", "lastName"] + extra_field_selectors)
+        fields_selectors = list(unique_field_selectors)
         # user sort to ease the tests URL mocking
         fields_selectors.sort()
         fields_selectors = ",".join(fields_selectors)
         return self.USER_DETAILS_URL.format(projection=fields_selectors)
 
     def user_emails_url(self):
+        """Return the url of the user's email addresses."""
         return self.USER_EMAILS_URL
 
     def user_data(self, access_token, *args, **kwargs):
+        """
+        Fetch the user's profile from LinkedIn, adding the first email address if ``FIELD_SELECTORS`` asks for it.
+
+        :param access_token: The OAuth2 access token.
+        :param args: Passed to :meth:`email_data`.
+        :param kwargs: Passed to :meth:`email_data`.
+        :returns: The profile dict.
+        """
         response = self.get_json(self.user_details_url(), headers=self.user_data_headers(access_token))
 
-        if "emailAddress" in set(self.setting("FIELD_SELECTORS", [])):
+        field_selectors = self.setting("FIELD_SELECTORS", [])
+        # a FIELD_SELECTORS setting of None means no extra fields.
+        if field_selectors is None:
+            field_selectors = []
+        if "emailAddress" in set(field_selectors):
             emails = self.email_data(access_token, *args, **kwargs)
             if emails:
                 response["emailAddress"] = emails[0]
@@ -92,6 +113,14 @@ class LinkedinOAuth2(BaseOAuth2):
         return response
 
     def email_data(self, access_token, *args, **kwargs):
+        """
+        Fetch the user's email addresses from LinkedIn.
+
+        :param access_token: The OAuth2 access token.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :returns: The non-empty email addresses.
+        """
         response = self.get_json(self.user_emails_url(), headers=self.user_data_headers(access_token))
         email_addresses = []
         for element in response.get("elements", []):
@@ -142,6 +171,12 @@ class LinkedinOAuth2(BaseOAuth2):
         return retval
 
     def user_data_headers(self, access_token):
+        """
+        Return the headers of LinkedIn api requests: the bearer token, and ``Accept-Language`` if ``FORCE_PROFILE_LANGUAGE`` is set.
+
+        :param access_token: The OAuth2 access token.
+        :returns: The headers.
+        """
         headers = {}
         lang = self.setting("FORCE_PROFILE_LANGUAGE")
         if lang:
@@ -150,21 +185,42 @@ class LinkedinOAuth2(BaseOAuth2):
         return headers
 
     def request_access_token(self, *args, **kwargs):
+        """
+        Request the access token, sending the form data as query parameters, as LinkedIn expects.
+
+        :param args: Passed to the base class.
+        :param kwargs: Passed to the base class; ``data`` is moved to ``params``.
+        :returns: The token response.
+        """
         # LinkedIn expects a POST request with querystring parameters, despite
         # the spec http://tools.ietf.org/html/rfc6749#section-4.1.3
         kwargs["params"] = kwargs.pop("data")
         return super().request_access_token(*args, **kwargs)
 
     def process_error(self, data):
+        """
+        Raise on an OAuth2 error, or on a LinkedIn ``serviceErrorCode``.
+
+        :param data: The response data.
+        :raises AuthCanceled: If the response has a ``serviceErrorCode``.
+        """
         super().process_error(data)
         if data.get("serviceErrorCode"):
             raise AuthCanceled(self, data.get("message") or data.get("status"))
 
 
 class LinkedinMobileOAuth2(LinkedinOAuth2):
+    """LinkedIn backend for the mobile SDK, which adds the ``x-li-src: msdk`` header."""
+
     name = "linkedin-mobile-oauth2"
 
     def user_data_headers(self, access_token):
+        """
+        Return the parent's headers, plus ``x-li-src: msdk``.
+
+        :param access_token: The OAuth2 access token.
+        :returns: The headers.
+        """
         headers = super().user_data_headers(access_token)
         headers["x-li-src"] = "msdk"
         return headers
