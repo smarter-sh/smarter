@@ -6,5 +6,5 @@
 #             -r constraints.in
 #
 # -----------------------------------------------------------------------------
-social-auth-core<6                  # 6.x replaced AuthAlreadyAssociated, AuthTokenError, ... with a few exception classes and error codes. Port apps/account/pipeline.py and lib/social_core/backends/linkedin.py first
+social-auth-core<7                  # 6.x replaced AuthAlreadyAssociated, AuthTokenError, ... with a few exception classes and error codes. Port apps/account/pipeline.py and lib/social_core/backends/linkedin.py first
 social-auth-app-django<7            # 7.x requires social-auth-core 6
