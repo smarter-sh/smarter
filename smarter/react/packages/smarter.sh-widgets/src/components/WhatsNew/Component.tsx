@@ -26,6 +26,36 @@ const DOCS_BASE_URL = "https://docs.smarter.sh";
 
 const FEATURES: Feature[] = [
   {
+    name: "Smarter Operations MCP Server",
+    version: "0.41",
+    description: gettext("Help desk tools for staff: pod logs, platform health and a user's sign-in problems"),
+    docsPath: "smarter-platform/smarter-operations-mcp-server.html",
+  },
+  {
+    name: gettext("Slack Bot"),
+    version: "0.39",
+    description: gettext("Answer questions in your Slack workspace with any deployed LLMClient"),
+    docsPath: "smarter-framework/smarter-on-kubernetes/slack-bot.html",
+  },
+  {
+    name: gettext("Global Search"),
+    version: "0.38",
+    description: gettext("Find any resource from the dashboard, and narrow lists by tag or annotation"),
+    docsPath: "smarter-platform/smarter-web-console.html",
+  },
+  {
+    name: gettext("Workbench Architecture"),
+    version: "0.34",
+    description: gettext("See an LLMClient's tools, plugins and guardrails as a tree, beside its chat"),
+    docsPath: "smarter-platform/smarter-web-console.html",
+  },
+  {
+    name: gettext("Languages"),
+    version: "0.30",
+    description: gettext("Use the web console in English, Spanish, French or Brazilian Portuguese"),
+    docsPath: "smarter-framework/developer-reference/translations.html",
+  },
+  {
     name: gettext("Extensions"),
     version: "0.27",
     description: gettext("Install signed, third-party LLM tools from the Smarter Extension registry"),
@@ -66,36 +96,6 @@ const FEATURES: Feature[] = [
     version: "0.18",
     description: gettext("Serve LLMClients from your own branded domain, managed with a SAM manifest"),
     docsPath: "smarter-resources/smarter-custom-domain.html",
-  },
-  {
-    name: gettext("Manifest Editor"),
-    version: "0.17",
-    description: gettext("Edit, validate, save, clone and delete manifests in the web console"),
-    docsPath: "smarter-platform/smarter-web-console.html",
-  },
-  {
-    name: gettext("Budgets"),
-    version: "0.16",
-    description: gettext("Enforce spending limits on any resource, with budget vs actual charts"),
-    docsPath: "smarter-resources/smarter-budget.html",
-  },
-  {
-    name: "LLMHosts",
-    version: "0.16",
-    description: gettext("Run open-weight LLMs on your own Kubernetes cluster"),
-    docsPath: "smarter-resources/smarter-llmhost.html",
-  },
-  {
-    name: gettext("Proxies"),
-    version: "0.16",
-    description: gettext("Pass requests through to LLM provider APIs, with keys kept as Smarter Secrets"),
-    docsPath: "smarter-resources/smarter-proxy.html",
-  },
-  {
-    name: "VectorStores",
-    version: "0.16",
-    description: gettext("Manage RAG vector databases: self-hosted Qdrant, Qdrant Cloud and Pinecone"),
-    docsPath: "smarter-resources/smarter-vectorstore.html",
   },
 ];
 

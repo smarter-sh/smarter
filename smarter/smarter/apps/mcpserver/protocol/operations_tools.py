@@ -105,7 +105,9 @@ class SmarterOperationsTool(MCPToolBase):
     :class:`~smarter.apps.mcpserver.protocol.tools.SmarterProjectTool`, its results are never
     cached.
 
-    :param user: The staff user whose api key the server verified.
+    :param user: The staff user whose api key, or signed acting user, the server verified, or None
+        for a request that the platform makes for nobody in particular, which may list the tools but
+        not call them.
     """
 
     arguments_model: ClassVar[type[OperationsToolArguments]] = OperationsToolArguments
@@ -114,11 +116,11 @@ class SmarterOperationsTool(MCPToolBase):
     read_only: ClassVar[bool] = True
     """Every operations tool only reads."""
 
-    def __init__(self, user: User):
+    def __init__(self, user: Optional[User]):
         """
         Keep the staff user, for the audit trail.
 
-        :param user: The staff user whose api key the server verified.
+        :param user: The staff user that the server verified, or None for nobody in particular.
         """
         self.user = user
 
@@ -139,8 +141,13 @@ class SmarterOperationsTool(MCPToolBase):
 
         :param arguments: The tool call's arguments.
         :returns: The result, as Markdown, at most :data:`MAX_RESULT_CHARACTERS`.
-        :raises SmarterMCPServerToolError: If the arguments are not valid, or the tool fails.
+        :raises SmarterMCPServerToolError: If there is no staff user, the arguments are not valid, or
+            the tool fails.
         """
+        if self.user is None:
+            # the server lists its tools for the platform's own background requests, which are made for
+            # nobody in particular, but a tool call always has a staff user, who is recorded.
+            raise SmarterMCPServerToolError(f"{self.name} requires a staff user of this platform.")
         try:
             validated = self.arguments_model.model_validate(arguments or {})
         except ValidationError as e:
@@ -175,6 +182,9 @@ class SmarterOperationsTool(MCPToolBase):
         :param is_error: Whether it failed.
         :param characters: The length of its result, after :func:`truncate`, or 0 for an error.
         """
+        if self.user is None:
+            # call() refuses a call without a user before it runs.
+            return
         OperationsToolCall.objects.create(
             user=self.user,
             username=self.user.get_username(),
