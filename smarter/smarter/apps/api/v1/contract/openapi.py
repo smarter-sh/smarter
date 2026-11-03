@@ -2127,7 +2127,7 @@ def openapi_document() -> OpenApiDocument:
         servers=[
             OpenApiServer(
                 url="{platform}/api/v1",
-                description="A Smarter platform.",
+                description="A Smarter installation.",
                 variables={
                     "platform": OpenApiServerVariable(
                         default=DEFAULT_PLATFORM_URL, description="The platform's url, with its scheme."
