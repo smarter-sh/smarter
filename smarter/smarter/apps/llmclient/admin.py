@@ -52,12 +52,30 @@ class LLMClientAdmin(SmarterCustomerModelAdmin):
     ordering = ["-updated_at"]
 
     def ready(self, obj: LLMClient) -> bool:
+        """
+        Show whether the LLMClient is ready to serve prompts.
+
+        :param obj: The LLMClient in the changelist row.
+        :returns: The LLMClient's ``ready`` property.
+        """
         return obj.ready
 
     def mode(self, obj: LLMClient) -> str:
+        """
+        Show the mode the LLMClient runs in at its own url.
+
+        :param obj: The LLMClient in the changelist row.
+        :returns: The mode that ``LLMClient.mode()`` returns for the LLMClient's ``url``.
+        """
         return obj.mode(obj.url)
 
     def get_queryset(self, request):
+        """
+        Return the LLMClients the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The permitted LLMClients, or an empty queryset if the user does not resolve to a ``User``.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -82,6 +100,13 @@ class LLMClientRequestsAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in LLMClientRequests._meta.fields]
 
     def get_queryset(self, request):
+        """
+        Return the LLMClients the requesting user has ownership permission for, limited to the admin's queryset.
+
+        :param request: The admin request.
+        :returns: The permitted LLMClients whose ids match a primary key in the default
+            ``LLMClientRequests`` queryset, or an empty queryset if the user does not resolve to a ``User``.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -182,6 +207,12 @@ class LLMClientPluginAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in LLMClientPlugin._meta.fields]
 
     def get_queryset(self, request):
+        """
+        Return the LLMClient plugins whose LLMClient the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The permitted rows, or an empty queryset if the user does not resolve to a ``User``.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -206,6 +237,12 @@ class LLMClientExtensionsAdmin(SmarterCustomerModelAdmin):
     list_display = ["llmclient", "extension", "created_at", "updated_at"]
 
     def get_queryset(self, request):
+        """
+        Return the LLMClient extensions whose LLMClient the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The permitted rows, or an empty queryset if the user does not resolve to a ``User``.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -229,6 +266,12 @@ class LLMClientMCPClientsAdmin(SmarterCustomerModelAdmin):
     list_display = ["llmclient", "mcpclient", "created_at", "updated_at"]
 
     def get_queryset(self, request):
+        """
+        Return the LLMClient MCP clients whose LLMClient the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The permitted rows, or an empty queryset if the user does not resolve to a ``User``.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):

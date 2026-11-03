@@ -17,6 +17,12 @@ class Command(SmarterCommand):
     )
 
     def handle(self, *args, **options):
+        """
+        Write the architecture contract's JSON Schema to ``SCHEMA_PATH``, and print the path.
+
+        :param args: Unused positional arguments.
+        :param options: Unused command options.
+        """
         self.handle_begin()
         SCHEMA_PATH.write_text(contract_schema_json(), encoding="utf-8")
         self.stdout.write(str(SCHEMA_PATH))

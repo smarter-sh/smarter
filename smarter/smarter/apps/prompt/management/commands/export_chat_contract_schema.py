@@ -18,9 +18,20 @@ class Command(SmarterCommand):
     help = "Write the JSON Schema of the Smarter Chat api contract."
 
     def add_arguments(self, parser):
+        """
+        Add the ``--output`` option.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("--output", default=SCHEMA_PATH, help="The file to write.")
 
     def handle(self, *args, **options):
+        """
+        Write the JSON Schema of the Smarter Chat api contract, and print the file's path.
+
+        :param args: Unused positional arguments.
+        :param options: The command's options, with ``output``, the file to write.
+        """
         self.handle_begin()
         path = write_chat_contract_schema(options["output"])
         self.stdout.write(path)
