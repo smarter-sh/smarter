@@ -975,6 +975,12 @@ gettext("Agentic AI wrote more than 70% of Smarter's unit tests.");
 // Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
 gettext("Smarter's first commit was made in February 2023.");
 // Translators: used in react/packages/smarter-doodle/src/App.tsx
+gettext("Drawn by a Smarter AI application.");
+// Translators: used in react/packages/smarter-doodle/src/App.tsx
+gettext("Chosen by a Smarter AI application.");
+// Translators: used in react/packages/smarter-doodle/src/App.tsx
+gettext("Learn how");
+// Translators: used in react/packages/smarter-doodle/src/App.tsx
 gettext("Learn more");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("The publisher's trust badge");

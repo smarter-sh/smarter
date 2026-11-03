@@ -158,6 +158,18 @@ class SmarterWaffleSwitches:
     Inactive, the page shows the plain base scene.
     """
 
+    ENABLE_DOODLE_AI_CREDIT = "enable_doodle_ai_credit"
+    """Enables the credit below a doodle that a Smarter AI application chose or drew, in place of the project's description."""
+
+    ENABLE_DOODLE_AUTO_APPROVE = "enable_doodle_auto_approve"
+    """Shows a doodle that the Smarter Doodle Artist drew without a superuser's approval in the admin."""
+
+    ENABLE_DOODLE_LLM_ARTWORK = "enable_doodle_llm_artwork"
+    """Lets the Smarter Doodle Editor choose a holiday that the catalog has no theme for, which the Smarter Doodle Artist draws."""
+
+    ENABLE_DOODLE_LLM_EDITOR = "enable_doodle_llm_editor"
+    """Lets the Smarter Doodle Editor, an LLMClient, choose each region's doodle of each new day."""
+
     ENABLE_DOODLE_ANIMATION = "enable_doodle_animation"
     """Enables the Doodle's animations.
 
@@ -429,6 +441,34 @@ class SmarterWaffleSwitches:
                 "Enables the Doodle, the sign-in page's illustration of the day. "
                 "Inactive, the page shows the plain base scene."
             ),
+            default=True,
+        ),
+        ENABLE_DOODLE_AI_CREDIT: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_AI_CREDIT,
+            comment=(
+                "Enables the credit below a doodle that a Smarter AI application chose or drew, "
+                "in place of the project's description."
+            ),
+            default=True,
+        ),
+        ENABLE_DOODLE_AUTO_APPROVE: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_AUTO_APPROVE,
+            comment=(
+                "Shows a doodle that the Smarter Doodle Artist drew without a superuser's approval " "in the admin."
+            ),
+            default=False,
+        ),
+        ENABLE_DOODLE_LLM_ARTWORK: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_LLM_ARTWORK,
+            comment=(
+                "Lets the Smarter Doodle Editor choose a holiday that the catalog has no theme for, "
+                "which the Smarter Doodle Artist draws."
+            ),
+            default=True,
+        ),
+        ENABLE_DOODLE_LLM_EDITOR: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_LLM_EDITOR,
+            comment="Lets the Smarter Doodle Editor, an LLMClient, choose each region's doodle of each new day.",
             default=True,
         ),
         ENABLE_DOODLE_ANIMATION: SmarterWaffleSwitch(

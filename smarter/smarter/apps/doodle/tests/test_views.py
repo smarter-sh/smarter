@@ -10,8 +10,9 @@ from waffle.testutils import override_switch
 from smarter.apps.doodle.api.v1 import views
 from smarter.apps.doodle.api.v1.urls import DoodleApiV1ReverseViews
 from smarter.apps.doodle.caching import artwork_url, doodle_of_the_day
-from smarter.apps.doodle.const import DEFAULT_THEME_SLUG
+from smarter.apps.doodle.const import DEFAULT_THEME_SLUG, LEARN_HOW_URL
 from smarter.apps.doodle.contract.models import DoodleApiResponse
+from smarter.apps.doodle.models import Doodle, DoodleSource
 from smarter.apps.doodle.planner import plan_doodle
 from smarter.apps.doodle.regions import DoodleRegion
 from smarter.lib.django.shortcuts import reverse
@@ -22,6 +23,7 @@ from .mixins import DIWALI, DoodleTestMixin
 REGIONAL = SmarterWaffleSwitches.ENABLE_DOODLE_REGIONAL
 ANIMATION = SmarterWaffleSwitches.ENABLE_DOODLE_ANIMATION
 CAPTION = SmarterWaffleSwitches.ENABLE_DOODLE_CAPTION
+AI_CREDIT = SmarterWaffleSwitches.ENABLE_DOODLE_AI_CREDIT
 
 KOLKATA = "Asia/Kolkata"
 
@@ -83,6 +85,20 @@ class TestDoodleViews(DoodleTestMixin):
         body = DoodleApiResponse.model_validate(response.json())
         self.assertEqual(body.region, DoodleRegion.GLOBAL)
         self.assertEqual(body.theme, "diwali")
+
+    def test_the_ai_credit_and_its_switch(self):
+        doodle = Doodle.objects.get(date=DIWALI, region=DoodleRegion.SOUTH_ASIA)
+        Doodle.objects.filter(pk=doodle.pk).update(source=DoodleSource.LLM)
+        self.addCleanup(Doodle.objects.filter(pk=doodle.pk).update, source=doodle.source)
+        doodle_of_the_day.invalidate(DIWALI.isoformat(), DoodleRegion.SOUTH_ASIA)
+        self.addCleanup(doodle_of_the_day.invalidate, DIWALI.isoformat(), DoodleRegion.SOUTH_ASIA)
+        with override_switch(REGIONAL, active=True), override_switch(AI_CREDIT, active=True):
+            body = self.get_today(KOLKATA).json()
+        self.assertEqual(body["aiCredit"], "chosen")
+        self.assertEqual(body["learnHowUrl"], LEARN_HOW_URL)
+        with override_switch(REGIONAL, active=True), override_switch(AI_CREDIT, active=False):
+            body = self.get_today(KOLKATA).json()
+        self.assertEqual(body["aiCredit"], "")
 
     def test_switches_stop_animation_and_caption(self):
         with override_switch(REGIONAL, active=True), override_switch(CAPTION, active=False):

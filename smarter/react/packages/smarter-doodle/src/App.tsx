@@ -2,6 +2,9 @@
  * The Doodle: the left panel of the sign-in pages. The logo, the doodle of the day, its caption, and
  * the project's name and description.
  *
+ * When a Smarter AI application chose or drew the doodle, a credit, with a link to how it works,
+ * takes the place of the project's description.
+ *
  * Until the doodle of the day arrives, and if it never does, the panel shows the base scene, as the
  * Django template does without JavaScript. The page's stylesheet, in
  * templates/account/authentication/base.html, styles the smarter-doodle-* classes for both.
@@ -67,12 +70,23 @@ function App({ appContext, timeZone = browserTimeZone() }: { appContext: AppCont
         )}
       </figure>
       <h1 className="smarter-doodle-title">{appContext.productName}</h1>
-      <div className="smarter-doodle-description">
-        {appContext.productDescription}{" "}
-        <a href={appContext.projectUrl} target="_blank" rel="noopener">
-          {gettext("Learn more")}
-        </a>
-      </div>
+      {doodle?.aiCredit ? (
+        <div className="smarter-doodle-description smarter-doodle-ai-credit" data-testid="smarter-doodle-ai-credit">
+          {doodle.aiCredit === "drawn"
+            ? gettext("Drawn by a Smarter AI application.")
+            : gettext("Chosen by a Smarter AI application.")}{" "}
+          <a href={doodle.learnHowUrl} target="_blank" rel="noopener">
+            {gettext("Learn how")}
+          </a>
+        </div>
+      ) : (
+        <div className="smarter-doodle-description">
+          {appContext.productDescription}{" "}
+          <a href={appContext.projectUrl} target="_blank" rel="noopener">
+            {gettext("Learn more")}
+          </a>
+        </div>
+      )}
     </>
   );
 }

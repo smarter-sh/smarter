@@ -38,3 +38,15 @@ class TestDoodleCommands(DoodleTestMixin):
             call_command("plan_doodles", days=3, stdout=out)
         plan.assert_called_once_with(days=3)
         self.assertIn("Planned 12 doodles.", out.getvalue())
+        self.assertNotIn("Smarter Doodle Editor", out.getvalue())
+
+    def test_plan_doodles_with_the_editor(self):
+        out = io.StringIO()
+        command = "smarter.apps.doodle.management.commands.plan_doodles"
+        with (
+            patch(f"{command}.plan_doodles", return_value=12),
+            patch(f"{command}.edit_days", return_value=2) as edit,
+        ):
+            call_command("plan_doodles", days=1, editor=True, stdout=out)
+        self.assertEqual(len(edit.call_args.args[0]), 3)
+        self.assertIn("The Smarter Doodle Editor chose the doodles of 2 days.", out.getvalue())

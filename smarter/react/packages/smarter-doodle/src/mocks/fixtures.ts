@@ -27,8 +27,23 @@ export const diwali: DoodleApiResponse = {
   linkUrl: "https://en.wikipedia.org/wiki/Diwali",
   imageUrl: `${STATIC_URL}doodle/base.svg`,
   isDefault: false,
+  aiCredit: "",
+  learnHowUrl: "https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration/doodle.html",
   animated: true,
   showCaption: true,
+};
+
+/** Revolution Day in Mexico, which the Smarter Doodle Editor chose, and the Smarter Doodle Artist drew. */
+export const drawnByAi: DoodleApiResponse = {
+  ...diwali,
+  date: "2026-11-16",
+  region: "mx",
+  theme: "ai-2026-11-16-revolution-day",
+  title: "Revolution Day",
+  caption: "Happy Revolution Day!",
+  altText: "Paper flags in green, white and red hang above a Smarter LLMClient.",
+  linkUrl: "https://en.wikipedia.org/wiki/Mexican_Revolution",
+  aiCredit: "drawn",
 };
 
 export const quietDay: DoodleApiResponse = {

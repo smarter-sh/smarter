@@ -35,6 +35,14 @@ class TestDoodleContract(unittest.TestCase):
         response = DoodleApiResponse.from_doodle(DIWALI, animated=False, show_caption=True)
         self.assertEqual(response.image_url, "/api/v1/doodles/artwork/abc.svg?still=1")
 
+    def test_ai_credit(self):
+        drawn = DIWALI.model_copy(update={"ai_credit": "drawn"})
+        response = DoodleApiResponse.from_doodle(drawn, animated=True, show_caption=True)
+        self.assertEqual(response.to_json()["aiCredit"], "drawn")
+        self.assertTrue(response.learn_how_url.startswith("https://docs.smarter.sh/"))
+        hidden = DoodleApiResponse.from_doodle(drawn, animated=True, show_caption=True, show_ai_credit=False)
+        self.assertEqual(hidden.ai_credit, "")
+
     def test_no_caption_for_the_default(self):
         default = DIWALI.model_copy(update={"is_default": True})
         response = DoodleApiResponse.from_doodle(default, animated=True, show_caption=True)

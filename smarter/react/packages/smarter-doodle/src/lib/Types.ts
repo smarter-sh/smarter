@@ -21,6 +21,13 @@ export interface DoodleApiResponse {
   imageUrl: string;
   /** Whether it is the plain default doodle, which celebrates nothing. */
   isDefault: boolean;
+  /**
+   * What a Smarter AI application did: "chosen", the Smarter Doodle Editor chose it; "drawn", the
+   * Smarter Doodle Artist drew it too. Empty when a person or the calendar chose it.
+   */
+  aiCredit: "" | "chosen" | "drawn";
+  /** Where the AI credit's Learn how links to: how the doodle is chosen and drawn. */
+  learnHowUrl: string;
   /** Whether the artwork is animated. */
   animated: boolean;
   /** Whether to show the caption below the artwork. */

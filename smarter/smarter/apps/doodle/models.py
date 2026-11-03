@@ -16,6 +16,7 @@ from django.db import models
 from smarter.lib.django.models import TimestampedModel
 
 from .artwork import svg_sha256
+from .const import DEFAULT_THEME_SLUG
 from .regions import DoodleRegion
 from .schedule import DoodleSchedule
 
@@ -87,6 +88,10 @@ class DoodleTheme(TimestampedModel):
         DoodleArtwork, on_delete=models.PROTECT, related_name="themes", help_text="The props on the base scene."
     )
     is_active = models.BooleanField(default=True, help_text="Whether the planner may choose it.")
+    is_generated = models.BooleanField(
+        default=False,
+        help_text="Whether the Smarter Doodle Artist drew it, for one day, rather than the catalog's file.",
+    )
 
     # pylint: disable=C0115
     class Meta:
@@ -122,6 +127,7 @@ class DoodleSource(models.TextChoices):
     CALENDAR = "calendar", "The calendar"
     DEFAULT = "default", "The default, nothing was due"
     HUMAN = "human", "A person, in the admin"
+    LLM = "llm", "The Smarter Doodle Editor, an LLMClient"
 
 
 class Doodle(TimestampedModel):
@@ -149,6 +155,24 @@ class Doodle(TimestampedModel):
     def __str__(self) -> str:
         return f"{self.date} {self.region} {self.theme}"
 
+    @property
+    def ai_credit(self) -> str:
+        """
+        What a Smarter AI application did for the doodle, for the credit below it.
+
+        :returns: ``drawn`` if the Smarter Doodle Artist drew its artwork, ``chosen`` if the Smarter
+            Doodle Editor chose its catalog theme, or an empty string. Never for the plain default.
+        :rtype: str
+        """
+        if self.source != DoodleSource.LLM:
+            return ""
+        theme = self.theme
+        if theme.is_generated:
+            return "drawn"
+        if theme.slug == DEFAULT_THEME_SLUG:
+            return ""
+        return "chosen"
+
     @classmethod
     def shown(cls, date, region: str) -> Optional["Doodle"]:
         """
@@ -164,8 +188,43 @@ class Doodle(TimestampedModel):
         return doodle
 
 
+class DoodleEditorRunStatus(models.TextChoices):
+    """How a run of the Smarter Doodle Editor ended."""
+
+    SUCCEEDED = "succeeded", "Succeeded"
+    FAILED = "failed", "Failed"
+
+
+class DoodleEditorRun(TimestampedModel):
+    """
+    A prompt of the Smarter Doodle Editor for one day: what it was asked, and what it answered.
+
+    The planner asks the editor once for each day. A day whose run succeeded isn't asked again, and
+    a day whose runs failed :data:`~smarter.apps.doodle.const.EDITOR_MAX_ATTEMPTS` times is left to
+    the calendar.
+    """
+
+    date = models.DateField(help_text="The day that the editor chose the doodles of.")
+    status = models.CharField(max_length=16, choices=DoodleEditorRunStatus.choices)
+    request = models.JSONField(default=dict, help_text="The prompt: the day's candidates, in each region.")
+    response = models.TextField(blank=True, default="", help_text="The editor's answer.")
+    error = models.TextField(blank=True, default="", help_text="Why the run failed.")
+
+    # pylint: disable=C0115
+    class Meta:
+        verbose_name = "Doodle Editor Run"
+        verbose_name_plural = "Doodle Editor Runs"
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["date", "status"])]
+
+    def __str__(self) -> str:
+        return f"{self.date} {self.status}"
+
+
 __all__ = [
     "Doodle",
+    "DoodleEditorRun",
+    "DoodleEditorRunStatus",
     "DoodleArtwork",
     "DoodleCategory",
     "DoodleSource",

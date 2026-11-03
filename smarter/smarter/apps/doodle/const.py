@@ -46,3 +46,21 @@ VIEWBOX = "0 0 520 340"
 
 PROPS_PLACEHOLDER_ID = "doodle-props"
 """The id of the empty group in the base scene that a theme's props are drawn into."""
+
+EDITOR_LLMCLIENT = "smarter_doodle_editor"
+"""The staff-only LLMClient of the Smarter account that chooses each region's doodle, from example-manifests."""
+
+ARTIST_LLMCLIENT = "smarter_doodle_artist"
+"""The staff-only LLMClient of the Smarter account that draws a holiday that the catalog has no theme for."""
+
+EDITOR_MAX_ATTEMPTS = 3
+"""How many times the planner asks the editor about a day, before it leaves the day to the calendar."""
+
+MAX_OBSERVANCES_PER_REGION = 12
+"""How many of a region's holidays of a day the editor is told about, at most."""
+
+MAX_GENERATED_SVG_LENGTH = 40_000
+"""The longest SVG, in characters, that the Smarter Doodle Artist may answer with."""
+
+LEARN_HOW_URL = "https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration/doodle.html"
+"""Where the credit of a doodle that a Smarter AI application chose or drew links to: how it works."""

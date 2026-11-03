@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import App from "@/App";
 import { browserTimeZone } from "@/lib/api";
-import { appContext, diwali, quietDay } from "@/mocks/fixtures";
+import { appContext, diwali, drawnByAi, quietDay } from "@/mocks/fixtures";
 import { server } from "@test/server";
 
 /** Answers the doodle api with a response, and records the time zones that it is asked for. */
@@ -40,6 +40,23 @@ describe("App", () => {
     expect(screen.getByTestId("smarter-doodle-figure")).toHaveAttribute("data-theme", "diwali");
     fireEvent.load(image);
     expect(image).toHaveClass("smarter-doodle-image-loaded");
+  });
+
+  it("credits the Smarter AI applications that drew the doodle, in place of the description", async () => {
+    useDoodleApi(drawnByAi);
+    render(<App appContext={appContext} timeZone="America/Mexico_City" />);
+    const credit = await screen.findByTestId("smarter-doodle-ai-credit");
+    expect(credit).toHaveTextContent("Drawn by a Smarter AI application.");
+    expect(screen.getByRole("link", { name: "Learn how" })).toHaveAttribute("href", drawnByAi.learnHowUrl);
+    expect(screen.queryByText(appContext.productDescription, { exact: false })).not.toBeInTheDocument();
+  });
+
+  it("credits the Smarter AI application that chose the doodle", async () => {
+    useDoodleApi({ ...diwali, aiCredit: "chosen" });
+    render(<App appContext={appContext} timeZone="Asia/Kolkata" />);
+    expect(await screen.findByTestId("smarter-doodle-ai-credit")).toHaveTextContent(
+      "Chosen by a Smarter AI application.",
+    );
   });
 
   it("shows a caption without a link as text", async () => {

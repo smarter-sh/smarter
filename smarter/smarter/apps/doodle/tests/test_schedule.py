@@ -6,7 +6,13 @@ from unittest.mock import patch
 from pydantic import ValidationError
 
 from smarter.apps.doodle import schedule
-from smarter.apps.doodle.schedule import DoodleSchedule, holiday_dates, nth_weekday
+from smarter.apps.doodle.schedule import (
+    DoodleSchedule,
+    country_holidays,
+    holiday_dates,
+    holidays_on,
+    nth_weekday,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -60,6 +66,15 @@ class TestSchedule(SmarterTestBase):
         with patch.object(schedule, "logger") as logger:
             self.assertEqual(holiday_dates("ZZ", "Anything", 2026), [])
         logger.warning.assert_called_once()
+
+    def test_holidays_on(self):
+        self.assertEqual(holidays_on("MX", datetime.date(2026, 11, 16)), ["Revolution Day"])
+        self.assertEqual(holidays_on("MX", datetime.date(2026, 11, 17)), [])
+
+    def test_a_year_that_the_package_does_not_date(self):
+        # India's lunisolar holidays are dated up to 2035; its Gregorian ones, every year.
+        self.assertEqual(holiday_dates("IN", "Diwali", 2099), [])
+        self.assertIn("2099-01-26", country_holidays("IN", 2099))
 
     def test_never(self):
         never = DoodleSchedule(kind="never")
