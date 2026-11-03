@@ -1,7 +1,7 @@
 Log Tools
 =========
 
-.. automodule:: smarter.apps.mcpserver.logs.tools
+.. automodule:: smarter.apps.mcpserver.protocol.tools.logs
     :members:
     :undoc-members:
     :show-inheritance:

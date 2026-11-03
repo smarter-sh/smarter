@@ -45,7 +45,7 @@ RESERVED_HEADERS = frozenset(
         "trailer",
         "transfer-encoding",
         "upgrade",
-        # the platform signs it, for its own Smarter Operations MCP server: see smarter.apps.mcpserver.acting_user.
+        # the platform signs it, for its own MCPServer's staff-only endpoint: see smarter.apps.mcpserver.services.acting_user.
         "x-smarter-acting-user",
     }
 )

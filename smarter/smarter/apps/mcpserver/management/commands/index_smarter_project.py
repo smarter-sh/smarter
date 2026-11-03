@@ -1,7 +1,7 @@
 """
 The ``index_smarter_project`` management command: index The Smarter Project's repositories and blog.
 
-The Smarter Project MCP server searches an index of each repository's files, and of the blog's
+The MCPServer's public endpoint searches an index of each repository's files, and of the blog's
 posts. This command brings those indexes up to date, either in the foreground, which shows
 each outcome, or by queueing the Celery tasks of :mod:`smarter.apps.mcpserver.tasks`, which is
 how ``manage.py initialize_platform`` runs it.
@@ -13,9 +13,9 @@ how ``manage.py initialize_platform`` runs it.
     be documented.
 """
 
-from smarter.apps.mcpserver.index.blog import index_blog
-from smarter.apps.mcpserver.index.indexer import index_repository
-from smarter.apps.mcpserver.repositories import repository_names
+from smarter.apps.mcpserver.services.indexing.blog import index_blog
+from smarter.apps.mcpserver.services.indexing.github import index_repository
+from smarter.apps.mcpserver.services.repositories import repository_names
 from smarter.apps.mcpserver.tasks import index_blog as index_blog_task
 from smarter.apps.mcpserver.tasks import index_repositories
 from smarter.apps.mcpserver.tasks import index_repository as index_repository_task
@@ -48,7 +48,7 @@ class Command(SmarterCommand):
         python manage.py index_smarter_project --queue
     """
 
-    help = "Index The Smarter Project's GitHub repositories, and its blog, for the Smarter Project MCP server."
+    help = "Index The Smarter Project's GitHub repositories, and its blog, for the MCPServer's public endpoint."
 
     def add_arguments(self, parser):
         """

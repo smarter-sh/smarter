@@ -134,7 +134,7 @@ class CloudProvider(InfrastructureService):
         """
         Describe the health of the platform's Kubernetes cluster, as the cloud provider sees it.
 
-        The Smarter Operations MCP server's ``eks_status`` tool reports it. This implementation knows
+        The MCPServer's staff-only ``eks_status`` tool reports it. This implementation knows
         only what :meth:`get_kubernetes_cluster_info` returns: the control plane's status, versions and
         health issues. A provider overrides it to add its node groups, add-ons and recommendations, as
         :class:`~smarter.apps.infrastructure.providers.aws.AWSProvider` does with EKS.

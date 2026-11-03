@@ -1,4 +1,4 @@
-# Test pod logs for the Smarter Operations MCP server's log tools (tests/operations_base.py).
+# Test pod logs for the MCPServer's staff-only log tools (tests/operations_base.py).
 # Each line was written minutes_ago minutes before the test runs. The values are fake: no real
 # hosts, keys or users. Redaction has already happened, as Alloy does before Loki stores a line.
 lines:

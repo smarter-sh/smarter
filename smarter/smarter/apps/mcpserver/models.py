@@ -2,12 +2,12 @@
 Models of the MCPServer app: the search index of The Smarter Project's repositories, and the audit trail of the operations tools.
 
 :class:`RepositoryIndex` records, for each repository of
-:data:`~smarter.apps.mcpserver.repositories.SMARTER_PROJECT_REPOSITORIES`, the commit that
+:data:`~smarter.apps.mcpserver.services.repositories.SMARTER_PROJECT_REPOSITORIES`, the commit that
 is indexed, and :class:`RepositoryFile` holds the text of each of its files. The index is
-built by :func:`smarter.apps.mcpserver.index.indexer.index_repository`, and replaced whenever the
+built by :func:`smarter.apps.mcpserver.services.indexing.github.index_repository`, and replaced whenever the
 repository's branch moves to a new commit.
 
-:class:`OperationsToolCall` records every call to a tool of the Smarter Operations MCP server
+:class:`OperationsToolCall` records every call to a staff-only tool of the MCPServer
 (:mod:`smarter.apps.mcpserver.protocol.operations`): who called it, for which help desk ticket,
 with which arguments, and whether it failed. The tools read logs and users' data, so each call
 is kept until a superuser deletes it.
@@ -63,14 +63,14 @@ class RepositoryIndex(TimestampedModel):
     The index of one of The Smarter Project's repositories, or of its blog.
 
     There is one row per repository of
-    :data:`~smarter.apps.mcpserver.repositories.SMARTER_PROJECT_REPOSITORIES`, plus one for the
+    :data:`~smarter.apps.mcpserver.services.repositories.SMARTER_PROJECT_REPOSITORIES`, plus one for the
     blog, whose ``repository`` is the blog's name, e.g. ``blog.smarter.sh``. The row records
     which commit is indexed, and whether the last attempt to index it failed. The text of the
     indexed files is in its :class:`RepositoryFile` rows, ``index.files``.
 
     It is written only by the indexers,
-    :func:`smarter.apps.mcpserver.index.indexer.index_repository` and
-    :func:`smarter.apps.mcpserver.index.blog.index_blog`.
+    :func:`smarter.apps.mcpserver.services.indexing.github.index_repository` and
+    :func:`smarter.apps.mcpserver.services.indexing.blog.index_blog`.
     """
 
     # pylint: disable=C0115
@@ -158,7 +158,7 @@ class RepositoryFile(TimestampedModel):
 
 class OperationsToolCall(TimestampedModel):
     """
-    One call to a tool of the Smarter Operations MCP server, for the audit trail.
+    One call to a staff-only tool of the MCPServer, for the audit trail.
 
     The operations tools read logs and users' data, so the server writes a row for every
     call, whether it succeeded or not: who called it, for which help desk ticket, with which

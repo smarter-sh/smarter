@@ -1,6 +1,6 @@
-"""Tests for smarter.apps.mcpserver.repositories."""
+"""Tests for smarter.apps.mcpserver.services.repositories."""
 
-from smarter.apps.mcpserver.repositories import (
+from smarter.apps.mcpserver.services.repositories import (
     SMARTER_PROJECT_DOCS_LATEST_URL,
     SMARTER_PROJECT_REPOSITORIES,
     ProjectRepository,
