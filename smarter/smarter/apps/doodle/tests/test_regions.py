@@ -8,6 +8,7 @@ from smarter.apps.doodle.regions import (
     DoodleRegion,
     country_for_timezone,
     local_date,
+    region_countries,
     region_for_timezone,
     theme_applies_to,
     valid_timezone,
@@ -66,6 +67,14 @@ class TestRegions(unittest.TestCase):
 
     def test_local_date_defaults_to_now(self):
         self.assertIsInstance(local_date("UTC"), datetime.date)
+
+    def test_region_countries(self):
+        self.assertEqual(region_countries("ca"), ["CA"])
+        self.assertIn("IN", region_countries("south-asia"))
+        self.assertIn("BR", region_countries("latam"))
+        self.assertNotIn("US", region_countries("latam"))
+        self.assertIn("FR", region_countries("europe"))
+        self.assertEqual(region_countries("global"), [])
 
     def test_theme_applies_to(self):
         self.assertTrue(theme_applies_to(["*"], "mx"))

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import App from "@/App";
 import { appContext } from "@/mocks/fixtures";
-import { diwaliHandler, failingHandler, quietDayHandler } from "@/mocks/handlers";
+import { diwaliHandler, drawnByAiHandler, failingHandler, quietDayHandler } from "@/mocks/handlers";
 
 /**
  * The sign-in page's left panel. Its layout is the page's stylesheet, so the stories show it on the
@@ -28,6 +28,9 @@ type Story = StoryObj<typeof meta>;
 
 /** Diwali, in South Asia. */
 export const Holiday: Story = { parameters: { msw: { handlers: [diwaliHandler] } } };
+
+/** Revolution Day in Mexico, chosen and drawn by Smarter AI applications: the credit replaces the description. */
+export const DrawnByAi: Story = { parameters: { msw: { handlers: [drawnByAiHandler] } } };
 
 /** A day that nothing is due: the base scene, with no caption. */
 export const QuietDay: Story = { parameters: { msw: { handlers: [quietDayHandler] } } };

@@ -30,9 +30,11 @@ The Django app ``smarter.apps.doodle`` does the work, and the React app only sho
    and draw its props. ``manage.py load_doodle_themes``, which ``initialize_platform`` runs, loads
    the catalog and draws each theme's artwork.
 2. **The planner.** A Celery Beat task, ``plan_doodles``, chooses the doodle of every region for
-   the next seven days, so that a week of content is always ready. For each day and region, the
-   due theme of the highest priority wins, and a region's own theme wins over one of every region.
-   When nothing is due, the plain default wins. ``manage.py plan_doodles`` does the same by hand.
+   the next seven days, so that a week of content is always ready, then asks the Smarter Doodle
+   Editor about each new day (below). For each day and region, the due theme of the highest
+   priority wins, and a region's own theme wins over one of every region. When nothing is due, the
+   plain default wins. ``manage.py plan_doodles`` does the same by hand, and asks the editor too
+   with ``--editor``.
 3. **The api.** ``GET /api/v1/doodles/today/?tz=<time zone>`` returns the doodle of the day as
    JSON, and ``GET /api/v1/doodles/artwork/<sha256>.svg`` its artwork. Both are public, because
    the page shows the doodle before anyone signs in. An artwork's url is its content's hash, so a
@@ -44,8 +46,52 @@ The Django app ``smarter.apps.doodle`` does the work, and the React app only sho
    to a page about the day. Without JavaScript, or if the api fails, the page keeps the plain scene.
 
 A superuser can override a day's doodle in the :doc:`Django admin <../../../smarter-platform/django-admin>`,
-under Doodles: choose another theme, or reject the doodle, and the planner leaves that day alone.
-A change shows within ten minutes, the time that a day's doodle is cached.
+under Doodles: choose another theme, and neither the planner nor the editor changes that day again.
+The list's actions approve or reject doodles. A change shows within ten minutes, the time that a
+day's doodle is cached.
+
+The Smarter Doodle Editor and Artist
+------------------------------------
+
+The doodle is itself a Smarter AI application. Two staff-only LLMClients of the Smarter account,
+from the `example manifests <https://github.com/smarter-sh/example-manifests>`__, choose and draw
+it, and the platform's own code prompts them through the chat api, with
+:mod:`smarter.apps.llmclient.prompting`, so their system prompts, guardrails, journal and cost
+accounting apply as they would to anyone's prompt.
+
+- **smarter_doodle_editor** chooses each region's doodle of each new day. The planner prompts it
+  once a day, with JSON: for each region, the catalog themes that are due, and the region's other
+  holidays that day, from the ``holidays`` package. It answers with JSON: for each region, a catalog
+  theme, one of the holidays, or the plain scene. Its guardrails strip a code fence from its answer,
+  and check it with OpenAI's moderation model.
+- **smarter_doodle_artist** draws a holiday that the editor chose and the catalog has no theme for.
+  It answers with the SVG of the decorations, and its guardrail removes scripts.
+
+The editor can't invent a topic, and nothing it says is trusted. The platform
+(:mod:`smarter.apps.doodle.editor`) checks every choice again:
+
+- A choice must be one of the region's candidates, and a holiday only when the region has no
+  catalog theme that day.
+- A holiday about mourning, war, politics, a monarchy or a single religion's holy day is never a
+  candidate, and the editor's caption and subject for the artist may not be about one either. The
+  match uses the plugin selectors' language matching: plurals, typos and WordNet synonyms, e.g.
+  *bereavement* for *mourning*.
+- The category, the caption's length and the alt text are checked, and the caption's link must be
+  an English Wikipedia article.
+
+The artist's SVG goes through an allowlist sanitizer (:mod:`smarter.apps.doodle.sanitize`): only
+the shapes of a flat drawing, no text, images, links, scripts, ids or ``url()``, and css that only
+animates its own classes. A drawn doodle is *proposed*: visitors see the calendar's choice until a
+superuser approves it, unless ``enable_doodle_auto_approve`` is on.
+
+Each prompt of the editor is recorded, under Doodle Editor Runs in the admin: what it was asked,
+what it answered, and which of its choices were refused. A day is asked once, or until it has
+failed three times, after which the calendar's choice stays. On a platform without the
+example manifests, the calendar alone chooses.
+
+When a Smarter AI application chose or drew the day's doodle, the panel says so, in place of the
+project's description: *Chosen by a Smarter AI application*, or *Drawn by a Smarter AI
+application*, with a link to this page.
 
 Waffle switches
 ---------------
@@ -57,9 +103,16 @@ Waffle switches
 - ``enable_doodle_animation``: animates the doodles, e.g. a flickering flame. Inactive, every
   doodle is a still image. Visitors who ask their system for reduced motion always get still images.
 - ``enable_doodle_caption``: shows the caption below a themed doodle.
+- ``enable_doodle_llm_editor``: lets the Smarter Doodle Editor choose the doodles of each new day.
+  Inactive, the calendar alone chooses.
+- ``enable_doodle_llm_artwork``: lets the editor choose a holiday that the catalog has no theme
+  for, which the Smarter Doodle Artist draws.
+- ``enable_doodle_auto_approve``: shows a drawn doodle without a superuser's approval. It is the
+  only one that is inactive by default.
+- ``enable_doodle_ai_credit``: shows the credit of a Smarter AI application below its doodle.
 - ``log_doodle``: logs the app's info and debug messages.
 
-All are active by default.
+All but ``enable_doodle_auto_approve`` are active by default.
 
 Technical Reference
 -------------------
@@ -88,6 +141,18 @@ Technical Reference
    :no-index:
 
 .. automodule:: smarter.apps.doodle.models
+   :members:
+   :no-index:
+
+.. automodule:: smarter.apps.doodle.editor
+   :members:
+   :no-index:
+
+.. automodule:: smarter.apps.doodle.sanitize
+   :members:
+   :no-index:
+
+.. automodule:: smarter.apps.llmclient.prompting
    :members:
    :no-index:
 

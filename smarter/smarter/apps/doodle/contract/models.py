@@ -4,11 +4,12 @@ The response of the doodle of the day, ``GET /api/v1/doodles/today/``.
 The sign-in page's React app, ``@smarter/doodle``, reads it. Its fields are camelCase.
 """
 
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from smarter.apps.doodle.const import LEARN_HOW_URL
 from smarter.lib.typing import SmarterDictType
 
 
@@ -40,6 +41,13 @@ class DoodleOfTheDay(DoodleApiModel):
     link_url: str = Field(description="Where the caption links to. Empty for nowhere.")
     image_url: str = Field(description="The artwork's url. It never changes, and may be cached forever.")
     is_default: bool = Field(description="Whether it is the plain default doodle, which celebrates nothing.")
+    ai_credit: Literal["", "chosen", "drawn"] = Field(
+        default="",
+        description=(
+            "What a Smarter AI application did: chosen, the Smarter Doodle Editor chose it; drawn, the "
+            "Smarter Doodle Artist drew it too. Empty when a person or the calendar chose it."
+        ),
+    )
 
 
 class DoodleApiResponse(DoodleOfTheDay):
@@ -47,15 +55,26 @@ class DoodleApiResponse(DoodleOfTheDay):
 
     animated: bool = Field(description="Whether the artwork is animated.")
     show_caption: bool = Field(description="Whether to show the caption below the artwork.")
+    learn_how_url: str = Field(
+        description="Where the AI credit's Learn how links to: how the doodle is chosen and drawn."
+    )
 
+    # pylint: disable=too-many-arguments
     @classmethod
-    def from_doodle(cls, doodle: DoodleOfTheDay, animated: bool, show_caption: bool) -> "DoodleApiResponse":
+    def from_doodle(
+        cls,
+        doodle: DoodleOfTheDay,
+        animated: bool,
+        show_caption: bool,
+        show_ai_credit: bool = True,
+    ) -> "DoodleApiResponse":
         """
         Build the response from a planned doodle and the switches.
 
         :param doodle: The doodle of the day.
         :param animated: Whether the artwork may be animated.
         :param show_caption: Whether the caption may be shown.
+        :param show_ai_credit: Whether the credit of a Smarter AI application may be shown.
         :returns: The response.
         :rtype: DoodleApiResponse
         """
@@ -65,7 +84,9 @@ class DoodleApiResponse(DoodleOfTheDay):
         caption_shown = show_caption and bool(doodle.caption) and not doodle.is_default
         fields = doodle.model_dump(by_alias=False)
         fields["image_url"] = image_url
-        response = cls(**fields, animated=animated, show_caption=caption_shown)
+        if not show_ai_credit:
+            fields["ai_credit"] = ""
+        response = cls(**fields, animated=animated, show_caption=caption_shown, learn_how_url=LEARN_HOW_URL)
         return response
 
 

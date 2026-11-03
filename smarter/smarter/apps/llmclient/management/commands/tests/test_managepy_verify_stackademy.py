@@ -89,7 +89,7 @@ class TestVerifyStackademy(TestAccountMixin):
         command = verify_stackademy.Command(stdout=io.StringIO())
         with (
             mock.patch.object(verify_stackademy.LLMClient.objects, "get", return_value=mock.Mock(id=1)),
-            mock.patch(f"{MODULE}.APIClient") as api_client,
+            mock.patch("smarter.apps.llmclient.prompting.APIClient") as api_client,
         ):
             api_client.return_value.post.side_effect = [config, prompt]
             command.verify_llmclient(name="stackademy_api", user_profile=self.user_profile, token_key="a-key")

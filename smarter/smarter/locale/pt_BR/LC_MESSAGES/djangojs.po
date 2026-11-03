@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 23:06+0000\n"
+"POT-Creation-Date: 2026-11-03 23:40+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -2303,6 +2303,18 @@ msgstr "A IA agêntica escreveu mais de 70% dos testes unitários do Smarter."
 #. Translators: used in react/packages/smarter-didyouknow/src/lib/facts.ts
 msgid "Smarter's first commit was made in February 2023."
 msgstr "O primeiro commit do Smarter foi feito em fevereiro de 2023."
+
+#. Translators: used in react/packages/smarter-doodle/src/App.tsx
+msgid "Drawn by a Smarter AI application."
+msgstr "Desenhado por um aplicativo de IA do Smarter."
+
+#. Translators: used in react/packages/smarter-doodle/src/App.tsx
+msgid "Chosen by a Smarter AI application."
+msgstr "Escolhido por um aplicativo de IA do Smarter."
+
+#. Translators: used in react/packages/smarter-doodle/src/App.tsx
+msgid "Learn how"
+msgstr "Saiba como"
 
 #. Translators: used in react/packages/smarter-doodle/src/App.tsx
 msgid "Learn more"

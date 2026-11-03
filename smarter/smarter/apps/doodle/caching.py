@@ -5,7 +5,7 @@ Cached reads of the doodle app's rows.
 - :func:`artwork_svg`: an artwork's SVG, for ``GET /api/v1/doodles/artwork/<sha256>.svg``.
 
 A doodle is cached for :data:`~smarter.apps.doodle.const.DOODLE_CACHE_TIMEOUT` seconds, so a
-change in the admin shows within ten minutes. An artwork never changes: its name is its hash.
+change in the admin, e.g. an approval, shows within ten minutes. An artwork never changes: its name is its hash.
 """
 
 import datetime
@@ -21,8 +21,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .const import ARTWORK_CACHE_MAX_AGE, BASE_SCENE_STATIC_PATH, DOODLE_CACHE_TIMEOUT
 from .contract.models import DoodleOfTheDay
 from .models import Doodle, DoodleArtwork, DoodleSource, DoodleTheme
-from .planner import default_theme
-from .regions import DoodleRegion
+from .planner import candidates, default_theme
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -68,16 +67,18 @@ def doodle_from_row(doodle: Doodle, region: str) -> DoodleOfTheDay:
         link_url=doodle.link_url,
         image_url=artwork_url(doodle.artwork.sha256),
         is_default=is_default,
+        ai_credit=doodle.ai_credit,
     )
 
 
-def doodle_from_theme(theme: DoodleTheme, day: str, region: str) -> DoodleOfTheDay:
+def doodle_from_theme(theme: DoodleTheme, day: str, region: str, is_default: bool) -> DoodleOfTheDay:
     """
-    Return the doodle of the day of a theme, when nothing is planned.
+    Return the doodle of the day of a theme, when no doodle is approved.
 
-    :param theme: The theme, usually the default theme.
+    :param theme: The theme: the calendar's choice, or the default theme.
     :param day: The local date.
     :param region: The visitor's region.
+    :param is_default: Whether it is the default theme.
     :returns: The doodle of the day.
     :rtype: DoodleOfTheDay
     """
@@ -90,7 +91,7 @@ def doodle_from_theme(theme: DoodleTheme, day: str, region: str) -> DoodleOfTheD
         alt_text=theme.alt_text,
         link_url=theme.link_url,
         image_url=artwork_url(theme.artwork.sha256),
-        is_default=True,
+        is_default=is_default,
     )
 
 
@@ -99,8 +100,9 @@ def doodle_of_the_day(day: str, region: str) -> DoodleOfTheDay:
     """
     Return the doodle of a day in a region.
 
-    The region's approved doodle, else the global one, else the default theme, else, when the
-    catalog isn't loaded, the base scene from the static files.
+    The region's approved doodle; else, e.g. while a drawn doodle awaits approval, or before the
+    planner has run, the calendar's choice for the region, made now; else, when the catalog isn't
+    loaded, the base scene from the static files.
 
     :param day: The local date, as an ISO string.
     :param region: The region.
@@ -109,15 +111,20 @@ def doodle_of_the_day(day: str, region: str) -> DoodleOfTheDay:
     """
     date = datetime.date.fromisoformat(day)
     doodle = Doodle.shown(date, region)
-    if doodle is None and region != DoodleRegion.GLOBAL:
-        doodle = Doodle.shown(date, DoodleRegion.GLOBAL)
     if doodle is not None:
         return doodle_from_row(doodle, region)
 
+    due = candidates(date, region)
+    if due:
+        logger.debug(
+            "%s.doodle_of_the_day() no approved doodle for %s in %s: the calendar's.", logger_prefix, day, region
+        )
+        return doodle_from_theme(due[0], day, region, is_default=False)
+
     theme = default_theme()
     if theme is not None:
-        logger.warning("%s.doodle_of_the_day() no doodle is planned for %s in %s.", logger_prefix, day, region)
-        return doodle_from_theme(theme, day, region)
+        logger.debug("%s.doodle_of_the_day() no approved doodle for %s in %s: the default.", logger_prefix, day, region)
+        return doodle_from_theme(theme, day, region, is_default=True)
 
     logger.warning(
         "%s.doodle_of_the_day() the doodle themes aren't loaded. Run manage.py load_doodle_themes.", logger_prefix

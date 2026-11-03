@@ -204,6 +204,24 @@ def local_date(tz: Optional[str], now: Optional[datetime.datetime] = None) -> da
     return local_now.date()
 
 
+def region_countries(region: str) -> list[str]:
+    """
+    Return the countries of a region, by their time zones.
+
+    :param region: The region.
+    :returns: The ISO 3166 country codes whose time zones belong to the region, sorted. Empty for
+        :attr:`DoodleRegion.GLOBAL`, which is no country's.
+    :rtype: list[str]
+    """
+    countries = set()
+    if region == DoodleRegion.GLOBAL:
+        return []
+    for zone, country in ZONE_COUNTRIES.items():
+        if region_for_timezone(zone) == region:
+            countries.add(country)
+    return sorted(countries)
+
+
 def theme_applies_to(regions: list[str], region: str) -> bool:
     """
     Whether a theme whose ``regions`` are these is shown in a region.
@@ -223,6 +241,7 @@ __all__ = [
     "DoodleRegion",
     "country_for_timezone",
     "local_date",
+    "region_countries",
     "region_for_timezone",
     "theme_applies_to",
     "valid_timezone",

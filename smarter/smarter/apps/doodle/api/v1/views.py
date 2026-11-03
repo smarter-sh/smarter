@@ -55,7 +55,10 @@ class DoodleTodayView(SmarterUnauthenticatedAPIView):
 
         animated = switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_ANIMATION)
         show_caption = switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_CAPTION)
-        body = DoodleApiResponse.from_doodle(doodle, animated=animated, show_caption=show_caption)
+        show_ai_credit = switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_AI_CREDIT)
+        body = DoodleApiResponse.from_doodle(
+            doodle, animated=animated, show_caption=show_caption, show_ai_credit=show_ai_credit
+        )
 
         response = Response(body.to_json())
         response["Cache-Control"] = f"public, max-age={TODAY_CACHE_MAX_AGE}"

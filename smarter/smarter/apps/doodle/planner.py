@@ -6,7 +6,8 @@ The candidate of the highest priority wins; at equal priority, a theme of the re
 over one of every region, then the slug decides, so that the choice is the same on every run.
 When nothing is due, the default theme wins.
 
-A doodle that a person chose in the admin (source ``human``) is never replanned.
+A doodle that a person chose in the admin (source ``human``), or that the Smarter Doodle Editor
+chose (source ``llm``, see :mod:`smarter.apps.doodle.editor`), is never replanned.
 """
 
 import datetime
@@ -21,6 +22,7 @@ from .const import DEFAULT_THEME_SLUG, PLANNING_DAYS, RETENTION_DAYS
 from .models import (
     Doodle,
     DoodleArtwork,
+    DoodleEditorRun,
     DoodleSource,
     DoodleStatus,
     DoodleTheme,
@@ -84,8 +86,8 @@ def plan_doodle(day: datetime.date, region: str) -> Optional[Doodle]:
     :rtype: Optional[Doodle]
     """
     existing = Doodle.objects.filter(date=day, region=region).first()
-    if existing is not None and existing.source == DoodleSource.HUMAN:
-        logger.debug("%s.plan_doodle() keeps the doodle that a person chose: %s.", logger_prefix, existing)
+    if existing is not None and existing.source in (DoodleSource.HUMAN, DoodleSource.LLM):
+        logger.debug("%s.plan_doodle() keeps the doodle that %s chose: %s.", logger_prefix, existing.source, existing)
         return existing
 
     due = candidates(day, region)
@@ -145,7 +147,9 @@ def planning_window(days: int = PLANNING_DAYS, today: Optional[datetime.date] = 
 
 def purge(today: Optional[datetime.date] = None, retention_days: int = RETENTION_DAYS) -> int:
     """
-    Delete the doodles older than the retention period, and the artworks that nothing uses.
+    Delete the doodles and editor runs older than the retention period, and the drawn themes and.
+
+    artworks that nothing uses.
 
     :param today: Today, in UTC. Now, by default.
     :param retention_days: How many days of past doodles to keep.
@@ -156,6 +160,8 @@ def purge(today: Optional[datetime.date] = None, retention_days: int = RETENTION
         today = timezone.now().date()
     cutoff = today - datetime.timedelta(days=retention_days)
     deleted, _ = Doodle.objects.filter(date__lt=cutoff).delete()
+    DoodleEditorRun.objects.filter(date__lt=cutoff).delete()
+    DoodleTheme.objects.filter(is_generated=True, doodles__isnull=True).delete()
     unused = DoodleArtwork.objects.filter(themes__isnull=True, doodles__isnull=True)
     unused.delete()
     return deleted

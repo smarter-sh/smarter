@@ -8,6 +8,8 @@ from smarter.apps.doodle.const import DEFAULT_THEME_SLUG, PLANNING_DAYS
 from smarter.apps.doodle.models import (
     Doodle,
     DoodleArtwork,
+    DoodleEditorRun,
+    DoodleEditorRunStatus,
     DoodleSource,
     DoodleStatus,
     DoodleTheme,
@@ -70,6 +72,14 @@ class TestPlanner(DoodleTestMixin):
         kept = planner.plan_doodle(DIWALI, DoodleRegion.EUROPE)
         self.assertEqual(kept.theme.slug, "halloween")
 
+    def test_a_doodle_that_the_editor_chose_is_kept(self):
+        self.addCleanup(self.delete_doodles, DIWALI)
+        doodle = planner.plan_doodle(DIWALI, DoodleRegion.OCEANIA)
+        default = self.theme(DEFAULT_THEME_SLUG)
+        Doodle.objects.filter(pk=doodle.pk).update(theme=default, artwork=default.artwork, source=DoodleSource.LLM)
+        kept = planner.plan_doodle(DIWALI, DoodleRegion.OCEANIA)
+        self.assertEqual(kept.theme.slug, DEFAULT_THEME_SLUG)
+
     def test_nothing_to_plan_without_a_catalog(self):
         with patch.object(planner, "default_theme", return_value=None):
             with patch.object(planner, "logger") as logger:
@@ -107,10 +117,24 @@ class TestPlanner(DoodleTestMixin):
         self.addCleanup(self.delete_doodles, old_day)
         planner.plan_doodle(old_day, DoodleRegion.GLOBAL)
         orphan = DoodleArtwork.for_svg(f"<svg>{self.hash_suffix}</svg>")
+        drawn_artwork = DoodleArtwork.for_svg(f"<svg>drawn {self.hash_suffix}</svg>")
+        drawn = DoodleTheme.objects.create(
+            slug=f"ai-test-{self.hash_suffix}",
+            name="Drawn",
+            category="culture",
+            alt_text="Drawn.",
+            artwork=drawn_artwork,
+            is_active=False,
+            is_generated=True,
+        )
+        old_run = DoodleEditorRun.objects.create(date=old_day, status=DoodleEditorRunStatus.SUCCEEDED)
         deleted = planner.purge(today=datetime.date(2026, 11, 3))
         self.assertGreaterEqual(deleted, 1)
         self.assertFalse(Doodle.objects.filter(date=old_day).exists())
         self.assertFalse(DoodleArtwork.objects.filter(pk=orphan.pk).exists())
+        self.assertFalse(DoodleTheme.objects.filter(pk=drawn.pk).exists())
+        self.assertFalse(DoodleArtwork.objects.filter(pk=drawn_artwork.pk).exists())
+        self.assertFalse(DoodleEditorRun.objects.filter(pk=old_run.pk).exists())
         self.assertTrue(DoodleArtwork.objects.filter(pk=self.theme(DEFAULT_THEME_SLUG).artwork_id).exists())
 
     def test_purge_defaults_to_today(self):
