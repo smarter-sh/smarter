@@ -1,11 +1,11 @@
-"""Test smarter.apps.mcpserver.status.feeds, with the safe HTTP client faked: nothing reaches the internet."""
+"""Test smarter.apps.mcpserver.services.status.feeds, with the safe HTTP client faked: nothing reaches the internet."""
 
 from datetime import datetime, timezone
 from unittest import mock
 
 from smarter.apps.llmtool.plugin.safe_http import SafeHttpError
-from smarter.apps.mcpserver.status import feeds
-from smarter.apps.mcpserver.status.feeds import (
+from smarter.apps.mcpserver.services.status import feeds
+from smarter.apps.mcpserver.services.status.feeds import (
     STATUS_PAGES,
     ProviderStatus,
     aws_service_events,
@@ -16,7 +16,7 @@ from smarter.apps.mcpserver.status.feeds import (
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-FETCH = "smarter.apps.mcpserver.status.feeds.fetch"
+FETCH = "smarter.apps.mcpserver.services.status.feeds.fetch"
 NOW = datetime(2026, 11, 2, 21, 0, 0, tzinfo=timezone.utc)
 
 

@@ -29,7 +29,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from smarter.apps.mcpserver.acting_user import is_operations_server_url
+from smarter.apps.mcpserver.services import is_staff_endpoint_url
 from smarter.lib import logging
 from smarter.lib.cache.tool_results import cached_tool_call
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -84,9 +84,9 @@ class MCPFunction:
     cacheable: bool = False
     """Whether the call's results may be cached.
 
-    It may if it only reads, and its server is not this platform's Smarter Operations MCP server,
+    It may if it only reads, and its server is not the staff-only endpoint of this platform's MCPServer,
     whose results depend on who is chatting, and whose every call must reach its audit trail. See
-    :func:`~smarter.apps.mcpserver.acting_user.is_operations_server_url`.
+    :func:`~smarter.apps.mcpserver.services.acting_user.is_staff_endpoint_url`.
     """
 
 
@@ -185,7 +185,7 @@ class MCPToolkit:
                 logger.warning("%s.load() skipping MCPClient %s: %s", self.formatted_class_name, mcpclient.name, e)
                 continue
             self.connected.append(mcpclient)
-            acts_for_user = is_operations_server_url(mcpclient.endpoint_url)
+            acts_for_user = is_staff_endpoint_url(mcpclient.endpoint_url)
             for tool in catalog.tools:
                 if not is_tool_allowed(mcpclient, tool.name):
                     continue
@@ -281,7 +281,7 @@ class MCPToolkit:
                 raise SmarterMCPClientToolError(result.text)
             return result.text
 
-        # a call that may change something, or that this platform's operations server answers for
+        # a call that may change something, or that this platform's staff-only MCPServer endpoint answers for
         # the user who is chatting, is never cached. Changing how the MCPClient connects changes its
         # fingerprint, and so the key.
         timeout = mcpclient.cache_ttl if function.cacheable else 0

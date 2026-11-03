@@ -416,7 +416,7 @@ command structure:
 
 For a complete list of subcommands under any verb, run
 ``smarter <verb> --help``.  Full CLI reference:
-``https://docs.smarter.sh/en/latest/smarter-framework/smarter-cli.html``
+``https://docs.smarter.sh/smarter-framework/smarter-cli.html``
 
 4.3 Resource Kinds Relevant to This Tutorial
 ---------------------------------------------
@@ -443,7 +443,7 @@ kinds most relevant to your initial setup are:
      - Extends a LLMClient's knowledge domain using function-calling and data
        connectors (SQL, REST API, static data).  Out of scope for this
        tutorial but documented at
-       ``https://docs.smarter.sh/en/latest/smarter-resources/llmtool/``
+       ``https://docs.smarter.sh/smarter-resources/smarter-llmtool.html``
 
 Regarding the **Provider** resource kind: this is a platform-level resource
 managed by the infrastructure team through Smarter's administrative interface.
@@ -451,7 +451,7 @@ It stores upstream vendor credentials (including the Anthropic API key) and
 maps them to the LangChain-managed request pipeline inside Smarter.  Developers
 do not create or modify Provider resources — that is an infrastructure concern.
 The authoritative technical reference for the Provider manifest is at
-``https://docs.smarter.sh/en/latest/smarter-resources/smarter-provider.html``
+``https://docs.smarter.sh/smarter-resources/smarter-provider.html``
 and is provided here for completeness; your infrastructure team will have
 already applied the relevant configuration.
 
@@ -992,17 +992,17 @@ resolve the issue, contact the IT helpdesk and include:
    * - Resource
      - URL
    * - Smarter documentation home
-     - ``https://docs.smarter.sh/en/latest/``
+     - ``https://docs.smarter.sh/``
    * - Smarter CLI reference
-     - ``https://docs.smarter.sh/en/latest/smarter-framework/smarter-cli.html``
+     - ``https://docs.smarter.sh/smarter-framework/smarter-cli.html``
    * - Smarter manifest overview
-     - ``https://docs.smarter.sh/manifests/``
+     - ``https://docs.smarter.sh/smarter-framework/smarter-manifests.html``
    * - Smarter CLI download
      - ``https://smarter.sh/cli``
    * - Smarter Provider manifest reference (infrastructure team)
-     - ``https://docs.smarter.sh/en/latest/smarter-resources/smarter-provider.html``
+     - ``https://docs.smarter.sh/smarter-resources/smarter-provider.html``
    * - Smarter Plugin documentation
-     - ``https://docs.smarter.sh/en/latest/smarter-resources/llmtool/``
+     - ``https://docs.smarter.sh/smarter-resources/smarter-llmtool.html``
    * - VS Code extension for Smarter manifests
      - ``https://marketplace.visualstudio.com/items?itemName=Querium.smarter-manifest``
 

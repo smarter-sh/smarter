@@ -70,7 +70,7 @@ function McpServer({ serverUrl = defaultServerUrl() }: McpServerProps) {
           </ul>
           <div className="mt-auto pt-6">
             <a
-              href="https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html"
+              href="https://docs.smarter.sh/smarter-platform/mcpserver.html#public-tools"
               target="_blank"
               className="btn btn-sm fw-semibold mcp-btn"
             >

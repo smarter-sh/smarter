@@ -45,7 +45,7 @@ from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 
 from smarter.apps.llmtool.plugin.safe_http import is_loopback_host, validate_public_url
-from smarter.apps.mcpserver.acting_user import (
+from smarter.apps.mcpserver.services import (
     ACTING_USER_HEADER,
     acting_user_headers,
     current_acting_user,
@@ -324,9 +324,9 @@ class MCPServerConnection:
         """
         Return the HTTP headers to send to the MCP server: its custom headers, and its credential.
 
-        A request to this platform's own Smarter Operations MCP server also carries the signed
+        A request to the staff-only endpoint of this platform's own MCPServer also carries the signed
         acting user, the user who is chatting, from
-        :func:`~smarter.apps.mcpserver.acting_user.acting_user_headers`. No other server gets it.
+        :func:`~smarter.apps.mcpserver.services.acting_user.acting_user_headers`. No other server gets it.
 
         :raises SmarterMCPClientConfigurationError: If the credential is missing.
         """

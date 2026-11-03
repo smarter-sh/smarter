@@ -1,4 +1,4 @@
-# A test cluster for the Smarter Operations MCP server's status tools (tests/operations_base.py), as
+# A test cluster for the MCPServer's staff-only status tools (tests/operations_base.py), as
 # kubectl get -o json returns its resources, keyed by kind. The values are fake. The tests set each
 # event's lastTimestamp to a few minutes before they run.
 pod:

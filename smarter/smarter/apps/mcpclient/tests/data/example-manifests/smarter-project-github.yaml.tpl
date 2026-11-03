@@ -1,11 +1,12 @@
 # A copy of https://github.com/smarter-sh/example-manifests/blob/main/smarter/mcp-clients/smarter-project-github.yaml.tpl, for unit tests.
 ---
-# The Smarter Project's GitHub repository smarter-sh/smarter, through the Smarter Project MCP server
-# of this platform, which indexes the repository from GitHub every hour.
+# The Smarter Project's GitHub repository smarter-sh/smarter, through the public tools of this
+# platform's MCPServer, which indexes the repository from GitHub every hour.
 # Repository: https://github.com/smarter-sh/smarter
-# Documentation: https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html
+# Documentation: https://docs.smarter.sh/smarter-platform/smarter-project-mcp-server.html
 #
-# The MCP server serves one endpoint per repository, so this client reads only smarter-sh/smarter.
+# The MCPServer serves its public tools at one endpoint per repository, so this client reads only
+# smarter-sh/smarter.
 # The smarter_sdk_guide LLMClient uses several such clients, one per repository:
 # see the other smarter-project-github*.yaml.tpl manifests, and smarter-project.yaml.tpl, which
 # reads all of them.
@@ -13,10 +14,11 @@
 # This file is a string.Template: load_from_github fills in the scheme and domain of the
 # platform that applies it, from smarter_settings.environment_url and
 # smarter_settings.environment_platform_domain, e.g. https://alpha.platform.example.com, or
-# http://localhost:9357 in local development, so that this MCPClient reads the MCP server of
+# http://localhost:9357 in local development, so that this MCPClient connects to the MCPServer of
 # its own platform.
 #
-# The MCP server requires no authentication. Its tools are read-only.
+# The MCPServer's public endpoint requires no authentication. The tools that this MCPClient
+# allows are read-only.
 apiVersion: smarter.sh/v1
 kind: MCPClient
 metadata:
@@ -29,7 +31,7 @@ metadata:
     - github
     - code
   annotations:
-    - smarter.sh/mcpclient/documentation: https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html
+    - smarter.sh/mcpclient/documentation: https://docs.smarter.sh/smarter-platform/smarter-project-mcp-server.html
     - smarter.sh/mcpclient/repository: https://github.com/smarter-sh/smarter
 spec:
   config:

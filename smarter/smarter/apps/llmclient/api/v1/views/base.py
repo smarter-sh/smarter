@@ -22,7 +22,7 @@ from smarter.apps.llmclient.models import (
 )
 from smarter.apps.llmclient.signals import llmclient_called
 from smarter.apps.llmtool.plugin.base import PluginBase
-from smarter.apps.mcpserver.acting_user import acting_user
+from smarter.apps.mcpserver.services import acting_user
 from smarter.apps.prompt.contract.builders import (
     PromptChatApiError,
     PromptChatApiErrorBadRequest,
@@ -605,8 +605,8 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         contract = self.forced_contract or requested_contract(request)
 
         # the prompt runs as the LLMClient's owner, self.user_profile, but its MCP servers learn who
-        # sent it: this platform's Smarter Operations MCP server serves only its staff, and records
-        # each call under the person who made it. See smarter.apps.mcpserver.acting_user.
+        # sent it: the staff-only endpoint of this platform's MCPServer serves only its staff, and records
+        # each call under the person who made it. See smarter.apps.mcpserver.services.acting_user.
         prompting_user = get_resolved_user(request.user)
 
         def complete() -> HttpResponse:

@@ -45,7 +45,7 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
 
-OWNERSHIP_DOCS_URL = "https://docs.smarter.sh/en/latest/smarter-resources/account/models/metadata_with_ownership.html"
+OWNERSHIP_DOCS_URL = "https://docs.smarter.sh/smarter-resources/account/models/metadata_with_ownership.html"
 """The docs page that explains who owns a Smarter resource, and who may read and change it."""
 
 

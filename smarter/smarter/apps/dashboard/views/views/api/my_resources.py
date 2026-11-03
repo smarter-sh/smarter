@@ -107,7 +107,7 @@ from smarter.lib.django.views import (
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
-EXTENSIONS_DOCS_URL = "https://docs.smarter.sh/en/latest/smarter-platform/extensions.html"
+EXTENSIONS_DOCS_URL = "https://docs.smarter.sh/smarter-platform/extensions.html"
 
 
 def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:

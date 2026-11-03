@@ -13,10 +13,10 @@ describe("slackMessage", () => {
   it("has the title, the fact and its link", () => {
     const message = slackMessage({
       text: "Smarter has <many> facts & figures.",
-      link: { label: "Read <more>", url: "https://docs.smarter.sh/en/latest/" },
+      link: { label: "Read <more>", url: "https://docs.smarter.sh/" },
     });
     expect(message).toBe(
-      ":bulb: *Did you know?*\nSmarter has &lt;many&gt; facts &amp; figures.\n<https://docs.smarter.sh/en/latest/|Read &lt;more&gt;>",
+      ":bulb: *Did you know?*\nSmarter has &lt;many&gt; facts &amp; figures.\n<https://docs.smarter.sh/|Read &lt;more&gt;>",
     );
   });
 
