@@ -76,7 +76,7 @@ The few routes that the document leaves out are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason: web console
 actions, whose clients use manifests instead, passthroughs to LLM providers' own apis, and routes
 that aren't implemented yet. The families that it leaves out, the views that the platform's unit
-tests call, and the endpoints of the :doc:`MCPServer <../../smarter-platform/smarter-project-mcp-server>`,
+tests call, and the endpoints of the :doc:`MCPServer </smarter-platform/mcpserver>`,
 whose protocol the Model Context Protocol specification defines, are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
 

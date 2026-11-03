@@ -241,10 +241,10 @@ manifests for popular remote MCP servers.
      - bearer_token
 
 Smarter's built-in MCPClients each give LLMClients a collection of the tools of the platform's own
-MCPServer, the one MCP server that every Smarter platform runs. ``smarter_project`` and
-``smarter_project_github*`` connect to its :doc:`public endpoint <../smarter-platform/smarter-project-mcp-server>`,
+:doc:`MCPServer </smarter-platform/mcpserver>`. ``smarter_project`` and
+``smarter_project_github*`` connect to its :ref:`public endpoint <mcpserver-public-tools>`,
 whose tools search and read The Smarter Project's documentation and source code, and
-``smarter_operations`` connects to its :doc:`staff-only endpoint <../smarter-platform/smarter-operations-mcp-server>`,
+``smarter_operations`` connects to its :ref:`staff-only endpoint <mcpserver-staff-only-tools>`,
 whose tools read the platform's health, pod logs and users, for its staff only. Their manifests are
 templates, ``*.yaml.tpl``, whose ``endpointUrl`` names the domain of the platform that applies them.
 

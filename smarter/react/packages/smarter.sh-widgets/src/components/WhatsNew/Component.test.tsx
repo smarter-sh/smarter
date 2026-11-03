@@ -12,7 +12,10 @@ describe("WhatsNew", () => {
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) {
       expect(link).not.toBeEmptyDOMElement();
-      expect(link).toHaveAttribute("href", expect.stringMatching(/^https:\/\/docs\.smarter\.sh\/.+\.html$/));
+      expect(link).toHaveAttribute(
+        "href",
+        expect.stringMatching(/^https:\/\/docs\.smarter\.sh\/.+\.html(#[a-z0-9-]+)?$/),
+      );
     }
   });
 

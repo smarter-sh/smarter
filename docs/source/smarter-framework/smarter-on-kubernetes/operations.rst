@@ -202,7 +202,7 @@ the application group reach Loki, see ``network_policy.tf`` in
 `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__.
 
 The platform's staff, and their AI agents, search these logs with the
-:doc:`MCPServer's staff-only tools <../../smarter-platform/smarter-operations-mcp-server>`. You can also
+:ref:`MCPServer's staff-only tools <mcpserver-staff-only-tools>`. You can also
 query Loki from a pod in the namespace with `LogQL <https://grafana.com/docs/loki/latest/query/>`__,
 e.g. the errors of the Celery workers in the last hour:
 
