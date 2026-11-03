@@ -5,9 +5,12 @@ The Smarter Operations MCP server: the staff-only server of this platform's oper
 :class:`~smarter.apps.mcpserver.protocol.base.MCPServerBase`, to the platform's staff and their AI
 agents, e.g. Claude Code answering help desk questions. Its tools read the platform's pod logs, its
 health and its users' accounts, which are not public, so
-:class:`~smarter.apps.mcpserver.protocol.views.SmarterOperationsMCPServerView` serves it only to a
-request whose ``Authorization: Token`` header carries the api key of an active staff user, and
-every tool call is recorded in :class:`~smarter.apps.mcpserver.models.OperationsToolCall`.
+:class:`~smarter.apps.mcpserver.protocol.views.SmarterOperationsMCPServerView` serves it only to the
+platform's staff (:func:`~smarter.apps.account.utils.is_platform_staff`): a request whose
+``Authorization: Token`` header carries a staff user's api key, e.g. from Claude Code, or one that
+this platform signed for the staff user who is chatting with an LLMClient, e.g. ``smarter_sysadmin``
+(see :mod:`~smarter.apps.mcpserver.acting_user`). Every tool call is recorded in
+:class:`~smarter.apps.mcpserver.models.OperationsToolCall`.
 
 Its :data:`INSTRUCTIONS` hold the rules for what a reply to a user may say: the tools' output is
 for staff, and an agent that drafts a reply from it must leave out everything that is not the
@@ -19,6 +22,8 @@ user's own business.
     Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental, and will
     be documented.
 """
+
+from typing import Optional
 
 import mcp_types
 
@@ -118,11 +123,11 @@ class SmarterOperationsMCPServer(MCPServerBase):
     The Smarter Operations MCP server, for one staff user.
 
     :class:`~smarter.apps.mcpserver.protocol.views.SmarterOperationsMCPServerView` creates one for
-    each request, once it has verified that the request's api key is an active staff user's. Every
-    tool of :data:`OPERATIONS_TOOL_CLASSES` is served, each one for that user, so that its calls are
-    recorded under them in the audit trail.
+    each request, once it has verified that the request is from one of the platform's staff, by their
+    api key or a signed acting user. Every tool of :data:`OPERATIONS_TOOL_CLASSES` is served, each
+    one for that user, so that its calls are recorded under them in the audit trail.
 
-    :param user: The staff user whose api key the view verified.
+    :param user: The staff user that the view verified, or None for nobody in particular.
 
     **Example usage**::
 
@@ -130,11 +135,14 @@ class SmarterOperationsMCPServer(MCPServerBase):
         response = server.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
     """
 
-    def __init__(self, user: User):
+    def __init__(self, user: Optional[User]):
         """
         Create the server's tools, for the staff user.
 
-        :param user: The staff user whose api key the view verified.
+        :param user: The staff user that the view verified, or None for a request that the platform
+            signed for nobody in particular, e.g. the background refresh of an MCPClient's catalog.
+            Without a user, the server answers ``initialize`` and ``tools/list``, but every tool
+            refuses to run.
         """
         self.user = user
         self.tools: dict[str, MCPToolBase] = {}

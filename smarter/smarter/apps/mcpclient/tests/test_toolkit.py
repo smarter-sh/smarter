@@ -148,6 +148,27 @@ class TestMCPToolkit(MCPClientTestBase):
         self.assertTrue(toolkit.functions[self.function_name(toolkit, "echo")].read_only)
         self.assertFalse(toolkit.functions[self.function_name(toolkit, "add_numbers")].read_only)
         self.assertTrue(toolkit.functions[f"mcp{self.mcpclient.id}_read_resource"].read_only)
+        self.assertTrue(toolkit.functions[self.function_name(toolkit, "echo")].cacheable)
+        self.assertFalse(toolkit.functions[self.function_name(toolkit, "add_numbers")].cacheable)
+        self.assertTrue(toolkit.functions[f"mcp{self.mcpclient.id}_read_resource"].cacheable)
+
+    def test_operations_server_tools_are_never_cached(self):
+        """The platform's operations server answers for the user who is chatting, and audits every call: never cached."""
+        with mock.patch("smarter.apps.mcpclient.toolkit.is_operations_server_url", return_value=True):
+            toolkit = self.load()
+        name = self.function_name(toolkit, "echo")
+        self.assertTrue(toolkit.functions[name].read_only)
+        self.assertFalse(toolkit.functions[name].cacheable)
+        self.assertFalse(toolkit.functions[f"mcp{self.mcpclient.id}_read_resource"].cacheable)
+        with (
+            mock_mcp_server(),
+            mock.patch.object(
+                MCPServerConnection, "call_tool", autospec=True, side_effect=MCPServerConnection.call_tool
+            ) as call_tool,
+        ):
+            toolkit.call(name, {"text": "every time"})
+            toolkit.call(name, {"text": "every time"})
+        self.assertEqual(call_tool.call_count, 2)
 
     def test_read_only_tool_is_cached(self):
         """Test that a read-only tool's result is cached, by its arguments, and reported as cached."""

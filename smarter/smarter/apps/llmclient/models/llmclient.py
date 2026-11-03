@@ -18,6 +18,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
+    is_platform_staff,
 )
 from smarter.apps.llmclient.signals import (
     llmclient_deploy,
@@ -257,6 +258,12 @@ class LLMClient(MetaDataWithOwnershipModel):
         encoder=json.SmarterJSONEncoder,
     )
 
+    #: Whether only the platform's own staff may see and use the LLMClient, e.g. ``smarter_sysadmin``,
+    #: whose MCPClient reads the platform's logs and its users' accounts. See
+    #: :func:`~smarter.apps.account.utils.is_platform_staff` and :meth:`restrict_readable`.
+    #: Example: True
+    staff_only = models.BooleanField(default=False)
+
     # : The DNS verification status of the LLMClient's custom domain. This is part of the deployment process and is managed by
     # : the asynchronous LLMClient deployment workflow.
     # : Example: "Verified"
@@ -287,6 +294,29 @@ class LLMClient(MetaDataWithOwnershipModel):
         LLMClients often, e.g. several times per request of Smarter Chat's configuration api.
         """
         return f"{self.name} ({self.pk})" if self.name else "undefined"
+
+    @classmethod
+    def restrict_readable(cls, queryset: models.QuerySet["LLMClient"], user: User) -> models.QuerySet["LLMClient"]:
+        """
+        Hide the staff-only LLMClients from a user who is not one of the platform's staff.
+
+        Called last by
+        :meth:`~smarter.apps.account.models.metadata_with_ownership.SmarterQuerySetWithPermissions.with_read_permission_for`,
+        so that a staff-only LLMClient, e.g. ``smarter_sysadmin``, is in no list, workbench or api
+        of anyone else, even a superuser of another account.
+
+        **Side effects:** one database query, by
+        :func:`~smarter.apps.account.utils.is_platform_staff`.
+
+        :param queryset: The LLMClients that the user's account and the Smarter account let them read.
+        :param user: The user.
+        :returns: The queryset, without the staff-only LLMClients unless the user is one of the
+            platform's staff.
+        """
+        if is_platform_staff(user):
+            return queryset
+        visible = queryset.exclude(staff_only=True)
+        return visible
 
     @property
     def is_billable_resource(self) -> bool:

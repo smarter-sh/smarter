@@ -63,3 +63,13 @@ class TestLLMClientSpecConfig(SmarterTestBase):
         """The model ignores keys that it doesn't define. Apply rejects them, see the broker's tests."""
         with self.assertRaises(ValidationError):
             SAMLLMClientSpecConfig(appName="Example")
+
+
+class TestLLMClientSpecConfigStaffOnly(SmarterTestBase):
+    """Test spec.config.prompt.staffOnly."""
+
+    def test_default_is_false(self):
+        self.assertFalse(SAMLLMClientSpecConfigPrompt().staffOnly)
+
+    def test_true(self):
+        self.assertTrue(SAMLLMClientSpecConfigPrompt(staffOnly=True).staffOnly)
