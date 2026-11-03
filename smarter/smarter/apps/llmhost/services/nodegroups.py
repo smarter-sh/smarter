@@ -75,21 +75,44 @@ class NodeGroupBackend(ABC):
 
     @abstractmethod
     def create(self, compute: LLMHostCompute, desired: int) -> NodeGroup:
-        """Create the compute's node group, with ``desired`` nodes."""
+        """
+        Create the compute's node group, with ``desired`` nodes.
+
+        :param compute: The LLMHostCompute.
+        :param desired: The node group's desired size.
+        :returns: The new node group.
+        :raises LLMHostComputeError: if the cloud refuses.
+        """
 
     @abstractmethod
     def scale(self, compute: LLMHostCompute, desired: int) -> None:
-        """Set the node group's desired size, and its maximum size to the compute's max_nodes."""
+        """
+        Set the node group's desired size, and its maximum size to the compute's max_nodes.
+
+        :param compute: The LLMHostCompute.
+        :param desired: The node group's desired size.
+        :raises LLMHostComputeError: if the cloud refuses.
+        """
 
     @abstractmethod
     def remove_node(self, compute: LLMHostCompute, provider_id: str) -> None:
-        """Terminate one node, by its Kubernetes providerID, and lower the desired size by one."""
+        """
+        Terminate one node, by its Kubernetes providerID, and lower the desired size by one.
+
+        :param compute: The LLMHostCompute whose node group has the node.
+        :param provider_id: The Node's ``spec.providerID``, e.g. ``aws:///us-east-1a/i-0abc``.
+        :raises LLMHostComputeError: if the cloud refuses.
+        """
 
     @abstractmethod
     def delete(self, compute: LLMHostCompute) -> None:
-        """Delete the compute's node group, and its nodes.
+        """
+        Delete the compute's node group, and its nodes.
 
         Idempotent.
+
+        :param compute: The LLMHostCompute.
+        :raises LLMHostComputeError: if the cloud refuses.
         """
 
 
@@ -130,18 +153,21 @@ class EKSNodeGroupBackend(NodeGroupBackend):
 
     @property
     def eks(self):
+        """The boto3 EKS client, created from the AWS provider's session on first use."""
         if self._eks is None:
             self._eks = self._session().client("eks")
         return self._eks
 
     @property
     def autoscaling(self):
+        """The boto3 Auto Scaling client, created from the AWS provider's session on first use."""
         if self._autoscaling is None:
             self._autoscaling = self._session().client("autoscaling")
         return self._autoscaling
 
     @property
     def ready(self) -> bool:
+        """Whether the cluster name is set and AWS is configured, so that node groups can be managed."""
         try:
             return bool(self.cluster_name) and self.eks is not None
         except LLMHostComputeError:
@@ -156,6 +182,15 @@ class EKSNodeGroupBackend(NodeGroupBackend):
             raise LLMHostComputeError(f"{operation} failed: {e}") from e
 
     def describe(self, compute: LLMHostCompute) -> Optional[NodeGroup]:
+        """
+        Describe the compute's EKS node group: its status, size and health issues.
+
+        Calls eks:DescribeNodegroup.
+
+        :param compute: The LLMHostCompute.
+        :returns: The node group, or None if it does not exist.
+        :raises LLMHostComputeError: if the call fails otherwise.
+        """
         try:
             response = self._call(
                 "eks:DescribeNodegroup",
@@ -169,9 +204,10 @@ class EKSNodeGroupBackend(NodeGroupBackend):
             raise
         nodegroup = response["nodegroup"]
         scaling = nodegroup.get("scalingConfig", {})
-        issues = [
-            f"{issue.get('code')}: {issue.get('message')}" for issue in nodegroup.get("health", {}).get("issues", [])
-        ]
+        health = nodegroup.get("health", {})
+        issues = []
+        for issue in health.get("issues", []):
+            issues.append(f"{issue.get('code')}: {issue.get('message')}")
         return NodeGroup(
             name=nodegroup["nodegroupName"],
             status=nodegroup["status"],
@@ -206,8 +242,19 @@ class EKSNodeGroupBackend(NodeGroupBackend):
         return self._defaults
 
     def create(self, compute: LLMHostCompute, desired: int) -> NodeGroup:
+        """
+        Create the compute's EKS managed node group: its instance type, AMI, disk, taint, labels and tags.
+
+        Calls eks:CreateNodegroup, which starts billable EC2 instances.
+
+        :param compute: The LLMHostCompute.
+        :param desired: The node group's desired size.
+        :returns: The node group, ``CREATING``.
+        :raises LLMHostComputeError: if the call fails.
+        """
         role, subnets = self.defaults()
         taint = compute.taint
+        eks_taint = {"key": taint["key"], "value": taint["value"], "effect": TAINT_EFFECTS[taint["effect"]]}
         self._call(
             "eks:CreateNodegroup",
             self.eks.create_nodegroup,
@@ -221,7 +268,7 @@ class EKSNodeGroupBackend(NodeGroupBackend):
             nodeRole=role,
             capacityType=compute.capacity_type,
             labels={LABEL_COMPUTE: compute.name},
-            taints=[{"key": taint["key"], "value": taint["value"], "effect": TAINT_EFFECTS[taint["effect"]]}],
+            taints=[eks_taint],
             tags={
                 "smarter.sh/compute": compute.name,
                 "smarter.sh/environment": str(smarter_settings.environment),
@@ -232,6 +279,13 @@ class EKSNodeGroupBackend(NodeGroupBackend):
         return NodeGroup(compute.nodegroup_name, NodeGroupStatus.CREATING, desired, compute.max_nodes)
 
     def scale(self, compute: LLMHostCompute, desired: int) -> None:
+        """
+        Set the EKS node group's desired and maximum size. Calls eks:UpdateNodegroupConfig.
+
+        :param compute: The LLMHostCompute.
+        :param desired: The node group's desired size.
+        :raises LLMHostComputeError: if the call fails.
+        """
         self._call(
             "eks:UpdateNodegroupConfig",
             self.eks.update_nodegroup_config,
@@ -242,6 +296,15 @@ class EKSNodeGroupBackend(NodeGroupBackend):
         logger.info("%s scaled node group %s to %s nodes", logger_prefix, compute.nodegroup_name, desired)
 
     def remove_node(self, compute: LLMHostCompute, provider_id: str) -> None:
+        """
+        Terminate one node's EC2 instance, and lower its Auto Scaling group's desired capacity by one.
+
+        Calls autoscaling:TerminateInstanceInAutoScalingGroup.
+
+        :param compute: The LLMHostCompute whose node group has the node.
+        :param provider_id: The Node's ``spec.providerID``.
+        :raises LLMHostComputeError: if ``provider_id`` is not an EC2 instance's, or the call fails.
+        """
         instance = instance_id(provider_id)
         self._call(
             "autoscaling:TerminateInstanceInAutoScalingGroup",
@@ -252,6 +315,16 @@ class EKSNodeGroupBackend(NodeGroupBackend):
         logger.info("%s removed node %s from node group %s", logger_prefix, instance, compute.nodegroup_name)
 
     def delete(self, compute: LLMHostCompute) -> None:
+        """
+        Delete the compute's EKS node group, and so its nodes.
+
+        Calls eks:DeleteNodegroup.
+
+        A node group that does not exist is not an error.
+
+        :param compute: The LLMHostCompute.
+        :raises LLMHostComputeError: if the call fails otherwise.
+        """
         try:
             self._call(
                 "eks:DeleteNodegroup",
@@ -284,10 +357,19 @@ class InMemoryNodeGroupBackend(NodeGroupBackend):
 
     @property
     def ready(self) -> bool:
+        """Whether the simulated cloud is reachable.
+
+        Tests set it to simulate an outage.
+        """
         return self._ready
 
     @ready.setter
     def ready(self, value: bool) -> None:
+        """
+        Set whether the simulated cloud is reachable.
+
+        :param value: Whether it is reachable.
+        """
         self._ready = value
 
     def _check(self) -> None:
@@ -295,11 +377,26 @@ class InMemoryNodeGroupBackend(NodeGroupBackend):
             raise LLMHostComputeError(self.fail)
 
     def describe(self, compute: LLMHostCompute) -> Optional[NodeGroup]:
+        """
+        Return a copy of the compute's stored node group, or None.
+
+        :param compute: The LLMHostCompute.
+        :returns: The node group, or None.
+        :raises LLMHostComputeError: if :attr:`fail` is set.
+        """
         self._check()
         nodegroup = self.nodegroups.get(compute.nodegroup_name)
         return copy.deepcopy(nodegroup)
 
     def create(self, compute: LLMHostCompute, desired: int) -> NodeGroup:
+        """
+        Store an ``ACTIVE`` node group for the compute, and record its name in :attr:`created`.
+
+        :param compute: The LLMHostCompute.
+        :param desired: The node group's desired size.
+        :returns: A copy of the node group.
+        :raises LLMHostComputeError: if :attr:`fail` is set.
+        """
         self._check()
         nodegroup = NodeGroup(compute.nodegroup_name, NodeGroupStatus.ACTIVE, desired, compute.max_nodes)
         self.nodegroups[nodegroup.name] = nodegroup
@@ -307,17 +404,38 @@ class InMemoryNodeGroupBackend(NodeGroupBackend):
         return copy.deepcopy(nodegroup)
 
     def scale(self, compute: LLMHostCompute, desired: int) -> None:
+        """
+        Set the stored node group's desired size, and its maximum to the compute's max_nodes.
+
+        :param compute: The LLMHostCompute.
+        :param desired: The node group's desired size.
+        :raises LLMHostComputeError: if :attr:`fail` is set.
+        :raises KeyError: if the node group does not exist.
+        """
         self._check()
         nodegroup = self.nodegroups[compute.nodegroup_name]
         nodegroup.desired = desired
         nodegroup.max_nodes = compute.max_nodes
 
     def remove_node(self, compute: LLMHostCompute, provider_id: str) -> None:
+        """
+        Lower the stored node group's desired size by one, and record the node in :attr:`removed`.
+
+        :param compute: The LLMHostCompute.
+        :param provider_id: The Node's ``spec.providerID``.
+        :raises LLMHostComputeError: if :attr:`fail` is set.
+        """
         self._check()
         self.nodegroups[compute.nodegroup_name].desired -= 1
         self.removed.append(provider_id)
 
     def delete(self, compute: LLMHostCompute) -> None:
+        """
+        Remove the stored node group, if any, and record its name in :attr:`deleted`.
+
+        :param compute: The LLMHostCompute.
+        :raises LLMHostComputeError: if :attr:`fail` is set.
+        """
         self._check()
         self.nodegroups.pop(compute.nodegroup_name, None)
         self.deleted.append(compute.nodegroup_name)

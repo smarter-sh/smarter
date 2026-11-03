@@ -20,7 +20,13 @@ module_prefix = __name__
 
 @receiver(post_save, sender=LLMHost)
 def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
-    """Create the default API for the llmhost."""
+    """
+    Log that an LLMHost was created or updated, with its serialized fields.
+
+    :param sender: The LLMHost model.
+    :param instance: The LLMHost that was saved.
+    :param created: Whether it was created, rather than updated.
+    """
 
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_saved()"
     data = logging.SmarterFormattedText.json(LLMHostSerializer(instance).data)
@@ -32,7 +38,12 @@ def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
 
 @receiver(pre_delete, sender=LLMHost)
 def llmhost_deleted(sender, instance: LLMHost, **kwargs):
-    """Delete the default API for the llmhost."""
+    """
+    Log that an LLMHost is about to be deleted.
+
+    :param sender: The LLMHost model.
+    :param instance: The LLMHost being deleted.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_deleted()"
     logger.info("%s %s", prefix, instance)
 
