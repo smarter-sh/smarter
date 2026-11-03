@@ -259,7 +259,7 @@ and only inside functions.
   `smarter/lib/cache/tool_results.py`, the one cache of tool results. It owns
   the key (a namespace, the tool's identity, its arguments as canonical JSON),
   never stores an error, and skips the cache at timeout 0. MCP tools, extension
-  tools and the Smarter Project MCP server use it; each caller decides only
+  tools and the MCPServer's public tools use it; each caller decides only
   what may be cached and for how long. Don't write another one. Never cache a
   tool that writes, or whose result depends on who calls it.
 - **A conversation's first message** has its answer cached by

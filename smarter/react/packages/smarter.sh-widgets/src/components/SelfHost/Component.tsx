@@ -97,7 +97,7 @@ function SelfHost() {
           {/* begin::Action */}
           <div className="d-flex flex-wrap align-items-center gap-3 mt-auto pt-7">
             <a
-              href="https://docs.smarter.sh/en/latest/smarter-platform/installation.html"
+              href="https://docs.smarter.sh/smarter-platform/installation.html"
               target="_blank"
               className="btn btn-sm fw-semibold selfhost-btn"
             >

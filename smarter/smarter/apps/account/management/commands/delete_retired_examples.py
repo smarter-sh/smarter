@@ -44,7 +44,7 @@ RETIRED_EXAMPLES: tuple[RetiredExample, ...] = (
         model=MCPClient,
         name="smarter_project_github_chat",
         reason=(
-            "the Smarter Project MCP server stopped serving the archived smarter-chat repository in v0.36.0, "
+            "the MCPServer stopped serving the archived smarter-chat repository in v0.36.0, "
             "so its endpoint /api/v1/mcp/smarter-project/smarter-chat/ answers 404."
         ),
     ),

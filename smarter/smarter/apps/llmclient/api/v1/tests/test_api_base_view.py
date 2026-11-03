@@ -20,7 +20,7 @@ from smarter.apps.llmclient.api.v1.views.base import LLMClientApiBaseViewSet
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.mcpserver.acting_user import current_acting_user
+from smarter.apps.mcpserver.services import current_acting_user
 from smarter.apps.prompt.contract.models import (
     PromptChatApiErrorResponse,
     PromptChatApiPromptResponse,

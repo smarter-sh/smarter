@@ -15,7 +15,7 @@ describe("McpServer", () => {
     render(<McpServer />);
     expect(screen.getByRole("link", { name: "Documentation" })).toHaveAttribute(
       "href",
-      "https://docs.smarter.sh/en/latest/smarter-platform/smarter-project-mcp-server.html",
+      "https://docs.smarter.sh/smarter-platform/mcpserver.html#public-tools",
     );
   });
 

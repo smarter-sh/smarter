@@ -49,7 +49,8 @@
 #                  one job summary, combines their coverage, and uploads it
 #                  to Codecov once (flag: python), when every shard passed.
 #                  It fails when any shard failed, so it stands for all eight.
-#   slack-bot      The unit tests of the Helm chart's Slack bot and of the
+#   slack-bot      The unit tests of the Helm chart's Slack bot, of the chart's
+#                  log redaction (helm/charts/smarter/tests) and of the
 #                  workflows' scripts (scripts/tests).
 #   notify         Posts the results to Slack: the job summaries' test counts,
 #                  coverage and failed tests (scripts/slack_test_report.py).
@@ -336,6 +337,9 @@ jobs:
 
       - name: Unit tests
         run: python -m unittest discover -v -s helm/charts/slack-bot/tests
+
+      - name: Unit tests of the chart's log redaction
+        run: python -m unittest discover -v -s helm/charts/smarter/tests
 
       # -t scripts puts scripts/ on sys.path, so that the tests import the scripts by name.
       - name: Unit tests of the workflows' scripts

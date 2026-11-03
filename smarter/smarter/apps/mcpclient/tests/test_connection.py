@@ -41,10 +41,10 @@ from smarter.apps.mcpclient.exceptions import (
     SmarterMCPClientPermissionError,
 )
 from smarter.apps.mcpclient.models import MCPAuthType, MCPClient, MCPTransport
-from smarter.apps.mcpserver.acting_user import (
+from smarter.apps.mcpserver.services import (
     ACTING_USER_HEADER,
     acting_user,
-    operations_server_url,
+    staff_endpoint_url,
     verify_acting_user,
 )
 from smarter.common.const import SmarterEnvironments
@@ -283,11 +283,11 @@ class TestMCPServerConnection(MCPClientTestBase):
         self.assertNotIn("Authorization", headers)
 
     def test_headers_acting_user(self):
-        """Only the platform's own operations server gets the signed acting user, and a stored one is never sent."""
+        """Only the platform's own staff-only MCPServer endpoint gets the signed acting user, and a stored one is never sent."""
         stored = {"X-Client-Id": "smarter-tests", "x-smarter-acting-user": "forged"}
         with acting_user(self.admin_user):
             elsewhere = self.connection(headers=stored)
-            operations = self.connection(headers=stored, endpoint_url=operations_server_url())
+            operations = self.connection(headers=stored, endpoint_url=staff_endpoint_url())
         elsewhere_headers = elsewhere.request_headers()
         self.assertEqual(elsewhere_headers, {"X-Client-Id": "smarter-tests", "User-Agent": USER_AGENT})
         operations_headers = operations.request_headers()

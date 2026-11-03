@@ -212,6 +212,8 @@ class TestLoginView(TestAccountMixin):
         log_login_failure.assert_called_once_with(self.admin_user.email, LoginFailure.ERROR)
         view_logger.error.assert_called_once()
         self.assertNotIn(self.admin_user.email, repr(view_logger.error.call_args))
+        # the exception's text is logged, and never shown to the client (issue #914).
+        self.assertNotIn("boom", response.content.decode())
 
     def test_post_login_invalid_form(self):
         """POST with missing fields should return bad request."""
@@ -620,6 +622,13 @@ class TestAccountRegisterView(TestAccountMixin):
         self.assertEqual(user_profile.language, "fr")
         infrastructure.email.send_email.assert_called_once()
         self.assertIn('<html lang="fr">', infrastructure.email.send_email.call_args.kwargs["body"])
+
+    def test_sign_up_form_rejects_an_existing_address_in_any_case(self):
+        """An email address that another user has, typed in another case, is rejected (issue #914)."""
+        form = AccountRegisterView.SignUpForm({"email": self.admin_user.email.upper(), "password": "testpass123"})
+        self.assertFalse(form.is_valid())
+        self.assertIn("email", form.errors)
+        self.assertEqual(User.objects.filter(email__iexact=self.admin_user.email).count(), 1)
 
     def test_post_register_view_invalid_form(self):
         """POST invalid registration data should re-render the form with errors."""

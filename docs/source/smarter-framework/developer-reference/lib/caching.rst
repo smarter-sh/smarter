@@ -57,8 +57,8 @@ may be cached and for how long:
   :attr:`~smarter.apps.llmtool.extension.protocol.SmarterExtensionTool.cache_ttl` has its results
   cached, by its arguments and the Extension's settings. Extension tools can depend on who calls
   them, so the default is no caching.
-- **The Smarter Project MCP server** caches its own tool results for an hour, until a repository is
-  indexed again. See :mod:`smarter.apps.mcpserver.caching`.
+- **The MCPServer** caches the results of its own public tools for an hour, until a repository is
+  indexed again. See :mod:`smarter.apps.mcpserver.protocol.caching`.
 
 The LLM's answer to the first message of a conversation is cached too, for
 ``smarter_settings.prompt_response_cache_expiration`` seconds (``SMARTER_PROMPT_RESPONSE_CACHE_EXPIRATION``,

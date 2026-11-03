@@ -91,7 +91,7 @@ f3bf3acbd087   smarter        "bash -c 'watchmedo …"   About a minute ago   Up
 This project demonstrates a wide variety of good coding best practices for
 managing mission-critical cloud-based micro services in a team environment,
 namely its adherence to [12-Factor Methodology](./docs/legacy/12-FACTOR.md).
-Please see this [Code Management Best Practices](https://docs.smarter.sh/en/latest/developers/developer-guidelines.html)
+Please see this [Code Management Best Practices](https://docs.smarter.sh/smarter-framework/guides/developer-guidelines.html)
 for additional details.
 
 We want to make this project more accessible to students and learners as an

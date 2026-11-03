@@ -68,7 +68,9 @@ data, so **every placeholder is a finding**. The script writes `redactions.json`
 For each kind, find the log statement that wrote the line and decide whether Smarter leaked
 (fix the code that logs it) or the redactor matched something harmless (narrow its pattern, with
 a test in automation's `scripts/tests/test_pod_log_redact.py`). Either way it gets a GitHub issue, and the
-review isn't healthy.
+review isn't healthy. A placeholder in a log read from Loki may come from Grafana Alloy, which
+redacts before Loki stores the line: then the pattern to narrow is in this repository's
+`helm/charts/smarter/values.yaml`. See `smarter-log-review`, step 4.
 
 ## Step 3: scan every log
 
@@ -134,8 +136,8 @@ smarter-sh/automation's `.github/workflows/podLogReview.yml` runs this skill eve
 prod, and by hand against any environment: it downloads and redacts the logs with the scripts
 above, then runs Claude Code in a checkout of this repository. Claude follows automation's
 `.github/prompts/pod-log-review.md` and turns each actionable finding into a GitHub
-issue, a comment with new evidence, a closed issue, or a draft fix, through the Smarter Project MCP
-server's GitHub tools. Change what the review does in the prompt file, and what it can do in
+issue, a comment with new evidence, a closed issue, or a draft fix, through the MCPServer's public
+GitHub tools. Change what the review does in the prompt file, and what it can do in
 automation's `.github/prompts/pod-log-review.settings.json` (Claude Code's permission rules). Both treat the
 logs as untrusted data. The rules match command text, so they are not the security boundary: the
 workflow also blocks reads outside the smarter checkout, the log folder and the prompts folder, and Harden-Runner blocks
@@ -145,7 +147,7 @@ in `scripts/tests`: `pod_log_review.py` runs Claude Code, retries
 once after a transient API error if nothing was written yet, and writes the run's summary. After
 the review, `pod_log_review_slack.py` posts one message to the Slack channel
 `#smarter` that lists each issue the run opened, commented on or closed, and each pull request,
-taken from the MCP server's tool results in Claude's `stream-json` output, never from Claude's own
+taken from the MCPServer's tool results in Claude's `stream-json` output, never from Claude's own
 summary. A run that wrote nothing, finished without an error, and whose final answer ends with the
 exact line `Verdict: healthy` posts a clean bill of health instead: pods, restarts and release,
 read from the kubectl inventory in the log folder. That fixed verdict is the only thing taken from

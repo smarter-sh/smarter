@@ -85,6 +85,14 @@ A `<redacted:<kind>>` placeholder means smarter-sh/automation's `scripts/pod_log
 like a credential or personal data (see `smarter-pod-log-review`, step 2). It is always a finding:
 a leak to fix in the code that logged it, or a redactor pattern to narrow.
 
+Find which redactor wrote it before you decide where the fix goes. Logs read from Loki (the
+MCPServer's log tools, the daily review) were already redacted by Grafana Alloy before they were
+stored: Alloy writes a bare `<redacted>`, which `pod_log_redact.py` only relabels. A false positive
+there is fixed in this repository, in `loki.process "redact"` of `helm/charts/smarter/values.yaml`,
+with a case in `helm/charts/smarter/tests/test_alloy_redact.py`, not in automation's redactor
+(issue #913, after #898 fixed the wrong one). Logs downloaded with `kubectl logs` never passed
+through Alloy.
+
 **Not leaks** (verified):
 
 - `"apiKeys": [{"apiKey": "<uuid>"}]` in `llmclient_saved()` dumps is the SmarterAuthToken's public
@@ -92,6 +100,7 @@ a leak to fix in the code that logged it, or a redactor pattern to narrow.
   they share one token.
 - `"api_key": "****abcd"` in `chat_response` dumps is masked.
 - Connection strings print as `mysql://user:******@host` and `https://host (Auth: ******)`.
+- `secret_accessed()` names the Secret that was read, `Secret <name>`: the name, never the value.
 - The Stackademy example secrets, from https://github.com/smarter-sh/stackademy, are public test credentials whose value equals their name. A log
   redactor that masks secret values therefore masks names too (`********_proxy_password`); that's the
   redactor, not Smarter.

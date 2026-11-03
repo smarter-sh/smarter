@@ -171,8 +171,8 @@ A brokered entity consists of the following:
   Transformers map data to/from a Smarter manifest and a Django object
   relational model (ORM).
 - `Docs url endpoints <../smarter/smarter/apps/docs/urls.py>`__.
-  Examples: https://docs.smarter.sh/manifest/secret/ and
-  https://docs.smarter.sh/json-schema/secret/
+  Examples: ``https://platform.example.com/docs/manifest/secret/`` and
+  ``https://platform.example.com/docs/json-schema/secret/``
 - `Kind
   registration <../smarter/smarter/apps/api/v1/manifests/enum.py>`__
 - `Broker

@@ -17,7 +17,7 @@ describe("SelfHost", () => {
     }
     expect(within(selfHost).getByRole("link", { name: "Installation Guide" })).toHaveAttribute(
       "href",
-      "https://docs.smarter.sh/en/latest/smarter-platform/installation.html",
+      "https://docs.smarter.sh/smarter-platform/installation.html",
     );
     expect(within(selfHost).getByText("Open source · AGPL-3.0")).toBeInTheDocument();
   });

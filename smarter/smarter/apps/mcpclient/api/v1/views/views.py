@@ -56,7 +56,7 @@ from smarter.apps.mcpclient.exceptions import (
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.serializers import MCPClientSerializer
 from smarter.apps.mcpclient.signals import mcpclient_called
-from smarter.apps.mcpserver.acting_user import acting_user
+from smarter.apps.mcpserver.services import acting_user
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
@@ -192,8 +192,8 @@ class MCPClientToolCallView(MCPClientViewBase):
         tool_name = kwargs.get("tool_name", "")
         arguments = request.data if isinstance(request.data, dict) else {}
         try:
-            # this platform's Smarter Operations MCP server learns who is calling: see
-            # smarter.apps.mcpserver.acting_user.
+            # the staff-only endpoint of this platform's MCPServer learns who is calling: see
+            # smarter.apps.mcpserver.services.acting_user.
             with acting_user(request.user):
                 connection = MCPServerConnection(mcpclient)
             result = connection.call_tool(tool_name, arguments)

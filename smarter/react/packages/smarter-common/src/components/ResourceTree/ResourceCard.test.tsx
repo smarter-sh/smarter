@@ -25,7 +25,7 @@ describe("ResourceCard", () => {
     render(<ResourceCard node={leafTree} isRoot />);
     expect(screen.getByRole("link", { name: "About LLMClient, in the documentation" })).toHaveAttribute(
       "href",
-      "https://docs.smarter.sh/en/latest/smarter-resources/smarter-llmclient.html",
+      "https://docs.smarter.sh/smarter-resources/smarter-llmclient.html",
     );
     expect(screen.getByRole("article")).toHaveClass("architecture-card-root", "architecture-card-primary");
   });

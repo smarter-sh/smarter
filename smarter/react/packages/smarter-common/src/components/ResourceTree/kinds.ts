@@ -6,7 +6,7 @@
 import { gettext } from "../../lib/i18n";
 
 /** The documentation that the cards link to. */
-export const DOCS = "https://docs.smarter.sh/en/latest";
+export const DOCS = "https://docs.smarter.sh";
 
 /** A Bootstrap color of the web console's theme, for a kind's icon and the accent of its card. */
 export type Tone = "primary" | "info" | "success" | "warning" | "danger" | "dark" | "secondary";

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import Integrations from "@/components/Integrations/Component";
 
-const DOCS = "https://docs.smarter.sh/en/latest/smarter-framework";
+const DOCS = "https://docs.smarter.sh/smarter-framework";
 
 describe("Integrations", () => {
   it("links each integration's logo to its documentation", () => {

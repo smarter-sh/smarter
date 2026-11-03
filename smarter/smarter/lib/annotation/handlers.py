@@ -92,7 +92,7 @@ def register_annotation_handler(prefix: str, handler: AnnotationHandler) -> Anno
     """
     Call ``handler`` whenever an annotation whose key's prefix is ``prefix``, or a subdomain of it, changes.
 
-    The prefixes that belong to the Smarter platform, ``smarter.sh`` and its subdomains, may only
+    The prefixes that belong to the Smarter Project, ``smarter.sh`` and its subdomains, may only
     be handled by Smarter's own code.
 
     :param prefix: A DNS domain that the integration owns, e.g. ``acme.com``.
@@ -108,7 +108,7 @@ def register_annotation_handler(prefix: str, handler: AnnotationHandler) -> Anno
     module = getattr(handler, "__module__", "") or ""
     if is_reserved_annotation_key(prefix + "/x") and not module.startswith("smarter."):
         raise SmarterAnnotationError(
-            f"Annotation prefix {prefix!r} is reserved for the Smarter platform. Use a domain that you own."
+            f"Annotation prefix {prefix!r} is reserved for the Smarter Project. Use a domain that you own."
         )
     handlers = _handlers.setdefault(prefix, [])
     if handler not in handlers:

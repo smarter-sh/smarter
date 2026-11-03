@@ -124,7 +124,7 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
         description=(
             f"{class_identifier}.allowed_origins[list[str]]. Optional. The origins of the web pages that may call "
             "this llmclient from a browser, with the @smarter.sh/ui-chat React component, in addition to those that "
-            "the Smarter platform allows. An origin is a scheme, a host and an optional port, without a path or a "
+            "the Smarter installation allows. An origin is a scheme, a host and an optional port, without a path or a "
             "wildcard. Example: ['https://www.example.com', 'http://localhost:5173']."
         ),
     )
@@ -135,8 +135,8 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
             "the llmclient: the staff users of the Smarter account that runs the platform, not the admins of other "
             "accounts. Defaults to False. A staff-only llmclient is in no other user's lists, workbench or apis, "
             "including at its deployed url, and only the platform's staff may apply one. Use it for an llmclient "
-            "whose tools read what only staff may see, e.g. an MCPClient of the platform's Smarter Operations MCP "
-            "server."
+            "whose tools read what only staff may see, e.g. one with the smarter_operations MCPClient, of the "
+            "MCPServer's staff-only tools."
         ),
     )
 
@@ -206,7 +206,7 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
         description=(
             f"{class_identifier}.styles[object]. Optional. The look of the LLMClient's chat, in the Smarter "
             "workbench and on every page that embeds it: its logo, background image, fonts and colors. See "
-            "https://docs.smarter.sh/en/latest/smarter-resources/llmclient/styles.html"
+            "https://docs.smarter.sh/smarter-resources/llmclient/styles.html"
         ),
     )
 
@@ -222,7 +222,7 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
     plugins: Optional[List[str]] = Field(
         None,
         description=f"{class_identifier}.searchTerms[list]. Optional. The Plugins to add to the "
-        f"{MANIFEST_KIND}. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/plugins/ for more information.",
+        f"{MANIFEST_KIND}. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/smarter-resources/smarter-llmtool.html for more information.",
     )
     extensions: Optional[List[str]] = Field(
         None,
@@ -244,5 +244,5 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
     )
     apiKey: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.apiKey[str]. Optional. The name of the API key that this llmclient uses for authentication. Example: 'my_api_key'. API keys are only necessary for llmclients that are not public facing. This is the name of the API key that is used to authenticate the llmclient with the Smarter API. API keys are issued by a Smarter platform administrator and are used to authenticate the llmclient with the Smarter API.",
+        description=f"{class_identifier}.apiKey[str]. Optional. The name of the API key that this llmclient uses for authentication. Example: 'my_api_key'. API keys are only necessary for llmclients that are not public facing. This is the name of the API key that is used to authenticate the llmclient with the Smarter API. API keys are issued by an administrator of the Smarter installation and are used to authenticate the llmclient with the Smarter API.",
     )

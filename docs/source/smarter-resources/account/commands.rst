@@ -16,6 +16,7 @@ manage.py Commands
    commands/initialize_account
    commands/initialize_platform
    commands/load_from_github
+   commands/merge_duplicate_users
    commands/reset_cache
    commands/send_slack_invitation_email
    commands/send_welcome_email
