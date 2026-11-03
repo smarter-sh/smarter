@@ -33,6 +33,17 @@ class Command(SmarterCommand):
         parser.add_argument("domain", type=str, help="The domain name to register.")
 
     def handle(self, *args, **options):
+        """
+        Register the domain for the account, and print the name servers to delegate the domain to.
+
+        Fails if the cloud services are unavailable, the domain does not exist or belongs to another account,
+        or registration fails. Registration creates the domain's DNS hosted zone through the infrastructure
+        service.
+
+        :param args: Positional arguments (unused).
+        :param options: The parsed options: ``account_number`` and ``domain``.
+        :raises Account.DoesNotExist: if no account has the account number.
+        """
         self.handle_begin()
 
         if not infrastructure.ready:

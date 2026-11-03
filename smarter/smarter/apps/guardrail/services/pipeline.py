@@ -71,7 +71,13 @@ _DISPOSITION_PRECEDENCE = [
 
 
 def fold(current: PipelineDisposition, incoming: PipelineDisposition) -> PipelineDisposition:
-    """Return whichever of two dispositions ranks higher."""
+    """
+    Return whichever of two dispositions ranks higher, in ``_DISPOSITION_PRECEDENCE``.
+
+    :param current: The disposition so far.
+    :param incoming: The disposition of the latest guardrail.
+    :returns: ``incoming`` if it ranks higher than ``current``, otherwise ``current``.
+    """
     if _DISPOSITION_PRECEDENCE.index(incoming) > _DISPOSITION_PRECEDENCE.index(current):
         return incoming
     return current
@@ -114,7 +120,13 @@ class GuardrailPipeline:
 
     @classmethod
     def for_llmclient(cls, llmclient: "LLMClient", session_key: Optional[str] = None) -> "GuardrailPipeline":
-        """Return a pipeline for the guardrails of an LLMClient, as listed in its manifest's ``spec.guardrails``."""
+        """
+        Return a pipeline for the guardrails of an LLMClient, as listed in its manifest's ``spec.guardrails``.
+
+        :param llmclient: The LLMClient, whose guardrails the pipeline runs and records events for.
+        :param session_key: The session key of the prompt, for the events.
+        :returns: The pipeline.
+        """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.llmclient.models import LLMClientGuardrails
 

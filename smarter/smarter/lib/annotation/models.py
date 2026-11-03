@@ -248,11 +248,14 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         :rtype: list[AnnotationChange]
         """
         # pylint: disable=import-outside-toplevel
+        from smarter.lib.django.models import MetaDataModel
+
         from .handlers import dispatch_annotation_changes
 
         content_type = annotation_content_type(instance)
         # annotations read by prefetch_annotations() are about to be out of date.
-        if hasattr(instance, "_prefetched_annotations"):
+        # only a MetaDataModel has them: prefetch_annotations() skips every other model.
+        if isinstance(instance, MetaDataModel):
             instance._prefetched_annotations = None  # pylint: disable=protected-access
         with transaction.atomic():
             existing = {
@@ -345,7 +348,13 @@ class AnnotationManager(models.Manager["Annotation"]):
         return self.get_queryset().for_object(instance)
 
     def with_key(self, key: str, value: Optional[str] = None) -> AnnotationQuerySet:
-        """See :meth:`AnnotationQuerySet.with_key`."""
+        """
+        Return the annotations with a key, and optionally a value; see :meth:`AnnotationQuerySet.with_key`.
+
+        :param key: The annotation key, e.g. ``acme.com/crm-account-id``.
+        :param value: The value to match exactly, or ``None`` for any value.
+        :returns: The annotations.
+        """
         return self.get_queryset().with_key(key, value)
 
     def with_prefix(self, prefix: str) -> AnnotationQuerySet:
@@ -353,7 +362,13 @@ class AnnotationManager(models.Manager["Annotation"]):
         return self.get_queryset().with_prefix(prefix)
 
     def sync(self, instance: models.Model, annotations: AnnotationsMap) -> list[AnnotationChange]:
-        """See :meth:`AnnotationQuerySet.sync`."""
+        """
+        Make a resource's annotations exactly ``annotations``; see :meth:`AnnotationQuerySet.sync`.
+
+        :param instance: The resource, already saved.
+        :param annotations: The resource's annotations, already validated.
+        :returns: The changes, in key order.
+        """
         return self.get_queryset().sync(instance, annotations)
 
     def delete_for_object(self, instance: models.Model) -> list[AnnotationChange]:

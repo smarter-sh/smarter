@@ -90,6 +90,7 @@ class SAMMCPClientBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter API MCPClient Manifest Broker Error"
 
 
@@ -469,6 +470,12 @@ class SAMMCPClientBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented for MCPClients.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
@@ -550,17 +557,35 @@ class SAMMCPClientBroker(AbstractBroker):
         return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented for MCPClients.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
         )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented for MCPClients.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an empty ``logs`` response: MCPClients keep no logs.
+
+        :param request: The request.
+        :returns: The response, with empty data.
+        """
         command = SmarterJournalCliCommands(self.logs.__name__)
         return self.json_response_ok(command=command, data={})

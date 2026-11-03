@@ -151,20 +151,28 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
 
     @property
     def is_billable_resource(self) -> bool:
+        """Whether the vectorstore costs money.
+
+        Always True.
+        """
         return True
 
     @property
     def is_self_hosted(self) -> bool:
+        """Whether Smarter runs the vectorstore's database, on Kubernetes."""
         return self.hosting == VectorstoreHostingKind.SELF_HOSTED
 
     @property
     def is_deployed(self) -> bool:
+        """Whether the vectorstore is provisioning or ready."""
         return self.status in (VectorstoreStatus.PROVISIONING, VectorstoreStatus.READY)
 
     @property
     def maintenance(self) -> SmarterDictType:
         """The manifest's spec.maintenance."""
-        return (self.spec or {}).get("maintenance") or {}
+        spec = self.spec or {}
+        maintenance = spec.get("maintenance") or {}
+        return maintenance
 
     @property
     def kubernetes_name(self) -> str:
@@ -213,7 +221,13 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
 
     @classmethod
     def get_cached_vectorstores_for_user(cls, user: User, invalidate: bool = False) -> list["VectorstoreMeta"]:
-        """The vectorstores that the user may read."""
+        """
+        The vectorstores that the user may read.
+
+        :param user: The user, or None.
+        :param invalidate: Invalidate the cached list first.
+        :returns: The vectorstores, cached by user id, or an empty list for no user.
+        """
         if user is None:
             return []
 

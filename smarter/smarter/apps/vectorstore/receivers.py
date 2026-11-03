@@ -26,7 +26,12 @@ module_prefix = logging.SmarterFormattedText.text(__name__)
 @receiver(post_save, sender=VectorstoreMeta)
 @receiver(post_delete, sender=VectorstoreMeta)
 def vectorstore_changed(sender, instance: VectorstoreMeta, **kwargs):
-    """Invalidate the cached vectorstore, and its owner's cached lists."""
+    """
+    Invalidate the cached vectorstore, and its owner's cached lists.
+
+    :param sender: The model class.
+    :param instance: The vectorstore that was saved or deleted.
+    """
     # pylint: disable=import-outside-toplevel
     from .caching import invalidate_all_cached_vectorstores_for_user_profile
 
@@ -41,27 +46,61 @@ def vectorstore_changed(sender, instance: VectorstoreMeta, **kwargs):
 
 @receiver(vectorstore_deployed)
 def vectorstore_deployed_receiver(sender, vectorstore: VectorstoreMeta, **kwargs):
+    """
+    Log that a vectorstore was deployed.
+
+    :param sender: The sender's class.
+    :param vectorstore: The vectorstore.
+    """
     logger.info("%s Vectorstore %s deployed.", module_prefix, vectorstore)
 
 
 @receiver(vectorstore_destroyed)
 def vectorstore_destroyed_receiver(sender, vectorstore: VectorstoreMeta, **kwargs):
+    """
+    Log that a vectorstore's database was destroyed.
+
+    :param sender: The sender's class.
+    :param vectorstore: The vectorstore.
+    """
     logger.info("%s Vectorstore %s destroyed.", module_prefix, vectorstore)
 
 
 @receiver(vectorstore_status_changed)
 def vectorstore_status_changed_receiver(sender, vectorstore: VectorstoreMeta, previous, status, message, **kwargs):
+    """
+    Log a vectorstore's change of status, at warning level when it failed.
+
+    :param sender: The sender's class.
+    :param vectorstore: The vectorstore.
+    :param previous: Its previous status.
+    :param status: Its new status.
+    :param message: Why.
+    """
     log = logger.warning if status == "failed" else logger.info
     log("%s Vectorstore %s: %s -> %s %s", module_prefix, vectorstore, previous, status, message)
 
 
 @receiver(document_loaded)
 def document_loaded_receiver(sender, document, **kwargs):
+    """
+    Log that a document was loaded, and its number of chunks.
+
+    :param sender: The sender's class.
+    :param document: The document.
+    """
     logger.info("%s %s loaded, %s chunks.", module_prefix, document, document.chunk_count)
 
 
 @receiver(document_load_failed)
 def document_load_failed_receiver(sender, document, error, **kwargs):
+    """
+    Log that a document could not be loaded.
+
+    :param sender: The sender's class.
+    :param document: The document.
+    :param error: Why.
+    """
     logger.warning("%s %s failed to load: %s", module_prefix, document, error)
 
 

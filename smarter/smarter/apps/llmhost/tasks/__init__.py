@@ -66,6 +66,13 @@ def dns_enabled() -> bool:
 
 
 def create_dns_record(llmhost: LLMHost) -> None:
+    """
+    Create the DNS A record of the LLMHost's default Ingress hostname, if DNS is enabled.
+
+    Calls the DNS provider, e.g. Route53. Errors are logged, not raised.
+
+    :param llmhost: The LLMHost.
+    """
     hostname = managed_hostname(llmhost)
     if not hostname or not dns_enabled():
         return
@@ -80,6 +87,11 @@ def create_dns_record(llmhost: LLMHost) -> None:
 
 
 def destroy_dns_record(llmhost: LLMHost) -> None:
+    """
+    Queue the Celery task that deletes the DNS A record of the LLMHost's default Ingress hostname, if DNS is enabled.
+
+    :param llmhost: The LLMHost.
+    """
     hostname = managed_hostname(llmhost)
     if not hostname or not dns_enabled():
         return

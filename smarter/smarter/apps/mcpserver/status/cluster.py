@@ -629,7 +629,11 @@ def warning_event(event: SmarterDictType) -> WarningEvent:
     if last_seen is None:
         last_seen = parse_time(metadata.get("creationTimestamp"))
 
-    count = series.get("count") or event.get("count") or 1
+    count = series.get("count")
+    if not count:
+        count = event.get("count")
+    if not count:
+        count = 1
     kind = str(involved.get("kind", "")).lower()
     name = str(involved.get("name", ""))
     return WarningEvent(

@@ -59,6 +59,7 @@ class PluginDetailView(DocsBaseView):
 
     @property
     def formatted_class_name(self):
+        """The class name, with this instance's id, formatted for logging."""
         class_name = f"{__name__}.{PluginDetailView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 

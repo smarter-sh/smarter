@@ -192,7 +192,12 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
 
 @receiver(post_delete, sender=User)
 def user_post_delete(sender: User, instance: User, **kwargs):
-    """Signal receiver for deleted of User model."""
+    """
+    Log the deletion of a User.
+
+    :param sender: The User model.
+    :param instance: The deleted User.
+    """
     logger.info(
         "%s User post_delete: %s, id: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.user_post_delete()",
@@ -203,7 +208,13 @@ def user_post_delete(sender: User, instance: User, **kwargs):
 
 @receiver(post_save, sender=UserProfile)
 def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, **kwargs):
-    """Signal receiver for created/saved of UserProfile model."""
+    """
+    Log the save of a UserProfile, and invalidate the cache of its user's UserProfiles.
+
+    :param sender: The UserProfile model.
+    :param instance: The saved UserProfile.
+    :param created: Whether it was created.
+    """
     logger.info(
         "%s UserProfile post_save: %s, created: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.user_profile_post_save()",
@@ -216,7 +227,14 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
 
 @receiver(post_delete, sender=UserProfile)
 def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwargs):
-    """Signal receiver for deleted of UserProfile model."""
+    """
+    Log the deletion of a UserProfile, and invalidate the cache of its user's UserProfiles.
+
+    Nothing is invalidated when the User was deleted with it.
+
+    :param sender: The UserProfile model.
+    :param instance: The deleted UserProfile.
+    """
     logger.info(
         "%s UserProfile: %s, id: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.user_profile_post_delete()",
@@ -251,7 +269,13 @@ person's name. Log an Account by its ``account_number``, not ``str(account)``, w
 
 @receiver(post_save, sender=Account)
 def account_post_save(sender: Account, instance: Account, created, **kwargs):
-    """Signal receiver for created/saved of Account model."""
+    """
+    Log the creation or update of an Account, without its contact fields.
+
+    :param sender: The Account model.
+    :param instance: The saved Account.
+    :param created: Whether it was created.
+    """
     model_prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.account_post_save()"
     account_json = json.dumps(model_to_dict(instance, exclude=ACCOUNT_CONTACT_FIELDS))
     if created:
@@ -267,7 +291,12 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
 
 @receiver(post_delete, sender=Account)
 def account_post_delete(sender: Account, instance: Account, **kwargs):
-    """Signal receiver for deleted of Account model."""
+    """
+    Log the deletion of an Account.
+
+    :param sender: The Account model.
+    :param instance: The deleted Account.
+    """
     logger.info(
         "%s Account post_delete: %s, id: %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.account_post_delete()",
@@ -278,7 +307,13 @@ def account_post_delete(sender: Account, instance: Account, **kwargs):
 
 @receiver(post_save, sender=Charge)
 def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
-    """Signal receiver for created/saved of Charge model."""
+    """
+    Log the save of a Charge.
+
+    :param sender: The Charge model.
+    :param instance: The saved Charge.
+    :param created: Whether it was created.
+    """
     charge_json = json.dumps(model_to_dict(instance))
     logger.debug(
         "%s Charge post_save: %s, created: %s",
@@ -319,7 +354,14 @@ def resource_lock_changed(sender: ResourceLock, instance: ResourceLock, **kwargs
 
 @receiver(budget_warning)
 def budget_warning_receiver(sender, resource_constraint: ResourceConstraint, actual, limit, **kwargs):
-    """Signal receiver for budget_warning signal."""
+    """
+    Log a warning that a resource has spent the warning threshold of its budget.
+
+    :param sender: The sender of ``budget_warning``.
+    :param resource_constraint: The resource's constraint.
+    :param actual: The amount spent.
+    :param limit: The budget's limit.
+    """
     logger.warning(
         "%s Budget warning: %s has spent %s of its limit of %s.",
         f"{logging.SmarterFormattedText.text(module_prefix)}.budget_warning()",
@@ -331,7 +373,14 @@ def budget_warning_receiver(sender, resource_constraint: ResourceConstraint, act
 
 @receiver(budget_exceeded)
 def budget_exceeded_receiver(sender, resource_constraint: ResourceConstraint, lock, reason: str, **kwargs):
-    """Signal receiver for budget_exceeded signal."""
+    """
+    Log a warning that a resource has exceeded its budget.
+
+    :param sender: The sender of ``budget_exceeded``.
+    :param resource_constraint: The resource's constraint.
+    :param lock: The ResourceLock, or None when the budget only warns.
+    :param reason: Why the budget is exceeded.
+    """
     logger.warning(
         "%s Budget exceeded: %s %s %s",
         f"{logging.SmarterFormattedText.text(module_prefix)}.budget_exceeded()",
@@ -343,7 +392,12 @@ def budget_exceeded_receiver(sender, resource_constraint: ResourceConstraint, lo
 
 @receiver(budget_released)
 def budget_released_receiver(sender, resource_constraint: ResourceConstraint, **kwargs):
-    """Signal receiver for budget_released signal."""
+    """
+    Log that a resource's budget lock was released.
+
+    :param sender: The sender of ``budget_released``.
+    :param resource_constraint: The resource's constraint.
+    """
     logger.info(
         "%s Budget released: %s is no longer locked.",
         f"{logging.SmarterFormattedText.text(module_prefix)}.budget_released()",

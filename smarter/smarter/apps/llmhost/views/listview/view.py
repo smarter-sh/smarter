@@ -45,6 +45,12 @@ class LLMHostListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the LLMHost list React app, with its configuration.
+
+        :param request: The request.
+        :returns: The rendered page.
+        """
         # pylint: disable=C0415
         from smarter.apps.llmhost.urls import LLMHostReverseNames
 
@@ -92,6 +98,12 @@ class LLMHostComputeListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the LLMHostCompute list React app, with its configuration.
+
+        :param request: The request.
+        :returns: The rendered page.
+        """
         # pylint: disable=C0415
         from smarter.apps.llmhost.urls import LLMHostReverseNames
 

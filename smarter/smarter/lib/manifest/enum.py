@@ -10,6 +10,7 @@ class SAMEnumException(SAMExceptionBase):
 
     @property
     def get_formatted_err_message(self):
+        """The error message prefix of these errors."""
         return "Smarter API Manifest Enumeration Error"
 
 
@@ -40,6 +41,7 @@ class SAMDataFormats(SmarterEnumAbstract):
 class SAMSpecificationKeyOptions(SmarterEnumAbstract):
     """
     Key types enumeration.
+
     Used to specify whether a key in the specification is required, optional, or read-only.
 
     .. :no-index:
@@ -119,7 +121,6 @@ class SCLIResponseGet(SmarterEnumAbstract):
 
 class SCLIResponseGetData(SmarterEnumAbstract):
     """
-
     CLI get response data enumeration.
 
     .. :no-index:

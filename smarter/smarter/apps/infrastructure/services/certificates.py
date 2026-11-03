@@ -52,6 +52,7 @@ class Certificate:
 
     @property
     def is_issued(self) -> bool:
+        """Whether the certificate's status is Issued."""
         return self.status == CertificateStatus.ISSUED
 
 

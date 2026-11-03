@@ -1,6 +1,4 @@
-"""
-Batch user creation view for smarter api.
-"""
+"""Batch user creation view for smarter api."""
 
 from typing import List, Optional
 
@@ -21,9 +19,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 
 class UserModel(BaseModel):
-    """
-    Pydantic model for user data in batch user creation.
-    """
+    """Pydantic model for user data in batch user creation."""
 
     username: str
     email: EmailStr
@@ -34,18 +30,14 @@ class UserModel(BaseModel):
 
 
 class BatchModel(BaseModel):
-    """
-    Pydantic model for batch user creation data.
-    """
+    """Pydantic model for batch user creation data."""
 
     account_number: str
     users: List[UserModel]
 
 
 class CreatedUserModel(UserModel):
-    """
-    Pydantic model for created user data in batch user creation.
-    """
+    """Pydantic model for created user data in batch user creation."""
 
     account_number: str
     status: str
@@ -53,9 +45,7 @@ class CreatedUserModel(UserModel):
 
 
 class BatchCreateUsersResponseModel(BaseModel):
-    """
-    Pydantic model for the response of batch user creation.
-    """
+    """Pydantic model for the response of batch user creation."""
 
     created_users: List[CreatedUserModel]
 
@@ -69,23 +59,43 @@ class BatchCreateUsersView(AccountViewBase):
     """
 
     def get(self, request: Request, *args, **kwargs) -> HttpResponseBadRequest:
+        """
+        Refuse GET: users are batch created with POST.
+
+        :param request: The request.
+        :returns: A 400 response.
+        """
         return HttpResponseBadRequest(
             "GET method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
     def patch(self, request: Request, *args, **kwargs) -> HttpResponseBadRequest:
+        """
+        Refuse PATCH: users are batch created with POST.
+
+        :param request: The request.
+        :returns: A 400 response.
+        """
         return HttpResponseBadRequest(
             "PATCH method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
     def delete(self, request: Request, *args, **kwargs) -> HttpResponseBadRequest:
+        """
+        Refuse DELETE: users are batch created with POST.
+
+        :param request: The request.
+        :returns: A 400 response.
+        """
         return HttpResponseBadRequest(
             "DELETE method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
     def post(self, request: Request, *args, **kwargs) -> JsonResponse | HttpResponseBadRequest:
         """
-        Handle batch user creation. Receives a list of user data in the
+        Handle batch user creation.
+
+        Receives a list of user data in the
         request body and creates users for the specified account. The process
         is as follows:
 
@@ -158,7 +168,7 @@ class BatchCreateUsersView(AccountViewBase):
             return HttpResponseBadRequest("Request body is required.")
         data = request.data
         try:
-            batch_data = BatchModel(**data)
+            batch_data = BatchModel.model_validate(data)
         # pylint: disable=broad-except
         except Exception as e:
             logger.error("Invalid request data: %s", e)

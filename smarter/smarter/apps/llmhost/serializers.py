@@ -26,6 +26,7 @@ class LLMHostSerializer(MetaDataWithOwnershipModelSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """Return every field, read only: LLMHosts change only by applying manifests."""
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True
@@ -54,6 +55,7 @@ class LLMHostComputeSerializer(MetaDataWithOwnershipModelSerializer):
         fields = "__all__"
 
     def get_fields(self):
+        """Return every field, read only: LLMHostComputes change only by applying manifests."""
         fields = super().get_fields()
         for field in fields.values():
             field.read_only = True

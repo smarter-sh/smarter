@@ -47,6 +47,14 @@ class PromptListView(SmarterAuthenticatedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+        Render the page that hosts the LLMClient list React app, with its configuration in the context.
+
+        :param request: The request.
+        :param args: Unused positional arguments.
+        :param kwargs: Unused keyword arguments.
+        :returns: The rendered page.
+        """
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames
 

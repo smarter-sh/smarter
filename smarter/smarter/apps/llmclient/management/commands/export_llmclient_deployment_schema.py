@@ -16,6 +16,12 @@ class Command(SmarterCommand):
     )
 
     def handle(self, *args, **options):
+        """
+        Write the deployment page's JSON Schema to ``SCHEMA_PATH``, and print the path.
+
+        :param args: Positional arguments (unused).
+        :param options: The parsed options (unused).
+        """
         self.handle_begin()
         SCHEMA_PATH.write_text(contract_schema_json(), encoding="utf-8")
         self.stdout.write(str(SCHEMA_PATH))

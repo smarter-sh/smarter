@@ -57,11 +57,17 @@ def smarter_filter_queryset_for_user_profile(
     if not user_profile:
         logger.debug("%s: No user profile, returning empty queryset", logger_prefix)
         return qs.none()
+    if user_profile.user.is_superuser:
+        role = "superuser"
+    elif user_profile.user.is_staff:
+        role = "staff"
+    else:
+        role = "customer"
     logger.debug(
         "%s: Filtering queryset for user %s with role %s",
         logger_prefix,
         user_profile.user,
-        "superuser" if user_profile.user.is_superuser else "staff" if user_profile.user.is_staff else "customer",
+        role,
     )
 
     # 2.) if the user is a superuser, return all llmclients.
@@ -159,6 +165,12 @@ class AccountAdmin(SmarterStaffOnlyModelAdmin):
     list_display = ("company_name", "account_number", "created_at", "updated_at")
 
     def get_queryset(self, request: HttpRequest):
+        """
+        Return the rows that the request's user may see in the admin.
+
+        :param request: The admin request.
+        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
@@ -180,6 +192,12 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
     list_display = ("account", "first_name", "last_name", "email", "phone", "is_primary")
 
     def get_queryset(self, request: HttpRequest):
+        """
+        Return the rows that the request's user may see in the admin.
+
+        :param request: The admin request.
+        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
@@ -219,6 +237,12 @@ class BudgetAdmin(SmarterSuperUserOnlyModelAdmin):
     )
 
     def get_queryset(self, request: HttpRequest):
+        """
+        Return the rows that the request's user may see in the admin.
+
+        :param request: The admin request.
+        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
@@ -241,6 +265,12 @@ class ResourceConstraintAdmin(SmarterSuperUserOnlyModelAdmin):
     search_fields = ("resource_locator",)
 
     def get_queryset(self, request: HttpRequest):
+        """
+        Return the rows that the request's user may see in the admin.
+
+        :param request: The admin request.
+        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
@@ -262,6 +292,12 @@ class ResourceLockAdmin(SmarterSuperUserOnlyModelAdmin):
     search_fields = ("resource_locator",)
 
     def get_queryset(self, request: HttpRequest):
+        """
+        Return the rows that the request's user may see in the admin.
+
+        :param request: The admin request.
+        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
@@ -276,16 +312,44 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
     model = Charge
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Make every field read-only: rows are written by the platform, never in the admin.
+
+        :param request: The admin request.
+        :param obj: The row being viewed, or None.
+        :returns: The names of all of the model's fields.
+        """
         # pylint: disable=protected-access
         return [field.name for field in self.model._meta.fields]
 
     def has_add_permission(self, request, obj=None):
+        """
+        Refuse to add rows in the admin.
+
+        :param request: The admin request.
+        :param obj: Unused.
+        :returns: False.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
+        """
+        Refuse to change rows in the admin.
+
+        :param request: The admin request.
+        :param obj: The row, or None.
+        :returns: False.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Refuse to delete rows in the admin.
+
+        :param request: The admin request.
+        :param obj: The row, or None.
+        :returns: False.
+        """
         return False
 
     list_display = (
@@ -298,6 +362,12 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
     )
 
     def get_queryset(self, request):
+        """
+        Return the rows that the request's user may see in the admin.
+
+        :param request: The admin request.
+        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
@@ -312,16 +382,44 @@ class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
     model = AggregatedCharges
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Make every field read-only: rows are written by the platform, never in the admin.
+
+        :param request: The admin request.
+        :param obj: The row being viewed, or None.
+        :returns: The names of all of the model's fields.
+        """
         # pylint: disable=protected-access
         return [field.name for field in self.model._meta.fields]
 
     def has_add_permission(self, request, obj=None):
+        """
+        Refuse to add rows in the admin.
+
+        :param request: The admin request.
+        :param obj: Unused.
+        :returns: False.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
+        """
+        Refuse to change rows in the admin.
+
+        :param request: The admin request.
+        :param obj: The row, or None.
+        :returns: False.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Refuse to delete rows in the admin.
+
+        :param request: The admin request.
+        :param obj: The row, or None.
+        :returns: False.
+        """
         return False
 
     list_display = (
@@ -339,6 +437,12 @@ class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
     )
 
     def get_queryset(self, request):
+        """
+        Return the aggregated charges of the request user's account, or all of them for a superuser.
+
+        :param request: The admin request.
+        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile` on ``account``.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
@@ -376,7 +480,13 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None) -> bool:
-        """Prevent deletion for non-superusers."""
+        """
+        Prevent deletion for non-superusers.
+
+        :param request: The admin request.
+        :param obj: The User to delete, or None.
+        :returns: True only for an authenticated superuser.
+        """
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
         if not isinstance(request.user, User):
@@ -387,7 +497,13 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_change_permission(self, request, obj=None) -> bool:
-        """Allow change permissions for superusers and to staff users if they are changing a user within their own account."""
+        """
+        Allow change permissions for superusers and to staff users if they are changing a user within their own account.
+
+        :param request: The admin request.
+        :param obj: The User to change, or None. A staff user without an obj may not change anything.
+        :returns: True for a superuser, or for a staff user whose account is ``obj``'s account.
+        """
         if not hasattr(request, "user"):
             return False
         if not isinstance(request.user, User):
@@ -415,16 +531,21 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_module_permission(self, request: HttpRequest) -> bool:
+        """
+        Show the Users module to staff users only.
+
+        :param request: The admin request.
+        :returns: True if :func:`~smarter.apps.dashboard.admin.smarter_is_staff` accepts the request.
+        """
         return smarter_is_staff(request)  # type: ignore
 
+    @admin.display(description="Account")
     def profile_account(self, obj) -> Optional[Account]:
         """Custom method to display the account associated with the user's profile."""
         userprofile = UserProfile.get_cached_object(user=obj)
         if userprofile:
             return userprofile.account
         return None
-
-    profile_account.short_description = "Account"
 
     def get_queryset(self, request):
         """Customize the queryset based on whether the user is_staff or is_superuser."""
@@ -447,6 +568,14 @@ class RestrictedUserAdmin(UserAdmin):
         return qs.none()
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Return the fields that the request user may not change.
+
+        :param request: The admin request.
+        :param obj: The User being viewed, or None.
+        :returns: For a superuser, the username and dates; for a staff user, also ``is_superuser`` and
+            ``is_staff``; for anyone else, every field.
+        """
         user = get_resolved_user(request.user)
         if not user:
             return [field.name for field in self.model._meta.fields]
@@ -473,6 +602,12 @@ class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
     # this probably is not necessary since the module
     # permission is limited to superusers.
     def get_queryset(self, request: HttpRequest):
+        """
+        Return every UserProfile for a superuser, and none for anyone else.
+
+        :param request: The admin request.
+        :returns: The queryset.
+        """
         qs = super().get_queryset(request)
         if not isinstance(request.user, User):
             logger.warning("Unexpected user type in RestrictedUserProfileAdmin.get_queryset: %s", type(request.user))

@@ -5,6 +5,7 @@ import random
 import uuid
 from datetime import datetime
 from http import HTTPStatus
+from typing import Optional
 from warnings import deprecated
 
 from django import forms, http
@@ -18,6 +19,11 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 
 def payment_method_factory():
+    """
+    Return a randomly generated payment method, a placeholder until billing exists.
+
+    :returns: The payment method's fields, with a random card type, number and expiration year.
+    """
 
     def generate_card_number(card_type: str = "visa"):
         if card_type == "visa":
@@ -79,6 +85,14 @@ class PaymentMethodView(SmarterAdminWebView):
 
     # pylint: disable=W0612
     def process_form(self, request):
+        """
+        Validate the payment method form.
+
+        Nothing is saved yet.
+
+        :param request: The request, with the form's data.
+        :returns: A json response: 200 when the form is valid, else 400.
+        """
         # TODO: Add payment method to user's account
         form = PaymentMethodForm(request.POST)
         if form.is_valid():
@@ -94,19 +108,55 @@ class PaymentMethodView(SmarterAdminWebView):
 
     # pylint: disable=W0221
     def get(self, request, payment_method_id: str):
-        """View for the payment method detail."""
+        """
+        Return a randomly generated payment method, a placeholder until billing exists.
+
+        :param request: The request.
+        :param payment_method_id: Unused.
+        :returns: A json response.
+        """
         retval = payment_method_factory()
         return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK.value)
 
-    def post(self, request, payment_method_id: str = None):
+    def post(self, request, payment_method_id: Optional[str] = None):
+        """
+        Validate the payment method form, with :meth:`process_form`.
+
+        :param request: The request.
+        :param payment_method_id: Unused.
+        :returns: A json response.
+        """
         return self.process_form(request)
 
-    def patch(self, request, payment_method_id: str = None):
+    def patch(self, request, payment_method_id: Optional[str] = None):
+        """
+        Validate the payment method form, with :meth:`process_form`.
+
+        :param request: The request.
+        :param payment_method_id: Unused.
+        :returns: A json response.
+        """
         return self.process_form(request)
 
-    def put(self, request, payment_method_id: str = None):
+    def put(self, request, payment_method_id: Optional[str] = None):
+        """
+        Validate the payment method form, with :meth:`process_form`.
+
+        :param request: The request.
+        :param payment_method_id: Unused.
+        :returns: A json response.
+        """
         return self.process_form(request)
 
     def delete(self, request, payment_method_id: str):
+        """
+        Accept the deletion of a payment method.
+
+        Nothing is deleted yet.
+
+        :param request: The request.
+        :param payment_method_id: The payment method's id, which is logged.
+        :returns: A 200 json response.
+        """
         logger.info("Deleting payment method %s", payment_method_id)
         return http.JsonResponse(data={}, status=HTTPStatus.OK.value)

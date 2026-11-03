@@ -63,7 +63,8 @@ def billable_resources(manifest: str) -> list[tuple[str, str]]:
         return retval
     for doc in documents:
         kind = str(doc.get("kind", "")).lower()
-        name = str((doc.get("metadata") or {}).get("name", ""))
+        metadata = doc.get("metadata") or {}
+        name = str(metadata.get("name", ""))
         spec = doc.get("spec") or {}
         if kind in BILLABLE_KUBERNETES_KINDS:
             retval.append((kind, name))
@@ -111,7 +112,14 @@ class KubernetesService(InfrastructureService):
 
     @abstractmethod
     def get_resource(self, kind: str, name: str, namespace: str) -> Optional[SmarterDictType]:
-        """Return a resource, or None if it does not exist or the cluster is unavailable."""
+        """
+        Return a resource, or None if it does not exist or the cluster is unavailable.
+
+        :param kind: The kind, e.g. ``ingress``.
+        :param name: The resource's name.
+        :param namespace: The namespace.
+        :returns: The resource, as ``kubectl get -o json`` returns it, or None.
+        """
 
     def get_resources(self, resources: list[tuple[str, str]], namespace: str) -> dict[tuple[str, str], SmarterDictType]:
         """
@@ -132,7 +140,14 @@ class KubernetesService(InfrastructureService):
 
     @abstractmethod
     def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[SmarterDictType]:
-        """Return the resources of a kind, optionally those that match a label selector."""
+        """
+        Return the resources of a kind, optionally those that match a label selector.
+
+        :param kind: The kind, e.g. ``pods``.
+        :param namespace: The namespace.
+        :param selector: A label selector, e.g. ``app=qdrant``, or None for all.
+        :returns: The resources, or an empty list.
+        """
 
     def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[SmarterDictType]]:
         """
@@ -169,7 +184,15 @@ class KubernetesService(InfrastructureService):
     def get_pod_logs(
         self, namespace: str, selector: str, container: Optional[str] = None, tail: int = 200
     ) -> Optional[str]:
-        """Return the most recent log lines of the pods that match a label selector."""
+        """
+        Return the most recent log lines of the pods that match a label selector.
+
+        :param namespace: The namespace.
+        :param selector: A label selector.
+        :param container: The container, or None for the pod's default.
+        :param tail: How many lines of each pod.
+        :returns: The logs, or None if they could not be read.
+        """
 
     def _sleep(self, seconds: float) -> None:
         time.sleep(seconds)
@@ -178,11 +201,23 @@ class KubernetesService(InfrastructureService):
     # resources
     # --------------------------------------------------------------------------
     def verify_ingress(self, name: str, namespace: str) -> bool:
-        """Whether an Ingress exists."""
+        """
+        Whether an Ingress exists.
+
+        :param name: The Ingress's name.
+        :param namespace: The Ingress's namespace.
+        :returns: True if it exists.
+        """
         return self.get_resource("ingress", name, namespace) is not None
 
     def verify_secret(self, name: str, namespace: str) -> bool:
-        """Whether a Secret exists."""
+        """
+        Whether a Secret exists.
+
+        :param name: The Secret's name.
+        :param namespace: The Secret's namespace.
+        :returns: True if it exists.
+        """
         return self.get_resource("secret", name, namespace) is not None
 
     def verify_certificate(self, name: str, namespace: str) -> bool:
@@ -198,8 +233,13 @@ class KubernetesService(InfrastructureService):
         """Whether a cert-manager Certificate exists, and its Ready condition is True."""
         if certificate is None:
             return False
-        conditions = (certificate.get("status") or {}).get("conditions") or []
-        ready = next((c.get("status") for c in conditions if c.get("type") == "Ready"), None)
+        status = certificate.get("status") or {}
+        conditions = status.get("conditions") or []
+        ready = None
+        for condition in conditions:
+            if condition.get("type") == "Ready":
+                ready = condition.get("status")
+                break
         if str(ready).lower() == "true":
             logger.info("%s certificate %s %s is issued", self.formatted_class_name, namespace, name)
             return True
@@ -236,15 +276,33 @@ class KubernetesService(InfrastructureService):
         return ingress_verified, certificate_verified, secret_verified
 
     def delete_ingress(self, name: str, namespace: str) -> bool:
-        """Delete an Ingress."""
+        """
+        Delete an Ingress.
+
+        :param name: The Ingress's name.
+        :param namespace: The Ingress's namespace.
+        :returns: True if it was deleted, or did not exist.
+        """
         return self.delete_resource("ingress", name, namespace)
 
     def delete_certificate(self, name: str, namespace: str) -> bool:
-        """Delete a cert-manager Certificate."""
+        """
+        Delete a cert-manager Certificate.
+
+        :param name: The Certificate's name.
+        :param namespace: The Certificate's namespace.
+        :returns: True if it was deleted, or did not exist.
+        """
         return self.delete_resource("certificate", name, namespace)
 
     def delete_secret(self, name: str, namespace: str) -> bool:
-        """Delete a Secret."""
+        """
+        Delete a Secret.
+
+        :param name: The Secret's name.
+        :param namespace: The Secret's namespace.
+        :returns: True if it was deleted, or did not exist.
+        """
         return self.delete_resource("secret", name, namespace)
 
     def delete_ingress_resources(self, hostname: str, namespace: str) -> tuple[bool, bool, bool]:
@@ -310,6 +368,11 @@ class KubectlKubernetesService(KubernetesService):
 
     @property
     def ready(self) -> bool:
+        """
+        Whether kubectl is configured for the cluster, and the environment's namespace exists.
+
+        Records the connection state, which sends a signal when it changes.
+        """
         if not self.configured:
             return self.connection_state(False, "kubectl is not configured for the cluster")
         if not self.namespace_verified:
@@ -414,6 +477,14 @@ class KubectlKubernetesService(KubernetesService):
         return None
 
     def get_resource(self, kind: str, name: str, namespace: str) -> Optional[SmarterDictType]:
+        """
+        Return a resource with ``kubectl get``.
+
+        :param kind: The kind, e.g. ``ingress``.
+        :param name: The resource's name.
+        :param namespace: The namespace.
+        :returns: The resource, or None if it does not exist, kubectl fails, or the cluster is not ready.
+        """
         if not self.ready:
             return None
         return self._kubectl_json("get", kind, name, "-n", namespace, "--ignore-not-found")
@@ -442,14 +513,28 @@ class KubectlKubernetesService(KubernetesService):
             logger.error("%s kubectl get %s returned invalid json: %s", self.formatted_class_name, " ".join(refs), e)
             return {}
         # kubectl returns a List of several resources, or the resource itself when only one exists.
-        items = output.get("items", []) if output.get("kind") == "List" else [output]
-        found = {
-            (str(item.get("kind", "")).lower(), str((item.get("metadata") or {}).get("name", ""))): item
-            for item in items
-        }
-        return {resource: found[resource] for resource in resources if resource in found}
+        if output.get("kind") == "List":
+            items = output.get("items", [])
+        else:
+            items = [output]
+        found: dict[tuple[str, str], SmarterDictType] = {}
+        for item in items:
+            item_kind = str(item.get("kind", "")).lower()
+            metadata = item.get("metadata") or {}
+            item_name = str(metadata.get("name", ""))
+            found[(item_kind, item_name)] = item
+        retval = {resource: found[resource] for resource in resources if resource in found}
+        return retval
 
     def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[SmarterDictType]:
+        """
+        Return the resources of a kind with ``kubectl get``, optionally those that match a label selector.
+
+        :param kind: The kind, e.g. ``pods``.
+        :param namespace: The namespace.
+        :param selector: A label selector, e.g. ``app=qdrant``, or None for all.
+        :returns: The resources, or an empty list if there are none, kubectl fails, or the cluster is not ready.
+        """
         if not self.ready:
             return []
         args = ["get", kind, "-n", namespace]
@@ -459,6 +544,14 @@ class KubectlKubernetesService(KubernetesService):
         return (output or {}).get("items", [])
 
     def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[SmarterDictType]]:
+        """
+        Return every resource of a kind with ``kubectl get``, for the inventory.
+
+        :param kind: The kind, e.g. ``node``.
+        :param namespace: The namespace of a namespaced kind, or None for a cluster-scoped kind.
+        :returns: The resources, or None if they could not be listed, e.g. because kubectl failed, its
+            output is not a list, or the cluster is not ready.
+        """
         if not self.ready:
             return None
         args = ["get", kind] + (["-n", namespace] if namespace else [])
@@ -474,6 +567,19 @@ class KubectlKubernetesService(KubernetesService):
         return items if isinstance(items, list) else None
 
     def delete_resource(self, kind: str, name: str, namespace: str) -> bool:
+        """
+        Delete a resource with ``kubectl delete``.
+
+        A resource that does not exist counts as deleted.
+
+        Sends the destroying and destroyed resource signals, which record it in the ledger, billable if
+        its kind is in ``BILLABLE_KUBERNETES_KINDS``.
+
+        :param kind: The kind, e.g. ``ingress``.
+        :param name: The resource's name.
+        :param namespace: The namespace.
+        :returns: True if it was deleted, False if kubectl failed or the cluster is not ready.
+        """
         if not self.ready:
             return False
         billable = kind.lower() in BILLABLE_KUBERNETES_KINDS
@@ -487,6 +593,17 @@ class KubectlKubernetesService(KubernetesService):
         return True
 
     def delete_resources(self, kinds: list[str], namespace: str, selector: str) -> bool:
+        """
+        Delete the resources of several kinds that match a label selector, with one ``kubectl delete``.
+
+        Sends the destroying and destroyed resource signals for each billable kind.
+
+        :param kinds: The kinds, e.g. ``["statefulset", "service"]``.
+        :param namespace: The namespace.
+        :param selector: A label selector, which is required, so that a namespace is never emptied by mistake.
+        :returns: True if they were deleted, False if kubectl failed or the cluster is not ready.
+        :raises KubernetesServiceError: If ``kinds`` or ``selector`` is empty.
+        """
         if not kinds or not selector:
             raise KubernetesServiceError("delete_resources() requires kinds and a label selector.")
         if not self.ready:
@@ -507,6 +624,16 @@ class KubectlKubernetesService(KubernetesService):
     def get_pod_logs(
         self, namespace: str, selector: str, container: Optional[str] = None, tail: int = 200
     ) -> Optional[str]:
+        """
+        Return the most recent log lines of the pods that match a label selector, with ``kubectl logs``.
+
+        :param namespace: The namespace.
+        :param selector: A label selector.
+        :param container: The container, or None for the pod's default.
+        :param tail: How many lines of each pod.
+        :returns: The logs, each line prefixed with its pod. If kubectl fails, its output and error,
+            which explain why, e.g. a pod that is still pulling its image. None if the cluster is not ready.
+        """
         if not self.ready:
             return None
         args = ["logs", "-n", namespace, "-l", selector, "--tail", str(tail), "--prefix"]
@@ -566,6 +693,7 @@ class InMemoryKubernetesService(KubernetesService):
 
     @property
     def ready(self) -> bool:
+        """Whether the cluster is ready, as set in the constructor."""
         return self._ready
 
     def _in(self, kind: str, namespace: Optional[str]) -> list[SmarterDictType]:

@@ -28,6 +28,8 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 # Mini Serializers - only used by PromptHelper.
 # --------------------------------------------------------------------------------
 class PromptSerializer(serializers.ModelSerializer):
+    """Serializer for the Prompt model, with all of its fields."""
+
     class Meta:
         model = Prompt
         fields = "__all__"
@@ -368,8 +370,14 @@ class PromptHelper(SmarterRequestMixin):
                 django_friendly_url = django_friendly_url.replace("http://testserver/", "http://testserver.local/")
                 # The User-Agent header has no length limit, but its column does: a longer value
                 # would make the database raise DataError, and the request fail with a 500.
-                user_agent_max_length = Prompt._meta.get_field("user_agent").max_length
-                user_agent = (self.user_agent or "user_agent")[:user_agent_max_length]
+                user_agent_field = Prompt._meta.get_field("user_agent")
+                user_agent_max_length = None
+                if isinstance(user_agent_field, models.CharField):
+                    user_agent_max_length = user_agent_field.max_length
+                user_agent = self.user_agent
+                if not user_agent:
+                    user_agent = "user_agent"
+                user_agent = user_agent[:user_agent_max_length]
                 prompt = Prompt.objects.create(
                     session_key=self.session_key,
                     user_profile=self.user_profile,
