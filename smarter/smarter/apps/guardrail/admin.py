@@ -89,9 +89,23 @@ class GuardrailEventAdmin(SmarterCustomerModelAdmin):
     actions = ["mark_reviewed"]
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Make every field read-only except ``reviewed``.
+
+        :param request: The admin request.
+        :param obj: The GuardrailEvent being edited, or None.
+        :returns: The names of every GuardrailEvent field other than ``reviewed``.
+        """
         return [field.name for field in GuardrailEvent._meta.fields if field.name != "reviewed"]
 
     def has_add_permission(self, request, obj=None):
+        """
+        Forbid adding GuardrailEvents in the admin; the guardrail pipeline records them.
+
+        :param request: The admin request.
+        :param obj: Unused.
+        :returns: Always False.
+        """
         return False
 
     def get_queryset(self, request):
@@ -109,7 +123,15 @@ class GuardrailEventAdmin(SmarterCustomerModelAdmin):
 
     @admin.action(description="Mark the selected events as reviewed")
     def mark_reviewed(self, request, queryset):
-        """Mark events as reviewed."""
+        """
+        Mark events as reviewed.
+
+        Updates the rows with ``QuerySet.update()``, so no model signals are sent, then reports the
+        count to the admin user.
+
+        :param request: The admin request.
+        :param queryset: The selected GuardrailEvents.
+        """
         updated = queryset.update(reviewed=True)
         self.message_user(request, f"{updated} event(s) marked as reviewed.")
 

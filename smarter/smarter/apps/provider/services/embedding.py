@@ -1,6 +1,4 @@
-"""
-Embedding Service Interface
-"""
+"""Embedding Service Interface."""
 
 from abc import ABC, abstractmethod
 from typing import List, Optional, Type
@@ -17,9 +15,10 @@ from smarter.common.mixins import SmarterHelperMixin
 
 class SmarterEmbeddingServiceInterface(ABC, SmarterHelperMixin):
     """
-    Interface for embedding services. Defines methods for generating embeddings
-    from text inputs, with optional metadata support.
+    Interface for embedding services.
 
+    Defines methods for generating embeddings
+    from text inputs, with optional metadata support.
     """
 
     _EmbeddingsClass: Type[Embeddings] = Embeddings
@@ -59,9 +58,7 @@ class SmarterEmbeddingServiceInterface(ABC, SmarterHelperMixin):
 
 
 class SmarterOpenAICompatibleEmbeddingService(SmarterEmbeddingServiceInterface):
-    """
-    Implementation of the SmarterEmbeddingServiceInterface using OpenAI's embedding API.
-    """
+    """Implementation of the SmarterEmbeddingServiceInterface using OpenAI's embedding API."""
 
     _embeddings: Optional[OpenAIEmbeddings] = None
 
@@ -79,4 +76,10 @@ class SmarterOpenAICompatibleEmbeddingService(SmarterEmbeddingServiceInterface):
         return self._embeddings
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        Embed texts with the OpenAI embeddings api, which makes a network call to the provider.
+
+        :param texts: The texts to embed.
+        :returns: One embedding vector per text, in order.
+        """
         return self.embeddings.embed_documents(texts)

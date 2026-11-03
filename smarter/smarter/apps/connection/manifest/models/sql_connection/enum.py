@@ -26,8 +26,18 @@ class DBMSAuthenticationMethods(Enum):
 
     @classmethod
     def choices(cls):
+        """
+        Return the authentication methods as Django model field choices.
+
+        :returns: A list of ``(value, label)`` tuples, where the label is the member name in title case, e.g. ``("tcpip_ssh", "Tcpip Ssh")``.
+        """
         return [(method.value, method.name.replace("_", " ").title()) for method in cls]
 
     @classmethod
     def all(cls):
+        """
+        Return the values of all authentication methods.
+
+        :returns: A list of the authentication method values.
+        """
         return [method.value for method in cls]

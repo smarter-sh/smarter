@@ -17,6 +17,13 @@ class UrlParam(BaseModel):
 
     @field_validator("key")
     def validate_name(cls, v):
+        """
+        Convert the url param key to a string and validate that it is a clean string.
+
+        :param v: The key.
+        :returns: The key, as a string.
+        :raises SmarterValueError: if the key is not a clean string.
+        """
         v = str(v)
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SmarterValueError("Key must be a valid cleanstring.")
@@ -24,6 +31,13 @@ class UrlParam(BaseModel):
 
     @field_validator("value")
     def validate_value(cls, v):
+        """
+        Convert the url param value to a string and validate that it is a clean string.
+
+        :param v: The value.
+        :returns: The value, as a string.
+        :raises SmarterValueError: if the value is not a clean string.
+        """
         v = str(v)
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SmarterValueError("Value must be a valid cleanstring.")
@@ -38,6 +52,13 @@ class RequestHeader(BaseModel):
 
     @field_validator("name")
     def validate_name(cls, v):
+        """
+        Convert the header name to a string and validate it as an HTTP header name.
+
+        :param v: The header name.
+        :returns: The header name, as a string.
+        :raises SmarterValueError: if it has invalid characters or is not ASCII.
+        """
         v = str(v)
 
         if not SmarterValidator.is_valid_http_request_header_key(v):
@@ -46,6 +67,13 @@ class RequestHeader(BaseModel):
 
     @field_validator("value")
     def validate_value(cls, v):
+        """
+        Convert the header value to a string and validate it as an HTTP header value.
+
+        :param v: The header value.
+        :returns: The header value, as a string.
+        :raises SmarterValueError: if it has invalid characters, e.g. control characters.
+        """
         v = str(v)
 
         if not SmarterValidator.is_valid_http_request_header_value(v):
@@ -60,7 +88,13 @@ class TestValue(BaseModel):
     value: Any = Field(..., description="The test value for the parameter.")
 
     @field_validator("value")
-    def validate_value(cls, v) -> str:
+    def validate_value(cls, v) -> Optional[str]:
+        """
+        Convert the test value to a string, leaving strings and None unchanged.
+
+        :param v: The test value.
+        :returns: The value as a string, or None if it is None.
+        """
         if isinstance(v, str):
             return v
         if v is None:
@@ -109,10 +143,22 @@ class Parameter(BaseModel):
 
     @field_validator("default")
     def validate_default(cls, v):
+        """
+        Convert the default value to a string, leaving None unchanged.
+
+        :param v: The default value.
+        :returns: The value as a string, or None if it is None.
+        """
         return str(v) if v is not None else v
 
     @model_validator(mode="after")
     def validate_enum_and_default(self):
+        """
+        Validate that the default value, when both it and ``enum`` are set, is one of the enum values.
+
+        :returns: This parameter, unchanged.
+        :raises SmarterValueError: if the default is not in ``enum``.
+        """
         if self.default is None:
             return self
         if self.enum is None:
