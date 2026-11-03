@@ -47,6 +47,14 @@ class ApiV1CliVersionApiView(CliBaseApiView):
         raise APIV1CLIViewError(f"Failed to get version from {url}. HTTP status code: {response.status_code}")
 
     def info(self):
+        """
+        Return the versions of the platform, its main Python packages, and the latest smarter-cli.
+
+        Reads the smarter-cli version from GitHub, a network call.
+
+        :returns: The journaled response, whose data is a :class:`CliApiVersion`.
+        :raises APIV1CLIViewError: when the smarter-cli version cannot be read.
+        """
         version = CliApiVersion(
             api=CliApiVersionApi(
                 version=smarter_settings.version,
@@ -76,5 +84,11 @@ class ApiV1CliVersionApiView(CliBaseApiView):
         )
 
     def post(self, request):
+        """
+        Return the versions: see :meth:`info`.
+
+        :param request: The cli's request.
+        :returns: The journaled response.
+        """
         response = self.info()
         return response
