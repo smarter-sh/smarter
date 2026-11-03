@@ -24,6 +24,12 @@ class DocsJsonSchemaBaseView(DocsBaseView):
     kind: Optional[SAMKinds] = None
 
     def get(self, request, *args, **kwargs):
+        """
+        Render the JSON Schema of :attr:`kind`, fetched from the cli api's schema view.
+
+        :param request: The request.
+        :returns: The rendered page.
+        """
         view = ApiV1CliSchemaApiView.as_view()
         json_response = self.get_brokered_json_response(
             ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.json_schema, view, request, *args, **kwargs
@@ -33,6 +39,7 @@ class DocsJsonSchemaBaseView(DocsBaseView):
         return render(request, self.template_path, context=self.context)  # type: ignore
 
     def post(self, request, *args, **kwargs):
+        """Refuse POST, with ``400``."""
         return HttpResponseBadRequest("POST method not allowed on this endpoint.")
 
 

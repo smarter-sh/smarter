@@ -80,6 +80,13 @@ class SAMVectorsearchSpecConfig(AbstractSAMSpecBase):
     @field_validator("vectorstore_name", "auth_secret_name")
     @classmethod
     def strip_and_validate_name(cls, value: Optional[str]) -> Optional[str]:
+        """
+        Strip whitespace from ``vectorstore_name`` and ``auth_secret_name``, and reject blank names.
+
+        :param value: The name, or None.
+        :returns: The stripped name, or None if it was None.
+        :raises ValueError: when the name is blank.
+        """
         if value is None:
             return value
         value = value.strip()
@@ -89,6 +96,15 @@ class SAMVectorsearchSpecConfig(AbstractSAMSpecBase):
 
     @model_validator(mode="after")
     def validate_search_type_constraints(self) -> "SAMVectorsearchSpecConfig":
+        """
+        Check that the search parameters suit ``search_type``.
+
+        ``score_threshold`` is required for, and only valid with, ``similarity_score_threshold``.
+        ``fetch_k`` and ``lambda_mult`` are only valid with ``mmr``, where ``fetch_k`` must be at least ``k``.
+
+        :returns: The config, unchanged.
+        :raises ValueError: when a parameter does not suit the search type.
+        """
         if self.search_type == VectorsearchSearchType.SIMILARITY_SCORE_THRESHOLD:
             if self.score_threshold is None:
                 raise ValueError("score_threshold is required when search_type is similarity_score_threshold.")

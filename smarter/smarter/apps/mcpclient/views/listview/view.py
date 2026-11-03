@@ -45,6 +45,14 @@ class MCPClientListView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render the page that hosts the mcpclient-list React app, which lists the user's MCPClients.
+
+        The context holds the app's root element id, cookie names and list api url.
+
+        :param request: The request.
+        :returns: The rendered ``mcpclient-list`` template.
+        """
         # pylint: disable=C0415
         from smarter.apps.mcpclient.urls import MCPClientReverseNames
 

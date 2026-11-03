@@ -204,6 +204,12 @@ class SecretTransformer(SmarterHelperMixin):
     # pylint: disable=W0613
     @classmethod
     def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
+        """
+        Return an example Secret manifest, as a dict.
+
+        :param kwargs: Unused.
+        :returns: The manifest.
+        """
         return {
             SAMKeys.APIVERSION.value: SMARTER_API_MANIFEST_DEFAULT_VERSION,
             SAMKeys.KIND.value: MANIFEST_KIND,

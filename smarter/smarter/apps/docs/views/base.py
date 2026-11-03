@@ -49,6 +49,7 @@ class DocsError(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter api docs error"
 
 
@@ -109,7 +110,7 @@ def brokered_error_response(request: "HttpRequest", error: DocsBrokeredResponseE
 class DocsBaseView(SmarterAuthenticatedWebView):
     """JSON Schema base view."""
 
-    template_path: Optional[str] = None
+    template_path: str = ""
     name: Optional[str] = None
     kind: Optional[SAMKinds] = None
     context: SmarterDictType = {}
@@ -117,6 +118,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
     @property
     def formatted_class_name(self):
+        """The view's module, class name and instance id, formatted for log messages."""
         class_name = f"{__name__}.{DocsBaseView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -294,15 +296,22 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             return brokered_error_response(request, e)
 
     def put(self, request: ASGIRequest, *args, **kwargs):
+        """Refuse PUT, with ``400``."""
         return HttpResponseBadRequest("PUT method not supported for this view.")
 
     def patch(self, request: ASGIRequest, *args, **kwargs):
+        """Refuse PATCH, with ``400``."""
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
     def post(self, request: ASGIRequest, *args, **kwargs):
+        """Refuse POST, with ``400``.
+
+        Its message says PATCH.
+        """
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
     def delete(self, request: ASGIRequest, *args, **kwargs):
+        """Refuse DELETE, with ``400``."""
         return HttpResponseBadRequest("DELETE method not supported for this view.")
 
 
@@ -318,6 +327,13 @@ class TxtBaseView(SmarterWebTxtView):
     leader: Optional[str] = None
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render :attr:`text_file`, with :attr:`title` and :attr:`leader`.
+
+        :param request: The request.
+        :returns: The rendered page.
+        :raises DocsError: when :attr:`text_file` is not set.
+        """
         file_path = self.text_file
         if not file_path:
             raise DocsError("self.text_file not set.")
@@ -340,6 +356,13 @@ class MarkdownBaseView(SmarterWebHtmlView):
     markdown_file: Optional[str] = None
 
     def get(self, request: ASGIRequest, *args, **kwargs):
+        """
+        Render :attr:`markdown_file`, a file in ``DOCS_PATH``, as HTML.
+
+        :param request: The request.
+        :returns: The rendered page.
+        :raises DocsError: when :attr:`markdown_file` is not set.
+        """
         if not self.markdown_file:
             raise DocsError("self.markdown_file not set.")
         file_path = os.path.join(DOCS_PATH, self.markdown_file)

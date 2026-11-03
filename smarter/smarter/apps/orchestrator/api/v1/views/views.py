@@ -65,9 +65,20 @@ class OrchestratorView(ViewBase):
     orchestrator_id: Optional[int] = None
 
     def get_queryset(self, *args, **kwargs):
+        """
+        The queryset of the one Orchestrator that the request names.
+
+        :returns: A queryset holding :attr:`orchestrator`.
+        """
         return Orchestrator.objects.filter(id=self.orchestrator.id)  # type: ignore[return-value]
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Remove ``hashed_id`` from the url kwargs, for :meth:`initial`, then dispatch the request.
+
+        :param request: The request.
+        :returns: The response.
+        """
         self.hashed_id = kwargs.pop("hashed_id", None)
         return super().dispatch(request, *args, **kwargs)
 
@@ -93,6 +104,14 @@ class OrchestratorView(ViewBase):
             logger.debug("%s.initial() - %s %s", self.formatted_class_name, self.orchestrator, self.user_profile)
 
     def get(self, request: Request, orchestrator_id: Optional[int] = None):
+        """
+        Return the Orchestrator, serialized as a :class:`OrchestratorApiOrchestrator`.
+
+        :param request: The request.
+        :param orchestrator_id: The Orchestrator's id, from the url; :meth:`initial` has already found it.
+        :returns: The Orchestrator, with ``200``.
+        :raises NotFound: when the request names no Orchestrator.
+        """
         if self.orchestrator:
             return Response(
                 OrchestratorApiOrchestrator.from_model(self.orchestrator, request.user).model_dump(mode="json"),
@@ -101,14 +120,32 @@ class OrchestratorView(ViewBase):
         raise NotFound("Orchestrator not found")
 
     def post(self, request: Request, *args, **kwargs):
+        """
+        Create an Orchestrator from the request body's fields, then redirect to it.
+
+        :param request: The request, whose JSON body holds the Orchestrator's fields.
+        :returns: A redirect to the new Orchestrator's url, or ``400`` if it could not be created.
+        """
         try:
             data = request.data
+            if not isinstance(data, dict):
+                raise TypeError(f"Expected a JSON dict in request body but received {type(data)}")
             orchestrator = Orchestrator.objects.create(**data)
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(orchestrator.id) + "/")  # type: ignore[return-value]
 
     def patch(self, request: Request, *args, orchestrator_id: Optional[int] = None, **kwargs):
+        """
+        Set the Orchestrator's attributes from the request body, save it, then redirect to it.
+
+        Keys that are not attributes of the Orchestrator are ignored.
+
+        :param request: The request, whose JSON body is a dict of attribute values.
+        :param orchestrator_id: The Orchestrator's id, from the url; :meth:`initial` has already found it.
+        :returns: A redirect to the request's url; ``404`` if there is no Orchestrator; ``400`` if the body is
+            not a dict or the Orchestrator does not validate; ``500`` if saving fails.
+        """
         orchestrator: Optional[Orchestrator] = None
         data: Optional[SmarterDictType] = None
 
@@ -117,12 +154,15 @@ class OrchestratorView(ViewBase):
             return HttpResponseNotFound("Orchestrator not found")
 
         try:
-            data = request.data
-            if not isinstance(data, dict):
+            request_data = request.data
+            if not isinstance(request_data, dict):
                 return JsonResponse(
-                    {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+                    {
+                        "error": f"Invalid request data. Expected a JSON dict in request body but received {type(request_data)}"
+                    },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+            data = request_data
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
@@ -141,6 +181,15 @@ class OrchestratorView(ViewBase):
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, *args, orchestrator_id: Optional[int] = None, **kwargs):
+        """
+        Delete the Orchestrator, then redirect to the parent url.
+
+        A superuser may delete any Orchestrator by its id; other users delete the Orchestrator that :meth:`initial` found.
+
+        :param request: The request.
+        :param orchestrator_id: The Orchestrator's id, from the url.
+        :returns: A redirect to the url two levels up, or ``500`` if deleting fails.
+        """
         if orchestrator_id and self.is_superuser():
             orchestrator = get_object_or_404(Orchestrator, pk=orchestrator_id)
         else:
@@ -171,6 +220,12 @@ class OrchestratorListView(ContractListMixin, ListViewBase):
     orchestrators: Optional[QuerySet[Orchestrator]]
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Dispatch the request, then set :attr:`orchestrators` to the Orchestrators the user may read, unless it failed.
+
+        :param request: The request.
+        :returns: The response.
+        """
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response
@@ -178,6 +233,11 @@ class OrchestratorListView(ContractListMixin, ListViewBase):
         return response
 
     def get_queryset(self, *args, **kwargs):
+        """
+        The Orchestrators that the user may read, ordered by name.
+
+        :returns: The queryset, with its owners and tags fetched.
+        """
         return (
             Orchestrator.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
             .select_related("user_profile__user", "user_profile__account")

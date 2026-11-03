@@ -463,8 +463,15 @@ class MyResourcesView(SmarterAuthenticatedWebView):
         return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Return the counts and list urls of the user's resources, from the cache.
 
+        :param request: The request.
+        :returns: The resources, as JSON.
+        """
         user = get_resolved_user(request.user)
+        if user is None:
+            return JsonResponse({"error": "Not signed in."}, status=HTTPStatus.UNAUTHORIZED)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
 
         # user_profile_id is unused, but makes the cache key unique to the user.
