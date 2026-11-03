@@ -63,6 +63,7 @@ class SAMUserBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The label of this error, used in its string form."""
         return "Smarter API User Manifest Broker Error"
 
 

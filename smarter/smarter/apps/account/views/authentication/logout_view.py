@@ -1,6 +1,4 @@
-"""
-Django Account Authentication Logout view.
-"""
+"""Django Account Authentication Logout view."""
 
 from django.contrib.auth import logout
 from django.http import HttpResponseRedirect
@@ -24,6 +22,12 @@ class LogoutView(SmarterNeverCachedWebView):
     """View for logging out browser session."""
 
     def get(self, request, *args, **kwargs) -> HttpResponseRedirect:
+        """
+        Sign the user out, and redirect to ``/``.
+
+        :param request: The request.
+        :returns: The redirect.
+        """
         logger.debug(
             "%s.LogoutView.get() called with request type: %s %s with args: %s, kwargs: %s",
             self.formatted_class_name,
@@ -36,6 +40,12 @@ class LogoutView(SmarterNeverCachedWebView):
         return redirect_and_expire_cache(path="/")
 
     def post(self, request, *args, **kwargs) -> HttpResponseRedirect:
+        """
+        Sign the user out, and redirect to ``/``.
+
+        :param request: The request.
+        :returns: The redirect.
+        """
         logger.debug(
             "%s.LogoutView.post() called with request type: %s %s with args: %s, kwargs: %s",
             self.formatted_class_name,
