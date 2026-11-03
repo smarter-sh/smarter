@@ -86,6 +86,13 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
     @field_validator("name")
     def validate_name(cls, v):
+        """
+        Strip the Provider name, and require it to be non-empty snake case.
+
+        :param v: The name.
+        :returns: The stripped name.
+        :raises SAMValidationError: If the name is empty or not snake case.
+        """
         v = str(v).strip()
         if not v:
             raise SAMValidationError("Provider name must not be empty.")
@@ -100,16 +107,36 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
     @field_validator("base_url")
     def validate_api_url(cls, v):
+        """
+        Require ``base_url``, when set, to be a valid URL.
+
+        :param v: The API URL, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid URL.
+        """
         if v is None or SmarterValidator.is_valid_url(v):
             return v
         raise SAMValidationError(f"Invalid API URL: {v}. Must be a valid URL.")
 
     @field_validator("api_key")
     def validate_api_key(cls, v):
+        """
+        Accept ``api_key`` unchanged.
+
+        :param v: The name of the Secret that holds the api key.
+        :returns: The value, unchanged.
+        """
         return v
 
     @field_validator("connectivity_test_path")
     def validate_connectivity_test_path(cls, v):
+        """
+        Give ``connectivity_test_path`` leading and trailing slashes, and require a valid URL path.
+
+        :param v: The connectivity test path.
+        :returns: The path, with leading and trailing slashes, or None if it is empty.
+        :raises SAMValidationError: If the path is not a valid URL path.
+        """
         v = SmarterValidator.leading_slash(v)
         v = SmarterValidator.trailing_slash(v)  # type: ignore
         if v is None or SmarterValidator.is_valid_url_path(v):
@@ -118,42 +145,91 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
     @field_validator("logo")
     def validate_logo(cls, v):
+        """
+        Require ``logo``, when set, to be a valid URL.
+
+        :param v: The logo URL, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid URL.
+        """
         if v is None or SmarterValidator.is_valid_url(v):
             return v
         raise SAMValidationError(f"Invalid logo URL: {v}. Must be a valid URL.")
 
     @field_validator("website_url")
     def validate_website(cls, v):
+        """
+        Require ``website_url``, when set, to be a valid URL.
+
+        :param v: The website URL, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid URL.
+        """
         if v is None or SmarterValidator.is_valid_url(v):
             return v
         raise SAMValidationError(f"Invalid website_url URL: {v}. Must be a valid URL.")
 
     @field_validator("contact_email")
     def validate_contact_email(cls, v):
+        """
+        Require ``contact_email``, when set, to be a valid email address.
+
+        :param v: The email address, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid email address.
+        """
         if v is None or SmarterValidator.is_valid_email(v):
             return v
         raise SAMValidationError(f"Invalid contact email: {v}. Must be a valid email address.")
 
     @field_validator("support_email")
     def validate_support_email(cls, v):
+        """
+        Require ``support_email``, when set, to be a valid email address.
+
+        :param v: The email address, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid email address.
+        """
         if v is None or SmarterValidator.is_valid_email(v):
             return v
         raise SAMValidationError(f"Invalid support email: {v}. Must be a valid email address.")
 
     @field_validator("terms_of_service_url")
     def validate_terms_of_service_url(cls, v):
+        """
+        Require ``terms_of_service_url``, when set, to be a valid URL.
+
+        :param v: The terms of service URL, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid URL.
+        """
         if v is None or SmarterValidator.is_valid_url(v):
             return v
         raise SAMValidationError(f"Invalid terms of service URL: {v}. Must be a valid URL.")
 
     @field_validator("docs_url")
     def validate_docs_url(cls, v):
+        """
+        Require ``docs_url``, when set, to be a valid URL.
+
+        :param v: The documentation URL, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid URL.
+        """
         if v is None or SmarterValidator.is_valid_url(v):
             return v
         raise SAMValidationError(f"Invalid documentation URL: {v}. Must be a valid URL.")
 
     @field_validator("privacy_policy_url")
     def validate_privacy_policy_url(cls, v):
+        """
+        Require ``privacy_policy_url``, when set, to be a valid URL.
+
+        :param v: The privacy policy URL, or None.
+        :returns: The value, unchanged.
+        :raises SAMValidationError: If the value is not a valid URL.
+        """
         if v is None or SmarterValidator.is_valid_url(v):
             return v
         raise SAMValidationError(f"Invalid privacy policy URL: {v}. Must be a valid URL.")

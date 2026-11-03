@@ -156,7 +156,11 @@ class Proxy(MetaDataWithOwnershipModel):
 
         :returns: The base URL, or an empty string if neither is set.
         """
-        url = self.base_url or (self.provider.base_url if self.provider_id else "") or ""  # type: ignore[attr-defined]
+        url = self.base_url
+        if not url and self.provider_id:  # type: ignore[attr-defined]
+            url = self.provider.base_url
+        if not url:
+            url = ""
         if url and not url.endswith("/"):
             url += "/"
         return url

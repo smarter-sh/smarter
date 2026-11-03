@@ -177,8 +177,12 @@ class LLMHost(MetaDataWithOwnershipModel):
 
     @property
     def uptime_hours(self) -> Optional[float]:
+        """The uptime, in hours, rounded to four decimal places, or None if the LLMHost is not deployed."""
         uptime = self.uptime
-        return round(uptime.total_seconds() / 3600, 4) if uptime is not None else None
+        if uptime is None:
+            return None
+        hours = uptime.total_seconds() / 3600
+        return round(hours, 4)
 
     @property
     def estimated_cost(self) -> Optional[Decimal]:
@@ -186,12 +190,22 @@ class LLMHost(MetaDataWithOwnershipModel):
         hours = self.uptime_hours
         if hours is None or self.cost_per_hour is None:
             return None
-        return (Decimal(str(hours)) * self.replicas * self.cost_per_hour).quantize(Decimal("0.0001"))
+        cost = Decimal(str(hours)) * self.replicas * self.cost_per_hour
+        return cost.quantize(Decimal("0.0001"))
 
     def record_event(
         self, event_type: str, message: str = "", details: Optional[SmarterDictType] = None
     ) -> "LLMHostEvent":
-        """Record a lifecycle event, with the LLMHost's current status."""
+        """
+        Record a lifecycle event, with the LLMHost's current status.
+
+        Creates an :class:`LLMHostEvent` row.
+
+        :param event_type: The kind of event, e.g. launched or destroyed.
+        :param message: A human-readable description.
+        :param details: Additional data about the event. Optional.
+        :returns: The new event.
+        """
         return LLMHostEvent.objects.create(
             llmhost=self,
             llmhost_name=self.name,

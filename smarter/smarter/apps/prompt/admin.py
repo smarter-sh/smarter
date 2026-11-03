@@ -28,6 +28,12 @@ class ChatAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in Prompt._meta.fields]
 
     def get_queryset(self, request):
+        """
+        Return the Prompts that the request's user has ownership permission to see, or none for a non-user.
+
+        :param request: The admin HTTP request.
+        :returns: The filtered queryset.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -53,6 +59,12 @@ class ChatHistoryAdmin(SmarterCustomerModelAdmin):
     list_display = ["prompt", "prompt_history"]
 
     def get_queryset(self, request):
+        """
+        Return the PromptHistory rows of Prompts that the request's user may see, or none for a non-user.
+
+        :param request: The admin HTTP request.
+        :returns: The filtered queryset.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -73,6 +85,12 @@ class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in PromptPluginUsage._meta.fields]
 
     def get_queryset(self, request):
+        """
+        Return the PromptPluginUsage rows of Prompts that the request's user may see, or none for a non-user.
+
+        :param request: The admin HTTP request.
+        :returns: The filtered queryset.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -93,6 +111,12 @@ class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in PromptToolCall._meta.fields]
 
     def get_queryset(self, request):
+        """
+        Return the PromptToolCall rows of Prompts that the request's user may see, or none for a non-user.
+
+        :param request: The admin HTTP request.
+        :returns: The filtered queryset.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):

@@ -429,7 +429,9 @@ def cli_schemas() -> tuple[dict[str, OpenApiSchema], list[str]]:
             "mapping": {kind: REF_TEMPLATE.format(model=name) for kind, name in kind_schemas.items()},
         },
     }
-    schemas["SAMKind"] = {"type": "string", "enum": kinds, "description": "A SAM manifest's kind."}
+    # A list[str] is not a JsonValue, whose lists are invariant list[JsonValue].
+    kind_enum: list[OpenApiSchema] = list(kinds)
+    schemas["SAMKind"] = {"type": "string", "enum": kind_enum, "description": "A SAM manifest's kind."}
     schemas["JsonSchema"] = {
         "type": "object",
         "description": f"A JSON Schema ({JSON_SCHEMA_DIALECT}).",
@@ -1949,6 +1951,11 @@ def journal_paths() -> dict[str, OpenApiPathItem]:
     :rtype: dict[str, OpenApiPathItem]
     """
     tag = TAG_JOURNAL
+    # Each sortable column, ascending (``createdAt``) and descending (``-createdAt``).
+    ordering_values = []
+    for column in JOURNAL_SORT_FIELDS:
+        ordering_values.append(f"{column}")
+        ordering_values.append(f"-{column}")
     return {
         "/journal/": OpenApiPathItem(
             get=rest_read(
@@ -1968,7 +1975,7 @@ def journal_paths() -> dict[str, OpenApiPathItem]:
                         "The column to sort by, e.g. createdAt, or -createdAt to sort it in descending order.",
                         {
                             "type": "string",
-                            "enum": [f"{sign}{column}" for column in JOURNAL_SORT_FIELDS for sign in ("", "-")],
+                            "enum": ordering_values,
                         },
                     ),
                 ],

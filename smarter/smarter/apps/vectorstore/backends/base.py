@@ -63,12 +63,18 @@ class SmarterVectorstoreBackend(ABC):
 
     @property
     def embeddings(self) -> Embeddings:
+        """
+        The embeddings model, which turns texts into vectors.
+
+        :raises VectorStoreBackendError: If the backend was created without one.
+        """
         if self._embeddings is None:
             raise VectorStoreBackendError(f"Vectorstore {self.vectorstore.name} has no embeddings model.")
         return self._embeddings
 
     @property
     def index_name(self) -> str:
+        """The name of the index or collection: the vectorstore's ``index_name``, or its default."""
         return self.vectorstore.index_name or self.vectorstore.default_index_name()
 
     # --- lifecycle --------------------------------------------------------------
@@ -114,7 +120,14 @@ class SmarterVectorstoreBackend(ABC):
     # --- data -------------------------------------------------------------------
     @abstractmethod
     def upsert(self, ids: list[str], texts: list[str], metadatas: list[SmarterDictType], batch_size: int = 64) -> None:
-        """Embed and insert, or replace, chunks."""
+        """
+        Embed and insert, or replace, chunks.
+
+        :param ids: The chunks' ids.
+        :param texts: The chunks' texts.
+        :param metadatas: The chunks' metadata.
+        :param batch_size: How many chunks to embed and upsert at a time.
+        """
 
     @abstractmethod
     def delete(self, ids: list[str]) -> None:

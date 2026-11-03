@@ -41,6 +41,20 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
+def _first_instance_of(args: tuple, cls: type):
+    """
+    Return the first positional argument that is an instance of a class.
+
+    :param args: The positional arguments.
+    :param cls: The class.
+    :returns: The first argument that is an instance of ``cls``, or None.
+    """
+    for arg in args:
+        if isinstance(arg, cls):
+            return arg
+    return None
+
+
 class AccountMixin(SmarterHelperMixin):
     """
     Provides consistent initialization and short-lived caching of the.
@@ -96,16 +110,26 @@ class AccountMixin(SmarterHelperMixin):
         # Initial resolution of parameters, taking into consideration that
         # they may be passed in via args or kwargs.
         # ---------------------------------------------------------------------
-        request = kwargs.get("request") or next((arg for arg in args if "request" in str(type(arg)).lower()), None)
-        user = user or kwargs.get("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
-        account = (
-            account or kwargs.get("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
-        )
-        user_profile = (
-            user_profile
-            or kwargs.get("user_profile", None)
-            or next((arg for arg in args if isinstance(arg, UserProfile)), None)
-        )
+        request = kwargs.get("request")
+        if not request:
+            request = None
+            for arg in args:
+                type_name = str(type(arg)).lower()
+                if "request" in type_name:
+                    request = arg
+                    break
+        if not user:
+            user = kwargs.get("user", None)
+        if not user:
+            user = _first_instance_of(args, User)
+        if not account:
+            account = kwargs.get("account", None)
+        if not account:
+            account = _first_instance_of(args, Account)
+        if not user_profile:
+            user_profile = kwargs.get("user_profile", None)
+        if not user_profile:
+            user_profile = _first_instance_of(args, UserProfile)
         api_token = api_token or kwargs.get("api_token", None)
 
         if isinstance(account_number, str):

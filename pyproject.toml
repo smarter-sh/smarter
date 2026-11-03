@@ -40,6 +40,14 @@ build-backend = "setuptools.build_meta"
 [tool.isort]
 profile = "black"
 
+# Pyright, and Pylance in VS Code, which is built on it. These two checks fire on idioms that are
+# correct here: every Django model and DRF serializer with its own nested Meta "overrides" its
+# parent's, and each SAM broker narrows AbstractBroker's attributes (e.g. _manifest) to its own
+# kind's types. See scripts/pyright_new_errors.py for checking only the errors a change adds.
+[tool.pyright]
+reportIncompatibleVariableOverride = false
+reportIncompatibleMethodOverride = false
+
 [tool.black]
 line-length = 120
 target-version = ['py312']

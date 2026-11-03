@@ -1,5 +1,4 @@
-"""
-This module defines an enumeration for OpenAI function calling types.
+"""This module defines an enumeration for OpenAI function calling types.
 
 "type": "function",
 "function": {
@@ -10,16 +9,13 @@ This module defines an enumeration for OpenAI function calling types.
         "properties": properties,
         "required": [],
     },
-
 """
 
 from smarter.common.enum import SmarterEnumAbstract
 
 
 class OpenAIToolCall(SmarterEnumAbstract):
-    """
-    Enum for OpenAI function calling types.
-    """
+    """Enum for OpenAI function calling types."""
 
     TYPE = "type"
     FUNCTION = "function"
@@ -33,6 +29,7 @@ class OpenAIToolCall(SmarterEnumAbstract):
 
     @classmethod
     def all(cls):
+        """Return every member's value."""
         return [
             cls.TYPE,
             cls.FUNCTION,
@@ -46,9 +43,7 @@ class OpenAIToolCall(SmarterEnumAbstract):
 
 
 class OpenAIToolTypes(SmarterEnumAbstract):
-    """
-    Enum for OpenAI tool types.
-    """
+    """Enum for OpenAI tool types."""
 
     FUNCTION = "function"
     CODE_INTERPRETER = "code_interpreter"
@@ -56,6 +51,7 @@ class OpenAIToolTypes(SmarterEnumAbstract):
 
     @classmethod
     def all(cls):
+        """Return every member's value."""
         return [
             cls.FUNCTION,
             cls.CODE_INTERPRETER,

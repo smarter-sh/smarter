@@ -143,14 +143,22 @@ class MCPToolkit:
         :param name: The name of the tool, as the server reports it.
         :returns: The function name.
         """
-        candidate = f"mcp{mcpclient.id}_{FUNCTION_NAME_PATTERN.sub('_', name)}"[:MAX_FUNCTION_NAME_LENGTH]  # type: ignore
+        sanitized_name = FUNCTION_NAME_PATTERN.sub("_", name)
+        candidate = f"mcp{mcpclient.id}_{sanitized_name}"  # type: ignore
+        candidate = candidate[:MAX_FUNCTION_NAME_LENGTH]
         if candidate in self.functions:
             suffix = "_" + hashlib.sha256(name.encode()).hexdigest()[:6]
             candidate = candidate[: MAX_FUNCTION_NAME_LENGTH - len(suffix)] + suffix
         return candidate
 
     def add_function(self, function: MCPFunction, description: str, parameters: SmarterDictType) -> None:
-        """Add a function tool, and remember what it calls."""
+        """
+        Add a function tool, and remember what it calls.
+
+        :param function: The MCP tool that the function calls; its ``name`` is the function's name.
+        :param description: The tool's description, truncated to ``MAX_DESCRIPTION_LENGTH``.
+        :param parameters: The tool's JSON Schema of its parameters.
+        """
         self.functions[function.name] = function
         self.tools.append(
             {

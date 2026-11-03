@@ -203,10 +203,16 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
 
     @property
     def llmclient(self) -> Optional[LLMClient]:
+        """The LLMClient of this config request, set by the ``llmclient_helper`` setter."""
         return self._llmclient
 
     @property
     def llmclient_helper(self) -> Optional[LLMClientHelper]:
+        """
+        The LLMClientHelper of this request, created on first access and cached.
+
+        Built from the LLMClient when one is set, else from the LLMClient name of the view or the request.
+        """
         # "is not None", not truthiness, here and below: see the comment in dispatch_config().
         if self._llmclient_helper is not None:
             return self._llmclient_helper
@@ -245,6 +251,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
 
     @llmclient_helper.setter
     def llmclient_helper(self, value: Optional[LLMClientHelper]):
+        """
+        Set the LLMClientHelper, and copy its LLMClient, account, user and user profile onto the view.
+
+        :param value: The LLMClientHelper, or None. A helper without an LLMClient unsets ``llmclient``.
+        """
         self._llmclient_helper = value
         if self._llmclient_helper and self._llmclient_helper.llmclient:
             self._llmclient = self._llmclient_helper.llmclient

@@ -34,16 +34,46 @@ class UserProfileView(AccountViewBase):
     """
 
     def get(self, request: Request, user_profile_id: int):
+        """
+        Return a UserProfile as json.
+
+        :param request: The request.
+        :param user_profile_id: The UserProfile's id.
+        :returns: The :class:`AccountApiProfile` of the UserProfile.
+        :raises Http404: when the UserProfile does not exist.
+        """
         user_profile = get_object_or_404(UserProfile.objects.select_related("user", "account"), pk=user_profile_id)
         return JsonResponse(AccountApiProfile.from_model(user_profile).model_dump(mode="json"))
 
     def post(self, request: Request, user_profile_id: Optional[int] = None):
+        """
+        Refuse to create a UserProfile: this endpoint does not support it.
+
+        :param request: The request.
+        :param user_profile_id: Unused.
+        :returns: A 400 response.
+        """
         return HttpResponseBadRequest()
 
     def patch(self, request: Request, user_profile_id: Optional[int] = None):
+        """
+        Refuse to update a UserProfile: this endpoint does not support it.
+
+        :param request: The request.
+        :param user_profile_id: Unused.
+        :returns: A 400 response.
+        """
         return HttpResponseBadRequest()
 
     def delete(self, request, user_profile_id: int):
+        """
+        Delete a UserProfile.
+
+        :param request: The request.
+        :param user_profile_id: The UserProfile's id.
+        :returns: A redirect to ``/``, or a 500 :class:`JsonResponse` when the delete fails.
+        :raises Http404: when the UserProfile does not exist.
+        """
         logger.debug(
             "%s.delete() called by %s with user_profile_id: %s",
             self.formatted_class_name,
@@ -69,6 +99,11 @@ class UserProfileListView(ContractListMixin, AccountListViewBase):
     contract_model = AccountApiProfile
 
     def get_queryset(self):
+        """
+        Return every UserProfile for a superuser, else those of the request user's Account.
+
+        :returns: The queryset, ordered by pk; empty for an anonymous request or a user without a UserProfile.
+        """
         if not isinstance(self.user_profile, UserProfile):
             return UserProfile.objects.none()
         if not self.request:

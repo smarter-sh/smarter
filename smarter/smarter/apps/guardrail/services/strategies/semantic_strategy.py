@@ -72,7 +72,18 @@ class SemanticStrategy(BaseGuardrailStrategy):
     """Match a text segment by its embedding's similarity to reference texts."""
 
     def evaluate(self, *, segment, guardrail, context: StrategyContext) -> StrategyMatch:  # pylint: disable=R0914
-        """Compare the segment's embedding with each reference text's embedding."""
+        """
+        Compare the segment's embedding with each reference text's embedding.
+
+        Calls the Guardrail's LLM provider to embed the segment; reference embeddings are cached.
+
+        :param segment: The text segment.
+        :param guardrail: The Guardrail, which supplies the strategy's configuration.
+        :param context: Ambient evaluation context. Unused.
+        :returns: A match triggered when the best cosine similarity reaches the Guardrail's threshold.
+        :raises GuardrailConfigError: when the Guardrail has no ``referenceTexts``.
+        :raises GuardrailProviderError: when the embeddings call fails, or returns the wrong number of vectors.
+        """
         references: list[str] = list(guardrail.settings.get("referenceTexts") or [])
         if not references:
             raise GuardrailConfigError(

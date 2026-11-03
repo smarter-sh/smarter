@@ -223,14 +223,28 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return self.formatted_text(class_name)
 
     def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
+        """
+        Convert an error response to JSON for clients that accept JSON.
 
+        It does nothing unless the ``ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR`` waffle switch is active.
+
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, or a :class:`~django.http.JsonResponse` with the same status code.
+        """
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
             return response
 
         return self.normalize_json_error_response(request=request, response=response)
 
     async def async_process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
+        """
+        Async version of :meth:`process_response`.
 
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, or a :class:`~django.http.JsonResponse` with the same status code.
+        """
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
             return response
 
@@ -239,7 +253,15 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return self.normalize_json_error_response(request=request, response=response)
 
     def normalize_json_error_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """Convert non-JSON error responses into JsonResponse objects."""
+        """
+        Convert non-JSON error responses into JsonResponse objects.
+
+        Only responses with a status of 400 or more, to clients that accept JSON, are converted.
+
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, or a :class:`~django.http.JsonResponse` with the same status code.
+        """
 
         # the status code is the cheapest check, and most responses aren't errors.
         if response.status_code < HTTPStatus.BAD_REQUEST:

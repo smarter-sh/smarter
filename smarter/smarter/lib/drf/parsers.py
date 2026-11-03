@@ -17,6 +17,15 @@ class YAMLParser(BaseParser):
     media_type = "application/x-yaml"
 
     def parse(self, stream, media_type=None, parser_context=None):
+        """
+        Parse a UTF-8 YAML request body.
+
+        :param stream: The request body stream.
+        :param media_type: The request's media type, unused.
+        :param parser_context: DRF's parser context, unused.
+        :returns: The parsed data.
+        :raises ParseError: If the body is not valid YAML.
+        """
         # pylint: disable=W0707
         try:
             data = stream.read().decode("utf-8")

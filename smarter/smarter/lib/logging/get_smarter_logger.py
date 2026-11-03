@@ -1,5 +1,5 @@
 """
-smarter.lib.logging.get_smarter_logger
+Smarter.lib.logging.get_smarter_logger
 ======================================
 
 getSmarterLogger() - A utility function to retrieve a logger instance with
@@ -23,7 +23,9 @@ def getSmarterLogger(
     condition_func: Optional[Callable] = None,
 ) -> Union[Logger, WaffleSwitchedLoggerWrapper]:
     """
-    Python's logging module enhanced with optional Waffle switch control. If
+    Python's logging module enhanced with optional Waffle switch control.
+
+    If
     any of `any_switches`, `all_switches` or `condition_func` is provided, the
     logger will only emit logs if at least one of the specified conditions is met.
 
@@ -39,9 +41,7 @@ def getSmarterLogger(
     """
 
     def eval_any_switches() -> bool:
-        """
-        Evaluate if any of the specified Waffle switches are active.
-        """
+        """Evaluate if any of the specified Waffle switches are active."""
         return (
             isinstance(any_switches, list)
             and len(any_switches) > 0
@@ -49,9 +49,7 @@ def getSmarterLogger(
         )
 
     def eval_all_switches() -> bool:
-        """
-        Evaluate if all specified Waffle switches are active.
-        """
+        """Evaluate if all specified Waffle switches are active."""
         return (
             isinstance(all_switches, list)
             and len(all_switches) > 0
@@ -59,19 +57,20 @@ def getSmarterLogger(
         )
 
     def eval_switches(level) -> bool:
-        """
-        Evaluate the combined conditions of any_switches, all_switches, and the optional condition_func.
-        """
-        return (
-            eval_any_switches()
-            or eval_all_switches()
-            or (condition_func(level) if condition_func is not None else False)
-        )
+        """Evaluate the combined conditions of any_switches, all_switches, and the optional condition_func."""
+        any_switches_result = eval_any_switches()
+        if any_switches_result:
+            return any_switches_result
+        all_switches_result = eval_all_switches()
+        if all_switches_result:
+            return all_switches_result
+        if condition_func is None:
+            return False
+        condition_result = condition_func(level)
+        return condition_result
 
     def switches_are_provided() -> bool:
-        """
-        Determine if any switch conditions or a condition function have been provided.
-        """
+        """Determine if any switch conditions or a condition function have been provided."""
         return (isinstance(any_switches, list) and len(any_switches) > 0) or (
             isinstance(all_switches, list) and len(all_switches) > 0 or condition_func is not None
         )

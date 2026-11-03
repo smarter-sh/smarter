@@ -484,7 +484,15 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         return path.lower()
 
     def is_amnesty_path(self, path: str) -> bool:
+        """
+        Return whether a path is exempt from the sensitive-file check.
 
+        A path is exempt when it is an amnesty url, or when it or one of its segments matches an
+        allowed pattern.
+
+        :param path: The normalized request path.
+        :returns: True if the path is exempt.
+        """
         if path.replace("/", "") in self.amnesty_urls:
             return True
 
@@ -494,12 +502,19 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         if any(pattern.match(path) for pattern in self.allowed_patterns):
             return True
 
-        return any(
-            pattern.match(segment) for segment in self.iter_path_segments(path) for pattern in self.allowed_patterns
-        )
+        for segment in self.iter_path_segments(path):
+            for pattern in self.allowed_patterns:
+                if pattern.match(segment):
+                    return True
+        return False
 
     def is_throttled(self, client_ip: str) -> bool:
+        """
+        Return whether a client has reached the throttle limit of sensitive-file probes.
 
+        :param client_ip: The client's ip address.
+        :returns: True if the client's count, in the cache, is at least ``THROTTLE_LIMIT``.
+        """
         throttle_key = self.get_throttle_key(client_ip)
 
         blocked_count = cache.get(throttle_key, 0)
@@ -507,7 +522,11 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         return blocked_count >= self.THROTTLE_LIMIT
 
     def increment_throttle(self, client_ip: str) -> None:
+        """
+        Add one to a client's probe count in the cache, and reset its ``THROTTLE_TIMEOUT``.
 
+        :param client_ip: The client's ip address.
+        """
         throttle_key = self.get_throttle_key(client_ip)
 
         try:
@@ -529,10 +548,22 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def get_throttle_key(client_ip: str) -> str:
+        """
+        Return the cache key of a client's probe count.
+
+        :param client_ip: The client's ip address.
+        :returns: The cache key.
+        """
         return f"sensitive_files_throttle:{client_ip}"
 
     @staticmethod
     def iter_path_segments(path: str) -> Iterable[str]:
+        """
+        Return the non-empty segments of a path, e.g. ``a`` and ``b`` for ``/a//b/``.
+
+        :param path: The path.
+        :returns: A generator of the segments.
+        """
         return (segment for segment in path.split("/") if segment)
 
     @classmethod

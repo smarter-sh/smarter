@@ -276,7 +276,11 @@ class Command(SmarterCommand):
             if isinstance(response_json, list):
                 models = response_json
             else:
-                models = response_json.get("data") or response_json.get("models") or []
+                models = response_json.get("data")
+                if not models:
+                    models = response_json.get("models")
+                if not models:
+                    models = []
             if len(models) == 0:
                 self.stdout.write(self.style.WARNING(f"{log_prefix} No provider models found."))
                 return

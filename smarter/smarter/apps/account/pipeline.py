@@ -50,6 +50,13 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, Smarte
         return await get_response(request)
 
     def process_exception(self, request, exception):
+        """
+        Redirect to the "account already associated" page when a social account belongs to another user.
+
+        :param request: The request.
+        :param exception: The exception that social auth raised.
+        :returns: The redirect for :class:`AuthAlreadyAssociated`, else the parent class's response.
+        """
         # strategy = getattr(request, "social_strategy", None)
         # if strategy is None or self.raise_exception(request, exception):
         #     return None

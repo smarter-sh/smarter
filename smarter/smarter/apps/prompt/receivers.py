@@ -62,7 +62,14 @@ def get_sender_name(sender: Any) -> str:
 
 @receiver(plugin_deleting, dispatch_uid=prefix + ".plugin_deleting")
 def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
-    """Handle plugin deleting signal."""
+    """
+    Log that a plugin is being deleted.
+
+    :param sender: The object that sent the signal.
+    :param plugin: The plugin being deleted.
+    :param plugin_meta: The plugin's PluginMeta.
+    :param kwargs: Other signal arguments, unused.
+    """
     logger.info(
         "%s by %s %s is being deleted. Pruning its usage records.",
         f"{logger_prefix}.handle_plugin_deleting()",
@@ -74,7 +81,15 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 # prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 @receiver(prompt_session_invoked, dispatch_uid="prompt_session_invoked")
 def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request: ASGIRequest, *args, **kwargs):
-    """Handle prompt session invoked signal."""
+    """
+    Log, at DEBUG, that a prompt session was invoked, with the request's url.
+
+    :param sender: The object that sent the signal.
+    :param instance: The prompt session.
+    :param request: The request that invoked it.
+    :param args: Unused positional arguments.
+    :param kwargs: Other signal arguments, unused.
+    """
     if isinstance(request, ASGIRequest):
         url: str = request.build_absolute_uri()
     else:
@@ -106,7 +121,14 @@ def handle_chat_config_invoked(
 
 @receiver(prompt_started, dispatch_uid="prompt_started")
 def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[SmarterDictType] = None, **kwargs):
-    """Handle prompt started signal."""
+    """
+    Log that a prompt started.
+
+    :param sender: The object that sent the signal.
+    :param prompt: The prompt.
+    :param data: The prompt's data, unused.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     sender_name = get_sender_name(sender)
     logger.info(
@@ -121,7 +143,15 @@ def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[
 def handle_chat_completion_request_sent(
     sender, prompt: Optional[Prompt] = None, iteration: int = 0, data: Optional[SmarterDictType] = None, **kwargs
 ):
-    """Handle prompt completion request sent signal."""
+    """
+    Log a request sent to the LLM, and at DEBUG its body.
+
+    :param sender: The object that sent the signal.
+    :param prompt: The prompt.
+    :param iteration: The request's iteration.
+    :param data: The request's body.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     sender_name = get_sender_name(sender)
     this_prefix = f"{logger_prefix}.handle_chat_completion_request_sent() iteration {iteration}"
@@ -200,7 +230,15 @@ def handle_chat_completion_plugin_called(
     input_text: Optional[str] = None,
     **kwargs,
 ):
-    """Handle prompt completion plugin call signal."""
+    """
+    Log that the LLM called a plugin, and at DEBUG the input text.
+
+    :param sender: The object that sent the signal.
+    :param prompt: The prompt.
+    :param plugin: The plugin's PluginMeta.
+    :param input_text: The user's input text.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     logger.info(
         "%s by %s for prompt %s, plugin: %s",
@@ -224,7 +262,18 @@ def handle_chat_completion_tool_called(
     response: Optional[Union[SmarterDictType, list]] = None,
     **kwargs,
 ):
-    """Handle prompt completion tool call signal."""
+    """
+    Log a tool call, with its function name, arguments and the prompt's id.
+
+    :param sender: The object that sent the signal.
+    :param prompt: The prompt.
+    :param plugin: The plugin's PluginMeta, unused.
+    :param function_name: The called function's name.
+    :param function_args: The function's arguments.
+    :param request: The request, unused.
+    :param response: The response, unused.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     chat_id = prompt.id if prompt else None  # type: ignore
 
@@ -248,7 +297,16 @@ def handle_chat_response_success(
     messages: Optional[list] = None,
     **kwargs,
 ):
-    """Handle prompt completion returned signal."""
+    """
+    Log a successful prompt, and queue the Celery task that saves its PromptHistory.
+
+    :param sender: The object that sent the signal.
+    :param prompt: The prompt. Without one, no history is saved.
+    :param request: The request sent to the LLM.
+    :param response: The LLM's response.
+    :param messages: The conversation's messages.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     request_data = request_to_json(request) if request else None
     if isinstance(response, ChatCompletion):
@@ -301,7 +359,20 @@ def handle_chat_response_failure(
     stack_trace: Optional[str] = None,
     **kwargs,
 ):
-    """Handle prompt completion failed signal."""
+    """
+    Log a failed prompt as an error, with the request's metadata and the iteration's data.
+
+    :param sender: The object that sent the signal.
+    :param iteration: The iteration that failed.
+    :param prompt: The prompt.
+    :param request_meta_data: The request's metadata.
+    :param exception: The exception raised.
+    :param first_iteration: The first iteration's data, logged when ``iteration`` is 1.
+    :param second_iteration: The second iteration's data, logged when ``iteration`` is 2 or more.
+    :param messages: The conversation's messages, unused.
+    :param stack_trace: The exception's stack trace.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     sender_name = get_sender_name(sender)
 
@@ -350,7 +421,14 @@ def handle_chat_provider_initialized(sender, **kwargs):
 
 @receiver(prompt_handler_console_output, dispatch_uid="prompt_handler_console_output")
 def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
-    """Handle prompt handler() console output signal."""
+    """
+    Log a message of the prompt handler's console output, with its JSON.
+
+    :param sender: The object that sent the signal.
+    :param message: The message.
+    :param json_obj: The JSON object to log with it.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     logger.info(
         "%s: %s\n%s",
@@ -367,7 +445,13 @@ def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
 
 @receiver(llm_tool_presented, dispatch_uid="llm_tool_presented")
 def handle_llm_tool_presented(sender, tool: SmarterDictType, **kwargs):
-    """Handle llm_tool_presented() signal."""
+    """
+    Log a tool that was presented to the LLM.
+
+    :param sender: The object that sent the signal.
+    :param tool: The tool's definition.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     sender_name = sender.__name__
 
@@ -381,7 +465,13 @@ def handle_llm_tool_presented(sender, tool: SmarterDictType, **kwargs):
 
 @receiver(llm_tool_requested, dispatch_uid="llm_tool_requested")
 def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
-    """Handle a tool call request signal."""
+    """
+    Log, at DEBUG, a tool call that the LLM requested.
+
+    :param sender: The object that sent the signal.
+    :param tool_call: The tool call.
+    :param kwargs: Other signal arguments, unused.
+    """
 
     sender_name = sender.__name__
 
@@ -396,7 +486,14 @@ def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
 
 @receiver(llm_tool_responded, dispatch_uid="llm_tool_responded")
 def handle_llm_tool_responded(sender, tool_call: SmarterDictType, tool_response: SmarterDictType, **kwargs):
-    """Handle a tool call response signal."""
+    """
+    Log, at DEBUG, a tool call and its response.
+
+    :param sender: The object that sent the signal.
+    :param tool_call: The tool call.
+    :param tool_response: The tool's response.
+    :param kwargs: Other signal arguments, unused.
+    """
     sender_name = sender.__name__
 
     # DEBUG: the tool's response is data that the conversation asked for.
@@ -414,7 +511,14 @@ def handle_llm_tool_responded(sender, tool_call: SmarterDictType, tool_response:
 # ------------------------------------------------------------------------------
 @receiver(post_save, sender=Prompt)
 def handle_chat_post_save(sender, instance, created, **kwargs):
+    """
+    Log, at DEBUG, that a Prompt was created or updated.
 
+    :param sender: The Prompt model class.
+    :param instance: The saved Prompt.
+    :param created: True if the row was created, False if updated.
+    :param kwargs: Other signal arguments, unused.
+    """
     if created:
         logger.debug("%s", f"{logger_prefix}.handle_chat_post_save() Prompt record created.")
     else:
@@ -423,7 +527,14 @@ def handle_chat_post_save(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PromptHistory)
 def handle_chat_history_post_save(sender, instance, created, **kwargs):
+    """
+    Log, at DEBUG, that a PromptHistory was created or updated.
 
+    :param sender: The PromptHistory model class.
+    :param instance: The saved PromptHistory.
+    :param created: True if the row was created, False if updated.
+    :param kwargs: Other signal arguments, unused.
+    """
     if created:
         logger.debug("%s", f"{logger_prefix}.handle_chat_history_post_save() PromptHistory record created.")
     else:
@@ -432,7 +543,14 @@ def handle_chat_history_post_save(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PromptToolCall)
 def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
+    """
+    Log, at DEBUG, that a PromptToolCall was created or updated.
 
+    :param sender: The PromptToolCall model class.
+    :param instance: The saved PromptToolCall.
+    :param created: True if the row was created, False if updated.
+    :param kwargs: Other signal arguments, unused.
+    """
     if created:
         logger.debug("%s", f"{logger_prefix}.handle_chat_tool_call_post_save() PromptToolCall record created.")
     else:
@@ -441,7 +559,14 @@ def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=PromptPluginUsage)
 def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
+    """
+    Log, at DEBUG, that a PromptPluginUsage was created or updated.
 
+    :param sender: The PromptPluginUsage model class.
+    :param instance: The saved PromptPluginUsage.
+    :param created: True if the row was created, False if updated.
+    :param kwargs: Other signal arguments, unused.
+    """
     if created:
         logger.debug("%s", f"{logger_prefix}.handle_chat_plugin_usage_post_save() PromptPluginUsage record created.")
     else:
@@ -450,7 +575,13 @@ def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
 
 @receiver(pre_delete, sender=PromptToolCall)
 def handle_chat_tool_call_post_delete(sender, instance, **kwargs):
-    """Handle PromptToolCall post delete signal."""
+    """
+    Log that a PromptToolCall is being deleted (a ``pre_delete`` receiver).
+
+    :param sender: The PromptToolCall model class.
+    :param instance: The PromptToolCall being deleted.
+    :param kwargs: Other signal arguments, unused.
+    """
     logger.info(
         "%s %s deleting", f"{logger_prefix}.handle_chat_tool_call_post_delete() PromptToolCall record", instance
     )
@@ -458,7 +589,13 @@ def handle_chat_tool_call_post_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=PromptPluginUsage)
 def handle_chat_plugin_usage_post_delete(sender, instance, **kwargs):
-    """Handle PromptPluginUsage post delete signal."""
+    """
+    Log that a PromptPluginUsage is being deleted (a ``pre_delete`` receiver).
+
+    :param sender: The PromptPluginUsage model class.
+    :param instance: The PromptPluginUsage being deleted.
+    :param kwargs: Other signal arguments, unused.
+    """
     logger.info(
         "%s %s deleting", f"{logger_prefix}.handle_chat_plugin_usage_post_delete() PromptPluginUsage record", instance
     )

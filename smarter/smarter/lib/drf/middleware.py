@@ -107,6 +107,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
+        """The middleware's dotted class name, formatted for log messages."""
         class_name = f"{__name__}.{self.__class__.__name__}"
         return self.formatted_text(class_name)
 
@@ -132,7 +133,18 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         return response
 
     def process_request(self, request: Request):
+        """
+        Authenticate an api request that carries a token in its ``Authorization`` header.
 
+        Non-api requests, requests that are already authenticated, and requests without a token
+        pass through. A valid token logs its user in, and sends the authentication request and
+        success signals. It does nothing unless the ``ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH`` waffle
+        switch is active.
+
+        :param request: The request.
+        :returns: The next handler's response, or a 401 journaled error response if the token fails.
+        :raises ValueError: If the request's url can't be built.
+        """
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH):
             return self.get_response(request)
 
@@ -197,11 +209,22 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def is_api_request(url: str) -> bool:
+        """
+        Return whether a url is a Smarter api endpoint.
+
+        :param url: The absolute url.
+        :returns: True for an api endpoint.
+        """
         return SmarterValidator.is_api_endpoint(url)
 
     @staticmethod
     def get_authorization_header(request: Request) -> str:
+        """
+        Return the request's ``Authorization`` header as a string.
 
+        :param request: The request.
+        :returns: The header, or an empty string.
+        """
         auth_header = get_authorization_header(request)
 
         if isinstance(auth_header, bytes):
@@ -216,7 +239,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def get_auth_prefix() -> str:
-
+        """Return knox's ``AUTH_HEADER_PREFIX``, e.g. ``Token``, as a string."""
         prefix = knox_settings.AUTH_HEADER_PREFIX
 
         if isinstance(prefix, bytes):
@@ -248,7 +271,12 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def ensure_request_user(request: Request) -> Request:
+        """
+        Set the request's user to an anonymous user when it has none.
 
+        :param request: The request, which is changed in place.
+        :returns: The same request.
+        """
         if not hasattr(request, "user") or request.user is None:
             request.user = SmarterAnonymousUser()
 
@@ -256,7 +284,13 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def authenticate_request(request: Request):
+        """
+        Authenticate the request's token with :class:`SmarterTokenAuthentication`, and set ``request.auth``.
 
+        :param request: The request.
+        :returns: A tuple of the user and the token.
+        :raises AuthenticationFailed: If the token is invalid or has no user.
+        """
         logger.debug(
             "%s.authenticate_request() called",
             logging.SmarterFormattedText.text(SmarterTokenAuthenticationMiddleware.__name__),
@@ -281,7 +315,14 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         user,
         auth_obj,
     ) -> None:
-        """Warn on tokens exceeding configured lifetime."""
+        """
+        Warn on tokens exceeding configured lifetime.
+
+        The token is not rejected; only a warning is logged.
+
+        :param user: The authenticated user, for the log message.
+        :param auth_obj: The authenticated token, or an object with its ``digest``.
+        """
 
         digest = getattr(auth_obj, "digest", None)
 
@@ -321,7 +362,14 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         token: str | None,
         exc: Exception,
     ):
+        """
+        Send the authentication failure signal, and return a 401 journaled error response.
 
+        :param request: The request.
+        :param token: The masked token.
+        :param exc: The authentication error.
+        :returns: The 401 :class:`SmarterJournaledJsonErrorResponse`.
+        """
         smarter_token_authentication_failure.send(
             sender=self.__class__,
             user=SmarterAnonymousUser(),
@@ -333,9 +381,14 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
         wrapped_exception = SmarterTokenAuthenticationError("Authentication failed.")
 
-        thing = SAMKinds.from_url(self.smarter_build_absolute_uri(request))
+        url = self.smarter_build_absolute_uri(request)
 
-        command = SmarterJournalCliCommands.from_url(self.smarter_build_absolute_uri(request))
+        # from_url() raises TypeError on None, so a request without a url has no thing or command.
+        thing = None
+        command = None
+        if url is not None:
+            thing = SAMKinds.from_url(url)
+            command = SmarterJournalCliCommands.from_url(url)
 
         return SmarterJournaledJsonErrorResponse(
             request=request,

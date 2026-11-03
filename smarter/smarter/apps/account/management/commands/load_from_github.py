@@ -181,6 +181,11 @@ class Command(SmarterCommand):
 
     @url.setter
     def url(self, value: str) -> None:
+        """
+        Set the repository's url, after validating it.
+
+        :param value: The url.
+        """
         SmarterValidator.validate_url(value)
         self._url = value
 
@@ -372,7 +377,8 @@ class Command(SmarterCommand):
                 ):
                     self.stdout.write(self.style.WARNING(f"Skipped {path}: it is not a Smarter manifest."))
                     continue
-                name = str((manifest.get("metadata") or {}).get("name", ""))
+                metadata = manifest.get("metadata") or {}
+                name = str(metadata.get("name", ""))
                 retval.append(
                     RepositoryManifest(
                         path=path, filespec=filespec, kind=str(manifest["kind"]), name=name, manifest=manifest
@@ -517,7 +523,10 @@ class Command(SmarterCommand):
         :returns: True if it is to be skipped.
         :rtype: bool
         """
-        if item.kind != SAMKinds.BUDGET.value or (item.manifest.get("spec") or {}).get("resources"):
+        if item.kind != SAMKinds.BUDGET.value:
+            return False
+        spec = item.manifest.get("spec") or {}
+        if spec.get("resources"):
             return False
         return Budget.objects.filter(name=item.name).exists()
 

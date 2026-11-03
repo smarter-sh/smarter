@@ -461,7 +461,12 @@ class PipelineResult(BaseModel):
             :attr:`outcomes`, in outcome order.
         :rtype: list[GuardrailFinding]
         """
-        return [f for o in self.outcomes for f in o.findings if f.triggered]
+        triggered = []
+        for outcome in self.outcomes:
+            for finding in outcome.findings:
+                if finding.triggered:
+                    triggered.append(finding)
+        return triggered
 
 
 __all__ = [

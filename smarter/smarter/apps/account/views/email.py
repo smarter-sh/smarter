@@ -30,6 +30,13 @@ class EmailPreviewView(SmarterNeverCachedWebView):
     contact_email: ContactEmail = WELCOME_EMAIL
 
     def get(self, request, *args, **kwargs):
+        """
+        Render the contact email's template, in the requested language.
+
+        :param request: The request; its ``language`` query parameter defaults to the active language.
+        :param kwargs: ``first_name``, for the greeting.
+        :returns: The rendered email, or a 400 response for an unknown language.
+        """
         first_name: str = kwargs.get("first_name", "big fella")
         language = request.GET.get("language") or translation.get_language()
         if language not in welcome_email_languages():

@@ -81,6 +81,13 @@ def get_cached_llmclients_owned_by_user_profile(user_profile: UserProfile) -> mo
 
 
 def invalidate_cached_llmclients_owned_by_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of LLMClients owned by the given UserProfile.
+
+    The next call to :func:`get_cached_llmclients_owned_by_user_profile` queries the database again.
+
+    :param user_profile: The user profile whose cache entry should be invalidated.
+    """
     _get_cached_llmclients_owned_by_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -120,6 +127,13 @@ def get_cached_llmclients_shared_with_user_profile(user_profile: UserProfile) ->
 
 
 def invalidate_cached_llmclients_shared_with_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of LLMClients shared with the given UserProfile.
+
+    The next call to :func:`get_cached_llmclients_shared_with_user_profile` queries the database again.
+
+    :param user_profile: The user profile whose cache entry should be invalidated.
+    """
     _get_cached_llmclients_shared_with_user_profile.invalidate(user_profile.id)  # type: ignore
 
 
@@ -160,6 +174,13 @@ def get_cached_llmclients_available_to_user_profile(user_profile: UserProfile) -
 
 
 def invalidate_cached_llmclients_available_to_user_profile(user_profile: UserProfile) -> None:
+    """
+    Invalidate the cached queryset of LLMClients available to the given UserProfile.
+
+    The next call to :func:`get_cached_llmclients_available_to_user_profile` queries the database again.
+
+    :param user_profile: The user profile whose cache entry should be invalidated.
+    """
     _get_cached_llmclients_available_to_user_profile.invalidate(user_profile.id)  # type: ignore
 
 

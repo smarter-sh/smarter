@@ -23,7 +23,6 @@ Smarter api's OpenAPI document publishes. Errors are Django REST framework's ``{
 """
 
 from http import HTTPStatus
-from typing import Any
 
 from django.db.models import QuerySet
 from django.http import Http404
@@ -102,7 +101,18 @@ class GuardrailViewBase(SmarterAuthenticatedAPIView):
     """
 
     def get_guardrail(self, request: Request, owner: bool = False, **kwargs) -> Guardrail:
-        """Return the Guardrail in the URL, if the user may read it, or own it."""
+        """
+        Return the Guardrail in the URL, if the user may read it, or own it.
+
+        Sends the ``guardrail_called`` signal for the Guardrail it returns.
+
+        :param request: The API request, whose user is checked.
+        :param owner: True to require ownership permission, rather than read permission.
+        :param kwargs: The URL kwargs, with either ``hashed_id`` or ``guardrail_id``.
+        :returns: The Guardrail.
+        :raises Http404: when the URL has no id, or the Guardrail does not exist or the user may
+            not read (or own) it.
+        """
         hashed_id = kwargs.get("hashed_id")
         guardrail_id = Guardrail.id_from_hashed_id(hashed_id) if hashed_id else kwargs.get("guardrail_id")
         if not guardrail_id:
@@ -190,4 +200,11 @@ class GuardrailListView(ContractListMixin, SmarterAuthenticatedListAPIView):
         return GuardrailApiGuardrail.from_model(row, self.request.user).model_dump(mode="json")
 
     def get_queryset(self, *args, **kwargs) -> QuerySet[Guardrail]:
+        """
+        Return the Guardrails the user may read, ordered by priority, then name.
+
+        :param args: Unused.
+        :param kwargs: Unused.
+        :returns: The Guardrails the requesting user has read permission for.
+        """
         return Guardrail.objects.with_read_permission_for(user=self.request.user).order_by("priority", "name")  # type: ignore[attr-defined]

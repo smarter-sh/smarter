@@ -40,23 +40,54 @@ class CliBrokerTestMixin:
     name_prefix = "test_cli_broker"
 
     def setUp(self):
+        """Give the test a unique resource name, and delete the resources with that name after it."""
         super().setUp()  # type: ignore[misc]
         self.name = f"{self.name_prefix}_{self.hash_suffix}"  # type: ignore[attr-defined]
         self.addCleanup(self.model.objects.filter(name__startswith=self.name).delete)  # type: ignore[attr-defined]
 
     def cli_url(self, command: str, with_kind: bool = True, **params) -> str:
-        kwargs = {SAMKeys.KIND.value: self.kind} if with_kind else None
-        url = reverse(ApiV1CliReverseViews.namespace + getattr(ApiV1CliReverseViews, command), kwargs=kwargs)
-        return f"{url}?{urlencode(params)}" if params else url
+        """
+        Return the url of a cli command.
 
-    def cli(self, command: str, status=HTTPStatus.OK, data=None, with_kind: bool = True, **params) -> SmarterDictType:
-        """Call a cli command, assert its status, which may be a tuple of statuses, and return its json."""
-        response, received = self.get_response(path=self.cli_url(command, with_kind, **params), data=data)  # type: ignore[attr-defined]
+        :param command: The command, e.g. ``describe``.
+        :param with_kind: Whether the url includes the kind.
+        :param params: Query parameters, e.g. ``name``.
+        :returns: The url path, with its query string.
+        """
+        kwargs = {SAMKeys.KIND.value: self.kind} if with_kind else None
+        view_name = ApiV1CliReverseViews.namespace + getattr(ApiV1CliReverseViews, command)
+        url = reverse(view_name, kwargs=kwargs)
+        if not params:
+            return url
+        query_string = urlencode(params)
+        return f"{url}?{query_string}"
+
+    def cli(
+        self,
+        command: str,
+        status: HTTPStatus | tuple[HTTPStatus, ...] = HTTPStatus.OK,
+        data=None,
+        with_kind: bool = True,
+        **params,
+    ) -> SmarterDictType:
+        """
+        Call a cli command, assert its status, which may be a tuple of statuses, and return its json.
+
+        :param command: The command, e.g. ``apply``.
+        :param status: The expected status, or a tuple of them.
+        :param data: The request body, e.g. a manifest.
+        :param with_kind: Whether the url includes the kind.
+        :param params: Query parameters, e.g. ``name``.
+        :returns: The response's json.
+        """
+        path = self.cli_url(command, with_kind, **params)
+        response, received = self.get_response(path=path, data=data)  # type: ignore[attr-defined]
         statuses = status if isinstance(status, tuple) else (status,)
         self.assertIn(received, statuses, msg=f"{command}: {response}")  # type: ignore[attr-defined]
         return response
 
     def example_manifest(self) -> SmarterDictType:
+        """Return the kind's example manifest, from the ``example_manifest`` command."""
         response = self.cli("example_manifest")
         manifest = response["data"]
         self.assertEqual(manifest[SAMKeys.KIND.value], self.kind)  # type: ignore[attr-defined]
@@ -69,10 +100,12 @@ class CliBrokerTestMixin:
         return manifest
 
     def apply(self) -> SmarterDictType:
+        """Apply the example manifest, renamed for this test, and return the response's json."""
         manifest = self.prepare_manifest(self.example_manifest())
         return self.cli("apply", data=manifest, with_kind=False)
 
     def test_example_manifest(self):
+        """The example manifest is of this kind, and has a spec."""
         manifest = self.example_manifest()
         self.assertIn(SAMKeys.SPEC.value, manifest)  # type: ignore[attr-defined]
 

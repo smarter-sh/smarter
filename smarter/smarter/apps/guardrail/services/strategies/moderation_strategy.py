@@ -17,13 +17,29 @@ class ModerationStrategy(BaseGuardrailStrategy):
     """Match a text segment with a moderation model."""
 
     def evaluate(self, *, segment, guardrail, context: StrategyContext) -> StrategyMatch:
-        """Moderate the segment, and compare the scores of the Guardrail's categories with its threshold."""
+        """
+        Moderate the segment, and compare the scores of the Guardrail's categories with its threshold.
+
+        Calls the Guardrail's LLM provider. A category triggers when its score reaches the threshold,
+        or when the moderation model flagged it. With no ``categories``, every category counts.
+
+        :param segment: The text segment.
+        :param guardrail: The Guardrail, which supplies the strategy's configuration.
+        :param context: Ambient evaluation context. Unused.
+        :returns: A match whose confidence is the highest score among the categories.
+        :raises GuardrailProviderError: when the moderation call fails.
+        """
         model = guardrail.settings.get("model") or DEFAULT_MODERATION_MODEL
         result = get_client(guardrail).moderate(segment.text, model=model)
         categories = set(guardrail.settings.get("categories") or result.scores.keys())
         threshold = self.threshold(guardrail)
         scores = {name: score for name, score in result.scores.items() if name in categories}
-        triggered = sorted(name for name in categories if scores.get(name, 0.0) >= threshold or name in result.flagged)
+        triggered_names = []
+        for name in categories:
+            score = scores.get(name, 0.0)
+            if score >= threshold or name in result.flagged:
+                triggered_names.append(name)
+        triggered = sorted(triggered_names)
         confidence = max(scores.values(), default=0.0)
         if not triggered:
             return StrategyMatch(triggered=False, confidence=confidence)

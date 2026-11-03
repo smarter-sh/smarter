@@ -45,6 +45,11 @@ class Command(SmarterCommand):
     )
 
     def add_arguments(self, parser):
+        """
+        Add the ``--language`` and ``--no-compile`` options.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument(
             "--language",
             action="append",
@@ -61,6 +66,14 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
+        """
+        Regenerate django.po and djangojs.po for each language, then compile them unless ``--no-compile``.
+
+        Runs ``makemessages`` from the project root and from the React messages directory, and
+        restores the working directory afterwards.
+
+        :param options: The command's options: ``languages``, ``no_compile`` and ``verbosity``.
+        """
         self.handle_begin()
         languages = options["languages"] or [code for code, _ in settings.LANGUAGES]
         # makemessages and compilemessages take locale names, which are also the catalogs' directory

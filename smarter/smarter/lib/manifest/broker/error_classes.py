@@ -52,6 +52,7 @@ class SAMBrokerError(SAMExceptionBase):
 
     @property
     def get_formatted_err_message(self):
+        """The error message: the thing, the command, ``unidentified error``, then the message, if any."""
         msg = f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error."
         if self.message:
             msg += "  " + self.message
@@ -63,6 +64,7 @@ class SAMBrokerReadOnlyError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message: the thing, the command, ``read-only error``, then the message, if any."""
         msg = f"Smarter API {self.thing} manifest broker: {self.command}() read-only error."
         if self.message:
             msg += "  " + self.message
@@ -74,6 +76,7 @@ class SAMBrokerErrorNotImplemented(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message: the thing, the command, ``not implemented error``, then the message, if any."""
         msg = f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error."
         if self.message:
             msg += "  " + self.message
@@ -85,6 +88,7 @@ class SAMBrokerErrorNotReady(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message: the thing, the command, ``not ready error``, then the message, if any."""
         msg = f"Smarter API {self.thing} manifest broker: {self.command}() not ready error."
         if self.message:
             msg += "  " + self.message
@@ -96,6 +100,7 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message: the thing, the command, ``not found error``, then the message, if any."""
         msg = f"Smarter API {self.thing} manifest broker: {self.command}() not found error."
         if self.message:
             msg += "  " + self.message
@@ -107,6 +112,7 @@ class SAMBrokerErrorDependencies(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message: the thing, the command, ``dependency error``, then the message, if any."""
         msg = f"Smarter API {self.thing} manifest broker: {self.command}() dependency error."
         if self.message:
             msg += "  " + self.message
@@ -118,6 +124,7 @@ class SAMBrokerInternalError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The error message: the thing, the command, ``internal error``, then the message, if any."""
         msg = f"Smarter API {self.thing} manifest broker: {self.command}() internal error."
         if self.message:
             msg += "  " + self.message

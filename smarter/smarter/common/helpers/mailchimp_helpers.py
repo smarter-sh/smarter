@@ -1,7 +1,10 @@
 """Mailchimp API helper functions."""
 
+from typing import cast
+
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
+from pydantic import SecretStr
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
@@ -15,9 +18,16 @@ class MailchimpHelper:
     """Mailchimp API helper functions."""
 
     client = MailchimpMarketing.Client()
-    client.set_config({"api_key": smarter_settings.mailchimp_api_key.get_secret_value(), "server": MAILCHIMP_SERVER})
+    # the default and the settings validator are both a SecretStr, so the setting is never None.
+    mailchimp_api_key = cast(SecretStr, smarter_settings.mailchimp_api_key)
+    client.set_config({"api_key": mailchimp_api_key.get_secret_value(), "server": MAILCHIMP_SERVER})
 
     def ping(self) -> bool:
+        """
+        Whether the MailChimp api answers a ping.
+
+        :returns: True if it does.
+        """
         try:
             mailchimp_api_response = self.client.ping.get()
             logger.debug("Connected to MailChimp API: %s", mailchimp_api_response)
@@ -31,6 +41,12 @@ class MailchimpHelper:
         return False
 
     def add_list_member(self, email_address) -> bool:
+        """
+        Subscribe an email address to the MailChimp list, ``smarter_settings.mailchimp_list_id``.
+
+        :param email_address: The email address.
+        :returns: True if MailChimp says it is subscribed.
+        """
 
         # ------------------------------
         # Add to Mailchimp
@@ -64,9 +80,9 @@ class MailchimpHelper:
                 error.status_code,
                 error.text,
             )
+            # Never log the API key itself.
             logger.error(
-                "API key: %s, List ID: %s, Intended email addition: %s, MailChimp server: %s",
-                smarter_settings.mailchimp_api_key.get_secret_value(),
+                "List ID: %s, Intended email addition: %s, MailChimp server: %s",
                 smarter_settings.mailchimp_list_id,
                 email_address,
                 MAILCHIMP_SERVER,

@@ -29,8 +29,16 @@ class ProviderModelVerificationAdmin(admin.StackedInline):
     list_display = ["created_at", "provider_model", "verification_type", "is_successful", "is_valid"]
 
     def get_queryset(self, request):
+        """
+        Return every provider model verification to an authenticated user, and none otherwise.
+
+        :param request: The admin request.
+        :returns: The verifications queryset, or an empty queryset.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if user is None:
+            return qs.none()
         if user.is_authenticated:
             return qs
         return qs.none()
@@ -48,9 +56,17 @@ class ProviderVerificationAdmin(admin.StackedInline):
     list_display = ["created_at", "provider", "verification_type", "is_successful", "is_valid"]
 
     def get_queryset(self, request):
+        """
+        Return every provider verification to an authenticated user, and none otherwise.
+
+        :param request: The admin request.
+        :returns: The verifications queryset, or an empty queryset.
+        """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
 
+        if user is None:
+            return qs.none()
         if user.is_authenticated:
             return qs
         return qs.none()
@@ -79,6 +95,8 @@ class ProviderAdmin(SmarterCustomerModelAdmin):
         """Visibility is granted to authenticated users."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if user is None:
+            return qs.none()
         if user.is_authenticated:
             return qs
         return qs.none()
@@ -106,6 +124,8 @@ class ProviderModelAdmin(SmarterCustomerModelAdmin):
         """Visibility is granted to authenticated users."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if user is None:
+            return qs.none()
         if user.is_authenticated:
             return qs
         return qs.none()

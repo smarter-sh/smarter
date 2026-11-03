@@ -94,13 +94,22 @@ def compute_spec_to_django_orm(spec: SAMLLMHostComputeSpec) -> SmarterDictType:
 
 
 def immutable_changes(compute: LLMHostCompute, spec: SAMLLMHostComputeSpec) -> list[str]:
-    """The parts of the spec that changed, and that an existing node group cannot change: its nodes, and subnets."""
+    """
+    The parts of the spec that changed, and that an existing node group cannot change: its nodes, and subnets.
+
+    :param compute: The LLMHostCompute, with its stored spec.
+    :param spec: The spec being applied.
+    :returns: The changed paths, e.g. ``["node", "nodeGroup.subnetIds"]``, or an empty list.
+    """
     old = compute.spec or {}
     new = spec.model_dump(mode="json", exclude_none=True)
     changes = []
     if old.get("node") != new.get("node"):
         changes.append("node")
-    if (old.get("nodeGroup", {}) or {}).get("subnetIds", []) != new["nodeGroup"].get("subnetIds", []):
+    old_nodegroup = old.get("nodeGroup", {}) or {}
+    old_subnet_ids = old_nodegroup.get("subnetIds", [])
+    new_subnet_ids = new["nodeGroup"].get("subnetIds", [])
+    if old_subnet_ids != new_subnet_ids:
         changes.append("nodeGroup.subnetIds")
     return changes
 
@@ -110,6 +119,7 @@ class SAMLLMHostComputeBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter API LLMHostCompute Manifest Broker Error"
 
 
@@ -143,6 +153,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
 
     @property
     def provisioner(self) -> ComputeProvisioner:
+        """The :class:`~smarter.apps.llmhost.services.compute.ComputeProvisioner` that manages the node group, created on first use."""
         if self._provisioner is None:
             self._provisioner = ComputeProvisioner()
         return self._provisioner
@@ -268,10 +279,12 @@ class SAMLLMHostComputeBroker(AbstractBroker):
 
     @property
     def ORMMetaModelClass(self) -> Type[LLMHostCompute]:
+        """The Django model that holds an LLMHostCompute's metadata: :class:`~smarter.apps.llmhost.models.LLMHostCompute`."""
         return LLMHostCompute
 
     @property
     def ORMModelClass(self) -> Type[LLMHostCompute]:
+        """The Django model of an LLMHostCompute: :class:`~smarter.apps.llmhost.models.LLMHostCompute`."""
         return LLMHostCompute
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -385,6 +398,12 @@ class SAMLLMHostComputeBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.command_result())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: an LLMHostCompute cannot be prompted.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
@@ -475,6 +494,12 @@ class SAMLLMHostComputeBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=state.__dict__)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: undeploy the LLMHostCompute's LLMHosts instead, and its idle nodes are removed.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"Undeploy not implemented: undeploy the {self.kind}'s LLMHosts, and its idle nodes are removed.",
@@ -483,6 +508,12 @@ class SAMLLMHostComputeBroker(AbstractBroker):
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Not implemented: an LLMHostCompute has no logs.
+
+        :param request: The request.
+        :raises SAMBrokerErrorNotImplemented: always.
+        """
         command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)
 

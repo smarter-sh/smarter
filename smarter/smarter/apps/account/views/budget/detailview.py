@@ -30,6 +30,15 @@ class BudgetDetailView(DocsBaseView):
     budget: Optional[Budget] = None
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Render a Budget's manifest, from the cli ``describe`` api.
+
+        A non-superuser sees only a Budget that is attached to a resource they may see.
+
+        :param request: The request.
+        :param kwargs: ``hashed_id``, the Budget's hashed id.
+        :returns: The rendered page, or a 404 response.
+        """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 

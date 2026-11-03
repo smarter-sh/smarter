@@ -45,6 +45,12 @@ class AccountInactiveView(SmarterNeverCachedWebView):
     template_path = "account/account-inactive.html"
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Render the page that says the account is inactive.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         logger.debug(
             "%s.AccountInactiveView.get() called with request type: %s %s, args: %s, kwargs: %s",
             self.formatted_class_name,
@@ -68,6 +74,12 @@ class AccountRegisterView(SmarterNeverCachedWebView):
     template_path = "account/authentication/sign-up.html"
 
     def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
+        """
+        Render the sign-up form, or redirect a signed-in user to ``/``.
+
+        :param request: The request.
+        :returns: The rendered form, or the redirect.
+        """
         logger.debug(
             "%s.AccountRegisterView.get() called with request type: %s %s, args: %s, kwargs: %s",
             self.formatted_class_name,
@@ -85,6 +97,15 @@ class AccountRegisterView(SmarterNeverCachedWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
+        """
+        Create a User from the sign-up form, sign them in, and redirect to ``/welcome/``.
+
+        The email address is also the username. An invalid form is rendered again.
+
+        :param request: The request, with the form's data.
+        :returns: The redirect, or the rendered form.
+        :raises Exception: when the new user cannot be authenticated, which is a bug.
+        """
         logger.debug(
             "%s.AccountRegisterView.post() called with request type: %s %s, args: %s, kwargs: %s",
             self.formatted_class_name,
@@ -125,6 +146,13 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
         return self.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Email the signed-in user a link to activate their account, and render a page that says so.
+
+        :param request: The request.
+        :returns: The rendered page, with a link to resend the email, or a 404 response when no user
+            is signed in.
+        """
 
         logger.debug(
             "%s.AccountActivationEmailView.get() called with request type: %s %s, args: %s, kwargs: %s",
@@ -158,6 +186,9 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
             }
         }
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
+        if isinstance(body, HttpResponse):
+            # the template failed to render, and render_clean_html() logged why.
+            return body
         subject = _("Activate your account.")
         to = user.email
         logger.debug(
@@ -188,6 +219,14 @@ class AccountActivateView(SmarterNeverCachedWebView):
         return logging.SmarterFormattedText.text(class_name)
 
     def get(self, request, *args, **kwargs):
+        """
+        Activate the User of an account activation link, and render the welcome page.
+
+        :param request: The request.
+        :param kwargs: ``uidb64`` and ``token``, from the link.
+        :returns: The welcome page, or a 404, 400 or 403 response when the user does not exist, or the
+            token is not valid or has expired.
+        """
         logger.debug(
             "%s.AccountActivateView.get() called with request type: %s %s, args: %s, kwargs: %s",
             self.formatted_class_name,

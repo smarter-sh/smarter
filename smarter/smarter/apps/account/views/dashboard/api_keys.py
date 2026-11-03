@@ -47,6 +47,12 @@ class APIKeysView(APIKeyBase):
     template_path = "account/dashboard/api-keys.html"
 
     def get(self, request, *args, **kwargs):
+        """
+        Render the user's api keys.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         api_keys = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile)  # type: ignore[call-arg]
         api_keys = api_keys.only("user_profile", "description", "created", "last_used_at", "is_active")
         context = {
@@ -144,7 +150,13 @@ class APIKeyView(APIKeyBase):
         return http.JsonResponse({"error": "Invalid content type"}, status=HTTPStatus.BAD_REQUEST)
 
     def is_valid_uuid(self, uuid_to_test, version=4):
-        """Check if uuid_to_test is a valid UUID."""
+        """
+        Check if uuid_to_test is a valid UUID.
+
+        :param uuid_to_test: The UUID, or its string form.
+        :param version: The UUID version.
+        :returns: True if it parses as a UUID of the version, and its string form is unchanged.
+        """
         if isinstance(uuid_to_test, UUID):
             uuid_to_test = str(uuid_to_test)
         try:
@@ -199,14 +211,34 @@ class APIKeyView(APIKeyBase):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Create an api key, and redirect to its page, which shows the new key once.
+
+        :param request: The request.
+        :returns: The redirect.
+        """
         return self._handle_create(request)
 
     def patch(self, request, key_id, *args, **kwargs):
+        """
+        Update an api key from a multipart form or a json body.
+
+        :param request: The request.
+        :param key_id: The api key's id.
+        :returns: A json response.
+        """
         logger.debug("Received PATCH request: %s", request)
 
         return self._handle_write_request(request, key_id)
 
     def delete(self, request, key_id, *args, **kwargs):
+        """
+        Delete an api key that the request user owns.
+
+        :param request: The request.
+        :param key_id: The api key's id.
+        :returns: A json response: 200 or 404, or a 403 response.
+        """
         logger.debug("Received DELETE request: %s", request)
         try:
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
@@ -226,6 +258,12 @@ class APIKeyListView(APIKeyBase):
     template_path = "account/dashboard/api-keys.html"
 
     def get(self, request, *args, **kwargs):
+        """
+        Render the user's api keys.
+
+        :param request: The request.
+        :returns: The rendered template.
+        """
         api_keys = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile)  # type: ignore[call-arg]
         api_keys = api_keys.only("user_profile", "description", "created", "last_used_at", "is_active")
         context = {

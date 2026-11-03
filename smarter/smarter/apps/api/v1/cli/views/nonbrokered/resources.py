@@ -190,6 +190,7 @@ from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
 from smarter.apps.api.v1.contract.models import CliApiResource
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -202,8 +203,17 @@ class ApiV1CliResourcesApiView(CliBaseApiView):
     """Smarter API command-line interface 'resources' view."""
 
     def dictionaryize(self, sam_kind: str, deployable: bool = False) -> SmarterDictType:
+        """
+        Describe a SAM kind for the cli: its singular and plural names, and whether it is deployable.
 
+        :param sam_kind: The kind's name, in any case.
+        :param deployable: Whether the kind's broker implements deploy and undeploy.
+        :returns: A :class:`CliApiResource`, as a dict.
+        :raises SmarterValueError: If ``sam_kind`` is not a string.
+        """
         sam_kind_singular = SAMKinds.str_to_kind(sam_kind)
+        if sam_kind_singular is None:
+            raise SmarterValueError(f"Invalid SAMKinds value: {sam_kind!r}.")
         sam_kind_plural = SAMKinds.plural(sam_kind_singular)
         resource = CliApiResource(
             Singular=sam_kind_singular,
@@ -216,7 +226,11 @@ class ApiV1CliResourcesApiView(CliBaseApiView):
         return resource.model_dump(mode="json")
 
     def resources(self):
+        """
+        Return every SAM kind, described by :meth:`dictionaryize`.
 
+        :returns: The journaled response, whose data is the list of kinds.
+        """
         all_resources = []
         all_kinds = SAMKinds.all()
         for kind in all_kinds:
@@ -236,5 +250,11 @@ class ApiV1CliResourcesApiView(CliBaseApiView):
         )
 
     def post(self, request):
+        """
+        Return every SAM kind: see :meth:`resources`.
+
+        :param request: The cli's request.
+        :returns: The journaled response.
+        """
         response = self.resources()
         return response

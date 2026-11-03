@@ -471,7 +471,14 @@ __all__ = ["MetaDataModel"]
 # pylint: disable=W0613
 @receiver(m2m_changed)
 def tags_changed(sender, instance, action, **kwargs):
-    """Invalidate tags_list when the tags of a MetaDataModel instance change."""
+    """
+    Invalidate tags_list when the tags of a MetaDataModel instance change.
+
+    :param sender: The m2m through model.
+    :param instance: The instance whose many-to-many relation changed.
+    :param action: The m2m_changed action; only ``post_add``, ``post_remove`` and ``post_clear`` act.
+    :param kwargs: The rest of the signal's arguments.
+    """
     if action in ("post_add", "post_remove", "post_clear") and isinstance(instance, MetaDataModel) and instance.pk:
         # the instance's own dict, where cached_property stores tags_list. vars() is typed as a dict.
         vars(instance).pop("tags_list", None)

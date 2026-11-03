@@ -65,9 +65,20 @@ class VectorsearchView(ViewBase):
     vectorsearch_id: Optional[int] = None
 
     def get_queryset(self, *args, **kwargs):
+        """
+        The queryset of the one Vectorsearch that the request names.
+
+        :returns: A queryset holding :attr:`vectorsearch`.
+        """
         return Vectorsearch.objects.filter(id=self.vectorsearch.id)  # type: ignore[return-value]
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Remove ``hashed_id`` from the url kwargs, for :meth:`initial`, then dispatch the request.
+
+        :param request: The request.
+        :returns: The response.
+        """
         self.hashed_id = kwargs.pop("hashed_id", None)
         return super().dispatch(request, *args, **kwargs)
 
@@ -93,6 +104,14 @@ class VectorsearchView(ViewBase):
             logger.debug("%s.initial() - %s %s", self.formatted_class_name, self.vectorsearch, self.user_profile)
 
     def get(self, request: Request, vectorsearch_id: Optional[int] = None):
+        """
+        Return the Vectorsearch, serialized as a :class:`VectorsearchApiVectorsearch`.
+
+        :param request: The request.
+        :param vectorsearch_id: The Vectorsearch's id, from the url; :meth:`initial` has already found it.
+        :returns: The Vectorsearch, with ``200``.
+        :raises NotFound: when the request names no Vectorsearch.
+        """
         if self.vectorsearch:
             return Response(
                 VectorsearchApiVectorsearch.from_model(self.vectorsearch, request.user).model_dump(mode="json"),
@@ -101,14 +120,32 @@ class VectorsearchView(ViewBase):
         raise NotFound("Vectorsearch not found")
 
     def post(self, request: Request, *args, **kwargs):
+        """
+        Create a Vectorsearch from the request body's fields, then redirect to it.
+
+        :param request: The request, whose JSON body holds the Vectorsearch's fields.
+        :returns: A redirect to the new Vectorsearch's url, or ``400`` if it could not be created.
+        """
         try:
             data = request.data
+            if not isinstance(data, dict):
+                raise TypeError(f"Expected a JSON dict in request body but received {type(data)}")
             vectorsearch = Vectorsearch.objects.create(**data)
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(vectorsearch.id) + "/")  # type: ignore[return-value]
 
     def patch(self, request: Request, *args, vectorsearch_id: Optional[int] = None, **kwargs):
+        """
+        Set the Vectorsearch's attributes from the request body, save it, then redirect to it.
+
+        Keys that are not attributes of the Vectorsearch are ignored.
+
+        :param request: The request, whose JSON body is a dict of attribute values.
+        :param vectorsearch_id: The Vectorsearch's id, from the url; :meth:`initial` has already found it.
+        :returns: A redirect to the request's url; ``404`` if there is no Vectorsearch; ``400`` if the body is
+            not a dict or the Vectorsearch does not validate; ``500`` if saving fails.
+        """
         vectorsearch: Optional[Vectorsearch] = None
         data: Optional[SmarterDictType] = None
 
@@ -117,12 +154,15 @@ class VectorsearchView(ViewBase):
             return HttpResponseNotFound("Vectorsearch not found")
 
         try:
-            data = request.data
-            if not isinstance(data, dict):
+            request_data = request.data
+            if not isinstance(request_data, dict):
                 return JsonResponse(
-                    {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+                    {
+                        "error": f"Invalid request data. Expected a JSON dict in request body but received {type(request_data)}"
+                    },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+            data = request_data
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
@@ -141,6 +181,15 @@ class VectorsearchView(ViewBase):
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, *args, vectorsearch_id: Optional[int] = None, **kwargs):
+        """
+        Delete the Vectorsearch, then redirect to the parent url.
+
+        A superuser may delete any Vectorsearch by its id; other users delete the Vectorsearch that :meth:`initial` found.
+
+        :param request: The request.
+        :param vectorsearch_id: The Vectorsearch's id, from the url.
+        :returns: A redirect to the url two levels up, or ``500`` if deleting fails.
+        """
         if vectorsearch_id and self.is_superuser():
             vectorsearch = get_object_or_404(Vectorsearch, pk=vectorsearch_id)
         else:
@@ -171,6 +220,12 @@ class VectorsearchListView(ContractListMixin, ListViewBase):
     vectorsearchs: Optional[QuerySet[Vectorsearch]]
 
     def dispatch(self, request: Request, *args, **kwargs):
+        """
+        Dispatch the request, then set :attr:`vectorsearchs` to the Vectorsearchs the user may read, unless it failed.
+
+        :param request: The request.
+        :returns: The response.
+        """
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response
@@ -178,6 +233,11 @@ class VectorsearchListView(ContractListMixin, ListViewBase):
         return response
 
     def get_queryset(self, *args, **kwargs):
+        """
+        The Vectorsearchs that the user may read, ordered by name.
+
+        :returns: The queryset, with its owners and tags fetched.
+        """
         return (
             Vectorsearch.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
             .select_related("user_profile__user", "user_profile__account")

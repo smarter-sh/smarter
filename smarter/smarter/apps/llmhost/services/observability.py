@@ -79,46 +79,83 @@ class LLMHostObservation:
 
 
 def summarize_pod(pod: SmarterDictType) -> SmarterDictType:
-    """A pod's name, phase, readiness, restarts, and the reason it is not ready, if any."""
+    """
+    Summarize a pod: its name, phase, readiness, restarts, and the reason it is not ready, if any.
+
+    :param pod: The pod, as a Kubernetes API dict.
+    :returns: A dict with ``name``, ``phase``, ``ready``, ``restarts``, ``downloading`` (an init
+        container, which copies the model weights, is running) and ``reason`` (None when there is
+        nothing to report).
+    """
     status = pod.get("status", {}) or {}
     containers = status.get("containerStatuses", []) or []
     init_containers = status.get("initContainerStatuses", []) or []
     reason = None
     for container in [*init_containers, *containers]:
-        waiting = (container.get("state", {}) or {}).get("waiting")
+        name = container.get("name")
+        state = container.get("state", {}) or {}
+        waiting = state.get("waiting")
         if waiting and waiting.get("reason") not in (None, "PodInitializing", "ContainerCreating"):
-            reason = f"{container.get('name')}: {waiting.get('reason')}: {waiting.get('message', '')}".strip(": ")
+            waiting_reason = waiting.get("reason")
+            waiting_message = waiting.get("message", "")
+            reason = f"{name}: {waiting_reason}: {waiting_message}".strip(": ")
             break
-        last = (container.get("lastState", {}) or {}).get("terminated")
+        last_state = container.get("lastState", {}) or {}
+        last = last_state.get("terminated")
         if last and last.get("reason") in ("OOMKilled", "Error"):
-            reason = f"{container.get('name')}: last terminated: {last.get('reason')}"
+            reason = f"{name}: last terminated: {last.get('reason')}"
     if reason is None:
-        for condition in status.get("conditions", []) or []:
+        conditions = status.get("conditions", []) or []
+        for condition in conditions:
             if condition.get("type") == "PodScheduled" and condition.get("status") == "False":
-                reason = f"{condition.get('reason', 'Unschedulable')}: {condition.get('message', '')}".strip(": ")
-    return {
+                condition_reason = condition.get("reason", "Unschedulable")
+                condition_message = condition.get("message", "")
+                reason = f"{condition_reason}: {condition_message}".strip(": ")
+
+    ready = bool(containers) and all(c.get("ready") for c in containers)
+    restarts = sum(int(c.get("restartCount", 0) or 0) for c in containers)
+    downloading = False
+    for init_container in init_containers:
+        init_state = init_container.get("state", {}) or {}
+        if "running" in init_state:
+            downloading = True
+            break
+    summary = {
         "name": pod.get("metadata", {}).get("name"),
         "phase": status.get("phase"),
-        "ready": bool(containers) and all(c.get("ready") for c in containers),
-        "restarts": sum(int(c.get("restartCount", 0) or 0) for c in containers),
-        "downloading": any("running" in (c.get("state", {}) or {}) for c in init_containers),
+        "ready": ready,
+        "restarts": restarts,
+        "downloading": downloading,
         "reason": reason,
     }
+    return summary
 
 
 def _has_error(pod: SmarterDictType) -> Optional[str]:
     status = pod.get("status", {}) or {}
-    for container in [*(status.get("initContainerStatuses") or []), *(status.get("containerStatuses") or [])]:
-        waiting = (container.get("state", {}) or {}).get("waiting") or {}
+    init_containers = status.get("initContainerStatuses") or []
+    containers = status.get("containerStatuses") or []
+    for container in [*init_containers, *containers]:
+        state = container.get("state", {}) or {}
+        waiting = state.get("waiting") or {}
         if waiting.get("reason") in ERROR_REASONS:
-            return f"{container.get('name')}: {waiting.get('reason')}: {waiting.get('message', '')}".strip(": ")
+            name = container.get("name")
+            waiting_reason = waiting.get("reason")
+            waiting_message = waiting.get("message", "")
+            error = f"{name}: {waiting_reason}: {waiting_message}".strip(": ")
+            return error
     return None
 
 
 def _unschedulable(pod: SmarterDictType) -> Optional[str]:
-    for condition in (pod.get("status", {}) or {}).get("conditions", []) or []:
+    status = pod.get("status", {}) or {}
+    conditions = status.get("conditions", []) or []
+    for condition in conditions:
         if condition.get("type") == "PodScheduled" and condition.get("status") == "False":
-            return f"{condition.get('reason', 'Unschedulable')}: {condition.get('message', '')}".strip(": ")
+            condition_reason = condition.get("reason", "Unschedulable")
+            condition_message = condition.get("message", "")
+            message = f"{condition_reason}: {condition_message}".strip(": ")
+            return message
     return None
 
 
@@ -127,11 +164,14 @@ def interpret(deployment: Optional[SmarterDictType], pods: list[SmarterDictType]
     """
     Map an LLMHost's Deployment and pods to its status.
 
+    :param deployment: The LLMHost's Deployment, as a Kubernetes API dict, or None if it has none.
+    :param pods: The Deployment's pods, as Kubernetes API dicts.
     :returns: (status, message, desired replicas, ready replicas)
     """
     if not deployment:
         return Status.INACTIVE.value, "Not deployed.", 0, 0
-    desired = int((deployment.get("spec", {}) or {}).get("replicas", 1) or 0)
+    deployment_spec = deployment.get("spec", {}) or {}
+    desired = int(deployment_spec.get("replicas", 1) or 0)
     dstatus = deployment.get("status", {}) or {}
     ready = int(dstatus.get("readyReplicas", 0) or 0)
 
@@ -140,7 +180,11 @@ def interpret(deployment: Optional[SmarterDictType], pods: list[SmarterDictType]
             if ready == 0:
                 return Status.ERROR.value, condition.get("message", "Progress deadline exceeded."), desired, ready
 
-    errors = [e for e in (_has_error(pod) for pod in pods) if e]
+    errors = []
+    for pod in pods:
+        error = _has_error(pod)
+        if error:
+            errors.append(error)
     if desired and ready >= desired:
         return Status.ACTIVE.value, f"{ready}/{desired} replicas ready.", desired, ready
     if ready > 0:
@@ -150,7 +194,11 @@ def interpret(deployment: Optional[SmarterDictType], pods: list[SmarterDictType]
         return Status.ERROR.value, errors[0], desired, ready
     if any(summarize_pod(pod)["downloading"] for pod in pods):
         return Status.DOWNLOADING.value, "Copying the model weights to the model volume.", desired, ready
-    unschedulable = [u for u in (_unschedulable(pod) for pod in pods) if u]
+    unschedulable = []
+    for pod in pods:
+        unschedulable_reason = _unschedulable(pod)
+        if unschedulable_reason:
+            unschedulable.append(unschedulable_reason)
     if not pods or unschedulable:
         message = unschedulable[0] if unschedulable else "Waiting for pods to be created."
         return Status.PENDING.value, message, desired, ready

@@ -222,15 +222,21 @@ class PluginBase(ABC, AccountMixin):
         :type name: Optional[str]
         :param kwargs: Additional keyword arguments.
         """
-        user = kwargs.pop("user", None) or next((user for user in args if isinstance(user, User)), None)
-        user_profile = (
-            user_profile
-            or kwargs.pop("user_profile", None)
-            or next((user_profile for user_profile in args if isinstance(user_profile, UserProfile)), None)
-        )
-        account = kwargs.pop("account", None) or next(
-            (account for account in args if isinstance(account, Account)), None
-        )
+        # user, user_profile and account come from the keyword arguments, or else
+        # from the first positional argument of their type.
+        user = kwargs.pop("user", None)
+        if not user:
+            users_in_args = (arg for arg in args if isinstance(arg, User))
+            user = next(users_in_args, None)
+        if not user_profile:
+            user_profile = kwargs.pop("user_profile", None)
+        if not user_profile:
+            user_profiles_in_args = (arg for arg in args if isinstance(arg, UserProfile))
+            user_profile = next(user_profiles_in_args, None)
+        account = kwargs.pop("account", None)
+        if not account:
+            accounts_in_args = (arg for arg in args if isinstance(arg, Account))
+            account = next(accounts_in_args, None)
         AccountMixin.__init__(self, *args, user=user, user_profile=user_profile, account=account, **kwargs)
         self._api_version = api_version or self.api_version
         self._selected = selected

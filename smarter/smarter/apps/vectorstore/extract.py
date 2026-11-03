@@ -64,31 +64,59 @@ class _TextExtractor(HTMLParser):
         self._skipping = 0
 
     def handle_starttag(self, tag, attrs):
+        """
+        Start skipping a script or style, or start a new line at a block element.
+
+        :param tag: The tag's name.
+        :param attrs: The tag's attributes.
+        """
         if tag in self.SKIP:
             self._skipping += 1
         elif tag in ("p", "div", "br", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "section", "article"):
             self.parts.append("\n")
 
     def handle_endtag(self, tag):
+        """
+        Stop skipping at the end of a script or style.
+
+        :param tag: The tag's name.
+        """
         if tag in self.SKIP and self._skipping:
             self._skipping -= 1
 
     def handle_data(self, data):
+        """
+        Keep the text, unless it is inside a script or style.
+
+        :param data: The text.
+        """
         if not self._skipping:
             self.parts.append(data)
 
     @property
     def text(self) -> str:
+        """The text, unescaped, with runs of spaces and tabs collapsed, and at most one blank line in a row."""
         text = html.unescape("".join(self.parts))
-        return re.sub(r"\n\s*\n+", "\n\n", re.sub(r"[ \t]+", " ", text)).strip()
+        single_spaced = re.sub(r"[ \t]+", " ", text)
+        paragraphs = re.sub(r"\n\s*\n+", "\n\n", single_spaced)
+        return paragraphs.strip()
 
 
 def content_type_for(name: str, content_type: Optional[str] = None) -> str:
-    """The media type of a document, from its declared type, else from its name's extension."""
-    declared = (content_type or "").split(";", 1)[0].strip().lower()
+    """
+    The media type of a document, from its declared type, else from its name's extension.
+
+    :param name: The document's name, a file name or url.
+    :param content_type: The declared media type, e.g. a ``Content-Type`` header, or None.
+    :returns: The declared type, if supported, else the type of the name's extension, else the
+        guessed type, else the declared type, else ``application/octet-stream``.
+    """
+    media_type = (content_type or "").split(";", 1)[0]
+    declared = media_type.strip().lower()
     if declared in SUPPORTED_TYPES:
         return declared
-    extension = os.path.splitext(name.lower().split("?", 1)[0])[1]
+    path = name.lower().split("?", 1)[0]
+    extension = os.path.splitext(path)[1]
     if extension in EXTENSIONS:
         return EXTENSIONS[extension]
     guessed, _ = mimetypes.guess_type(name)

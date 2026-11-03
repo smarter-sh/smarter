@@ -19,8 +19,13 @@ module_prefix = __name__
 
 @receiver(post_save, sender=Orchestrator)
 def orchestrator_saved(sender, instance: Orchestrator, created: bool, **kwargs):
-    """Create the default API for the orchestrator."""
+    """
+    Log the creation or update of an Orchestrator, with its serialized data.
 
+    :param sender: The model class.
+    :param instance: The Orchestrator that was saved.
+    :param created: True if the Orchestrator was created, False if it was updated.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.orchestrator_saved()"
     data = logging.SmarterFormattedText.json(OrchestratorSerializer(instance).data)
     if created:
@@ -31,7 +36,12 @@ def orchestrator_saved(sender, instance: Orchestrator, created: bool, **kwargs):
 
 @receiver(pre_delete, sender=Orchestrator)
 def orchestrator_deleted(sender, instance: Orchestrator, **kwargs):
-    """Delete the default API for the orchestrator."""
+    """
+    Log that an Orchestrator is about to be deleted.
+
+    :param sender: The model class.
+    :param instance: The Orchestrator being deleted.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.orchestrator_deleted()"
     logger.info("%s %s", prefix, instance)
 

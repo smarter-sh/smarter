@@ -6,6 +6,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.41.3](https://github.com/smarter-sh/smarter/compare/v0.41.2...v0.41.3) (2026-11-03)
+
+### Bug Fixes
+
+* **account:** one operation per line, docstrings, and type errors ([dcad675](https://github.com/smarter-sh/smarter/commit/dcad675fa00b417f79a30a9b498df86db0bcc26a))
+* **api:** type the contract models, and regenerate the contract ([b128de5](https://github.com/smarter-sh/smarter/commit/b128de54d895bdb31d9139e339bd588e37d84350))
+* **lib:** one operation per line, docstrings, and type errors ([8ad966a](https://github.com/smarter-sh/smarter/commit/8ad966a7b9dfe644d86b6033f7d76ed657c7449a))
+* **llmclient:** one operation per line, docstrings, and type errors ([1ee6b1b](https://github.com/smarter-sh/smarter/commit/1ee6b1b0f202ca34891d207345a96904af7b7328))
+* **llmtool:** one operation per line, docstrings, and type errors ([b04a67b](https://github.com/smarter-sh/smarter/commit/b04a67b12902b8a133c798801ccdc1c68013b09f))
+* one operation per line, docstrings, and type errors in small apps ([7d5d5c0](https://github.com/smarter-sh/smarter/commit/7d5d5c0b1b9f071f3ac6209e4f167730f0736ea7))
+* **provider:** one operation per line, docstrings, and type errors ([a8fbb19](https://github.com/smarter-sh/smarter/commit/a8fbb1948ddce8b5a2d87d35dfdaf0b96aa8fa82))
+* **vectorstore:** one operation per line, docstrings, and type errors ([62f56ac](https://github.com/smarter-sh/smarter/commit/62f56aca00de97038b92a664e9257b906793e908))
+
+### Refactoring
+
+* **llmhost:** one operation per line, docstrings, and types ([ef75f02](https://github.com/smarter-sh/smarter/commit/ef75f02303e30631b0d9811d408d128ddc6b3766))
+
+## [0.41.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.41.2...v0.41.3-alpha.1) (2026-11-03)
+
+### Bug Fixes
+
+* **account:** one operation per line, docstrings, and type errors ([dcad675](https://github.com/smarter-sh/smarter/commit/dcad675fa00b417f79a30a9b498df86db0bcc26a))
+* **api:** type the contract models, and regenerate the contract ([b128de5](https://github.com/smarter-sh/smarter/commit/b128de54d895bdb31d9139e339bd588e37d84350))
+* **lib:** one operation per line, docstrings, and type errors ([8ad966a](https://github.com/smarter-sh/smarter/commit/8ad966a7b9dfe644d86b6033f7d76ed657c7449a))
+* **llmclient:** one operation per line, docstrings, and type errors ([1ee6b1b](https://github.com/smarter-sh/smarter/commit/1ee6b1b0f202ca34891d207345a96904af7b7328))
+* **llmtool:** one operation per line, docstrings, and type errors ([b04a67b](https://github.com/smarter-sh/smarter/commit/b04a67b12902b8a133c798801ccdc1c68013b09f))
+* one operation per line, docstrings, and type errors in small apps ([7d5d5c0](https://github.com/smarter-sh/smarter/commit/7d5d5c0b1b9f071f3ac6209e4f167730f0736ea7))
+* **provider:** one operation per line, docstrings, and type errors ([a8fbb19](https://github.com/smarter-sh/smarter/commit/a8fbb1948ddce8b5a2d87d35dfdaf0b96aa8fa82))
+* **vectorstore:** one operation per line, docstrings, and type errors ([62f56ac](https://github.com/smarter-sh/smarter/commit/62f56aca00de97038b92a664e9257b906793e908))
+
+### Refactoring
+
+* **llmhost:** one operation per line, docstrings, and types ([ef75f02](https://github.com/smarter-sh/smarter/commit/ef75f02303e30631b0d9811d408d128ddc6b3766))
+
 ## [0.41.2](https://github.com/smarter-sh/smarter/compare/v0.41.1...v0.41.2) (2026-11-03)
 
 ### Bug Fixes

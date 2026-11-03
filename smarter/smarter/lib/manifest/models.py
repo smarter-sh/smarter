@@ -108,6 +108,12 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
 
     @model_validator(mode="before")
     def coerce_none_strings(cls, data):
+        """
+        Replace the strings ``"None"`` and ``""`` with None in the raw input, before validation.
+
+        :param data: The raw input; only a dict is changed, in place.
+        :returns: The input.
+        """
         if isinstance(data, dict):
             for k, v in data.items():
                 if v in ("None", ""):

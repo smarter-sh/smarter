@@ -83,12 +83,26 @@ class AccountUnsubscribeView(SmarterNeverCachedWebView):
         )
 
     def get(self, request, *args, **kwargs):
+        """
+        Render the page that asks to confirm the unsubscribe, or says it is done.
+
+        :param request: The request.
+        :param kwargs: ``token``, which holds the email address.
+        :returns: The page, or a 400 response for an invalid token.
+        """
         email = self.email_address(kwargs.get("token", ""))
         if email is None:
             return self.bad_link(request)
         return self.render(request, email, unsubscribed=AccountContact.unsubscribed_at_of(email) is not None)
 
     def post(self, request, *args, **kwargs):
+        """
+        Unsubscribe the email address of the token.
+
+        :param request: The request.
+        :param kwargs: ``token``, which holds the email address.
+        :returns: The page that says it is unsubscribed, or a 400 response for an invalid token.
+        """
         email = self.email_address(kwargs.get("token", ""))
         if email is None:
             return self.bad_link(request)

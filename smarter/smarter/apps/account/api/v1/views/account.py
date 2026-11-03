@@ -37,6 +37,15 @@ class AccountView(AccountViewBase):
     """
 
     def get(self, request: Request, account_id: int):
+        """
+        Return an Account as json.
+
+        :param request: The request.
+        :param account_id: The Account's id. Only a superuser may read another Account; anyone else gets
+            the Account of their own UserProfile.
+        :returns: The :class:`AccountApiAccountDetail` of the Account.
+        :raises PermissionDenied: when a non-superuser has no UserProfile.
+        """
         logger.debug("%s.get() called with account_id: %s", self.formatted_class_name, account_id)
         if account_id and request.user.is_superuser:  # type: ignore
             account = get_object_or_404(Account, pk=account_id)
@@ -48,6 +57,14 @@ class AccountView(AccountViewBase):
 
     # pylint: disable=W0613
     def post(self, request: Request, account_id: Optional[int] = None):
+        """
+        Create an Account from the json dict in the request body.
+
+        :param request: The request, whose body holds the Account's fields.
+        :param account_id: Unused.
+        :returns: A redirect to the new Account's url, or a 400 response when the body is not a json
+            dict or the Account cannot be created.
+        """
         logger.debug("%s.post() called with data: %s", self.formatted_class_name, request.data)
         try:
             data = request.data
@@ -71,6 +88,16 @@ class AccountView(AccountViewBase):
         return HttpResponseRedirect(request.path_info + str(account.id) + "/")  # type: ignore
 
     def patch(self, request: Request, account_id: int):
+        """
+        Update an Account's fields from the json dict in the request body, and save it.
+
+        Keys that are not attributes of the Account are ignored.
+
+        :param request: The request, whose body holds the fields to change.
+        :param account_id: The Account's id.
+        :returns: The response: 404 when the Account does not exist, 400 when the body or the new values
+            are not valid.
+        """
         logger.debug("%s.patch() called for account_id: %s", self.formatted_class_name, account_id)
         account: Account
 
@@ -119,6 +146,14 @@ class AccountView(AccountViewBase):
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request, account_id: int):
+        """
+        Delete an Account.
+
+        :param request: The request.
+        :param account_id: The Account's id.
+        :returns: A redirect to ``/``, or a 500 response when the delete fails.
+        :raises Http404: when the Account does not exist.
+        """
         logger.debug("%s.delete() called with account_id: %s", self.formatted_class_name, account_id)
         account: Account
         account = get_object_or_404(Account, pk=account_id)
@@ -141,6 +176,11 @@ class AccountListView(ContractListMixin, AccountListViewBase):
     contract_model = AccountApiAccountDetail
 
     def get_queryset(self):
+        """
+        Return every Account for a superuser, and none for anyone else.
+
+        :returns: The queryset.
+        """
         logger.debug("%s.get_queryset() called", self.formatted_class_name)
         if self.is_superuser():
             return Account.objects.all()

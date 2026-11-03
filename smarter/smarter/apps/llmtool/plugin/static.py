@@ -337,18 +337,24 @@ class StaticPlugin(PluginBase):
         # recast the Pydantic model to the PluginDataStatic Django ORM model
         if not self._manifest:
             return None
+        # the description is presented to the LLM as the tool description. it is
+        # metadata.description of the manifest. spec.data.description would be redundant.
+        metadata = self._manifest.metadata
+        if metadata and metadata.description:
+            description = metadata.description
+        elif self.plugin_meta:
+            description = self.plugin_meta.description
+        else:
+            description = ""
+        spec = self._manifest.spec
+        if spec and spec.data:
+            static_data = spec.data.staticData
+        else:
+            static_data = None
         return {
             "plugin": self.plugin_meta,
-            # the description is presented to the LLM as the tool description. it is
-            # metadata.description of the manifest. spec.data.description would be redundant.
-            "description": (
-                self._manifest.metadata.description
-                if self._manifest.metadata and self._manifest.metadata.description
-                else self.plugin_meta.description if self.plugin_meta else ""
-            ),
-            "static_data": (
-                self._manifest.spec.data.staticData if self._manifest.spec and self._manifest.spec.data else None
-            ),
+            "description": description,
+            "static_data": static_data,
         }
 
     @property
@@ -425,11 +431,13 @@ class StaticPlugin(PluginBase):
         """
         if not self.ready:
             return None
-        description = (
-            (self.plugin_data.description if self.plugin_data else None)
-            or (self.plugin_meta.description if self.plugin_meta else None)
-            or "Static Plugin"
-        )
+        description = None
+        if self.plugin_data:
+            description = self.plugin_data.description
+        if not description and self.plugin_meta:
+            description = self.plugin_meta.description
+        if not description:
+            description = "Static Plugin"
         inquiry_type: SmarterDictType = {"type": "string"}
         if self.inquiry_types:
             inquiry_type["enum"] = self.inquiry_types

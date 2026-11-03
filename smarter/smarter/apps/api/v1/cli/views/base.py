@@ -76,6 +76,7 @@ class APIV1CLIViewError(SmarterException):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter api v1 command-line interface error"
 
 
@@ -84,6 +85,7 @@ class SmarterAPIV1CLIViewErrorNotAuthenticated(APIV1CLIViewError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter api v1 command-line interface error: not authenticated"
 
 
@@ -92,6 +94,7 @@ class APIV1CLIViewBadRequestError(APIV1CLIViewError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter api v1 command-line interface error: bad request"
 
 
@@ -100,6 +103,7 @@ class APIV1CLIViewNotFoundError(APIV1CLIViewError):
 
     @property
     def get_formatted_err_message(self):
+        """The heading of this error's message."""
         return "Smarter api v1 command-line interface error: not found"
 
 
@@ -534,7 +538,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
         # - http://testserver/api/v1/cli/prompt/config/TestLLMClient/
         if not self._manifest_kind:
-            self._manifest_kind = SAMKinds.from_url(self.url)
+            url = self.url
+            # from_url() raises TypeError on None, so a request without a url has no kind.
+            if url is not None:
+                self._manifest_kind = SAMKinds.from_url(url)
             if self._manifest_kind:
                 logger.warning(
                     "%s.manifest_kind() setting manifest kind to %s from analysis of url %s",

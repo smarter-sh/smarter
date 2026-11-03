@@ -53,6 +53,21 @@ class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
         is_active: bool = True,
         **kwargs,
     ) -> tuple["SmarterAuthToken", str]:
+        """
+        Create and save a new API key for a user.
+
+        Only the token's digest is stored; the token itself is returned once, here.
+
+        :param user: The user who owns the key; must be staff.
+        :param expiry: How long the key is valid, as a timedelta, or None for no expiry.
+        :param prefix: An optional prefix for the token string.
+        :param name: The key's name.
+        :param description: The key's description.
+        :param is_active: Whether the key is active.
+        :param kwargs: More model fields.
+        :returns: A tuple of the saved key and the plain token.
+        :raises SmarterBusinessRuleViolation: If the user is not staff.
+        """
         prefix = prefix or ""
         token = prefix + crypto.create_token_string()
         token_key = token[: CONSTANTS.TOKEN_KEY_LENGTH]
@@ -182,8 +197,10 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         except (ValueError, cls.DoesNotExist):
             return None
 
+    # TimestampedModel declares id as an int, the primary key of a normal row. This token's id is
+    # deliberately its key_id string, so the override is intended.
     @property
-    def id(self) -> str:  # pylint: disable=invalid-name
+    def id(self) -> str:  # pylint: disable=invalid-name  # pyright: ignore[reportIncompatibleVariableOverride]
         """
         Returns the token's public identifier, its key_id, as a string.
 
@@ -262,6 +279,13 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         )
 
     def save(self, *args, **kwargs):
+        """
+        Save the API key, setting ``created`` if unset and converting ``name`` to snake_case.
+
+        :param args: Passed to Django's ``save()``.
+        :param kwargs: Passed to Django's ``save()``.
+        :raises SmarterBusinessRuleViolation: If the key's user is not staff.
+        """
         if not self.user.is_staff:
             raise SmarterBusinessRuleViolation("API Keys can only be created for staff users.")
         if self.created is None:

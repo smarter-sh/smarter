@@ -16,10 +16,21 @@ class Command(SmarterCommand):
     )
 
     def add_arguments(self, parser):
+        """
+        Add the ``path`` and ``--output`` arguments.
+
+        :param parser: The command's argument parser.
+        """
         parser.add_argument("path", type=str, help="The extension's source directory, which holds its pyproject.toml.")
         parser.add_argument("--output", type=str, default=".", help="The directory to write the archive to.")
 
     def handle(self, *args, **options):
+        """
+        Build the archive from the source directory, write it to the output directory, and print its path and sha256.
+
+        :param args: Unused.
+        :param options: The parsed command line options.
+        """
         self.handle_begin()
         source, output = Path(options["path"]), Path(options["output"])
         try:

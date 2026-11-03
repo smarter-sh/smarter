@@ -287,6 +287,12 @@ class LLMClientHelper(SmarterRequestMixin):
 
     @llmclient_id.setter
     def llmclient_id(self, llmclient_id: int):
+        """
+        Set the LLMClient id, checking that the LLMClient belongs to the helper's account.
+
+        :param llmclient_id: The id of the LLMClient.
+        :raises SmarterValueError: if the LLMClient's account is not ``self.account``.
+        """
         self._llmclient_id = llmclient_id
         llmclient = LLMClient.get_cached_object(pk=llmclient_id)
         if llmclient and llmclient.user_profile.cached_account != self.account:
@@ -490,6 +496,7 @@ class LLMClientHelper(SmarterRequestMixin):
 
     @property
     def is_deployed(self) -> bool:
+        """True if the helper has an LLMClient and it is deployed."""
         return self.llmclient.deployed if self.llmclient else False  # type: ignore[return-value]
 
     @cached_property

@@ -19,7 +19,20 @@ class LLMJudgeStrategy(BaseGuardrailStrategy):
     """Match a text segment by asking an LLM to judge it."""
 
     def evaluate(self, *, segment, guardrail, context: StrategyContext) -> StrategyMatch:
-        """Render the judge prompt for the segment, and run it."""
+        """
+        Render the judge prompt for the segment, and run it.
+
+        Calls the Guardrail's LLM provider.
+
+        :param segment: The text segment.
+        :param guardrail: The Guardrail, which supplies the strategy's configuration.
+        :param context: Ambient evaluation context. Unused.
+        :returns: A match that is triggered when the judge says so with at least the Guardrail's
+            threshold of confidence.
+        :raises GuardrailConfigError: when ``judgePrompt`` has no ``{text}`` placeholder, or is not a
+            valid template.
+        :raises GuardrailProviderError: when the judge call fails.
+        """
         template = guardrail.settings.get("judgePrompt") or ""
         if "{text}" not in template:
             raise GuardrailConfigError(

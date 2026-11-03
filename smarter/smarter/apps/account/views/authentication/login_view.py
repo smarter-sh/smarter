@@ -59,6 +59,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     @property
     def formatted_class_name(self):
+        """The class name, formatted for log messages."""
         return f"{logging.SmarterFormattedText.text(__name__)}.{LoginView.__name__}"
 
     @property
@@ -178,6 +179,14 @@ class LoginView(SmarterNeverCachedWebView):
         return False
 
     def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
+        """
+        Render the login form, or redirect a signed-in user to ``/``.
+
+        The form shows the Google and GitHub buttons, sign-up and footer links per their settings and switches.
+
+        :param request: The request.
+        :returns: The rendered form, or the redirect.
+        """
         logger.debug(
             "%s.LoginView.get() called with request type: %s %s", self.formatted_class_name, type(request), request
         )
