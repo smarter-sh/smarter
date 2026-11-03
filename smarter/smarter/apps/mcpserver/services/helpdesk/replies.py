@@ -124,7 +124,10 @@ REPLY_RULES: tuple[ReplyRule, ...] = (
         "It tells whether an address has an account, which lets anyone find out who uses the platform.",
     ),
 )
-"""The rules of what a reply must not contain, beyond the Guardrail detectors, in the order they are checked."""
+"""The rules of what a reply must not contain, beyond the Guardrail detectors, in the order they are checked.
+
+:meta hide-value:
+"""
 
 DETECTOR_REASONS: dict[str, str] = {
     SAMGuardrailDetector.EMAIL.value: "Email addresses other than the requester's are another person's data.",
