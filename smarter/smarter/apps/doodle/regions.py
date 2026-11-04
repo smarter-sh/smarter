@@ -11,6 +11,7 @@ The regions are coarse on purpose: each one is a doodle to plan every day.
 
 import datetime
 import importlib.resources
+from functools import lru_cache
 from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -204,22 +205,28 @@ def local_date(tz: Optional[str], now: Optional[datetime.datetime] = None) -> da
     return local_now.date()
 
 
-def region_countries(region: str) -> list[str]:
+@lru_cache(maxsize=32)
+def region_countries(region: str) -> tuple[str, ...]:
     """
     Return the countries of a region, by their time zones.
+
+    It is a pure function of the tz database, which the editor asks again for every region of
+    every day, so its answers are kept for the life of the process.
 
     :param region: The region.
     :returns: The ISO 3166 country codes whose time zones belong to the region, sorted. Empty for
         :attr:`DoodleRegion.GLOBAL`, which is no country's.
-    :rtype: list[str]
+    :rtype: tuple[str, ...]
     """
     countries = set()
     if region == DoodleRegion.GLOBAL:
-        return []
+        return ()
     for zone, country in ZONE_COUNTRIES.items():
         if region_for_timezone(zone) == region:
             countries.add(country)
-    return sorted(countries)
+    # a tuple, so that no caller can change the cached answer.
+    found = tuple(sorted(countries))
+    return found
 
 
 def theme_applies_to(regions: list[str], region: str) -> bool:

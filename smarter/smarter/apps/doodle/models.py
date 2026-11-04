@@ -184,7 +184,10 @@ class Doodle(TimestampedModel):
         :rtype: Optional[Doodle]
         """
         doodles = cls.objects.filter(date=date, region=region, status=DoodleStatus.APPROVED)
-        doodle = doodles.select_related("theme", "artwork").first()
+        doodles = doodles.select_related("theme", "artwork")
+        # the doodle of the day names its artwork by hash: the SVG text is served on its own.
+        doodles = doodles.defer("theme__props_svg", "artwork__svg")
+        doodle = doodles.first()
         return doodle
 
 
