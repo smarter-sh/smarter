@@ -29,7 +29,10 @@
   Python SDK <https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__, on the typed
   Python client for the same API; `Getting Started with Smarter's CLI
   <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__, on applying, prompting and
-  deploying a chatbot from its manifest. The case studies `One Contract, Five Clients
+  deploying a chatbot from its manifest; `How to Build a Smarter Extension in Python With
+  Cookiecutter <https://blog.smarter.sh/2026/11/01/smarter-extension-cookiecutter-how-to/>`__, a
+  step-by-step tutorial that generates, tests and releases a new Extension from the official
+  template. The case studies `One Contract, Five Clients
   <https://smarter.sh/case-studies/api-contract>`__, on that contract, its code generation and
   semantic versions, and `The Smarter Project MCP Server
   <https://smarter.sh/case-studies/mcp-server>`__, on designing tools, results and errors for an
