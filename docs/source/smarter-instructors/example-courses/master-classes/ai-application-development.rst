@@ -75,7 +75,14 @@ Source Code*.
 :doc:`/smarter-resources/smarter-secret`, :doc:`/smarter-resources/smarter-proxy`,
 :doc:`/smarter-resources/smarter-guardrail`, :doc:`ADR 008 </adr/008-function-calling>`, :doc:`ADR
 031 </adr/031-pydantic-over-json>`, `Django and httpx: An LLM Proxy That Keeps Provider API Keys
-Away From Callers <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__.
+Away From Callers <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, `Build a
+Slack Bot With a Smarter LLMClient
+<https://blog.smarter.sh/2026/10/31/slack-bot-llmclient-kubernetes/>`__, `Introducing the Smarter
+MCP Server <https://blog.smarter.sh/2026/10/30/what-is-an-mcp-server/>`__, `How Smarter's MCP Server
+Searches Its Own Code, Documentation and Blog
+<https://blog.smarter.sh/2026/11/01/smarter-project-mcp-server-design/>`__, `Smarter's MCP Server
+Gives Sysadmins Live Platform Diagnostics in a Chat
+<https://blog.smarter.sh/2026/11/03/smarter-operations-mcp-server/>`__.
 
 **Exercises.**
 

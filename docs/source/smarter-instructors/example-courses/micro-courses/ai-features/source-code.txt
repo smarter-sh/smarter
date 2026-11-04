@@ -1,0 +1,257 @@
+Every lecture, lab and assignment in this course rests on the files and commits below. Every
+reference is to the ``main`` branch of `github.com/smarter-sh/smarter
+<https://github.com/smarter-sh/smarter>`__, unless another repository is named, so that students
+can open each one during class. Python paths are under ``smarter/smarter/``. The case that runs
+through the course is the web console's Doodle, the illustration on the sign-in page that two
+Smarter LLMClients choose and draw each day, described in `How Two Smarter LLMClients Create the
+Sign-in Page's Daily Doodle <https://blog.smarter.sh/2026/11/04/smarter-doodle-llm-editor-artist/>`__
+and in :doc:`/smarter-framework/developer-reference/react-integration/doodle`.
+
+The Feature Without the AI
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The app's map
+     - The Doodle is an ordinary Django app. Its package docstring lists each module: regions,
+       schedules, the catalog, the planner, the editor, the sanitizer, caching and the api.
+     - `apps/doodle/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/doodle>`__,
+       `__init__.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/__init__.py>`__
+   * - The catalog
+     - Nineteen occasions with artwork drawn and reviewed ahead of time, each a short YAML file
+       and an SVG of its decorations. A date is fixed, the nth weekday of a month, or a country's
+       holiday by name, worked out by the ``holidays`` package. ``themes.py`` validates every
+       file before it saves any.
+     - `data/themes/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/doodle/data/themes>`__,
+       `README.md <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/data/themes/README.md>`__,
+       `schedule.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/schedule.py>`__,
+       `themes.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/themes.py>`__
+   * - Regions
+     - The browser sends its time zone and nothing else. Smarter maps it to one of 12 regions and
+       the visitor's local date. No IP address is looked up, and nothing about the visitor is
+       stored.
+     - `regions.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/regions.py>`__
+   * - The planner
+     - The calendar alone chooses each region's doodle a week ahead: the due theme of the highest
+       priority, or the default. A doodle that a person chose is never replanned. This is the
+       safe answer that the AI parts improve on, and fall back to.
+     - `planner.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/planner.py>`__
+   * - The models
+     - ``DoodleArtwork`` stores an SVG under its SHA-256. ``Doodle`` is one region's doodle of one
+       day, with its status, its source (calendar, default, human or LLM) and its reason.
+       ``DoodleEditorRun`` keeps every prompt to the editor, its answer and its refusals.
+     - `models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/models.py>`__
+   * - The schedule
+     - A Celery task plans the doodles every six hours from Celery Beat, then asks the editor about
+       new days. ``manage.py plan_doodles --editor`` does the same by hand.
+     - `tasks.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/tasks.py>`__,
+       `celerybeat.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__,
+       `plan_doodles.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/management/commands/plan_doodles.py>`__
+
+AI Resources as Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The editor
+     - An LLMClient manifest: a model, a temperature of 0.2, a long system prompt that describes
+       the request and the answer, example prompts that are real requests, and two output
+       Guardrails. Its taste is configuration, changed by editing YAML, not by a release.
+       :doc:`/smarter-resources/smarter-llmclient`.
+     - `llmclient-smarter-doodle-editor.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-smarter-doodle-editor.yaml>`__
+       (example-manifests)
+   * - The artist
+     - A second LLMClient, at temperature 0.6, whose system prompt describes the base scene in
+       coordinates, the palette, a limit on shapes, and what it must never draw.
+     - `llmclient-smarter-doodle-artist.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-smarter-doodle-artist.yaml>`__
+       (example-manifests),
+       `base.svg <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/static/doodle/base.svg>`__
+   * - Output Guardrails
+     - The editor's answer passes OpenAI's moderation model and a Guardrail that strips a stray
+       code fence so the JSON parses. :doc:`/smarter-resources/smarter-guardrail`.
+     - `json-code-fence-output.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/guardrails/json-code-fence-output.yaml>`__,
+       `moderation-output.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/guardrails/moderation-output.yaml>`__
+       (example-manifests)
+   * - Staff only
+     - ``staffOnly: true`` hides an LLMClient from everyone but the platform's staff, who can
+       still open it in the workbench and try it by hand.
+     - `llmclient-smarter-doodle-editor.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-smarter-doodle-editor.yaml>`__
+       (example-manifests)
+   * - Prompting from code
+     - The platform prompts its own LLMClients through the chat api, as any client would.
+       ``single_use_api_key()`` creates an api key and always deletes it, ``prompt_llmclient()``
+       sends one prompt in a new session and validates the result, and ``assistant_text()``
+       returns the answer. The journal and the account's cost accounting see every prompt.
+     - `prompting.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/prompting.py>`__
+   * - Extracted, not copied
+     - ``verify_stackademy`` had the same logic first. When the Doodle needed it, it was moved to
+       ``prompting.py`` and both use it. :doc:`ADR 033 </adr/033-dry>`.
+     - `verify_stackademy.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/management/commands/verify_stackademy.py>`__
+   * - Finding the resources
+     - ``smarter_llmclient()`` returns the editor or the artist, or ``None`` when the example
+       manifests aren't loaded, in which case the calendar does the whole job.
+     - `editor.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/editor.py>`__
+
+Trust Nothing the Model Says
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - A menu, not a blank page
+     - ``editor_request()`` builds a JSON document that lists, for each region, exactly what the
+       editor may choose: the catalog's due themes, the region's other holidays, and its trends.
+       ``default`` is always a safe choice.
+     - `editor.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/editor.py>`__
+   * - The contract with the model
+     - Pydantic models describe the request (``DoodleEditorRequest``) and the answer
+       (``DoodleEditorAnswer``, ``DoodleEditorDecision``), with a ``reason`` for every choice.
+       ``parse_answer()`` refuses anything that doesn't validate. :doc:`ADR 031
+       </adr/031-pydantic-over-json>`.
+     - `editor.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/editor.py>`__
+   * - Every choice checked again
+     - ``check_decision()`` enforces in code what the system prompt asks: the choice must be on
+       the region's menu, of an allowed category, with a short caption and alt text, and a
+       Wikipedia link or none. A refused choice is recorded, and the region keeps the calendar's
+       doodle.
+     - `editor.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/editor.py>`__
+   * - Blocked topics
+     - ``has_blocked_word()`` refuses mourning, war, politics, accidents, crimes and the like, with
+       the same language matching as the Plugins' selectors: plurals, typos and WordNet synonyms,
+       never a word inside another.
+     - `editor.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/editor.py>`__,
+       `nlp.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/nlp.py>`__
+   * - Inputs filtered before the model
+     - Trends come from Wikipedia's most viewed articles. ``region_trends()`` drops people, dates
+       and blocked words, and keeps only articles whose English description names an occasion,
+       an allowlist. They are fetched with the Plugins' hardened HTTP client and cached for 12
+       hours.
+     - `trends.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/trends.py>`__,
+       `safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__
+
+Judges, Sanitizers and People
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - A judge of tone
+     - Word lists can't tell sad news from a festival. ``upbeat_occasion_input`` is an
+       ``llm_judge`` Guardrail that asks a small model whether an occasion is plainly cheerful.
+     - `upbeat-occasion-input.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/guardrails/upbeat-occasion-input.yaml>`__
+       (example-manifests),
+       `llm_judge_strategy.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/llm_judge_strategy.py>`__
+   * - Failing closed
+     - ``tone_check()`` declines an occasion when the judge says no, when it fails, and when the
+       Guardrail doesn't exist on the platform.
+     - `editor.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/editor.py>`__
+   * - Asking a Guardrail directly
+     - ``evaluate()`` runs one Guardrail on one text and returns whether it triggered, without a
+       chat. ``tone_check()`` calls it in-process, and the Guardrail api's evaluate view calls it
+       over HTTP.
+     - `guardrail/api/v1/views/views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/api/v1/views/views.py>`__
+   * - Models that differ
+     - A model that rejects a parameter, as one rejects the judge's temperature, is retried once
+       without it. The chat provider and the judge share one list of such quirks.
+     - `model_quirks.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/openai/model_quirks.py>`__,
+       `clients.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/strategies/clients.py>`__
+   * - Generated markup
+     - The artist's SVG is untrusted. The sanitizer keeps an allowlist of shapes and attributes,
+       strips handlers, links, ids, ``url()``, ``javascript:`` and ``data:``, limits CSS to the
+       drawing's own prefixed classes, and caps its size.
+     - `sanitize.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/sanitize.py>`__,
+       `artwork.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/artwork.py>`__
+   * - Two locks on one door
+     - The page shows artwork with ``<img>``, in which a browser runs no scripts, and the artwork's
+       url sends a sandboxing Content-Security-Policy and ``nosniff``.
+     - `views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/api/v1/views.py>`__
+   * - A person decides
+     - A drawing is saved as proposed. In the Django admin, *Preview the week* shows every
+       region's doodle for every planned day, with who chose it and the editor's reason, and
+       Approve and Reject buttons. Doodle Editor Runs are the paper trail.
+     - `admin.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/admin.py>`__
+   * - Switches
+     - The editor, the artwork, the trends and the credit each have a waffle switch.
+       ``enable_doodle_auto_approve``, which skips review, is off by default.
+     - `switches.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/waffle/switches.py>`__
+
+Into the Product
+~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Topic
+     - What Smarter does
+     - Where to look
+   * - The api
+     - ``GET /api/v1/doodles/today/?tz=`` returns the day's doodle as a Pydantic contract, with
+       ``aiCredit`` and ``learnHowUrl``. Caching falls back from the region's approved doodle to
+       the calendar's choice, so a drawing that awaits approval never leaves a gap.
+     - `contract/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/contract/models.py>`__,
+       `caching.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/caching.py>`__
+   * - The page
+     - A small React app that Django hosts shows the doodle, its caption, and "Chosen by" or
+       "Drawn by a Smarter AI application" with a link that explains how.
+       :doc:`/smarter-framework/developer-reference/react-integration`.
+     - `smarter-doodle/src/App.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-doodle/src/App.tsx>`__,
+       `react_doodle.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/templatetags/react_doodle.py>`__
+   * - Testing with the models patched
+     - The editor's and artist's answers are patched in tests, with a test for every refusal and
+       every failure. The app has well over a hundred tests.
+     - `test_editor.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/tests/test_editor.py>`__
+   * - Dangerous input on file
+     - The sanitizer is tested against saved drawings, one safe, one crowded, one empty and one
+       dangerous; trends against saved Wikimedia responses, so no test needs the network.
+     - `tests/data/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/doodle/tests/data>`__,
+       `test_sanitize.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/tests/test_sanitize.py>`__,
+       `test_trends.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/tests/test_trends.py>`__
+
+The Doodle in the History
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Doodle was built in three phases, each a commit whose body explains what it adds, how it was
+tested and what it ran into, so students can watch an AI feature grow from a calendar.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Commit
+     - Why it is worth studying
+     - Where to look
+   * - Phase 1: a calendar
+     - The whole feature with no LLM at all: regions, schedules, the catalog, the planner, the api,
+       the React app and the switches. The safe answer comes first.
+     - `commit 0df9280ff <https://github.com/smarter-sh/smarter/commit/0df9280ff18c1155b6d1b8111a35dd42ec6d3302>`__
+   * - Phase 2: an editor and an artist
+     - Two LLMClients, the prompting helpers extracted from ``verify_stackademy``, the checks, the
+       sanitizer, the editor runs and the admin's Approve and Reject. Its body records what the
+       models did when they were run for real.
+     - `commit d07b91f67 <https://github.com/smarter-sh/smarter/commit/d07b91f677ff0b8428ac36c62be9b5670f7492b1>`__
+   * - Phase 3: trends and a judge
+     - Wikipedia trends, the tone check that fails closed, and a fix to every ``llm_judge``
+       Guardrail on a model that rejected its temperature.
+     - `commit 2e6cb0806 <https://github.com/smarter-sh/smarter/commit/2e6cb0806c126bcdf064f278d785f2901665aaa8>`__
+   * - Credit where it's due
+     - The "Learn how" link under an AI-chosen doodle points to the article that explains it.
+     - `commit f00ac5cac <https://github.com/smarter-sh/smarter/commit/f00ac5cac5fb7d16859c239a9cbae491c428c6c7>`__

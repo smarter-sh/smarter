@@ -64,7 +64,13 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 LLM Proxy That Keeps Provider API Keys Away From Callers
 <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, `Smarter's Ownership Model: One
 Base Class for Owning, Sharing and Tracking AI Resources
-<https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__.
+<https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__, `How Smarter's
+Kubernetes-Style Annotations Trace Every Resource to Its GitHub Commit
+<https://blog.smarter.sh/2026/10/31/sam-annotations-github-provenance/>`__, `How Two Smarter
+LLMClients Create the Sign-in Page's Daily Doodle
+<https://blog.smarter.sh/2026/11/04/smarter-doodle-llm-editor-artist/>`__, a case of human review,
+an audit trail and disclosure for AI output that everyone sees. The
+:doc:`ai-features` course teaches developers to build such a feature.
 
 **Exercises.**
 

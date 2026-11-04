@@ -65,7 +65,9 @@ Each course plan lists every file that it uses under *Smarter in the Source Code
 :doc:`/smarter-framework/extensions/developer-guide`, :doc:`/smarter-platform/extensions`,
 :doc:`/smarter-resources/llmtool/how-tools-work`, `Smarter's OpenAPI Contract: One Extensibility
 Model for Python, Go, React and VS Code
-<https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__.
+<https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, `How to Build a Smarter Extension
+in Python With Cookiecutter
+<https://blog.smarter.sh/2026/11/01/smarter-extension-cookiecutter-how-to/>`__.
 
 **Exercises.**
 
