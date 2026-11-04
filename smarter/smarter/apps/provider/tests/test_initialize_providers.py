@@ -55,6 +55,10 @@ class TestInitializeProviders(TestAccountMixin):
         for patcher in (
             patch.object(initialize_providers, "HERE", Path(tmp.name)),
             patch.dict(os.environ, {ENV_VAR: "sk-test-initialize"}),
+            # creating a ProviderModel queues verify_provider_model. Celery is not eager in tests, so,
+            # unpatched, it runs in the live worker, which writes ProviderModelVerifications while the
+            # cleanup deletes the provider, and the delete fails on their foreign key.
+            patch("smarter.apps.provider.tasks.verify_provider_model"),
         ):
             patcher.start()
             self.addCleanup(patcher.stop)
