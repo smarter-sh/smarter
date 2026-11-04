@@ -55,7 +55,11 @@ def handle_mcpserver_tool_called(
     sender, server: str, tool_name: str, arguments: dict, is_error: bool, characters: int, **kwargs
 ):
     """
-    Log a call to one of the MCPServer's tools, with its arguments and the length of its result.
+    Log a call to one of the MCPServer's tools, with its argument names and the length of its result.
+
+    The argument values are logged at DEBUG only. They are whatever the caller sent, and the public
+    endpoint is open to anyone: a search query, an issue's body, or a pull request's author and
+    files may hold personal data or a credential, which must not reach the INFO log.
 
     :param sender: The class that sent the signal.
     :param server: The server's name.
@@ -65,7 +69,7 @@ def handle_mcpserver_tool_called(
     :param characters: The length of the tool's result.
     :param kwargs: The signal's other arguments, which are ignored.
     """
-    formatted_arguments = logging.SmarterFormattedText.json(arguments)
+    argument_names = ", ".join(arguments.keys())
     if is_error:
         outcome = ", an error"
     else:
@@ -75,9 +79,17 @@ def handle_mcpserver_tool_called(
         logger_prefix,
         server,
         tool_name,
-        formatted_arguments,
+        argument_names,
         characters,
         outcome,
+    )
+    formatted_arguments = logging.SmarterFormattedText.json(arguments)
+    logger.debug(
+        "%s.handle_mcpserver_tool_called() %s %s arguments: %s",
+        logger_prefix,
+        server,
+        tool_name,
+        formatted_arguments,
     )
 
 
