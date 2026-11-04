@@ -3,6 +3,7 @@
 import time
 from unittest.mock import MagicMock, patch
 
+from asgiref.sync import async_to_sync
 from django.apps import apps
 from django.db.models.signals import post_delete, post_save
 from django.db.utils import OperationalError
@@ -15,6 +16,8 @@ from smarter.lib.django.waffle import (
 )
 from smarter.lib.django.waffle.is_active import (
     SWITCH_CACHE_SECONDS,
+    async_switch_is_active,
+    cached_switch_state,
     clear_switch_cache,
     switch_is_active,
 )
@@ -199,3 +202,44 @@ class TestSwitchCache(SmarterTestBase):
             self.assertFalse(switch_is_active(name))
         with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
             self.assertTrue(switch_is_active(name))
+
+    def test_a_remembered_switch_skips_the_readiness_checks(self):
+        """Test that a remembered state is returned before the apps and database are checked."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
+            self.assertTrue(switch_is_active(name))
+        with patch(f"{IS_ACTIVE}.is_database_ready") as is_ready:
+            self.assertTrue(switch_is_active(name))
+        is_ready.assert_not_called()
+
+    def test_cached_switch_state(self):
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        self.assertIsNone(cached_switch_state(name))
+        self.assertIsNone(cached_switch_state(None))  # type: ignore[arg-type]
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(False)):
+            switch_is_active(name)
+        self.assertFalse(cached_switch_state(name))
+
+    def test_async_switch_is_active_answers_from_memory(self):
+        """Test that a remembered state is returned without the hop to Django's sync thread."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
+            self.assertTrue(switch_is_active(name))
+        with patch(f"{IS_ACTIVE}.sync_to_async") as sync_to_async:
+            self.assertTrue(async_to_sync(async_switch_is_active)(name))
+        sync_to_async.assert_not_called()
+
+    def test_async_switch_is_active_reads_a_switch_it_does_not_remember(self):
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
+            self.assertTrue(async_to_sync(async_switch_is_active)(name))
+
+
+class TestSwitchNames(SmarterTestBase):
+    """Test the list and the set of every switch's name."""
+
+    def test_all_is_a_sorted_list_and_all_set_matches_it(self):
+        switches = SmarterWaffleSwitches()
+        self.assertIsInstance(switches.all, list)
+        self.assertEqual(switches.all_set, frozenset(switches.all))
+        self.assertIn(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF, switches.all_set)

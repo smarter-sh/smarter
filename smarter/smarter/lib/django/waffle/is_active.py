@@ -1,7 +1,8 @@
-"""Switch_is_active() - Check if a Waffle switch is active with caching and database readiness checks."""
+"""Check whether a Waffle switch is active, with caching and database readiness checks."""
 
 import time
 from importlib import import_module
+from typing import TYPE_CHECKING, Optional
 
 from asgiref.sync import sync_to_async
 from django.apps import apps
@@ -17,7 +18,11 @@ from smarter.lib import logging
 from .ready import is_database_ready
 from .switches import smarter_waffle_switches
 
+if TYPE_CHECKING:
+    from waffle.models import AbstractBaseSwitch
+
 logger = logging.getLogger(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 # Also catch driver-specific DB errors for lower-level connector failures.
 try:
@@ -33,7 +38,7 @@ except ImportError:
     MariaDBOperationalError = None
     MariaDBProgrammingError = None
 
-prefix = f"{SmarterFormattedText.text(__name__)}.switch_is_active()"
+prefix = f"{logger_prefix}.switch_is_active()"
 
 SWITCH_CACHE_SECONDS = 5
 """
@@ -47,6 +52,33 @@ remembers at once; other processes see the change within this many seconds.
 
 _switch_cache: dict[str, tuple[bool, float]] = {}
 """Each switch's state, and the :func:`time.monotonic` time until which it is current."""
+
+
+DB_EXCEPTIONS: tuple[type[BaseException], ...] = (OperationalError, ProgrammingError)
+"""The database errors that mean a switch can't be read yet, including the drivers' own, when installed."""
+for _driver_error in (MySQLdbOperationalError, MariaDBOperationalError, MariaDBProgrammingError):
+    if _driver_error is not None:
+        DB_EXCEPTIONS += (_driver_error,)
+
+
+def cached_switch_state(switch_name: str) -> Optional[bool]:
+    """
+    Return the state that this process remembers for a switch, if it is still current.
+
+    It never touches the database or Redis, so it is safe to call from async code.
+
+    :param switch_name: The name of the switch.
+    :returns: The switch's state, or None if it isn't remembered or has expired.
+    """
+    if not isinstance(switch_name, str):
+        return None
+    cached = _switch_cache.get(switch_name)
+    if cached is None:
+        return None
+    is_active, expires_at = cached
+    if expires_at <= time.monotonic():
+        return None
+    return is_active
 
 
 def clear_switch_cache(*args, **kwargs) -> None:
@@ -63,7 +95,7 @@ post_save.connect(clear_switch_cache, sender="waffle.Switch", dispatch_uid="smar
 post_delete.connect(clear_switch_cache, sender="waffle.Switch", dispatch_uid="smarter_clear_switch_cache_on_delete")
 
 
-def create_missing_switch(switch_name: str):
+def create_missing_switch(switch_name: str) -> "AbstractBaseSwitch":
     """
     Create a switch that is missing from the database, with its Smarter default and comment.
 
@@ -73,8 +105,7 @@ def create_missing_switch(switch_name: str):
     default is active, because ``initialize_waffle`` only creates switches that do not exist.
 
     :param switch_name: The name of a switch in :class:`SmarterWaffleSwitches`.
-    :returns: The switch.
-    :rtype: waffle.models.Switch
+    :returns: The switch, a :class:`waffle.models.Switch` unless ``WAFFLE_SWITCH_MODEL`` names another model.
     """
     defaults = smarter_waffle_switches.switches[switch_name]  # type: ignore[index]
     switch, created = get_waffle_switch_model().objects.get_or_create(
@@ -82,7 +113,9 @@ def create_missing_switch(switch_name: str):
     )
     get_cache().set(switch._cache_key(switch_name), switch)  # pylint: disable=protected-access
     if created:
-        logger.info("%s created missing switch %s, active=%s", prefix, switch_name, switch.active)
+        logger.info(
+            "%s.create_missing_switch() created missing switch %s, active=%s", logger_prefix, switch_name, switch.active
+        )
     return switch
 
 
@@ -96,18 +129,25 @@ def switch_is_active(switch_name: str) -> bool:
         It includes caching to optimize performance and handles database readiness to prevent errors.
         Each process remembers a switch's state for :data:`SWITCH_CACHE_SECONDS`.
 
-    Example:
-        .. code-block:: python
+    **Example**
 
-            from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+    .. code-block:: python
 
-            if switch_is_active(smarter_waffle_switches.API_LOGGING):
-                print("API logging is enabled.")
+        from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+
+        if switch_is_active(SmarterWaffleSwitches.API_LOGGING):
+            print("API logging is enabled.")
 
     :param switch_name: The name of the Waffle switch to check.
-    :return: True if the switch is active, False otherwise.
-    :rtype: bool
+    :returns: True if the switch is active, False otherwise, including when the app registry or
+        the database isn't ready, or the name isn't a :class:`SmarterWaffleSwitches` switch.
     """
+    # The remembered state comes first: this runs on every log call of a switched logger.
+    # A state is only remembered after the apps and the database were ready.
+    cached = cached_switch_state(switch_name)
+    if cached is not None:
+        return cached
+
     # Prevent model access before Django app registry is ready
     if not apps.ready:
         logger.warning("%s App registry not ready, assuming switch %s is inactive.", prefix, switch_name)
@@ -124,23 +164,9 @@ def switch_is_active(switch_name: str) -> bool:
     if not isinstance(switch_name, str):
         logger.error("%s switch_name must be a string, got %s", prefix, type(switch_name).__name__)
         return False
-    if switch_name not in smarter_waffle_switches.all:
+    if switch_name not in smarter_waffle_switches.all_set:
         logger.error("%s switch_name '%s' is not a valid SmarterWaffleSwitches attribute", prefix, switch_name)
         return False
-    db_exceptions = tuple(
-        t
-        for t in (
-            OperationalError,
-            ProgrammingError,
-            MySQLdbOperationalError,
-            MariaDBOperationalError,
-            MariaDBProgrammingError,
-        )
-        if t is not None
-    ) or (Exception,)
-    cached = _switch_cache.get(switch_name)
-    if cached is not None and cached[1] > time.monotonic():
-        return cached[0]
     try:
         switch = get_waffle_switch_model().get(switch_name)
         if not switch.pk:
@@ -148,7 +174,7 @@ def switch_is_active(switch_name: str) -> bool:
         is_active = switch.is_active()
         _switch_cache[switch_name] = (is_active, time.monotonic() + SWITCH_CACHE_SECONDS)
         return is_active
-    except (*db_exceptions, AppRegistryNotReady) as e:
+    except (*DB_EXCEPTIONS, AppRegistryNotReady) as e:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
         )
@@ -163,6 +189,14 @@ async def async_switch_is_active(switch_name: str) -> bool:
     await this helper instead of calling :func:`switch_is_active` directly.
     ``thread_sensitive=True`` keeps the work on Django's thread-sensitive sync
     executor so connection-local state remains safe.
-    """
 
+    A state that this process remembers is returned at once, without the hop to that
+    executor, which is a single thread shared by every request.
+
+    :param switch_name: The name of the Waffle switch to check.
+    :returns: True if the switch is active, False otherwise.
+    """
+    cached = cached_switch_state(switch_name)
+    if cached is not None:
+        return cached
     return await sync_to_async(switch_is_active, thread_sensitive=True)(switch_name)

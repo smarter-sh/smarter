@@ -3,6 +3,7 @@
 # pylint: disable=W0718,W0212
 
 import asyncio
+import fnmatch
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -13,7 +14,10 @@ from django.test import RequestFactory
 
 from smarter.lib.django import waffle
 from smarter.lib.django.middleware.sensitive_files import (
+    GLOB_MATCHES,
+    GLOB_REGEX,
     SmarterBlockSensitiveFilesMiddleware,
+    is_sensitive_path,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -211,3 +215,36 @@ class TestSmarterBlockSensitiveFilesMiddleware(unittest.TestCase):
             self.assertEqual(asyncio.run(middleware(self.make_request("/normal/"))).content, b"async OK")
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=False):
             self.assertEqual(asyncio.run(middleware(self.make_request("/.env"))).content, b"async OK")
+
+    def test_is_sensitive_path(self):
+        """Test exact names and glob patterns, against the whole path and each of its segments."""
+        self.assertTrue(is_sensitive_path("/.env"))
+        self.assertTrue(is_sensitive_path("/app/.git/config"))
+        self.assertTrue(is_sensitive_path("/backups/server.key"))
+        self.assertTrue(is_sensitive_path("/a/b/.env"))
+        self.assertFalse(is_sensitive_path("/api/v1/cli/apply/"))
+        self.assertFalse(is_sensitive_path("/"))
+
+    def test_glob_regex_matches_like_fnmatch(self):
+        """Test that the one compiled regex answers as fnmatch does with each pattern."""
+        samples = [
+            "server.key",
+            "site.bak",
+            "app.log",
+            "id_rsa",
+            "config.php.bak",
+            "index.html",
+            "readme",
+            ".env.local",
+        ]
+        for sample in samples:
+            expected = any(fnmatch.fnmatch(sample, pattern) for pattern in GLOB_MATCHES)
+            with self.subTest(sample=sample):
+                self.assertEqual(bool(GLOB_REGEX.match(sample)), expected)
+
+    def test_inspection_does_not_use_the_cache(self):
+        """The check is in memory: it costs no Redis round trip, and caches nothing in Redis."""
+        with patch("smarter.lib.django.middleware.sensitive_files.cache") as redis_cache:
+            redis_cache.get.return_value = 0
+            SmarterBlockSensitiveFilesMiddleware.is_sensitive_request("/a/b/c/")
+        redis_cache.set.assert_not_called()
