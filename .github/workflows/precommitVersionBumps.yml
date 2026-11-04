@@ -17,12 +17,17 @@ on:
     - cron: "0 0 * * 3"
   workflow_dispatch:
 
+# The push to alpha uses the PAT secret, not GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   evaluate_precommit_config:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
 
@@ -34,7 +39,7 @@ jobs:
           git pull origin alpha
 
       - name: Cache NPM dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -42,7 +47,7 @@ jobs:
             ${{ runner.os }}-node
 
       - name: Cache Python dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('./smarter/requirements/**/*.txt') }}
@@ -50,7 +55,7 @@ jobs:
             ${{ runner.os }}-pip
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
 
@@ -78,7 +83,7 @@ jobs:
           SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
 
       - name: Install npm dependencies
         run: npm install
