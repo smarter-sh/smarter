@@ -9,6 +9,7 @@ from smarter.lib import logging
 from .const import namespace as app_name
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class JournalConfig(AppConfig, SmarterHelperMixin):
@@ -20,8 +21,8 @@ class JournalConfig(AppConfig, SmarterHelperMixin):
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
-        """Import signals."""
-        from . import receivers  # noqa: F401
-        from . import signals  # noqa: F401
+        """Import the receivers and signals, which connects the receivers."""
+        from . import receivers, signals  # noqa: F401
 
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", self.formatted_state_ready)
+        app_label = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
+        logger.debug("%s.ready() %s app is %s", logger_prefix, app_label, self.formatted_state_ready)

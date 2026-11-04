@@ -1,4 +1,4 @@
-"""Smarter API SmarterAuthToken Manifest Constants."""
+"""Constants of the SmarterAuthToken manifest: its kind."""
 
 from smarter_types import SAMKinds
 

@@ -74,7 +74,6 @@ def is_client_manifest() -> bool:
     Whether the manifest that is being validated is one that a client sent.
 
     :returns: True inside :func:`client_manifest_validation`.
-    :rtype: bool
     """
     return _CLIENT_MANIFEST.get()
 
@@ -92,7 +91,13 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     )
 
     def __init__(self, **data):
-        """Add support for passing a 'user' argument when initializing the model, which will be stored in a private attribute."""
+        """
+        Initialize the model, with an optional owner that is kept in private attributes.
+
+        :param data: The model's fields, and optionally ``user_profile`` or ``user``, which are not fields.
+            A user profile sets both :attr:`user_profile` and :attr:`user`. A user without a user profile
+            sets them only if the user is authenticated, from the user's cached user profile.
+        """
         user_profile = data.pop("user_profile", None)
         user = data.pop("user", None)
         super().__init__(**data)
@@ -122,12 +127,20 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
 
     @property
     def user(self) -> Optional[User]:
-        """Get the user associated with this manifest, if any."""
+        """
+        Get the user associated with this manifest, if any.
+
+        :returns: The user of the model's user profile, or None.
+        """
         return self._user
 
     @property
     def user_profile(self) -> Optional[UserProfile]:
-        """Get the user profile associated with this manifest, if any."""
+        """
+        Get the user profile associated with this manifest, if any.
+
+        :returns: The user profile that the model was initialized with, or the authenticated user's, or None.
+        """
         return self._user_profile
 
 
@@ -183,7 +196,15 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         """
         Validates the ``name`` field for a manifest.
 
-        Ensures the value is a string, present, and meets all constraints. Raises if not a string.
+        Ensures the value is a non-empty string of at most 50 characters, without characters that are
+        not URL friendly. A name that is not URL friendly, or not in snake_case, is converted, with a
+        warning.
+
+        :param v: The value of the ``name`` field to validate.
+        :type v: str
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is not a string, is empty,
+            is longer than 50 characters, or has characters that are not URL friendly.
+        :return: The validated, and possibly converted, ``name``.
         """
         if not isinstance(v, str):
             raise SAMValidationError(f"Manifest 'name' must be a string, got {type(v)}.")
@@ -199,8 +220,9 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         slugified = str(slugify(v, allow_unicode=False)).replace("-", "_")
         if slugified != v:
             logger.warning(
-                "%s.name '%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
-                logger_prefix + f".{cls.__name__}",
+                "%s.%s.validate_name() '%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
+                logger_prefix,
+                cls.__name__,
                 v,
                 slugified,
             )
@@ -208,8 +230,9 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         if not SmarterValidator.is_valid_snake_case(v):
             snake_case_name = to_snake_case(v)
             logger.warning(
-                "%s.name '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
-                logger_prefix + f".{cls.__name__}",
+                "%s.%s.validate_name() '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
+                logger_prefix,
+                cls.__name__,
                 v,
                 snake_case_name,
             )
@@ -224,30 +247,32 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         """
         Validates the ``description`` field for a manifest.
 
-        This method ensures that the ``description`` attribute is present. If the value is missing,
-        a ``SAMValidationError`` is raised.
+        A string is stripped of its whitespace. A missing or blank description is None: it is
+        not an error.
 
         :param v: The value of the ``description`` field to validate.
         :type v: str
-        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is missing.
-        :return: The validated ``description`` string.
-        :rtype: str
+        :return: The stripped ``description`` string, or None if it is missing, blank, or not a string.
         """
-        return v.strip() if isinstance(v, str) and v.strip() != "" else None
+        if not isinstance(v, str):
+            return None
+        description = v.strip()
+        if description == "":
+            return None
+        return description
 
     @field_validator("version")
     def validate_version(cls, v) -> Optional[str]:
         """
         Validates the ``version`` field for a manifest.
 
-        This method ensures that the ``version`` attribute is present and follows semantic versioning
-        rules. If the value is missing or invalid, a ``SAMValidationError`` is raised
+        A version follows semantic versioning rules. A missing or empty version is None: it is not
+        an error.
 
         :param v: The value of the ``version`` field to validate.
         :type v: str
-        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is missing or invalid.
-        :return: The validated ``version`` string.
-        :rtype: str
+        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the version is not a semantic version.
+        :return: The validated ``version`` string, or None if it is missing or empty.
         """
         if v in [None, ""]:
             return None
@@ -269,7 +294,6 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         :type v: Optional[List[str]]
         :raises smarter.lib.manifest.exceptions.SAMValidationError: If any tag is invalid.
         :return: The validated list of tags.
-        :rtype: Optional[List[str]]
         """
         if v is None:
             return v
@@ -294,7 +318,6 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         :type v: AnnotationsInput
         :raises smarter.lib.manifest.exceptions.SAMValidationError: If a key or value is invalid.
         :return: The annotations.
-        :rtype: Optional[dict[str, str]]
         """
         if v is None:
             return v
@@ -523,7 +546,6 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
         :type v: str
         :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is missing or not a supported version.
         :return: The validated ``apiVersion`` string.
-        :rtype: str
         """
         if v in [None, ""]:
             raise SAMValidationError("Missing required manifest key: apiVersion")
@@ -544,7 +566,6 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
         :param v: The value of the ``metadata`` field to validate.
         :type v: dict or AbstractSAMMetadataBase
         :return: The validated ``metadata`` object.
-        :rtype: AbstractSAMMetadataBase
         """
         if isinstance(v, dict):
             return AbstractSAMMetadataBase(**v)

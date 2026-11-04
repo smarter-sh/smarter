@@ -1,12 +1,11 @@
 # pylint: disable=unused-argument
-"""Django signal receivers for account app."""
+"""Django signal receivers of API keys (SmarterAuthToken) and of token authentication events."""
 
 from django.core import serializers
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.listview import connect_listview_cache
@@ -21,20 +20,25 @@ from .signals import (
 )
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
+def should_log(level: int) -> bool:
+    """
+    Return whether this module logs, which it does while the ``RECEIVER_LOGGING`` waffle switch is active.
+
+    :param level: The log level, which is ignored.
+    :returns: True if the switch is active.
+    """
     return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-module_prefix = "smarter.lib.drf.receivers"
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(post_save, sender=SmarterAuthToken)
 def handle_auth_token_save(sender, instance, created, **kwargs):
     """
-    Signal receiver for created/saved of SmarterAuthToken model: log the token as JSON at DEBUG.
+    Log a saved SmarterAuthToken as JSON, at DEBUG.
 
     :param sender: The SmarterAuthToken model.
     :param instance: The saved token.
@@ -42,34 +46,26 @@ def handle_auth_token_save(sender, instance, created, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     json_data = serializers.serialize("json", [instance])
-    if created:
-        logger.debug(
-            "%s SmarterAuthToken: %s, created: %s",
-            f"{SmarterFormattedText.text(module_prefix)}.smarter_auth_token_save()",
-            json_data,
-            created,
-        )
-    else:
-        logger.debug(
-            "%s SmarterAuthToken: %s, created: %s",
-            f"{SmarterFormattedText.text(module_prefix)}.smarter_auth_token_save()",
-            json_data,
-            created,
-        )
+    logger.debug(
+        "%s.handle_auth_token_save() SmarterAuthToken: %s, created: %s",
+        logger_prefix,
+        json_data,
+        created,
+    )
 
 
 @receiver(post_delete, sender=SmarterAuthToken)
 def handle_smarter_auth_token_delete(sender, instance, **kwargs):
     """
-    Signal receiver for deleted of SmarterAuthToken model: log the token at DEBUG.
+    Log a deleted SmarterAuthToken, at DEBUG.
 
     :param sender: The SmarterAuthToken model.
     :param instance: The deleted token.
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s SmarterAuthToken: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.smarter_auth_token_delete()",
+        "%s.handle_smarter_auth_token_delete() SmarterAuthToken: %s",
+        logger_prefix,
         instance,
     )
 
@@ -77,7 +73,7 @@ def handle_smarter_auth_token_delete(sender, instance, **kwargs):
 @receiver(smarter_token_authentication_request)
 def handle_smarter_token_authentication_request(sender, token, url, **kwargs):
     """
-    Signal receiver for authentication request: log it at DEBUG.
+    Log a token authentication request, at DEBUG.
 
     :param sender: The class that sent the signal.
     :param token: The masked token.
@@ -85,8 +81,8 @@ def handle_smarter_token_authentication_request(sender, token, url, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s sender: %s, token: %s, url: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.smarter_token_authentication_request()",
+        "%s.handle_smarter_token_authentication_request() sender: %s, token: %s, url: %s",
+        logger_prefix,
         sender,
         token,
         url,
@@ -96,7 +92,7 @@ def handle_smarter_token_authentication_request(sender, token, url, **kwargs):
 @receiver(smarter_token_authentication_success)
 def handle_smarter_token_authentication_success(sender, user, token, **kwargs):
     """
-    Signal receiver for authorization granted: log it at DEBUG.
+    Log a successful token authentication, at DEBUG.
 
     :param sender: The class that sent the signal.
     :param user: The authenticated user.
@@ -104,8 +100,8 @@ def handle_smarter_token_authentication_success(sender, user, token, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s sender: %s, user: %s, token: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.smarter_token_authentication_success()",
+        "%s.handle_smarter_token_authentication_success() sender: %s, user: %s, token: %s",
+        logger_prefix,
         sender,
         user,
         token,
@@ -115,7 +111,7 @@ def handle_smarter_token_authentication_success(sender, user, token, **kwargs):
 @receiver(smarter_token_authentication_failure)
 def handle_smarter_token_authentication_failure(sender, user, token, error: AuthenticationFailed, **kwargs):
     """
-    Signal receiver for authorization denied: log it as a warning.
+    Log a failed token authentication, as a warning.
 
     :param sender: The class that sent the signal.
     :param user: The user, usually anonymous.
@@ -124,8 +120,8 @@ def handle_smarter_token_authentication_failure(sender, user, token, error: Auth
     :param kwargs: The rest of the signal's arguments.
     """
     logger.warning(
-        "%s sender: %s, user: %s, token: %s, error: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.smarter_token_authentication_failure()",
+        "%s.handle_smarter_token_authentication_failure() sender: %s, user: %s, token: %s, error: %s",
+        logger_prefix,
         sender,
         user,
         token,
