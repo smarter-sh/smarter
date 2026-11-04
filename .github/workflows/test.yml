@@ -124,6 +124,9 @@ concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   ENVIRONMENT: "local"
   SMTP_SENDER: "no-reply@smarter.sh"
@@ -173,7 +176,7 @@ jobs:
       react-passed: ${{ steps.react.outputs.cache-hit }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       # git ls-files -s prints each matching file's mode, blob id and path,
       # and takes glob pathspecs. The hash of that listing changes when, and
@@ -197,7 +200,7 @@ jobs:
 
       - name: Look for a python pass
         id: python
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .tests-passed
           key: ${{ steps.keys.outputs.python }}
@@ -205,7 +208,7 @@ jobs:
 
       - name: Look for a react pass
         id: react
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .tests-passed
           key: ${{ steps.keys.outputs.react }}
@@ -247,10 +250,10 @@ jobs:
         working-directory: smarter/react
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: npm
@@ -282,7 +285,7 @@ jobs:
 
       - name: Upload the test results for notify
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: react-results
           path: |
@@ -296,7 +299,7 @@ jobs:
       # to smarter/react, which codecov.yml maps back to the repository's.
       #========================================================================
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./smarter/react/coverage/lcov.info
           flags: react
@@ -312,7 +315,7 @@ jobs:
           echo "${{ github.sha }}" > .tests-passed/commit
 
       - name: Save the pass
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .tests-passed
           key: ${{ needs.fingerprint.outputs.react-key }}
@@ -328,10 +331,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
@@ -371,7 +374,7 @@ jobs:
     steps:
       - name: Checkout code
         id: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0 # Ensures all history and tags are fetched
           fetch-tags: true
@@ -410,13 +413,13 @@ jobs:
       #------------------------------------------------------------------------
       - name: Set up Python
         id: python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
 
       - name: Install Node
         id: node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
 
@@ -586,7 +589,7 @@ jobs:
       #========================================================================
       - name: Restore Python venv
         id: venv
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: venv
           key: venv-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('smarter/requirements/local.txt') }}
@@ -594,7 +597,7 @@ jobs:
       - name: Restore pip downloads
         id: pypi
         if: steps.venv.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .pypi_cache
           key: pypi-${{ runner.os }}-py3.14-${{ hashFiles('smarter/requirements/local.txt') }}
@@ -603,7 +606,7 @@ jobs:
 
       - name: Restore root node_modules
         id: root-node-modules
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: node_modules
           key: root-node-modules-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
@@ -624,21 +627,21 @@ jobs:
 
       - name: Save Python venv
         if: matrix.shard == 1 && steps.venv.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: venv
           key: ${{ steps.venv.outputs.cache-primary-key }}
 
       - name: Save pip downloads
         if: matrix.shard == 1 && steps.venv.outputs.cache-hit != 'true' && steps.pypi.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .pypi_cache
           key: ${{ steps.pypi.outputs.cache-primary-key }}
 
       - name: Save root node_modules
         if: matrix.shard == 1 && steps.root-node-modules.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: node_modules
           key: ${{ steps.root-node-modules.outputs.cache-primary-key }}
@@ -697,16 +700,16 @@ jobs:
       # authenticate them. See the note at the top of this file.
       - name: Login to Docker Hub
         id: login-dockerhub
-        uses: docker/login-action@v4
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Expose GitHub runtime for BuildKit cache
-        uses: crazy-max/ghaction-github-runtime@v3
+        uses: crazy-max/ghaction-github-runtime@3cb05d89e1f492524af3d41a1c98c83bc3025124 # v3.1.0
 
       - name: Enable Docker layer cache for docker-compose
         shell: bash
@@ -839,7 +842,7 @@ jobs:
 
       - name: Upload coverage data and test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: python-shard-${{ matrix.shard }}
           path: shard/
@@ -892,25 +895,25 @@ jobs:
 
       - name: Checkout code
         if: needs.python.result != 'skipped'
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Download the shards' results
         if: needs.python.result != 'skipped'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: python-shard-*
           path: shards
 
       - name: Test summary
         if: needs.python.result != 'skipped'
-        uses: test-summary/action@v2
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
         with:
           paths: "shards/**/test-results-shard-*.xml"
           show: "fail, skip"
 
       - name: Set up Python
         if: needs.python.result == 'success'
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
 
@@ -947,7 +950,7 @@ jobs:
 
       - name: Upload the coverage total for notify
         if: needs.python.result == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: python-coverage
           path: coverage.json
@@ -955,7 +958,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: needs.python.result == 'success'
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./coverage.xml
           flags: python
@@ -971,7 +974,7 @@ jobs:
 
       - name: Save the pass
         if: needs.python.result == 'success'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .tests-passed
           key: ${{ needs.fingerprint.outputs.python-key }}
@@ -1009,10 +1012,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Download the test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         continue-on-error: true
         with:
           path: results

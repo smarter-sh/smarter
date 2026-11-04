@@ -210,7 +210,7 @@ runs:
     # -------------------------------------------------------------------------
   steps:
     - name: Cache Helm dependencies
-      uses: actions/cache@v5
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
       with:
         path: |
           ~/.cache/helm
@@ -238,7 +238,7 @@ runs:
     # Checkout all code referenced by this action
     - name: Checkout code
       id: checkout_code
-      uses: actions/checkout@v6
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       with:
         # A release's tag comes after the commit that started the run (see
         # build.yml), whose own latest tag is the previous release.
@@ -262,7 +262,7 @@ runs:
     # authenticate AWS CLI
     - name: Configure AWS credentials
       id: aws-credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
@@ -303,7 +303,7 @@ runs:
     # Kubernetes deployment manifest.
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+      uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
     # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
     # echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.223" >> $GITHUB_ENV
