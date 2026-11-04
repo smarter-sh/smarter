@@ -1,0 +1,12 @@
+slug: us-independence-day
+name: Independence Day
+category: national
+caption: Happy Fourth of July!
+alt_text: Red, white and blue fireworks and stars over a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/Independence_Day_(United_States)
+priority: 80
+regions: [us]
+schedule:
+  kind: fixed
+  month: 7
+  day: 4

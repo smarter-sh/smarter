@@ -1,0 +1,13 @@
+slug: ada-lovelace-day
+name: Ada Lovelace Day
+category: science
+caption: Happy Ada Lovelace Day!
+alt_text: The gears of an Analytical Engine turn above a Smarter LLMClient, beside a punched card.
+link_url: https://en.wikipedia.org/wiki/Ada_Lovelace_Day
+priority: 55
+regions: ["*"]
+schedule:
+  kind: nth_weekday
+  month: 10
+  weekday: 1
+  nth: 2

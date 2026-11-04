@@ -1,0 +1,12 @@
+slug: halloween
+name: Halloween
+category: celebration
+caption: Happy Halloween!
+alt_text: Bats fly under a full moon above a Smarter LLMClient, and jack-o'-lanterns grin on the ground.
+link_url: https://en.wikipedia.org/wiki/Halloween
+priority: 60
+regions: [us, ca, europe, oceania, global]
+schedule:
+  kind: fixed
+  month: 10
+  day: 31

@@ -1,0 +1,9 @@
+# The evergreen default: the base scene, with no props. The planner chooses it when nothing else is due.
+slug: default
+name: The Smarter Project
+category: evergreen
+alt_text: A Smarter LLMClient's chat window, with the plugin, guardrail, vectorstore and secret that it uses, and its manifest.
+priority: 0
+regions: ["*"]
+schedule:
+  kind: never

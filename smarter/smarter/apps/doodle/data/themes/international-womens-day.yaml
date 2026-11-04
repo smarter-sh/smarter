@@ -1,0 +1,12 @@
+slug: international-womens-day
+name: International Women's Day
+category: observance
+caption: Happy International Women's Day!
+alt_text: Sprigs of yellow mimosa and a purple ribbon frame a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/International_Women%27s_Day
+priority: 50
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 3
+  day: 8

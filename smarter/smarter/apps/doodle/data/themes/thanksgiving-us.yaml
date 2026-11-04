@@ -1,0 +1,13 @@
+slug: thanksgiving-us
+name: Thanksgiving
+category: celebration
+caption: Happy Thanksgiving!
+alt_text: Autumn leaves drift past a Smarter LLMClient, beside a pumpkin pie and a pumpkin.
+link_url: https://en.wikipedia.org/wiki/Thanksgiving_(United_States)
+priority: 75
+regions: [us]
+schedule:
+  kind: holiday
+  country: US
+  holiday: Thanksgiving
+props: thanksgiving.svg

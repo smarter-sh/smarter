@@ -1,0 +1,13 @@
+slug: thanksgiving-ca
+name: Thanksgiving
+category: celebration
+caption: Happy Thanksgiving!
+alt_text: Autumn leaves drift past a Smarter LLMClient, beside a pumpkin pie and a pumpkin.
+link_url: https://en.wikipedia.org/wiki/Thanksgiving_(Canada)
+priority: 75
+regions: [ca]
+schedule:
+  kind: holiday
+  country: CA
+  holiday: Thanksgiving
+props: thanksgiving.svg

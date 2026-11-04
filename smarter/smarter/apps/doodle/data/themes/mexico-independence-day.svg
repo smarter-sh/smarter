@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .fw-burst { transform-box: fill-box; transform-origin: center; animation: fw-pop 2.6s ease-out infinite; }
+    .fw-b { animation-delay: -0.9s; }
+    .fw-c { animation-delay: -1.7s; }
+    @keyframes fw-pop { 0% { transform: scale(0.3); opacity: 0; } 25% { opacity: 1; } 70% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
+  </style>
+  <g transform="translate(40 74) scale(0.9)"><g class="fw-burst " fill="none" stroke="#43a047" stroke-width="2.6" stroke-linecap="round"><path d="M8 0H20M5.7 5.7L14.1 14.1M0 8V20M-5.7 5.7L-14.1 14.1M-8 0H-20M-5.7 -5.7L-14.1 -14.1M0 -8V-20M5.7 -5.7L14.1 -14.1" /></g></g>
+  <g transform="translate(480 74) scale(0.9)"><g class="fw-burst fw-b" fill="none" stroke="#e53935" stroke-width="2.6" stroke-linecap="round"><path d="M8 0H20M5.7 5.7L14.1 14.1M0 8V20M-5.7 5.7L-14.1 14.1M-8 0H-20M-5.7 -5.7L-14.1 -14.1M0 -8V-20M5.7 -5.7L14.1 -14.1" /></g></g>
+  <!-- a string of pennants -->
+  <path d="M0 18 Q130 60 260 22 Q390 60 520 18" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" />
+  <path d="M53 33 H77 L65 57 Z" fill="#43a047" />
+  <path d="M118 40 H142 L130 64 Z" fill="#ffffff" />
+  <path d="M183 37 H207 L195 61 Z" fill="#e53935" />
+  <path d="M313 37 H337 L325 61 Z" fill="#43a047" />
+  <path d="M378 40 H402 L390 64 Z" fill="#ffffff" />
+  <path d="M443 33 H467 L455 57 Z" fill="#e53935" />
+</svg>

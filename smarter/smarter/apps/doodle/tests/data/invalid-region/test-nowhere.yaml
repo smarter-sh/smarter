@@ -1,0 +1,9 @@
+slug: test-nowhere
+name: Test nowhere
+category: season
+alt_text: Nowhere.
+regions: [atlantis]
+schedule:
+  kind: fixed
+  month: 1
+  day: 1

@@ -26,8 +26,10 @@ from smarter.apps.guardrail.services.exceptions import (
 )
 from smarter.lib import json, logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+from smarter.lib.openai.model_quirks import DEFAULT_TEMPERATURE_ONLY_MODELS
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CLIENT_TIMEOUT = 15.0
 
@@ -196,19 +198,49 @@ class OpenAIGuardrailClient:
         :returns: The judge's verdict.
         :raises GuardrailProviderError: when the API call fails, or its reply is not a valid verdict.
         """
+        kwargs = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": JUDGE_SYSTEM_MESSAGE},
+                {"role": "user", "content": prompt},
+            ],
+            "response_format": {"type": "json_object"},
+        }
+        # a reasoning model accepts only its default temperature, as the chat providers learn too.
+        if model not in DEFAULT_TEMPERATURE_ONLY_MODELS:
+            kwargs["temperature"] = temperature
         try:
-            response = self._client.chat.completions.create(
-                model=model,
-                temperature=temperature,
-                messages=[
-                    {"role": "system", "content": JUDGE_SYSTEM_MESSAGE},
-                    {"role": "user", "content": prompt},
-                ],
-                response_format={"type": "json_object"},
-            )
+            response = self.create_judge_completion(kwargs)
         except openai.OpenAIError as e:
             raise GuardrailProviderError(f"The LLM judge call failed: {e}") from e
         return parse_verdict(response.choices[0].message.content)
+
+    def create_judge_completion(self, kwargs: dict):
+        """
+        Send the judge's chat completion, without its temperature if the model rejects it.
+
+        A model that rejects the temperature is retried once without it, and added to
+        :data:`~smarter.lib.openai.model_quirks.DEFAULT_TEMPERATURE_ONLY_MODELS`,
+        which the chat providers share, so that each process pays for the failed request once.
+
+        :param kwargs: The keyword arguments of ``chat.completions.create()``.
+        :returns: The completion.
+        :raises openai.OpenAIError: When the call fails for another reason.
+        """
+        try:
+            return self._client.chat.completions.create(**kwargs)
+        except openai.BadRequestError as e:
+            if "temperature" not in kwargs or e.param != "temperature":
+                raise
+            logger.warning(
+                "%s.create_judge_completion() model %s rejected temperature=%s. Retrying with its default temperature.",
+                logger_prefix,
+                kwargs["model"],
+                kwargs["temperature"],
+            )
+            DEFAULT_TEMPERATURE_ONLY_MODELS.add(str(kwargs["model"]))
+            kwargs.pop("temperature")
+            return self._client.chat.completions.create(**kwargs)
 
 
 _clients: dict[str, OpenAIGuardrailClient] = {}

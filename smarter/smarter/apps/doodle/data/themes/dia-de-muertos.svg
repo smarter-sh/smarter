@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .dm-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: dm-flicker 0.8s ease-in-out infinite alternate; }
+    @keyframes dm-flicker { from { transform: scaleY(0.85); } to { transform: scaleY(1.1); } }
+    .dm-flutter { transform-box: view-box; transform-origin: 260px 0px; animation: dm-flutter 5s ease-in-out infinite; }
+    @keyframes dm-flutter { 0%, 100% { transform: rotate(-0.6deg); } 50% { transform: rotate(0.6deg); } }
+  </style>
+  <g class="dm-flutter">
+  <path d="M0 18 Q130 60 260 22 Q390 60 520 18" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" />
+  <path d="M47 30 H83 V60 L77 64 L71 60 L65 64 L59 60 L53 64 L47 60 Z" fill="#ff6b9a" />
+  <g fill="#d81b60"><circle cx="65" cy="44" r="4" /><circle cx="57" cy="44" r="2.5" /><circle cx="73" cy="44" r="2.5" /><circle cx="65" cy="36" r="2.5" /><circle cx="65" cy="52" r="2.5" /></g>
+  <path d="M112 37 H148 V67 L142 71 L136 67 L130 71 L124 67 L118 71 L112 67 Z" fill="#ffc145" />
+  <g fill="#f57f17"><circle cx="130" cy="51" r="4" /><circle cx="122" cy="51" r="2.5" /><circle cx="138" cy="51" r="2.5" /><circle cx="130" cy="43" r="2.5" /><circle cx="130" cy="59" r="2.5" /></g>
+  <path d="M177 33 H213 V63 L207 67 L201 63 L195 67 L189 63 L183 67 L177 63 Z" fill="#00c2a8" />
+  <g fill="#00897b"><circle cx="195" cy="47" r="4" /><circle cx="187" cy="47" r="2.5" /><circle cx="203" cy="47" r="2.5" /><circle cx="195" cy="39" r="2.5" /><circle cx="195" cy="55" r="2.5" /></g>
+  <path d="M307 33 H343 V63 L337 67 L331 63 L325 67 L319 63 L313 67 L307 63 Z" fill="#8e44ad" />
+  <g fill="#5e2d79"><circle cx="325" cy="47" r="4" /><circle cx="317" cy="47" r="2.5" /><circle cx="333" cy="47" r="2.5" /><circle cx="325" cy="39" r="2.5" /><circle cx="325" cy="55" r="2.5" /></g>
+  <path d="M372 37 H408 V67 L402 71 L396 67 L390 71 L384 67 L378 71 L372 67 Z" fill="#ff5733" />
+  <g fill="#c0392b"><circle cx="390" cy="51" r="4" /><circle cx="382" cy="51" r="2.5" /><circle cx="398" cy="51" r="2.5" /><circle cx="390" cy="43" r="2.5" /><circle cx="390" cy="59" r="2.5" /></g>
+  <path d="M437 30 H473 V60 L467 64 L461 60 L455 64 L449 60 L443 64 L437 60 Z" fill="#4fc3f7" />
+  <g fill="#0288d1"><circle cx="455" cy="44" r="4" /><circle cx="447" cy="44" r="2.5" /><circle cx="463" cy="44" r="2.5" /><circle cx="455" cy="36" r="2.5" /><circle cx="455" cy="52" r="2.5" /></g>
+  </g>
+  <g><circle cx="40" cy="300" r="12" fill="#ff8f00" /><circle cx="40" cy="300" r="8" fill="#ffb300" /><circle cx="40" cy="300" r="4" fill="#ff6f00" /></g>
+  <g><circle cx="70" cy="306" r="9" fill="#ff8f00" /><circle cx="70" cy="306" r="6" fill="#ffb300" /><circle cx="70" cy="306" r="3" fill="#ff6f00" /></g>
+  <g><circle cx="100" cy="298" r="11" fill="#ff8f00" /><circle cx="100" cy="298" r="7" fill="#ffb300" /><circle cx="100" cy="298" r="3" fill="#ff6f00" /></g>
+  <g><circle cx="420" cy="300" r="11" fill="#ff8f00" /><circle cx="420" cy="300" r="7" fill="#ffb300" /><circle cx="420" cy="300" r="3" fill="#ff6f00" /></g>
+  <g><circle cx="452" cy="306" r="9" fill="#ff8f00" /><circle cx="452" cy="306" r="6" fill="#ffb300" /><circle cx="452" cy="306" r="3" fill="#ff6f00" /></g>
+  <g><circle cx="484" cy="298" r="12" fill="#ff8f00" /><circle cx="484" cy="298" r="8" fill="#ffb300" /><circle cx="484" cy="298" r="4" fill="#ff6f00" /></g>
+  <rect x="140" y="282" width="10" height="22" rx="2" fill="#fff8e1" />
+  <rect x="370" y="282" width="10" height="22" rx="2" fill="#fff8e1" />
+  <g fill="#ffc145">
+    <path class="dm-flame" d="M145 268 q5 7 0 13 q-5 -6 0 -13 z" />
+    <path class="dm-flame" d="M375 268 q5 7 0 13 q-5 -6 0 -13 z" />
+  </g>
+</svg>

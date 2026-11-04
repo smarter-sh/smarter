@@ -1,0 +1,50 @@
+{% load static i18n react_doodle %}
+{% comment %}
+The Doodle, the sign-in page's illustration of the day: the logo, the doodle, and the project's name
+and description, from the @smarter/doodle React app. account/authentication/base.html includes it in
+the sign-in pages' left panel.
+
+The root's content is the page without JavaScript: the logo, the plain base scene, the name and the
+description. The React app replaces it with the same layout and the doodle of the day, while the
+enable_doodle waffle switch is active.
+
+see: smarter.apps.doodle.templatetags.react_doodle, which reads the React manifest.json file to
+determine the correct hashed filenames to include.
+{% endcomment %}
+{% doodle_enabled as doodle_on %}
+{% doodle_base_image_url as base_image_url %}
+{% if doodle_on %}
+  {% doodle_react_assets as doodle_assets %}
+  {% doodle_api_url as api_url %}
+  {% for css_file in doodle_assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/doodle/' %}{{ css_file }}">
+  {% endfor %}
+{% endif %}
+<div id="smarter-doodle-root"
+  class="smarter-doodle"
+  {% if doodle_on %}
+  smarter-doodle-api-url="{{ api_url }}"
+  {% endif %}
+  smarter-doodle-base-image-url="{{ base_image_url }}"
+  smarter-doodle-home-url="{% url 'console_home' %}"
+  smarter-doodle-logo-url="{{ branding.cdn_logo_url }}"
+  smarter-doodle-product-name="{{ branding.smarter_product_name }}"
+  smarter-doodle-product-description="{{ branding.smarter_product_description }}"
+  smarter-doodle-project-url="{{ branding.smarter_project_website_url }}">
+  <a href="{% url 'console_home' %}" class="smarter-doodle-logo">
+    <img alt="Logo" src="{{ branding.cdn_logo_url }}" />
+  </a>
+  <figure class="smarter-doodle-figure">
+    <img class="smarter-doodle-image" src="{{ base_image_url }}" alt="" />
+  </figure>
+  <h1 class="smarter-doodle-title">{{ branding.smarter_product_name }}</h1>
+  <div class="smarter-doodle-description">
+    {{ branding.smarter_product_description }}
+    <a href="{{ branding.smarter_project_website_url }}" target="_blank" rel="noopener">{% translate "Learn more" %}</a>
+  </div>
+</div>
+{% if doodle_on %}
+  {% for js_file in doodle_assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/doodle/' %}{{ js_file }}"></script>
+  {% endfor %}
+{% endif %}
