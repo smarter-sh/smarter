@@ -1,0 +1,10 @@
+{"entities": {
+  "Q1": {"id": "Q1", "labels": {"en": {"value": "Antonio Navarro Wolff"}}, "descriptions": {"en": {"value": "Colombian engineer and politician (1948–2026)"}}, "sitelinks": {"eswiki": {"title": "Antonio Navarro Wolff", "url": "https://es.wikipedia.org/wiki/Antonio_Navarro_Wolff"}}},
+  "Q2": {"id": "Q2", "labels": {"en": {"value": "2026 FIFA World Cup"}}, "descriptions": {"en": {"value": "international association football tournament"}}, "sitelinks": {"eswiki": {"title": "Copa Mundial de Fútbol de 2026", "url": "https://es.wikipedia.org/wiki/Copa_Mundial_de_F%C3%BAtbol_de_2026"}}},
+  "Q3": {"id": "Q3", "labels": {"en": {"value": "2026 Toledo train collision"}}, "descriptions": {"en": {"value": "rail accident in Toledo, Spain"}}, "sitelinks": {"eswiki": {"title": "Accidente ferroviario de Urda", "url": "https://es.wikipedia.org/wiki/Accidente_ferroviario_de_Urda"}}},
+  "Q4": {"id": "Q4", "labels": {"en": {"value": "Day of the Dead"}}, "descriptions": {"en": {"value": "Mexican celebration"}}, "sitelinks": {"eswiki": {"title": "Día de Muertos", "url": "https://es.wikipedia.org/wiki/D%C3%ADa_de_Muertos"}}},
+  "Q5": {"id": "Q5", "labels": {"en": {"value": "WhatsApp"}}, "descriptions": {"en": {"value": "Meta Platforms-owned mobile instant messenger"}}, "sitelinks": {"eswiki": {"title": "WhatsApp", "url": "https://es.wikipedia.org/wiki/WhatsApp"}}},
+  "Q6": {"id": "Q6", "labels": {"en": {"value": "Solar eclipse of August 12, 2026"}}, "descriptions": {"en": {"value": "total solar eclipse"}}, "sitelinks": {"eswiki": {"title": "Eclipse solar del 12 de agosto de 2026", "url": "https://es.wikipedia.org/wiki/Eclipse_solar_del_12_de_agosto_de_2026"}}},
+  "Q7": {"id": "Q7", "labels": {"en": {"value": "Gonzalo Miró"}}, "descriptions": {"en": {"value": "Spanish TV presenter"}}, "sitelinks": {"eswiki": {"title": "Gonzalo Miró", "url": "https://es.wikipedia.org/wiki/Gonzalo_Mir%C3%B3"}}},
+  "-1": {"site": "eswiki", "title": "Artículo sin Wikidata", "missing": ""}
+}}

@@ -294,9 +294,9 @@ class DoodleThemeAdmin(SmarterSuperUserOnlyModelAdmin):
 class DoodleEditorRunAdmin(SmarterSuperUserOnlyModelAdmin):
     """The Smarter Doodle Editor's runs, read-only: its audit trail."""
 
-    list_display = ["created_at", "date", "status"]
-    list_filter = ["status"]
-    readonly_fields = ["date", "status", "request", "response", "error", "created_at", "updated_at"]
+    list_display = ["created_at", "date", "status", "with_trends"]
+    list_filter = ["status", "with_trends"]
+    readonly_fields = ["date", "status", "with_trends", "request", "response", "error", "created_at", "updated_at"]
 
     def has_add_permission(self, request, obj=None) -> bool:
         """

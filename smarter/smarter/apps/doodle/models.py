@@ -199,9 +199,9 @@ class DoodleEditorRun(TimestampedModel):
     """
     A prompt of the Smarter Doodle Editor for one day: what it was asked, and what it answered.
 
-    The planner asks the editor once for each day. A day whose run succeeded isn't asked again, and
-    a day whose runs failed :data:`~smarter.apps.doodle.const.EDITOR_MAX_ATTEMPTS` times is left to
-    the calendar.
+    The planner asks the editor once for each day, a week ahead, and once more, with trends, the
+    day before. A day whose run succeeded isn't asked again, and a day whose runs failed
+    :data:`~smarter.apps.doodle.const.EDITOR_MAX_ATTEMPTS` times is left to the calendar.
     """
 
     date = models.DateField(help_text="The day that the editor chose the doodles of.")
@@ -209,6 +209,9 @@ class DoodleEditorRun(TimestampedModel):
     request = models.JSONField(default=dict, help_text="The prompt: the day's candidates, in each region.")
     response = models.TextField(blank=True, default="", help_text="The editor's answer.")
     error = models.TextField(blank=True, default="", help_text="Why the run failed.")
+    with_trends = models.BooleanField(
+        default=False, help_text="Whether the editor was told what each region is reading about."
+    )
 
     # pylint: disable=C0115
     class Meta:

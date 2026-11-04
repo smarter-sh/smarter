@@ -167,6 +167,9 @@ class SmarterWaffleSwitches:
     ENABLE_DOODLE_LLM_ARTWORK = "enable_doodle_llm_artwork"
     """Lets the Smarter Doodle Editor choose a holiday that the catalog has no theme for, which the Smarter Doodle Artist draws."""
 
+    ENABLE_DOODLE_TRENDS = "enable_doodle_trends"
+    """Tells the Smarter Doodle Editor what each region is reading about on Wikipedia, for today and tomorrow."""
+
     ENABLE_DOODLE_LLM_EDITOR = "enable_doodle_llm_editor"
     """Lets the Smarter Doodle Editor, an LLMClient, choose each region's doodle of each new day."""
 
@@ -463,6 +466,14 @@ class SmarterWaffleSwitches:
             comment=(
                 "Lets the Smarter Doodle Editor choose a holiday that the catalog has no theme for, "
                 "which the Smarter Doodle Artist draws."
+            ),
+            default=True,
+        ),
+        ENABLE_DOODLE_TRENDS: SmarterWaffleSwitch(
+            name=ENABLE_DOODLE_TRENDS,
+            comment=(
+                "Tells the Smarter Doodle Editor what each region is reading about on Wikipedia, "
+                "for today and tomorrow."
             ),
             default=True,
         ),

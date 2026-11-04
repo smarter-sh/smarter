@@ -8,11 +8,15 @@ region's doodle of that day. The editor may only choose among what it is given:
 - the region's **catalog** themes that are due, whose artwork exists and was reviewed;
 - the region's **observances**: its other holidays that day, from the ``holidays`` package, which
   have no artwork yet. When it chooses one, the artist, ``smarter_doodle_artist``, draws it;
+- the region's **trends**: what it is reading about on Wikipedia (:mod:`smarter.apps.doodle.trends`),
+  on the editor's second look at today and tomorrow. The artist draws them too;
 - the **default**: the plain scene.
 
 Its answer is checked again here, whatever its system prompt says: a choice must be one of the
-region's candidates; an observance must not be about mourning, war, politics or a religion's holy
-day (:data:`BLOCKED_WORDS`), and its category, caption and link must be fit to show. A choice that
+region's candidates; an observance or a trend must not be about mourning, war, politics or a
+religion's holy day (:data:`BLOCKED_WORDS`), its category, caption and link must be fit to show, and
+the ``upbeat_occasion_input`` Guardrail, a small LLM, must judge it fun and upbeat
+(:func:`tone_check`). A choice that
 fails is ignored, and the calendar's doodle stays. A drawn doodle is proposed, and a superuser
 approves it in the admin, unless the ``enable_doodle_auto_approve`` switch is on.
 
@@ -21,14 +25,19 @@ once, or until it has failed :data:`~smarter.apps.doodle.const.EDITOR_MAX_ATTEMP
 """
 
 import datetime
+import hashlib
 import re
+from functools import lru_cache
 from typing import Literal, Optional
 
+from django.utils import timezone
 from django.utils.text import slugify
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.guardrail.api.v1.views.views import evaluate as evaluate_guardrail
+from smarter.apps.guardrail.models import Guardrail, GuardrailStage
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.prompting import (
     SmarterLLMClientPromptError,
@@ -52,6 +61,8 @@ from .const import (
     EDITOR_LLMCLIENT,
     EDITOR_MAX_ATTEMPTS,
     MAX_OBSERVANCES_PER_REGION,
+    TONE_GUARDRAIL,
+    TRENDS_HORIZON_DAYS,
 )
 from .models import (
     Doodle,
@@ -67,6 +78,7 @@ from .planner import candidates
 from .regions import DoodleRegion, region_countries
 from .sanitize import extract_svg, sanitize_svg
 from .schedule import DoodleSchedule, holidays_on
+from .trends import DoodleTrend, region_trends
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING])
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -97,6 +109,32 @@ BLOCKED_WORDS = (
     "lent",
     "good friday",
     "ashura",
+    "religious",
+    "christian",
+    "church",
+    "feast day",
+    "accident",
+    "collision",
+    "crash",
+    "derailment",
+    "killed",
+    "attack",
+    "shooting",
+    "bombing",
+    "explosion",
+    "murder",
+    "crime",
+    "terrorism",
+    "earthquake",
+    "flood",
+    "hurricane",
+    "wildfire",
+    "epidemic",
+    "pandemic",
+    "scandal",
+    "protest",
+    "riot",
+    "trial",
 )
 """
 Words of a holiday that a doodle never celebrates on its own: mourning, war, politics, and a single.
@@ -116,8 +154,8 @@ OBSERVANCE_CATEGORIES = (
 )
 """The categories that a drawn observance may have."""
 
-WIKIPEDIA = re.compile(r"^https://en\.wikipedia\.org/wiki/[^\s<>\"']+$")
-"""The only links that a drawn observance's caption may have: an English Wikipedia article."""
+WIKIPEDIA = re.compile(r"^https://[a-z-]{2,12}\.wikipedia\.org/wiki/[^\s<>\"']+$")
+"""The only links that a drawn doodle's caption may have: a Wikipedia article, of any edition."""
 
 
 class DoodleEditorModel(BaseModel):
@@ -150,6 +188,18 @@ class DoodleEditorRegion(DoodleEditorModel):
     name: str
     catalog: list[DoodleEditorCatalogTheme]
     observances: list[DoodleEditorObservance]
+    trends: list[DoodleTrend] = Field(
+        default_factory=list, description="What the region is reading about, from Wikipedia. See trends.py."
+    )
+
+
+class DoodleEditorSubject(DoodleEditorModel):
+    """What the artist draws: an observance or a trend that the editor chose."""
+
+    id: str
+    name: str
+    description: str = Field(default="", description="What it is, e.g. a trend's Wikidata description.")
+    link_url: str = Field(description="The page that the doodle's caption links to.")
 
 
 class DoodleEditorRequest(DoodleEditorModel):
@@ -182,7 +232,7 @@ class DoodleEditorDecision(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     region: str
-    choice: Literal["catalog", "observance", "default"]
+    choice: Literal["catalog", "observance", "trend", "default"]
     id: Optional[str] = None
     reason: str = ""
     category: Optional[str] = None
@@ -200,6 +250,7 @@ class DoodleEditorAnswer(BaseModel):
     decisions: list[DoodleEditorDecision]
 
 
+@lru_cache(maxsize=4096)
 def has_blocked_word(text: str) -> bool:
     """
     Whether a text refers to one of the :data:`BLOCKED_WORDS`.
@@ -208,6 +259,9 @@ def has_blocked_word(text: str) -> bool:
     its plural (``victims``), a typo of a longer word (``genocde``), or a synonym from the WordNet
     thesaurus (``bereavement`` for ``mourning``). A word never matches inside another, e.g. ``war``
     in ``Award``. It errs on the side of caution: a holiday that it blocks is simply not celebrated.
+    It is a pure function of its text, and slow (each word is tried three ways), so its answers are
+    kept for the life of the process: the regions that share a Wikipedia edition ask about the same
+    texts again.
 
     :param text: e.g. a holiday's name, or the editor's caption.
     :returns: True if it refers to one.
@@ -249,13 +303,17 @@ def observances(day: datetime.date, region: str) -> list[DoodleEditorObservance]
     return found
 
 
-def editor_request(day: datetime.date, regions: list[str], artwork_allowed: bool) -> DoodleEditorRequest:
+def editor_request(
+    day: datetime.date, regions: list[str], artwork_allowed: bool, with_trends: bool = False
+) -> DoodleEditorRequest:
     """
     Build the editor's prompt for a day.
 
     :param day: The day.
     :param regions: The regions to choose for.
     :param artwork_allowed: Whether the editor may choose a holiday that the artist must draw.
+    :param with_trends: Whether to tell the editor what each region is reading about, which the
+        artist must draw too. See :mod:`smarter.apps.doodle.trends`.
     :returns: The request.
     :rtype: DoodleEditorRequest
     """
@@ -270,11 +328,20 @@ def editor_request(day: datetime.date, regions: list[str], artwork_allowed: bool
                 )
             )
         region_observances = []
+        region_trends_ = []
         if artwork_allowed:
             region_observances = observances(day, region)
+            if with_trends:
+                region_trends_ = region_trends(region, day, has_blocked_word)
         label = str(labels[region])
         request_regions.append(
-            DoodleEditorRegion(region=region, name=label, catalog=catalog, observances=region_observances)
+            DoodleEditorRegion(
+                region=region,
+                name=label,
+                catalog=catalog,
+                observances=region_observances,
+                trends=region_trends_,
+            )
         )
     return DoodleEditorRequest(date=day.isoformat(), artwork_allowed=artwork_allowed, regions=request_regions)
 
@@ -322,17 +389,14 @@ def check_decision(decision: DoodleEditorDecision, request: DoodleEditorRequest)
             return f"{decision.id} is not a catalog theme of {decision.region} that day"
         return None
 
-    # an observance, which the artist must draw
+    # an observance or a trend, which the artist must draw
     if not request.artwork_allowed:
         return "artwork isn't allowed"
     if candidates_of_region.catalog:
         return "the region has catalog themes, which come first"
-    observance = None
-    for candidate in candidates_of_region.observances:
-        if candidate.id == decision.id:
-            observance = candidate
-    if observance is None:
-        return f"{decision.id} is not an observance of {decision.region} that day"
+    subject = drawable_subject(decision, request)
+    if subject is None:
+        return f"{decision.id} is not a {decision.choice} of {decision.region} that day"
     if decision.category not in OBSERVANCE_CATEGORIES:
         return f"the category {decision.category} isn't allowed"
     if not decision.caption or len(decision.caption) > 60:
@@ -341,11 +405,74 @@ def check_decision(decision: DoodleEditorDecision, request: DoodleEditorRequest)
         return "the alt text is missing, or longer than 255 characters"
     if not decision.subject:
         return "the subject for the artist is missing"
-    if decision.link_url and not WIKIPEDIA.match(decision.link_url):
-        return f"the link {decision.link_url} isn't an English Wikipedia article"
-    for text in (observance.name, decision.caption, decision.subject, decision.alt_text):
+    if subject.link_url and not WIKIPEDIA.match(subject.link_url):
+        return f"the link {subject.link_url} isn't a Wikipedia article"
+    for text in (subject.name, decision.caption, decision.subject, decision.alt_text):
         if has_blocked_word(text):
             return f"{text!r} is about a topic that a doodle never celebrates"
+    return None
+
+
+def drawable_subject(decision: DoodleEditorDecision, request: DoodleEditorRequest) -> Optional[DoodleEditorSubject]:
+    """
+    Return the observance or the trend that a decision chose, for the artist to draw.
+
+    An observance's link is the one that the editor wrote, which is checked. A trend's is its own
+    article's, whatever the editor wrote.
+
+    :param decision: An ``observance`` or ``trend`` decision.
+    :param request: The request it answers.
+    :returns: The subject, or ``None`` if the region had no such candidate.
+    :rtype: Optional[DoodleEditorSubject]
+    """
+    candidates_of_region = request.region(decision.region)
+    if candidates_of_region is None:
+        return None
+    if decision.choice == "observance":
+        for observance in candidates_of_region.observances:
+            if observance.id == decision.id:
+                countries = ", ".join(observance.countries)
+                return DoodleEditorSubject(
+                    id=observance.id,
+                    name=observance.name,
+                    description=f"a public holiday of {countries}",
+                    link_url=decision.link_url or "",
+                )
+    if decision.choice == "trend":
+        for trend in candidates_of_region.trends:
+            if trend.id == decision.id:
+                return DoodleEditorSubject(
+                    id=trend.id, name=trend.title, description=trend.description, link_url=trend.url
+                )
+    return None
+
+
+def tone_check(decision: DoodleEditorDecision, subject: DoodleEditorSubject) -> Optional[str]:
+    """
+    Ask the ``upbeat_occasion_input`` Guardrail whether an occasion is fun and upbeat.
+
+    It is a tone check, by a small LLM, which the word lists can't do: a solemn anniversary or sad
+    news has no blocked word. It fails closed: without the Guardrail, or when it fails, nothing
+    is drawn.
+
+    :param decision: The editor's decision, whose caption and subject are judged too.
+    :param subject: The observance or trend.
+    :returns: Why the occasion is declined, or ``None`` if it is upbeat.
+    :rtype: Optional[str]
+    """
+    account = smarter_cached_objects.smarter_account
+    guardrail = Guardrail.objects.filter(name=TONE_GUARDRAIL, user_profile__account=account).first()
+    if guardrail is None:
+        return f"the Guardrail {TONE_GUARDRAIL} doesn't exist, so nothing is drawn"
+    text = (
+        f"{subject.name}: {subject.description}. "
+        f"The caption: {decision.caption}. The illustration: {decision.subject}"
+    )
+    result = evaluate_guardrail(guardrail, text, GuardrailStage.INPUT)
+    if result.error:
+        return f"the tone check failed, so nothing is drawn: {result.error}"
+    if result.triggered:
+        return f"{subject.name!r} isn't upbeat enough for a doodle, says {TONE_GUARDRAIL}"
     return None
 
 
@@ -373,20 +500,23 @@ def smarter_admin_profile() -> UserProfile:
     return profile
 
 
-def draw(decision: DoodleEditorDecision, observance: DoodleEditorObservance, day: datetime.date) -> DoodleTheme:
+def draw(decision: DoodleEditorDecision, subject: DoodleEditorSubject, day: datetime.date) -> DoodleTheme:
     """
-    Ask the artist to draw an observance, and save it as a theme of that day only.
+    Ask the artist to draw an observance or a trend, and save it as a theme of that day only.
 
     :param decision: The editor's decision.
-    :param observance: The observance.
+    :param subject: The observance or trend.
     :param day: The day.
     :returns: The theme, inactive, so that the calendar never chooses it.
     :rtype: DoodleTheme
     :raises SmarterLLMClientPromptError: If the artist doesn't exist, or the prompt fails.
     :raises SmarterValueError: If its answer isn't a safe SVG of the base scene's viewBox.
     """
-    # one theme per country's holiday: two countries' holidays of the same name have their own link.
-    slug = slugify(f"ai-{day.isoformat()}-{observance.id.replace(':', '-')}")[:64]
+    # one theme per country's holiday, or edition's article: those of the same name have their own link.
+    # The hash keeps apart the ids that slugify empties, e.g. the Hindi or Japanese titles of trends.
+    readable = slugify(f"ai-{day.isoformat()}-{subject.id.replace(':', '-')}")[:54].rstrip("-")
+    digest = hashlib.sha1(subject.id.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
+    slug = f"{readable}-{digest}"
     existing = DoodleTheme.objects.filter(slug=slug).select_related("artwork").first()
     if existing is not None:
         return existing
@@ -395,7 +525,7 @@ def draw(decision: DoodleEditorDecision, observance: DoodleEditorObservance, day
     if artist is None:
         raise SmarterLLMClientPromptError(f"The LLMClient {ARTIST_LLMCLIENT} doesn't exist.")
     prefix = "ai"
-    prompt = json.dumps({"name": observance.name, "subject": decision.subject, "prefix": prefix})
+    prompt = json.dumps({"name": subject.name, "subject": decision.subject, "prefix": prefix})
     with single_use_api_key(smarter_admin_profile(), "doodle_artist") as token_key:
         result = prompt_llmclient(artist, token_key, prompt)
     answer = assistant_text(result) or ""
@@ -406,11 +536,11 @@ def draw(decision: DoodleEditorDecision, observance: DoodleEditorObservance, day
     schedule = DoodleSchedule(kind="never").model_dump(exclude_none=True)
     theme = DoodleTheme.objects.create(
         slug=slug,
-        name=observance.name,
+        name=subject.name[:128],
         category=str(decision.category),
         caption=str(decision.caption),
         alt_text=alt_text,
-        link_url=decision.link_url or "",
+        link_url=subject.link_url,
         priority=0,
         regions=[decision.region],
         schedule=schedule,
@@ -419,7 +549,7 @@ def draw(decision: DoodleEditorDecision, observance: DoodleEditorObservance, day
         is_active=False,
         is_generated=True,
     )
-    logger.info("%s.draw() the Smarter Doodle Artist drew %s for %s.", logger_prefix, observance.name, day)
+    logger.info("%s.draw() the Smarter Doodle Artist drew %s for %s.", logger_prefix, subject.name, day)
     return theme
 
 
@@ -437,14 +567,10 @@ def apply_decision(
     """
     status = DoodleStatus.APPROVED
     reason = f"Chosen by the Smarter Doodle Editor: {decision.reason}"
-    if decision.choice == "observance":
-        candidates_of_region = request.region(decision.region)
-        observance = None
-        for candidate in candidates_of_region.observances:  # type: ignore[union-attr]
-            if candidate.id == decision.id:
-                observance = candidate
+    if decision.choice in ("observance", "trend"):
+        subject = drawable_subject(decision, request)
         try:
-            theme = draw(decision, observance, day)  # type: ignore[arg-type]
+            theme = draw(decision, subject, day)  # type: ignore[arg-type]
         except (SmarterLLMClientPromptError, SmarterValueError) as e:
             logger.warning(
                 "%s.apply_decision() the artist failed, so the calendar's doodle stays: %s", logger_prefix, e
@@ -476,32 +602,59 @@ def apply_decision(
     return doodle
 
 
-def regions_to_edit(day: datetime.date) -> list[str]:
+def regions_to_edit(day: datetime.date, with_trends: bool = False) -> list[str]:
     """
     Return the regions whose doodle of a day the editor may choose: not one that a person chose.
 
     :param day: The day.
+    :param with_trends: Whether it is the editor's second look at the day, with trends. Then a
+        doodle that the artist drew, which a superuser may have approved, is kept too.
     :returns: The regions.
     :rtype: list[str]
     """
-    chosen_by_people = set(Doodle.objects.filter(date=day, source=DoodleSource.HUMAN).values_list("region", flat=True))
+    kept = set(Doodle.objects.filter(date=day, source=DoodleSource.HUMAN).values_list("region", flat=True))
+    if with_trends:
+        drawn = Doodle.objects.filter(date=day, theme__is_generated=True).values_list("region", flat=True)
+        kept.update(drawn)
     regions = []
     for region in DoodleRegion.values:
-        if region in chosen_by_people:
+        if region in kept:
             continue
         regions.append(region)
     return regions
+
+
+def trends_are_due(day: datetime.date) -> bool:
+    """
+    Whether the editor looks at a day with trends: they are news, so only today's and tomorrow's.
+
+    :param day: The day.
+    :returns: True while the ``enable_doodle_trends`` and ``enable_doodle_llm_artwork`` switches are
+        on, and the day is at most :data:`~smarter.apps.doodle.const.TRENDS_HORIZON_DAYS` after today.
+    :rtype: bool
+    """
+    if not switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_TRENDS):
+        return False
+    if not switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_LLM_ARTWORK):
+        return False
+    today = timezone.now().date()
+    horizon = today + datetime.timedelta(days=TRENDS_HORIZON_DAYS)
+    return day <= horizon
 
 
 def needs_editing(day: datetime.date) -> bool:
     """
     Whether the editor should be asked about a day.
 
+    The editor looks at each day once, a week ahead, and once more, with trends, the day before.
+
     :param day: The day.
-    :returns: False if a run of that day succeeded, or failed too many times.
+    :returns: False if a run of that day succeeded, with trends when they are due, or failed too
+        many times.
     :rtype: bool
     """
-    runs = DoodleEditorRun.objects.filter(date=day)
+    with_trends = trends_are_due(day)
+    runs = DoodleEditorRun.objects.filter(date=day, with_trends=with_trends)
     if runs.filter(status=DoodleEditorRunStatus.SUCCEEDED).exists():
         return False
     failures = runs.filter(status=DoodleEditorRunStatus.FAILED).count()
@@ -526,9 +679,11 @@ def edit_day(day: datetime.date) -> Optional[DoodleEditorRun]:
         return None
 
     artwork_allowed = switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_LLM_ARTWORK)
-    request = editor_request(day, regions_to_edit(day), artwork_allowed)
+    with_trends = trends_are_due(day)
+    regions = regions_to_edit(day, with_trends=with_trends)
+    request = editor_request(day, regions, artwork_allowed, with_trends=with_trends)
     request_json = request.model_dump(mode="json")
-    run = DoodleEditorRun(date=day, request=request_json)
+    run = DoodleEditorRun(date=day, request=request_json, with_trends=with_trends)
 
     try:
         with single_use_api_key(smarter_admin_profile(), "doodle_editor") as token_key:
@@ -546,6 +701,9 @@ def edit_day(day: datetime.date) -> Optional[DoodleEditorRun]:
     refused = []
     for decision in answer.decisions:
         refusal = check_decision(decision, request)
+        if refusal is None and decision.choice in ("observance", "trend"):
+            subject = drawable_subject(decision, request)
+            refusal = tone_check(decision, subject)  # type: ignore[arg-type]
         if refusal is not None:
             refused.append(f"{decision.region}: {refusal}")
             continue

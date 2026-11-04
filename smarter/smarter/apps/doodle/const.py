@@ -68,3 +68,9 @@ LEARN_HOW_URL = "https://docs.smarter.sh/en/latest/smarter-framework/developer-r
 
 DoodleAiCredit = Literal["", "chosen", "drawn"]
 """What a Smarter AI application did for a doodle: chose it, drew it too, or nothing."""
+
+TRENDS_HORIZON_DAYS = 1
+"""How many days after today the editor looks at again, with trends: trends are news."""
+
+TONE_GUARDRAIL = "upbeat_occasion_input"
+"""The Guardrail of the Smarter account that judges whether an occasion is fun and upbeat, from example-manifests."""
