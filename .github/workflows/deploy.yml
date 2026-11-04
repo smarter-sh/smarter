@@ -42,6 +42,9 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 env:
   AWS_REGION: ca-central-1
   DEBUG_MODE: "true"
@@ -65,6 +68,7 @@ jobs:
       || (github.event.workflow_run.conclusion == 'success'
           && !startsWith(github.event.workflow_run.head_commit.message, 'chore(release):'))
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       actions: read
     outputs:
@@ -74,7 +78,7 @@ jobs:
       - name: Download Build's release-info
         if: github.event_name == 'workflow_run'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-info
           path: release-info
@@ -103,6 +107,7 @@ jobs:
     needs: resolve
     if: needs.resolve.outputs.deploy == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     outputs:
       environment: ${{ steps.describe.outputs.environment }}
       version: ${{ steps.describe.outputs.version }}
@@ -110,7 +115,7 @@ jobs:
     steps:
       - name: Checkout code
         id: checkout_code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ needs.resolve.outputs.tag || github.ref }}
           fetch-depth: 0 # Ensures all history and tags are fetched
@@ -261,7 +266,7 @@ jobs:
           echo "${{ env.VERSION }}" > release-info/tag
 
       - name: Upload release-info
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-info
           path: release-info/
@@ -283,7 +288,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ needs.deploy.outputs.version || needs.resolve.outputs.tag || github.ref }}
           fetch-depth: 0
