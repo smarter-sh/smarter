@@ -151,8 +151,8 @@ Notes
 =====
 
 This middleware inherits from
-:class:`django.utils.deprecation.MiddlewareMixin`
-for compatibility with Django's middleware lifecycle hooks.
+:class:`smarter.common.mixins.SmarterMiddlewareMixin`, which detects the
+sync or async mode and provides the amnesty check.
 
 The middleware is designed to be fail-safe. Any parsing or serialization
 errors automatically fall back to the original unmodified response.
@@ -192,7 +192,8 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
     """
     Middleware that minifies HTML responses using BeautifulSoup.
 
-    Notes:
+    **Notes:**
+
     - Only processes HTML responses
     - Skips streaming/file responses
     - Fail-safe: original response is returned on parsing errors
@@ -226,7 +227,15 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
     )
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        """
+        Minify a response synchronously, or hand the request to :meth:`__acall__` in async mode.
 
+        An amnesty path, or a request while ``ENABLE_MIDDLEWARE_HTML_MINIFY`` is off, gets the
+        next handler's response unchanged.
+
+        :param request: The incoming request.
+        :returns: The response, minified or unchanged (a coroutine in async mode).
+        """
         if self.async_mode:
             return self.__acall__(request)
 
@@ -241,6 +250,12 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return self.process_response(request, response)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+        """
+        Minify a response in async mode, unless ``ENABLE_MIDDLEWARE_HTML_MINIFY`` is off.
+
+        :param request: The incoming request.
+        :returns: The response, minified or unchanged.
+        """
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
             return await super().__acall__(request)
 
@@ -281,7 +296,9 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         if self.should_skip(request, response):
             return response
 
-        return await sync_to_async(self.minify_response)(response)
+        # Parsing html is pure CPU work that touches no database, so it needn't wait for
+        # Django's one thread-sensitive thread, which every ORM call from async code shares.
+        return await sync_to_async(self.minify_response, thread_sensitive=False)(response)
 
     def should_skip(self, request: HttpRequest, response) -> bool:
         """
@@ -320,13 +337,25 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return not response.content
 
     def minify_response(self, response):
-        """Minify HTML response content."""
+        """
+        Remove the comments from an html response.
+
+        A page without comments is returned as it is, without being parsed: removing
+        comments is all this middleware does, and parsing a page costs milliseconds.
+
+        :param response: The html response.
+        :returns: The same response, with its content minified, or unchanged if it has no
+            comments, looks like XML, or fails to parse.
+        """
 
         try:
 
             html = self.decode_content(response.content)
 
             if self.looks_like_xml(html):
+                return response
+
+            if "<!--" not in html:
                 return response
 
             soup = BeautifulSoup(html, "lxml")
@@ -336,13 +365,18 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
             response["Content-Length"] = str(len(response.content))
 
         except Exception as exc:  # pylint: disable=broad-except
-            logging.exception("%s.minify_response() - failed to minify HTML: %s", self.formatted_class_name, exc)
+            logger.exception("%s.minify_response() - failed to minify HTML: %s", self.formatted_class_name, exc)
 
         return response
 
     @staticmethod
     def decode_content(content) -> str:
-        """Decode response content safely."""
+        """
+        Decode response content to text, replacing bytes that are not valid utf-8.
+
+        :param content: The response's content, bytes or text.
+        :returns: The content as text, without leading whitespace.
+        """
 
         if isinstance(content, bytes):
             return content.decode("utf-8", errors="replace").lstrip()
@@ -351,20 +385,34 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
 
     @classmethod
     def looks_like_xml(cls, html: str) -> bool:
-        """Detect XML/RSS/Feed responses."""
+        """
+        Return whether a document starts like XML, an RSS feed, an Atom feed or a sitemap.
+
+        :param html: The decoded document, without leading whitespace.
+        :returns: True if the document starts with one of :attr:`XML_PREFIXES`.
+        """
 
         # only the start of the document matters, so don't lowercase all of it.
         return html[:16].lower().startswith(cls.XML_PREFIXES)
 
     @staticmethod
     def remove_comments(soup: BeautifulSoup) -> None:
-        """Remove HTML comments from soup."""
+        """
+        Remove every html comment from a parsed document, in place.
+
+        :param soup: The parsed document.
+        """
 
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
 
     @staticmethod
     def serialize_html(soup: BeautifulSoup) -> str:
-        """Serialize minimized HTML."""
+        """
+        Serialize a parsed document with BeautifulSoup's ``minimal`` formatter.
+
+        :param soup: The parsed document.
+        :returns: The document as html text.
+        """
 
         return soup.decode(formatter="minimal")

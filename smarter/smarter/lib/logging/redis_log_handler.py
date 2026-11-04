@@ -1,6 +1,5 @@
 """
-Smarter.lib.logging.redis_log_handler
-=====================================
+Publish log records to Redis channels and streams, for real-time log streaming.
 
 This module provides a custom logging handler for publishing log records to Redis channels,
 enabling real-time log streaming for distributed systems. It is designed to work with context-aware
@@ -10,25 +9,22 @@ to a global log channel for system-wide log aggregation.
 This handler is used for the Terminal Emulator real-time log view in the Smarter
 web console.
 
-Main Components
----------------
+**Main Components:**
 
 - ``smarter.lib.logging.redis_log_handler.RedisLogHandler``: A custom logging handler that publishes log records to Redis channels, supporting both job-specific and global log streams.
 - ``smarter.lib.logging.redis_log_handler.job_id_factory``: Utility function to generate unique job IDs for associating logs with specific jobs or tasks.
-- ``smarter.lib.logging.redis_log_handler.user_id_context``: Context variable for tracking the current job ID within the logging context.
+- ``smarter.lib.logging.redis_log_handler.user_id_context``: Context variable for the current user channel (a user context such as ``User.ada``, or a job id) within the logging context.
 - ``smarter.lib.logging.redis_log_handler.request_id_context``: Context variable for the current request's id, which each published log record carries, so that a log stream can be narrowed to one request.
 - ``smarter.lib.logging.redis_log_handler.GLOBAL_LOG_CHANNEL``: The Redis channel name used for publishing all logs globally.
 
-Features
---------
+**Features:**
 
 - Asynchronous log publishing to Redis using a background worker thread and batching for efficiency.
 - Support for both job-specific and global log channels.
 - Graceful shutdown and log flushing on process exit.
 - Handles dropped logs if the internal queue is full, with periodic reporting.
 
-Example Usage
--------------
+**Example Usage:**
 
 .. code-block:: python
 
@@ -78,6 +74,7 @@ Example Usage
 """
 
 import atexit
+import json as std_json
 import os
 import queue
 import re
@@ -85,12 +82,12 @@ import sys
 import threading
 import uuid
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Callable, Optional, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Callable, Optional, ParamSpec, TypedDict, TypeVar
 
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
 
-from smarter.lib import json, logging
+from smarter.lib import logging
 
 if TYPE_CHECKING:
     from redis import Redis
@@ -98,13 +95,20 @@ if TYPE_CHECKING:
 CONTEXT_NAME = "user_id"
 REQUEST_ID_CONTEXT_NAME = "request_id"
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
-SESSION_KEY_CONTEXT_NAME = "session_key"
-SESSION_KEY_PATTERN = re.compile(r"^[a-fA-F0-9]{64}$")
 """
 The form of a request id: up to 64 letters, digits, underscores and hyphens.
 
 A request id is sent by the browser, in the ``X-Smarter-RequestId`` header, so it is validated
 before it is attached to log records. See :func:`valid_request_id`.
+"""
+SESSION_KEY_CONTEXT_NAME = "session_key"
+SESSION_KEY_PATTERN = re.compile(r"^[a-fA-F0-9]{64}$")
+"""
+The form of a chat session key: 64 hexadecimal digits.
+
+A session key arrives in a request, e.g. as the ``session_key`` query parameter of a request to
+an LLMClient's api, so it is validated before it is attached to log records. See
+:func:`valid_session_key`.
 """
 CHANNEL_PREFIX = "logs"
 GLOBAL_LOG_CHANNEL = "global"
@@ -123,6 +127,16 @@ GLOBAL_STREAM_TTL_SECONDS = (
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
+
+class LogQueueItem(TypedDict):
+    """One log record waiting in :data:`log_queue` to be published."""
+
+    #: The pubsub channel to publish to, e.g. ``logs:global``.
+    channel: str
+    #: The record, as compact JSON.
+    data: str
+
+
 _redis_client: Optional["Redis"] = None
 """The Redis connection that log records are published to, opened by :func:`get_redis_cache` on first use."""
 _redis_unconfigured_logged = False
@@ -132,11 +146,19 @@ _publish_state = {"failing": False}
 user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
 request_id_context: ContextVar[str | None] = ContextVar(REQUEST_ID_CONTEXT_NAME, default=None)
 session_key_context: ContextVar[str | None] = ContextVar(SESSION_KEY_CONTEXT_NAME, default=None)
-log_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
+log_queue: "queue.Queue[Optional[LogQueueItem]]" = queue.Queue(maxsize=MAX_QUEUE_SIZE)
+"""The records waiting for :func:`redis_worker` to publish them.
+
+None is the shutdown sentinel.
+"""
 
 
 def redis_is_ready() -> bool:
-    """Check if the Redis cache is ready to accept connections."""
+    """
+    Check if the Redis cache is ready to accept connections.
+
+    :returns: True if Redis is configured and answers a ping, else False.
+    """
     cache = get_redis_cache()
     if cache is None:
         return False
@@ -159,9 +181,7 @@ def job_id_factory(prefix: str = "job") -> str:
     for ensuring that each subscription has a unique identifier.
 
     :param prefix: The prefix to use for the job ID (default is "job").
-    :type prefix: str
-    :return: A unique job ID string.
-    :rtype: str
+    :returns: A unique job ID string.
     """
     return f"{prefix}_{str(uuid.uuid4())}"
 
@@ -171,15 +191,15 @@ def valid_request_id(request_id: Optional[str]) -> Optional[str]:
     Return a request id if it has the form of one, or else None.
 
     :param request_id: A request id, e.g. the value of a request's ``X-Smarter-RequestId`` header.
-    :type request_id: Optional[str]
-    :return: The request id, stripped, or None if it is missing or does not match
+    :returns: The request id, stripped, or None if it is missing or does not match
         :data:`REQUEST_ID_PATTERN`.
-    :rtype: Optional[str]
     """
     if not request_id:
         return None
     request_id = request_id.strip()
-    return request_id if REQUEST_ID_PATTERN.match(request_id) else None
+    if not REQUEST_ID_PATTERN.match(request_id):
+        return None
+    return request_id
 
 
 def valid_session_key(session_key: Optional[str]) -> Optional[str]:
@@ -188,55 +208,84 @@ def valid_session_key(session_key: Optional[str]) -> Optional[str]:
 
     :param session_key: A chat session key, e.g. the ``session_key`` query parameter of a
         request to an LLMClient's api.
-    :type session_key: Optional[str]
-    :return: The session key, stripped, or None if it is missing or does not match
+    :returns: The session key, stripped, or None if it is missing or does not match
         :data:`SESSION_KEY_PATTERN`.
-    :rtype: Optional[str]
     """
     if not session_key:
         return None
     session_key = session_key.strip()
-    return session_key if SESSION_KEY_PATTERN.match(session_key) else None
+    if not SESSION_KEY_PATTERN.match(session_key):
+        return None
+    return session_key
 
 
 def build_channel(name: str) -> str:
-    """Build a normalized Redis pubsub channel name."""
-    return f"{CHANNEL_PREFIX}:{name}"
+    """
+    Build a normalized Redis pubsub channel name.
+
+    :param name: The channel's name, e.g. a user context such as ``User.ada``.
+    :returns: The channel, ``logs:<name>``.
+    """
+    channel = f"{CHANNEL_PREFIX}:{name}"
+    return channel
+
+
+GLOBAL_CHANNEL = build_channel(GLOBAL_LOG_CHANNEL)
+"""The pubsub channel that every log record is published to."""
+
+POD_NAME = os.getenv("HOSTNAME")
+"""The name of the pod (or container) that this process runs in, added to every published record."""
 
 
 def stream_key(channel: str) -> str:
-    """Build the Redis stream key for a pubsub channel."""
-    return f"stream:{channel}"
+    """
+    Build the Redis stream key for a pubsub channel.
+
+    :param channel: The channel.
+    :returns: The stream key, ``stream:<channel>``.
+    """
+    key = f"stream:{channel}"
+    return key
 
 
 def stream_ttl_seconds(channel: str) -> int | None:
-    """Return TTL policy for a channel stream key."""
-    if channel == build_channel(GLOBAL_LOG_CHANNEL):
+    """
+    Return how long a channel's stream is kept after its last record.
+
+    :param channel: The channel.
+    :returns: :data:`GLOBAL_STREAM_TTL_SECONDS` for the global channel, else :data:`USER_STREAM_TTL_SECONDS`.
+    """
+    if channel == GLOBAL_CHANNEL:
         return GLOBAL_STREAM_TTL_SECONDS
     return USER_STREAM_TTL_SECONDS
 
 
 def get_user_channel() -> str:
     """
-    Return the current user channel suffix from context.
+    Return the current user channel suffix from context, or a new job id if there is none.
 
-    This value is expected to be a stable user identity string
-    (for example "User.123") and is reused across requests for
-    that same user.
+    The user channel is expected to be a stable user identity string (for example
+    ``User.123``) and is reused across requests for that same user.
+
+    :returns: The user channel suffix, or a unique ``job_<uuid>``.
     """
-    return user_id_context.get() or job_id_factory()
+    user_id = user_id_context.get()
+    if user_id:
+        return user_id
+    return job_id_factory()
 
 
-def get_user_context(user: Any) -> str:
+def get_user_context(user: object) -> str:
     """
-    Retrieves the current user context for logging.
+    Build the user context for logging, ``<ClassName>.<username>``, e.g. ``User.ada``.
 
-    This function accesses the :obj:`user_id_context` context variable to get the current user ID or job ID
-    associated with the logging context. This is used by the :obj:`RedisLogHandler` to determine which Redis
-    channel to publish log records to, allowing for both job-specific and global log streams.
+    The middleware stores this value in :obj:`user_id_context`, and :class:`RedisLogHandler`
+    publishes each record to the channel built from it, so that a user's log stream holds only
+    the records logged while that user's requests were handled.
 
-    :return: The current user context (user ID or job ID) for logging.
-    :rtype: str
+    :param user: The user, e.g. a Django ``User`` or ``AnonymousUser``. An object without a
+        ``username`` attribute is identified by ``str(user)``.
+    :returns: The user context, e.g. ``User.ada``.
     """
     if hasattr(user, "username"):
         username = user.username
@@ -261,10 +310,8 @@ def bind_log_context(func: Callable[_P, _T]) -> Callable[_P, _T]:
     stream nor the request's. Bind such work while the request is being handled.
 
     :param func: The function to call in the current log context.
-    :type func: Callable[_P, _T]
     :returns: A function that sets the log context, calls ``func`` and restores the log context
         that it found.
-    :rtype: Callable[_P, _T]
     """
     user_id = user_id_context.get()
     request_id = request_id_context.get()
@@ -294,7 +341,6 @@ def get_redis_cache() -> Optional["Redis"]:
     because this runs on every flush, and the warning would itself be queued for one.
 
     :returns: The Redis connection, or None if Django's cache isn't configured yet.
-    :rtype: Optional[redis.Redis]
     """
     global _redis_client, _redis_unconfigured_logged  # pylint: disable=global-statement
 
@@ -312,7 +358,7 @@ def get_redis_cache() -> Optional["Redis"]:
     return _redis_client
 
 
-def flush(buffer) -> None:
+def flush(buffer: list[LogQueueItem]) -> None:
     """
     Flushes the buffer of log entries to Redis.
 
@@ -327,8 +373,6 @@ def flush(buffer) -> None:
     own log record is queued for the next batch.
 
     :param buffer: List of log entries to be published.
-    :type buffer: list
-    :return: None
     """
     cache = get_redis_cache()
     if cache is None:
@@ -337,6 +381,8 @@ def flush(buffer) -> None:
         return
 
     pipe = cache.pipeline()
+    # Each stream's ttl is set once per batch, after its last record, not once per record.
+    stream_ttls: dict[str, int] = {}
     for payload in buffer:
         channel = payload["channel"]
         key = stream_key(channel)
@@ -344,8 +390,10 @@ def flush(buffer) -> None:
         pipe.xadd(key, {"data": payload["data"]}, maxlen=1000, approximate=True)
         ttl = stream_ttl_seconds(channel)
         if ttl is not None:
-            pipe.expire(key, ttl)
+            stream_ttls[key] = ttl
         log_queue.task_done()
+    for key, ttl in stream_ttls.items():
+        pipe.expire(key, ttl)
     try:
         pipe.execute()
     # pylint: disable=broad-except
@@ -365,7 +413,7 @@ def flush(buffer) -> None:
         logger.info("%s.flush() Redis is available again. Publishing log records.", logger_prefix)
 
 
-def next_batch(timeout: float = LOG_QUEUE_TIMEOUT) -> tuple[list, bool]:
+def next_batch(timeout: float = LOG_QUEUE_TIMEOUT) -> tuple[list[LogQueueItem], bool]:
     """
     Take the next batch of log entries from the queue.
 
@@ -373,11 +421,9 @@ def next_batch(timeout: float = LOG_QUEUE_TIMEOUT) -> tuple[list, bool]:
     already queued, without waiting, up to ``MAX_BATCH`` entries.
 
     :param timeout: Seconds to wait for the first entry.
-    :type timeout: float
     :returns: The batch, which may be empty, and whether the shutdown sentinel (None) was taken.
-    :rtype: tuple[list, bool]
     """
-    buffer: list = []
+    buffer: list[LogQueueItem] = []
     try:
         item = log_queue.get(timeout=timeout)
     except queue.Empty:
@@ -395,8 +441,13 @@ def next_batch(timeout: float = LOG_QUEUE_TIMEOUT) -> tuple[list, bool]:
             return buffer, False
 
 
-def purge_log_context(context: str):
-    """Delete the Redis stream for a specific logging context."""
+def purge_log_context(context: str) -> None:
+    """
+    Delete the Redis stream for a specific logging context.
+
+    :param context: The logging context, e.g. a user context such as ``User.ada``.
+    :raises RuntimeError: if Redis is not configured.
+    """
     cache = get_redis_cache()
     if cache is None:
         raise RuntimeError("Redis cache is not available")
@@ -407,19 +458,15 @@ def purge_log_context(context: str):
 
 def redis_worker() -> None:
     """
-    Worker function that continuously processes log entries from the queue.
+    Process log entries from the queue continuously, and publish them to Redis channels.
 
-    and publishes them to Redis channels. This function runs in a separate
-    thread and handles batching of log entries for efficiency.
+    This function runs in a separate thread and handles batching of log entries for efficiency.
 
     The worker takes everything that is queued, up to MAX_BATCH entries (see
     :func:`next_batch`), and publishes it to Redis in one pipeline. If the
     queue is empty, it waits briefly before checking again. The worker also
     listens for a sentinel value (None) to gracefully shut down when the
     process is exiting.
-
-    :param None: No parameters are required for this function.
-    :return: None
     """
 
     logger.debug("%s.redis_worker() Starting Redis log worker thread.", logger_prefix)
@@ -447,9 +494,6 @@ def shutdown() -> None:
     placing a sentinel value (None) in the log queue. It then waits
     for the worker thread to finish processing any remaining log
     entries, with a timeout of 1 second.
-
-    :param None: No parameters are required for this function.
-    :return: None
     """
     if not worker_thread.is_alive():
         return
@@ -485,31 +529,68 @@ class RedisLogHandler(logging.Handler):
     by a background worker thread for efficiency and non-blocking behavior.
 
     If the internal log queue is full, log records may be dropped. The number of dropped logs is tracked by
-    the class variable dropped_logs, and a message is printed every 100 dropped logs.
+    the class variable :attr:`dropped_logs`, and a message is printed every 100 dropped logs.
 
-    See Also
-    --------
-    job_id_factory : Function to generate unique job IDs.
-    user_id_context : Context variable for the current job ID.
-    GLOBAL_LOG_CHANNEL : Name of the global Redis log channel.
+    **See also:**
+
+    - :func:`job_id_factory`: generates unique job IDs.
+    - :obj:`user_id_context`: the context variable for the current user channel.
+    - :data:`GLOBAL_LOG_CHANNEL`: the name of the global Redis log channel.
     """
 
     dropped_logs = 0
+    """How many log records were not published because :data:`log_queue` was full, in this process."""
 
-    def emit(self, record):
+    publishing_enabled: Optional[bool] = None
+    """
+    Whether log records are published at all: ``smarter_settings.enable_dashboard_server_logs``.
+
+    When it is off, the dashboard refuses to stream logs, so publishing them would only cost
+    Redis commands. It is read on the first record, once Django's settings exist, and kept.
+    """
+
+    def is_publishing_enabled(self) -> bool:
+        """
+        Return whether log records are published to Redis.
+
+        The setting is read once, on the first record after Smarter's settings can be
+        imported. A record logged before then is not published.
+
+        :returns: ``smarter_settings.enable_dashboard_server_logs``.
+        """
+        if self.publishing_enabled is not None:
+            return self.publishing_enabled
+        try:
+            # pylint: disable=import-outside-toplevel
+            from smarter.common.conf import smarter_settings
+
+            enabled = bool(smarter_settings.enable_dashboard_server_logs)
+        # pylint: disable=broad-except
+        except Exception:
+            # Smarter's settings are still being imported. Ask again on the next record.
+            return False
+        RedisLogHandler.publishing_enabled = enabled
+        return enabled
+
+    def emit(self, record: logging.LogRecord) -> None:
         """
         Emit a log record.
 
         This method formats the log record and publishes it to the appropriate Redis channels.
-        If a job ID is present in the current context, the log record is published to the job-specific
-        channel. All log records are also published to the global log channel. While a request id is
-        set in :obj:`request_id_context`, the record carries it as ``request_id``, and while a chat
-        session key is set in :obj:`session_key_context`, as ``session_key``.
+        While a user channel is set in :obj:`user_id_context`, the record is published to it. Every
+        record is also published to the global log channel. While a request id is set in
+        :obj:`request_id_context`, the record carries it as ``request_id``, and while a chat session
+        key is set in :obj:`session_key_context`, as ``session_key``.
+
+        A record logged outside any user's context, e.g. by a Celery task or at startup, goes to the
+        global channel only: no one can subscribe to a channel made up for one record.
 
         :param record: The log record to be emitted.
-        :type record: logging.LogRecord
         """
-        user_id = get_user_channel()
+        if not self.is_publishing_enabled():
+            return
+
+        user_id = user_id_context.get()
 
         try:
             # Respect Django logging formatter configuration (e.g. asctime/levelname)
@@ -521,7 +602,7 @@ class RedisLogHandler(logging.Handler):
                 "level": record.levelname,
                 "timestamp": record.created,
                 "logger": record.name,
-                "pod": os.getenv("HOSTNAME"),
+                "pod": POD_NAME,
             }
             request_id = request_id_context.get()
             if request_id:
@@ -530,26 +611,25 @@ class RedisLogHandler(logging.Handler):
             if session_key:
                 payload["session_key"] = session_key
 
-            data = json.dumps(payload)
+            # The payload holds only strings and numbers, so the standard library's compact
+            # encoder is enough. It runs in C, unlike an indented dump.
+            data = std_json.dumps(payload, separators=(",", ":"))
 
-            # Publish the log entry to the Redis channel for a
-            # specific job ID. These are typically initiated
-            # inside Celery tasks in cases where the log output
-            # is viewable from the UI.
-            log_queue.put_nowait(
-                {
-                    "channel": build_channel(user_id),
-                    "data": data,
-                }
-            )
+            # Publish the log entry to the user's own channel, e.g. for
+            # the dashboard's log viewer.
+            if user_id:
+                log_queue.put_nowait(
+                    {
+                        "channel": build_channel(user_id),
+                        "data": data,
+                    }
+                )
 
             # Publish the log entry to a global Redis channel
-            # for all logs. This is the feed for the optional
-            # 'server logs' view in the UI, which shows
-            # all log output.
+            # for all logs.
             log_queue.put_nowait(
                 {
-                    "channel": build_channel(GLOBAL_LOG_CHANNEL),
+                    "channel": GLOBAL_CHANNEL,
                     "data": data,
                 }
             )
@@ -565,7 +645,9 @@ class RedisLogHandler(logging.Handler):
                 )
         # pylint: disable=broad-except
         except Exception:
-            logger.exception("%s.emit() Failed to emit log record.", logger_prefix, exc_info=True)
+            # Not logged: this handler would receive its own error record. handleError()
+            # is the logging module's way to report a handler's failure, on stderr.
+            self.handleError(record)
 
 
 __all__ = [

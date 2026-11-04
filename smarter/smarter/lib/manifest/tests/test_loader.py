@@ -1,6 +1,7 @@
 """Test SAMLoader."""
 
 import os
+from unittest.mock import patch
 
 import yaml
 
@@ -105,3 +106,23 @@ class TestManifestLoader(SmarterTestBase):
         for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:
             self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
             test_missing(element)
+
+    def test_yaml_is_parsed_once(self):
+        """A YAML manifest is parsed once, however often its keys are read."""
+        yaml_text = yaml.dump(self.good_manifest_text)
+        with patch("smarter.lib.manifest.loader.yaml.safe_load", wraps=yaml.safe_load) as safe_load:
+            loader = SAMLoader(manifest=yaml_text)
+            self.assertEqual(loader.data_format, SAMDataFormats.YAML)
+            self.assertTrue(loader.ready)
+            self.assertIsInstance(loader.manifest_spec, dict)
+            self.assertIsInstance(loader.manifest_metadata, dict)
+        self.assertEqual(safe_load.call_count, 1)
+
+    def test_loaders_do_not_share_a_specification(self):
+        """Each loader has its own specification, so one loader's kind doesn't leak into another's."""
+        first = SAMLoader(manifest=self.good_manifest_text)
+        second = SAMLoader(manifest=self.good_manifest_text, kind="SomethingElse")
+        self.assertIsNot(first.specification, second.specification)
+        self.assertEqual(second.specification[SAMKeys.KIND], "SomethingElse")
+        self.assertNotEqual(first.specification[SAMKeys.KIND], "SomethingElse")
+        self.assertEqual(SAMLoader._specification[SAMKeys.KIND], "PLACEHOLDER")  # pylint: disable=protected-access
