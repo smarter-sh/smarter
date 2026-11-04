@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.42.0-alpha.2...v0.42.0-alpha.3) (2026-11-04)
+
+### Features
+
+* **doodle:** let the doodle editor follow trends, and check its tone ([210c935](https://github.com/smarter-sh/smarter/commit/210c9357e3744f0fb3f39620b84d05c580880dcd))
+
 ## [0.42.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.0-alpha.1...v0.42.0-alpha.2) (2026-11-04)
 
 ### Features
