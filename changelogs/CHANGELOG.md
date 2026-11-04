@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.2...v0.42.3-alpha.1) (2026-11-04)
+
+### Bug Fixes
+
+* **lib:** stop credential leaks, fix token expiry and json encoding ([17dcee1](https://github.com/smarter-sh/smarter/commit/17dcee1ad4fa2253a69843e0a8a885722f26dbad))
+
+### Performance
+
+* **lib:** authenticate api keys once per request, cut redis calls ([4719073](https://github.com/smarter-sh/smarter/commit/4719073fa759a72e4d3526f8279817130b518008))
+
 ## [0.42.2](https://github.com/smarter-sh/smarter/compare/v0.42.1...v0.42.2) (2026-11-04)
 
 ### Bug Fixes
