@@ -399,9 +399,9 @@ class TestDoodleEditor(DoodleTestMixin):
     def test_tone_check(self):
         decision = DoodleEditorDecision(**ECLIPSE_DECISION)
         subject = editor.DoodleEditorSubject(id=ECLIPSE.id, name=ECLIPSE.title, description="eclipse", link_url="")
-        guardrails = patch.object(editor.Guardrail.objects, "filter")
+        guardrails = patch.object(editor.Guardrail, "get_cached_object")
         with guardrails as lookup:
-            lookup.return_value.first.return_value = None
+            lookup.side_effect = editor.Guardrail.DoesNotExist
             self.assertIn("doesn't exist", editor.tone_check(decision, subject))
         cases = [
             (MagicMock(error=None, triggered=False), None),
@@ -411,7 +411,7 @@ class TestDoodleEditor(DoodleTestMixin):
         for result, expected in cases:
             with self.subTest(expected=expected):
                 with guardrails as lookup, patch.object(editor, "evaluate_guardrail", return_value=result) as evaluate:
-                    lookup.return_value.first.return_value = MagicMock()
+                    lookup.return_value = MagicMock()
                     refusal = editor.tone_check(decision, subject)
                 if expected is None:
                     self.assertIsNone(refusal)

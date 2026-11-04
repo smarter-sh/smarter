@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """
 The views of the doodle api, ``/api/v1/doodles/``.
 
