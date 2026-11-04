@@ -49,7 +49,7 @@ runs:
 
     - name: Restore React build
       id: react-build
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
       with:
         path: |
           smarter/smarter/static/react
@@ -61,14 +61,14 @@ runs:
     - name: Install Node
       id: node
       if: steps.react-build.outputs.cache-hit != 'true'
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
       with:
         node-version: ${{ inputs.node-version }}
 
     - name: Restore React node_modules
       id: react-node-modules
       if: steps.react-build.outputs.cache-hit != 'true'
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
       with:
         path: |
           smarter/react/node_modules
@@ -85,7 +85,7 @@ runs:
 
     - name: Save React node_modules
       if: steps.react-build.outputs.cache-hit != 'true' && steps.react-node-modules.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
       with:
         path: |
           smarter/react/node_modules
@@ -103,7 +103,7 @@ runs:
 
     - name: Save React build
       if: steps.react-build.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
       with:
         path: |
           smarter/smarter/static/react

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.0...v0.42.1-alpha.1) (2026-11-04)
+
+### Bug Fixes
+
+* **doodle:** link the AI credit's Learn how to the blog post ([f00ac5c](https://github.com/smarter-sh/smarter/commit/f00ac5cac5fb7d16859c239a9cbae491c428c6c7))
+
 ## [0.42.0](https://github.com/smarter-sh/smarter/compare/v0.41.4...v0.42.0) (2026-11-04)
 
 ### Features
