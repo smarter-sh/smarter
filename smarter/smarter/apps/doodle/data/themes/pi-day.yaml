@@ -1,0 +1,12 @@
+slug: pi-day
+name: Pi Day
+category: science
+caption: Happy Pi Day!
+alt_text: The digits of pi float above a Smarter LLMClient, beside a freshly baked pie.
+link_url: https://en.wikipedia.org/wiki/Pi_Day
+priority: 55
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 3
+  day: 14

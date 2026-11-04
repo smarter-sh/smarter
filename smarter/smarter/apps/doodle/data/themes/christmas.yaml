@@ -1,0 +1,13 @@
+slug: christmas
+name: Christmas
+category: celebration
+caption: Merry Christmas!
+alt_text: Snow falls on a Smarter LLMClient in a Santa hat, beside a little tree and presents.
+link_url: https://en.wikipedia.org/wiki/Christmas
+priority: 70
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 12
+  day: 24
+  days: 2

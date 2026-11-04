@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .hk-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: hk-flicker 0.75s ease-in-out infinite alternate; }
+    @keyframes hk-flicker { from { transform: scaleY(0.85); } to { transform: scaleY(1.12); } }
+    .hk-spin { transform-box: fill-box; transform-origin: 50% 100%; animation: hk-wobble 1.2s ease-in-out infinite alternate; }
+    @keyframes hk-wobble { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+  </style>
+  <!-- a menorah -->
+  <g transform="translate(0 14)">
+  <g fill="#ffc145">
+    <rect x="384" y="270" width="96" height="4" rx="2" />
+    <rect x="430" y="256" width="4" height="40" />
+    <rect x="416" y="296" width="32" height="6" rx="3" />
+  </g>
+  <g fill="#4fc3f7">
+    <rect x="386" y="256" width="4" height="14" rx="1" />
+    <rect x="397" y="256" width="4" height="14" rx="1" />
+    <rect x="408" y="256" width="4" height="14" rx="1" />
+    <rect x="419" y="256" width="4" height="14" rx="1" />
+    <rect x="441" y="256" width="4" height="14" rx="1" />
+    <rect x="452" y="256" width="4" height="14" rx="1" />
+    <rect x="463" y="256" width="4" height="14" rx="1" />
+    <rect x="474" y="256" width="4" height="14" rx="1" />
+    <rect x="430" y="240" width="4" height="16" rx="1" />
+  </g>
+  <g fill="#ffc145">
+    <path class="hk-flame" d="M388 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M399 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M410 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M421 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M443 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M454 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M465 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M476 246 q4 5 0 9 q-4 -4 0 -9 z" />
+    <path class="hk-flame" d="M432 230 q4 5 0 9 q-4 -4 0 -9 z" />
+  </g>
+    </g>
+  <!-- a dreidel -->
+  <g class="hk-spin">
+    <rect x="76" y="258" width="6" height="12" rx="2" fill="#1565c0" />
+    <path d="M62 270 H96 V292 L79 310 L62 292 Z" fill="#1e88e5" />
+    <path d="M62 270 H96 V276 H62 Z" fill="#64b5f6" />
+    <text x="79" y="292" text-anchor="middle" font-family="'Arial Hebrew', 'Noto Sans Hebrew', serif" font-size="14" font-weight="700" fill="#ffffff">ג</text>
+  </g>
+</svg>

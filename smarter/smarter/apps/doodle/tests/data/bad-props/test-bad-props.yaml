@@ -1,0 +1,8 @@
+slug: test-bad-props
+name: Test bad props
+category: season
+alt_text: A theme whose props are of another viewBox.
+link_url: https://example.com/
+regions: ["*"]
+schedule:
+  kind: never

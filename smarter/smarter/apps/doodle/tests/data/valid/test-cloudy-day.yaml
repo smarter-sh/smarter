@@ -1,0 +1,9 @@
+slug: test-cloudy-day
+name: Test cloudy day
+category: season
+alt_text: The base scene, on a cloudy day.
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 6
+  day: 21

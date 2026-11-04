@@ -32,6 +32,7 @@ tldextract                              # Extracts the top-level domain from a U
 validators                              # Data validation library
 mailchimp-marketing                     # Mailchimp API, for adding people to the mailing list
 pycountry                               # ISO country, subdivision, language, currency and their translations
+holidays                                # public holidays of about 150 countries, for the sign-in page's Doodle
 
 # Django
 # ------------
