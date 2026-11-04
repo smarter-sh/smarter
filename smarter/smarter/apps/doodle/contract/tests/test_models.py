@@ -2,6 +2,7 @@
 
 import unittest
 
+from smarter.apps.doodle.const import LEARN_HOW_URL
 from smarter.apps.doodle.contract.models import (
     DoodleApiResponse,
     DoodleOfTheDay,
@@ -39,7 +40,8 @@ class TestDoodleContract(unittest.TestCase):
         drawn = DIWALI.model_copy(update={"ai_credit": "drawn"})
         response = DoodleApiResponse.from_doodle(drawn, animated=True, show_caption=True)
         self.assertEqual(response.to_json()["aiCredit"], "drawn")
-        self.assertTrue(response.learn_how_url.startswith("https://docs.smarter.sh/"))
+        self.assertEqual(response.learn_how_url, LEARN_HOW_URL)
+        self.assertTrue(response.learn_how_url.startswith("https://"))
         hidden = DoodleApiResponse.from_doodle(drawn, animated=True, show_caption=True, show_ai_credit=False)
         self.assertEqual(hidden.ai_credit, "")
 
