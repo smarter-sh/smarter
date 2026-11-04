@@ -1,0 +1,12 @@
+slug: test-sunny-day
+name: Test sunny day
+category: season
+caption: Hello, sun!
+alt_text: A sun above a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/Sun
+priority: 100
+regions: [mx]
+schedule:
+  kind: fixed
+  month: 6
+  day: 21

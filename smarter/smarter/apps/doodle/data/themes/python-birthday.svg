@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .py-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: py-flicker 0.9s ease-in-out infinite alternate; }
+    @keyframes py-flicker { from { transform: scaleY(0.85); } to { transform: scaleY(1.1); } }
+  </style>
+  <!-- a party hat on the chat window -->
+  <g transform="rotate(-12 204 92)">
+    <path d="M190 106 L218 106 L204 70 Z" fill="#4fc3f7" />
+    <path d="M194.5 94 H213.5 M199.3 82 H208.7" stroke="#ffc145" stroke-width="3" />
+    <circle cx="204" cy="69" r="4.5" fill="#ff5733" />
+  </g>
+  <!-- a birthday cake -->
+  <g transform="translate(24 10)">
+  <rect x="404" y="270" width="76" height="30" rx="4" fill="#ffffff" />
+  <path d="M404 278 q9.5 8 19 0 t19 0 t19 0 t19 0" fill="none" stroke="#ff6b9a" stroke-width="4" />
+  <rect x="398" y="298" width="88" height="6" rx="3" fill="#ffc145" />
+  <rect x="425" y="252" width="5" height="18" rx="2" fill="#4fc3f7" />
+  <rect x="440" y="252" width="5" height="18" rx="2" fill="#ffc145" />
+  <rect x="455" y="252" width="5" height="18" rx="2" fill="#00c2a8" />
+  <g fill="#ffc145">
+    <path class="py-flame" d="M427.5 240 q4 6 0 11 q-4 -5 0 -11 z" />
+    <path class="py-flame" d="M442.5 240 q4 6 0 11 q-4 -5 0 -11 z" />
+    <path class="py-flame" d="M457.5 240 q4 6 0 11 q-4 -5 0 -11 z" />
+  </g>
+    </g>
+  <!-- a prompt, waiting -->
+  <text x="40" y="296" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700" fill="#ffc145">&gt;&gt;&gt;<tspan fill="#ffffff"> 🎂</tspan></text>
+</svg>

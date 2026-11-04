@@ -1,0 +1,12 @@
+slug: lunar-new-year
+name: Lunar New Year
+category: celebration
+caption: Happy Lunar New Year!
+alt_text: Two red lanterns with golden tassels sway above a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/Lunar_New_Year
+priority: 70
+regions: [east-asia, southeast-asia, us, ca, oceania, global]
+schedule:
+  kind: holiday
+  country: CN
+  holiday: Spring Festival

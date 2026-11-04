@@ -22,6 +22,7 @@ from smarter.apps.guardrail.services.strategies.clients import (
     OpenAIGuardrailClient,
     default_client_for,
 )
+from smarter.lib.openai.model_quirks import DEFAULT_TEMPERATURE_ONLY_MODELS
 
 from .base_classes import GuardrailTestBase
 
@@ -69,7 +70,7 @@ class TestGuardrailClients(GuardrailTestBase):
         client, sdk = self.client()
         message = SimpleNamespace(content='{"triggered": true, "confidence": 0.9, "rationale": "r"}')
         sdk.chat.completions.create.return_value = SimpleNamespace(choices=[SimpleNamespace(message=message)])
-        verdict = client.judge("prompt", model="gpt-6-luna")
+        verdict = client.judge("prompt", model="test-judge-model")
         self.assertTrue(verdict.triggered)
         kwargs = sdk.chat.completions.create.call_args.kwargs
         self.assertEqual(kwargs["response_format"], {"type": "json_object"})
@@ -77,6 +78,40 @@ class TestGuardrailClients(GuardrailTestBase):
         # the text under judgement may try to instruct the judge, so the system message forbids it
         self.assertEqual(kwargs["messages"][0], {"role": "system", "content": JUDGE_SYSTEM_MESSAGE})
         self.assertEqual(kwargs["messages"][1], {"role": "user", "content": "prompt"})
+
+    def test_judge_retries_without_a_rejected_temperature(self):
+        """Test that a model that rejects the temperature is retried without it, and remembered."""
+        client, sdk = self.client()
+        model = "test-default-temperature-only"
+        self.addCleanup(DEFAULT_TEMPERATURE_ONLY_MODELS.discard, model)
+        message = SimpleNamespace(content='{"triggered": false, "confidence": 0.1, "rationale": "r"}')
+        completion = SimpleNamespace(choices=[SimpleNamespace(message=message)])
+        rejected = openai.BadRequestError(
+            "temperature", response=mock.MagicMock(status_code=400), body={"param": "temperature"}
+        )
+        rejected.param = "temperature"
+        sdk.chat.completions.create.side_effect = [rejected, completion]
+        with mock.patch("smarter.apps.guardrail.services.strategies.clients.logger"):
+            verdict = client.judge("prompt", model=model)
+        self.assertFalse(verdict.triggered)
+        calls = sdk.chat.completions.create.call_args_list
+        self.assertIn("temperature", calls[0].kwargs)
+        self.assertNotIn("temperature", calls[1].kwargs)
+        self.assertIn(model, DEFAULT_TEMPERATURE_ONLY_MODELS)
+        sdk.chat.completions.create.side_effect = None
+        sdk.chat.completions.create.return_value = completion
+        client.judge("prompt", model=model)
+        self.assertNotIn("temperature", sdk.chat.completions.create.call_args.kwargs)
+
+    def test_judge_raises_other_bad_requests(self):
+        """Test that a bad request about anything else isn't retried."""
+        client, sdk = self.client()
+        rejected = openai.BadRequestError("model", response=mock.MagicMock(status_code=400), body={"param": "model"})
+        rejected.param = "model"
+        sdk.chat.completions.create.side_effect = rejected
+        with self.assertRaises(GuardrailProviderError):
+            client.judge("prompt", model="test-judge-model")
+        self.assertEqual(sdk.chat.completions.create.call_count, 1)
 
     def test_errors(self):
         """Test that the SDK's errors are raised as GuardrailProviderError."""

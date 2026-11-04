@@ -1,27 +1,22 @@
 """Verify that the Stackademy LLMClients work, with a real prompt to each one."""
 
-from http import HTTPStatus
-
 from django.core.management import CommandError
-from pydantic import ValidationError
-from rest_framework.test import APIClient
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
 from smarter.apps.llmclient.models import LLMClient
-from smarter.apps.prompt.contract.models import (
-    PromptChatApiMessage,
-    PromptChatApiPromptResponse,
+from smarter.apps.llmclient.prompting import (
+    SmarterLLMClientPromptError,
+    prompt_llmclient,
+    single_use_api_key,
 )
-from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
+from smarter.apps.prompt.contract.models import PromptChatApiMessage
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
-from smarter.lib.drf.models import SmarterAuthToken
-from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 logger_prefix = SmarterFormattedText.text(f"{__name__}")
@@ -106,26 +101,18 @@ class Command(SmarterCommand):
         :param user_profile: The owner of the Stackademy LLMClients.
         :raises CommandError: If an LLMClient doesn't work.
         """
-        token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
-            user_profile=user_profile,
-            name="verify_stackademy",
-            user=user_profile.user,
-            description="DELETE ME: single-use key created by manage.py verify_stackademy",
-        )
-        try:
+        # the single-use api key is deleted, whether or not the verification succeeded.
+        with single_use_api_key(user_profile, "verify_stackademy") as token_key:
             for name in STACKADEMY_LLMCLIENTS:
                 self.verify_llmclient(name=name, user_profile=user_profile, token_key=token_key)
-        finally:
-            # the single-use api key is deleted, whether or not the verification succeeded.
-            token_record.delete()
 
     def verify_llmclient(self, name: str, user_profile: UserProfile, token_key: str) -> None:
         """
         Verify that a Stackademy LLMClient answers :data:`VERIFICATION_PROMPT` with its plugin's data.
 
-        The prompt is sent in-process to the chat api, as a client of version 2 of the chat
-        contract would send it. The LLMClient works if the prompt succeeds, the LLM calls a tool,
-        every tool call returns data, and the LLM answers.
+        The prompt is sent in-process to the chat api, with
+        :func:`~smarter.apps.llmclient.prompting.prompt_llmclient`. The LLMClient works if the
+        prompt succeeds, the LLM calls a tool, every tool call returns data, and the LLM answers.
 
         :param name: The LLMClient's name.
         :param user_profile: The owner of the LLMClient.
@@ -138,28 +125,10 @@ class Command(SmarterCommand):
         except LLMClient.DoesNotExist as e:
             raise CommandError(f"LLMClient {name} does not exist.") from e
 
-        client = APIClient()
-        headers = {"Authorization": f"Token {token_key}", "X-Smarter-Capabilities": "chat-contract-v2"}
-        if smarter_settings.environment in SmarterEnvironments.aws_environments:
-            headers["Host"] = smarter_settings.environment_platform_domain
-
-        def post(path: str, body: SmarterDictType) -> SmarterDictType:
-            response = client.post(f"/api/v1/llm-clients/{llmclient.id}/{path}", data=body, format="json", headers=headers)  # type: ignore[arg-type]
-            if response.status_code != HTTPStatus.OK:
-                raise CommandError(
-                    f"LLMClient {name} {path} failed with status {response.status_code}: {response.content.decode()}"
-                )
-            return response.json()
-
-        config = post("config/", {"session_key": None})
-        session_key = config["data"]["session_key"]
-        body = post(
-            "prompt/", {"session_key": session_key, "messages": [{"role": "user", "content": VERIFICATION_PROMPT}]}
-        )
         try:
-            result = PromptChatApiPromptResponse.model_validate(body).data
-        except ValidationError as e:
-            raise CommandError(f"LLMClient {name} returned an invalid prompt response: {e}") from e
+            result = prompt_llmclient(llmclient, token_key, VERIFICATION_PROMPT)
+        except SmarterLLMClientPromptError as e:
+            raise CommandError(str(e)) from e
 
         tool_messages = [message for message in result.messages if message.role == "tool"]
         if not tool_messages:

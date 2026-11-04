@@ -1,0 +1,18 @@
+/*
+ * The Doodle's own styles: its fade-in. The panel's layout is the page's, in
+ * templates/account/authentication/base.html, so that it is the same with and without JavaScript.
+ */
+.smarter-doodle-image {
+  opacity: 0.85;
+  transition: opacity 0.6s ease-in;
+}
+
+.smarter-doodle-image-loaded {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smarter-doodle-image {
+    transition: none;
+  }
+}

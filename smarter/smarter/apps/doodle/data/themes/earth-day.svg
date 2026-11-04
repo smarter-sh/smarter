@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .ed-spin { transform-box: fill-box; transform-origin: center; animation: ed-spin 40s linear infinite; }
+    @keyframes ed-spin { to { transform: rotate(360deg); } }
+    .ed-grow { transform-box: fill-box; transform-origin: 50% 100%; animation: ed-grow 4s ease-in-out infinite alternate; }
+    @keyframes ed-grow { from { transform: scale(0.92); } to { transform: scale(1.05); } }
+  </style>
+  <!-- the planet -->
+  <circle cx="70" cy="56" r="34" fill="#ffffff" opacity="0.08" />
+  <circle cx="70" cy="56" r="26" fill="#2e86de" />
+  <g class="ed-spin">
+    <path d="M56 40 c6 -4 14 -2 16 4 c2 6 -6 8 -4 14 c2 6 -8 8 -12 2 c-4 -6 -6 -16 0 -20 z" fill="#4cd137" />
+    <path d="M80 60 c4 -2 10 0 10 6 c0 6 -8 10 -12 6 c-3 -3 -2 -10 2 -12 z" fill="#4cd137" />
+    <path d="M76 36 c3 -2 7 -1 8 2 c-2 2 -6 2 -8 -2 z" fill="#4cd137" />
+  </g>
+  <!-- seedlings -->
+  <g fill="#4cd137">
+    <g class="ed-grow">
+      <path d="M60 304 V286" stroke="#4cd137" stroke-width="2.5" stroke-linecap="round" />
+      <path d="M60 290 c-12 0 -16 -10 -14 -14 c6 0 14 4 14 14 z M60 288 c10 -2 14 -10 12 -14 c-6 0 -12 4 -12 14 z" />
+    </g>
+    <g class="ed-grow">
+      <path d="M140 306 V292" stroke="#4cd137" stroke-width="2.5" stroke-linecap="round" />
+      <path d="M140 296 c-9 0 -12 -7 -10 -10 c4 0 10 3 10 10 z M140 294 c8 -1 11 -8 9 -11 c-5 0 -9 3 -9 11 z" />
+    </g>
+    <g class="ed-grow">
+      <path d="M380 306 V290" stroke="#4cd137" stroke-width="2.5" stroke-linecap="round" />
+      <path d="M380 294 c-10 0 -14 -8 -12 -12 c5 0 12 3 12 12 z M380 292 c9 -1 12 -9 10 -12 c-5 0 -10 3 -10 12 z" />
+    </g>
+    <g class="ed-grow">
+      <path d="M460 304 V284" stroke="#4cd137" stroke-width="2.5" stroke-linecap="round" />
+      <path d="M460 288 c-12 0 -16 -10 -14 -14 c6 0 14 4 14 14 z M460 286 c10 -2 14 -10 12 -14 c-6 0 -12 4 -12 14 z" />
+    </g>
+  </g>
+</svg>

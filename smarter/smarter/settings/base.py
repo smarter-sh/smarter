@@ -808,6 +808,7 @@ INSTALLED_APPS = [
     "smarter.apps.connection",
     "smarter.apps.dashboard",
     "smarter.apps.docs",
+    "smarter.apps.doodle",
     "smarter.apps.guardrail",
     "smarter.apps.infrastructure",
     "smarter.apps.llmclient",

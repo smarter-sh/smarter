@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .lny-sway { transform-box: view-box; animation: lny-sway 4s ease-in-out infinite; }
+    .lny-left { transform-origin: 120px 0px; }
+    .lny-right { transform-origin: 400px 0px; animation-delay: -2s; }
+    @keyframes lny-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  </style>
+  <g class="lny-sway lny-left">
+    <path d="M120 0 V28" stroke="#ffc145" stroke-width="1.6" />
+    <rect x="110" y="26" width="20" height="6" rx="2" fill="#ffc145" />
+    <ellipse cx="120" cy="52" rx="24" ry="21" fill="#e53935" />
+    <path d="M120 31 C108 38 108 66 120 73 M120 31 C132 38 132 66 120 73" fill="none" stroke="#b71c1c" stroke-width="1.6" />
+    <rect x="110" y="72" width="20" height="6" rx="2" fill="#ffc145" />
+    <path d="M114 78 V96 M120 78 V100 M126 78 V96" stroke="#ffc145" stroke-width="2" stroke-linecap="round" />
+  </g>
+  <g class="lny-sway lny-right">
+    <path d="M400 0 V20" stroke="#ffc145" stroke-width="1.6" />
+    <rect x="390" y="18" width="20" height="6" rx="2" fill="#ffc145" />
+    <ellipse cx="400" cy="44" rx="24" ry="21" fill="#e53935" />
+    <path d="M400 23 C388 30 388 58 400 65 M400 23 C412 30 412 58 400 65" fill="none" stroke="#b71c1c" stroke-width="1.6" />
+    <rect x="390" y="64" width="20" height="6" rx="2" fill="#ffc145" />
+    <path d="M394 70 V86 M400 70 V90 M406 70 V86" stroke="#ffc145" stroke-width="2" stroke-linecap="round" />
+  </g>
+  <g fill="#ffc145">
+    <circle cx="190" cy="54" r="2" />
+    <circle cx="232" cy="80" r="1.6" />
+    <circle cx="296" cy="64" r="2" />
+    <circle cx="340" cy="86" r="1.6" />
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+slug: eid-al-fitr
+name: Eid al-Fitr
+category: celebration
+caption: Eid Mubarak!
+alt_text: A golden crescent moon, stars and a glowing lantern above a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/Eid_al-Fitr
+priority: 70
+regions: [middle-east, south-asia, southeast-asia, africa, global]
+schedule:
+  kind: holiday
+  country: ID
+  holiday: Eid al-Fitr

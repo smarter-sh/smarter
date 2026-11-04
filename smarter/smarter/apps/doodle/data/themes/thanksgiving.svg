@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .tg-leaf { transform-box: fill-box; transform-origin: center; animation: tg-fall 9s linear infinite; }
+    @keyframes tg-fall { 0% { transform: translate(0, -10px) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translate(30px, 330px) rotate(300deg); opacity: 0; } }
+  </style>
+  <g transform="translate(40 0)"><path class="tg-leaf" style="animation-delay: 0s; animation-duration: 9s" d="M0 -24 C8 -18 8 -6 0 0 C-8 -6 -8 -18 0 -24 Z M0 -24 V2" fill="#e65100" stroke="#5d4037" stroke-width="0.8" /></g>
+  <g transform="translate(120 0)"><path class="tg-leaf" style="animation-delay: -3s; animation-duration: 11s" d="M0 -24 C8 -18 8 -6 0 0 C-8 -6 -8 -18 0 -24 Z M0 -24 V2" fill="#ffb300" stroke="#5d4037" stroke-width="0.8" /></g>
+  <g transform="translate(160 0)"><path class="tg-leaf" style="animation-delay: -6s; animation-duration: 10s" d="M0 -24 C8 -18 8 -6 0 0 C-8 -6 -8 -18 0 -24 Z M0 -24 V2" fill="#c62828" stroke="#5d4037" stroke-width="0.8" /></g>
+  <g transform="translate(350 0)"><path class="tg-leaf" style="animation-delay: -1.5s; animation-duration: 10s" d="M0 -24 C8 -18 8 -6 0 0 C-8 -6 -8 -18 0 -24 Z M0 -24 V2" fill="#ff8f00" stroke="#5d4037" stroke-width="0.8" /></g>
+  <g transform="translate(420 0)"><path class="tg-leaf" style="animation-delay: -4.5s; animation-duration: 9s" d="M0 -24 C8 -18 8 -6 0 0 C-8 -6 -8 -18 0 -24 Z M0 -24 V2" fill="#c62828" stroke="#5d4037" stroke-width="0.8" /></g>
+  <g transform="translate(490 0)"><path class="tg-leaf" style="animation-delay: -7s; animation-duration: 11s" d="M0 -24 C8 -18 8 -6 0 0 C-8 -6 -8 -18 0 -24 Z M0 -24 V2" fill="#ffb300" stroke="#5d4037" stroke-width="0.8" /></g>
+  <!-- a pumpkin pie -->
+  <path d="M30 292 C30 308 110 308 110 292 Z" fill="#c97c3d" />
+  <ellipse cx="70" cy="292" rx="40" ry="10" fill="#e8a25c" />
+  <ellipse cx="70" cy="291" rx="33" ry="7" fill="#e67e22" />
+  <ellipse cx="70" cy="289" rx="10" ry="3" fill="#fff8e1" />
+  <!-- a pumpkin -->
+  <rect x="452" y="266" width="5" height="10" rx="2" fill="#558b2f" />
+  <ellipse cx="455" cy="292" rx="28" ry="20" fill="#ff8f00" />
+  <path d="M440 276 C434 288 436 300 442 310 M470 276 C476 288 474 300 468 310 M455 272 V312" fill="none" stroke="#e65100" stroke-width="2" />
+</svg>
