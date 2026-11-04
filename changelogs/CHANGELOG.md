@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.2-alpha.1...v0.42.2-alpha.2) (2026-11-04)
+
+### Bug Fixes
+
+* **mcpserver:** log a tool call's argument names at INFO, and its values only at DEBUG ([0490183](https://github.com/smarter-sh/smarter/commit/04901837d15b862e713ab6d78716f5d99e1197e4)), closes [#918](https://github.com/smarter-sh/smarter/issues/918)
+
 ## [0.42.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.1...v0.42.2-alpha.1) (2026-11-04)
 
 ### Performance
