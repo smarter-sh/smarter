@@ -74,7 +74,7 @@ from .models import (
     DoodleStatus,
     DoodleTheme,
 )
-from .planner import candidates
+from .planner import candidates, due_on, themes_without_svg
 from .regions import DoodleRegion, region_countries
 from .sanitize import extract_svg, sanitize_svg
 from .schedule import DoodleSchedule, holidays_on
@@ -318,10 +318,11 @@ def editor_request(
     :rtype: DoodleEditorRequest
     """
     labels = dict(DoodleRegion.choices)
+    due = due_on(day)
     request_regions = []
     for region in regions:
         catalog = []
-        for theme in candidates(day, region):
+        for theme in candidates(day, region, due=due):
             catalog.append(
                 DoodleEditorCatalogTheme(
                     id=theme.slug, name=theme.name, category=theme.category, priority=theme.priority
@@ -461,8 +462,9 @@ def tone_check(decision: DoodleEditorDecision, subject: DoodleEditorSubject) -> 
     :rtype: Optional[str]
     """
     account = smarter_cached_objects.smarter_account
-    guardrail = Guardrail.objects.filter(name=TONE_GUARDRAIL, user_profile__account=account).first()
-    if guardrail is None:
+    try:
+        guardrail: Guardrail = Guardrail.get_cached_object(name=TONE_GUARDRAIL, account=account)  # type: ignore[assignment]
+    except Guardrail.DoesNotExist:
         return f"the Guardrail {TONE_GUARDRAIL} doesn't exist, so nothing is drawn"
     text = (
         f"{subject.name}: {subject.description}. "
@@ -482,10 +484,14 @@ def smarter_llmclient(name: str) -> Optional[LLMClient]:
 
     :param name: e.g. :data:`~smarter.apps.doodle.const.EDITOR_LLMCLIENT`.
     :returns: The LLMClient, or ``None`` if the example manifests that declare it aren't loaded.
+        A missing LLMClient isn't cached, so it is found as soon as they are.
     :rtype: Optional[LLMClient]
     """
     account = smarter_cached_objects.smarter_account
-    llmclient = LLMClient.objects.filter(name=name, user_profile__account=account).first()
+    try:
+        llmclient = LLMClient.get_cached_object(name=name, account=account)
+    except LLMClient.DoesNotExist:
+        return None
     return llmclient
 
 
@@ -517,7 +523,7 @@ def draw(decision: DoodleEditorDecision, subject: DoodleEditorSubject, day: date
     readable = slugify(f"ai-{day.isoformat()}-{subject.id.replace(':', '-')}")[:54].rstrip("-")
     digest = hashlib.sha1(subject.id.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
     slug = f"{readable}-{digest}"
-    existing = DoodleTheme.objects.filter(slug=slug).select_related("artwork").first()
+    existing = themes_without_svg().filter(slug=slug).first()
     if existing is not None:
         return existing
 
@@ -580,9 +586,9 @@ def apply_decision(
             status = DoodleStatus.PROPOSED
         reason = f"Chosen by the Smarter Doodle Editor, and drawn by the Smarter Doodle Artist: {decision.reason}"
     elif decision.choice == "catalog":
-        theme = DoodleTheme.objects.select_related("artwork").get(slug=decision.id)
+        theme = themes_without_svg().get(slug=decision.id)
     else:
-        theme = DoodleTheme.objects.select_related("artwork").get(slug=DEFAULT_THEME_SLUG)
+        theme = themes_without_svg().get(slug=DEFAULT_THEME_SLUG)
 
     doodle, _ = Doodle.objects.update_or_create(
         date=day,

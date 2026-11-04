@@ -69,12 +69,12 @@ class TestRegions(unittest.TestCase):
         self.assertIsInstance(local_date("UTC"), datetime.date)
 
     def test_region_countries(self):
-        self.assertEqual(region_countries("ca"), ["CA"])
+        self.assertEqual(region_countries("ca"), ("CA",))
         self.assertIn("IN", region_countries("south-asia"))
         self.assertIn("BR", region_countries("latam"))
         self.assertNotIn("US", region_countries("latam"))
         self.assertIn("FR", region_countries("europe"))
-        self.assertEqual(region_countries("global"), [])
+        self.assertEqual(region_countries("global"), ())
 
     def test_theme_applies_to(self):
         self.assertTrue(theme_applies_to(["*"], "mx"))

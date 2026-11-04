@@ -90,6 +90,7 @@ class DoodleAdmin(SmarterSuperUserOnlyModelAdmin):
 
     change_list_template = TEMPLATES + "change_list.html"
     list_display = ["date", "region", "theme", "status", "source", "title"]
+    list_select_related = ["theme"]
     list_filter = ["region", "status", "source", "theme"]
     search_fields = ["title", "caption", "theme__slug"]
     readonly_fields = ["artwork", "source", "reason", "preview", "created_at", "updated_at"]
@@ -160,7 +161,9 @@ class DoodleAdmin(SmarterSuperUserOnlyModelAdmin):
         :returns: One row per planned day, with a cell for each region, in the regions' order.
         :rtype: list[DoodlePreviewDay]
         """
-        doodles = Doodle.objects.filter(date__gte=first).select_related("theme", "artwork").order_by("date")
+        doodles = Doodle.objects.filter(date__gte=first).select_related("theme", "artwork")
+        # the cells link to each artwork by its hash: the SVG text isn't needed.
+        doodles = doodles.defer("theme__props_svg", "artwork__svg").order_by("date")
         by_day: dict[datetime.date, dict[str, Doodle]] = {}
         for doodle in doodles:
             by_day.setdefault(doodle.date, {})[doodle.region] = doodle
