@@ -2,6 +2,7 @@
 
 import datetime
 import decimal
+import json as stdlib_json
 import uuid
 
 from smarter.lib import json
@@ -94,6 +95,32 @@ class TestDumps(SmarterTestBase):
                 return "a thing"
 
         self.assertEqual(json.loads(json.dumps({"thing": Thing()})), {"thing": "a thing"})
+
+    def test_encoder_runs_before_the_str_fallback(self):
+        """Test that dumps() formats datetimes, sets and lazy strings with the encoder, not str()."""
+        from django.utils.translation import (  # pylint: disable=import-outside-toplevel
+            gettext_lazy,
+        )
+
+        when = datetime.datetime(2026, 1, 2, 3, 4, 5, tzinfo=datetime.timezone.utc)
+        data = json.loads(json.dumps({"when": when, "ids": {1}, "label": gettext_lazy("Name")}))
+        self.assertEqual(data, {"when": "2026-01-02T03:04:05Z", "ids": [1], "label": "Name"})
+
+    def test_explicit_default_is_used(self):
+        """Test that a caller's default replaces the str() fallback."""
+        self.assertEqual(json.loads(json.dumps({"x": object()}, default=lambda o: "custom")), {"x": "custom"})
+
+    def test_custom_encoder_keeps_its_own_default(self):
+        """Test that a caller's encoder class still runs, with str() as the fallback."""
+
+        class Encoder(stdlib_json.JSONEncoder):
+            def default(self, o):
+                if isinstance(o, complex):
+                    return [o.real, o.imag]
+                return super().default(o)
+
+        data = json.loads(json.dumps({"c": 1 + 2j, "x": "ok"}, cls=Encoder))
+        self.assertEqual(data, {"c": [1.0, 2.0], "x": "ok"})
 
     def test_indent_zero(self):
         self.assertEqual(json.dumps({"a": 1}, indent=0), '{\n"a": 1\n}')
