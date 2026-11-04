@@ -63,7 +63,23 @@ MAX_OBSERVANCES_PER_REGION = 12
 MAX_GENERATED_SVG_LENGTH = 40_000
 """The longest SVG, in characters, that the Smarter Doodle Artist may answer with."""
 
-LEARN_HOW_URL = "https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration/doodle.html"
+DOODLE_BLOG_POST_URL = ""
+"""
+The blog post that explains how the doodle is chosen and drawn, on blog.smarter.sh.
+
+Set it once the post is published, and the credit's Learn how links to it. Empty, it links to
+:data:`DOODLE_DOCS_URL`.
+"""
+
+DOODLE_DOCS_URL = (
+    "https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration/doodle.html"
+)
+"""The doodle's documentation, where the credit's Learn how links to until the blog post exists."""
+
+if DOODLE_BLOG_POST_URL:
+    LEARN_HOW_URL = DOODLE_BLOG_POST_URL
+else:
+    LEARN_HOW_URL = DOODLE_DOCS_URL
 """Where the credit of a doodle that a Smarter AI application chose or drew links to: how it works."""
 
 DoodleAiCredit = Literal["", "chosen", "drawn"]
