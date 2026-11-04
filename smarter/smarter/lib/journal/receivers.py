@@ -9,7 +9,6 @@ so the receivers log an entry's key, thing, command and status code, never its d
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -24,7 +23,7 @@ from .signals import (
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 error_logger = logging.getSmarterLogger(__name__)
 """Logs whatever the waffle switches, for a journal entry that could not be saved."""
-module_prefix = __name__
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(post_save, sender=SAMJournal)
@@ -38,8 +37,8 @@ def samjournal_post_save(sender, instance: SAMJournal, created, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s SAMJournal: %s, thing: %s, command: %s, status_code: %s, created: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.samjournal_post_save()",
+        "%s.samjournal_post_save() SAMJournal: %s, thing: %s, command: %s, status_code: %s, created: %s",
+        logger_prefix,
         instance.key,
         instance.thing,
         instance.command,
@@ -58,8 +57,8 @@ def samjournal_post_delete(sender, instance: SAMJournal, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s SAMJournal: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.samjournal_post_delete()",
+        "%s.samjournal_post_delete() SAMJournal: %s",
+        logger_prefix,
         instance.key,
     )
 
@@ -74,8 +73,8 @@ def journal_entry_created_receiver(sender, journal: SAMJournal, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s sender: %s, journal: %s, thing: %s, command: %s, status_code: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.journal_entry_created()",
+        "%s.journal_entry_created_receiver() sender: %s, journal: %s, thing: %s, command: %s, status_code: %s",
+        logger_prefix,
         sender,
         journal.key,
         journal.thing,
@@ -90,21 +89,33 @@ def journal_entry_failed_receiver(sender, user, thing, command, status, request,
     Signal receiver for journal_entry_failed signal.
 
     It logs at error level, whatever the waffle switches, because a missing journal entry is a gap in an
-    audit record. Operators monitor the logs for ``could not create journal entry``.
+    audit record. Operators monitor the logs for ``could not create journal entry``. The request and
+    response documents are not logged, because they hold credentials and user content.
+
+    :param sender: The class that sent the signal.
+    :param user: The user the entry was for, or None.
+    :param thing: The kind of resource.
+    :param command: The command that was journaled.
+    :param status: The response's http status code.
+    :param request: The serialized request. Not logged.
+    :param response: The response document. Not logged.
+    :param error: The exception that stopped the entry from being created.
+    :param kwargs: Any other signal arguments.
     """
-    prefix = f"{SmarterFormattedText.text(module_prefix)}.journal_entry_failed()"
     error_logger.error(
-        "%s sender=%s, user=%s, thing=%s, command=%s, status=%s\nrequest=%s\nresponse: %s",
-        prefix,
+        "%s.journal_entry_failed_receiver() sender=%s, user=%s, thing=%s, command=%s, status=%s",
+        logger_prefix,
         sender,
         user,
         thing,
         command,
         status,
-        request,
-        response,
     )
-    error_logger.error("%s could not create journal entry: %s", prefix, error)
+    error_logger.error(
+        "%s.journal_entry_failed_receiver() could not create journal entry: %s",
+        logger_prefix,
+        error,
+    )
 
 
 @receiver(journal_entry_accessed)
@@ -118,8 +129,8 @@ def journal_entry_accessed_receiver(sender, journal: SAMJournal, user, **kwargs)
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s sender: %s, journal: %s, user: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.journal_entry_accessed()",
+        "%s.journal_entry_accessed_receiver() sender: %s, journal: %s, user: %s",
+        logger_prefix,
         sender,
         journal.key,
         user,
@@ -137,8 +148,8 @@ def journal_entries_listed_receiver(sender, user, count, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s sender: %s, user: %s, count: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.journal_entries_listed()",
+        "%s.journal_entries_listed_receiver() sender: %s, user: %s, count: %s",
+        logger_prefix,
         sender,
         user,
         count,
