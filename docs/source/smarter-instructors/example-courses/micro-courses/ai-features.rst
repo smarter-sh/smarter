@@ -33,6 +33,10 @@ to be right:
   prompt is kept, each part has a switch, and the page says when an AI chose its doodle:
   `admin.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/admin.py>`__.
 
+.. image:: https://cdn.smarter.sh/docs/smarter-instructors/example-courses/micro-courses/ai-features/signin-panel.png
+   :alt: The Doodle on the production sign-in page: an LLMClient chat window joined to icons for a Plugin, a Guardrail, a database and a Secret, with fireworks and confetti, the caption Happy Independence Day!, and the note Drawn by a Smarter AI application. Learn how
+   :width: 100%
+
 **What the course covers.** Deciding which parts of a feature belong to a model and which to
 code; building the feature's safe answer first; declaring the AI parts as LLMClients and
 Guardrails, and prompting them from code; designing the request and the answer as a contract,
