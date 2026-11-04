@@ -1,8 +1,7 @@
 """Celery Beat schedule for the smarter project."""
 
 import os
-
-from celery.schedules import timedelta
+from datetime import timedelta
 
 # Set the default Django settings module for the 'celery' program
 # and then instantiate the Celery singleton.
@@ -44,6 +43,11 @@ app.conf.beat_schedule = {
     "charge-llmhost-computes": {
         "task": "smarter.apps.llmhost.tasks.charge_llmhost_computes",
         "schedule": timedelta(hours=1),
+        "options": OPERATIONAL,
+    },
+    "plan-doodles": {
+        "task": "smarter.apps.doodle.tasks.plan_doodles",
+        "schedule": timedelta(hours=6),
         "options": OPERATIONAL,
     },
     "purge-guardrail-events": {

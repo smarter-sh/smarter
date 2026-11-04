@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Doodle</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered
+    by Django.
+
+    See:
+    - smarter.apps.doodle.templatetags.react_doodle
+    - templates/react/doodle.html, which templates/account/authentication/base.html includes
+    -->
+    <div
+      id="smarter-doodle-root"
+      class="smarter-doodle"
+      smarter-doodle-api-url="/api/v1/doodles/today/"
+      smarter-doodle-base-image-url="/static/doodle/base.svg"
+      smarter-doodle-home-url="/"
+      smarter-doodle-logo-url="/static/images/logo/smarter-crop.png"
+      smarter-doodle-product-name="The Smarter Project"
+      smarter-doodle-product-description="An open source, no-code AI authoring platform designed for instructional use."
+      smarter-doodle-project-url="https://smarter.sh"
+    ></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

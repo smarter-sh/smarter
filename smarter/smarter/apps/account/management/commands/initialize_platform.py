@@ -116,6 +116,13 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize Waffle switches: %s", e)
 
         try:
+            # the sign-in page's doodle: its theme catalog, on the current base scene, then a week of doodles.
+            call_command("load_doodle_themes")
+            call_command("plan_doodles")
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to load and plan the sign-in page's doodles: %s", e)
+
+        try:
             # queued for the Celery worker, which downloads the repositories from GitHub: the
             # smarter_project_* MCPClients of example-manifests read them through the platform's MCP server.
             call_command("index_smarter_project", queue=True)

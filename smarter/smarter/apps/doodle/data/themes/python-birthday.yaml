@@ -1,0 +1,12 @@
+slug: python-birthday
+name: Python's birthday
+category: science
+caption: Happy birthday, Python!
+alt_text: A Smarter LLMClient wears a party hat, beside a birthday cake. Python was first released on February 20, 1991.
+link_url: https://en.wikipedia.org/wiki/History_of_Python
+priority: 45
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 2
+  day: 20

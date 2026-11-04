@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <!-- an apple on the chat window -->
+  <path d="M312 86 C300 80 290 90 292 100 C294 108 302 110 312 106 C322 110 330 108 332 100 C334 90 324 80 312 86 Z" fill="#e53935" />
+  <path d="M312 86 C312 80 314 76 318 74" fill="none" stroke="#6d4c41" stroke-width="2.2" stroke-linecap="round" />
+  <path d="M316 80 C320 72 330 72 332 76 C328 82 320 82 316 80 Z" fill="#7cb342" />
+  <path d="M298 92 C298 88 302 86 304 86" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="2" stroke-linecap="round" />
+  <!-- a chalkboard -->
+  <rect x="26" y="252" width="110" height="60" rx="4" fill="#a1887f" />
+  <rect x="32" y="258" width="98" height="48" rx="2" fill="#2e5d4b" />
+  <text x="81" y="288" text-anchor="middle" font-family="'Comic Sans MS', 'Chalkboard', 'Marker Felt', cursive" font-size="16" fill="#ffffff" fill-opacity="0.9">a + b = ♥</text>
+  <!-- a pencil -->
+  <g transform="rotate(-20 450 290)">
+    <rect x="404" y="284" width="80" height="12" fill="#ffc145" />
+    <rect x="398" y="284" width="8" height="12" fill="#ff6b9a" />
+    <path d="M484 284 L500 290 L484 296 Z" fill="#f5deb3" />
+    <path d="M495 288 L500 290 L495 292 Z" fill="#424242" />
+  </g>
+</svg>

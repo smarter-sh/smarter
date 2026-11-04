@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .dw-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: dw-flicker 0.7s ease-in-out infinite alternate; }
+    @keyframes dw-flicker { from { transform: scale(0.9, 0.85); } to { transform: scale(1, 1.1); } }
+    .dw-glow { animation: dw-glow 2.4s ease-in-out infinite; }
+    @keyframes dw-glow { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.45; } }
+    .dw-bulb { animation: dw-twinkle 1.6s ease-in-out infinite; }
+    .dw-bulb-b { animation-delay: -0.8s; }
+    @keyframes dw-twinkle { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+  </style>
+  <path d="M0 18 Q130 60 260 22 Q390 60 520 18" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5" />
+  <circle class="dw-bulb" cx="65" cy="34" r="5" fill="#ff5733" />
+  <circle class="dw-bulb dw-bulb-b" cx="130" cy="40" r="5" fill="#ffc145" />
+  <circle class="dw-bulb" cx="195" cy="36" r="5" fill="#00c2a8" />
+  <circle class="dw-bulb dw-bulb-b" cx="325" cy="36" r="5" fill="#ff6b9a" />
+  <circle class="dw-bulb" cx="390" cy="40" r="5" fill="#ffc145" />
+  <circle class="dw-bulb dw-bulb-b" cx="455" cy="34" r="5" fill="#4fc3f7" />
+  <g><circle class="dw-glow" cx="40" cy="280" r="16" fill="#ffc145" opacity="0.3" />
+  <path d="M24 290 Q40 312 56 290 Z" fill="#e67e22" /><ellipse cx="40" cy="290" rx="16" ry="3" fill="#a04000" />
+  <path class="dw-flame" d="M40 270 Q46 282 40 288 Q34 282 40 270 Z" fill="#ffc145" /><path class="dw-flame" d="M40 278 Q43 284 40 288 Q37 284 40 278 Z" fill="#fff3b0" /></g>
+  <g><circle class="dw-glow" cx="95" cy="280" r="16" fill="#ffc145" opacity="0.3" />
+  <path d="M79 290 Q95 312 111 290 Z" fill="#e67e22" /><ellipse cx="95" cy="290" rx="16" ry="3" fill="#a04000" />
+  <path class="dw-flame" d="M95 270 Q101 282 95 288 Q89 282 95 270 Z" fill="#ffc145" /><path class="dw-flame" d="M95 278 Q98 284 95 288 Q92 284 95 278 Z" fill="#fff3b0" /></g>
+  <g><circle class="dw-glow" cx="150" cy="280" r="16" fill="#ffc145" opacity="0.3" />
+  <path d="M134 290 Q150 312 166 290 Z" fill="#e67e22" /><ellipse cx="150" cy="290" rx="16" ry="3" fill="#a04000" />
+  <path class="dw-flame" d="M150 270 Q156 282 150 288 Q144 282 150 270 Z" fill="#ffc145" /><path class="dw-flame" d="M150 278 Q153 284 150 288 Q147 284 150 278 Z" fill="#fff3b0" /></g>
+  <g><circle class="dw-glow" cx="370" cy="280" r="16" fill="#ffc145" opacity="0.3" />
+  <path d="M354 290 Q370 312 386 290 Z" fill="#e67e22" /><ellipse cx="370" cy="290" rx="16" ry="3" fill="#a04000" />
+  <path class="dw-flame" d="M370 270 Q376 282 370 288 Q364 282 370 270 Z" fill="#ffc145" /><path class="dw-flame" d="M370 278 Q373 284 370 288 Q367 284 370 278 Z" fill="#fff3b0" /></g>
+  <g><circle class="dw-glow" cx="425" cy="280" r="16" fill="#ffc145" opacity="0.3" />
+  <path d="M409 290 Q425 312 441 290 Z" fill="#e67e22" /><ellipse cx="425" cy="290" rx="16" ry="3" fill="#a04000" />
+  <path class="dw-flame" d="M425 270 Q431 282 425 288 Q419 282 425 270 Z" fill="#ffc145" /><path class="dw-flame" d="M425 278 Q428 284 425 288 Q422 284 425 278 Z" fill="#fff3b0" /></g>
+  <g><circle class="dw-glow" cx="480" cy="280" r="16" fill="#ffc145" opacity="0.3" />
+  <path d="M464 290 Q480 312 496 290 Z" fill="#e67e22" /><ellipse cx="480" cy="290" rx="16" ry="3" fill="#a04000" />
+  <path class="dw-flame" d="M480 270 Q486 282 480 288 Q474 282 480 270 Z" fill="#ffc145" /><path class="dw-flame" d="M480 278 Q483 284 480 288 Q477 284 480 278 Z" fill="#fff3b0" /></g>
+</svg>
