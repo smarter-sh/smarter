@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.0](https://github.com/smarter-sh/smarter/compare/v0.41.4...v0.42.0) (2026-11-04)
+
+### Features
+
+* **doodle:** add the sign-in page's doodle of the day ([0df9280](https://github.com/smarter-sh/smarter/commit/0df9280ff18c1155b6d1b8111a35dd42ec6d3302))
+* **doodle:** let Smarter AI applications choose and draw the doodle ([d07b91f](https://github.com/smarter-sh/smarter/commit/d07b91f677ff0b8428ac36c62be9b5670f7492b1))
+* **doodle:** let Smarter AI applications choose and draw the doodle ([a5b491b](https://github.com/smarter-sh/smarter/commit/a5b491b823119c4388309e39687ebe031c2b4ed4))
+* **doodle:** let the doodle editor follow trends, and check its tone ([2e6cb08](https://github.com/smarter-sh/smarter/commit/2e6cb0806c126bcdf064f278d785f2901665aaa8))
+* **doodle:** let the doodle editor follow trends, and check its tone ([210c935](https://github.com/smarter-sh/smarter/commit/210c9357e3744f0fb3f39620b84d05c580880dcd))
+
 ## [0.42.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.42.0-alpha.3...v0.42.0-alpha.4) (2026-11-04)
 
 ### Features
