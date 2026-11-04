@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.0-alpha.1...v0.42.0-alpha.2) (2026-11-04)
+
+### Features
+
+* **doodle:** let Smarter AI applications choose and draw the doodle ([d07b91f](https://github.com/smarter-sh/smarter/commit/d07b91f677ff0b8428ac36c62be9b5670f7492b1))
+* **doodle:** let Smarter AI applications choose and draw the doodle ([a5b491b](https://github.com/smarter-sh/smarter/commit/a5b491b823119c4388309e39687ebe031c2b4ed4))
+
 ## [0.42.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.41.4...v0.42.0-alpha.1) (2026-11-03)
 
 ### Features
