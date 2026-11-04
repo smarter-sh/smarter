@@ -1,9 +1,9 @@
 # pylint: disable=W0613,W0212
 """
-Cache management utilities for AuthToken objects.
+Cache management utilities for API keys, the :class:`~smarter.lib.drf.models.SmarterAuthToken` model.
 
 This module provides functions for efficient type-annotated retrieval and
-caching of AuthToken querysets. It includes utilities to:
+caching of API key querysets, imported here as ``AuthToken``. It includes utilities to:
 
 - Retrieve and cache AuthTokens owned by a user profile
 - Retrieve and cache AuthTokens shared with a user profile
@@ -26,7 +26,7 @@ Dependencies:
     - Django ORM
     - cache_results.cache_results
     - smarter.apps.account.models.user_profile.UserProfile
-    - smarter.apps.authtoken.models.AuthToken
+    - smarter.lib.drf.models.SmarterAuthToken
 """
 
 from cache_results import cache_results
@@ -46,6 +46,12 @@ logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 @cache_results()
 def _get_cached_authtokens_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[AuthToken]:
+    """
+    Return the AuthTokens owned by a user profile's user, cached by ``user_profile_id``.
+
+    :param user_profile_id: The id of the user profile, the cache key.
+    :returns: A queryset of the AuthTokens.
+    """
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = AuthToken.objects.owned_by(user_profile.user)  # type: ignore
     return retval
@@ -60,17 +66,14 @@ def get_cached_authtokens_owned_by_user_profile(user_profile: UserProfile) -> mo
     the queryset is fetched from the database again and re-cached.
 
     :param user_profile: The user profile whose owned AuthTokens should be retrieved.
-    :type user_profile: UserProfile
-
     :returns: A Django queryset containing the AuthToken objects owned by the user.
-    :rtype: QuerySet[AuthToken]
 
     .. code-block:: python
 
         >>> user_profile = UserProfile.objects.get(pk=1)
         >>> authtokens = get_cached_authtokens_owned_by_user_profile(user_profile)
-        >>> for bot in authtokens:
-        ...     print(bot.name)
+        >>> for authtoken in authtokens:
+        ...     print(authtoken.name)
 
     .. seealso::
 
@@ -91,6 +94,12 @@ def invalidate_cached_authtokens_owned_by_user_profile(user_profile: UserProfile
 
 @cache_results()
 def _get_cached_authtokens_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[AuthToken]:
+    """
+    Return the AuthTokens shared with a user profile's user, cached by ``user_profile_id``.
+
+    :param user_profile_id: The id of the user profile, the cache key.
+    :returns: A queryset of the AuthTokens.
+    """
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = AuthToken.objects.shared_with(user_profile.user)  # type: ignore
     return retval
@@ -105,16 +114,14 @@ def get_cached_authtokens_shared_with_user_profile(user_profile: UserProfile) ->
     the queryset is fetched from the database again and re-cached.
 
     :param user_profile: The user profile whose shared AuthTokens should be retrieved.
-    :type user_profile: UserProfile
     :returns: A Django queryset containing the AuthToken objects shared with the user.
-    :rtype: QuerySet[AuthToken]
 
     .. code-block:: python
 
         >>> user_profile = UserProfile.objects.get(pk=1)
         >>> shared_authtokens = get_cached_authtokens_shared_with_user_profile(user_profile)
-        >>> for bot in shared_authtokens:
-        ...     print(bot.name)
+        >>> for authtoken in shared_authtokens:
+        ...     print(authtoken.name)
 
     .. seealso::
 
@@ -134,7 +141,13 @@ def invalidate_cached_authtokens_shared_with_user_profile(user_profile: UserProf
 
 
 @cache_results()
-def _get_cached_authtokens_available_to_user_profile(user_profile_id) -> models.QuerySet[AuthToken]:
+def _get_cached_authtokens_available_to_user_profile(user_profile_id: int) -> models.QuerySet[AuthToken]:
+    """
+    Return the AuthTokens that a user profile's user may read, cached by ``user_profile_id``.
+
+    :param user_profile_id: The id of the user profile, the cache key.
+    :returns: A queryset of the AuthTokens.
+    """
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = AuthToken.objects.with_read_permission_for(user_profile.user)  # type: ignore
     return retval
@@ -150,16 +163,14 @@ def get_cached_authtokens_available_to_user_profile(user_profile: UserProfile) -
     and re-cached.
 
     :param user_profile: The user profile whose available AuthTokens should be retrieved.
-    :type user_profile: UserProfile
     :returns: A Django queryset containing the AuthToken objects available to the user.
-    :rtype: QuerySet[AuthToken]
 
     .. code-block:: python
 
         >>> user_profile = UserProfile.objects.get(pk=1)
         >>> available_authtokens = get_cached_authtokens_available_to_user_profile(user_profile)
-        >>> for bot in available_authtokens:
-        ...     print(bot.name)
+        >>> for authtoken in available_authtokens:
+        ...     print(authtoken.name)
 
     .. seealso::
 
@@ -187,9 +198,6 @@ def invalidate_all_cached_authtokens_for_user_profile(user_profile: UserProfile)
     affect any of these querysets, ensuring that subsequent calls will fetch fresh data from the database.
 
     :param user_profile: The user profile for which to invalidate cached AuthToken querysets.
-    :type user_profile: UserProfile
-    :returns: None
-    :rtype: None
 
     .. code-block:: python
 

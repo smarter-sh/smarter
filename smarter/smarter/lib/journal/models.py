@@ -1,4 +1,10 @@
-"""This module contains the Django models for SAM."""
+"""
+The Django model of the Smarter Journal, the audit log of the Smarter api's requests and responses.
+
+Each :class:`SAMJournal` entry is written by
+:class:`~smarter.lib.journal.http.SmarterJournaledJsonResponse` while the ``ENABLE_JOURNAL``
+switch is on.
+"""
 
 from django.conf import settings
 from django.db import models
@@ -18,8 +24,8 @@ class SAMJournal(models.Model):
     records the details of the operation, including the user responsible, the type of entity affected, the
     command executed, the request and response payloads, and the resulting status code.
 
-    Examples
-    --------
+    **Example:**
+
     Creating a new journal entry::
 
         entry = SAMJournal(
@@ -32,14 +38,11 @@ class SAMJournal(models.Model):
         )
         entry.save()
 
-    See Also
-    --------
-    smarter.common.utils.hash_factory
-        Utility function used to generate unique keys for journal entries.
-    smarter.lib.journal.enum.SmarterJournalCliCommands
-        Enumeration of valid CLI commands for journal entries.
-    smarter.lib.journal.enum.SmarterJournalThings
-        Enumeration of valid entity types for journal entries.
+    **See also:**
+
+    - :func:`smarter.common.utils.hash_factory`: generates unique keys for journal entries.
+    - :class:`smarter.lib.journal.enum.SmarterJournalCliCommands`: the valid CLI commands for journal entries.
+    - :class:`smarter.lib.journal.enum.SmarterJournalThings`: the valid entity types for journal entries.
     """
 
     key = models.CharField(primary_key=True, default=None, editable=False, max_length=64, unique=True)

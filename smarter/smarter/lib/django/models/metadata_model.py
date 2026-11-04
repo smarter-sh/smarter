@@ -1,4 +1,4 @@
-"""Django ORM base model."""
+"""The abstract base model of Smarter models that hold SAM metadata: name, description, version, tags, annotations."""
 
 from functools import cached_property
 from logging import getLogger
@@ -24,16 +24,11 @@ from smarter.lib.annotation.validation import (
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .timestamped_model import TimestampedModel
+from .timestamped_model import TimestampedModel, should_log_verbose
 
 logger = getLogger(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 cache_prefix = f"{__name__}."
-
-
-# pylint: disable=W0613
-def should_log_verbose(level):
-    """Check if logging should be done based on the waffle switch."""
-    return smarter_settings.verbose_logging
 
 
 verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
@@ -41,30 +36,39 @@ verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 @cache_results(timeout=smarter_settings.cache_expiration)
 def _get_tags_by_model_and_pk(model_label: str, pk: int) -> list[str]:
-    """Return the tag names of a MetaDataModel instance.
+    """
+    Return the tag names of a MetaDataModel instance, cached for ``smarter_settings.cache_expiration``.
 
-    Invalidated by tags_changed() below.
+    :func:`tags_changed` invalidates it.
+
+    :param model_label: The model's label, e.g. ``llmclient.LLMClient``.
+    :param pk: The instance's primary key.
+    :returns: The names of the instance's tags.
     """
     model = apps.get_model(model_label)
-    retval = [tag.name for tag in model.objects.get(pk=pk).tags.all()]
-    verbose_logger.debug("tags_list - fetched and cached tags for %s with pk=%s from database", model_label, pk)
+    instance = model.objects.get(pk=pk)
+    retval = [tag.name for tag in instance.tags.all()]
+    verbose_logger.debug(
+        "%s._get_tags_by_model_and_pk() fetched and cached tags for %s with pk=%s from database",
+        logger_prefix,
+        model_label,
+        pk,
+    )
     return retval
 
 
 class MetaDataModel(TimestampedModel):
     """
-    Abstract base model that adds SAM metadata fields to a.
+    Abstract base model that adds the SAM metadata fields to :class:`TimestampedModel`.
 
-    TimestampedModel Django ORM model. These are the
-    the common fields that makeup the Pydantic SAM metadata model,
-    along with timestamp fields for create/modify tracking.
+    These are the common fields that make up the Pydantic SAM metadata model, along with the
+    timestamp fields for create/modify tracking.
 
     **Example Usage:**
 
     .. code-block:: python
 
-        from smarter.smarter.lib.django.models import MetaDataModel
-        from smarter.apps.account.models import User
+        from smarter.lib.django.models import MetaDataModel
 
         class MyModel(MetaDataModel):
             name = models.CharField(max_length=100)
@@ -121,7 +125,6 @@ class MetaDataModel(TimestampedModel):
             llmclient.save()
 
         :returns: A copy of the annotations. Changing it doesn't change the resource.
-        :rtype: AnnotationsMap
         """
         if self._pending_annotations is not None:
             return dict(self._pending_annotations)
@@ -148,9 +151,7 @@ class MetaDataModel(TimestampedModel):
         Add or change one annotation of a saved resource, immediately.
 
         :param key: The annotation key, e.g. ``acme.com/crm-account-id``.
-        :type key: str
         :param value: The value. Scalars are converted to strings.
-        :type value: object
         :raises SmarterAnnotationError: If the key or value is invalid.
         """
         self.annotations = {**self.annotations, key: value}
@@ -163,7 +164,6 @@ class MetaDataModel(TimestampedModel):
         Does nothing if it doesn't exist.
 
         :param key: The annotation key.
-        :type key: str
         """
         annotations = self.annotations
         if key in annotations:
@@ -194,11 +194,8 @@ class MetaDataModel(TimestampedModel):
             LLMClient.with_annotation("acme.com/crm-account-id", "A-10042")
 
         :param key: The annotation key.
-        :type key: str
         :param value: The value to match, or ``None`` for any value.
-        :type value: Optional[str]
         :returns: The resources, not filtered by any user's permissions.
-        :rtype: QuerySet
         """
         # pylint: disable=import-outside-toplevel
         from smarter.lib.annotation.selectors import model_with_annotation
@@ -206,7 +203,11 @@ class MetaDataModel(TimestampedModel):
         return model_with_annotation(cls, key, value)
 
     def validate(self):
-        """Validate the model."""
+        """
+        Validate the model: its version, when set, must be a semantic version.
+
+        :raises SmarterValueError: if the version is not ``MAJOR.MINOR.PATCH``.
+        """
         super().validate()
         # version should be a semantic version: MAJOR.MINOR.PATCH
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
@@ -216,13 +217,12 @@ class MetaDataModel(TimestampedModel):
         """
         Clone the model instance with a new name and optional new version.
 
-        :param new_name: The name for the cloned instance.
-        :type new_name: str
-        :param new_version: The version for the cloned instance. If not provided, it will be the same as the original.
-        :type new_version: Optional[str]
+        Only the name, version, description and annotations are copied. The clone is validated
+        and saved.
 
-        :returns: A new instance of MetaDataModel with the same field values except for name and version.
-        :rtype: MetaDataModel
+        :param new_name: The name for the cloned instance.
+        :param new_version: The version for the cloned instance. If not provided, it will be the same as the original.
+        :returns: The new, saved instance.
         """
         clone_kwargs = {
             "name": new_name,
@@ -239,11 +239,10 @@ class MetaDataModel(TimestampedModel):
         """
         Rename the model instance with a new name.
 
-        :param new_name: The new name for the instance.
-        :type new_name: str
+        The instance is validated and saved.
 
+        :param new_name: The new name for the instance.
         :returns: The updated instance of MetaDataModel with the new name.
-        :rtype: MetaDataModel
         """
         self.name = new_name
         self.full_clean()  # Validate the updated instance
@@ -256,7 +255,6 @@ class MetaDataModel(TimestampedModel):
         Check if the model instance is ready for use.
 
         :returns: True if the instance is ready, False otherwise.
-        :rtype: bool
         """
         return super().ready and self.name is not None
 
@@ -274,8 +272,7 @@ class MetaDataModel(TimestampedModel):
             self.name = 'Example LLMClient 1'
             self.rfc1034_compliant_name  # 'example-llmclient-1'
 
-        :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
-        :rtype: Optional[str]
+        :returns: The RFC 1034-compliant name, or None if ``self.name`` is not set.
         """
         if self.name:
             return rfc1034_compliant_str(self.name)
@@ -286,14 +283,10 @@ class MetaDataModel(TimestampedModel):
         """
         Return the tags as a list of strings.
 
-        We assume that @cached_property
-        is more efficient at fetch than @cache_results, all things considered
-        equal, which provides a marginal boost to instances. Meanwhile, the
-        @cache_results is persisted to the Django cache, and thus outlives
-        this instance. Thus, best of both worlds.
+        It is cached twice: ``cached_property`` keeps it on the instance, which is the fastest
+        lookup, and ``cache_results`` keeps it in the Django cache, which outlives the instance.
 
         :returns: List of tag names.
-        :rtype: list[str]
         """
         return _get_tags_by_model_and_pk(self._meta.label, self.pk)
 
@@ -307,7 +300,7 @@ class MetaDataModel(TimestampedModel):
         This method is selectively overridden in models that inherit from MetaDataModel to provide class-specific
         function parameters.
 
-        Example usage:
+        **Example**
 
         .. code-block:: python
 
@@ -316,17 +309,19 @@ class MetaDataModel(TimestampedModel):
             # Retrieve by name
             instance = MyModel.get_cached_object(name="exampleName")
 
-        :param invalidate: Whether to invalidate the cache for this retrieval.
-        :type invalidate: bool, optional
+        :param args: Passed on to :meth:`TimestampedModel.get_cached_object` for a lookup by pk.
+        :param invalidate: Whether to drop the cached row, and read it again from the database.
         :param pk: The primary key of the model instance to retrieve.
-        :type pk: int, optional
-        :param name: The name of the model instance to retrieve.
-        :type name: str, optional
-
-        :returns: The model instance if found, otherwise None.
-        :rtype: Optional["MetaDataModel"]
+        :param name: The name of the model instance to retrieve, which takes precedence over ``pk``.
+        :param kwargs: Passed on to :meth:`TimestampedModel.get_cached_object` for a lookup by pk.
+        :returns: The model instance.
+        :raises NotImplementedError: if called on an abstract model class.
+        :raises DoesNotExist: the model's ``DoesNotExist``, if neither ``pk`` nor ``name`` is given,
+            or no row matches.
+        :raises MultipleObjectsReturned: the model's ``MultipleObjectsReturned``, if several rows
+            have the name.
         """
-        logger_prefix = SmarterFormattedText.text(__name__ + "." + MetaDataModel.__name__ + ".get_cached_object()")
+        class_prefix = SmarterFormattedText.text(__name__ + "." + MetaDataModel.__name__)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -340,8 +335,8 @@ class MetaDataModel(TimestampedModel):
         def _get_object_by_name(name: str, class_name: str = cls.__name__) -> "MetaDataModel":
             try:
                 verbose_logger.debug(
-                    "%s.get_cached_object() called with pk: %s, name: %s, invalidate: %s",
-                    logger_prefix,
+                    "%s._get_object_by_name() called with pk: %s, name: %s, invalidate: %s",
+                    class_prefix,
                     pk,
                     name,
                     invalidate,
@@ -349,7 +344,7 @@ class MetaDataModel(TimestampedModel):
                 retval = cls.objects.prefetch_related("tags").get(name=name)
                 verbose_logger.debug(
                     "%s._get_object_by_name() fetched and cached %s name: %s",
-                    logger_prefix,
+                    class_prefix,
                     class_name,
                     name,
                 )
@@ -357,15 +352,15 @@ class MetaDataModel(TimestampedModel):
             except cls.DoesNotExist as e:
                 verbose_logger.debug(
                     "%s._get_object_by_name() no %s object found for name: %s",
-                    logger_prefix,
+                    class_prefix,
                     class_name,
                     name,
                 )
                 raise cls.DoesNotExist(f"{class_name} object with name '{name}' does not exist.") from e
             except cls.MultipleObjectsReturned as e:
                 logger.error(
-                    "%s.get_cached_object() - Multiple %s objects found for name '%s'. Returning the first one.",
-                    logger_prefix,
+                    "%s._get_object_by_name() - Multiple %s objects found for name '%s'.",
+                    class_prefix,
                     class_name,
                     name,
                 )
@@ -388,7 +383,7 @@ class MetaDataModel(TimestampedModel):
         This method is selectively overridden in models that inherit from
         MetaDataModel to provide class-specific function parameters.
 
-        Example usage:
+        **Example**
 
         .. code-block:: python
 
@@ -396,56 +391,46 @@ class MetaDataModel(TimestampedModel):
             instances = MyModel.get_cached_objects()
 
         :param invalidate: Whether to invalidate the cache for this retrieval.
-        :type invalidate: bool
+        :param kwargs: Passed on to :meth:`TimestampedModel.get_cached_objects`.
         :returns: A queryset of all model instances.
-        :rtype: QuerySet
+        :raises NotImplementedError: if called on an abstract model class.
         """
-        logger_prefix = SmarterFormattedText.text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        class_prefix = SmarterFormattedText.text(__name__ + "." + cls.__name__)
         verbose_logger.debug(
-            "%s.get_cached_objects() called for %s with invalidate=%s", logger_prefix, cls.__name__, invalidate
+            "%s.get_cached_objects() called for %s with invalidate=%s", class_prefix, cls.__name__, invalidate
         )
 
         if cls._meta.abstract:
             raise NotImplementedError(
-                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+                "get_cached_objects() must be called on a concrete model class, not an abstract base class."
             )
-
-        if invalidate:
-            pass
 
         return super().get_cached_objects(invalidate=invalidate, **kwargs)  # type: ignore
 
     def save(self, *args, **kwargs):
         """
-        Save the model instance to the database, performing validation before the actual save.
+        Validate and save the model instance, write its pending annotations, and invalidate its caches.
 
-        This method overrides the default ``save()`` behavior of Django models to ensure that
-        the model is validated by calling :meth:`validate` before any data is written to the database.
-        If validation fails, a :exc:`django.core.exceptions.ValidationError` is raised with detailed
-        information about the error, the arguments passed, the model class, and the current field values.
+        :meth:`TimestampedModel.save` validates the instance first. Then the annotations assigned
+        since the last save are written. When an existing row of a direct subclass of
+        MetaDataModel is saved, its cached copies, by pk and by name, and the cached list of all
+        rows, are invalidated.
 
-        Parameters
-        ----------
-        *args
-            Positional arguments passed to the parent ``save()`` method. These are forwarded to Django's ORM.
-        **kwargs
-            Keyword arguments passed to the parent ``save()`` method. These are forwarded to Django's ORM.
+        **Example**
 
-        Examples
-        --------
         .. code-block:: python
 
             obj = MyModel(name="Example")
             obj.save()  # Will call validate() before saving
-        .. note::
 
-            - The :meth:`validate` method is intended to be overridden in subclasses to provide custom validation logic.
-            - If :meth:`validate` raises a :exc:`ValidationError`, the save operation is aborted and the error is propagated.
-            - The error message includes the arguments, keyword arguments, model class, and current field values for easier debugging.
         .. important::
 
             - If you override this method in a subclass, always call ``super().save(*args, **kwargs)`` to retain validation and timestamp functionality.
             - If validation fails, no data will be saved to the database.
+
+        :param args: Positional arguments, forwarded to Django's ``save()``.
+        :param kwargs: Keyword arguments, forwarded to Django's ``save()``.
+        :raises SmarterValueError: if validation fails.
         """
         is_new = self.pk is None
         super().save(*args, **kwargs)
@@ -459,9 +444,19 @@ class MetaDataModel(TimestampedModel):
             self.__class__.get_cached_objects(invalidate=True)  # type: ignore
 
     def __str__(self) -> str:
+        """
+        Return the instance's pk and name, e.g. ``1 example``.
+
+        :returns: The short description of the row.
+        """
         return f"{self.pk} {self.name}"
 
     def __repr__(self) -> str:
+        """
+        Return the model's class name, pk, name and timestamps, for debugging.
+
+        :returns: The description of the row.
+        """
         return f"<{self.__class__.__name__} pk={self.pk} name={self.name} created_at={self.created_at} updated_at={self.updated_at}>"
 
 
@@ -479,8 +474,13 @@ def tags_changed(sender, instance, action, **kwargs):
     :param action: The m2m_changed action; only ``post_add``, ``post_remove`` and ``post_clear`` act.
     :param kwargs: The rest of the signal's arguments.
     """
-    if action in ("post_add", "post_remove", "post_clear") and isinstance(instance, MetaDataModel) and instance.pk:
-        # the instance's own dict, where cached_property stores tags_list. vars() is typed as a dict.
-        vars(instance).pop("tags_list", None)
-        # pylint: disable=W0212
-        _get_tags_by_model_and_pk.invalidate(instance._meta.label, instance.pk)
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
+    if not isinstance(instance, MetaDataModel):
+        return
+    if not instance.pk:
+        return
+    # the instance's own dict, where cached_property stores tags_list. vars() is typed as a dict.
+    vars(instance).pop("tags_list", None)
+    # pylint: disable=W0212
+    _get_tags_by_model_and_pk.invalidate(instance._meta.label, instance.pk)

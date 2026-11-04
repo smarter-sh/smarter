@@ -9,7 +9,7 @@ class SAMExceptionBase(SmarterException):
     """Base exception for Smarter API Manifest handling."""
 
     @property
-    def get_formatted_err_message(self):
+    def get_formatted_err_message(self) -> str:
         """The class name as words, e.g. ``Smarter API Manifest validation error`` for ``SAMValidationError``."""
         name = self.__class__.__name__
         name = name.replace("SAM", "Smarter API Manifest ")
@@ -25,4 +25,4 @@ class SAMBadRequestError(SAMExceptionBase):
 
 
 class SAMValidationError(SAMExceptionBase):
-    """Exception raised during Plugin validation."""
+    """Exception raised when a manifest, or a value in it, is invalid."""

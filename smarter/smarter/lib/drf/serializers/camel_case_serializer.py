@@ -1,4 +1,4 @@
-"""Account serializers for smarter api."""
+"""The base serializer of Smarter apis whose json keys are camelCase."""
 
 import sys
 from typing import Optional
@@ -12,9 +12,12 @@ from smarter.lib import logging
 logger = logging.getSmarterLogger(__name__)
 
 
-def is_sphinx_build():
-    """Determine if the current execution context is a Sphinx documentation build."""
+def is_sphinx_build() -> bool:
+    """
+    Return whether the code runs in a Sphinx documentation build.
 
+    :returns: True if the ``sphinx`` module is imported.
+    """
     return "sphinx" in sys.modules
 
 
@@ -24,7 +27,12 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
     request: Optional[HttpRequest]
 
     def __init__(self, *args, **kwargs):
-        """Initialize the serializer and set the request context."""
+        """
+        Initialize the serializer, and set ``request`` from the serializer's context.
+
+        :param args: Passed to DRF's ``ModelSerializer``.
+        :param kwargs: Passed to DRF's ``ModelSerializer``.
+        """
         super().__init__(*args, **kwargs)
         self.logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + self.__class__.__name__)
 
@@ -40,8 +48,12 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
                 self.request = None
 
     def to_representation(self, instance):
-        """Convert field names to camelCase."""
+        """
+        Serialize an instance, with its field names in camelCase.
 
+        :param instance: The model instance.
+        :returns: The serialized instance, with camelCase keys.
+        """
         representation = super().to_representation(instance)
         new_representation = {}
         for key, value in representation.items():

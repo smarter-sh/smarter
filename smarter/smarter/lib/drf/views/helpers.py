@@ -1,4 +1,4 @@
-"""Django template and view helper functions."""
+"""DRF permission classes and base api views for Smarter's public and authenticated apis."""
 
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 # API public views
 # ------------------------------------------------------------------------------
 class UnauthenticatedPermissionClass(BasePermission):
-    """Allows public access to APIS."""
+    """Permission class that allows public access to apis."""
 
     # pylint: disable=unused-argument
-    def has_all_permission(self, request: Request, view) -> bool:
+    def has_all_permission(self, request: Request, view: APIView) -> bool:
         """
         Allow every request.
 
@@ -32,7 +32,12 @@ class UnauthenticatedPermissionClass(BasePermission):
 
 
 class SmarterAuthenticatedPermissionClass(IsAuthenticated):
-    """Implements an internal API permission class that allows authenticated users to access internal API endpoints without requiring bearer tokens or other authentication methods."""
+    """
+    Permission class of api views that require an authenticated user.
+
+    It is DRF's ``IsAuthenticated``, and adds a check that lets an authenticated internal api
+    request through without a bearer token or other authentication method.
+    """
 
     @property
     def formatted_class_name(self) -> str:
@@ -40,9 +45,9 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
         class_name = f"{__name__}.{self.__class__.__name__}"
         return SmarterFormattedText.text(class_name)
 
-    def has_all_permission(self, request: Request, view) -> bool:
+    def has_all_permission(self, request: Request, view: APIView) -> bool:
         """
-        Allows internal view access to authenticated users and internal API requests.
+        Allow an authenticated request that is flagged as an internal api request.
 
         :param request: The request.
         :param view: The view.
@@ -59,12 +64,12 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
 
 
 class SmarterUnauthenticatedAPIView(APIView):
-    """Base API view for smarter."""
+    """Base class of Smarter's public api views, which allow every request."""
 
     permission_classes = [UnauthenticatedPermissionClass]
 
 
 class SmarterUnauthenticatedAPIListView(ListAPIView):
-    """Base API listview for smarter."""
+    """Base class of Smarter's public api list views, which allow every request."""
 
     permission_classes = [UnauthenticatedPermissionClass]
