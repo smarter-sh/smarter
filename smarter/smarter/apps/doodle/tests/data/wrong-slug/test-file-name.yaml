@@ -1,0 +1,7 @@
+slug: test-another-name
+name: Test another name
+category: season
+alt_text: A theme whose file has another name.
+regions: ["*"]
+schedule:
+  kind: never

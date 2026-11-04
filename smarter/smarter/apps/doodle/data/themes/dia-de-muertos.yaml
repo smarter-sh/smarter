@@ -1,0 +1,13 @@
+slug: dia-de-muertos
+name: Día de Muertos
+category: culture
+caption: ¡Feliz Día de Muertos!
+alt_text: Colorful papel picado flags hang above a Smarter LLMClient, with marigolds and candles on the ground.
+link_url: https://en.wikipedia.org/wiki/Day_of_the_Dead
+priority: 80
+regions: [mx, latam]
+schedule:
+  kind: fixed
+  month: 11
+  day: 1
+  days: 2

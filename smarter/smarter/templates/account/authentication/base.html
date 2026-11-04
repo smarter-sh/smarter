@@ -3,8 +3,81 @@
 
 {% block head_extra %}
 <style>
-  .bw-background {
-      filter: grayscale(100%);
+  /* the left panel, and the Doodle in it. See templates/react/doodle.html. */
+  .smarter-doodle-aside {
+    background:
+      radial-gradient(ellipse at 50% 110%, rgba(255, 87, 51, 0.35) 0%, rgba(255, 87, 51, 0) 55%),
+      radial-gradient(ellipse at 10% 0%, rgba(79, 195, 247, 0.18) 0%, rgba(79, 195, 247, 0) 45%),
+      linear-gradient(160deg, #17123b 0%, #2a1c5a 55%, #3a1d4d 100%);
+  }
+  .smarter-doodle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1.5rem;
+    color: #ffffff;
+    text-align: center;
+  }
+  .smarter-doodle-logo img {
+    height: 100px;
+  }
+  .smarter-doodle-figure {
+    display: none;
+    margin: 2.5rem 0 2rem;
+    width: 100%;
+    max-width: 520px;
+  }
+  .smarter-doodle-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 520 / 340;
+  }
+  .smarter-doodle-caption {
+    margin-top: 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .smarter-doodle-caption a {
+    color: #ffc145;
+    text-decoration: none;
+  }
+  .smarter-doodle-caption a:hover {
+    text-decoration: underline;
+  }
+  .smarter-doodle-title,
+  .smarter-doodle-description {
+    display: none;
+    color: #ffffff;
+  }
+  .smarter-doodle-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+  }
+  .smarter-doodle-description a {
+    color: #ffffff;
+    text-decoration: underline;
+  }
+  @media (min-width: 992px) {
+    .smarter-doodle-aside {
+      min-height: 100vh;
+    }
+    .smarter-doodle {
+      padding: 2.5rem;
+    }
+    .smarter-doodle-logo img {
+      height: 180px;
+    }
+    .smarter-doodle-figure {
+      display: block;
+    }
+    .smarter-doodle-title,
+    .smarter-doodle-description {
+      display: block;
+    }
   }
 </style>
 {% endblock %}
@@ -13,27 +86,10 @@
       <!--begin::Authentication - Sign-in -->
 			<div class="d-flex flex-column flex-lg-row flex-column-fluid">
               <!--begin::Aside-->
-              <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center bw-background" style='background-image: url("{% static "assets/media/misc/auth-bg.png" %}")'>
-                <!--begin::Content-->
-                <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
-                  <!--begin::Logo-->
-                  <a href="{% url 'console_home' %}" class="mb-0 mb-lg-20">
-                      <img alt="Logo" src="{{ branding.cdn_logo_url }}" class="h-100px h-lg-200px" />
-                  </a>
-                  <!--end::Logo-->
-                  <!--begin::Image-->
-                  <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20" src="{% static 'assets/media/misc/auth-screens.png' %}" alt="" />
-                  <!--end::Image-->
-                  <!--begin::Title-->
-                  <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">{{ branding.smarter_product_name }}</h1>
-                  <!--end::Title-->
-                  <!--begin::Text-->
-                  <div class="d-none d-lg-block text-white fs-base text-center">
-                    {{ branding.smarter_product_description }} <a href="{{ branding.smarter_project_website_url }}" style="color: #ffffff; text-decoration: underline;" target="_blank">{% translate "Learn more" %}</a>
-                  </div>
-                  <!--end::Text-->
-                </div>
-                <!--end::Content-->
+              <div class="d-flex flex-lg-row-fluid w-lg-50 smarter-doodle-aside">
+                <!--begin::Doodle-->
+                {% include 'react/doodle.html' %}
+                <!--end::Doodle-->
               </div>
               <!--begin::Aside-->
               <!--begin::Body-->

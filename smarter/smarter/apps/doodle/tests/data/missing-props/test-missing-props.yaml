@@ -1,0 +1,8 @@
+slug: test-missing-props
+name: Test missing props
+category: season
+alt_text: A theme whose props don't exist.
+regions: ["*"]
+schedule:
+  kind: never
+props: does-not-exist.svg

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .al-gear { transform-box: fill-box; transform-origin: center; animation: al-turn 12s linear infinite; }
+    .al-gear-r { animation-direction: reverse; animation-duration: 8s; }
+    @keyframes al-turn { to { transform: rotate(360deg); } }
+  </style>
+  <!-- gears -->
+  <g class="al-gear">
+    <circle cx="64" cy="54" r="22" fill="none" stroke="#ffc145" stroke-width="9" stroke-dasharray="6 5.5" />
+    <circle cx="64" cy="54" r="15" fill="#ffc145" />
+    <circle cx="64" cy="54" r="5" fill="#2a1c5a" />
+  </g>
+  <g class="al-gear al-gear-r">
+    <circle cx="104" cy="82" r="14" fill="none" stroke="#4fc3f7" stroke-width="7" stroke-dasharray="4.4 4.4" />
+    <circle cx="104" cy="82" r="9" fill="#4fc3f7" />
+    <circle cx="104" cy="82" r="3" fill="#2a1c5a" />
+  </g>
+  <g class="al-gear al-gear-r">
+    <circle cx="452" cy="50" r="18" fill="none" stroke="#ff6b9a" stroke-width="8" stroke-dasharray="5 4.4" />
+    <circle cx="452" cy="50" r="12" fill="#ff6b9a" />
+    <circle cx="452" cy="50" r="4" fill="#2a1c5a" />
+  </g>
+  <!-- a punched card -->
+  <g transform="rotate(-6 440 290)">
+    <rect x="386" y="270" width="108" height="40" rx="3" fill="#f5deb3" />
+    <g fill="#5d4037">
+      <rect x="396" y="278" width="4" height="7" /><rect x="408" y="290" width="4" height="7" /><rect x="420" y="278" width="4" height="7" />
+      <rect x="432" y="296" width="4" height="7" /><rect x="444" y="284" width="4" height="7" /><rect x="456" y="278" width="4" height="7" />
+      <rect x="468" y="290" width="4" height="7" /><rect x="480" y="296" width="4" height="7" />
+    </g>
+  </g>
+</svg>

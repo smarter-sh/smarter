@@ -1,0 +1,12 @@
+slug: world-teachers-day
+name: World Teachers' Day
+category: observance
+caption: Thank you, teachers!
+alt_text: An apple sits on a Smarter LLMClient's chat window, beside a chalkboard and a pencil.
+link_url: https://en.wikipedia.org/wiki/World_Teachers%27_Day
+priority: 55
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 10
+  day: 5
