@@ -1,0 +1,12 @@
+slug: earth-day
+name: Earth Day
+category: observance
+caption: Happy Earth Day!
+alt_text: A small green and blue planet rises over a Smarter LLMClient, and seedlings sprout from the ground.
+link_url: https://en.wikipedia.org/wiki/Earth_Day
+priority: 50
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 4
+  day: 22

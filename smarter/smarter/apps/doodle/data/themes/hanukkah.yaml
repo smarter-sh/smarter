@@ -1,0 +1,12 @@
+slug: hanukkah
+name: Hanukkah
+category: celebration
+caption: Happy Hanukkah!
+alt_text: A lit menorah and a blue dreidel on the ground beside a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/Hanukkah
+priority: 65
+regions: [us, ca, europe, oceania, latam, global]
+schedule:
+  kind: holiday
+  country: IL
+  holiday: Hanukkah

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>.ai-sway { transform-box: fill-box; animation: ai-sway 4s ease-in-out infinite; } @keyframes ai-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }</style>
+  <g class="ai-sway">
+    <circle cx="60" cy="50" r="12" fill="#ffc145" />
+    <circle cx="460" cy="50" r="12" fill="#ff6b9a" />
+  </g>
+</svg>

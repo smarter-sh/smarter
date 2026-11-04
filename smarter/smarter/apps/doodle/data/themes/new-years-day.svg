@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .ny-burst { transform-box: fill-box; transform-origin: center; animation: ny-pop 2.6s ease-out infinite; }
+    .ny-burst-b { animation-delay: -0.9s; }
+    .ny-burst-c { animation-delay: -1.7s; }
+    @keyframes ny-pop { 0% { transform: scale(0.3); opacity: 0; } 25% { opacity: 1; } 70% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
+  </style>
+  <!-- fireworks -->
+  <g transform="translate(62 50)">
+    <g class="ny-burst" fill="none" stroke="#ff5733" stroke-width="2.6" stroke-linecap="round">
+      <path d="M8 0H20M5.7 5.7L14.1 14.1M0 8V20M-5.7 5.7L-14.1 14.1M-8 0H-20M-5.7 -5.7L-14.1 -14.1M0 -8V-20M5.7 -5.7L14.1 -14.1" />
+    </g>
+  </g>
+  <g transform="translate(458 48)">
+    <g class="ny-burst ny-burst-b" fill="none" stroke="#ffc145" stroke-width="2.6" stroke-linecap="round">
+      <path d="M8 0H20M5.7 5.7L14.1 14.1M0 8V20M-5.7 5.7L-14.1 14.1M-8 0H-20M-5.7 -5.7L-14.1 -14.1M0 -8V-20M5.7 -5.7L14.1 -14.1" />
+    </g>
+  </g>
+  <g transform="translate(182 34) scale(0.8)">
+    <g class="ny-burst ny-burst-c" fill="none" stroke="#00c2a8" stroke-width="2.6" stroke-linecap="round">
+      <path d="M8 0H20M5.7 5.7L14.1 14.1M0 8V20M-5.7 5.7L-14.1 14.1M-8 0H-20M-5.7 -5.7L-14.1 -14.1M0 -8V-20M5.7 -5.7L14.1 -14.1" />
+    </g>
+  </g>
+  <g transform="translate(360 28) scale(0.7)">
+    <g class="ny-burst" fill="none" stroke="#ff6b9a" stroke-width="2.6" stroke-linecap="round">
+      <path d="M8 0H20M5.7 5.7L14.1 14.1M0 8V20M-5.7 5.7L-14.1 14.1M-8 0H-20M-5.7 -5.7L-14.1 -14.1M0 -8V-20M5.7 -5.7L14.1 -14.1" />
+    </g>
+  </g>
+  <!-- a party hat on the chat window -->
+  <g transform="rotate(14 318 92)">
+    <path d="M304 106 L332 106 L318 70 Z" fill="#6c5ce7" />
+    <path d="M308.5 94 H327.5 M313.3 82 H322.7" stroke="#ffc145" stroke-width="3" />
+    <circle cx="318" cy="69" r="4.5" fill="#ffc145" />
+  </g>
+  <!-- confetti -->
+  <g>
+    <rect x="128" y="74" width="6" height="3" fill="#ffc145" transform="rotate(30 131 75)" />
+    <rect x="240" y="62" width="6" height="3" fill="#ff6b9a" transform="rotate(-20 243 63)" />
+    <rect x="300" y="78" width="6" height="3" fill="#00c2a8" transform="rotate(50 303 79)" />
+    <rect x="404" y="80" width="6" height="3" fill="#4fc3f7" transform="rotate(-40 407 81)" />
+    <rect x="40" y="296" width="6" height="3" fill="#ff5733" transform="rotate(20 43 297)" />
+    <rect x="120" y="302" width="6" height="3" fill="#ffc145" transform="rotate(-30 123 303)" />
+    <rect x="160" y="290" width="6" height="3" fill="#4fc3f7" transform="rotate(60 163 291)" />
+    <rect x="360" y="298" width="6" height="3" fill="#ff6b9a" transform="rotate(-15 363 299)" />
+    <rect x="420" y="292" width="6" height="3" fill="#00c2a8" transform="rotate(35 423 293)" />
+    <rect x="474" y="304" width="6" height="3" fill="#ffc145" transform="rotate(-50 477 305)" />
+  </g>
+</svg>

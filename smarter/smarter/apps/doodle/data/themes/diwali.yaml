@@ -1,0 +1,12 @@
+slug: diwali
+name: Diwali
+category: celebration
+caption: Happy Diwali!
+alt_text: Glowing diyas line the ground below a Smarter LLMClient, under a string of colorful lights.
+link_url: https://en.wikipedia.org/wiki/Diwali
+priority: 70
+regions: [south-asia, southeast-asia, us, ca, europe, oceania, africa, global]
+schedule:
+  kind: holiday
+  country: IN
+  holiday: Diwali
