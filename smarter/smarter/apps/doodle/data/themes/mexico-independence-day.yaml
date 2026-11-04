@@ -1,0 +1,12 @@
+slug: mexico-independence-day
+name: Independence Day of Mexico
+category: national
+caption: ¡Viva México!
+alt_text: Green, white and red pennants and fireworks over a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/Independence_Day_(Mexico)
+priority: 80
+regions: [mx]
+schedule:
+  kind: fixed
+  month: 9
+  day: 16

@@ -6,7 +6,7 @@ import re
 import time
 import traceback
 from http import HTTPStatus
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import openai
 from openai.types.chat.chat_completion import ChatCompletion, Choice
@@ -72,6 +72,10 @@ from smarter.lib.cache.tool_results import is_error_result
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.openai.model_quirks import (
+    DEFAULT_TEMPERATURE_ONLY_MODELS,
+    TOOLS_REQUIRE_NO_REASONING_MODELS,
+)
 from smarter.lib.typing import SmarterDictType
 
 from .chat_provider_base import SmarterChatProviderBase
@@ -105,29 +109,6 @@ of the request first, never the system prompt or the current turn. See
 :func:`~smarter.apps.provider.services.text_completion.utils.cap_message_history`.
 """
 REASONING_EFFORT_NONE = "none"
-
-TOOLS_REQUIRE_NO_REASONING_MODELS: set[str] = {"gpt-6-luna"}
-"""
-Models whose v1/chat/completions endpoint rejects function tools unless reasoning_effort is 'none'.
-
-OpenAI returns a 400 for these models when a request has tools and omits reasoning_effort, because
-their default effort is not 'none'. The set is not exhaustive: a model that fails this way at runtime
-is added to it, so each process pays for the failed request at most once per model. reasoning_effort
-is never sent otherwise, because older models such as gpt-4o-mini, and some OpenAI-compatible
-providers, reject the parameter.
-"""
-
-DEFAULT_TEMPERATURE_ONLY_MODELS: set[str] = set()
-"""
-Models that reject any temperature but their default when reasoning_effort is not sent.
-
-OpenAI returns a 400 for these models, e.g. "'temperature' does not support 0.2 with this model.
-Only the default (1) value is supported." Their reasoning runs at its default effort when a request
-omits reasoning_effort, such as the final answer after tool calls, and reasoning models accept only
-the default temperature. A model that fails this way at runtime is added to the set, and later
-requests to it that omit reasoning_effort omit temperature too, so each process pays for the failed
-request at most once per model.
-"""
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)

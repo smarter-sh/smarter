@@ -1,0 +1,101 @@
+{% extends "admin/base_site.html" %}
+{% comment %}
+The week's doodles: every region's doodle of every planned day, with approve and reject buttons.
+See smarter.apps.doodle.admin.DoodleAdmin.week_preview_view().
+{% endcomment %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .doodle-week { overflow-x: auto; }
+    .doodle-week table { border-collapse: separate; border-spacing: 6px; }
+    .doodle-week th { text-align: center; white-space: nowrap; }
+    .doodle-week th.doodle-date { text-align: right; vertical-align: middle; }
+    .doodle-week td { width: 170px; min-width: 170px; vertical-align: top; padding: 6px; border-radius: 8px;
+      background: linear-gradient(160deg, #17123b 0%, #2a1c5a 55%, #3a1d4d 100%); color: #ffffff; text-align: center; }
+    .doodle-week td.doodle-default img { opacity: 0.45; }
+    .doodle-week td.doodle-hidden { outline: 2px dashed #ff5733; }
+    .doodle-week img { width: 100%; display: block; }
+    .doodle-week .doodle-title { font-weight: 600; margin-top: 4px; }
+    .doodle-week .doodle-caption { color: #ffc145; min-height: 1.2em; }
+    .doodle-week .doodle-badge { display: inline-block; font-size: 11px; border-radius: 9px; padding: 1px 7px; margin: 3px 2px 0; }
+    .doodle-week .doodle-ai { background: #6c5ce7; }
+    .doodle-week .doodle-proposed { background: #ff5733; }
+    .doodle-week .doodle-rejected { background: #6b6b6b; }
+    .doodle-week .doodle-human { background: #00897b; }
+    .doodle-week form { display: inline; }
+    .doodle-week button { margin-top: 6px; cursor: pointer; font-size: 11px; }
+    .doodle-week a.doodle-edit { color: #ffffff; font-size: 11px; margin-left: 4px; }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{{ changelist_url }}">Doodles</a>
+    &rsaquo; {{ title }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <p class="help">
+      Every region's doodle of every planned day. Faded doodles are the plain scene. A doodle that is
+      proposed or rejected, outlined, isn't shown: visitors see the calendar's choice instead. Hover a
+      doodle for why it was chosen.
+    </p>
+    {% if days %}
+      <div class="doodle-week">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              {% for region, label in regions %}<th title="{{ label }}">{{ region }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for day in days %}
+              <tr>
+                <th class="doodle-date">{{ day.date|date:"D, M j" }}</th>
+                {% for cell in day.cells %}
+                  {% with doodle=cell.doodle %}
+                    {% if doodle %}
+                      <td class="{% if cell.is_default %}doodle-default{% endif %}{% if doodle.status != 'approved' %} doodle-hidden{% endif %}"
+                          title="{{ doodle.reason }}">
+                        <img src="{{ cell.image_url }}" alt="{{ doodle.alt_text }}" loading="lazy">
+                        <div class="doodle-title">{% if cell.is_default %}plain scene{% else %}{{ doodle.title }}{% endif %}</div>
+                        <div class="doodle-caption">{{ doodle.caption }}</div>
+                        {% if doodle.ai_credit %}<span class="doodle-badge doodle-ai">AI {{ doodle.ai_credit }}</span>{% endif %}
+                        {% if doodle.source == 'human' %}<span class="doodle-badge doodle-human">chosen by a person</span>{% endif %}
+                        {% if doodle.status != 'approved' %}<span class="doodle-badge doodle-{{ doodle.status }}">{{ doodle.status }}</span>{% endif %}
+                        <div>
+                          {% if doodle.status != 'approved' %}
+                            <form method="post">{% csrf_token %}
+                              <input type="hidden" name="doodle_id" value="{{ doodle.pk }}">
+                              <button type="submit" name="action" value="approve">Approve</button>
+                            </form>
+                          {% endif %}
+                          {% if doodle.status != 'rejected' and not cell.is_default %}
+                            <form method="post">{% csrf_token %}
+                              <input type="hidden" name="doodle_id" value="{{ doodle.pk }}">
+                              <button type="submit" name="action" value="reject">Reject</button>
+                            </form>
+                          {% endif %}
+                          <a class="doodle-edit" href="{{ cell.change_url }}">Edit</a>
+                        </div>
+                      </td>
+                    {% else %}
+                      <td>&mdash;</td>
+                    {% endif %}
+                  {% endwith %}
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p>No doodles are planned. Run <code>manage.py plan_doodles</code>, or wait for Celery Beat.</p>
+    {% endif %}
+  </div>
+{% endblock %}
