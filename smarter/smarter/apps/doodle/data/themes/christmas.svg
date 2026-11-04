@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .xm-snow { animation: xm-fall 10s linear infinite; }
+    @keyframes xm-fall { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: 0.9; } 100% { transform: translate(12px, 330px); opacity: 0.2; } }
+    .xm-star { transform-box: fill-box; transform-origin: center; animation: xm-shine 2s ease-in-out infinite alternate; }
+    @keyframes xm-shine { from { transform: scale(0.9); } to { transform: scale(1.15); } }
+  </style>
+  <g fill="#ffffff">
+  <circle class="xm-snow" style="animation-delay: 0s; animation-duration: 10s" cx="20" cy="-6" r="2.2" />
+  <circle class="xm-snow" style="animation-delay: -5s; animation-duration: 12s" cx="60" cy="-6" r="1.6" />
+  <circle class="xm-snow" style="animation-delay: -2s; animation-duration: 9s" cx="110" cy="-6" r="2.4" />
+  <circle class="xm-snow" style="animation-delay: -7s; animation-duration: 11s" cx="150" cy="-6" r="1.4" />
+  <circle class="xm-snow" style="animation-delay: -4s; animation-duration: 10s" cx="200" cy="-6" r="2" />
+  <circle class="xm-snow" style="animation-delay: -8.5s; animation-duration: 12s" cx="240" cy="-6" r="1.6" />
+  <circle class="xm-snow" style="animation-delay: -1s; animation-duration: 9s" cx="290" cy="-6" r="2.2" />
+  <circle class="xm-snow" style="animation-delay: -6s; animation-duration: 11s" cx="340" cy="-6" r="1.6" />
+  <circle class="xm-snow" style="animation-delay: -3s; animation-duration: 10s" cx="380" cy="-6" r="2.4" />
+  <circle class="xm-snow" style="animation-delay: -9s; animation-duration: 12s" cx="420" cy="-6" r="1.4" />
+  <circle class="xm-snow" style="animation-delay: -2.5s; animation-duration: 9s" cx="470" cy="-6" r="2" />
+  <circle class="xm-snow" style="animation-delay: -6.5s; animation-duration: 11s" cx="505" cy="-6" r="1.8" />
+  </g>
+  <!-- a Santa hat on the chat window -->
+  <path d="M290 104 C292 84 306 70 326 72 C340 74 346 86 350 98 L338 98 C334 90 326 86 320 88 C312 92 308 98 312 104 Z" fill="#e53935" />
+  <rect x="286" y="98" width="40" height="10" rx="5" fill="#ffffff" />
+  <circle cx="348" cy="100" r="6" fill="#ffffff" />
+  <!-- a tree -->
+  <g transform="translate(71 6)">
+  <rect x="64" y="292" width="10" height="12" fill="#6d4c41" />
+  <path d="M69 236 L92 270 H80 L98 294 H40 L58 270 H46 Z" fill="#2e7d32" />
+  <path class="xm-star" d="M69 226 l2.5 6 6.5 0 -5 4 2 6.5 -6 -4 -6 4 2 -6.5 -5 -4 6.5 0 z" fill="#ffc145" />
+  <g><circle cx="62" cy="262" r="2.5" fill="#ff5733" /><circle cx="76" cy="276" r="2.5" fill="#4fc3f7" /><circle cx="56" cy="284" r="2.5" fill="#ffc145" /><circle cx="84" cy="288" r="2.5" fill="#ff6b9a" /></g>
+    </g>
+  <!-- presents -->
+  <rect x="420" y="278" width="34" height="26" rx="2" fill="#00c2a8" />
+  <rect x="434" y="278" width="6" height="26" fill="#ffffff" />
+  <rect x="458" y="286" width="26" height="18" rx="2" fill="#ff6b9a" />
+  <rect x="468" y="286" width="6" height="18" fill="#ffc145" />
+  <path d="M437 278 c-8 -10 -14 -2 0 0 c8 -10 14 -2 0 0 z" fill="#ffffff" />
+</svg>

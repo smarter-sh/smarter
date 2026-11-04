@@ -1,0 +1,12 @@
+slug: canada-day
+name: Canada Day
+category: national
+caption: Happy Canada Day!
+alt_text: Red and white fireworks and a red maple leaf over a Smarter LLMClient.
+link_url: https://en.wikipedia.org/wiki/Canada_Day
+priority: 80
+regions: [ca]
+schedule:
+  kind: fixed
+  month: 7
+  day: 1

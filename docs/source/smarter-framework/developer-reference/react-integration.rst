@@ -666,6 +666,7 @@ pipelines and advanced React development workflows.
   react-integration/dashboard
   react-integration/dashboard-user-menu
   react-integration/didyouknow
+  react-integration/doodle
   react-integration/onboarding
   react-integration/llmclient-list
   react-integration/manifest-dropzone

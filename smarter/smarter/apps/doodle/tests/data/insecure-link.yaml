@@ -1,0 +1,8 @@
+slug: test-insecure-link
+name: Test insecure link
+category: season
+alt_text: A theme whose link is http.
+link_url: http://example.com/
+regions: ["*"]
+schedule:
+  kind: never

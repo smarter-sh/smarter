@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .hw-flap { transform-box: fill-box; transform-origin: center; animation: hw-flap 0.5s ease-in-out infinite alternate; }
+    @keyframes hw-flap { from { transform: scaleY(1); } to { transform: scaleY(0.6); } }
+    .hw-fly { animation: hw-fly 6s ease-in-out infinite; }
+    @keyframes hw-fly { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(14px, -6px); } }
+  </style>
+  <!-- the moon -->
+  <circle cx="452" cy="52" r="30" fill="#fff3c4" />
+  <circle cx="442" cy="44" r="5" fill="#f0e0a0" />
+  <circle cx="462" cy="62" r="4" fill="#f0e0a0" />
+  <!-- bats -->
+  <g fill="#120d26">
+    <g class="hw-fly"><path class="hw-flap" d="M74 50 Q82 42 86 48 Q88 44 90 46 Q92 44 94 48 Q98 42 106 50 Q100 49 98 54 Q94 50 90 54 Q86 50 82 54 Q80 49 74 50 Z" /></g>
+    <g class="hw-fly" style="animation-delay: -3s"><path class="hw-flap" d="M150 76 Q156 70 159 75 Q160 72 162 73 Q164 72 165 75 Q168 70 174 76 Q170 75 168 79 Q165 76 162 79 Q159 76 156 79 Q154 75 150 76 Z" /></g>
+    <g class="hw-fly" style="animation-delay: -1.5s"><path class="hw-flap" d="M380 60 Q386 54 389 59 Q390 56 392 57 Q394 56 395 59 Q398 54 404 60 Q400 59 398 63 Q395 60 392 63 Q389 60 386 63 Q384 59 380 60 Z" /></g>
+  </g>
+  <!-- jack-o'-lanterns -->
+  <g>
+    <rect x="66" y="270" width="6" height="10" rx="2" fill="#558b2f" />
+    <ellipse cx="69" cy="294" rx="30" ry="22" fill="#ff8f00" />
+    <path d="M54 280 C50 292 52 304 58 312 M84 280 C88 292 86 304 80 312" fill="none" stroke="#e65100" stroke-width="2" />
+    <path d="M56 288 l6 -6 6 6 z M70 288 l6 -6 6 6 z M56 300 Q69 310 82 300 L78 302 L74 298 L69 303 L64 298 L60 302 Z" fill="#3e2723" />
+  </g>
+  <g>
+    <rect x="455" y="282" width="5" height="8" rx="2" fill="#558b2f" />
+    <ellipse cx="457" cy="302" rx="22" ry="16" fill="#ff8f00" />
+    <path d="M446 296 l4 -4 4 4 z M460 296 l4 -4 4 4 z M447 305 Q457 312 467 305 L462 306 L457 303 L452 306 Z" fill="#3e2723" />
+  </g>
+</svg>

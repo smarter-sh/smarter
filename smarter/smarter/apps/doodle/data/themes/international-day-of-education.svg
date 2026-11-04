@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <!-- a graduation cap on the chat window -->
+  <path d="M240 96 V108 C240 114 280 114 280 108 V96 Z" fill="#2d2654" />
+  <path d="M220 92 L260 78 L300 92 L260 106 Z" fill="#3b3270" />
+  <path d="M260 92 L292 98 V114" fill="none" stroke="#ffc145" stroke-width="2" />
+  <path d="M288 113 h8 l-1 9 h-6 z" fill="#ffc145" />
+  <circle cx="260" cy="92" r="2.5" fill="#ffc145" />
+  <!-- a stack of books -->
+  <rect x="34" y="290" width="70" height="12" rx="2" fill="#4fc3f7" />
+  <rect x="40" y="278" width="62" height="12" rx="2" fill="#ff5733" />
+  <rect x="36" y="266" width="66" height="12" rx="2" fill="#00c2a8" />
+  <path d="M44 270 H96 M48 282 H96 M40 294 H98" stroke="#ffffff" stroke-opacity="0.6" stroke-width="1.5" />
+  <!-- and an open one -->
+  <path d="M420 300 C440 292 452 294 462 300 C472 294 484 292 504 300 V282 C484 274 472 276 462 282 C452 276 440 274 420 282 Z" fill="#ffffff" />
+  <path d="M462 282 V300" stroke="#6c5ce7" stroke-width="1.5" />
+</svg>

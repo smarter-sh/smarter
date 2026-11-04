@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <!-- mimosa, top left -->
+  <path d="M0 18 C40 30 70 50 96 80 M40 34 C46 22 58 16 70 14 M66 56 C76 48 90 46 102 48" fill="none" stroke="#7cb342" stroke-width="2.4" stroke-linecap="round" />
+  <g fill="#ffd54f">
+    <circle cx="70" cy="14" r="5" /><circle cx="62" cy="10" r="4" /><circle cx="76" cy="8" r="4" /><circle cx="80" cy="18" r="4" />
+    <circle cx="102" cy="48" r="5" /><circle cx="96" cy="42" r="4" /><circle cx="108" cy="42" r="4" /><circle cx="110" cy="52" r="4" />
+    <circle cx="96" cy="80" r="5" /><circle cx="90" cy="86" r="4" /><circle cx="102" cy="86" r="4" /><circle cx="104" cy="76" r="4" />
+    <circle cx="28" cy="28" r="4" /><circle cx="36" cy="22" r="3.5" />
+  </g>
+  <!-- mimosa, top right -->
+  <path d="M520 18 C480 30 450 50 424 80 M480 34 C474 22 462 16 450 14 M454 56 C444 48 430 46 418 48" fill="none" stroke="#7cb342" stroke-width="2.4" stroke-linecap="round" />
+  <g fill="#ffd54f">
+    <circle cx="450" cy="14" r="5" /><circle cx="458" cy="10" r="4" /><circle cx="444" cy="8" r="4" /><circle cx="440" cy="18" r="4" />
+    <circle cx="418" cy="48" r="5" /><circle cx="424" cy="42" r="4" /><circle cx="412" cy="42" r="4" /><circle cx="410" cy="52" r="4" />
+    <circle cx="424" cy="80" r="5" /><circle cx="430" cy="86" r="4" /><circle cx="418" cy="86" r="4" /><circle cx="416" cy="76" r="4" />
+    <circle cx="492" cy="28" r="4" /><circle cx="484" cy="22" r="3.5" />
+  </g>
+  <!-- a purple ribbon on the chat window -->
+  <path d="M260 104 C248 88 236 92 240 100 C244 108 256 106 260 104 Z M260 104 C272 88 284 92 280 100 C276 108 264 106 260 104 Z" fill="#8e44ad" />
+  <path d="M258 104 L250 122 M262 104 L270 122" stroke="#8e44ad" stroke-width="4" stroke-linecap="round" />
+  <circle cx="260" cy="104" r="4" fill="#b06cd1" />
+</svg>

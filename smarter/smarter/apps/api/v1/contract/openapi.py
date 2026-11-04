@@ -257,6 +257,10 @@ Every route of these urlconfs must be in the document, or in :data:`UNDOCUMENTED
 
 UNDOCUMENTED_URLCONFS: dict[str, str] = {
     "/tests/": "Views that only the platform's own unit tests call.",
+    "/doodles/": (
+        "The sign-in page's doodle of the day and its artwork, smarter.apps.doodle, which only the "
+        "page's own React app reads. These are not part of the platform's api."
+    ),
     "/demos/": (
         "Fictional data for the platform's example resources, e.g. the Stackademy course catalogue "
         "that the Stackademy ApiPlugin queries. These are not part of the platform's api."

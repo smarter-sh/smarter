@@ -1,0 +1,12 @@
+slug: new-years-day
+name: New Year's Day
+category: celebration
+caption: Happy New Year!
+alt_text: Fireworks and confetti over a Smarter LLMClient, which wears a party hat.
+link_url: https://en.wikipedia.org/wiki/New_Year%27s_Day
+priority: 60
+regions: ["*"]
+schedule:
+  kind: fixed
+  month: 1
+  day: 1

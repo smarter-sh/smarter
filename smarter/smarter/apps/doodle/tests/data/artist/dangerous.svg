@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 520 340" onload="alert(1)">
+  <script>alert(1)</script>
+  <style>.dd-flow { opacity: 0; }</style>
+  <foreignObject width="100" height="100"><div>hi</div></foreignObject>
+  <image href="https://example.com/x.png" width="10" height="10" />
+  <a href="javascript:alert(1)"><rect x="1" y="1" width="2" height="2" /></a>
+  <text x="10" y="10">Words</text>
+  <rect id="r1" x="10" y="10" width="20" height="20" fill="url(#g)" onclick="alert(1)" style="display:none" xlink:href="data:x" />
+  <circle cx="5" cy="5" r="5" fill="#fff"><animate attributeName="r" values="1;5" dur="1s" /></circle>
+  <g class="dd-flow ai-ok"><path d="M0 0 L10 10" stroke="javascript:alert(1)" /></g>
+</svg>

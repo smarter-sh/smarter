@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340">
+  <style>
+    .eid-glow { animation: eid-glow 3s ease-in-out infinite; }
+    @keyframes eid-glow { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.8; } }
+    .eid-sway { transform-box: view-box; transform-origin: 96px 0px; animation: eid-sway 4s ease-in-out infinite; }
+    @keyframes eid-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  </style>
+  <!-- a crescent moon and stars -->
+  <path d="M452 22 A28 28 0 1 0 452 78 A54 54 0 0 1 452 22 Z" fill="#ffc145" />
+  <g fill="#ffc145">
+    <path d="M470 40 l2 5 5 0 -4 3 1.5 5 -4.5 -3 -4.5 3 1.5 -5 -4 -3 5 0 z" />
+    <path d="M390 30 l1.4 3.6 3.6 0 -2.9 2.2 1.1 3.6 -3.2 -2.2 -3.2 2.2 1.1 -3.6 -2.9 -2.2 3.6 0 z" />
+    <circle cx="340" cy="60" r="1.8" />
+    <circle cx="190" cy="50" r="1.8" />
+  </g>
+  <!-- a lantern -->
+  <g class="eid-sway">
+    <path d="M96 0 V26" stroke="#ffc145" stroke-width="1.6" />
+    <path d="M84 36 L96 24 L108 36 Z" fill="#ffc145" />
+    <circle class="eid-glow" cx="96" cy="54" r="24" fill="#ffc145" opacity="0.4" />
+    <path d="M84 36 H108 L112 64 L96 78 L80 64 Z" fill="#00897b" stroke="#ffc145" stroke-width="2.5" stroke-linejoin="round" />
+    <path d="M90 42 H102 L104 62 L96 69 L88 62 Z" fill="#ffe082" />
+    <path d="M96 78 V86" stroke="#ffc145" stroke-width="2" stroke-linecap="round" />
+  </g>
+</svg>
