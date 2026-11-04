@@ -63,18 +63,15 @@ MAX_OBSERVANCES_PER_REGION = 12
 MAX_GENERATED_SVG_LENGTH = 40_000
 """The longest SVG, in characters, that the Smarter Doodle Artist may answer with."""
 
-DOODLE_BLOG_POST_URL = ""
+DOODLE_BLOG_POST_URL = "https://blog.smarter.sh/2026/11/04/smarter-doodle-llm-editor-artist/"
 """
 The blog post that explains how the doodle is chosen and drawn, on blog.smarter.sh.
 
-Set it once the post is published, and the credit's Learn how links to it. Empty, it links to
-:data:`DOODLE_DOCS_URL`.
+The credit's Learn how links to it. Empty, it links to :data:`DOODLE_DOCS_URL`.
 """
 
-DOODLE_DOCS_URL = (
-    "https://docs.smarter.sh/en/latest/smarter-framework/developer-reference/react-integration/doodle.html"
-)
-"""The doodle's documentation, where the credit's Learn how links to until the blog post exists."""
+DOODLE_DOCS_URL = "https://docs.smarter.sh/smarter-framework/developer-reference/react-integration/doodle.html"
+"""The doodle's documentation, where the credit's Learn how links to when there is no blog post."""
 
 if DOODLE_BLOG_POST_URL:
     LEARN_HOW_URL = DOODLE_BLOG_POST_URL
