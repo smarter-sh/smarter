@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.1...v0.42.2-alpha.1) (2026-11-04)
+
+### Performance
+
+* **doodle:** read the theme catalog once and skip unneeded svg text ([1c9d3a8](https://github.com/smarter-sh/smarter/commit/1c9d3a83f89ce362fda40e949b9214d2ee54577a))
+
 ## [0.42.1](https://github.com/smarter-sh/smarter/compare/v0.42.0...v0.42.1) (2026-11-04)
 
 ### Bug Fixes
