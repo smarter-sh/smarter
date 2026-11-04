@@ -76,6 +76,11 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: false
 
+# GITHUB_TOKEN is read-only. Every write (the release, its tag, the Helm chart
+# on GHCR, the merges) uses the PAT secret instead.
+permissions:
+  contents: read
+
 env:
   AWS_REGION: ca-central-1
   ROOT_DOMAIN: "smarter.sh"
@@ -101,6 +106,7 @@ jobs:
   release:
     if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       GITHUB_TOKEN: ${{ secrets.PAT }}
     outputs:
@@ -108,19 +114,19 @@ jobs:
       tag: ${{ steps.semantic.outputs.new_release_git_tag }}
       major: ${{ steps.semantic.outputs.new_release_major_version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
 
       - name: Install dependencies
         run: npm install
         shell: bash
 
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v5
+        uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5.0.2
         id: semantic
         with:
           branches: |
@@ -163,12 +169,13 @@ jobs:
       github.event_name == 'workflow_dispatch'
       || (github.ref == 'refs/heads/main' && needs.release.outputs.published == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     outputs:
       tag: ${{ steps.get-latest-version-tag.outputs.tag }}
     steps:
       - name: Checkout code
         id: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ inputs.tag || needs.release.outputs.tag || github.ref }}
           fetch-depth: 0 # Ensures all history and tags are fetched
@@ -214,14 +221,14 @@ jobs:
       # Log in to Docker Hub for the final step, which copies the image there.
       - name: Login to Docker Hub
         id: login-dockerhub
-        uses: docker/login-action@v4
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: Configure AWS credentials
         id: aws-credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -246,7 +253,7 @@ jobs:
             | docker login --username AWS --password-stdin public.ecr.aws
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:
           platforms: arm64
           image: public.ecr.aws/vend/tonistiigi/binfmt:latest
@@ -299,7 +306,7 @@ jobs:
           echo "PRERELEASE=$PRERELEASE_TAG" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
           driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
 
@@ -338,7 +345,7 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
       - name: Set Docker image
         id: set-docker-image
@@ -383,7 +390,7 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Build and push to AWS ECR
         id: build-and-push-to-ecr
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           push: true
@@ -468,7 +475,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload build-info
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: build-info
           path: build-info/
@@ -483,14 +490,12 @@ jobs:
     needs: image
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       version: ${{ steps.chart_version.outputs.version }}
-    permissions:
-      contents: write
-      packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ needs.image.outputs.tag }}
           fetch-depth: 0
@@ -501,7 +506,7 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Install Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
 
       - name: Install oras and jq
         run: |
@@ -539,7 +544,7 @@ jobs:
           helm push smarter-*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.4.0
+        uses: sigstore/cosign-installer@e1523de7571e31dbe865fd2e80c5c7c23ae71eb4 # v3.4.0
 
       - name: Login to GHCR for Cosign
         run: |
@@ -571,8 +576,9 @@ jobs:
           cosign verify --key sigstore/artifacthub-cosign.pub ghcr.io/${{ github.repository_owner }}/charts/smarter:${{ steps.chart_version.outputs.version }}
 
       - name: Attach the chart to the GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
+          token: ${{ secrets.PAT }}
           tag_name: ${{ needs.image.outputs.tag }}
           files: smarter-*.tgz
 
@@ -591,11 +597,11 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Download build-info
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: build-info
           path: build-info
@@ -644,6 +650,7 @@ jobs:
     needs: [image, helm]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Write the release's tag
         shell: bash
@@ -653,7 +660,7 @@ jobs:
           echo "Handing ${{ needs.image.outputs.tag }} to Deploy." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload release-info
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-info
           path: release-info/
@@ -669,9 +676,10 @@ jobs:
     needs: release
     if: github.ref == 'refs/heads/main' && needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
           token: ${{ secrets.PAT }}
