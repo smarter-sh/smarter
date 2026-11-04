@@ -3,6 +3,9 @@
 import datetime
 from unittest.mock import patch
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+
 from smarter.apps.doodle import planner
 from smarter.apps.doodle.const import DEFAULT_THEME_SLUG, PLANNING_DAYS
 from smarter.apps.doodle.models import (
@@ -26,6 +29,27 @@ class TestPlanner(DoodleTestMixin):
         christmas_eve = datetime.date(2026, 12, 24)
         slugs = [theme.slug for theme in planner.candidates(christmas_eve, DoodleRegion.US)]
         self.assertEqual(slugs, ["christmas"])
+
+    def test_candidates_of_a_day_read_once(self):
+        christmas_eve = datetime.date(2026, 12, 24)
+        due = planner.due_on(christmas_eve)
+        with CaptureQueriesContext(connection) as queries:
+            slugs = [theme.slug for theme in planner.candidates(christmas_eve, DoodleRegion.US, due=due)]
+            artworks = [theme.artwork.sha256 for theme in due]
+        self.assertEqual(len(queries), 0)
+        self.assertEqual(slugs, ["christmas"])
+        self.assertTrue(artworks)
+
+    def test_catalog_leaves_out_the_svg_text(self):
+        themes = planner.catalog()
+        self.assertTrue(themes)
+        for theme in themes:
+            deferred = theme.get_deferred_fields()
+            self.assertIn("props_svg", deferred)
+            self.assertIn("svg", theme.artwork.get_deferred_fields())
+            self.assertNotEqual(theme.slug, DEFAULT_THEME_SLUG)
+        default = planner.default_theme()
+        self.assertIn("svg", default.artwork.get_deferred_fields())
 
     def test_regional_theme_wins_at_equal_priority(self):
         theme = self.theme("christmas")
@@ -101,9 +125,14 @@ class TestPlanner(DoodleTestMixin):
         for day in window:
             self.addCleanup(self.delete_doodles, day)
         # purge() would delete every doodle 30 days before 2035, including the dev platform's.
-        with patch.object(planner, "purge", return_value=0) as purge:
+        with (
+            patch.object(planner, "purge", return_value=0) as purge,
+            patch.object(planner, "catalog", wraps=planner.catalog) as catalog,
+        ):
             planned = planner.plan_doodles(days=2, today=today)
         purge.assert_called_once_with(today=today)
+        # the catalog is read once, not once for each day and region.
+        catalog.assert_called_once()
         self.assertEqual(planned, len(window) * len(DoodleRegion.values))
         diwali = Doodle.objects.get(date=DIWALI, region=DoodleRegion.SOUTH_ASIA)
         self.assertEqual(diwali.theme.slug, "diwali")
