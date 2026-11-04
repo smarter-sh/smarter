@@ -1,0 +1,12 @@
+{"items": [{"project": "es.wikipedia", "access": "all-access", "year": "2026", "month": "11", "day": "02", "articles": [
+  {"article": "Wikipedia:Portada", "views": 900000, "rank": 1},
+  {"article": "Especial:Buscar", "views": 400000, "rank": 2},
+  {"article": "Antonio_Navarro_Wolff", "views": 90000, "rank": 3},
+  {"article": "Copa_Mundial_de_Fútbol_de_2026", "views": 80000, "rank": 4},
+  {"article": "Accidente_ferroviario_de_Urda", "views": 70000, "rank": 5},
+  {"article": "Día_de_Muertos", "views": 60000, "rank": 6},
+  {"article": "WhatsApp", "views": 50000, "rank": 7},
+  {"article": "Eclipse_solar_del_12_de_agosto_de_2026", "views": 40000, "rank": 8},
+  {"article": "Gonzalo_Miró", "views": 30000, "rank": 9},
+  {"article": "Artículo_sin_Wikidata", "views": 20000, "rank": 10}
+]}]}

@@ -64,7 +64,8 @@ accounting apply as they would to anyone's prompt.
 - **smarter_doodle_editor** chooses each region's doodle of each new day. The planner prompts it
   once a day, with JSON: for each region, the catalog themes that are due, and the region's other
   holidays that day, from the ``holidays`` package. It answers with JSON: for each region, a catalog
-  theme, one of the holidays, or the plain scene. Its guardrails strip a code fence from its answer,
+  theme, one of the holidays, or the plain scene. The day before, it looks at the day once more,
+  with what each region is reading about too (Trends, below), and may choose a trend. Its guardrails strip a code fence from its answer,
   and check it with OpenAI's moderation model.
 - **smarter_doodle_artist** draws a holiday that the editor chose and the catalog has no theme for.
   It answers with the SVG of the decorations, and its guardrail removes scripts.
@@ -79,7 +80,11 @@ The editor can't invent a topic, and nothing it says is trusted. The platform
   match uses the plugin selectors' language matching: plurals, typos and WordNet synonyms, e.g.
   *bereavement* for *mourning*.
 - The category, the caption's length and the alt text are checked, and the caption's link must be
-  an English Wikipedia article.
+  a Wikipedia article. A trend's link is always its own article's.
+- Last, the ``upbeat_occasion_input`` Guardrail, a small LLM judge from the example manifests, must
+  find the occasion plainly fun and upbeat. Word lists can't tell a solemn anniversary or sad news
+  from a festival; a judge of tone can, and moderation models, which look for harm, don't. Without
+  the Guardrail, or when it fails, nothing is drawn.
 
 The artist's SVG goes through an allowlist sanitizer (:mod:`smarter.apps.doodle.sanitize`): only
 the shapes of a flat drawing, no text, images, links, scripts, ids or ``url()``, and css that only
@@ -90,6 +95,25 @@ Each prompt of the editor is recorded, under Doodle Editor Runs in the admin: wh
 what it answered, and which of its choices were refused. A day is asked once, or until it has
 failed three times, after which the calendar's choice stays. On a platform without the
 example manifests, the calendar alone chooses.
+
+Trends
+~~~~~~
+
+Holidays are planned a week ahead; what people care about, e.g. a World Cup, isn't. So the editor
+looks at today and tomorrow once more, while the ``enable_doodle_trends`` switch is on, and is told
+what each region is reading about, from Wikipedia (:mod:`smarter.apps.doodle.trends`):
+
+- Wikimedia publishes the most viewed articles of each language edition every day, an official,
+  free and anonymous signal. Each region stands for its languages' editions, e.g. Spanish and
+  Portuguese for Latin America.
+- Each article is judged by its Wikidata item's English label and description, whatever its
+  edition's language, with one Wikidata request per edition. An article about a person (years of
+  life, or an occupation in its description), a date, or with a blocked word is left out, and its
+  description must name an occasion (a tournament, a festival, an eclipse, a launch...): an
+  allowlist, since a blocklist can't keep up with the news.
+- A trend is chosen only when the region has no catalog theme that day, and it is always drawn,
+  so it waits for a superuser's approval, unless auto-approve is on. A doodle that the artist drew
+  for a region is kept on the second look.
 
 When a Smarter AI application chose or drew the day's doodle, the panel says so, in place of the
 project's description: *Chosen by a Smarter AI application*, or *Drawn by a Smarter AI
@@ -109,6 +133,8 @@ Waffle switches
   Inactive, the calendar alone chooses.
 - ``enable_doodle_llm_artwork``: lets the editor choose a holiday that the catalog has no theme
   for, which the Smarter Doodle Artist draws.
+- ``enable_doodle_trends``: tells the editor what each region is reading about, on its second look
+  at today and tomorrow.
 - ``enable_doodle_auto_approve``: shows a drawn doodle without a superuser's approval. It is the
   only one that is inactive by default.
 - ``enable_doodle_ai_credit``: shows the credit of a Smarter AI application below its doodle.
@@ -147,6 +173,10 @@ Technical Reference
    :no-index:
 
 .. automodule:: smarter.apps.doodle.editor
+   :members:
+   :no-index:
+
+.. automodule:: smarter.apps.doodle.trends
    :members:
    :no-index:
 

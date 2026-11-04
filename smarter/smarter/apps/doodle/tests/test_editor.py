@@ -10,6 +10,7 @@ import datetime
 import os
 from unittest.mock import MagicMock, patch
 
+from django.utils import timezone
 from waffle.testutils import override_switch
 
 from smarter.apps.doodle import editor
@@ -36,6 +37,7 @@ from smarter.apps.doodle.models import (
 )
 from smarter.apps.doodle.planner import plan_doodle
 from smarter.apps.doodle.regions import DoodleRegion
+from smarter.apps.doodle.trends import DoodleTrend
 from smarter.apps.llmclient.prompting import SmarterLLMClientPromptError
 from smarter.apps.prompt.contract.models import (
     PromptChatApiMessage,
@@ -52,7 +54,31 @@ REVOLUTION_DAY = datetime.date(2035, 11, 19)
 
 REVOLUTION_DAY_ID = "MX:revolution-day"
 
+TRENDING_DAY = datetime.date(2035, 11, 21)
+"""A day with nothing due in Oceania, when a trend is."""
+
+ECLIPSE = DoodleTrend(
+    id="en:Solar_eclipse_of_November_21,_2035",
+    title="Solar eclipse of November 21, 2035",
+    description="total solar eclipse",
+    views=90000,
+    url="https://en.wikipedia.org/wiki/Solar_eclipse_of_November_21,_2035",
+)
+
+ECLIPSE_DECISION = {
+    "region": "oceania",
+    "choice": "trend",
+    "id": ECLIPSE.id,
+    "reason": "Everyone is watching the eclipse.",
+    "category": "science",
+    "caption": "Happy eclipse day!",
+    "alt_text": "A black sun with a golden ring above a Smarter LLMClient.",
+    "link_url": "https://en.wikipedia.org/wiki/Something_else",
+    "subject": "A sun hidden by the moon, with a golden corona, and stars.",
+}
+
 EDITOR = SmarterWaffleSwitches.ENABLE_DOODLE_LLM_EDITOR
+TRENDS = SmarterWaffleSwitches.ENABLE_DOODLE_TRENDS
 ARTWORK = SmarterWaffleSwitches.ENABLE_DOODLE_LLM_ARTWORK
 AUTO_APPROVE = SmarterWaffleSwitches.ENABLE_DOODLE_AUTO_APPROVE
 
@@ -90,7 +116,8 @@ class TestDoodleEditor(DoodleTestMixin):
 
     def setUp(self):
         super().setUp()
-        for day in (DIWALI, QUIET_DAY, REVOLUTION_DAY):
+        self.tone = None
+        for day in (DIWALI, QUIET_DAY, REVOLUTION_DAY, TRENDING_DAY):
             self.addCleanup(self.delete_doodles, day)
             self.addCleanup(DoodleEditorRun.objects.filter(date=day).delete)
         self.addCleanup(DoodleTheme.objects.filter(is_generated=True, slug__startswith="ai-2035").delete)
@@ -104,6 +131,7 @@ class TestDoodleEditor(DoodleTestMixin):
             patch.object(editor, "smarter_admin_profile", return_value=MagicMock()),
             patch.object(editor, "single_use_api_key", return_value=contextlib.nullcontext("a-key")),
             patch.object(editor, "prompt_llmclient", side_effect=list(results)) as prompt,
+            patch.object(editor, "tone_check", return_value=self.tone),
         ):
             yield prompt
 
@@ -225,7 +253,8 @@ class TestDoodleEditor(DoodleTestMixin):
         self.assertEqual(doodle.ai_credit, "drawn")
         self.assertEqual(doodle.caption, "Happy Revolution Day!")
         theme = doodle.theme
-        self.assertEqual(theme.slug, "ai-2035-11-19-mx-revolution-day")
+        self.assertTrue(theme.slug.startswith("ai-2035-11-19-mx-revolution-day-"))
+        self.assertEqual(len(theme.slug), len("ai-2035-11-19-mx-revolution-day-") + 8)
         self.assertTrue(theme.is_generated)
         self.assertFalse(theme.is_active)
         self.assertIn("ai-sway", theme.artwork.svg)
@@ -304,3 +333,88 @@ class TestDoodleEditor(DoodleTestMixin):
         self.assertIsNone(editor.smarter_llmclient("test_no_such_llmclient"))
         profile = editor.smarter_admin_profile()
         self.assertTrue(profile.user.is_staff)
+
+    # trends: the editor's second look at a day, and the tone check of what it would draw
+    # ---------------------------------------------------------------------------------------------
+
+    def test_trends_are_due(self):
+        today = timezone.now().date()
+        with override_switch(TRENDS, active=True), override_switch(ARTWORK, active=True):
+            self.assertTrue(editor.trends_are_due(today))
+            self.assertTrue(editor.trends_are_due(today + datetime.timedelta(days=1)))
+            self.assertFalse(editor.trends_are_due(today + datetime.timedelta(days=2)))
+        with override_switch(TRENDS, active=False):
+            self.assertFalse(editor.trends_are_due(today))
+        with override_switch(TRENDS, active=True), override_switch(ARTWORK, active=False):
+            self.assertFalse(editor.trends_are_due(today))
+
+    def test_trends_bring_a_second_look(self):
+        DoodleEditorRun.objects.create(date=TRENDING_DAY, status=DoodleEditorRunStatus.SUCCEEDED)
+        with patch.object(editor, "trends_are_due", return_value=False):
+            self.assertFalse(needs_editing(TRENDING_DAY))
+        with patch.object(editor, "trends_are_due", return_value=True):
+            self.assertTrue(needs_editing(TRENDING_DAY))
+            DoodleEditorRun.objects.create(date=TRENDING_DAY, status=DoodleEditorRunStatus.SUCCEEDED, with_trends=True)
+            self.assertFalse(needs_editing(TRENDING_DAY))
+
+    def test_trend_drawn_with_its_own_link(self):
+        with (
+            patch.object(editor, "trends_are_due", return_value=True),
+            patch.object(editor, "region_trends", return_value=[ECLIPSE]),
+            override_switch(ARTWORK, active=True),
+            override_switch(AUTO_APPROVE, active=False),
+        ):
+            with self.llm(decisions(ECLIPSE_DECISION), answer(SAFE_SVG)) as prompt:
+                run = edit_day(TRENDING_DAY)
+        self.assertTrue(run.with_trends)
+        editor_prompt = json.loads(prompt.call_args_list[0].args[2])
+        oceania = [region for region in editor_prompt["regions"] if region["region"] == "oceania"][0]
+        self.assertEqual(oceania["trends"][0]["id"], ECLIPSE.id)
+        doodle = Doodle.objects.get(date=TRENDING_DAY, region="oceania")
+        self.assertEqual(doodle.status, DoodleStatus.PROPOSED)
+        self.assertEqual(doodle.ai_credit, "drawn")
+        self.assertEqual(doodle.link_url, ECLIPSE.url)
+        self.assertEqual(doodle.title, ECLIPSE.title)
+
+    def test_trend_that_is_not_in_the_request(self):
+        request = editor_request(TRENDING_DAY, ["oceania"], artwork_allowed=True)
+        decision = DoodleEditorDecision(**ECLIPSE_DECISION)
+        self.assertIn("is not a trend", check_decision(decision, request))
+
+    def test_trend_second_look_keeps_drawn_doodles(self):
+        with override_switch(ARTWORK, active=True), override_switch(AUTO_APPROVE, active=True):
+            with self.llm(decisions(REVOLUTION_DAY_DECISION), answer(SAFE_SVG)):
+                edit_day(REVOLUTION_DAY)
+        self.assertNotIn("mx", regions_to_edit(REVOLUTION_DAY, with_trends=True))
+        self.assertIn("mx", regions_to_edit(REVOLUTION_DAY, with_trends=False))
+
+    def test_tone_declines_what_is_not_upbeat(self):
+        self.tone = "'Revolution Day' isn't upbeat enough for a doodle"
+        with override_switch(ARTWORK, active=True), self.llm(decisions(REVOLUTION_DAY_DECISION)) as prompt:
+            run = edit_day(REVOLUTION_DAY)
+        prompt.assert_called_once()
+        self.assertIn("isn't upbeat", run.error)
+        self.assertFalse(Doodle.objects.filter(date=REVOLUTION_DAY, region="mx", source=DoodleSource.LLM).exists())
+
+    def test_tone_check(self):
+        decision = DoodleEditorDecision(**ECLIPSE_DECISION)
+        subject = editor.DoodleEditorSubject(id=ECLIPSE.id, name=ECLIPSE.title, description="eclipse", link_url="")
+        guardrails = patch.object(editor.Guardrail.objects, "filter")
+        with guardrails as lookup:
+            lookup.return_value.first.return_value = None
+            self.assertIn("doesn't exist", editor.tone_check(decision, subject))
+        cases = [
+            (MagicMock(error=None, triggered=False), None),
+            (MagicMock(error=None, triggered=True), "isn't upbeat"),
+            (MagicMock(error="the provider failed"), "the tone check failed"),
+        ]
+        for result, expected in cases:
+            with self.subTest(expected=expected):
+                with guardrails as lookup, patch.object(editor, "evaluate_guardrail", return_value=result) as evaluate:
+                    lookup.return_value.first.return_value = MagicMock()
+                    refusal = editor.tone_check(decision, subject)
+                if expected is None:
+                    self.assertIsNone(refusal)
+                else:
+                    self.assertIn(expected, refusal)
+                self.assertIn("Solar eclipse", evaluate.call_args.args[1])
