@@ -83,6 +83,7 @@ jobs:
       || (github.event.workflow_run.conclusion == 'success'
           && !startsWith(github.event.workflow_run.head_commit.message, 'chore(release):'))
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       actions: read
     outputs:
@@ -92,7 +93,7 @@ jobs:
       - name: Download Deploy's release-info
         if: github.event_name == 'workflow_run'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-info
           path: release-info
@@ -132,7 +133,7 @@ jobs:
       # conf.py finds the release with `git describe --tags`, which needs the
       # history and tags.
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ needs.resolve.outputs.tag || github.ref }}
           fetch-depth: 0
@@ -140,7 +141,7 @@ jobs:
 
       - name: Set up Python
         id: python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
 
@@ -173,7 +174,7 @@ jobs:
 
       - name: Restore docs venv
         id: venv
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .venv-docs
           key: docs-venv-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('smarter/requirements/local.txt') }}
@@ -188,7 +189,7 @@ jobs:
 
       - name: Save docs venv
         if: steps.venv.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .venv-docs
           key: ${{ steps.venv.outputs.cache-primary-key }}
@@ -205,7 +206,7 @@ jobs:
       #========================================================================
       - name: Restore previous build
         id: build-cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: |
             docs/build
@@ -240,7 +241,7 @@ jobs:
           python scripts/sphinx_cache_mtimes.py save "$BLOB_MANIFEST"
 
       - name: Save this build
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: |
             docs/build
@@ -251,7 +252,7 @@ jobs:
       # Publish, as the docs environment's role.
       #========================================================================
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           role-to-assume: ${{ vars.DOCS_AWS_ROLE_ARN }}
           # the bucket's region (terraform/docs). CloudFront is global.
