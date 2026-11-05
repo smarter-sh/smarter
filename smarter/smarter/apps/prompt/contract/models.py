@@ -512,7 +512,7 @@ class PromptChatApiPromptToolCall(PromptChatApiOrmModel):
     prompt: int = Field(..., description="PromptToolCall.prompt: the chat session's id.")
     plugin: Optional[int] = Field(default=None, description="PromptToolCall.plugin: the PluginMeta's id, for a plugin.")
     function_name: Optional[str] = Field(default=None, max_length=255, description="PromptToolCall.function_name.")
-    function_args: Optional[str] = Field(default=None, max_length=255, description="PromptToolCall.function_args.")
+    function_args: Optional[str] = Field(default=None, description="PromptToolCall.function_args.")
     request: Optional[PromptChatApiJson] = Field(default=None, description="PromptToolCall.request: the tool's input.")
     response: Optional[PromptChatApiJson] = Field(
         default=None, description="PromptToolCall.response: the tool's result."
