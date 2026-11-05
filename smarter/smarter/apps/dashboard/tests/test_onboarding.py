@@ -22,8 +22,6 @@ from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.lib import json
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from ..const import namespace
-
 SWITCH = SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_ONBOARDING_HINTS
 REACT_CONST = Path(settings.PROJECT_ROOT) / "react" / "packages" / "smarter-onboarding" / "src" / "lib" / "const.ts"
 
@@ -35,9 +33,7 @@ class TestOnboardingSeenView(TestAccountMixin):
         super().setUp()
         self.client = Client()
         self.addCleanup(self.client.logout)
-        self.url = reverse(
-            f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.onboarding_seen}"
-        )
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.onboarding_seen}")
         self.addCleanup(self.forget_hints)
         self.forget_hints()
 

@@ -36,6 +36,7 @@ from smarter.apps.llmclient.views.deployment_contract import (
     CreateApiKeyRequest,
     LLMClientDeploymentPage,
 )
+from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
 from smarter.apps.prompt.contract.const import (
     CHAT_CONTRACT_V2_CAPABILITY,
     PUBLIC_META_DATA_FIELDS,
@@ -78,6 +79,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
 
     model = LLMClient
     reverse_names = PromptReverseNames
+    web_reverse_names = PromptApiWebReverseNames
     id_kwarg = "llmclient_id"
     invalidate_cache = staticmethod(invalidate_all_cached_llmclients_for_user_profile)
     resource_name_prefix = "test_prompt_views"
@@ -86,6 +88,14 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     @classmethod
     def create_resource(cls, name: str) -> LLMClient:
         return LLMClient.objects.create(name=name, user_profile=cls.user_profile)
+
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api, with the actions beside listview/."""
+        self.assertEqual(self.web_url("listview_all"), "/api/web/prompt/listview/")
+        self.assertEqual(self.web_url("listview", ownership_filter="owned"), "/api/web/prompt/listview/owned/")
+        self.assertEqual(self.web_id_url("clone", 1, new_name="x"), "/api/web/prompt/clone/1/x/")
+        self.assertEqual(self.web_id_url("rename", 1, new_name="x"), "/api/web/prompt/rename/1/x/")
+        self.assertEqual(self.web_id_url("delete", 1), "/api/web/prompt/delete/1/")
 
     def test_list_api_pending_filter(self):
         """Test that ?filter=pending lists only the LLMClients that aren't deployed, as the dashboard counts them."""
@@ -98,7 +108,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertNotIn(deployed.name, names)
         self.assertIn(deployed.name, self.listed("owned", invalidate_cache="true", page_size=100))
 
-        url = self.url("listview_api", ownership_filter="owned") + "?filter=pending&invalidate_cache=true"
+        url = self.web_url("listview", ownership_filter="owned") + "?filter=pending&invalidate_cache=true"
         pagination = self.post(url)["pagination"]
         self.assertEqual((pagination["filter"], pagination["filters"]), ("pending", ["pending"]))
 
@@ -158,7 +168,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         with patch(enabled, return_value=True):
             response = self.client.get(url, HTTP_HOST=PLATFORM_HOST)
         log_stream_url = response.context["workbench"]["log_stream_url"]
-        self.assertTrue(log_stream_url.endswith("/logs/api/stream/"), log_stream_url)
+        self.assertTrue(log_stream_url.endswith("/api/web/dashboard/logs/stream/"), log_stream_url)
         self.assertIn(f'smarter-log-stream-url="{log_stream_url}"', response.content.decode())
 
         # without a log stream, the Console has no "Server Logs" tab.

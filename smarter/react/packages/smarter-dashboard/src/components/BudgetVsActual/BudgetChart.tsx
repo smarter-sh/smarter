@@ -4,7 +4,7 @@
  * A budget versus actual chart: a bar of the actual spending of each billing period, red when
  * it reached the budget, and the budget's periodic limit as a line.
  *
- * The data is a series from the Smarter dashboard API, /dashboard/api/budgets/<locator>/series/.
+ * The data is a series from the Smarter dashboard API, /api/web/dashboard/budgets/<locator>/series/.
  */
 import {
   Bar,

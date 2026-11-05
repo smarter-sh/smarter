@@ -65,7 +65,6 @@ def welcome_dialog(context: RequestContext) -> dict[str, str | bool]:
     """
     # pylint: disable=import-outside-toplevel
     from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
-    from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
     user = get_resolved_user(context["request"].user)
     # templates/dashboard/base.html includes the dialog only for a signed-in user, but a None or an
@@ -74,15 +73,18 @@ def welcome_dialog(context: RequestContext) -> dict[str, str | bool]:
     show_at_startup = signed_in and not user_was_welcomed(user.pk)
     # a request from a RequestFactory, e.g. in a test, has no session.
     session = getattr(context["request"], "session", None) or {}
-    namespaces = (DashboardReverseNames.namespace, DashboardApiReverseNames.namespace)
     return {
         "root_id": "smarter-welcome-root",
         "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
         "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
         "cookie_domain": settings.SESSION_COOKIE_DOMAIN or "",
-        "api_url": reverse(*namespaces, DashboardApiReverseNames.welcome, urlconf=settings.ROOT_URLCONF),
+        "api_url": reverse(
+            DashboardApiReverseNames.namespace, DashboardApiReverseNames.welcome, urlconf=settings.ROOT_URLCONF
+        ),
         "dismiss_api_url": reverse(
-            *namespaces, DashboardApiReverseNames.welcome_dismiss, urlconf=settings.ROOT_URLCONF
+            DashboardApiReverseNames.namespace,
+            DashboardApiReverseNames.welcome_dismiss,
+            urlconf=settings.ROOT_URLCONF,
         ),
         "show_at_startup": show_at_startup,
         "show": show_at_startup and not session.get(WELCOME_SHOWN_SESSION_KEY, False),

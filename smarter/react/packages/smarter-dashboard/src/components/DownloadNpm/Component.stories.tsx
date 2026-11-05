@@ -6,7 +6,7 @@ import DownloadNpm from "@/components/DownloadNpm/Component";
 const meta = {
   title: "Dashboard/DownloadNpm",
   component: DownloadNpm,
-  args: { apiUrl: "/dashboard/api/npm/" },
+  args: { apiUrl: "/api/web/dashboard/npm/" },
 } satisfies Meta<typeof DownloadNpm>;
 
 export default meta;

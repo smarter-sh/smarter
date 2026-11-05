@@ -31,7 +31,7 @@ class TestLogStreams(TestAccountMixin):
 
     def test_stream_user_logs_subscribes_to_resolved_user_channel(self):
         """The SSE stream should use the same user context as the logging middleware."""
-        request = RequestFactory().get("/dashboard/logs/api/stream/")
+        request = RequestFactory().get("/api/web/dashboard/logs/stream/")
         request.user = self.non_admin_user
 
         fake_pubsub = MagicMock()
@@ -50,7 +50,7 @@ class TestLogStreams(TestAccountMixin):
 
     def test_stream_user_logs_replays_stream_history_before_live_messages(self):
         """Historical Redis stream entries should be emitted as the first log events."""
-        request = RequestFactory().get("/dashboard/logs/api/stream/")
+        request = RequestFactory().get("/api/web/dashboard/logs/stream/")
         request.user = self.non_admin_user
         channel = build_channel(get_user_context(self.non_admin_user))
 
@@ -82,7 +82,7 @@ class TestLogStreams(TestAccountMixin):
 
     def _stream(self, fake_cache, user=None, limit=3, query=None, log_level=logging.DEBUG):
         """Call the view with a fake redis, and collect its first chunks."""
-        request = RequestFactory().get("/dashboard/logs/api/stream/", query or {})
+        request = RequestFactory().get("/api/web/dashboard/logs/stream/", query or {})
         request.user = user or self.non_admin_user
         with (
             patch.object(
@@ -118,7 +118,7 @@ class TestLogStreams(TestAccountMixin):
 
     def test_disabled(self):
         """Test that the view explains that log streaming is disabled."""
-        request = RequestFactory().get("/dashboard/logs/api/stream/")
+        request = RequestFactory().get("/api/web/dashboard/logs/stream/")
         request.user = self.non_admin_user
         with patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=False)):
             response = streams.stream_user_logs(request)
@@ -134,7 +134,7 @@ class TestLogStreams(TestAccountMixin):
     def test_anonymous_user_gets_a_unique_channel(self):
         """Test that a request without a user subscribes to a channel that no logs are written to."""
         fake_cache = MagicMock()
-        request = RequestFactory().get("/dashboard/logs/api/stream/")
+        request = RequestFactory().get("/api/web/dashboard/logs/stream/")
         request.user = AnonymousUser()
         with (
             patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),

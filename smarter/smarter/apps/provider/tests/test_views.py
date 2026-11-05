@@ -8,6 +8,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.provider.api.web.urls import ProviderApiWebReverseNames
 from smarter.apps.provider.caching import (
     invalidate_all_cached_providers_for_user_profile,
 )
@@ -25,6 +26,7 @@ class TestProviderViews(ResourceViewsTestMixin, TestAccountMixin):
 
     model = Provider
     reverse_names = ProviderReverseNames
+    web_reverse_names = ProviderApiWebReverseNames
     id_kwarg = "provider_id"
     invalidate_cache = staticmethod(invalidate_all_cached_providers_for_user_profile)
     resource_name_prefix = "test_provider_views"
@@ -32,6 +34,14 @@ class TestProviderViews(ResourceViewsTestMixin, TestAccountMixin):
     @classmethod
     def create_resource(cls, name: str) -> Provider:
         return Provider.objects.create(name=name, user_profile=cls.user_profile, base_url="https://api.example.com/v1/")
+
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(self.web_url("listview_all"), "/api/web/provider/listview/")
+        self.assertEqual(self.web_url("listview", ownership_filter="owned"), "/api/web/provider/listview/owned/")
+        self.assertEqual(self.web_id_url("clone", 1, new_name="x"), "/api/web/provider/clone/1/x/")
+        self.assertEqual(self.web_id_url("rename", 1, new_name="x"), "/api/web/provider/rename/1/x/")
+        self.assertEqual(self.web_id_url("delete", 1), "/api/web/provider/delete/1/")
 
     def test_clone(self):
         super().test_clone()

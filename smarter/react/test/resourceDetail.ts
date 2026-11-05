@@ -6,14 +6,14 @@
  *     import { resourceDetailHandler } from "@test/resourceDetail";
  *     server.use(...listHandlers(), resourceDetailHandler());
  *
- * Each list's object has its detailUrl, /dashboard/api/resource/<kind>/<record locator>/, which the fixtures of
+ * Each list's object has its detailUrl, /api/web/dashboard/resource/<kind>/<record locator>/, which the fixtures of
  * the list packages give as detailUrl(kind, id).
  */
 import { http, HttpResponse } from "msw";
 
 /** The url of a resource's detail, as a list api's serializer sends it, e.g. for a fixture's detailUrl. */
 export function detailUrl(kind: string, id: number | string): string {
-  return `/dashboard/api/resource/${kind}/${kind.toLowerCase()}-r${id}/`;
+  return `/api/web/dashboard/resource/${kind}/${kind.toLowerCase()}-r${id}/`;
 }
 
 /** The detail that the handler returns: the resource uses one Secret, and one LLMClient uses it. */
@@ -64,7 +64,7 @@ export function resourceDetail(kind: string, recordLocator: string) {
 
 /** Answers every resource's detail. */
 export function resourceDetailHandler() {
-  return http.post("/dashboard/api/resource/:kind/:recordLocator/", ({ params }) =>
+  return http.post("/api/web/dashboard/resource/:kind/:recordLocator/", ({ params }) =>
     HttpResponse.json(resourceDetail(String(params.kind), String(params.recordLocator))),
   );
 }

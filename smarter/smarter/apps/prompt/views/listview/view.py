@@ -56,7 +56,7 @@ class PromptListView(SmarterAuthenticatedWebView):
         :returns: The rendered page.
         """
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseNames
+        from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
 
         context = {
             "llmclient_list": {
@@ -64,7 +64,9 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "llmclient_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api_all),
+                "llmclient_list_api_url": reverse(
+                    PromptApiWebReverseNames.namespace, PromptApiWebReverseNames.listview_all
+                ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }

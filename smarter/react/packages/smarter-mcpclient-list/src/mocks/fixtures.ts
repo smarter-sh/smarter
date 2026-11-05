@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { MCPClient } from "@/lib/Types";
 
-export const API_URL = "/mcpclient/react-integration/api/listview/";
+export const API_URL = "/api/web/mcpclient/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<MCPClient> = {}): MCPC
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/mcpclient/mcpclients/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/MCPClient/mcpclient-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/MCPClient/mcpclient-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

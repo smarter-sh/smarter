@@ -1,4 +1,4 @@
-"""Test the auth token list view's react-integration api, :mod:`smarter.lib.drf.views.listview.api`."""
+"""Test the auth token list view's web console api, :mod:`smarter.lib.drf.views.listview.api`."""
 
 import uuid
 from http import HTTPStatus
@@ -9,9 +9,8 @@ from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib import json
-from smarter.lib.drf.const import namespace
+from smarter.lib.drf.api.web.urls import AuthTokenApiWebReverseNames as WebNames
 from smarter.lib.drf.models import SmarterAuthToken
-from smarter.lib.drf.urls import AuthTokenReverseNames
 from smarter.lib.drf.views.listview.api import (
     AuthTokenListApiCloneView,
     AuthTokenListApiDeleteView,
@@ -20,7 +19,7 @@ from smarter.lib.drf.views.listview.api import (
 
 
 class TestAuthTokenListApi(TestAccountMixin):
-    """Test listing, cloning, renaming and deleting auth tokens with the react-integration api."""
+    """Test listing, cloning, renaming and deleting auth tokens with the web console api."""
 
     def setUp(self):
         super().setUp()
@@ -44,16 +43,33 @@ class TestAuthTokenListApi(TestAccountMixin):
         response = view_class.as_view()(request, **kwargs)
         return response, json.loads(response.content)
 
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        key_id = uuid.UUID(int=1)
+
+        def web_url(name: str, **kwargs) -> str:
+            return reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs or None)
+
+        self.assertEqual(web_url(WebNames.listview_all), "/api/web/authtoken/listview/")
+        self.assertEqual(web_url(WebNames.listview, ownership_filter="owned"), "/api/web/authtoken/listview/owned/")
+        self.assertEqual(
+            web_url(WebNames.clone, authtoken_id=key_id, new_name="x"), f"/api/web/authtoken/clone/{key_id}/x/"
+        )
+        self.assertEqual(
+            web_url(WebNames.rename, authtoken_id=key_id, new_name="x"), f"/api/web/authtoken/rename/{key_id}/x/"
+        )
+        self.assertEqual(web_url(WebNames.delete, authtoken_id=key_id), f"/api/web/authtoken/delete/{key_id}/")
+
     def test_list(self):
         """Test that the list includes the user's token, for each ownership filter."""
         for name, kwargs in (
-            (AuthTokenReverseNames.listview_api_all, {}),
-            (AuthTokenReverseNames.listview_api, {"ownership_filter": "owned"}),
-            (AuthTokenReverseNames.listview_api, {"ownership_filter": "shared"}),
-            (AuthTokenReverseNames.listview_api, {"ownership_filter": "all"}),
+            (WebNames.listview_all, {}),
+            (WebNames.listview, {"ownership_filter": "owned"}),
+            (WebNames.listview, {"ownership_filter": "shared"}),
+            (WebNames.listview, {"ownership_filter": "all"}),
         ):
             with self.subTest(kwargs=kwargs):
-                url = reverse(f"{namespace}:{name}", kwargs=kwargs)
+                url = reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs)
                 response = self.client.post(f"{url}?invalidate_cache=true&page_size=100")
                 self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
                 data = response.json()
@@ -70,7 +86,7 @@ class TestAuthTokenListApi(TestAccountMixin):
                 user=self.admin_user,
                 description="test",
             )
-        url = reverse(f"{namespace}:{AuthTokenReverseNames.listview_api}", kwargs={"ownership_filter": "owned"})
+        url = reverse(f"{WebNames.namespace}:{WebNames.listview}", kwargs={"ownership_filter": "owned"})
 
         data = self.client.post(f"{url}?invalidate_cache=true&search=listview_api_PAGE&page_size=2&page=2").json()
         self.assertEqual(
@@ -139,14 +155,14 @@ class TestAuthTokenListApi(TestAccountMixin):
     def test_urls(self):
         """Test cloning and renaming a token by its urls, which identify it by its key_id."""
         url = reverse(
-            f"{namespace}:{AuthTokenReverseNames.listview_api_clone}",
+            f"{WebNames.namespace}:{WebNames.clone}",
             args=[self.token_id, "test_listview_api_url_clone"],
         )
         response = self.client.post(url)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
         self.assertEqual(response.json()["name"], "test_listview_api_url_clone")
         url = reverse(
-            f"{namespace}:{AuthTokenReverseNames.listview_api_rename}",
+            f"{WebNames.namespace}:{WebNames.rename}",
             args=[self.token_id, "test_listview_api_url_renamed"],
         )
         self.assertEqual(self.client.post(url).status_code, HTTPStatus.OK)
@@ -165,6 +181,6 @@ class TestAuthTokenListApi(TestAccountMixin):
 
     def test_delete_url(self):
         """Test deleting a token by its url."""
-        url = reverse(f"{namespace}:{AuthTokenReverseNames.listview_api_delete}", args=[self.token_id])
+        url = reverse(f"{WebNames.namespace}:{WebNames.delete}", args=[self.token_id])
         response = self.client.post(url)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
