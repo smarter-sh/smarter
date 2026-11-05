@@ -30,9 +30,17 @@
   a series of agent changes diverge, and how to find it; `Smarter's OpenAPI Contract: One
   Extensibility Model for Python, Go, React and VS Code
   <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, on the generated, tested
-  OpenAPI document that every client depends on. The case studies `Converge or Diverge: AI Coding
-  Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on tests and guards as an agent's
-  feedback, `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__, on
-  contract tests, and `What Happens When You Click Deploy
-  <https://smarter.sh/case-studies/deploy>`__, on keeping the cloud out of tests, turn these posts
-  into lessons with labs and discussion questions.
+  OpenAPI document that every client depends on; `Leveraging Automations to Keep Smarter Healthy
+  <https://blog.smarter.sh/2026/11/02/leveraging-automations-keep-smarter-healthy/>`__, on how
+  pre-commit hooks, coverage thresholds, Dependabot and scheduled workflows each guard reliability;
+  `Introducing smarter-sh/automation, the GitHub Actions Cron Jobs That Look After Every Smarter
+  Repository <https://blog.smarter.sh/2026/11/02/smarter-sh-automation/>`__, on scheduled workflows
+  that test, audit and tidy every repository of the project; `Claude Code Reviews Smarter's
+  Kubernetes Pod Logs Every Day, and Proposes the Fixes
+  <https://blog.smarter.sh/2026/10/31/claude-code-pod-log-review-self-healing/>`__, on an unattended
+  agent that turns production logs into issues and pull requests. The case studies `Converge or
+  Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on tests and
+  guards as an agent's feedback, `One Contract, Five Clients
+  <https://smarter.sh/case-studies/api-contract>`__, on contract tests, and `What Happens When You
+  Click Deploy <https://smarter.sh/case-studies/deploy>`__, on keeping the cloud out of tests, turn
+  these posts into lessons with labs and discussion questions.

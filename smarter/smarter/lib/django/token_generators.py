@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring
 """Django token generators for single-use authentications."""
 
 from typing import Union
@@ -13,7 +12,6 @@ from django.utils.http import (
     urlsafe_base64_decode,
     urlsafe_base64_encode,
 )
-from django.utils.timezone import now as timezone_now
 from rest_framework.request import Request
 
 from smarter.apps.account.models import User
@@ -21,9 +19,10 @@ from smarter.common.exceptions import SmarterException
 from smarter.lib.django.shortcuts import reverse
 
 DEFAULT_LINK_EXPIRATION = 86400
-HFS_EPOCH_UNIX_TIMESTAMP = 2082844800
+"""How many seconds a link stays valid, unless the generator is given another expiration: one day."""
 
 SmarterRequest = Union[ASGIRequest, Request]
+"""A Django or a DRF request, either of which :meth:`ExpiringTokenGenerator.encode_link` accepts."""
 
 
 class SmarterTokenError(SmarterException):
@@ -50,6 +49,11 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
     """An object of this class can generate a token that expires after a certain amount of time."""
 
     def __init__(self, expiration: int = DEFAULT_LINK_EXPIRATION):
+        """
+        Initialize the generator.
+
+        :param expiration: How many seconds a token stays valid.
+        """
         self.expiration = expiration
         super().__init__()
 
@@ -96,8 +100,10 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
             proto_header = request.META.get("HTTP_X_FORWARDED_PROTO")
             if proto_header:
                 protocol = proto_header.split(",")[0].strip()
+            elif hasattr(request, "is_secure") and request.is_secure():
+                protocol = "https"
             else:
-                protocol = "https" if hasattr(request, "is_secure") and request.is_secure() else "http"
+                protocol = "http"
         # pylint: disable=broad-except
         except Exception:
             protocol = "https"
@@ -105,7 +111,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         url = protocol + "://" + domain + slug
         return url
 
-    def decode_link(self, uidb64, token) -> User:
+    def decode_link(self, uidb64: str, token: str) -> User:
         """
         Extract the user from the uid and token and validate.
 
@@ -118,7 +124,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         self.validate(user, token)
         return user
 
-    def parse_link(self, url: str):
+    def parse_link(self, url: str) -> tuple[User, str]:
         """
         Return the user and token from a link made by :meth:`encode_link`, without validating the token.
 
@@ -136,21 +142,30 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         token = path_parts[-1]
         return user, token
 
-    @staticmethod
-    def get_timestamp() -> int:
-        """Return the current unix time, in seconds."""
-        return int(timezone_now().timestamp())
-
-    def adjusted_timestamp(self, timestamp: int) -> int:
+    def get_timestamp(self) -> int:
         """
-        Convert a token's timestamp, counted from ``HFS_EPOCH_UNIX_TIMESTAMP``, to unix time.
+        Return the current time on the clock that Django's tokens use.
 
-        :param timestamp: The token's timestamp, in seconds.
-        :returns: The unix time, in seconds.
+        Django stamps a token with the seconds since 2001-01-01, so a token's age is
+        this value minus the token's own timestamp.
+
+        :returns: The seconds since 2001-01-01.
         """
-        return timestamp + HFS_EPOCH_UNIX_TIMESTAMP
+        now = self._now()
+        return self._num_seconds(now)
 
-    def validate(self, user, token) -> bool:
+    def token_age(self, timestamp: int) -> int:
+        """
+        Return how many seconds ago a token was made.
+
+        :param timestamp: The token's timestamp, the base36-decoded first part of the token.
+        :returns: The token's age, in seconds.
+        """
+        current_time = self.get_timestamp()
+        age = current_time - timestamp
+        return age
+
+    def validate(self, user: User, token: str) -> bool:
         """
         Check that a password reset token is correct for a given user.
 
@@ -177,10 +192,8 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         except ValueError as exc:
             raise SmarterTokenConversionError("Token is invalid.") from exc
 
-        adjusted_timestamp = self.adjusted_timestamp(timestamp)
-        current_time = self.get_timestamp()
-
-        if (current_time - adjusted_timestamp) > self.expiration:
+        age = self.token_age(timestamp)
+        if age > self.expiration:
             raise SmarterTokenExpiredError("Token has expired.")
 
         return True

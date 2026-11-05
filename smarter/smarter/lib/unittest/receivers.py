@@ -1,7 +1,7 @@
 """
 A test mixin that calls each signal receiver of a module, as its signal would, with a mock for each argument that the receiver names.
 
-Celery's Task.apply_async, and each Celery task that the module imports, are mocked, so that no receiver queues a
+Celery's ``Task.apply_async``, and each Celery task that the module imports, are mocked, so that no receiver queues a
 task. A receiver that only logs is then covered, and one that reads an argument that its signal does not send fails.
 """
 
@@ -14,13 +14,18 @@ from smarter.lib.typing import SmarterDictType
 
 
 class ReceiversTestMixin:
-    """Call each receiver of ``receivers_module`` with mock arguments."""
+    """
+    Call each receiver of ``receivers_module`` with mock arguments.
 
+    Mix it into a test base class that provides the :class:`unittest.TestCase` assertions.
+    """
+
+    #: The module whose receivers are tested.
     receivers_module: ModuleType
-    # receivers that the test does not call, e.g. those that write to the database.
+    #: Receivers that the test does not call, e.g. those that write to the database.
     skip: tuple[str, ...] = ()
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Patch ``Task.apply_async``, and every Celery task in the receivers module, until the end of the test."""
         super().setUp()  # type: ignore[misc]
         # no receiver may queue a task, however it imports it.
@@ -38,6 +43,8 @@ class ReceiversTestMixin:
         Yield the name and function of each receiver defined in the module, whose first parameter is ``sender``.
 
         Receivers named in ``skip`` are left out.
+
+        :returns: An iterator of ``(name, function)`` tuples.
         """
         for name, function in inspect.getmembers(self.receivers_module, inspect.isfunction):
             if function.__module__ != self.receivers_module.__name__ or name in self.skip:
@@ -59,7 +66,10 @@ class ReceiversTestMixin:
         for name, parameter in inspect.signature(function).parameters.items():
             if name == "sender" or parameter.kind in (parameter.VAR_KEYWORD, parameter.VAR_POSITIONAL):
                 continue
-            arguments[name] = True if name == "created" else MagicMock()
+            if name == "created":
+                arguments[name] = True
+            else:
+                arguments[name] = MagicMock()
         return arguments
 
     class Sender:

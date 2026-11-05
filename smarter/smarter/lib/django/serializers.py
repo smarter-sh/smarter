@@ -34,7 +34,8 @@ def related_rows(obj: models.Model, accessor: str, row_type: type[_RowT], *selec
     :returns: The related rows.
     """
     manager = getattr(obj, accessor)
-    if accessor in getattr(obj, "_prefetched_objects_cache", {}):
+    prefetched = getattr(obj, "_prefetched_objects_cache", {})
+    if accessor in prefetched:
         rows = list(manager.all())
     else:
         queryset = manager.all()

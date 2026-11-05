@@ -53,3 +53,19 @@ Example
 .. code:: console
 
    git commit -m "docs: add an example of a good commit message"
+
+Breaking Changes
+----------------
+
+A ``!`` after the type or scope, or a ``BREAKING CHANGE:`` footer, makes the next release a major
+one. Use it for any change that needs a manual step when an operator upgrades, such as a migration
+that can't run unattended or a renamed setting, and for a breaking change to the REST api, a
+manifest or the Smarter Chat contract. The footer says what an operator must do, and the release
+notes repeat it. What a major version promises, and what counts as breaking, is decided in
+:doc:`ADR-020 <../../adr/020-semantic-versioning>` and
+:doc:`ADR-023 <../../adr/023-api-versioning>`.
+
+.. code:: console
+
+   git commit -m "feat(secret)!: rename SMARTER_SECRET_TTL to SMARTER_SECRET_CACHE_TTL" \
+     -m "BREAKING CHANGE: set SMARTER_SECRET_CACHE_TTL in place of SMARTER_SECRET_TTL before upgrading."

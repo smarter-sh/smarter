@@ -8,8 +8,8 @@ to be instantiated as a singleton representing a specific React app,
 enabling Django templates to include the correctly-sequenced JavaScript
 and CSS assets built by Vite for each app.
 
-Key Features
--------------
+**Key Features**
+
 - Loads and caches the manifest.json for each React app from the static files directory,
   validated against the Pydantic model :class:`~smarter.lib.django.templatetags.smarter_react_contract.ViteManifest`.
 - Recursively collects CSS and JS dependencies for the entry point, including all imports.
@@ -17,14 +17,15 @@ Key Features
   :class:`~smarter.lib.django.templatetags.smarter_react_contract.ReactAppAssets`, for use in Django template tags.
 - Designed as a base class to be instantiated for each React app; singletons are used to register template tags per app.
 
-Main Classes and Functions
----------------------------
-- SmarterReactTemplateTagManager: Base class for managing Vite-generated React manifest loading and asset collection for a React app.
-- reactapp_build_assets: The JS and CSS assets for the configured entry point.
+**Main Classes and Functions**
+
+- :class:`SmarterReactTemplateTagManager`: Base class for managing Vite-generated React manifest loading and asset
+  collection for a React app.
+- :attr:`SmarterReactTemplateTagManager.reactapp_build_assets`: The JS and CSS assets for the configured entry point.
 - :mod:`smarter.lib.django.templatetags.smarter_react_contract`: the Pydantic models of the manifest and of the assets.
 
-Usage Example
--------------
+**Usage Example**
+
 In a Django template, use the registered template tag for your app to get asset paths::
 
     {% load react_dashboard %}
@@ -33,8 +34,8 @@ In a Django template, use the registered template tag for your app to get asset 
         <link class="smarter" rel="stylesheet" href="{% static 'react/smarter-dashboard/' %}{{ css_file }}">
     {% endfor %}
 
-Example React manifest.json
----------------------------
+**Example React manifest.json**
+
 A typical React manifest.json looks like this::
 
     {
@@ -93,7 +94,7 @@ register = template.Library()
 
 class SmarterReactTemplateTagManager(SmarterHelperMixin):
     """
-    Base class for per-React-app singleton managers that load and analyze Vite-generated React manifest.json files in order to generate ordered lists of JS and CSS assets.
+    Base class of the per-React-app singletons that read a Vite manifest.json, and list the app's JS and CSS assets in order.
 
     This class is intended to be instantiated once per React app, providing a
     long-lived singleton that manages loading and caching the React manifest.json
@@ -139,7 +140,6 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         The path of the app's Vite-generated manifest.json in the static files directory.
 
         :returns: The manifest.json's path.
-        :rtype: str
         """
         return os.path.join(settings.STATIC_ROOT, f"react/{self.app_name}/manifest.json")
 
@@ -153,7 +153,6 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         is logged, and is cached as None, until the server restarts.
 
         :returns: The manifest, or None if it couldn't be loaded.
-        :rtype: Optional[ViteManifest]
         """
         try:
             with open(self.manifest_path, encoding="utf-8") as f:
@@ -190,7 +189,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
 
         Example entry:
 
-            .. code-block:: json
+        .. code-block:: json
 
                 "index.html": {
                     "file": "assets/index.js",
@@ -207,7 +206,6 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                 }
 
         :returns: The entry point's key, or None if there is no manifest.
-        :rtype: Optional[str]
         :raises SmarterValueError: If the manifest has no entry point.
         """
         if not self.manifest:
@@ -226,9 +224,6 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         imports, depth first. The result is cached for the lifetime of the
         manager.
 
-        :returns: The entry point's JS and CSS files. Both lists are empty if there is no manifest.
-        :rtype: ReactAppAssets
-
         Example output::
 
             {
@@ -242,6 +237,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                     "assets/xterm-kHJ-D0s7.css"
                 ]
             }
+
+        :returns: The entry point's JS and CSS files. Both lists are empty if there is no manifest.
         """
         if not self.manifest or not self.entry_key:
             logger.error(

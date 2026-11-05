@@ -9,11 +9,40 @@ This module defines custom serializers for:
 These serializers enable structured, validated, and documented representations of HTTP request and user data for API endpoints and internal processing.
 """
 
+from typing import Optional
+
 from django.http import HttpRequest
 from rest_framework import serializers
 
 from smarter.apps.account.models import User
 from smarter.common.const import SmarterHttpMethods
+
+SAFE_META_KEYS = frozenset(
+    {
+        "CONTENT_LENGTH",
+        "CONTENT_TYPE",
+        "HTTP_ACCEPT",
+        "HTTP_ACCEPT_LANGUAGE",
+        "HTTP_HOST",
+        "HTTP_ORIGIN",
+        "HTTP_REFERER",
+        "HTTP_USER_AGENT",
+        "HTTP_X_FORWARDED_FOR",
+        "PATH_INFO",
+        "QUERY_STRING",
+        "REMOTE_ADDR",
+        "REQUEST_METHOD",
+        "SERVER_NAME",
+        "SERVER_PORT",
+    }
+)
+"""
+The ``request.META`` keys that a serialized request keeps.
+
+Serialized requests are stored in the journal, so this is an allowlist: headers that
+carry credentials (``HTTP_AUTHORIZATION``, ``HTTP_COOKIE``, ``HTTP_X_CSRFTOKEN``),
+and the server's own environment, are never stored.
+"""
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -66,11 +95,13 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
     :param str method: The HTTP method (e.g., ``GET``, ``POST``, ``PUT``, ``DELETE``).
     :param dict GET: Query parameters from the request URL.
     :param dict POST: Data submitted in the body of a POST request.
-    :param dict COOKIES: Cookies sent with the request.
-    :param dict META: Metadata and headers associated with the request.
+    :param dict META: The request's headers and metadata, limited to :data:`SAFE_META_KEYS`.
     :param str path: The path portion of the request URL.
     :param str encoding: The encoding used for the request body.
     :param str content_type: The MIME type of the request body.
+
+    Cookies are never serialized, and ``META`` keeps only :data:`SAFE_META_KEYS`, because
+    serialized requests are stored in the journal and must not hold API keys or session ids.
 
     **Example**
 
@@ -94,7 +125,6 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
         #     'method': 'GET',
         #     'GET': {'search': 'test'},
         #     'POST': {},
-        #     'COOKIES': {},
         #     'META': {},
         #     'path': '/api/v1/resource/',
         #     'encoding': 'utf-8',
@@ -116,8 +146,7 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
     )
     GET = serializers.DictField(child=serializers.CharField())
     POST = serializers.DictField(child=serializers.CharField())
-    COOKIES = serializers.DictField(child=serializers.CharField())
-    META = serializers.DictField(child=serializers.CharField())
+    META = serializers.SerializerMethodField()
     path = serializers.CharField()
     encoding = serializers.CharField()
     content_type = serializers.CharField()
@@ -130,8 +159,6 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
             "method": {"required": False},
             SmarterHttpMethods.GET: {"required": False},
             SmarterHttpMethods.POST: {"required": False},
-            "COOKIES": {"required": False},
-            "META": {"required": False},
             "path": {"required": False},
             "encoding": {"required": False},
             "content_type": {"required": False},
@@ -149,17 +176,38 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
         ret["url"] = self.get_url(instance)
         return ret
 
-    def get_url(self, obj):
+    def get_url(self, obj) -> Optional[str]:
         """
         Return the absolute url of ``obj.request``.
 
         :param obj: An object with a ``request`` attribute.
         :returns: The absolute url, or None if there is no request or it can't build one.
         """
-        if obj and hasattr(obj, "request") and obj.request:
-            _url = obj.request.build_absolute_uri() if hasattr(obj.request, "build_absolute_uri") else None
-            return _url
-        return None
+        if not obj:
+            return None
+        request = getattr(obj, "request", None)
+        if not request:
+            return None
+        if not hasattr(request, "build_absolute_uri"):
+            return None
+        url = request.build_absolute_uri()
+        return url
+
+    def get_META(self, obj) -> dict[str, str]:  # pylint: disable=invalid-name
+        """
+        Return the request's ``META``, limited to :data:`SAFE_META_KEYS`.
+
+        :param obj: The request.
+        :returns: The allowed keys and their values, as strings.
+        """
+        meta = getattr(obj, "META", None)
+        if not isinstance(meta, dict):
+            return {}
+        safe_meta = {}
+        for key in SAFE_META_KEYS:
+            if key in meta:
+                safe_meta[key] = str(meta[key])
+        return safe_meta
 
     def create(self, validated_data) -> HttpRequest:
         """
@@ -198,8 +246,7 @@ class HttpAuthenticatedRequestSerializer(HttpAnonymousRequestSerializer):
     :param str method: The HTTP method (e.g., ``GET``, ``POST``, ``PUT``, ``DELETE``).
     :param dict GET: Query parameters from the request URL.
     :param dict POST: Data submitted in the body of a POST request.
-    :param dict COOKIES: Cookies sent with the request.
-    :param dict META: Metadata and headers associated with the request.
+    :param dict META: The request's headers and metadata, limited to :data:`SAFE_META_KEYS`.
     :param str path: The path portion of the request URL.
     :param str encoding: The encoding used for the request body.
     :param str content_type: The MIME type of the request body.
@@ -229,7 +276,6 @@ class HttpAuthenticatedRequestSerializer(HttpAnonymousRequestSerializer):
         #     'method': 'POST',
         #     'GET': {},
         #     'POST': {'data': 'value'},
-        #     'COOKIES': {},
         #     'META': {},
         #     'path': '/api/v1/secure/',
         #     'encoding': 'utf-8',

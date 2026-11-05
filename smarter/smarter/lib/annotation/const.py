@@ -23,7 +23,8 @@ these keys, but only Smarter's own code registers handlers for them.
 """
 
 SOURCE_REPOSITORY_ANNOTATION = "smarter.sh/source-repository"
-"""The repository that a resource was applied from, e.g. ``https://github.com/smarter-sh/stackademy``.
+"""
+The repository that a resource was applied from, e.g. ``https://github.com/smarter-sh/stackademy``.
 
 ``manage.py load_from_github`` sets it, as Flux and Argo CD annotate the Kubernetes objects that they apply from git.
 """

@@ -39,8 +39,10 @@ import json
 import time
 from http import HTTPStatus
 from typing import (
+    TYPE_CHECKING,
     Callable,
     ClassVar,
+    Iterator,
     Mapping,
     NamedTuple,
     Optional,
@@ -80,6 +82,9 @@ from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
+if TYPE_CHECKING:
+    from smarter.apps.account.models import UserProfile
+
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CACHE_LOGGING])
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
@@ -106,15 +111,30 @@ class OwnershipManager(Protocol):
     """
 
     def owned_by(self, user: User) -> models.QuerySet:
-        """The resources that the user owns."""
+        """
+        Return the resources that the user owns.
+
+        :param user: The user.
+        :returns: The resources that the user owns.
+        """
         ...
 
     def shared_with(self, user: User) -> models.QuerySet:
-        """The resources that the user may read, but doesn't own."""
+        """
+        Return the resources that the user may read, but doesn't own.
+
+        :param user: The user.
+        :returns: The resources that are shared with the user.
+        """
         ...
 
     def with_read_permission_for(self, user: User) -> models.QuerySet:
-        """The resources that the user may read."""
+        """
+        Return the resources that the user may read.
+
+        :param user: The user.
+        :returns: The resources that the user owns or that are shared with them.
+        """
         ...
 
 
@@ -309,7 +329,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
     """The list's name in the cache, as :func:`connect_listview_cache` invalidates it, e.g. ``LLMClient``."""
 
     sort_fields: ClassVar[Mapping[str, str]] = DEFAULT_SORT_FIELDS
-    """The columns that the list may be sorted by.
+    """
+    The columns that the list may be sorted by.
 
     See :func:`~smarter.lib.django.pagination.paginate_queryset`.
     """
@@ -321,7 +342,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
     """The list's named filters, if it has any."""
 
     listview_label: ClassVar[Optional[str]] = None
-    """The list's name, where it is shown outside its page, e.g. by the dashboard's search.
+    """
+    The list's name, where it is shown outside its page, e.g. by the dashboard's search.
 
     Its model's plural verbose name, by default.
     """
@@ -334,12 +356,20 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
+        """
+        Return a formatted string of the class name for logging purposes.
+
+        :returns: The subclass's module, formatted, then its name and instance id.
+        """
         return f"{self.formatted_text(self.__class__.__module__)}.{self.__class__.__name__}[{id(self)}]"
 
     @classmethod
     def view_path(cls) -> str:
-        """Return the class's dotted path, by which :func:`cached_listview_page` imports it."""
+        """
+        Return the class's dotted path, by which :func:`cached_listview_page` imports it.
+
+        :returns: The class's module and qualified name, e.g. ``smarter.apps.guardrail.views.GuardrailListApiView``.
+        """
         return f"{cls.__module__}.{cls.__qualname__}"
 
     @classmethod
@@ -360,17 +390,18 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
             queryset = manager.with_read_permission_for(user)
         # every MetaDataWithOwnershipModel has an owner and tags, but e.g. SmarterAuthToken has no tags.
         owner_relations = [lookup for lookup in LISTVIEW_OWNER_RELATIONS if has_field(cls.model, lookup)]
-        tags = ["tags"] if _is_relation(cls.model, "tags") else []
-        return (
-            queryset.select_related(*owner_relations, *cls.select_related)
-            .prefetch_related(*tags, *cls.prefetch_related)
-            .order_by("-updated_at")
-        )
+        tags: list[str] = []
+        if _is_relation(cls.model, "tags"):
+            tags = ["tags"]
+        queryset = queryset.select_related(*owner_relations, *cls.select_related)
+        queryset = queryset.prefetch_related(*tags, *cls.prefetch_related)
+        queryset = queryset.order_by("-updated_at")
+        return queryset
 
     @classmethod
     def build_page(  # pylint: disable=R0913,R0914,R0917
         cls,
-        user_profile,
+        user_profile: "UserProfile",
         ownership_filter: str,
         page: Optional[str] = None,
         page_size: Optional[str] = None,
@@ -428,7 +459,14 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         return json.loads(json.dumps(response, cls=DjangoJSONEncoder))
 
     def get(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
-        """Return the same json as a POST, so that the list api can be browsed."""
+        """
+        Return the same json as a POST, so that the list api can be browsed.
+
+        :param request: The request.
+        :param args: Passed to :meth:`post`.
+        :param kwargs: Passed to :meth:`post`.
+        :returns: The response of :meth:`post`.
+        """
         return self.post(request, *args, **kwargs)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:  # pylint: disable=W0613
@@ -441,7 +479,9 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
         :param kwargs: ``ownership_filter``, from the url: ``owned``, ``shared`` or ``all`` (the default).
         :returns: The page, or a 400 response for an unknown ownership filter.
         """
-        ownership_filter = kwargs.get("ownership_filter") or SmarterResourceOwnershipFilterEnum.ALL
+        ownership_filter = kwargs.get("ownership_filter")
+        if not ownership_filter:
+            ownership_filter = SmarterResourceOwnershipFilterEnum.ALL
         if ownership_filter not in OWNERSHIP_FILTERS:
             logger.warning(
                 "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'.",
@@ -455,7 +495,8 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
 
         kind = self.listview_cache_kind
         user_profile_id = self.user_profile.id  # type: ignore[union-attr]
-        if request.GET.get("invalidate_cache", "false").lower() == "true":
+        invalidate_cache = request.GET.get("invalidate_cache", "false")
+        if invalidate_cache.lower() == "true":
             listview_cache_generation.invalidate(kind, user_profile_id)
 
         logger.debug(
@@ -500,34 +541,49 @@ class ListviewEntry(NamedTuple):
     @property
     def label(self) -> str:
         """The list's name: the list api's :attr:`~SmarterListApiView.listview_label`, or its model's plural verbose name."""
+        if self.view_class.listview_label:
+            return self.view_class.listview_label
         model = self.view_class.model
-        return self.view_class.listview_label or str(model._meta.verbose_name_plural)  # pylint: disable=W0212
+        return str(model._meta.verbose_name_plural)  # pylint: disable=W0212
 
 
-def _is_page_view(view_class) -> bool:
+def _is_page_view(view_class: object) -> bool:
     """Whether a view is a list's console page: a ``...ListView`` that is not a list api."""
-    return (
-        isinstance(view_class, type)
-        and view_class.__name__.endswith(LISTVIEW_PAGE_SUFFIX)
-        and not issubclass(view_class, SmarterListApiView)
-    )
+    if not isinstance(view_class, type):
+        return False
+    if not view_class.__name__.endswith(LISTVIEW_PAGE_SUFFIX):
+        return False
+    if issubclass(view_class, SmarterListApiView):
+        return False
+    return True
 
 
-def _walk_listviews(patterns, namespaces: tuple[str, ...] = ()):
+def _walk_listviews(
+    patterns: Sequence[Union[URLPattern, URLResolver]], namespaces: tuple[str, ...] = ()
+) -> Iterator[tuple[type[SmarterListApiView], str, int]]:
     """
     Yield each list api of ``patterns``, the url name of its console page, and how deeply it is included.
 
     The page is the ``...ListView`` of the same urlconf whose name matches the api's, e.g.
     GuardrailListView for GuardrailListApiView, or else the urlconf's first ``...ListView``. Its name
-    is joined with its namespaces, e.g. ``guardrail:guardrail_list_view``.
+    is joined with its namespaces, e.g. ``guardrail:guardrail_list_view``. A urlconf without a page
+    yields none of its list apis.
+
+    :param patterns: The url patterns of a urlconf.
+    :param namespaces: The namespaces that the urlconf is included under.
+    :returns: An iterator of ``(list api class, page url name, depth)``, where the depth is the
+        number of namespaces.
     """
-    pages = {
-        view_class.__name__: pattern.name
-        for pattern in patterns
-        if isinstance(pattern, URLPattern)
-        and pattern.name
-        and _is_page_view(view_class := getattr(pattern.callback, "view_class", None))
-    }
+    # the names of the urlconf's console pages, by their view class's name.
+    pages: dict[str, str] = {}
+    for pattern in patterns:
+        if not isinstance(pattern, URLPattern):
+            continue
+        if not pattern.name:
+            continue
+        page_view_class = getattr(pattern.callback, "view_class", None)
+        if _is_page_view(page_view_class):
+            pages[page_view_class.__name__] = pattern.name
     for pattern in patterns:
         if isinstance(pattern, URLResolver):
             namespace = (pattern.namespace,) if pattern.namespace else ()
@@ -536,7 +592,9 @@ def _walk_listviews(patterns, namespaces: tuple[str, ...] = ()):
             view_class = getattr(pattern.callback, "view_class", None)
             if isinstance(view_class, type) and issubclass(view_class, SmarterListApiView):
                 page_class = view_class.__name__.replace("ListApiView", LISTVIEW_PAGE_SUFFIX)
-                page = pages.get(page_class) or next(iter(pages.values()))
+                page = pages.get(page_class)
+                if not page:
+                    page = next(iter(pages.values()))
                 yield view_class, ":".join(namespaces + (page,)), len(namespaces)
 
 

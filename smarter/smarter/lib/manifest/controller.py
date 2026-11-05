@@ -1,6 +1,7 @@
 """Abstract helper class that maps a manifest model's metadata.kindClass to an instance of the correct Python subclass."""
 
 import abc
+from collections.abc import Mapping
 from typing import Any
 
 from smarter.apps.account.mixins import AccountMixin
@@ -16,27 +17,17 @@ class AbstractController(abc.ABC, AccountMixin):
     ensuring that the correct subclass is used for each manifest type. It also provides account and user context
     through the ``AccountMixin``.
 
-    Parameters
-    ----------
-    account : Account
-        The account associated with the controller instance. Must be a saved model.
-    user : User
-        The user associated with the controller instance. Must be a saved model.
-    user_profile : optional
-        The user's profile, if available.
-    request : optional
-        The request object, if available.
-    *args, **kwargs
-        Additional arguments passed to the mixin and controller.
+    :param user_profile: The user profile that owns the controlled resource. Its account and user
+        are the controller's account and user.
+    :param args: Passed on to :class:`~smarter.apps.account.mixins.AccountMixin`.
+    :param kwargs: Passed on to :class:`~smarter.apps.account.mixins.AccountMixin`, e.g. ``request``.
 
-    Usage Example
-    -------------
+    **Usage Example:**
 
     .. code-block:: python
 
-        account = Account.objects.get(pk=1)
-        user = User.objects.get(pk=1)
-        controller = MyControllerSubclass(account, user, user_profile=profile, request=request)
+        user_profile = UserProfile.get_cached_object(user=user)
+        controller = MyControllerSubclass(user_profile, request=request)
 
         # Access manifest, map, and obj properties
         manifest = controller.manifest
@@ -45,16 +36,21 @@ class AbstractController(abc.ABC, AccountMixin):
 
     .. note::
 
-        Both ``account`` and ``user`` must be saved instances (i.e., have a primary key).
         This class is abstract and must be subclassed with concrete implementations of the ``manifest``, ``map``, and ``obj`` properties.
 
     .. warning::
 
-        Attempting to instantiate this controller with unsaved ``account`` or ``user`` objects will raise a ``ValueError``.
-        Subclasses must implement all abstract properties, or a ``NotImplementedError`` will be raised.
+        A subclass that does not implement all of the abstract properties cannot be instantiated.
     """
 
-    def __init__(self, user_profile: UserProfile, *args, **kwargs):
+    def __init__(self, user_profile: UserProfile, *args: Any, **kwargs: Any) -> None:
+        """
+        Initialize the account context from the user profile, with one AccountMixin initialization.
+
+        :param user_profile: The user profile that owns the controlled resource.
+        :param args: Passed on to :class:`~smarter.apps.account.mixins.AccountMixin`.
+        :param kwargs: Passed on to :class:`~smarter.apps.account.mixins.AccountMixin`.
+        """
         # One AccountMixin initialization. (abc.ABC has no __init__, so super() is AccountMixin.)
         # It used to run twice: once without the user profile, and then again with it, which
         # resets and resolves everything the first run did. The cached accessors read the
@@ -78,7 +74,7 @@ class AbstractController(abc.ABC, AccountMixin):
 
     @property
     @abc.abstractmethod
-    def map(self):
+    def map(self) -> Mapping[str, Any]:
         """The mapping from manifest kinds to the classes that handle them; subclasses implement it."""
         raise NotImplementedError
 

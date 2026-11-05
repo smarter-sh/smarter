@@ -1,7 +1,4 @@
 """
-Smarter.lib.cache.hooks
-=======================
-
 Smarter's hooks for the cache-results package.
 
 The package (https://docs.cache-results.smarter.sh/) depends only on Django.
@@ -27,8 +24,7 @@ def logging_enabled() -> bool:
     """
     Whether to log every cache hit, miss and invalidation: the ``CACHE_LOGGING`` waffle switch.
 
-    :return: True if the switch is on.
-    :rtype: bool
+    :returns: True if the switch is on.
     """
     # pylint: disable=import-outside-toplevel
     from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
@@ -42,8 +38,7 @@ def verbose_logging() -> bool:
 
     The package asks only when :func:`logging_enabled` is True.
 
-    :return: True if verbose logging is on.
-    :rtype: bool
+    :returns: True if verbose logging is on.
     """
     return bool(smarter_settings.verbose_logging)
 
@@ -60,9 +55,7 @@ class SmarterCacheKeyEncoder(CacheKeyEncoder):
         Encode one value that JSON doesn't know.
 
         :param o: The value.
-        :type o: object
-        :return: A JSON-serializable representation of ``o``.
-        :rtype: object
+        :returns: A JSON-serializable representation of ``o``.
         :raises cache_results.CacheKeyArgumentError: If ``o`` has no safe representation.
         """
         if isinstance(o, HttpUrl):

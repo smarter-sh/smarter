@@ -9,7 +9,7 @@ class SAMEnumException(SAMExceptionBase):
     """Base exception for Smarter API Manifest enumerations."""
 
     @property
-    def get_formatted_err_message(self):
+    def get_formatted_err_message(self) -> str:
         """The error message prefix of these errors."""
         return "Smarter API Manifest Enumeration Error"
 
@@ -23,18 +23,14 @@ class SAMDataFormats(SmarterEnumAbstract):
     """
     Data format enumeration.
 
-    .. :no-index:
-
     Used to specify the format of data being handled, such as JSON or YAML.
-
-    attributes:
-        JSON: Represents data in JSON format.
-        YAML: Represents data in YAML format.
-        UNKNOWN: Represents an unknown or unsupported data format.
     """
 
+    #: Data in JSON format.
     JSON = "json"
+    #: Data in YAML format.
     YAML = "yaml"
+    #: An unknown or unsupported data format.
     UNKNOWN = "unknown"
 
 
@@ -43,61 +39,45 @@ class SAMSpecificationKeyOptions(SmarterEnumAbstract):
     Key types enumeration.
 
     Used to specify whether a key in the specification is required, optional, or read-only.
-
-    .. :no-index:
-
-    attributes:
-        REQUIRED: Indicates that the key is mandatory.
-        OPTIONAL: Indicates that the key is optional.
-        READONLY: Indicates that the key is read-only and cannot be modified.
     """
 
+    #: The key is mandatory.
     REQUIRED = "required"
+    #: The key is optional.
     OPTIONAL = "optional"
+    #: The key is read-only and cannot be modified.
     READONLY = "readonly"
 
 
 class SAMKeys(SmarterEnumAbstract):
-    """
-    Smarter API required keys enumeration.
+    """Smarter API Manifest top-level keys enumeration."""
 
-    .. :no-index:
-
-    attributes:
-        APIVERSION: The API version key.
-        KIND: The kind key.
-        METADATA: The metadata key.
-        SPEC: The specification key.
-        STATUS: The status key.
-    """
-
+    #: The API version key.
     APIVERSION = "apiVersion"
+    #: The kind key.
     KIND = "kind"
+    #: The metadata key.
     METADATA = "metadata"
+    #: The specification key.
     SPEC = "spec"
+    #: The status key.
     STATUS = "status"
 
 
 class SAMMetadataKeys(SmarterEnumAbstract):
-    """
-    Smarter API Plugin Metadata keys enumeration.
+    """Smarter API Manifest metadata keys enumeration."""
 
-    .. :no-index:
-
-    attributes:
-        AUTHOR: The author key.
-        NAME: The name key.
-        DESCRIPTION: The description key.
-        VERSION: The version key.
-        TAGS: The tags key.
-        ANNOTATIONS: The annotations key.
-    """
-
+    #: The author key.
     AUTHOR = "author"
+    #: The name key.
     NAME = "name"
+    #: The description key.
     DESCRIPTION = "description"
+    #: The version key.
     VERSION = "version"
+    #: The tags key.
     TAGS = "tags"
+    #: The annotations key.
     ANNOTATIONS = "annotations"
 
 
@@ -105,30 +85,18 @@ class SAMMetadataKeys(SmarterEnumAbstract):
 # Smarter API cli response Enumerations
 ###############################################################################
 class SCLIResponseGet(SmarterEnumAbstract):
-    """
-    CLI get response enumeration.
+    """CLI get response enumeration."""
 
-    .. :no-index:
-
-    attributes:
-        KWARGS: The kwargs key.
-        DATA: The data key.
-    """
-
+    #: The kwargs key.
     KWARGS = "kwargs"
+    #: The data key.
     DATA = "data"
 
 
 class SCLIResponseGetData(SmarterEnumAbstract):
-    """
-    CLI get response data enumeration.
+    """CLI get response data enumeration."""
 
-    .. :no-index:
-
-    attributes:
-        TITLES: The titles key.
-        ITEMS: The items key.
-    """
-
+    #: The titles key.
     TITLES = "titles"
+    #: The items key.
     ITEMS = "items"

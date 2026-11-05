@@ -23,7 +23,6 @@ def journal_contract_schema() -> SmarterDictType:
     The contract's JSON Schema (draft 2020-12): one definition, in ``$defs``, per model.
 
     :returns: The schema.
-    :rtype: SmarterDictType
     """
     _, schema = models_json_schema(
         [(model, "validation") for model in CONTRACT_MODELS],
@@ -41,7 +40,6 @@ def journal_contract_schema_json() -> str:
     The contract's JSON Schema, as the text of ``journal-contract.schema.json``.
 
     :returns: The schema, as indented JSON, with a final newline.
-    :rtype: str
     """
     return json.dumps(journal_contract_schema(), indent=2, sort_keys=True) + "\n"
 
@@ -51,9 +49,7 @@ def write_journal_contract_schema(path: str = SCHEMA_PATH) -> str:
     Write the contract's JSON Schema.
 
     :param path: The file to write. Defaults to ``journal-contract.schema.json``, beside this module.
-    :type path: str
     :returns: The path that was written.
-    :rtype: str
     """
     with open(path, "w", encoding="utf-8") as file:
         file.write(journal_contract_schema_json())

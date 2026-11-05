@@ -1,4 +1,4 @@
-"""SmarterWaffleSwitches - Predefined, centrally managed Waffle switches for the Smarter Platform."""
+"""The predefined, centrally managed waffle switches of the Smarter platform."""
 
 from dataclasses import dataclass
 
@@ -35,17 +35,21 @@ class SmarterWaffleSwitches:
         Only switches defined in this class are considered valid for use in the Smarter codebase.
         To add a new feature flag, declare it as a class attribute here.
 
-    Example usage:
+    **Example**
 
-        .. code-block:: python
+    .. code-block:: python
 
-            from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+        from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
-            if switch_is_active(SmarterWaffleSwitches.API_LOGGING):
-                print("API logging is enabled.")
+        if switch_is_active(SmarterWaffleSwitches.API_LOGGING):
+            print("API logging is enabled.")
     """
 
-    _all: list[str] = []  # Internal list to track all switch names
+    _all: list[str] = []
+    """Every switch's name, in sorted order, built by :attr:`all` on first use."""
+
+    _all_set: frozenset[str] = frozenset()
+    """Every switch's name, as a set, built by :attr:`all_set` on first use."""
 
     ALLOW_API_GET = "allow_api_get"
     """Allows GET requests to the API endpoints, which are normally restricted to POST requests."""
@@ -614,13 +618,37 @@ class SmarterWaffleSwitches:
     }
 
     @property
-    def all(self):
-        """Return all switches."""
+    def all(self) -> list[str]:
+        """
+        Return every switch's name.
+
+        :returns: The names of the switches, i.e. the values of the upper-case string attributes,
+            in the sorted order of the attributes.
+        """
         if not self._all:
-            self._all = [
-                getattr(self, attr) for attr in dir(self) if attr.isupper() and isinstance(getattr(self, attr), str)
-            ]
+            names = []
+            for attr in dir(self):
+                if not attr.isupper():
+                    continue
+                value = getattr(self, attr)
+                if isinstance(value, str):
+                    names.append(value)
+            self._all = names
         return self._all
+
+    @property
+    def all_set(self) -> frozenset[str]:
+        """
+        Return every switch's name, as a set.
+
+        :func:`~smarter.lib.django.waffle.switch_is_active` tests membership in it on every
+        check of a switch, which a set answers without scanning a list.
+
+        :returns: The names of the switches.
+        """
+        if not self._all_set:
+            self._all_set = frozenset(self.all)
+        return self._all_set
 
 
 smarter_waffle_switches = SmarterWaffleSwitches()

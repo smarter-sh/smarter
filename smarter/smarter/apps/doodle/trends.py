@@ -25,6 +25,64 @@ always draws it, so a trend's doodle awaits a superuser's approval unless auto-a
 
 The day's top articles are those of the day before, or, until the api has published it, a few
 hours after midnight UTC, of the day before that.
+
+Try it yourself
+---------------
+
+Three commands, with ``curl`` and ``jq``, show what this module does, for Canada, in English. They
+are a simplified version of it: step 3 checks a short list of occasion words, not every filter above.
+
+1. Ask Wikipedia which 25 articles were read the most yesterday, and save their titles:
+
+   .. code-block:: bash
+
+      curl -s "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/2026/11/03" \
+        | jq -r '[.items[0].articles[:25][].article | gsub("_"; " ")] | join("|")' > titles.txt
+
+2. Ask Wikidata, Wikipedia's sister site, what each of those articles is about, in one short
+   English sentence, e.g. *FIFA World Cup: international association football competition*:
+
+   .. code-block:: bash
+
+      curl -s -G "https://www.wikidata.org/w/api.php" \
+        --data-urlencode "action=wbgetentities" \
+        --data-urlencode "sites=enwiki" \
+        --data-urlencode "titles=$(cat titles.txt)" \
+        --data-urlencode "props=labels|descriptions" \
+        --data-urlencode "languages=en" \
+        --data-urlencode "format=json" > articles.json
+
+3. Keep only the articles about an occasion worth a doodle, e.g. a festival or a tournament, and
+   write them up as the request that the doodle editor, an LLMClient, receives:
+
+   .. code-block:: bash
+
+      jq '{date: "2026-11-04", artwork_allowed: true, regions: [{region: "ca", name: "Canada", catalog: [],
+        observances: [.entities[] | select(.descriptions.en.value // "" | test("festival|tournament|championship|cup|season|holiday|eclipse"; "i"))
+          | {id: ("CA:" + .id), name: .labels.en.value, countries: ["CA"]}]}]}' articles.json
+
+   which prints, e.g.:
+
+   .. code-block:: json
+
+      {
+        "date": "2026-11-04",
+        "artwork_allowed": true,
+        "regions": [
+          {
+            "region": "ca",
+            "name": "Canada",
+            "catalog": [],
+            "observances": [
+              {
+                "id": "CA:Q139761349",
+                "name": "Dancing with the Stars (American TV series) season 35",
+                "countries": ["CA"]
+              }
+            ]
+          }
+        ]
+      }
 """
 
 import datetime

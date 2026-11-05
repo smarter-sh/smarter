@@ -28,10 +28,14 @@ def manifest_template_values() -> dict[str, str]:
 
     :returns: The values, by placeholder name.
     """
-    return {
-        "environment_platform_scheme": urlparse(str(smarter_settings.environment_url)).scheme or "https",
+    scheme = urlparse(str(smarter_settings.environment_url)).scheme
+    if not scheme:
+        scheme = "https"
+    values = {
+        "environment_platform_scheme": scheme,
         "environment_platform_domain": str(smarter_settings.environment_platform_domain),
     }
+    return values
 
 
 def render_manifest_template(template: str) -> str:

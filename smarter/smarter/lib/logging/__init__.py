@@ -1,8 +1,4 @@
-"""
-Enhanced logging features for Smarter, including Waffle switch-controlled.
-
-loggers and custom Redis and Streaming file handlers.
-"""
+"""Enhanced logging features for Smarter, including Waffle switch-controlled loggers and custom Redis and Streaming file handlers."""
 
 from logging import (
     BASIC_FORMAT,

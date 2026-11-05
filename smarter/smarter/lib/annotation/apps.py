@@ -9,6 +9,7 @@ from smarter.lib import logging
 from .const import namespace as app_name
 
 logger = logging.getSmarterLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class AnnotationConfig(AppConfig, SmarterHelperMixin):
@@ -24,4 +25,5 @@ class AnnotationConfig(AppConfig, SmarterHelperMixin):
         """Connect the receivers."""
         from . import receivers  # noqa: F401
 
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", self.formatted_state_ready)
+        app_label = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
+        logger.debug("%s.ready() %s app is %s", logger_prefix, app_label, self.formatted_state_ready)

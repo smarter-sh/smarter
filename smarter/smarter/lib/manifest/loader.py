@@ -1,5 +1,6 @@
 """Smarter API Manifest Loader base class."""
 
+import copy
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -21,29 +22,16 @@ SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 
 class SAMLoaderError(SAMExceptionBase):
     """
-    Exception class for all errors raised by the Smarter API Manifest Loader.
+    The error that :class:`SAMLoader` and :func:`validate_key` raise.
 
-    This is the base error type for manifest validation, parsing, and loading operations in the Smarter API system.
-    All errors encountered during manifest handling, including schema violations, unsupported formats, and missing data,
-    should be raised as or derived from `SAMLoaderError`.
+    It is raised for a manifest that cannot be loaded or validated: an unsupported api version,
+    no manifest source or more than one, a format that is neither JSON nor YAML, or a missing
+    top-level key.
 
-    **Parameters**
-
-    This class does not require any parameters for instantiation, but it may be initialized with a custom error message
-    describing the specific failure.
-
-    :param message: A descriptive error message explaining the cause of the error.
-    :type message: str, optional
-
-    **Usage Example**
+    :param message: What went wrong, e.g. ``Missing required key: apiVersion``.
 
     .. code-block:: python
 
-        # Example: Raising a loader error for a missing required key
-        if not manifest.get("apiVersion"):
-            raise SAMLoaderError("Missing required key: apiVersion")
-
-        # Example: Handling loader errors in client code
         try:
             loader = SAMLoader(manifest=my_manifest)
         except SAMLoaderError as err:
@@ -51,25 +39,17 @@ class SAMLoaderError(SAMExceptionBase):
 
     .. note::
 
-        - All manifest validation and parsing errors should use this class for consistency and traceability.
-        - The `get_formatted_err_message` property provides a static, human-readable error label for logging and display.
-
-    .. attention::
-
-        - Catching this exception broadly may mask specific validation issues. Always inspect the error message for details.
-        - This class is intended for use within the manifest loader and related validation logic. For other error types,
-          use the appropriate exception class.
-
-    :raises: This class is raised directly or via subclassing for any manifest loader error.
+        The :attr:`get_formatted_err_message` property is a fixed label,
+        ``Smarter API Manifest Loader Error``, for logging and display.
     """
 
     @property
-    def get_formatted_err_message(self):
+    def get_formatted_err_message(self) -> str:
         """Return the static formatted error message for SAMLoader errors."""
         return "Smarter API Manifest Loader Error"
 
 
-def validate_key(key: str, key_value: Any, spec: Any):
+def validate_key(key: str, key_value: Any, spec: Any) -> None:
     """
     Validate a manifest key and its value against a specification.
 
@@ -80,16 +60,13 @@ def validate_key(key: str, key_value: Any, spec: Any):
     **Parameters**
 
     :param key: The manifest key to validate. Must be a string or an Enum with a string value.
-    :type key: str
 
     :param key_value: The value associated with the manifest key. The expected type and constraints depend on the specification.
-    :type key_value: Any
 
     :param spec: The specification against which the key and value are validated. This can be:
         - A list: The value must be one of the items in the list.
         - A tuple: The first element is the expected data type; the second is a list of key options (e.g., required, optional, readonly).
         - Any other type: The value must match the type and value of the spec.
-    :type spec: Any
 
     **Validation Logic**
 
@@ -174,11 +151,9 @@ class SAMLoader(SmarterHelperMixin):
     This class provides the foundational logic for loading, parsing, and validating
     Smarter API Manifest files, prior to attempting to use the manifest data for
     initializing a Pydantic model. It is designed to handle manifests provided as JSON or YAML,
-    and supports loading from a string, dictionary, file path, or URL. The loader ensures
-    that the manifest conforms to a specified schema, validating both the structure and
-    the data types of the manifest's contents. In cases where the syntax or structure
-    of the manifest is invalid, the loader is intended to provide more human readable
-    error messages than those produced by Pydantic alone.
+    and supports loading from a string, dictionary, file path, or URL. The loader checks
+    the manifest's format and its top-level keys, so that a manifest with invalid syntax or
+    structure gets a more human readable error message than Pydantic's.
 
     **Usage Overview**
 
@@ -189,16 +164,16 @@ class SAMLoader(SmarterHelperMixin):
       a Python dictionary, a file path, or a URL. Only one source should be provided at a time.
       The loader reads and stores the manifest data for further processing.
 
-    - **Specification Enforcement**: Maintains a specification dictionary that defines the
-      required structure and data types for the manifest. This includes top-level keys such as
-      API version, kind, metadata, spec, and status, as well as nested metadata requirements.
+    - **Specification**: Keeps its own copy of a specification dictionary that describes the
+      manifest's top-level keys and metadata, with the api version and kind filled in.
+      :meth:`validate_manifest` does not read it; subclasses may.
 
     - **Format Detection**: Automatically detects whether the manifest data is in JSON or YAML
       format, and parses it accordingly. If the format is invalid or unsupported, an error is raised.
 
-    - **Validation**: Recursively validates the manifest data against the specification. This
-      includes checking for required keys, verifying data types, and ensuring that values conform
-      to enumerated options where applicable. Validation errors are raised as exceptions.
+    - **Validation**: Checks that the manifest is a dict with the required top-level keys,
+      ``apiVersion``, ``kind``, ``metadata`` and ``spec``. The values themselves are validated
+      later, by the kind's Pydantic model. Validation errors are raised as exceptions.
 
     - **Extensibility**: Designed for subclassing, allowing child classes to override the
       specification and validation logic to accommodate custom manifest structures.
@@ -219,9 +194,8 @@ class SAMLoader(SmarterHelperMixin):
     Upon initialization, the loader validates the manifest by:
 
     1. Ensuring the manifest data is present and in a supported format.
-    2. Recursively checking each key and value against the specification.
-    3. Raising detailed errors if any required keys are missing, data types are incorrect,
-       or values are invalid.
+    2. Checking that the parsed manifest is a dict.
+    3. Raising an error if any required top-level key is missing.
 
     **Subclassing**
 
@@ -237,8 +211,8 @@ class SAMLoader(SmarterHelperMixin):
 
     **Logging**
 
-    The loader uses Python's standard logging library to emit warnings and errors during
-    the validation process, aiding in debugging and traceability.
+    The loader logs its state once it is initialized: at DEBUG when it is ready, and as a
+    warning when it is not.
     """
 
     _api_version: str = SmarterApiVersions.V1
@@ -285,15 +259,10 @@ class SAMLoader(SmarterHelperMixin):
         It supports loading manifest data from several sources, but only one source should be provided at a time.
 
         :param api_version: The API version of the manifest. Must be one of the supported API versions.
-        :type api_version: str
         :param kind: The kind of manifest. If not provided, it will be inferred from the manifest data.
-        :type kind: str, optional
         :param manifest: The manifest data, provided as a JSON/YAML string or a Python dictionary.
-        :type manifest: str or dict, optional
         :param file_path: Path to a file containing the manifest data.
-        :type file_path: str, optional
         :param url: URL pointing to the manifest data.
-        :type url: str, optional
 
         :raises SAMLoaderError: If the API version is not supported, if no manifest source is provided,
             if multiple sources are provided, or if the manifest format is invalid.
@@ -304,7 +273,8 @@ class SAMLoader(SmarterHelperMixin):
         2. It ensures that exactly one manifest source is specified (manifest, file_path, or url).
         3. The manifest data is loaded from the specified source.
         4. The loader sets the specification keys for API version and kind.
-        5. The manifest is validated against the specification, checking for required keys and correct data types.
+        5. The manifest is validated by :meth:`validate_manifest`, which checks its format and its required
+           top-level keys.
 
         Child classes may override the specification and validation logic to support custom manifest structures.
         """
@@ -338,20 +308,18 @@ class SAMLoader(SmarterHelperMixin):
         elif url:
             self._raw_data = requests.get(url, timeout=30).text
 
-        # 2. set specification key values
+        # 2. set specification key values, in this loader's own copy of the class's specification.
+        self._specification = copy.deepcopy(type(self)._specification)
         self._specification[SAMKeys.APIVERSION] = api_version
         if kind:
             self._specification[SAMKeys.KIND] = kind
         else:
             self._specification[SAMKeys.KIND] = self.get_key(SAMKeys.KIND.value)
 
-        # 3. validate a json representation of the manifest using our in-house Enumerated data types.
+        # 3. validate the manifest's format and its required top-level keys.
         # ---------------------------------------------------------------------
-        # Note that child classes are expected to
-        # override the specification as well as validate() in order to add
-        # the specification details of their own individual manifests.
-        # Therefore, this call will only validate the top-level keys and values
-        # of the manifest.
+        # Child classes may override validate_manifest() to check more. The
+        # values themselves are validated by the kind's Pydantic model.
         self.validate_manifest()
         self.log_loader_state()
 
@@ -388,7 +356,7 @@ class SAMLoader(SmarterHelperMixin):
         """
         if self._manifest is not None and not isinstance(self._manifest, (str, dict)):
             logger.error(
-                "%s.manifest - integrity error. Invalid manifest type: %s",
+                "%s.manifest() - integrity error. Invalid manifest type: %s",
                 self.formatted_class_name,
                 type(self._manifest),
             )
@@ -435,22 +403,32 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def json_data(self) -> Optional[SmarterDictType]:
-        """The manifest data parsed into a dict, or None if its format is unknown."""
-        if self.data_format == SAMDataFormats.JSON:
+        """
+        The manifest data parsed into a dict, or None if its format is unknown.
+
+        A YAML string is parsed once, by :attr:`data_format`, and the dict is kept: every key
+        lookup reads this property.
+        """
+        data_format = self.data_format
+        if data_format == SAMDataFormats.JSON:
             if isinstance(self.raw_data, str):
                 return json.loads(self.raw_data)
             return self.raw_data
-        if self.data_format == SAMDataFormats.YAML:
-            if isinstance(self.raw_data, str):
-                return yaml.safe_load(self.raw_data)
-            return self.raw_data
+        if data_format == SAMDataFormats.YAML:
+            if not isinstance(self.raw_data, str):
+                return self.raw_data
+            if self._dict_data is None:
+                self._dict_data = yaml.safe_load(self.raw_data)
+            return self._dict_data
         return None
 
     @property
     def yaml_data(self) -> Optional[str]:
         """The manifest data as a YAML string, or None if its format is unknown."""
         if self.data_format == SAMDataFormats.YAML:
-            return self.raw_data if isinstance(self.raw_data, str) else yaml.dump(self.json_data)
+            if isinstance(self.raw_data, str):
+                return self.raw_data
+            return yaml.dump(self.json_data)
         if self.data_format == SAMDataFormats.JSON:
             return yaml.dump(self.json_data)
         return None
@@ -480,8 +458,8 @@ class SAMLoader(SmarterHelperMixin):
                 self._data_format = SAMDataFormats.JSON
             except json.JSONDecodeError:
                 try:
-                    # we are a yaml string
-                    yaml.safe_load(self.raw_data)
+                    # we are a yaml string. The parsed data is kept for json_data.
+                    self._dict_data = yaml.safe_load(self.raw_data)
                     self._data_format = SAMDataFormats.YAML
                 except yaml.YAMLError as e:
                     raise SAMLoaderError("Invalid data format. Supported formats: json, yaml") from e
@@ -515,7 +493,6 @@ class SAMLoader(SmarterHelperMixin):
             SAMObject(**loader.pydantic_model_dump())
 
         :return: Dictionary representation of the manifest data, suitable for Pydantic model instantiation.
-        :rtype: dict
         """
         return {
             SAMKeys.APIVERSION.value: self.manifest_api_version,
@@ -528,66 +505,62 @@ class SAMLoader(SmarterHelperMixin):
     # -------------------------------------------------------------------------
     # class methods
     # -------------------------------------------------------------------------
-    def get_key(self, key) -> Any:
+    def get_key(self, key: str) -> Any:
         """
         Get a key from the manifest's JSON data.
 
         :param key: The key to retrieve.
-        :type key: str
-        :return: The value of the key, or None if the key does not exist.
-        :rtype: Any
+        :return: The value of the key, or None if the key does not exist, or the manifest data is not a dict.
         """
         try:
-            return self.json_data[key] if isinstance(self.json_data, dict) else None
+            json_data = self.json_data
+            if not isinstance(json_data, dict):
+                return None
+            return json_data[key]
         except (KeyError, TypeError):
             return None
 
-    def validate_manifest(self):
+    def validate_manifest(self) -> None:
         """
         Validate the manifest data.
 
-        This method performs a comprehensive validation of the manifest data against the expected specification.
-        Validation is performed recursively, ensuring that all required keys are present, that values are of the correct
-        data types, and that any enumerated or restricted values are respected. The validation process is driven by the
-        specification dictionary defined for the loader, which outlines the required structure and constraints for the manifest.
+        It checks the manifest's structure only. Its values are validated later, by the kind's
+        Pydantic model, so a wrong data type or value is not reported here.
 
         The validation process includes the following steps:
 
-        1. Checks that the manifest data is present and not empty.
+        1. If the manifest data is empty, it logs a warning and returns, without raising.
         2. Ensures that the manifest data is in a supported format (JSON or YAML).
-        3. Recursively traverses the manifest data, validating each key and value against the corresponding entry in the specification.
-        4. For each key:
-           - If the specification entry is a dictionary, validation is performed recursively on the nested structure.
-           - If the specification entry is a tuple, the method checks for required keys, correct data types, and any special options (such as optional or read-only).
-           - If the specification entry is a list, the method checks that the value is one of the allowed options.
-           - Otherwise, the method checks for exact value and type matches.
-        5. Raises a ``SAMLoaderError`` with a descriptive message if any validation check fails.
+        3. Ensures that the parsed manifest is a dict.
+        4. Ensures that it has the required top-level keys: ``apiVersion``, ``kind``, ``metadata`` and ``spec``.
+        5. Raises a ``SAMLoaderError`` with a descriptive message if any of these checks fails.
 
         This method is intended to be called automatically during loader initialization, but can also be invoked manually
         to re-validate the manifest after modifications.
 
         Subclasses may override this method to implement additional or custom validation logic as needed.
 
-        :raises SAMLoaderError: If the manifest data is missing, in an unsupported format, or fails validation.
+        :raises SAMLoaderError: If the manifest data is in an unsupported format, is not a dict, or is missing
+            a required top-level key.
         """
 
         # top-level validations of the manifest itself.
         if not self.raw_data:
             logger.warning("%s.validate_manifest() Received empty or invalid data.", self.formatted_class_name)
             return None
-        if not self.data_format in [SAMDataFormats.JSON, SAMDataFormats.YAML]:
+        if self.data_format not in [SAMDataFormats.JSON, SAMDataFormats.YAML]:
             raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
 
         if not isinstance(self.json_data, dict):
             raise SAMLoaderError(f"Invalid data format. Expected dict but got {type(self.json_data)}")
 
-        if not SAMKeys.APIVERSION.value in self.json_data:
+        if SAMKeys.APIVERSION.value not in self.json_data:
             raise SAMLoaderError(f"Missing required key: {SAMKeys.APIVERSION.value}")
-        if not SAMKeys.KIND.value in self.json_data:
+        if SAMKeys.KIND.value not in self.json_data:
             raise SAMLoaderError(f"Missing required key: {SAMKeys.KIND.value}")
-        if not SAMKeys.METADATA.value in self.json_data:
+        if SAMKeys.METADATA.value not in self.json_data:
             raise SAMLoaderError(f"Missing required key: {SAMKeys.METADATA.value}")
-        if not SAMKeys.SPEC.value in self.json_data:
+        if SAMKeys.SPEC.value not in self.json_data:
             raise SAMLoaderError(f"Missing required key: {SAMKeys.SPEC.value}")
 
         # mcdaniel 2026-03-14: this has outlived its usefulness. Deprecating.
@@ -603,85 +576,76 @@ class SAMLoader(SmarterHelperMixin):
         Returns a list of all metadata keys defined in the SAMMetadataKeys enumeration.
 
         :return: A list of metadata key strings.
-        :rtype: list[str]
         """
         return SAMMetadataKeys.all()
 
     @property
     def manifest_spec_keys(self) -> list[str]:
         """
-        Returns a list of all spec keys defined in the SAMSpecKeys enumeration.
+        Returns the keys of the manifest's ``spec``: none, here.
 
         This should be overridden by child classes to provide the specific spec keys
         relevant to their manifest type.
 
-        :return: A list of spec key strings.
-        :rtype: list[str]
+        :return: A list of spec key strings, empty here.
         """
         return []
 
     @property
     def manifest_status_keys(self) -> list[str]:
         """
-        Returns a list of all status keys defined in the SAMStatusKeys enumeration.
+        Returns the keys of the manifest's ``status``: none, here.
 
         This should be overridden by child classes to provide the specific status keys
         relevant to their manifest type.
 
-        :return: A list of status key strings.
-        :rtype: list[str]
+        :return: A list of status key strings, empty here.
         """
         return []
 
     @property
-    def manifest_api_version(self) -> str:
+    def manifest_api_version(self) -> Optional[str]:
         """
         Returns the API version of the manifest.
 
-        :return: The API version string.
-        :rtype: str
+        :return: The API version string, or None if the manifest has none.
         """
         return self.get_key(SAMKeys.APIVERSION.value)
 
     @property
-    def manifest_kind(self) -> str:
+    def manifest_kind(self) -> Optional[str]:
         """
         Returns the kind of the manifest.
 
-        :return: The kind string.
-        :rtype: str
+        :return: The kind string, or None if the manifest has none.
         """
-        if not self._specification[SAMKeys.KIND]:
-            self._specification[SAMKeys.KIND] = self.get_key(SAMKeys.KIND.value)
-        return self.get_key(SAMKeys.KIND.value)
+        kind = self.get_key(SAMKeys.KIND.value)
+        return kind
 
     @property
-    def manifest_metadata(self) -> SmarterDictType:
+    def manifest_metadata(self) -> Optional[SmarterDictType]:
         """
         Returns the metadata section of the manifest.
 
-        :return: The metadata dictionary.
-        :rtype: dict
+        :return: The metadata dictionary, or None if the manifest has none.
         """
         return self.get_key(SAMKeys.METADATA.value)
 
     @property
-    def manifest_spec(self) -> SmarterDictType:
+    def manifest_spec(self) -> Optional[SmarterDictType]:
         """
         Returns the spec section of the manifest.
 
-        :return: The spec dictionary.
-        :rtype: dict
+        :return: The spec dictionary, or None if the manifest has none.
         """
         return self.get_key(SAMKeys.SPEC.value)
 
     @property
-    def manifest_status(self) -> SmarterDictType:
+    def manifest_status(self) -> Optional[SmarterDictType]:
         """
         Returns the status section of the manifest.
 
-        :return: The status dictionary.
-        :rtype: dict
+        :return: The status dictionary, or None if the manifest has none.
         """
         return self.get_key(SAMKeys.STATUS.value)
 
@@ -696,7 +660,6 @@ class SAMLoader(SmarterHelperMixin):
         it in downstream processes or integrations.
 
         :return: ``True`` if the manifest is valid and ready to be used, otherwise ``False``.
-        :rtype: bool
         """
         return (
             bool(self.manifest_api_version)
@@ -711,7 +674,6 @@ class SAMLoader(SmarterHelperMixin):
         Returns the class name formatted for logging.
 
         :return: The formatted class name as a string.
-        :rtype: str
         """
         class_name = f"{__name__}.{SAMLoader.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
@@ -721,23 +683,20 @@ class SAMLoader(SmarterHelperMixin):
         Returns a string representation of the loader's readiness state.
 
         :return: "ready" if the loader is ready, otherwise "not ready".
-        :rtype: str
         """
         if self.ready:
             return self.formatted_state_ready
         return self.formatted_state_not_ready
 
-    def log_loader_state(self):
-        """
-        Log the current state of the SAMLoader instance for debugging purposes.
-
-        :return: None
-        """
-        log = logger.debug if self.ready else logger.warning
+    def log_loader_state(self) -> None:
+        """Log the current state of the SAMLoader instance: at DEBUG if it is ready, otherwise as a warning."""
+        if self.ready:
+            log = logger.debug
+        else:
+            log = logger.warning
         log(
-            "%s[%s].log_loader_state() %s %s loader is %s. source=%s",
-            super().formatted_class_name,
-            id(self),
+            "%s.log_loader_state() %s %s loader is %s. source=%s",
+            self.formatted_class_name,
             self.manifest_kind,
             self.name,
             self.loader_ready_state(),
@@ -746,9 +705,8 @@ class SAMLoader(SmarterHelperMixin):
 
     def to_json(self) -> SmarterDictType:
         """
-        Return the manifest data as a JSON string.
+        Return the manifest data as a dict, with its keys sorted, for logging.
 
-        :return: The manifest data in JSON format.
-        :rtype: str
+        :return: The manifest data, as a sorted dict.
         """
         return self.sorted_dict(self.json_data)  # type: ignore

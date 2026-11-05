@@ -77,6 +77,21 @@ class TestSmarterMiddlewareMixin(SmarterTestBase):
             self.assertIsNone(self.middleware.get_client_ip(make_request("/healthz/", REMOTE_ADDR="127.0.0.1")))
             logger.warning.assert_not_called()
 
+    def test_client_ip_warning_never_logs_credentials(self):
+        """The warning logs the ip headers only, not request.META, which holds the api key and session cookie."""
+        settings = MagicMock(environment_is_local=False)
+        request = make_request(
+            REMOTE_ADDR="10.0.0.1",
+            HTTP_HOST="testserver",
+            HTTP_AUTHORIZATION="Token not-a-real-key",
+            HTTP_COOKIE="sessionid=not-a-real-session",
+        )
+        with patch(f"{MODULE}.smarter_settings", settings), patch(f"{MODULE}.logger") as logger:
+            self.middleware.get_client_ip(request)
+        logged = str(logger.warning.call_args)
+        self.assertNotIn("not-a-real", logged)
+        self.assertIn("10.0.0.1", logged)
+
     def test_is_private_ip(self):
         for ip, private in (
             ("10.0.0.1", True),

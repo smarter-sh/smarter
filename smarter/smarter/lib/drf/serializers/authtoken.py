@@ -1,67 +1,32 @@
-"""Account serializers for smarter api."""
+"""The serializer of API keys, :class:`~smarter.lib.drf.models.SmarterAuthToken`, for the web console's list api."""
 
-import sys
-from typing import Optional
-
-from django.http import HttpRequest
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
     UserProfileSerializer,
 )
-from smarter.common.utils import to_camel_case, to_snake_case
-from smarter.lib import logging
 from smarter.lib.drf.manifest.models.auth_token.const import (
     MANIFEST_KIND as AUTH_TOKEN_KIND,
 )
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.drf.serializers.camel_case_serializer import (
+    SmarterCamelCaseSerializer,
+)
 
-logger = logging.getSmarterLogger(__name__)
-
-
-def is_sphinx_build():
-    """Determine if the current execution context is a Sphinx documentation build."""
-
-    return "sphinx" in sys.modules
-
-
-class SmarterCamelCaseSerializer(serializers.ModelSerializer):
-    """Base serializer to convert field names to camelCase."""
-
-    request: Optional[HttpRequest]
-
-    def __init__(self, *args, **kwargs):
-        """Initialize the serializer and set the request context."""
-        super().__init__(*args, **kwargs)
-        self.logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + self.__class__.__name__)
-
-        # Get the request from the context if available, while
-        # guarding against Sphinx autodoc generation issues.
-        if is_sphinx_build():
-            self.request = None
-        else:
-            context = getattr(self, "context", None)
-            if isinstance(context, dict):
-                self.request = context.get("request", None)
-            else:
-                self.request = None
-
-    def to_representation(self, instance):
-        """Convert field names to camelCase."""
-
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key, value in representation.items():
-            # double check that the key is a snake_case string before converting to camelCase
-            snake_key = to_snake_case(key)
-            camel_key = to_camel_case(snake_key)
-            new_representation[camel_key] = value
-        return new_representation
+# SmarterCamelCaseSerializer is re-exported, for code that imported it from this module.
+__all__ = [
+    "SmarterAuthTokenSerializer",
+    "SmarterCamelCaseSerializer",
+]
 
 
 class SmarterAuthTokenSerializer(MetaDataWithOwnershipModelSerializer):
-    """Serializer for SmarterAuthToken model."""
+    """
+    Serializer of the SmarterAuthToken model, with its owner's user profile and manifest url.
+
+    A token has no integer id, so ``id`` is its ``key_id``, a string.
+    """
 
     user_profile = UserProfileSerializer()
     # a token has no integer id: it is identified by its key_id, a UUID.
@@ -88,7 +53,6 @@ class SmarterAuthTokenSerializer(MetaDataWithOwnershipModelSerializer):
             "ready",
             "is_active",
             "last_used_at",
-            "ready",
         ]
         read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "key_id",

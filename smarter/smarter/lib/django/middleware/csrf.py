@@ -27,7 +27,7 @@ This middleware intentionally avoids several patterns that commonly
 introduce concurrency bugs or unsupported Django behavior:
 
 - Does not mutate ``request.user``
-- Does not override ``__call__``
+- Overrides ``__call__`` only to let amnesty paths skip the check
 - Does not use ``markcoroutinefunction``
 - Does not manually manage async adaptation
 - Does not persist middleware state across requests
@@ -182,6 +182,11 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
     """
 
     def __init__(self, get_response):
+        """
+        Initialize Django's CSRF middleware, then this instance's :class:`SmarterRequestMixin`.
+
+        :param get_response: The next handler in the middleware chain.
+        """
         super().__init__(get_response)
 
         # initialize request mixin WITHOUT fake users/admin state
@@ -189,11 +194,14 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
     def __call__(self, request):
         """
-        Standard Django middleware entry point.
+        Skip the CSRF middleware for an amnesty path, or run Django's middleware lifecycle.
 
-        This method intentionally does not contain any custom logic and
-        simply delegates to the parent class to preserve Django's
-        expected middleware lifecycle behavior.
+        An amnesty path, e.g. a health check, goes straight to the next handler. Every other
+        request goes through Django's ``__call__``, which calls :meth:`process_view` and
+        :meth:`process_response`.
+
+        :param request: The incoming request.
+        :returns: The response.
         """
         if self.deserves_amnesty(request.path):
             return self.get_response(request)
@@ -213,11 +221,14 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         request: ASGIRequest,
     ) -> list[str]:
         """
-        Return request-scoped trusted origins.
+        Return one request's trusted origins: ``CSRF_TRUSTED_ORIGINS``, plus its own origin for an LLMClient.
 
-        IMPORTANT:
-        - never mutate Django settings
-        - always return a fresh list
+        The list is a fresh copy for each request, and Django's settings are never changed. An
+        LLMClient or configuration api request adds its own origin, e.g. ``https://example.com``.
+        A failure to classify the request is logged, and the settings' origins are returned.
+
+        :param request: The request.
+        :returns: A new list of trusted origins.
         """
 
         origins = list(settings.CSRF_TRUSTED_ORIGINS)
@@ -231,8 +242,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
                     origins.append(origin)
         # pylint: disable=broad-except
         except Exception as exc:
-            logging.exception(
-                "%s failed building dynamic CSRF origins: %s",
+            logger.exception(
+                "%s.get_dynamic_trusted_origins() failed building dynamic CSRF origins: %s",
                 self.formatted_class_name,
                 exc,
             )
@@ -258,32 +269,45 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
                 kind = (bool(srm.is_llmclient), bool(srm.is_config))
             # pylint: disable=broad-except
             except Exception as exc:
-                logger.warning("%s could not classify %s: %s", self.formatted_class_name, request.path, exc)
+                logger.warning(
+                    "%s.llmclient_request_kind() could not classify %s: %s",
+                    self.formatted_class_name,
+                    request.path,
+                    exc,
+                )
                 kind = (False, False)
             setattr(request, LLMCLIENT_REQUEST_KIND_ATTRIBUTE, kind)
         return kind
 
     @cached_property
-    def csrf_trusted_origins_hosts(self):
+    def csrf_trusted_origins_hosts(self) -> list[str]:
         """
-        Django internals use this property.
+        The hosts of ``CSRF_TRUSTED_ORIGINS``, without a leading wildcard, as Django's internals expect.
 
-        We preserve compatibility while avoiding mutation
-        of global settings.
+        :meth:`process_view` swaps it for the request's own list while Django checks the request,
+        so that the settings are never changed.
+
+        :returns: The trusted hosts, e.g. ``.example.com`` for ``https://*.example.com``.
         """
         return [urlparse(origin).netloc.lstrip("*") for origin in settings.CSRF_TRUSTED_ORIGINS]
 
     @cached_property
-    def allowed_origins_exact(self):
-        """The ``CSRF_TRUSTED_ORIGINS`` without a wildcard, which must match an origin exactly."""
+    def allowed_origins_exact(self) -> set[str]:
+        """
+        The ``CSRF_TRUSTED_ORIGINS`` without a wildcard, which must match an origin exactly.
+
+        :returns: The set of exact origins.
+        """
         return {origin for origin in settings.CSRF_TRUSTED_ORIGINS if "*" not in origin}
 
     @cached_property
-    def allowed_origin_subdomains(self):
+    def allowed_origin_subdomains(self) -> defaultdict[str, list[str]]:
         """
         The wildcard ``CSRF_TRUSTED_ORIGINS``, as a dict of scheme to the domains whose subdomains are trusted.
 
         For example, ``https://*.example.com`` adds ``.example.com`` to the ``https`` list.
+
+        :returns: A dict of scheme to the list of trusted parent domains.
         """
         allowed_origin_subdomains = defaultdict(list)
 
@@ -343,12 +367,22 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         callback_kwargs,
     ):
         """
-        Main CSRF enforcement hook.
+        Check a request's CSRF token and origin, unless one of the bypass rules applies.
 
-        IMPORTANT:
-        - return None to continue processing
-        - return HttpResponse to short-circuit
-        - NEVER return self.get_response(request)
+        Amnesty paths, a disabled ``ENABLE_MIDDLEWARE_CSRF`` switch, the local environment, health
+        checks, internal hosts and, with ``CSRF_SUPPRESS_FOR_LLM_CLIENTS`` on, LLMClient requests
+        skip the check. Every other request is checked by Django, against the trusted origins of
+        :meth:`get_dynamic_trusted_origins`, which replace this instance's origin lists only until
+        Django's check returns. A rejected request is logged at ERROR.
+
+        This hook never calls ``self.get_response(request)``: it returns None, and Django calls the
+        view.
+
+        :param request: The request.
+        :param callback: The view function.
+        :param callback_args: The view's positional arguments.
+        :param callback_kwargs: The view's keyword arguments.
+        :returns: None to let the request through, or Django's ``403`` response.
         """
 
         if self.deserves_amnesty(request.path):
@@ -382,7 +416,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         is_llmclient, _ = self.llmclient_request_kind(request)
         if is_llmclient and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_LLM_CLIENTS):
             logger.info(
-                "%s llmclient CSRF bypass: %s",
+                "%s.process_view() llmclient CSRF bypass: %s",
                 self.formatted_class_name,
                 request.path,
             )
@@ -398,8 +432,12 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             self.csrf_trusted_origins_hosts = [urlparse(origin).netloc.lstrip("*") for origin in dynamic_origins]
             self.allowed_origins_exact = {origin for origin in dynamic_origins if "*" not in origin}
             allowed_subdomains = defaultdict(list)
-            for parsed in (urlparse(origin) for origin in dynamic_origins if "*" in origin):
-                allowed_subdomains[parsed.scheme].append(parsed.netloc.lstrip("*"))
+            for origin in dynamic_origins:
+                if "*" not in origin:
+                    continue
+                parsed = urlparse(origin)
+                domain = parsed.netloc.lstrip("*")
+                allowed_subdomains[parsed.scheme].append(domain)
 
             self.allowed_origin_subdomains = allowed_subdomains
             response = super().process_view(request, callback, callback_args, callback_kwargs)
@@ -412,7 +450,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         if isinstance(response, HttpResponseForbidden):
             logger.error(
                 (
-                    "%s CSRF validation failed "
+                    "%s.process_view() CSRF validation failed "
                     "| path=%s "
                     "| method=%s "
                     "| origin=%s "

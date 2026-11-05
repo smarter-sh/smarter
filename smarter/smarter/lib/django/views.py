@@ -1,19 +1,19 @@
 """Django template and view helper functions."""
 
 import re
+from collections.abc import Callable
 from functools import wraps
 from http import HTTPStatus
-from typing import Optional
+from typing import Optional, Union
 
-from bs4 import BeautifulSoup
 from cache_results import lazy_cache
-from django import template
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
+from django.utils.html import strip_spaces_between_tags
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
 
@@ -30,8 +30,13 @@ from smarter.lib.typing import SmarterDictType
 
 
 # pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
+def should_log(level: int) -> bool:
+    """
+    Check if logging should be done based on the waffle switch.
+
+    :param level: The log level of the message. It is ignored: the switch turns every level on or off.
+    :returns: True if the ``VIEW_LOGGING`` waffle switch is active.
+    """
     return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
 
 
@@ -41,16 +46,17 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 HTML_COMMENT_PATTERN = re.compile(r"<!--.*?-->")
 """Matches an html comment, for :meth:`SmarterView.remove_comments`."""
 
-logger_prefix_invalidations = SmarterFormattedText.text(
-    f"{__name__}.smarter_cache_page_by_user.invalidate()", SmarterFormattedText.BOLD_DARK_BLUE
-)
-
-register = template.Library()
+logger_prefix = SmarterFormattedText.text(__name__)
 cache_prefix = f"{__name__}.smarter_cache_page_by_user"
 
 
-def redirect_and_expire_cache(path: str = "/"):
-    """Redirect to the given path and expire the cache."""
+def redirect_and_expire_cache(path: str = "/") -> HttpResponseRedirect:
+    """
+    Redirect to the given path, with headers that tell browsers and proxies not to cache the redirect.
+
+    :param path: The path to redirect to.
+    :returns: The redirect response.
+    """
     response = redirect(path)
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response["Pragma"] = "no-cache"
@@ -58,27 +64,27 @@ def redirect_and_expire_cache(path: str = "/"):
     return response
 
 
-def smarter_cache_page_by_user(timeout):
+def smarter_cache_page_by_user(timeout: int) -> Callable[[Callable], Callable]:
     """
     Decorator to cache a view's response based on the authenticated user.
 
-    This decorator applies Django's `cache_page` decorator with a cache key
+    This decorator applies Django's ``cache_page`` decorator with a cache key
     that is unique to each user. Authenticated users will have their
     responses cached separately, while anonymous users will share a single
-    cache entry.
+    cache entry. Caching is skipped unless the ``ENABLE_SMARTER_PAGE_CACHING``
+    waffle switch is active. The decorated view has an ``invalidate(request)``
+    function that deletes the request's cache entry.
 
     Example:
 
-        .. code-block:: python
+    .. code-block:: python
 
-            @method_decorator(smarter_cache_page_by_user(60 * 15), name="dispatch")
-            class MyView(SmarterAuthenticatedWebView):
+        @method_decorator(smarter_cache_page_by_user(60 * 15), name="dispatch")
+        class MyView(SmarterAuthenticatedWebView):
             ...
 
     :param timeout: The cache timeout in seconds.
-    :type timeout: int
-    :return: A decorator that can be applied to a Django view function or method.
-    :rtype: function
+    :returns: A decorator that can be applied to a Django view function or method.
     """
 
     def decorator(view_func):
@@ -106,7 +112,11 @@ def smarter_cache_page_by_user(timeout):
                 hit = lazy_cache.get(key_prefix)
                 if hit is not None:
                     lazy_cache.delete(key_prefix)
-                    logger.info("%s Cache invalidated for key_prefix: %s", logger_prefix_invalidations, key_prefix)
+                    logger.info(
+                        "%s.smarter_cache_page_by_user.invalidate() cache invalidated for key_prefix: %s",
+                        logger_prefix,
+                        key_prefix,
+                    )
 
         wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper
@@ -141,58 +151,57 @@ class SmarterView(View):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
+        """
+        Return the class name in a formatted string along with the name of this view.
+
+        :returns: The dotted name of this view class and its instance id, formatted for logs.
+        """
         class_name = f"{__name__}.{SmarterView.__name__}[{id(self)}]"
         return logging.SmarterFormattedText.text(class_name)
 
     @property
     def ready(self) -> bool:
         """
-        Returns True if the view is ready to handle requests, False otherwise.
+        Return True if the view is ready to handle requests, False otherwise.
 
         This can be used to check if the necessary context or data is available before processing a request.
+
+        :returns: True if the view is ready.
         """
         return self._ready
 
-    @register.filter
-    def remove_comments(self, html):
+    def remove_comments(self, html: str) -> str:
         """
         Remove HTML comments from an html string.
 
         :param html: The HTML string from which to remove comments.
-        :type html: str
-        :return: The HTML string without comments.
-        :rtype: str
+        :returns: The HTML string without comments.
         """
         return HTML_COMMENT_PATTERN.sub("", html)
 
-    def minify_html(self, html):
+    def minify_html(self, html: str) -> str:
         """
-        Minify an html string.
+        Minify an html string, by removing the whitespace between tags.
+
+        It is one regular expression, not a parse: :class:`~smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware`
+        parses every html response anyway.
 
         :param html: The HTML string to minify.
-        :type html: str
-        :return: The minified HTML string.
-        :rtype: str
+        :returns: The minified HTML string.
         """
-        soup = BeautifulSoup(html, "html.parser")
-        for element in soup.find_all(text=True):
-            if isinstance(element, str) and element.isspace():
-                element.extract()
-        return str(soup)
+        minified_html = strip_spaces_between_tags(html)
+        return minified_html
 
-    def render_clean_html(self, request: HttpRequest, template_path, context=None):
+    def render_clean_html(
+        self, request: HttpRequest, template_path: str, context: Optional[SmarterDictType] = None
+    ) -> Union[str, HttpResponse]:
         """
         Render a template as a string, with comments removed and minified.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
         :param template_path: The path to the template to render.
-        :type template_path: str
-        :param context: The context to use for rendering the template.
-        :type context: dict, optional
-        :return: The rendered, cleaned HTML string.
-        :rtype: str
+        :param context: The context to use for rendering the template, or the view's context if None or empty.
+        :returns: The rendered, cleaned HTML string, or a 500 response if the template could not be rendered.
         """
         context = context or self.context
         response = None
@@ -219,7 +228,7 @@ class SmarterView(View):
 class SmarterWebXmlView(SmarterView):
     """Base view for smarter xml web views."""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> HttpResponse:
         """
         Render ``template_path`` with the view's context.
 
@@ -230,7 +239,11 @@ class SmarterWebXmlView(SmarterView):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
+        """
+        Return the class name in a formatted string along with the name of this view.
+
+        :returns: The dotted name of this view class and its instance id, formatted for logs.
+        """
         class_name = f"{__name__}.{SmarterWebXmlView.__name__}[{id(self)}]"
         return logging.SmarterFormattedText.text(class_name)
 
@@ -238,7 +251,7 @@ class SmarterWebXmlView(SmarterView):
 class SmarterWebTxtView(SmarterView):
     """Base view for smarter text web views."""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> HttpResponse:
         """
         Render ``template_path`` without comments and minified, as ``text/plain``.
 
@@ -252,7 +265,11 @@ class SmarterWebTxtView(SmarterView):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
+        """
+        Return the class name in a formatted string along with the name of this view.
+
+        :returns: The dotted name of this view class and its instance id, formatted for logs.
+        """
         class_name = f"{__name__}.{SmarterWebTxtView.__name__}[{id(self)}]"
         return logging.SmarterFormattedText.text(class_name)
 
@@ -266,24 +283,33 @@ class SmarterWebHtmlView(SmarterView):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
+        """
+        Return the class name in a formatted string along with the name of this view.
+
+        :returns: The dotted name of this view class and its instance id, formatted for logs.
+        """
         class_name = f"{__name__}.{SmarterWebHtmlView.__name__}[{id(self)}]"
         return logging.SmarterFormattedText.text(class_name)
 
     # pylint: disable=W0613
-    def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
+    def clean_http_response(
+        self,
+        request: HttpRequest,
+        template_path: str,
+        *args,
+        context: Optional[SmarterDictType] = None,
+        **kwargs,
+    ) -> HttpResponse:
         """
         Render a template and return an HttpResponse with comments removed.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
         :param template_path: The path to the template to render.
-        :type template_path: str
+        :param args: Ignored.
         :param context: The context to use for rendering the template.
-        :type context: dict, optional
-        :return: An HttpResponse with the cleaned HTML content, or the error response of
+        :param kwargs: Ignored.
+        :returns: An HttpResponse with the cleaned HTML content, or the error response of
             :meth:`render_clean_html` if the template could not be rendered.
-        :rtype: HttpResponse
         """
         minified_html = self.render_clean_html(request, template_path, context)
         if isinstance(minified_html, HttpResponse):
@@ -291,14 +317,14 @@ class SmarterWebHtmlView(SmarterView):
             return minified_html
         return HttpResponse(content=minified_html, content_type="text/html")
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests and return a cleaned HttpResponse.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
-        :return: An HttpResponse with the cleaned HTML content.
-        :rtype: HttpResponse
+        :param args: Passed to :meth:`clean_http_response`.
+        :param kwargs: Passed to :meth:`clean_http_response`.
+        :returns: An HttpResponse with the cleaned HTML content.
         """
         return self.clean_http_response(
             request, template_path=self.template_path, context=self.context, *args, **kwargs
@@ -308,30 +334,24 @@ class SmarterWebHtmlView(SmarterView):
 @method_decorator(never_cache, name="dispatch")
 class SmarterNeverCachedWebView(SmarterWebHtmlView):
     """
-    An optimized web view that requires authentication and is never cached.
+    A web view that is never cached, and does not require authentication.
 
-    This class combines two critical behaviors for secure and dynamic web applications:
+    It extends :class:`SmarterWebHtmlView`, not :class:`SmarterAuthenticatedWebView`, so anonymous
+    users can access it: it neither requires login nor initializes ``SmarterRequestMixin``. For a page
+    that must be both private and never cached, use :class:`SmarterAuthenticatedNeverCachedWebView`.
 
-    1. **Authentication Enforcement**: Inherits from `SmarterAuthenticatedWebView`, which applies the
-       `@login_required` decorator to the `dispatch` method. This ensures that only authenticated users
-       can access the view. If an unauthenticated user attempts access, they are redirected to the login page,
-       and the cache is expired to prevent sensitive data leakage.
-
-    2. **Cache Prevention**: Uses the `@never_cache` decorator (applied via `method_decorator` to the
-       `dispatch` method). This instructs Django and downstream proxies/browsers to never cache responses
-       from this view. This is essential for views that display user-specific or sensitive information,
-       ensuring that no part of the response is stored or reused.
-
-    By combining these decorators, `SmarterAuthenticatedNeverCachedWebView` guarantees that:
-    - Only logged-in users can access the view.
-    - Every response is generated fresh for each request, with no caching at any layer.
-
-    This makes it ideal for pages displaying private, frequently changing, or security-sensitive data.
+    The ``@never_cache`` decorator, applied via ``method_decorator`` to the ``dispatch`` method,
+    instructs Django and downstream proxies and browsers to never cache responses from this view,
+    so every response is generated fresh for each request.
     """
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
+        """
+        Return the class name in a formatted string along with the name of this view.
+
+        :returns: The dotted name of this view class and its instance id, formatted for logs.
+        """
         class_name = f"{__name__}.{SmarterNeverCachedWebView.__name__}[{id(self)}]"
         return logging.SmarterFormattedText.text(class_name)
 
@@ -341,11 +361,11 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
     """
     An optimized view that requires authentication.
 
-    This class uses the `@login_required` decorator, applied via Django's `method_decorator` to the `dispatch` method.
-    The `@login_required` decorator ensures that only authenticated users can access any HTTP method (GET, POST, etc.)
-    on this view. If an unauthenticated user attempts to access the view, they are redirected to the login page.
-    Additionally, the `dispatch` method is overridden to expire any cache for anonymous users, further protecting
-    sensitive data from being stored or leaked.
+    Only authenticated users can access any HTTP method (GET, POST, etc.) on this view. Its ``dispatch``
+    method checks ``request.user.is_authenticated`` explicitly, and redirects an anonymous user to the
+    login page with a response that expires the cache, so that sensitive data is not stored or leaked.
+    The class is also decorated with ``@login_required``, but the explicit check in ``dispatch`` is what
+    redirects, rather than raising, for an unauthenticated user.
 
     By inheriting from both Django's ``View`` and the custom ``SmarterRequestMixin``, it
     ensures consistent request handling and integration with Smarter-specific request features.
@@ -357,16 +377,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
     By enforcing authentication at the dispatch level, this view provides a robust foundation for building
     secure, user-specific pages in the Smarter platform.
 
-    This combination makes the view ideal for admin pages that display sensitive or frequently changing data, ensuring
-    both strict access control and cache prevention.
-
-    Bug Fix:
-
-        Fixed a bug where Django method decorators were raising exceptions for unauthenticated
-        users instead of redirecting them to the login page. Replaced the decorators
-        with explicit checks in the `dispatch` method.
-
-    .. versionadded:: v0.13.39
+    Successful responses vary on the ``Cookie`` header.
     """
 
     def __init__(self, **kwargs):
@@ -375,23 +386,31 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
+        """
+        Return the class name in a formatted string along with the name of this view.
+
+        :returns: The dotted name of this view class and its instance id, formatted for logs.
+        """
         class_name = f"{__name__}.{SmarterAuthenticatedWebView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
-    def log_ready_status(self):
-        """Logs the ready status of the view, building the message only when it will be logged."""
-        if logger.should_log(logging.DEBUG):
-            logger.debug("%s is %s", self.formatted_class_name, self.ready_state)
-
-    def setup(self, request: HttpRequest, *args, **kwargs):
+    def log_ready_status(self) -> None:
         """
-        Setup the view with the request and any additional arguments.
+        Log the ready status of the view at DEBUG, building the message only when it will be logged.
 
-        This method initializes the SmarterRequestMixin with the request.
+        :returns: None.
+        """
+        if logger.should_log(logging.DEBUG):
+            logger.debug("%s.log_ready_status() is %s", self.formatted_class_name, self.ready_state)
+
+    def setup(self, request: HttpRequest, *args, **kwargs) -> None:
+        """
+        Set up the view with the request and any additional arguments.
+
+        This method initializes the SmarterRequestMixin with the request, and marks the request as
+        not an internal api request.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         """
@@ -409,14 +428,15 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
             self._ready = True
         self.log_ready_status()
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Dispatch the request, redirecting to login if the user is anonymous.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
-        :return: An HttpResponse object.
-        :rtype: HttpResponse
+        :param args: Passed to the view.
+        :param kwargs: Passed to the view.
+        :returns: The view's response, which varies on ``Cookie``, or a redirect to ``/login/`` that
+            expires the cache.
         """
         if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
             response = super().dispatch(request, *args, **kwargs)
@@ -434,7 +454,7 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     """
     An optimized and cached web view that requires authentication.
 
-    This class uses two important Django decorators, both applied via `method_decorator` to the `dispatch` method:
+    This class uses two important Django decorators, both applied via ``method_decorator`` to the ``dispatch`` method:
 
     1. **@cache_control**: Sets HTTP cache headers on responses from this view, specifying the maximum age for cached content.
        This instructs browsers and proxies to cache the response for a defined period, improving performance for repeat visits.
@@ -443,26 +463,30 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
        This dramatically reduces server load and speeds up response times for authenticated users accessing the same content.
 
     Both decorators work together to ensure that authenticated users receive cached content when appropriate, while still
-    enforcing authentication via the parent class (`SmarterAuthenticatedWebView`), which uses the `@login_required` decorator.
+    enforcing authentication via the parent class (:class:`SmarterAuthenticatedWebView`).
 
     This view is ideal for pages where content is user-specific but does not change frequently, allowing for efficient caching
     without compromising security. The dispatch method also patches vary headers to ensure proper cache differentiation based
     on cookies, further protecting user data.
     """
 
-    def log_ready_status(self):
-        """Logs the ready status of the view, building the message only when it will be logged."""
-        if logger.should_log(logging.INFO):
-            logger.info("%s is %s", self.formatted_class_name, self.ready_state)
+    def log_ready_status(self) -> None:
+        """
+        Log the ready status of the view at INFO, building the message only when it will be logged.
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        :returns: None.
+        """
+        if logger.should_log(logging.INFO):
+            logger.info("%s.log_ready_status() is %s", self.formatted_class_name, self.ready_state)
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Dispatch the request and patch vary headers for successful responses.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
-        :return: An HttpResponse object.
-        :rtype: HttpResponse
+        :param args: Passed to the view.
+        :param kwargs: Passed to the view.
+        :returns: The view's response, which varies on ``Cookie`` if its status is below 300.
         """
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
@@ -476,13 +500,14 @@ class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
     """
     An optimized web view that requires authentication and is never cached.
 
-    This class uses two key Django decorators, both applied via `method_decorator` to the `dispatch` method:
+    It combines two behaviors:
 
-    1. **@login_required** (inherited from `SmarterAuthenticatedWebView`): Ensures that only authenticated users can access any HTTP method (GET, POST, etc.) on this view. If an unauthenticated user attempts access, they are redirected to the login page and the cache is expired to prevent sensitive data leakage.
+    1. **Authentication** (inherited from :class:`SmarterAuthenticatedWebView`): Ensures that only authenticated users can access any HTTP method (GET, POST, etc.) on this view. If an unauthenticated user attempts access, they are redirected to the login page and the cache is expired to prevent sensitive data leakage.
 
-    2. **@never_cache**: Explicitly instructs browsers, proxies, and Django itself to never cache responses from this view. This is critical for views that display user-specific or sensitive information, ensuring that no part of the response is stored or reused.
+    2. **@never_cache**, applied via ``method_decorator`` to the ``dispatch`` method: Explicitly instructs browsers, proxies, and Django itself to never cache responses from this view. This is critical for views that display user-specific or sensitive information, ensuring that no part of the response is stored or reused.
 
-    By combining these decorators, this view guarantees that:
+    Together, they guarantee that:
+
     - Only logged-in users can access the view.
     - Every response is generated fresh for each request, with no caching at any layer.
 
@@ -494,26 +519,24 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
     """
     An admin-only optimized web view that is never cached.
 
-    This class uses the `@staff_member_required` decorator, applied via Django's `method_decorator` to the `dispatch` method.
-    The `@staff_member_required` decorator ensures that only users who are marked as staff in Django's authentication system
-    can access any HTTP method (GET, POST, etc.) on this view. Non-staff users are redirected to the admin login page.
+    Its ``dispatch`` method checks the user explicitly, rather than with a decorator such as
+    ``@staff_member_required``, so that a user who may not access the view is redirected rather than
+    shown an error:
 
-    In addition, this view inherits from `SmarterAuthenticatedNeverCachedWebView`, which itself applies both the
-    `@login_required` and `@never_cache` decorators. This means:
+    - An anonymous user is redirected to ``/login/``.
+    - An authenticated user who is not marked as staff (``is_staff``) is redirected to the admin login page.
+
+    Both redirects expire the cache. In addition, this view inherits from
+    :class:`SmarterAuthenticatedNeverCachedWebView`, which is never cached. This means:
+
     - Only authenticated staff members can access the view.
     - Every response is generated fresh for each request, with no caching at any layer.
 
     This combination makes the view ideal for admin pages that display sensitive or frequently changing data, ensuring
     both strict access control and cache prevention.
-
-    Bug Fix:
-
-        Fixed a bug where Django method decorators were raising exceptions for unauthenticated
-        users instead of redirecting them to the login page. Replaced the decorators
-        with explicit checks in the `dispatch` method.
     """
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Redirect anonymous users to the login page and non-staff users to the admin login, then dispatch.
 
@@ -585,7 +608,11 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
+        """
+        Return the class name in a formatted string along with the name of this view.
+
+        :returns: The dotted name of this view class and its instance id, formatted for logs.
+        """
         class_name = f"{__name__}.{SmarterOptionallyAuthenticatedApiView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -595,17 +622,15 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         Whether the request is authenticated, by the web console's session or by an api key.
 
         :returns: True for an authenticated user.
-        :rtype: bool
         """
         user = getattr(self.smarter_request, "user", None)
         return bool(user and getattr(user, "is_authenticated", False))
 
-    def setup(self, request: HttpRequest, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs) -> None:
         """
         Set up the view with the request, and initialize SmarterRequestMixin with it.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         """
@@ -618,14 +643,14 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         if not self.smarter_request:
             self.smarter_request = request
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Dispatch the request, authenticated or not, and vary the response by ``Cookie``.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
-        :return: An HttpResponse object.
-        :rtype: HttpResponse
+        :param args: Passed to the view.
+        :param kwargs: Passed to the view.
+        :returns: The view's response, or :meth:`throttled_response` if the request was throttled.
         """
         response = self.throttle(request)
         if response is None:
@@ -643,9 +668,7 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         called, since every check counts against the limits.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
-        :return: :meth:`throttled_response` if the request exceeded its rate limit, otherwise None.
-        :rtype: Optional[HttpResponse]
+        :returns: :meth:`throttled_response` if the request exceeded its rate limit, otherwise None.
         """
         if not hasattr(self, "_throttle_wait"):
             self._throttle_wait = throttle_wait(request, self)
@@ -661,11 +684,8 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         Return the response to a request that exceeded its rate limit.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
         :param wait: The number of seconds to wait before retrying.
-        :type wait: int
-        :return: HTTP 429 Too Many Requests, with a ``Retry-After`` header.
-        :rtype: HttpResponse
+        :returns: HTTP 429 Too Many Requests, with a ``Retry-After`` header.
         """
         response = JsonResponse(
             {"detail": f"Request was throttled. Expected available in {wait} seconds."},

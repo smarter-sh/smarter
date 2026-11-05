@@ -144,9 +144,14 @@ after fixing staticfiles.
   the concept) and change every copy to use it, in the same change. Before
   writing a helper, search for one that already exists. See
   `docs/source/adr/033-dry.rst`.
-- **Migrations:** when an app's models change, prefer regenerating a single
-  `0001_initial.py` over adding `0002_...`. Ask first for released apps that
-  hold production data. See `smarter-migrations`.
+- **Migrations:** until 1.0.0 is released, prefer regenerating a single
+  `0001_initial.py` over adding `0002_...`, and ask first for released apps
+  that hold production data. From 1.0.0 on, released migrations are
+  append-only: never edit, delete or regenerate one (ADR-020). See
+  `smarter-migrations`.
+- **Breaking changes** (anything an operator must do by hand on upgrade, or a
+  break under ADR-023) need a `!` and a `BREAKING CHANGE:` footer with the
+  upgrade steps. See `docs/source/adr/020-semantic-versioning.rst`.
 - **Tests:** one test module per source module; fixtures built once in
   `setUpClass`; test data as YAML under `tests/data/`. `SmarterTestBase` has no
   transaction rollback, so delete everything you create. Traps are listed in

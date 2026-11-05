@@ -67,9 +67,7 @@ def split_annotation_key(key: str) -> tuple[Optional[str], str]:
         split_annotation_key("owner")                    # (None, "owner")
 
     :param key: The annotation key.
-    :type key: str
     :returns: The prefix, or ``None``, and the name.
-    :rtype: tuple[Optional[str], str]
     """
     if "/" in key:
         prefix, name = key.split("/", 1)
@@ -87,10 +85,8 @@ def validate_annotation_key(key: str) -> str:
     at most 317 characters.
 
     :param key: The annotation key.
-    :type key: str
     :raises SmarterAnnotationError: If the key is not valid.
     :returns: The key.
-    :rtype: str
     """
     if not isinstance(key, str) or not key:
         raise SmarterAnnotationError(f"Annotation keys must be non-empty strings, got {key!r}.")
@@ -124,15 +120,11 @@ def coerce_annotation_value(key: str, value: object, lenient: bool = False) -> s
     booleans to ``"true"`` or ``"false"``, dates to ISO 8601, ``None`` to ``""``.
 
     :param key: The annotation's key, for the error message.
-    :type key: str
     :param value: The value.
-    :type value: object
     :param lenient: Encode lists and dicts as JSON instead of rejecting them. Only data migrations
         of legacy rows set this.
-    :type lenient: bool
     :raises SmarterAnnotationError: If the value is a list, a dict, or bytes that aren't UTF-8.
     :returns: The value as a string.
-    :rtype: str
     """
     if value is None:
         return ""
@@ -162,9 +154,7 @@ def annotations_size(annotations: AnnotationsMap) -> int:
     Return the size of a resource's annotations in bytes: every key and value, UTF-8 encoded.
 
     :param annotations: The annotations.
-    :type annotations: AnnotationsMap
     :returns: The size in bytes.
-    :rtype: int
     """
     return sum(len(key.encode("utf-8")) + len(value.encode("utf-8")) for key, value in annotations.items())
 
@@ -183,14 +173,11 @@ def normalize_annotations(value: AnnotationsInput, lenient: bool = False) -> Ann
         normalize_annotations([{"acme.com/active": True}])  # {"acme.com/active": "true"}
 
     :param value: The annotations.
-    :type value: AnnotationsInput
     :param lenient: For legacy rows in data migrations: skip invalid keys, keep the last value of a
         duplicate key, encode lists and dicts as JSON, and don't enforce the size limit.
-    :type lenient: bool
     :raises SmarterAnnotationError: If a key or value is invalid, a key appears twice, or the
         annotations are larger than 256 KiB.
     :returns: The annotations, in their original order.
-    :rtype: AnnotationsMap
     """
     if value is None or value == "":
         return {}
@@ -243,11 +230,8 @@ def prefix_matches(prefix: Optional[str], owner: str) -> bool:
         prefix_matches("notacme.com", "acme.com")   # False
 
     :param prefix: A key's prefix, from :func:`split_annotation_key`.
-    :type prefix: Optional[str]
     :param owner: A DNS domain, e.g. ``acme.com``.
-    :type owner: str
     :returns: True if the prefix belongs to the owner.
-    :rtype: bool
     """
     if not prefix:
         return False
@@ -259,9 +243,7 @@ def is_reserved_annotation_key(key: str) -> bool:
     Return whether a key belongs to the Smarter platform: its prefix is ``smarter.sh`` or a subdomain.
 
     :param key: The annotation key.
-    :type key: str
     :returns: True if the key's prefix is reserved.
-    :rtype: bool
     """
     prefix, _ = split_annotation_key(key)
     return any(prefix_matches(prefix, reserved) for reserved in RESERVED_ANNOTATION_PREFIXES)

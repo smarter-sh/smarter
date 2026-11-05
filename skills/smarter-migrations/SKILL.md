@@ -20,7 +20,15 @@ including a regenerated `0001_initial.py` and a hand-written migration:
 
 ## Choose: recreate 0001_initial, or add a migration
 
-**Preference: one `0001_initial.py` per app, where possible.** When an app's
+**From 1.0.0 on, released migrations are append-only**
+([ADR-020](../../docs/source/adr/020-semantic-versioning.rst)): never edit,
+delete or regenerate a migration that is in a released version, in any app.
+Every schema change is a new migration that runs unattended on a production
+database, as described in "A new migration on a released app" below. The
+rest of this section applies only before 1.0.0 is released. Check with
+`git tag --list 'v1.*'`.
+
+**Before 1.0.0: one `0001_initial.py` per app, where possible.** When an app's
 models change, delete its migrations and regenerate one clean initial
 migration, rather than stacking up 0002, 0003, and so on. The `guardrail` app is
 an example.

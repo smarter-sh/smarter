@@ -1,4 +1,4 @@
-"""Smarter API SmarterAuthToken Manifest"""
+"""The Pydantic model of a SmarterAuthToken manifest."""
 
 from typing import ClassVar, Optional
 
@@ -16,7 +16,7 @@ MODULE_IDENTIFIER = MANIFEST_KIND
 
 
 class SAMSmarterAuthToken(AbstractSAMBase):
-    """Smarter API Manifest - SmarterAuthToken"""
+    """Smarter API Manifest - SmarterAuthToken."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

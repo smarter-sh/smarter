@@ -35,6 +35,9 @@ class TestRedisLogHandler(SmarterTestBase):
         patcher = patch.dict(handler._publish_state, {"failing": False})  # pylint: disable=protected-access
         patcher.start()
         self.addCleanup(patcher.stop)
+        patcher = patch.object(handler.RedisLogHandler, "publishing_enabled", True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def queued(self, *payloads):
         """Queue and dequeue payloads, as the worker does, so that flush() can mark them done."""
@@ -54,6 +57,19 @@ class TestRedisLogHandler(SmarterTestBase):
         self.assertEqual(pipe.xadd.call_count, 2)
         pipe.execute.assert_called_once()
         self.assertEqual(self.queue.unfinished_tasks, 0)
+
+    def test_flush_sets_each_streams_ttl_once(self):
+        """Test that a batch of records for one stream sets its ttl once, not once per record."""
+        channel = handler.build_channel("user.a")
+        buffer = self.queued(
+            {"channel": channel, "data": "one"},
+            {"channel": channel, "data": "two"},
+            {"channel": channel, "data": "three"},
+        )
+        handler.flush(buffer)
+        pipe = self.redis.pipeline.return_value
+        self.assertEqual(pipe.xadd.call_count, 3)
+        pipe.expire.assert_called_once_with(handler.stream_key(channel), handler.USER_STREAM_TTL_SECONDS)
 
     def test_flush_does_not_ping(self):
         """Test that flush() publishes without a round trip to check that Redis is up."""
@@ -159,11 +175,69 @@ class TestRedisLogHandler(SmarterTestBase):
         record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
         log_handler = handler.RedisLogHandler()
         dropped = handler.RedisLogHandler.dropped_logs
-        log_handler.emit(record)  # 2 payloads: the user's channel and the global channel.
-        with patch(f"{MODULE}.sys.stderr"):
-            log_handler.emit(record)  # the queue is full after one more payload.
+        token = handler.user_id_context.set("User.a")
+        try:
+            log_handler.emit(record)  # 2 payloads: the user's channel and the global channel.
+            with patch(f"{MODULE}.sys.stderr"):
+                log_handler.emit(record)  # the queue is full after one more payload.
+        finally:
+            handler.user_id_context.reset(token)
         self.assertEqual(self.queue.qsize(), 3)
         self.assertEqual(handler.RedisLogHandler.dropped_logs, dropped + 1)
+
+    def test_emit_without_a_user_goes_to_the_global_channel_only(self):
+        """A record outside any user's context gets no channel of its own, which no one could subscribe to."""
+        record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
+        handler.RedisLogHandler().emit(record)
+        self.assertEqual(self.queue.qsize(), 1)
+        self.assertEqual(self.queue.get_nowait()["channel"], handler.GLOBAL_CHANNEL)
+
+    def test_emit_with_a_user_goes_to_the_users_channel_too(self):
+        record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
+        token = handler.user_id_context.set("User.a")
+        try:
+            handler.RedisLogHandler().emit(record)
+        finally:
+            handler.user_id_context.reset(token)
+        channels = [self.queue.get_nowait()["channel"] for _ in range(2)]
+        self.assertEqual(channels, [handler.build_channel("User.a"), handler.GLOBAL_CHANNEL])
+
+    def test_emit_publishes_nothing_when_disabled(self):
+        """When the dashboard's server logs are off, no record is queued."""
+        record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
+        with patch.object(handler.RedisLogHandler, "publishing_enabled", False):
+            handler.RedisLogHandler().emit(record)
+        self.assertEqual(self.queue.qsize(), 0)
+
+    def test_is_publishing_enabled_reads_the_setting_once(self):
+        with (
+            patch.object(handler.RedisLogHandler, "publishing_enabled", None),
+            patch("smarter.common.conf.smarter_settings") as settings,
+        ):
+            settings.enable_dashboard_server_logs = False
+            log_handler = handler.RedisLogHandler()
+            self.assertFalse(log_handler.is_publishing_enabled())
+            settings.enable_dashboard_server_logs = True
+            self.assertFalse(log_handler.is_publishing_enabled())
+
+    def test_emit_failure_is_reported_by_handle_error(self):
+        """A failure is reported by handleError(), not logged, which would feed the handler its own record."""
+        record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
+        log_handler = handler.RedisLogHandler()
+        with (
+            patch.object(log_handler, "format", side_effect=RuntimeError("boom")),
+            patch.object(log_handler, "handleError") as handle_error,
+        ):
+            log_handler.emit(record)
+        handle_error.assert_called_once_with(record)
+
+    def test_get_user_channel(self):
+        token = handler.user_id_context.set("User.a")
+        try:
+            self.assertEqual(handler.get_user_channel(), "User.a")
+        finally:
+            handler.user_id_context.reset(token)
+        self.assertTrue(handler.get_user_channel().startswith("job_"))
 
     def test_valid_request_id(self):
         """Test that a request id from the browser is used only if it has the form of one."""
@@ -184,8 +258,8 @@ class TestRedisLogHandler(SmarterTestBase):
             finally:
                 handler.request_id_context.reset(token)
             log_handler.emit(record)
-        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(4)]
-        self.assertEqual([payload.get("request_id") for payload in payloads], ["abc123", "abc123", None, None])
+        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(2)]
+        self.assertEqual([payload.get("request_id") for payload in payloads], ["abc123", None])
 
     def test_bind_log_context(self):
         """Test that a bound function runs in the log context of its binding, and restores the caller's."""
@@ -229,8 +303,8 @@ class TestRedisLogHandler(SmarterTestBase):
             finally:
                 handler.session_key_context.reset(token)
             log_handler.emit(record)
-        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(4)]
-        self.assertEqual([payload.get("session_key") for payload in payloads], [session_key, session_key, None, None])
+        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(2)]
+        self.assertEqual([payload.get("session_key") for payload in payloads], [session_key, None])
 
     def test_bind_log_context_with_a_session_key(self):
         """Test that a bound function runs with the chat session key of its binding."""

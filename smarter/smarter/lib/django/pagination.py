@@ -172,10 +172,13 @@ def filter_queryset(queryset: QuerySet, name: str, filters: Mapping[str, Q]) -> 
         empty string if none did.
     """
     name = name.strip()
-    condition = filters.get(name) if name else None
+    if not name:
+        return queryset, ""
+    condition = filters.get(name)
     if condition is None:
         return queryset, ""
-    return queryset.filter(condition), name
+    filtered = queryset.filter(condition)
+    return filtered, name
 
 
 MAX_LIST_TAGS = 10
@@ -200,11 +203,20 @@ def clean_query_values(values: Optional[Sequence[str]], maximum: int) -> tuple[s
     :returns: The values, stripped, without duplicates.
     """
     retval: list[str] = []
-    for value in values or ():
-        value = (value or "").strip()[:MAX_SEARCH_LENGTH]
-        if value and value not in retval:
-            retval.append(value)
-    return tuple(retval[:maximum])
+    if not values:
+        return ()
+    for value in values:
+        if not value:
+            continue
+        cleaned = value.strip()
+        cleaned = cleaned[:MAX_SEARCH_LENGTH]
+        if not cleaned:
+            continue
+        if cleaned in retval:
+            continue
+        retval.append(cleaned)
+    kept = retval[:maximum]
+    return tuple(kept)
 
 
 def tag_condition(model: type[Model], tag: str) -> Optional[Q]:
@@ -244,7 +256,10 @@ def tag_queryset(queryset: QuerySet, tags: Sequence[str]) -> tuple[QuerySet, lis
         return queryset, []
     for tag in tags:
         condition = tag_condition(queryset.model, tag)
-        queryset = queryset.filter(condition) if condition is not None else queryset.none()
+        if condition is None:
+            queryset = queryset.none()
+        else:
+            queryset = queryset.filter(condition)
     return queryset, list(tags)
 
 
@@ -267,9 +282,11 @@ def annotate_queryset(queryset: QuerySet, annotations: Sequence[str]) -> tuple[Q
     if not annotations:
         return queryset, [], ""
     try:
-        return filter_by_annotations(queryset, list(annotations)), list(annotations), ""
+        filtered = filter_by_annotations(queryset, list(annotations))
     except SmarterAnnotationError as e:
         return queryset, [], e.message
+    applied = list(annotations)
+    return filtered, applied, ""
 
 
 def has_field(model: type[Model], lookup: str) -> bool:
@@ -369,7 +386,9 @@ def paginate_queryset(
     :param annotations: An annotation selector's requirements. See :func:`annotate_queryset`.
     :returns: The page, and its description, a dumped :class:`ListViewPagination`.
     """
-    search = (search or "").strip()[:MAX_SEARCH_LENGTH]
+    search = search or ""
+    search = search.strip()
+    search = search[:MAX_SEARCH_LENGTH]
     size = positive_int(page_size, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
     filters = filters or {}
     queryset, applied_filter = filter_queryset(queryset, list_filter or "", filters)
@@ -378,9 +397,11 @@ def paginate_queryset(
         queryset, clean_query_values(annotations, MAX_LIST_ANNOTATIONS)
     )
     queryset, applied_ordering = sort_queryset(queryset, ordering or "", sort_fields)
-    paginator = Paginator(search_queryset(queryset, search, search_fields), size)
+    searched = search_queryset(queryset, search, search_fields)
+    paginator = Paginator(searched, size)
+    page_number = positive_int(page, 1)
     # get_page() returns the last page for a page past it, and the first for an invalid one.
-    result = paginator.get_page(positive_int(page, 1))
+    result = paginator.get_page(page_number)
     pagination = ListViewPagination(
         page=result.number,
         page_size=size,
@@ -395,7 +416,8 @@ def paginate_queryset(
         annotations=applied_annotations,
         annotation_error=annotation_error,
     )
-    return result, pagination.model_dump(mode="json")
+    description = pagination.model_dump(mode="json")
+    return result, description
 
 
 def paginate_listview(

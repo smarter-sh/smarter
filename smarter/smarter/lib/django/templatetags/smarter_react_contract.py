@@ -1,8 +1,8 @@
 """
-Pydantic models of the JSON that.
+Pydantic models of the JSON that the React template tag manager reads and returns.
 
-:class:`~smarter.lib.django.templatetags.smarter_react_templatetag_manager.SmarterReactTemplateTagManager`
-reads and returns.
+The manager is
+:class:`~smarter.lib.django.templatetags.smarter_react_templatetag_manager.SmarterReactTemplateTagManager`.
 
 - :class:`ViteManifest` is a Vite-generated React ``manifest.json``: a map of
   :class:`ViteManifestChunk` keyed by source path. The manager validates the
@@ -126,12 +126,13 @@ class ViteManifest(BaseModel):
 
         :param data: The manifest.json's content.
         :returns: The model's fields.
-        :rtype: object
         """
         if not isinstance(data, dict) or "chunks" in data:
             return data
         chunks = dict(data)
-        return {"chunks": chunks, "build_info": chunks.pop(BUILD_INFO_KEY, None)}
+        build_info = chunks.pop(BUILD_INFO_KEY, None)
+        fields = {"chunks": chunks, "build_info": build_info}
+        return fields
 
     @model_serializer(mode="wrap")
     def join_build_info(self, handler: SerializerFunctionWrapHandler) -> SmarterDictType:
@@ -140,7 +141,6 @@ class ViteManifest(BaseModel):
 
         :param handler: Pydantic's default serializer.
         :returns: The chunks, keyed by source path, and ``_custom``.
-        :rtype: SmarterDictType
         """
         data = handler(self)
         manifest = dict(data["chunks"])
@@ -150,10 +150,9 @@ class ViteManifest(BaseModel):
 
     def __bool__(self) -> bool:
         """
-        Whether the manifest has any chunks.
+        Return whether the manifest has any chunks.
 
         :returns: True if the manifest has chunks.
-        :rtype: bool
         """
         return bool(self.chunks)
 
@@ -162,9 +161,11 @@ class ViteManifest(BaseModel):
         Find the key of the manifest's entry point, the first chunk with ``"isEntry": true``.
 
         :returns: The entry point's key, or None if the manifest has no entry point.
-        :rtype: Optional[str]
         """
-        return next((key for key, chunk in self.chunks.items() if chunk.is_entry), None)
+        for key, chunk in self.chunks.items():
+            if chunk.is_entry:
+                return key
+        return None
 
     def collect_assets(self, key: str, asset_type: ReactAssetType, seen: Optional[set[str]] = None) -> list[str]:
         """
@@ -178,7 +179,6 @@ class ViteManifest(BaseModel):
         :param asset_type: ``"js"`` for the chunks' ``file``, ``"css"`` for their ``css`` files.
         :param seen: The keys already visited, used by the recursion.
         :returns: The asset file paths, relative to the app's static directory.
-        :rtype: list[str]
         """
         if seen is None:
             seen = set()
@@ -187,9 +187,13 @@ class ViteManifest(BaseModel):
         seen.add(key)
 
         chunk = self.chunks[key]
-        assets = [chunk.file] if asset_type == "js" else list(chunk.css)
+        if asset_type == "js":
+            assets = [chunk.file]
+        else:
+            assets = list(chunk.css)
         for imported_key in chunk.imports:
-            assets.extend(self.collect_assets(key=imported_key, asset_type=asset_type, seen=seen))
+            imported_assets = self.collect_assets(key=imported_key, asset_type=asset_type, seen=seen)
+            assets.extend(imported_assets)
         return assets
 
 

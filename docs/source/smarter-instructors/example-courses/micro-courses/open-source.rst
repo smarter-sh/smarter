@@ -63,7 +63,11 @@ Each course plan lists every file and page that it uses under *Smarter in the So
 :doc:`/smarter-framework/guides/semantic-versioning`,
 :doc:`/smarter-framework/guides/documentation`, `Helm, cosign and Amazon ECR: What Smarter's Supply
 Chain Verifies, and What It Takes on Trust
-<https://blog.smarter.sh/2026/04/23/helm-cosign-supply-chain/>`__.
+<https://blog.smarter.sh/2026/04/23/helm-cosign-supply-chain/>`__, `Introducing
+smarter-sh/automation, the GitHub Actions Cron Jobs That Look After Every Smarter Repository
+<https://blog.smarter.sh/2026/11/02/smarter-sh-automation/>`__, `Leveraging Automations to Keep
+Smarter Healthy
+<https://blog.smarter.sh/2026/11/02/leveraging-automations-keep-smarter-healthy/>`__.
 
 **Exercises.**
 

@@ -1,55 +1,27 @@
 """
-ASGI-safe dynamic CORS middleware for Django.
+CORS middleware that runs ``django-cors-headers`` behind a waffle switch, in sync and async mode.
 
-This module extends :class:`corsheaders.middleware.CorsMiddleware`
-to support dynamically generated, request-scoped CORS origins while
-remaining fully compatible with concurrent ASGI execution.
-
-The middleware is specifically designed to safely support llmclient-origin
-resolution without introducing cross-request state leakage or unsafe
-async behavior.
-
-Key Features
-============
-
-- Fully compatible with ASGI concurrency
-- Stateless request processing
-- Dynamic llmclient-specific origin allowlisting
-- Local development origin support
-- Compatibility with ``django-cors-headers``
-- Optional feature-flag enablement via Django Waffle
-- Internal network bypass support
-- Regex-based origin matching
-
-Concurrency Safety
-==================
-
-This middleware intentionally avoids several patterns that commonly
-cause race conditions or request leakage under ASGI:
-
-- No mutable request state persisted across requests
-- No ``cached_property`` usage for request-specific data
-- No ``functools.lru_cache`` usage on request-dependent methods
-- No custom async adaptation
-- No ``markcoroutinefunction`` usage
-- No shared mutable global state
-
-Request state is attached only temporarily during request processing
-and is always cleaned up immediately afterward.
+This module extends :class:`corsheaders.middleware.CorsMiddleware`. It adds no CORS logic of its
+own: which origins are allowed, including regex matches, is decided by ``django-cors-headers``
+from the ``CORS_*`` Django settings, e.g. ``CORS_ALLOWED_ORIGINS`` and
+``CORS_ALLOWED_ORIGIN_REGEXES``. The local settings add the localhost origins there.
 
 Behavior
 ========
 
 For each request, the middleware:
 
-#. Starts with the configured static CORS allowlist
-#. Dynamically resolves llmclient-specific origins
-#. Adds localhost development origins when appropriate
-#. Applies regex-based origin matching
-#. Defers to ``django-cors-headers`` for core CORS behavior
+#. In sync mode, passes an amnesty path (see
+   :meth:`smarter.common.mixins.SmarterHelperMixin.deserves_amnesty`) straight to the next handler
+#. Passes the request straight to the next handler when the ``ENABLE_MIDDLEWARE_CORS`` switch is off
+#. Otherwise, defers to ``django-cors-headers``, which adds the CORS headers
 
-If the corresponding Django Waffle switch is disabled, the middleware
-acts as a transparent pass-through.
+Async Compatibility
+===================
+
+The middleware detects a coroutine-based next handler when it is created, and then runs
+:meth:`SmarterCorsMiddleware.__acall__` for every request. It keeps no request state on the
+instance, which every request shares.
 
 Classes
 =======
@@ -65,32 +37,6 @@ Dependencies
 - ``django-cors-headers``
 - Django
 - Django Waffle
-
-Environment-Specific Behavior
-=============================
-
-In local development environments, localhost origins are automatically
-added for requests targeting the local API host.
-
-Internal IP prefixes defined in application settings may bypass
-middleware processing entirely.
-
-Logging
-=======
-
-Middleware lifecycle events, dynamic origin additions, and exception
-conditions are logged using the application's structured logging
-framework.
-
-Notes
-=====
-
-This middleware relies on request-scoped llmclient resolution using
-:func:`smarter.apps.llmclient.models.get_cached_llmclient_by_request`.
-
-Because ``django-cors-headers`` internally expects synchronous
-middleware semantics, this implementation preserves compatibility
-without introducing custom async wrappers or coroutine adaptation.
 """
 
 from __future__ import annotations
@@ -125,40 +71,17 @@ else:
 
 class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     """
-    Django 6 / ASGI-safe dynamic CORS middleware.
+    CORS middleware that applies ``django-cors-headers`` only while ``ENABLE_MIDDLEWARE_CORS`` is on.
 
-    Design rules:
+    **Design rules:**
+
     - no shared request state on self
     - no coroutine guessing in core logic
-    - single execution path (sync + async unified)
+    - one class for sync and async mode
 
-    Middleware for handling Cross-Origin Resource Sharing (CORS) headers in the application.
-
-    This middleware extends the default CORS handling to dynamically add llmclient URLs to the
-    allowed origins at runtime. It ensures that requests from valid llmclient origins are permitted
-    by updating the CORS allowed origins list based on the current request context.
-
-    The middleware also provides additional logic to handle internal IP addresses, health check
-    endpoints, and logging for debugging and auditing purposes.
-
-    :cvar _url: The parsed URL (as a :class:`urllib.parse.SplitResult`) for the current request, or None.
-    :vartype _url: Optional[SplitResult]
-    :cvar _llmclient: The llmclient instance associated with the current request, or None.
-    :vartype _llmclient: Optional[LLMClient]
-    :cvar request: The current Django HTTP request object, or None.
-    :vartype request: Optional[HttpRequest]
-
-    **Key Features**
-
-    - Dynamically adds llmclient URLs to the CORS allowed origins list.
-    - Handles requests from internal IP addresses and health check endpoints.
-    - Provides detailed logging for CORS-related events and decisions.
-    - Integrates with Django and the `django-cors-headers` package.
-
-    .. note::
-        - The llmclient URL is only added to the allowed origins if an llmclient is associated with the request.
-        - Internal requests and health checks are short-circuited for efficiency.
-        - Logging is controlled via a waffle switch and the application's log level.
+    The allowed origins come from the ``CORS_*`` Django settings, through
+    :class:`corsheaders.middleware.CorsMiddleware`. In sync mode, an amnesty path skips the
+    middleware too.
 
     **Example**
 
@@ -169,18 +92,17 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             'smarter.lib.django.middleware.cors.SmarterCorsMiddleware',
             ...
         ]
-
-    :param request: The incoming HTTP request object.
-    :type request: django.http.HttpRequest
-
-    :returns: The HTTP response object, potentially with CORS headers added.
-    :rtype: django.http.response.HttpResponseBase or Awaitable[HttpResponseBase]
     """
 
     sync_capable = True
     async_capable = True
 
     def __init__(self, get_response):
+        """
+        Initialize ``django-cors-headers``, and detect whether the next handler is async.
+
+        :param get_response: The next handler in the middleware chain.
+        """
         super().__init__(get_response)
 
         self.get_response = get_response
@@ -199,6 +121,15 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         return self.formatted_text(class_name)
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        """
+        Add CORS headers to a sync response, or hand the request to :meth:`__acall__` in async mode.
+
+        An amnesty path, or a request while ``ENABLE_MIDDLEWARE_CORS`` is off, gets the next
+        handler's response unchanged.
+
+        :param request: The incoming request.
+        :returns: The response (a coroutine in async mode).
+        """
         if self.async_mode:
             return self.__acall__(request)
 
@@ -211,7 +142,14 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         return super().__call__(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+        """
+        Add CORS headers to an async response, unless ``ENABLE_MIDDLEWARE_CORS`` is off.
 
+        Unlike :meth:`__call__`, it does not check for an amnesty path.
+
+        :param request: The incoming request.
+        :returns: The response.
+        """
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
             result = self.get_response(request)
             if isawaitable(result):
