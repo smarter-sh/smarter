@@ -3,8 +3,9 @@ List Pagination, Search and Sorting
 
 Every resource list in the web console, e.g. the Guardrail, Secret or Prompt list, shows one
 page of resources at a time, with previous and next page buttons, a page number box, and a
-search, and its column headers sort it. Its Django list api, at
-``react-integration/api/listview/<owned|shared|all>/``, does the paging, the searching and the
+search, and its column headers sort it. Its Django list api, in the
+:doc:`web console api </smarter-framework/developer-reference/web-console-api>` at
+``/api/web/<app>/listview/<owned|shared|all>/``, does the paging, the searching and the
 sorting, so a search covers all of the resources that the user may list, and a sort orders all
 of them, not only those of the page shown.
 

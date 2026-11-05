@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { CustomDomain } from "@/lib/Types";
 
-export const API_URL = "/llmclient/custom-domains/react-integration/api/listview/";
+export const API_URL = "/api/web/llmclient/custom-domains/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -39,7 +39,7 @@ export function makeObject(id: number, overrides: Partial<CustomDomain> = {}): C
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/llmclient/custom-domains/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/CustomDomain/llmclientcustomdomain-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/CustomDomain/llmclientcustomdomain-r${id}/`,
     canDelete: true,
     domainName: `example-${id}.example.com`,
     awsHostedZoneId: `Z0000000000000${id}`,

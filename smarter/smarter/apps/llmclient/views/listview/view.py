@@ -53,7 +53,7 @@ class CustomDomainListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered template, with the React app's configuration in its context.
         """
         # pylint: disable=C0415
-        from smarter.apps.llmclient.urls import LLMClientReverseNames
+        from smarter.apps.llmclient.api.web.urls import LLMClientApiWebReverseNames
 
         context = {
             "custom_domain_list": {
@@ -62,7 +62,7 @@ class CustomDomainListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "custom_domain_list_api_url": reverse(
-                    LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview_api_all
+                    LLMClientApiWebReverseNames.namespace, LLMClientApiWebReverseNames.custom_domain_listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

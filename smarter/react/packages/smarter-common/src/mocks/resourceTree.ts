@@ -9,7 +9,7 @@ const OWNER = "Ada Lovelace (ada)";
 
 /** A resource that uses nothing. */
 function leaf(kind: string, icon: string, name: string, recordLocator: string, url: string | null): ResourceTreeNode {
-  const detailUrl = `/dashboard/api/resource/${kind}/${recordLocator}/`;
+  const detailUrl = `/api/web/dashboard/resource/${kind}/${recordLocator}/`;
   return { kind, icon, name, owner: OWNER, recordLocator, url, detailUrl, readable: true, children: [] };
 }
 

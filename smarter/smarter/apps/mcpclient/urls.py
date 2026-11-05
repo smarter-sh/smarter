@@ -1,23 +1,20 @@
 """
-Django URL patterns for the mcpclient app.
+Django URL patterns for the mcpclient app's web console pages.
 
-how we got here:
- - /mcpclient/
+- ``/mcpclient/``
+- ``/mcpclient/mcpclients/<hashed_id>/``
+
+The MCPClient api is at ``/api/v1/mcpclients/`` (:mod:`smarter.apps.mcpclient.api.v1.urls`), and the
+endpoints that the console's React apps call are at ``/api/web/mcpclient/``
+(:mod:`smarter.apps.mcpclient.api.web.urls`).
 """
 
-from django.urls import include, path, re_path
+from django.urls import path
 
 from smarter.apps.mcpclient.views.detailview import MCPClientDetailView
-from smarter.apps.mcpclient.views.listview.api import (
-    MCPClientListApiCloneView,
-    MCPClientListApiDeleteView,
-    MCPClientListApiRenameView,
-    MCPClientListApiView,
-)
 from smarter.apps.mcpclient.views.listview.view import MCPClientListView
 from smarter.common.utils import to_snake_case
 
-from .api.const import namespace as api_namespace
 from .const import namespace
 
 app_name = namespace
@@ -25,47 +22,19 @@ app_name = namespace
 
 class MCPClientReverseNames:
     """
-    Holds named URL patterns for the account dashboard.
+    Reverse view names for the MCPClient app's console pages.
 
-    This class provides constants for all named URL patterns used in the account dashboard views.
+    The endpoints that the list page's React app calls are in the web console's api:
+    see :class:`smarter.apps.mcpclient.api.web.urls.MCPClientApiWebReverseNames`.
     """
 
     namespace = namespace
 
     detailview = to_snake_case(MCPClientDetailView.__name__)
     listview = to_snake_case(MCPClientListView.__name__)
-    listview_api = to_snake_case(MCPClientListApiView.__name__)
-    listview_api_all = to_snake_case(MCPClientListApiView.__name__) + "_all"
-    listview_api_clone = to_snake_case(MCPClientListApiCloneView.__name__)
-    listview_api_delete = to_snake_case(MCPClientListApiDeleteView.__name__)
-    listview_api_rename = to_snake_case(MCPClientListApiRenameView.__name__)
 
 
 urlpatterns = [
-    path("api/", include("smarter.apps.mcpclient.api.urls", namespace=api_namespace)),
     path("mcpclients/<str:hashed_id>/", MCPClientDetailView.as_view(), name=MCPClientReverseNames.detailview),
     path("", MCPClientListView.as_view(), name=MCPClientReverseNames.listview),
-    path(
-        "react-integration/api/listview/", MCPClientListApiView.as_view(), name=MCPClientReverseNames.listview_api_all
-    ),
-    re_path(
-        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
-        MCPClientListApiView.as_view(),
-        name=MCPClientReverseNames.listview_api,
-    ),
-    path(
-        "react-integration/api/clone/<int:mcpclient_id>/<str:new_name>/",
-        MCPClientListApiCloneView.as_view(),
-        name=MCPClientReverseNames.listview_api_clone,
-    ),
-    path(
-        "react-integration/api/delete/<int:mcpclient_id>/",
-        MCPClientListApiDeleteView.as_view(),
-        name=MCPClientReverseNames.listview_api_delete,
-    ),
-    path(
-        "react-integration/api/rename/<int:mcpclient_id>/<str:new_name>/",
-        MCPClientListApiRenameView.as_view(),
-        name=MCPClientReverseNames.listview_api_rename,
-    ),
 ]

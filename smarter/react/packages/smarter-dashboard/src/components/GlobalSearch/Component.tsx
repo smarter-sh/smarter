@@ -13,11 +13,11 @@
  * (smarter.apps.dashboard.search) searches with each list's own permissions.
  *
  * :param sessionContext: Session context used for authenticated requests.
- * :param apiUrl: The global search api, e.g. /dashboard/api/search/.
+ * :param apiUrl: The global search api, e.g. /api/web/dashboard/search/.
  *
  * :example:
  *
- *     <GlobalSearch sessionContext={sessionContext} apiUrl="/dashboard/api/search/" />
+ *     <GlobalSearch sessionContext={sessionContext} apiUrl="/api/web/dashboard/search/" />
  */
 import { useEffect, useId, useRef, useState } from "react";
 import type { SessionContext } from "@smarter/common";

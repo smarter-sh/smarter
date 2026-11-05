@@ -1,23 +1,20 @@
 """
-Django URL patterns for the orchestrator app.
+Django URL patterns for the orchestrator app's web console pages.
 
-how we got here:
- - /orchestrators/api/v1/
+- ``/orchestrator/``
+- ``/orchestrator/orchestrators/<hashed_id>/``
+
+The Orchestrator api is at ``/api/v1/orchestrators/`` (:mod:`smarter.apps.orchestrator.api.v1.urls`), and the
+endpoints that the console's React apps call are at ``/api/web/orchestrator/``
+(:mod:`smarter.apps.orchestrator.api.web.urls`).
 """
 
-from django.urls import include, path, re_path
+from django.urls import path
 
 from smarter.apps.orchestrator.views.detailview import OrchestratorDetailView
-from smarter.apps.orchestrator.views.listview.api import (
-    OrchestratorListApiCloneView,
-    OrchestratorListApiDeleteView,
-    OrchestratorListApiRenameView,
-    OrchestratorListApiView,
-)
 from smarter.apps.orchestrator.views.listview.view import OrchestratorListView
 from smarter.common.utils import to_snake_case
 
-from .api.const import namespace as api_namespace
 from .const import namespace
 
 app_name = namespace
@@ -25,51 +22,19 @@ app_name = namespace
 
 class OrchestratorReverseNames:
     """
-    Holds named URL patterns for the account dashboard.
+    Reverse view names for the Orchestrator app's console pages.
 
-    This class provides constants for all named URL patterns used in the account dashboard views.
+    The endpoints that the list page's React app calls are in the web console's api:
+    see :class:`smarter.apps.orchestrator.api.web.urls.OrchestratorApiWebReverseNames`.
     """
 
     namespace = namespace
 
-    listview = to_snake_case(OrchestratorListApiView.__name__)
     detailview = to_snake_case(OrchestratorDetailView.__name__)
-
     listview = to_snake_case(OrchestratorListView.__name__)
-    listview_api = to_snake_case(OrchestratorListApiView.__name__)
-    listview_api_all = to_snake_case(OrchestratorListApiView.__name__) + "_all"
-    listview_api_clone = to_snake_case(OrchestratorListApiCloneView.__name__)
-    listview_api_delete = to_snake_case(OrchestratorListApiDeleteView.__name__)
-    listview_api_rename = to_snake_case(OrchestratorListApiRenameView.__name__)
 
 
 urlpatterns = [
-    path("api/", include("smarter.apps.orchestrator.api.urls", namespace=api_namespace)),
     path("orchestrators/<str:hashed_id>/", OrchestratorDetailView.as_view(), name=OrchestratorReverseNames.detailview),
     path("", OrchestratorListView.as_view(), name=OrchestratorReverseNames.listview),
-    path(
-        "react-integration/api/listview/",
-        OrchestratorListApiView.as_view(),
-        name=OrchestratorReverseNames.listview_api_all,
-    ),
-    re_path(
-        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
-        OrchestratorListApiView.as_view(),
-        name=OrchestratorReverseNames.listview_api,
-    ),
-    path(
-        "react-integration/api/clone/<int:orchestrator_id>/<str:new_name>/",
-        OrchestratorListApiCloneView.as_view(),
-        name=OrchestratorReverseNames.listview_api_clone,
-    ),
-    path(
-        "react-integration/api/delete/<int:orchestrator_id>/",
-        OrchestratorListApiDeleteView.as_view(),
-        name=OrchestratorReverseNames.listview_api_delete,
-    ),
-    path(
-        "react-integration/api/rename/<int:orchestrator_id>/<str:new_name>/",
-        OrchestratorListApiRenameView.as_view(),
-        name=OrchestratorReverseNames.listview_api_rename,
-    ),
 ]

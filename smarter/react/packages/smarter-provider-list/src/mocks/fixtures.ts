@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Provider } from "@/lib/Types";
 
-export const API_URL = "/provider/react-integration/api/listview/";
+export const API_URL = "/api/web/provider/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Provider> = {}): Provi
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/provider/providers/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/Provider/provider-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/Provider/provider-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

@@ -17,7 +17,7 @@
  *
  * :example:
  *
- *     <MyResources apiUrl="https://customer.smarter.sh/dashboard/api/my-resources" />
+ *     <MyResources apiUrl="https://customer.smarter.sh/api/web/dashboard/my-resources" />
  */
 import { useEffect, useState } from "react";
 import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";

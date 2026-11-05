@@ -606,7 +606,7 @@ describe("TabbedListView's resource detail", () => {
 
   /** The detail api of the LLMClients that use the examples: see guardrailDependents. */
   const llmclientDetailHandler = () =>
-    http.post("/dashboard/api/resource/LLMClient/:locator/", ({ params }) =>
+    http.post("/api/web/dashboard/resource/LLMClient/:locator/", ({ params }) =>
       HttpResponse.json({
         ...exampleDetail(22, "stackademy_sql", []),
         kind: "LLMClient",
@@ -686,7 +686,7 @@ describe("TabbedListView's resource detail", () => {
     let calls = 0;
     server.use(
       ...listHandlers(),
-      http.post("/dashboard/api/resource/Example/:locator/", () => {
+      http.post("/api/web/dashboard/resource/Example/:locator/", () => {
         calls += 1;
         return HttpResponse.json({ error: "Guardrail not found." }, { status: 404 });
       }),
@@ -789,7 +789,7 @@ describe("TabbedListView's resource detail", () => {
   it("opens the url's detail from the tab that has it, and nothing for a resource that no tab has", async () => {
     server.use(
       ...listHandlers(ownedExamples, [
-        { id: 3, name: "shared_example", detailUrl: "/dashboard/api/resource/Example/example-r3/" },
+        { id: 3, name: "shared_example", detailUrl: "/api/web/dashboard/resource/Example/example-r3/" },
       ]),
       detailHandler(),
     );

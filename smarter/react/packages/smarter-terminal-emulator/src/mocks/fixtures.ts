@@ -3,7 +3,7 @@ import type { SessionContext } from "@smarter/common";
 
 import type { SessionInfo } from "@/lib/session";
 
-export const TICKET_URL = "/dashboard/terminal/api/ticket/";
+export const TICKET_URL = "/api/web/dashboard/terminal/ticket/";
 export const WEBSOCKET_PATH = "/ws/terminal/";
 
 export const sessionContext: SessionContext = {

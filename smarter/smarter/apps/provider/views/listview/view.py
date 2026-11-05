@@ -54,7 +54,7 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered page, whose context gives the React app its root element id, cookie names and api url.
         """
         # pylint: disable=C0415
-        from smarter.apps.provider.urls import ProviderReverseNames
+        from smarter.apps.provider.api.web.urls import ProviderApiWebReverseNames
 
         context = {
             "provider_list": {
@@ -62,7 +62,9 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "provider_list_api_url": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview_api_all),
+                "provider_list_api_url": reverse(
+                    ProviderApiWebReverseNames.namespace, ProviderApiWebReverseNames.listview_all
+                ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }

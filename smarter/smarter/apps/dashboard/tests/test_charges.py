@@ -19,8 +19,6 @@ from smarter.apps.dashboard.views.views.api.charges import (
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.lib import json
 
-from ..const import namespace
-
 NOW = datetime(2026, 10, 17, 10, 30, tzinfo=timezone.utc)
 
 
@@ -32,7 +30,7 @@ class TestTokenUsageApiView(TestAccountMixin):
         self.client = Client()
         self.addCleanup(self.client.logout)
         self.client.force_login(self.admin_user)
-        self.url = reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.token_charges}")
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.token_charges}")
         # a locator that no real resource has, so that no budget evaluates these charges.
         self.locator = f"userprofile-test-{uuid4().hex}"
         for periodicity in TokenUsageWindow.WINDOWS:

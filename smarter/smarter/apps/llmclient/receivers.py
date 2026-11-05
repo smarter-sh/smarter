@@ -395,7 +395,18 @@ def handle_llmclient_dns_failed(sender, **kwargs):
 
 @receiver(llmclient_called, dispatch_uid="llmclient_called")
 def handle_llmclient_called(sender, **kwargs):
-    """Handle llmclient_called signal."""
+    """
+    Log a call to an LLMClient, and queue the ``create_llmclient_request`` Celery task that records it.
+
+    The signal is sent before the view checks the request's method, so a request without a body,
+    e.g. a ``GET`` to a route that only accepts ``POST``, arrives here too. That is the client's
+    mistake, which the view answers itself (e.g. with a 405): it is logged at DEBUG, and not
+    recorded. A missing LLMClient is a programming error, and is logged at ERROR.
+
+    :param sender: The signal's sender.
+    :param kwargs: The signal's arguments: ``llmclient``, the LLMClient that was called, and
+        ``data``, the request's body. The others are unused.
+    """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmclient_called()"
 
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
@@ -403,15 +414,12 @@ def handle_llmclient_called(sender, **kwargs):
 
     request_data = kwargs.get("data")
     try:
-        if llmclient and request_data:
-            create_llmclient_request.delay(llmclient.id, request_data)
+        if not llmclient:
+            logger.error("%s No llmclient instance provided.", prefix)
+        elif not request_data:
+            logger.debug("%s %s received a request without a body. Nothing to record.", prefix, llmclient.hostname)
         else:
-            logger.error(
-                "%s Missing llmclient instance or request data. LLMClient: %s, Data: %s",
-                prefix,
-                llmclient.hostname if llmclient else "No llmclient instance provided",
-                "Present" if request_data else "No data",
-            )
+            create_llmclient_request.delay(llmclient.id, request_data)
     except json.JSONDecodeError:
         logger.warning(
             "%s received an empty or invalid request body from %s",

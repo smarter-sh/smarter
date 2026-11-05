@@ -7,8 +7,8 @@ import type { SessionContext } from "@smarter/common";
 import type { BudgetSeriesRow } from "@/components/BudgetList/format";
 import type { Budget, BudgetListResponse, BudgetResourceStatus } from "@/lib/Types";
 
-export const API_URL = "/budget/react-integration/api/listview/";
-export const SERIES_URL = "/dashboard/api/budgets/series/";
+export const API_URL = "/api/web/account/budget/listview/";
+export const SERIES_URL = "/api/web/dashboard/budgets/series/";
 
 export const sessionContext: SessionContext = {
   ApiUrl: API_URL,

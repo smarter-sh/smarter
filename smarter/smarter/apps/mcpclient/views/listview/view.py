@@ -54,7 +54,7 @@ class MCPClientListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered ``mcpclient-list`` template.
         """
         # pylint: disable=C0415
-        from smarter.apps.mcpclient.urls import MCPClientReverseNames
+        from smarter.apps.mcpclient.api.web.urls import MCPClientApiWebReverseNames
 
         context = {
             "mcpclient_list": {
@@ -63,7 +63,7 @@ class MCPClientListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "mcpclient_list_api_url": reverse(
-                    MCPClientReverseNames.namespace, MCPClientReverseNames.listview_api_all
+                    MCPClientApiWebReverseNames.namespace, MCPClientApiWebReverseNames.listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

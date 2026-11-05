@@ -130,7 +130,9 @@ class InfrastructureResourceListView(SmarterAuthenticatedNeverCachedWebView):
             return SmarterHttpResponseForbidden(request=request, error_message=FORBIDDEN)
 
         # pylint: disable=C0415
-        from ..urls import InfrastructureReverseNames
+        from smarter.apps.infrastructure.api.web.urls import (
+            InfrastructureApiWebReverseNames,
+        )
 
         context = {
             "infrastructure_resource_list": {
@@ -139,7 +141,7 @@ class InfrastructureResourceListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "infrastructure_resource_list_api_url": reverse(
-                    InfrastructureReverseNames.namespace, InfrastructureReverseNames.listview_api
+                    InfrastructureApiWebReverseNames.namespace, InfrastructureApiWebReverseNames.listview
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

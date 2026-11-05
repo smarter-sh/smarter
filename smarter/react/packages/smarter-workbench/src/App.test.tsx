@@ -135,7 +135,7 @@ describe("App", () => {
 
   const onboarding = {
     enabled: true,
-    apiUrl: "/dashboard/api/onboarding/seen/",
+    apiUrl: "/api/web/dashboard/onboarding/seen/",
     seen: [],
     csrfCookieName: "csrftoken",
     cookieDomain: "localhost",
