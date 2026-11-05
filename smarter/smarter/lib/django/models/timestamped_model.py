@@ -121,16 +121,28 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @classmethod
     def hash_regex(cls) -> re.Pattern:
         """
-        Returns a regex pattern that matches the hashed ID format for this model anywhere in a string.
+        Returns a regex pattern that matches a hashed ID that is a whole url path segment.
 
         The hashed ID format is defined by the ``HASH_PREFIX`` and ``HASH_SUFFIX`` class attributes,
-        with a base64-encoded string in between. This regex can be used to validate or extract
-        hashed IDs from strings, including when embedded in URLs.
+        with a base64-encoded string in between. A match must start at the beginning of the string
+        or after a ``/``, and end at the end of the string or before a ``/``. Without these
+        boundaries, the pattern would match inside ordinary words, e.g. ``repo-ex`` in the host
+        name ``repo-explorer``.
+
+        Example:
+
+        .. code-block:: python
+
+            pattern = MyModel.hash_regex()
+            pattern.search("/workbench/llm-clients/rMTAwMDAyNwx/prompt/")  # matches rMTAwMDAyNwx
+            pattern.search("http://repo-explorer.example.com/")  # None
 
         :returns: A regex pattern for matching hashed IDs.
         """
         if cls._hash_regex is None:
-            cls._hash_regex = re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
+            prefix = re.escape(cls.HASH_PREFIX)
+            suffix = re.escape(cls.HASH_SUFFIX)
+            cls._hash_regex = re.compile(f"(?<![^/]){prefix}[A-Za-z0-9_-]+{suffix}(?![^/])")
         return cls._hash_regex
 
     @property
@@ -185,6 +197,24 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         return padded_encoded
 
     @classmethod
+    def _decode_hashed_id(cls, hashed_id: str) -> int:
+        """
+        Decodes a hashed ID that has its prefix and suffix, without logging.
+
+        :param hashed_id: The hashed ID string to decode (URL-safe, no padding).
+        :returns: The original object ID.
+        :raises ValueError: If the string between the prefix and suffix isn't base64-encoded
+            digits (``binascii.Error`` and ``UnicodeDecodeError`` are both ``ValueError``).
+        """
+        encoded_str = hashed_id[len(cls.HASH_PREFIX) : -len(cls.HASH_SUFFIX)]
+        padding = "=" * (-len(encoded_str) % 4)
+        padded_encoded_str = encoded_str + padding
+        decoded_bytes = base64.urlsafe_b64decode(padded_encoded_str.encode())
+        decoded_str = decoded_bytes.decode()
+        retval = int(decoded_str) - cls.HASH_FLOOR
+        return retval
+
+    @classmethod
     def id_from_hashed_id(cls, hashed_id: str) -> Optional[int]:
         """
         Decodes a hashed ID back to the original object ID.
@@ -222,13 +252,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                     cls.HASH_SUFFIX,
                 )
                 return None
-            encoded_str = hashed_id[len(cls.HASH_PREFIX) : -len(cls.HASH_SUFFIX)]
-            # Add padding if needed
-            padding = "=" * (-len(encoded_str) % 4)
-            encoded_str += padding
-            decoded_bytes = base64.urlsafe_b64decode(encoded_str.encode())
-            decoded_str = decoded_bytes.decode()
-            retval = int(decoded_str) - cls.HASH_FLOOR
+            retval = cls._decode_hashed_id(hashed_id)
             verbose_logger.debug(
                 "%s decoded %s.hashed_id: %s to id: %d",
                 logger_prefix,
@@ -238,7 +262,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             )
             return retval
         except (base64.binascii.Error, ValueError) as e:  # type: ignore[name-defined]
-            logger.error(
+            # The hashed id comes from a url, i.e. from the client, and every caller handles None.
+            logger.warning(
                 "%s Failed to decode %s.hashed_id '%s': %s",
                 logger_prefix,
                 cls.__name__,
@@ -260,10 +285,21 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @classmethod
     def find_hash(cls, value: str) -> Optional[str]:
         """
-        Finds and returns the first substring in the given value that matches the hashed ID format.
+        Finds and returns the first url path segment in the given value that is a hashed ID.
 
-        :param value: The string to search for a hashed ID.
-        :returns: The first matching hashed ID if found, otherwise None.
+        A segment counts only if it matches :meth:`hash_regex` and also decodes to an id, so a
+        path segment that merely looks like one, e.g. ``rex``, is skipped. Pass a url's path, not
+        the whole url: a host name is never a hashed ID.
+
+        Example:
+
+        .. code-block:: python
+
+            MyModel.find_hash("/workbench/llm-clients/rMTAwMDAyNwx/prompt/")  # "rMTAwMDAyNwx"
+            MyModel.find_hash("/api/v1/llm-clients/repo-ex/prompt/")  # None
+
+        :param value: The string to search for a hashed ID, usually a url path.
+        :returns: The first hashed ID found, otherwise None.
         """
         logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.find_hash()"
         verbose_logger.debug(
@@ -272,8 +308,21 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             value,
         )
         pattern = cls.hash_regex()
-        match = pattern.search(value)
-        retval = match.group(0) if match else None
+        retval = None
+        for match in pattern.finditer(value):
+            candidate = match.group(0)
+            try:
+                cls._decode_hashed_id(candidate)
+            except ValueError:
+                # binascii.Error and UnicodeDecodeError are both ValueErrors.
+                verbose_logger.debug(
+                    "%s - Skipping '%s', which looks like a hashed ID but doesn't decode.",
+                    logger_prefix,
+                    candidate,
+                )
+                continue
+            retval = candidate
+            break
         if retval:
             verbose_logger.debug(
                 "%s - Found hashed ID: %s",
