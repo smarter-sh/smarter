@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.42.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.6...v0.42.7-alpha.1) (2026-11-05)
+
+### Bug Fixes
+
+* **helm:** keep the autoscaler from evicting the only redis pod ([6fcf2eb](https://github.com/smarter-sh/smarter/commit/6fcf2eb6649699b24548efd7632654ff566d4d8e)), closes [#929](https://github.com/smarter-sh/smarter/issues/929)
+
 ## [0.42.6](https://github.com/smarter-sh/smarter/compare/v0.42.5...v0.42.6) (2026-11-05)
 
 ### Bug Fixes
