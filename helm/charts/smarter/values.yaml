@@ -501,10 +501,29 @@ redis:
     enabled: true
     password: "smarter"
   architecture: standalone
+  # Bitnami publishes bitnami/redis only as `latest`, so a version tag can't be pinned. The
+  # digest pins the image, so that a restarted pod runs the same Redis as before. A digest
+  # replaces the tag in the pod's image reference. This one is Redis 8.10.3 (amd64 and arm64).
+  # To upgrade, take the digest of the new `latest`, e.g. with
+  # `docker buildx imagetools inspect bitnami/redis:latest`.
+  image:
+    digest: "sha256:59078af5aec997137eb95f34fed376487b471e05c9a244c2812a13598c434950"
   master:
     disableCommands: []
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    # Redis is one pod on a ReadWriteOnce volume, so any eviction is an outage of about a
+    # minute, while the new pod waits for the volume to detach from the old node (issue #929).
+    # This annotation stops the cluster autoscaler from scaling down Redis's node.
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+    # The chart's default PodDisruptionBudget is maxUnavailable: 1, which allows evicting the
+    # only pod. minAvailable: 1 blocks every voluntary eviction. A node drain, or a managed node
+    # group upgrade, then waits for an operator to delete the pod by hand, at a time they choose.
+    pdb:
+      create: true
+      minAvailable: 1
+      maxUnavailable: ""
     containerSecurityContext:
       enabled: true
     persistence:
