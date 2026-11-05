@@ -7,7 +7,7 @@ changed, identified by its api version, kind and name. The journaled response ad
 itself, describe it.
 
 The broker's own state, e.g. its request, authentication, loader and cache key, is never
-returned to the client: see :meth:`AbstractBroker.to_json()`, which is for logging.
+returned to the client: see :meth:`~smarter.lib.manifest.broker.AbstractBroker.to_json`, which is for logging.
 """
 
 from typing import Optional

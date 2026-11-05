@@ -99,7 +99,7 @@
       "type": "object"
     },
     "SAMSmarterAuthTokenSpec": {
-      "description": "Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec",
+      "description": "Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec.",
       "properties": {
         "config": {
           "$ref": "#/$defs/SAMSmarterAuthTokenSpecConfig",
@@ -113,7 +113,7 @@
       "type": "object"
     },
     "SAMSmarterAuthTokenSpecConfig": {
-      "description": "Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec.config",
+      "description": "Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec.config.",
       "properties": {
         "isActive": {
           "default": false,
@@ -193,7 +193,7 @@
       "type": "object"
     }
   },
-  "description": "Smarter API Manifest - SmarterAuthToken",
+  "description": "Smarter API Manifest - SmarterAuthToken.",
   "properties": {
     "apiVersion": {
       "description": "apiVersion[String]: Required. The API version of the AbstractSAMBase.",

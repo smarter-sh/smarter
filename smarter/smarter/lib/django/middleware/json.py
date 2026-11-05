@@ -190,7 +190,16 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
     )
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        """
+        Convert a sync error response to JSON, or hand the request to :meth:`__acall__` in async mode.
 
+        An amnesty path, or a request while ``ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR`` is off, gets
+        the next handler's response unchanged.
+
+        :param request: The incoming request.
+        :returns: The response, or a :class:`~django.http.JsonResponse` with the same status code (a
+            coroutine in async mode).
+        """
         if self.async_mode:
             return self.__acall__(request)
 
@@ -205,7 +214,12 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return self.normalize_json_error_response(request=request, response=response)  # type: ignore
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+        """
+        Convert an async error response to JSON, unless ``ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR`` is off.
 
+        :param request: The incoming request.
+        :returns: The response, or a :class:`~django.http.JsonResponse` with the same status code.
+        """
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
             return await super().__acall__(request)
 
@@ -278,7 +292,12 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return JsonResponse(payload, status=response.status_code)
 
     def client_accepts_json(self, request: HttpRequest) -> bool:
-        """Determine whether the client accepts JSON responses."""
+        """
+        Return whether the client accepts JSON responses.
+
+        :param request: The request.
+        :returns: True if the ``Accept`` header names one of :attr:`JSON_CONTENT_TYPES`.
+        """
 
         accept_header = request.headers.get("Accept", "").lower()
 
@@ -289,7 +308,12 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def response_is_json(response: HttpResponseBase) -> bool:
-        """Detect whether the response is already JSON."""
+        """
+        Return whether the response is already JSON.
+
+        :param response: The response from the view.
+        :returns: True if its ``Content-Type`` contains ``json``.
+        """
 
         content_type = response.get(
             "Content-Type",
@@ -299,11 +323,17 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def build_error_payload(response: HttpResponseBase) -> SmarterDictType:
-        """Build standardized JSON error payload."""
+        """
+        Build the JSON error payload that replaces an error response.
 
-        return {
+        :param response: The error response.
+        :returns: ``{"error": {"status_code": ..., "message": ...}}``, with the response's status
+            code and reason phrase.
+        """
+        payload: SmarterDictType = {
             "error": {
                 "status_code": response.status_code,
                 "message": response.reason_phrase,
             }
         }
+        return payload

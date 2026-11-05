@@ -2,8 +2,8 @@
 Shared tests for the not-found, not-ready and failure branches of a SAM broker.
 
 These brokers share one layout: a resource property named for the kind (``orchestrator``,
-``vectorsearch``, ...), describe() and delete() that look the resource up by name,
-deploy() and undeploy() that aren't implemented, and an apply() guarded by
+``vectorsearch``, ...), ``describe()`` and ``delete()`` that look the resource up by name,
+``deploy()`` and ``undeploy()`` that aren't implemented, and an ``apply()`` guarded by
 ready, manifest and resource checks.
 """
 
@@ -21,7 +21,9 @@ from smarter.lib.manifest.loader import SAMLoader
 
 class BrokerBranchesTestMixin:
     """
-    Mix into a TestAccountMixin subclass, and set the class attributes below.
+    Test the not-found, not-ready and failure branches of a SAM broker.
+
+    Mix it into a ``TestAccountMixin`` subclass, and set the class attributes below.
 
     :cvar broker_class: The broker class under test.
     :cvar error_class: The broker's own SAMBrokerError subclass.
@@ -36,7 +38,7 @@ class BrokerBranchesTestMixin:
     model: type
     manifest_path: str
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Build a request by the admin user, a loader of ``manifest_path``, and the broker under test."""
         super().setUp()  # type: ignore[misc]
         self.request = self.create_generic_request("/anywhere/")  # type: ignore[attr-defined]
@@ -44,7 +46,7 @@ class BrokerBranchesTestMixin:
         self.loader = SAMLoader(manifest=get_readonly_yaml_file(self.manifest_path))
         self.broker = self.broker_class(request=self.request, account=self.account, loader=self.loader)  # type: ignore[attr-defined]
 
-    def patch_property(self, name: str, value) -> PropertyMock:
+    def patch_property(self, name: str, value: object) -> PropertyMock:
         """
         Patch a property of the broker class, until the end of the test.
 
@@ -170,4 +172,5 @@ def api_test_data(app: str, filename: str) -> str:
     unittest_dir = os.path.dirname(this_file)
     lib_dir = os.path.dirname(unittest_dir)
     here = os.path.dirname(lib_dir)
-    return os.path.join(here, "apps", app, "api", "v1", "views", "tests", "data", filename)
+    path = os.path.join(here, "apps", app, "api", "v1", "views", "tests", "data", filename)
+    return path

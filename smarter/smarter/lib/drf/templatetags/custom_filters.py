@@ -1,4 +1,4 @@
-"""Django template tools for DRF."""
+"""Django template filters of the drf app."""
 
 import codecs
 

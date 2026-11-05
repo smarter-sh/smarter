@@ -26,6 +26,7 @@ from pydantic.alias_generators import to_camel
 
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.pagination import ListViewPagination
+from smarter.lib.typing import SmarterDictType
 
 from .const import JOURNAL_KEY_PATTERN
 
@@ -132,11 +133,8 @@ class SAMJournalApiEnvelope(SAMJournalApiModel):
         The envelope of a response, without a journal key.
 
         :param command: The command that the view passed, e.g. a ``SmarterJournalCliCommands``, a string, or None.
-        :type command: object
         :param thing: The thing that the view passed, e.g. a ``SmarterJournalThings``, a string, or None.
-        :type thing: object
         :returns: The envelope.
-        :rtype: SAMJournalApiEnvelope
         """
         return cls(metadata=SAMJournalApiMetadata(command=str(command), thing=str(thing)))
 
@@ -147,7 +145,6 @@ class SAMJournalApiEnvelope(SAMJournalApiModel):
         The metadata's ``key`` is left out until the journal entry is saved.
 
         :returns: The envelope's keys.
-        :rtype: dict[str, JsonValue]
         """
         return self.model_dump(mode="json", exclude_none=True)
 
@@ -186,9 +183,7 @@ class SAMJournalApiErrorResponse(SAMJournalApiModel):
         The error response's JSON.
 
         :param include_stack_trace: Whether the error includes its ``stacktrace``.
-        :type include_stack_trace: bool
         :returns: The response's ``error`` key.
-        :rtype: dict[str, JsonValue]
         """
         exclude = None if include_stack_trace else {"error": {"stacktrace"}}
         return self.model_dump(mode="json", exclude=exclude)
@@ -230,9 +225,7 @@ class SAMJournalApiOrmModel(BaseModel):
         The model of a journal entry.
 
         :param journal: The journal entry.
-        :type journal: SAMJournal
         :returns: Its model.
-        :rtype: SAMJournalApiOrmModel
         """
         return cls(
             key=journal.key,
@@ -275,19 +268,20 @@ class SAMJournalApiEntrySummary(BaseModel):
     status_code: int = Field(..., ge=0, le=65535, description="SAMJournal.status_code: the http status.")
 
     @classmethod
-    def summary_fields(cls, journal: "SAMJournal") -> dict:
+    def summary_fields(cls, journal: "SAMJournal") -> SmarterDictType:
         """
-        The fields of a journal entry that both of the REST api's models have.
+        Return the fields of a journal entry that both of the REST api's models have.
 
         :param journal: The journal entry, whose ``user`` should be fetched with it.
-        :type journal: SAMJournal
         :returns: The fields, by name.
-        :rtype: dict
         """
+        username = None
+        if journal.user:
+            username = journal.user.username  # type: ignore[union-attr]
         return {
             "key": journal.key,
             "created_at": journal.created_at,
-            "user": journal.user.username if journal.user else None,  # type: ignore[union-attr]
+            "user": username,
             "thing": journal.thing,
             "command": journal.command,
             "status_code": journal.status_code,
@@ -299,9 +293,7 @@ class SAMJournalApiEntrySummary(BaseModel):
         The REST api's summary of a journal entry.
 
         :param journal: The journal entry, whose ``user`` should be fetched with it.
-        :type journal: SAMJournal
         :returns: Its model.
-        :rtype: SAMJournalApiEntrySummary
         """
         return cls(**cls.summary_fields(journal))
 
@@ -323,9 +315,7 @@ class SAMJournalApiEntry(SAMJournalApiEntrySummary):
         The REST api's model of a journal entry.
 
         :param journal: The journal entry, whose ``user`` should be fetched with it.
-        :type journal: SAMJournal
         :returns: Its model.
-        :rtype: SAMJournalApiEntry
         """
         return cls(**cls.summary_fields(journal), request=journal.request, response=journal.response)
 

@@ -1,0 +1,35 @@
+- **Official documentation:** OpenAI's `structured outputs guide
+  <https://platform.openai.com/docs/guides/structured-outputs>`__, on making a model answer in a
+  JSON Schema, and the `Pydantic documentation <https://docs.pydantic.dev/>`__, on validating what
+  comes back.
+- **Security:** the `OWASP Top 10 for LLM Applications <https://genai.owasp.org/llm-top-10/>`__,
+  especially prompt injection and improper output handling, and OWASP's `Cross Site Scripting
+  Prevention Cheat Sheet
+  <https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html>`__,
+  for the reasoning behind the Doodle's sanitizer.
+- **Human-AI interaction:** Google's `People + AI Guidebook <https://pair.withgoogle.com/guidebook/>`__,
+  on designing review, explanation and disclosure, and Saleema Amershi et al., *Guidelines for
+  Human-AI Interaction* (CHI 2019), eighteen guidelines tested on real products.
+- **Risk management:** the NIST `AI Risk Management Framework
+  <https://www.nist.gov/itl/ai-risk-management-framework>`__, for the vocabulary that governance
+  teams will use when they review an AI feature.
+- **Standards:** the `SVG 2 <https://www.w3.org/TR/SVG2/>`__ specification, for what an SVG can
+  carry besides shapes, and `JSON Schema <https://json-schema.org/>`__.
+- **YouTube:** the `AI Engineer <https://www.youtube.com/@aiDotEngineer>`__ channel, for talks on
+  evaluations, guardrails and LLMs in production, and the `PyCon US
+  <https://www.youtube.com/@PyConUS>`__ channel, for talks on Pydantic and testing.
+- **Podcasts:** `Latent Space <https://www.latent.space/podcast>`__, on building with LLMs, and
+  `Practical AI <https://practicalai.fm/>`__, on putting AI into products.
+- **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
+  `How Two Smarter LLMClients Create the Sign-in Page's Daily Doodle
+  <https://blog.smarter.sh/2026/11/04/smarter-doodle-llm-editor-artist/>`__, the course's case;
+  `LLM Guardrails in YAML: How Smarter Declares, Orders and Audits Them
+  <https://blog.smarter.sh/2026/06/11/smarter-llm-guardrails-yaml/>`__, on the Guardrails around
+  the editor and its judge; `DOMPurify and Markdown: Rendering LLM Output as Untrusted HTML in an
+  Embeddable Chat Widget <https://blog.smarter.sh/2026/08/03/smarter-chat-untrusted-html/>`__, on
+  the same problem as the artist's SVG, in the chat; `Build a Slack Bot With a Smarter LLMClient
+  <https://blog.smarter.sh/2026/10/31/slack-bot-llmclient-kubernetes/>`__, on another piece of
+  software that leaves the AI parts on the platform; and `Django-React Integration
+  <https://blog.smarter.sh/2026/05/29/react-integration/>`__, on how the console hosts the
+  Doodle's React app. The case study `Guardrails <https://smarter.sh/case-studies/guardrails>`__ is a lesson
+  with labs and discussion questions.

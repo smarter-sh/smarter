@@ -69,7 +69,12 @@ Quality With Agentic AI <https://blog.smarter.sh/2026/10/10/claude-code-large-dj
 `Part 2: The Antipattern That Makes a Codebase Diverge
 <https://blog.smarter.sh/2026/10/11/blog-prologue-geometric-series/>`__, `Part 3: What Claude Code
 Actually Reads <https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__, `Six High-Impact
-Uses of Claude Code <https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__.
+Uses of Claude Code <https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__, `Claude Code
+Reviews Smarter's Kubernetes Pod Logs Every Day, and Proposes the Fixes
+<https://blog.smarter.sh/2026/10/31/claude-code-pod-log-review-self-healing/>`__, `Introducing the
+Smarter MCP Server <https://blog.smarter.sh/2026/10/30/what-is-an-mcp-server/>`__, `How Smarter's
+MCP Server Searches Its Own Code, Documentation and Blog
+<https://blog.smarter.sh/2026/11/01/smarter-project-mcp-server-design/>`__.
 
 **Exercises.**
 

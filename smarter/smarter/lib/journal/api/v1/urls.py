@@ -18,8 +18,8 @@ class SAMJournalApiV1ReverseViews:
     """
     Reverse view names for the Smarter Journal api.
 
-    Example
-    -------
+    **Example:**
+
     .. code-block:: python
 
         from django.urls import reverse

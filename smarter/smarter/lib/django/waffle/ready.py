@@ -1,4 +1,4 @@
-"""Is_database_ready() - Check if the database is ready by verifying the connection and the existence of the waffle_switch table."""
+"""Check whether the database is ready for waffle: it accepts connections, and has the ``waffle_switch`` table."""
 
 from django.core.exceptions import SynchronousOnlyOperation
 from django.db import connections
@@ -15,14 +15,16 @@ class DbState:
 db_state = DbState()
 
 
-def is_database_ready(alias="default"):
+def is_database_ready(alias: str = "default") -> bool:
     """
-    Check if the database is ready by verifying the connection and.
+    Check whether the database accepts connections and has the ``waffle_switch`` table.
 
-    the existence of the waffle_switch table.
+    Once it has succeeded, it returns True for the life of the process without checking again.
+    It returns False, rather than raising, when called from async code, which Django forbids
+    to use the database.
 
     :param alias: The database alias to check.
-    :return: True if the database is ready, False otherwise.
+    :returns: True if the database is ready, False otherwise.
     """
 
     if db_state.ready:

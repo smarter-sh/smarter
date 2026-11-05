@@ -1,13 +1,9 @@
 """
-Smarter.lib.django.waffle
-------------------------------
+A managed wrapper of django-waffle, with short-lived caching and database readiness checks.
 
-Enhanced, managed Django-waffle wrapper with short-lived Redis-based caching
-and database readiness checks.
+**Features:**
 
-Features:
-
-- Caching: Integrates short-lived Redis-based caching to optimize feature flag (switch) checks.
+- Caching: each process remembers a switch's state for a few seconds, on top of waffle's own Redis cache.
 - Database Readiness Handling: Implements safeguards to prevent errors when the database is not ready.
 - Feature Flag Management: Centralized mechanism to check if a feature flag (switch) is active.
 - Custom Django Admin: Customized Django Admin class for managing waffle switches.
@@ -16,7 +12,7 @@ Features:
 .. important::
 
     These are managed feature flags; add any new switches to the SmarterWaffleSwitches class. These switches
-    are verified duing deployments to ensure that they exist in the database. A switch that is
+    are verified during deployments to ensure that they exist in the database. A switch that is
     checked before it exists is created with its default from SmarterWaffleSwitches.
 
 .. important::
@@ -24,15 +20,16 @@ Features:
     django-waffle relies on database tables as well as Redis for storing and caching feature flags. If the database is not ready, waffle switch values
     will default to inactive (False) to prevent application errors.
 
-Example:
-    .. code-block:: python
+**Example**
 
-        from smarter.lib.django.waffle import switch_is_active
+.. code-block:: python
 
-        if switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING):
-            print("API logging is enabled.")
+    from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
-Dependencies:
+    if switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING):
+        print("Account logging is enabled.")
+
+**Dependencies:**
 
 - `django-waffle <https://waffle.readthedocs.io/en/stable/>`_
 - `django-redis <https://django-redis.readthedocs.io/en/stable/>`_

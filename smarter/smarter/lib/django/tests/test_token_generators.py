@@ -1,13 +1,16 @@
-"""Test the SmarterValidator class."""
+"""Test the ExpiringTokenGenerator class."""
 
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+from smarter.apps.account.models import User
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     SmarterTokenError,
+    SmarterTokenExpiredError,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -20,6 +23,8 @@ class TestExpiringTokenGenerator(SmarterTestBase):
         self.token_gen = ExpiringTokenGenerator(expiration=100)
         self.user = MagicMock()
         self.user.pk = 123
+        # An unsaved user is enough for Django to make a token from.
+        self.real_user = User(pk=123, username=f"token_{self.hash_suffix}", email="token@example.com")
 
     @patch("smarter.lib.django.token_generators.force_bytes")
     @patch("smarter.lib.django.token_generators.urlsafe_base64_encode")
@@ -71,24 +76,47 @@ class TestExpiringTokenGenerator(SmarterTestBase):
         self.assertEqual(user, self.user)
         self.assertEqual(token, "token")
 
-    @patch("smarter.lib.django.token_generators.timezone_now")
-    def test_get_timestamp(self, mock_now):
-        mock_now.return_value.timestamp.return_value = 1234567890
-        self.assertEqual(self.token_gen.get_timestamp(), 1234567890)
+    @patch.object(ExpiringTokenGenerator, "_now")
+    def test_get_timestamp_uses_djangos_token_clock(self, mock_now):
+        """The clock counts seconds since 2001-01-01, as Django's token timestamps do."""
+        mock_now.return_value = datetime(2001, 1, 1, 0, 1, 40)
+        self.assertEqual(self.token_gen.get_timestamp(), 100)
 
-    def test_adjusted_timestamp(self):
-        ts = 100
-        self.assertEqual(self.token_gen.adjusted_timestamp(ts), 100 + 2082844800)
+    @patch.object(ExpiringTokenGenerator, "get_timestamp")
+    def test_token_age(self, mock_get_timestamp):
+        mock_get_timestamp.return_value = 250
+        self.assertEqual(self.token_gen.token_age(100), 150)
 
     @patch.object(ExpiringTokenGenerator, "check_token")
     @patch.object(ExpiringTokenGenerator, "get_timestamp")
     def test_validate_success(self, mock_get_timestamp, mock_check_token):
         mock_check_token.return_value = True
-        mock_get_timestamp.return_value = 2082844900
-        token = "2s-abcdef"  # 2s in base36 is 100
-        # adjusted_timestamp = 2082844800 + 100 = 2082844900
-        # current_time - adjusted_timestamp = 0 <= expiration
+        mock_get_timestamp.return_value = 100
+        token = "2s-abcdef"  # 2s in base36 is 100, so the token's age is 0
         self.assertTrue(self.token_gen.validate(self.user, token))
+
+    @patch.object(ExpiringTokenGenerator, "check_token")
+    def test_validate_a_fresh_django_token(self, mock_check_token):
+        """A token Django stamps now is accepted."""
+        mock_check_token.return_value = True
+        now = self.token_gen.get_timestamp()
+        token = self.token_gen._make_token_with_timestamp(self.real_user, now, self.token_gen.secret)
+        self.assertTrue(self.token_gen.validate(self.real_user, token))
+
+    @patch.object(ExpiringTokenGenerator, "check_token")
+    def test_validate_rejects_a_django_token_older_than_expiration(self, mock_check_token):
+        """
+        A token Django stamped longer ago than ``expiration`` is rejected.
+
+        Django's own check (``PASSWORD_RESET_TIMEOUT``, 3 days by default) is
+        patched out, so this proves the generator's shorter expiration is enforced.
+        """
+        mock_check_token.return_value = True
+        now = self.token_gen.get_timestamp()
+        too_old = now - self.token_gen.expiration - 1
+        token = self.token_gen._make_token_with_timestamp(self.real_user, too_old, self.token_gen.secret)
+        with self.assertRaises(SmarterTokenExpiredError):
+            self.token_gen.validate(self.real_user, token)
 
     @patch.object(ExpiringTokenGenerator, "check_token")
     def test_validate_integrity_error(self, mock_check_token):
@@ -113,8 +141,8 @@ class TestExpiringTokenGenerator(SmarterTestBase):
     @patch.object(ExpiringTokenGenerator, "get_timestamp")
     def test_validate_expired(self, mock_get_timestamp, mock_check_token):
         mock_check_token.return_value = True
-        mock_get_timestamp.return_value = 2082845001
-        # token timestamp = 100, adjusted = 2082844900, now = 2082845001, diff = 101 > expiration=100
+        mock_get_timestamp.return_value = 201
+        # token timestamp = 100, now = 201, age = 101 > expiration=100
         token = "2s-abcdef"
         with self.assertRaises(SmarterTokenError):
             self.token_gen.validate(self.user, token)

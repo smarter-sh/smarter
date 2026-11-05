@@ -57,6 +57,7 @@ from django.test.utils import (
 INFRASTRUCTURE = "infrastructure"
 """The tag of tests that use real infrastructure: Kubernetes, AWS Route53, ACM, and so on."""
 ENVIRONMENT_VARIABLE = "SMARTER_TEST_INFRASTRUCTURE"
+"""The environment variable that, set to ``true``, ``yes`` or ``1``, runs the infrastructure tests too."""
 JUNIT_XML_ENVIRONMENT_VARIABLE = "SMARTER_TEST_JUNIT_XML"
 """The environment variable that names the file to write a JUnit XML report of the test results to."""
 SHARD_ENVIRONMENT_VARIABLE = "SMARTER_TEST_SHARD"
@@ -64,21 +65,36 @@ SHARD_ENVIRONMENT_VARIABLE = "SMARTER_TEST_SHARD"
 
 
 def include_infrastructure() -> bool:
-    """Whether SMARTER_TEST_INFRASTRUCTURE asks for the infrastructure tests to run too."""
-    return os.environ.get(ENVIRONMENT_VARIABLE, "").strip().lower() in ("1", "true", "yes")
+    """
+    Return whether ``SMARTER_TEST_INFRASTRUCTURE`` asks for the infrastructure tests to run too.
+
+    :returns: True if the variable is ``1``, ``true`` or ``yes``, in any case.
+    """
+    value = os.environ.get(ENVIRONMENT_VARIABLE, "")
+    normalized_value = value.strip().lower()
+    included = normalized_value in ("1", "true", "yes")
+    return included
 
 
 def junit_xml_path() -> str | None:
-    """The file that SMARTER_TEST_JUNIT_XML asks for a JUnit XML report to be written to, if any."""
-    return os.environ.get(JUNIT_XML_ENVIRONMENT_VARIABLE, "").strip() or None
+    """
+    Return the file that ``SMARTER_TEST_JUNIT_XML`` asks for a JUnit XML report to be written to, if any.
+
+    :returns: The file's path, or None if the variable is unset or blank.
+    """
+    value = os.environ.get(JUNIT_XML_ENVIRONMENT_VARIABLE, "")
+    path = value.strip()
+    if not path:
+        return None
+    return path
 
 
 def requested_shard() -> tuple[int, int] | None:
     """
-    The shard that SMARTER_TEST_SHARD asks for, if any.
+    Return the shard that ``SMARTER_TEST_SHARD`` asks for, if any.
 
     :returns: ``(shard, shards)``, counting from 1, or None to run the whole suite.
-    :raises ValueError: if the value isn't ``<shard>/<shards>`` with ``1 <= shard <= shards``.
+    :raises ValueError: If the value isn't ``<shard>/<shards>`` with ``1 <= shard <= shards``.
     """
     value = os.environ.get(SHARD_ENVIRONMENT_VARIABLE, "").strip()
     if not value:
@@ -94,27 +110,28 @@ def requested_shard() -> tuple[int, int] | None:
 
 def testcase_class_name(test: unittest.TestCase) -> str:
     """
-    The dotted name of a test's TestCase class, e.g. ``smarter.lib.tests.test_json.TestJson``.
+    Return the dotted name of a test's TestCase class, e.g. ``smarter.lib.tests.test_json.TestJson``.
 
-    :param test: a test.
-    :returns: the module and qualified name of its class.
+    :param test: A test.
+    :returns: The module and qualified name of its class.
     """
     cls = type(test)
-    return f"{cls.__module__}.{cls.__qualname__}"
+    name = f"{cls.__module__}.{cls.__qualname__}"
+    return name
 
 
 def shard_tests(tests: list[unittest.TestCase], shard: int, shards: int) -> list[unittest.TestCase]:
     """
-    The tests of one shard, in their original order.
+    Return the tests of one shard, in their original order.
 
     A TestCase is never split, because its ``setUpClass`` builds the fixtures that all of its
     tests share. TestCases are dealt out largest first, each to the shard with the fewest tests
     so far, and ties are broken by name, so the result depends only on the tests themselves.
 
-    :param tests: the whole suite, as every shard discovers it.
-    :param shard: the shard to return, counting from 1.
-    :param shards: the number of shards.
-    :returns: the tests of that shard.
+    :param tests: The whole suite, as every shard discovers it.
+    :param shard: The shard to return, counting from 1.
+    :param shards: The number of shards.
+    :returns: The tests of that shard.
     """
     sizes = collections.Counter(testcase_class_name(test) for test in tests)
     loads = [0] * shards
@@ -123,24 +140,46 @@ def shard_tests(tests: list[unittest.TestCase], shard: int, shards: int) -> list
         index = loads.index(min(loads))
         shard_of[name] = index + 1
         loads[index] += size
-    return [test for test in tests if shard_of[testcase_class_name(test)] == shard]
+    selected = []
+    for test in tests:
+        test_shard = shard_of[testcase_class_name(test)]
+        if test_shard == shard:
+            selected.append(test)
+    return selected
 
 
 class SmarterTestRunner(DiscoverRunner):
     """
-    Django's test runner, except that it skips the infrastructure tests unless they are asked for,.
+    Django's test runner, with three additions for Smarter's suite.
 
-    writes a JUnit XML report when :data:`JUNIT_XML_ENVIRONMENT_VARIABLE` names a file, and runs
-    only one shard of the suite when :data:`SHARD_ENVIRONMENT_VARIABLE` asks for one.
+    It skips the infrastructure tests unless they are asked for, writes a JUnit XML report when
+    :data:`JUNIT_XML_ENVIRONMENT_VARIABLE` names a file, and runs only one shard of the suite
+    when :data:`SHARD_ENVIRONMENT_VARIABLE` asks for one.
     """
 
     def __init__(self, *args, tags: list[str] | None = None, exclude_tags: list[str] | None = None, **kwargs):
+        """
+        Create the runner, excluding the :data:`INFRASTRUCTURE` tag unless the tests are asked for.
+
+        They are asked for by ``--tag infrastructure``, or by :data:`ENVIRONMENT_VARIABLE`.
+
+        :param args: Passed to Django's ``DiscoverRunner``.
+        :param tags: The tags to run, from ``--tag``.
+        :param exclude_tags: The tags to skip, from ``--exclude-tag``.
+        :param kwargs: Passed to Django's ``DiscoverRunner``.
+        """
         tags = list(tags or [])
         exclude_tags = list(exclude_tags or [])
-        self.skipping_infrastructure = INFRASTRUCTURE not in tags and not include_infrastructure()
+        if INFRASTRUCTURE in tags:
+            self.skipping_infrastructure = False
+        else:
+            self.skipping_infrastructure = not include_infrastructure()
         if self.skipping_infrastructure and INFRASTRUCTURE not in exclude_tags:
             exclude_tags.append(INFRASTRUCTURE)
-        super().__init__(*args, tags=tags or None, exclude_tags=exclude_tags, **kwargs)
+        runner_tags = None
+        if tags:
+            runner_tags = tags
+        super().__init__(*args, tags=runner_tags, exclude_tags=exclude_tags, **kwargs)
 
     def setup_test_environment(self, **kwargs):
         """
@@ -159,9 +198,10 @@ class SmarterTestRunner(DiscoverRunner):
         """
         Build the suite as Django does, then keep only this run's shard, if one is asked for.
 
-        :param test_labels: the test labels from the command line.
-        :returns: the test suite.
-        :raises ValueError: if a shard is asked for together with ``--parallel``.
+        :param test_labels: The test labels from the command line.
+        :param kwargs: Passed to Django's ``build_suite()``.
+        :returns: The test suite.
+        :raises ValueError: If a shard is asked for together with ``--parallel``.
         """
         suite = super().build_suite(test_labels, **kwargs)
         shard = requested_shard()
@@ -176,12 +216,12 @@ class SmarterTestRunner(DiscoverRunner):
 
     def get_test_runner_kwargs(self):
         """
-        Django's runner arguments, without a result class when a JUnit XML report is asked for.
+        Return Django's runner arguments, without a result class when a JUnit XML report is asked for.
 
         xmlrunner records the results with its own result class, which writes the report.
         Django's --debug-sql and --pdb result classes don't apply then.
 
-        :returns: the keyword arguments of the unittest runner.
+        :returns: The keyword arguments of the unittest runner.
         """
         kwargs = super().get_test_runner_kwargs()
         if junit_xml_path() is not None:
@@ -194,8 +234,9 @@ class SmarterTestRunner(DiscoverRunner):
 
         xmlrunner still prints the usual progress and summary to the console.
 
-        :param suite: the test suite to run.
-        :returns: the test result.
+        :param suite: The test suite to run.
+        :param kwargs: Passed to Django's ``run_suite()``.
+        :returns: The test result.
         """
         path = junit_xml_path()
         if path is None:

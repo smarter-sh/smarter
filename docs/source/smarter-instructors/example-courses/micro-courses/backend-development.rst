@@ -66,7 +66,9 @@ reading list for these technologies), :doc:`/smarter-framework/guides/developer-
 Base Class for Owning, Sharing and Tracking AI Resources
 <https://blog.smarter.sh/2026/07/18/smarter-metadata-with-ownership/>`__, `Smarter's
 @cache_results() Decorator: Persistent Function Caching for Django
-<https://blog.smarter.sh/2026/05/09/smarter-cache-results/>`__.
+<https://blog.smarter.sh/2026/05/09/smarter-cache-results/>`__, `How Smarter's Kubernetes-Style
+Annotations Trace Every Resource to Its GitHub Commit
+<https://blog.smarter.sh/2026/10/31/sam-annotations-github-provenance/>`__.
 
 **Exercises.**
 

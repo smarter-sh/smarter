@@ -22,6 +22,9 @@ locator ends with its ``key_id``, and an Extension, whose page is addressed by i
 read from the database.
 """
 
+import functools
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Callable, Optional
 
 from django.conf import settings
@@ -43,9 +46,7 @@ def record_locator_prefix(model_class: type) -> str:
     The prefix of a model's record locators: the lower-cased name of its class, e.g. ``llmclient``.
 
     :param model_class: The Django model class, e.g. :class:`smarter.apps.llmclient.models.LLMClient`.
-    :type model_class: type
     :returns: The prefix, without the hyphen.
-    :rtype: str
     """
     return model_class.__name__.lower()
 
@@ -63,9 +64,7 @@ def parse_record_locator(record_locator: str) -> tuple[str, str]:
     the rest may have some, e.g. the ``key_id`` of an api key.
 
     :param record_locator: The record locator.
-    :type record_locator: str
     :returns: The prefix and the rest.
-    :rtype: tuple[str, str]
     :raises ValueError: If the record locator has no prefix, or nothing after it.
     """
     prefix, _, rest = (record_locator or "").partition("-")
@@ -79,11 +78,8 @@ def by_hashed_id(namespace: str, name: str) -> ConsolePath:
     A :data:`ConsolePath` for a page whose url has the resource's ``hashed_id``.
 
     :param namespace: The url namespace, e.g. ``GuardrailReverseNames.namespace``.
-    :type namespace: str
     :param name: The url name, e.g. ``GuardrailReverseNames.detailview``.
-    :type name: str
     :returns: The function.
-    :rtype: ConsolePath
     """
 
     def path(hashed_id: str) -> Optional[str]:
@@ -92,9 +88,13 @@ def by_hashed_id(namespace: str, name: str) -> ConsolePath:
     return path
 
 
-def console_paths() -> dict[str, ConsolePath]:
+@functools.cache
+def console_paths() -> Mapping[str, ConsolePath]:
     """
     The web console manifest page of each kind of resource that has one, by record locator prefix.
+
+    The mapping is built once per process, because a dependency tree looks up a page for each of its
+    nodes. It holds functions, which reverse their urls when they are called, so it never goes stale.
 
     An LLMClient's is its manifest page, not the Prompt Engineer's Workbench, so that every kind's
     page is one where its manifest can be edited. An Extension, which has no manifest, has its own page.
@@ -102,8 +102,7 @@ def console_paths() -> dict[str, ConsolePath]:
     The views are imported here, not at module level, because the url modules import the apps' views,
     which import the manifest brokers, which import this module.
 
-    :returns: A :data:`ConsolePath` for each record locator prefix.
-    :rtype: dict[str, ConsolePath]
+    :returns: A :data:`ConsolePath` for each record locator prefix, read-only because it is shared.
     """
     # pylint: disable=import-outside-toplevel
     from smarter.apps.account.models import Budget
@@ -171,7 +170,8 @@ def console_paths() -> dict[str, ConsolePath]:
         Vectorsearch: by_hashed_id(VectorsearchReverseNames.namespace, VectorsearchReverseNames.detailview),
         VectorstoreMeta: by_hashed_id(VectorstoreReverseNames.namespace, VectorstoreReverseNames.detailview),
     }
-    return {record_locator_prefix(model_class): path for model_class, path in pages.items()}
+    paths = {record_locator_prefix(model_class): path for model_class, path in pages.items()}
+    return MappingProxyType(paths)
 
 
 def console_url(record_locator: Optional[str]) -> Optional[str]:
@@ -188,9 +188,7 @@ def console_url(record_locator: Optional[str]) -> Optional[str]:
         # '/guardrail/guardrails/rNQx/'
 
     :param record_locator: The resource's record locator, e.g. ``llmclient-rMTAwMDAxMwx``.
-    :type record_locator: Optional[str]
     :returns: The path, or None.
-    :rtype: Optional[str]
     """
     if not record_locator:
         return None

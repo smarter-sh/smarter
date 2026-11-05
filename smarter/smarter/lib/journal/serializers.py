@@ -15,14 +15,16 @@ class SAMJournalSerializer(SmarterCamelCaseSerializer):
     caller's headers and cookies, including its api key, so this serializer is only used for one entry
     at a time, by superusers. See :class:`SAMJournalMiniSerializer` for lists.
 
-    :param key: String. The entry's primary key, 64 hexadecimal characters.
-    :param created_at: DateTime. When the entry was written.
-    :param user: String. The username of the user who made the request, or null for an anonymous request.
-    :param thing: String. The kind of resource, e.g. Guardrail.
-    :param command: String. The command, e.g. apply.
-    :param request: JSON. The serialized http request.
-    :param response: JSON. The response's JSON body.
-    :param status_code: Integer. The response's http status.
+    **Fields:**
+
+    - ``key`` (string): The entry's primary key, 64 hexadecimal characters.
+    - ``createdAt`` (datetime): When the entry was written.
+    - ``user`` (string): The username of the user who made the request, or null for an anonymous request.
+    - ``thing`` (string): The kind of resource, e.g. Guardrail.
+    - ``command`` (string): The command, e.g. apply.
+    - ``request`` (JSON): The serialized http request.
+    - ``response`` (JSON): The response's JSON body.
+    - ``statusCode`` (integer): The response's http status.
 
     .. note::
 
@@ -49,12 +51,14 @@ class SAMJournalMiniSerializer(SmarterCamelCaseSerializer):
 
     It is used to list journal entries, which can be large, and whose documents hold credentials.
 
-    :param key: String. The entry's primary key.
-    :param created_at: DateTime. When the entry was written.
-    :param user: String. The username of the user who made the request, or null for an anonymous request.
-    :param thing: String. The kind of resource, e.g. Guardrail.
-    :param command: String. The command, e.g. apply.
-    :param status_code: Integer. The response's http status.
+    **Fields:**
+
+    - ``key`` (string): The entry's primary key.
+    - ``createdAt`` (datetime): When the entry was written.
+    - ``user`` (string): The username of the user who made the request, or null for an anonymous request.
+    - ``thing`` (string): The kind of resource, e.g. Guardrail.
+    - ``command`` (string): The command, e.g. apply.
+    - ``statusCode`` (integer): The response's http status.
 
     **Example usage**::
 

@@ -13,7 +13,7 @@ Key Features
 - Supports async and sync Django execution
 - IP-based throttling for repeated suspicious requests
 - Amnesty allowlist support
-- Cached sensitive-path inspection
+- In-memory sensitive-path inspection, with one precompiled pattern
 - Unicode normalization and traversal protection
 - Feature-flag enablement via Django Waffle
 
@@ -106,10 +106,10 @@ Amnesty checks are applied before sensitive-file detection.
 Caching
 =======
 
-Sensitive path inspection uses cached detection results to reduce
-repeated pattern evaluation overhead.
-
-Cached inspection results use a default timeout of 24 hours.
+The glob patterns are compiled once, into one regular expression, and each
+process remembers the result for the most recent paths in memory. Nothing is
+cached in Redis: the check costs microseconds, which is less than a round trip,
+and a changed pattern list applies as soon as a process starts.
 
 Throttle Configuration
 ======================
@@ -210,11 +210,10 @@ import re
 import unicodedata
 import urllib.parse
 from collections.abc import Awaitable, Callable, Iterable
-from functools import cached_property
+from functools import cached_property, lru_cache
 from typing import cast
 
 from asgiref.sync import sync_to_async
-from cache_results import cache_results
 from cache_results import lazy_cache as cache
 from django.core.handlers.exception import response_for_exception
 from django.http import (
@@ -347,6 +346,12 @@ SENSITIVE_FILES = frozenset(
 EXACT_MATCHES = frozenset(pattern for pattern in SENSITIVE_FILES if "*" not in pattern)
 GLOB_MATCHES = frozenset(pattern for pattern in SENSITIVE_FILES if "*" in pattern)
 
+GLOB_REGEX = re.compile("|".join(fnmatch.translate(pattern) for pattern in sorted(GLOB_MATCHES)))
+"""Every pattern of :data:`GLOB_MATCHES`, compiled once into one regular expression."""
+
+SENSITIVE_PATH_CACHE_SIZE = 4096
+"""How many recent paths each process remembers the result of :func:`is_sensitive_path` for."""
+
 REPEATED_SLASHES = re.compile(r"/+")
 """Collapses repeated slashes in a request path."""
 
@@ -355,12 +360,13 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     """
     Middleware that blocks requests probing for sensitive files.
 
-    Features:
+    **Features:**
+
     - ASGI and WSGI compatible
     - Path normalization
     - Amnesty support
     - Request throttling
-    - Cached inspection
+    - In-memory inspection
     """
 
     THROTTLE_LIMIT = 5
@@ -372,7 +378,16 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.allowed_patterns = ALLOWED_PATTERNS
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        """
+        Inspect a request synchronously, or hand it to :meth:`__acall__` in async mode.
 
+        An amnesty path, or a request while ``ENABLE_MIDDLEWARE_SENSITIVE_FILES`` is off, passes
+        through untouched.
+
+        :param request: The incoming request.
+        :returns: A ``429`` if the client is throttled, the platform's ``404`` for a sensitive
+            path, or otherwise the next handler's response (a coroutine in async mode).
+        """
         if self.async_mode:
             return self.__acall__(request)
 
@@ -390,6 +405,15 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         return super().__call__(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+        """
+        Inspect a request in async mode, running the synchronous inspection in a thread.
+
+        :param request: The incoming request.
+        :returns: A ``429`` if the client is throttled, the platform's ``404`` for a sensitive
+            path, or otherwise the next handler's response.
+        """
+        if self.deserves_amnesty(request.path):
+            return await super().__acall__(request)
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
             return await super().__acall__(request)
@@ -415,7 +439,15 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self,
         request: HttpRequest,
     ) -> HttpResponse | None:
+        """
+        Check a request's path and client against the amnesty list, the throttle and the sensitive files.
 
+        Side effect: a sensitive path adds one to the client's probe count in the cache.
+
+        :param request: The incoming request.
+        :returns: A ``429`` if the client is throttled, the platform's ``404`` for a sensitive
+            path, or None to let the request through.
+        """
         normalized_path = self.normalize_path(request.path)
 
         if self.is_amnesty_path(normalized_path):
@@ -425,7 +457,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
         if not client_ip:
             logger.warning(
-                "%s could not determine client IP for request: %s",
+                "%s._inspect_request() could not determine client IP for request: %s",
                 self.formatted_class_name,
                 normalized_path,
             )
@@ -434,7 +466,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         if self.is_throttled(client_ip):
             # the client's IP address is personal data: log the path, never the address.
             logger.warning(
-                "%s throttled request: %s",
+                "%s._inspect_request() throttled request: %s",
                 self.formatted_class_name,
                 normalized_path,
             )
@@ -450,7 +482,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         if self.is_sensitive_request(normalized_path):
 
             logger.warning(
-                "%s blocked sensitive request: %s",
+                "%s._inspect_request() blocked sensitive request: %s",
                 self.formatted_class_name,
                 normalized_path,
             )
@@ -464,7 +496,15 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def normalize_path(path: str) -> str:
-        """Normalize paths to reduce traversal and encoding bypasses."""
+        """
+        Normalize a request path, to defeat traversal and encoding bypasses.
+
+        The path is url-decoded twice, NFKC-normalized, its backslashes turned into slashes, its
+        null bytes removed, its repeated slashes collapsed, its traversal resolved, and lower-cased.
+
+        :param path: The raw request path.
+        :returns: The normalized path, which always starts with ``/``.
+        """
 
         for _ in range(2):
             path = urllib.parse.unquote(path)
@@ -567,27 +607,40 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         return (segment for segment in path.split("/") if segment)
 
     @classmethod
-    @cache_results(timeout=60 * 60 * 24)
     def is_sensitive_request(cls, path: str) -> bool:
-        """Cached sensitive file detection."""
+        """
+        Return whether a normalized path asks for a sensitive file.
 
-        path_segments = tuple(cls.iter_path_segments(path))
-        normalized_full_path = path.lstrip("/")
+        :param path: The normalized request path.
+        :returns: True if the path, or one of its segments, is a sensitive file.
+        """
+        is_sensitive = is_sensitive_path(path)
+        return is_sensitive
 
-        if normalized_full_path in EXACT_MATCHES:
+
+@lru_cache(maxsize=SENSITIVE_PATH_CACHE_SIZE)
+def is_sensitive_path(path: str) -> bool:
+    """
+    Return whether a normalized path, or one of its segments, matches a sensitive file.
+
+    The path matches when it, or a segment of it, is one of :data:`EXACT_MATCHES`, or matches
+    :data:`GLOB_REGEX`. It is pure, so each process remembers the most recent results.
+
+    :param path: The normalized request path.
+    :returns: True if the path is sensitive.
+    """
+    normalized_full_path = path.lstrip("/")
+    if normalized_full_path in EXACT_MATCHES:
+        return True
+    if GLOB_REGEX.match(normalized_full_path):
+        return True
+
+    for segment in path.split("/"):
+        if not segment:
+            continue
+        if segment in EXACT_MATCHES:
+            return True
+        if GLOB_REGEX.match(segment):
             return True
 
-        for pattern in GLOB_MATCHES:
-            if fnmatch.fnmatch(normalized_full_path, pattern):
-                return True
-
-        for segment in path_segments:
-            if segment in EXACT_MATCHES:
-                return True
-
-        for segment in path_segments:
-            for pattern in GLOB_MATCHES:
-                if fnmatch.fnmatch(segment, pattern):
-                    return True
-
-        return False
+    return False
