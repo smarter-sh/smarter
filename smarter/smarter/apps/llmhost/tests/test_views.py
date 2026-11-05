@@ -5,6 +5,7 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.llmhost.api.web.urls import LLMHostApiWebReverseNames as WebNames
 from smarter.apps.llmhost.caching import (
     invalidate_all_cached_llmhost_computes_for_user_profile,
     invalidate_all_cached_llmhosts_for_user_profile,
@@ -28,6 +29,10 @@ def url(name: str, **kwargs) -> str:
     return reverse(f"{Names.namespace}:{name}", kwargs=kwargs)
 
 
+def web_url(name: str, **kwargs) -> str:
+    return reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs or None)
+
+
 class TestLLMHostListViews(LLMHostTestBase):
     """Test the React list view's api: list, clone, rename and delete."""
 
@@ -42,25 +47,45 @@ class TestLLMHostListViews(LLMHostTestBase):
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content)
 
+    def test_web_api_paths(self):
+        """Test that the LLMHost and LLMHostCompute list pages' endpoints are in the web console's api."""
+        self.assertEqual(web_url(WebNames.listview_all), "/api/web/llmhost/listview/")
+        self.assertEqual(web_url(WebNames.listview, ownership_filter="owned"), "/api/web/llmhost/listview/owned/")
+        self.assertEqual(web_url(WebNames.clone, llmhost_id=1, new_name="x"), "/api/web/llmhost/clone/1/x/")
+        self.assertEqual(web_url(WebNames.rename, llmhost_id=1, new_name="x"), "/api/web/llmhost/rename/1/x/")
+        self.assertEqual(web_url(WebNames.delete, llmhost_id=1), "/api/web/llmhost/delete/1/")
+        self.assertEqual(web_url(WebNames.compute_listview_all), "/api/web/llmhost/compute/listview/")
+        self.assertEqual(
+            web_url(WebNames.compute_listview, ownership_filter="owned"), "/api/web/llmhost/compute/listview/owned/"
+        )
+        self.assertEqual(
+            web_url(WebNames.compute_clone, llmhost_compute_id=1, new_name="x"), "/api/web/llmhost/compute/clone/1/x/"
+        )
+        self.assertEqual(
+            web_url(WebNames.compute_rename, llmhost_compute_id=1, new_name="x"),
+            "/api/web/llmhost/compute/rename/1/x/",
+        )
+        self.assertEqual(web_url(WebNames.compute_delete, llmhost_compute_id=1), "/api/web/llmhost/compute/delete/1/")
+
     def test_list(self):
         llmhost = self.new_llmhost("test_views_list")
-        data = self.post(url(Names.listview_api_all) + "?invalidate_cache=true")
+        data = self.post(web_url(WebNames.listview_all) + "?invalidate_cache=true")
         self.assertIn(llmhost.name, [item["name"] for item in data["objects"]])
-        owned = self.post(url(Names.listview_api, ownership_filter="owned") + "?invalidate_cache=true")
+        owned = self.post(web_url(WebNames.listview, ownership_filter="owned") + "?invalidate_cache=true")
         self.assertIn(llmhost.name, [item["name"] for item in owned["objects"]])
 
     def test_clone_rename_delete(self):
         """Test that the list view's actions find the LLMHost by its llmhost_id."""
         llmhost = self.new_llmhost("test_views_original")
-        clone = self.post(url(Names.listview_api_clone, llmhost_id=llmhost.pk, new_name="test_views_clone"))
+        clone = self.post(web_url(WebNames.clone, llmhost_id=llmhost.pk, new_name="test_views_clone"))
         self.addCleanup(LLMHost.objects.filter(name="test_views_clone").delete)
         self.assertEqual(LLMHost.objects.get(pk=clone["id"]).spec, llmhost.spec)
-        self.post(url(Names.listview_api_rename, llmhost_id=clone["id"], new_name="test_views_renamed"))
+        self.post(web_url(WebNames.rename, llmhost_id=clone["id"], new_name="test_views_renamed"))
         self.addCleanup(LLMHost.objects.filter(name="test_views_renamed").delete)
         self.assertEqual(LLMHost.objects.get(pk=clone["id"]).name, "test_views_renamed")
-        self.post(url(Names.listview_api_delete, llmhost_id=clone["id"]))
+        self.post(web_url(WebNames.delete, llmhost_id=clone["id"]))
         self.assertFalse(LLMHost.objects.filter(pk=clone["id"]).exists())
-        self.post(url(Names.listview_api_delete, llmhost_id=clone["id"]), status=HTTPStatus.NOT_FOUND)
+        self.post(web_url(WebNames.delete, llmhost_id=clone["id"]), status=HTTPStatus.NOT_FOUND)
 
 
 class TestLLMHostComputeListViews(LLMHostTestBase):
@@ -95,32 +120,32 @@ class TestLLMHostComputeListViews(LLMHostTestBase):
 
     def test_list(self):
         compute = self.own_compute("test_views_compute_list")
-        data = self.post(url(Names.compute_listview_api_all) + "?invalidate_cache=true")
+        data = self.post(web_url(WebNames.compute_listview_all) + "?invalidate_cache=true")
         self.assertIn(compute.name, [item["name"] for item in data["objects"]])
         for ownership_filter in ("owned", "shared", "all"):
             with self.subTest(ownership_filter=ownership_filter):
-                self.post(url(Names.compute_listview_api, ownership_filter=ownership_filter))
-        self.assertEqual(self.client.get(url(Names.compute_listview_api_all)).status_code, HTTPStatus.OK)
+                self.post(web_url(WebNames.compute_listview, ownership_filter=ownership_filter))
+        self.assertEqual(self.client.get(web_url(WebNames.compute_listview_all)).status_code, HTTPStatus.OK)
 
     def test_clone_rename_delete(self):
         """Test that the list view's actions find the LLMHostCompute by its llmhost_compute_id."""
         compute = self.own_compute("test_views_compute")
         clone_name = f"{compute.name}_clone"
-        clone = self.post(url(Names.compute_listview_api_clone, llmhost_compute_id=compute.pk, new_name=clone_name))
+        clone = self.post(web_url(WebNames.compute_clone, llmhost_compute_id=compute.pk, new_name=clone_name))
         clone_pk = LLMHostCompute.objects.get(name=clone_name, user_profile=self.user_profile).pk
         self.assertEqual(clone["name"], clone_name)
         renamed = f"{compute.name}_renamed"
-        self.post(url(Names.compute_listview_api_rename, llmhost_compute_id=clone_pk, new_name=renamed))
+        self.post(web_url(WebNames.compute_rename, llmhost_compute_id=clone_pk, new_name=renamed))
         self.assertEqual(LLMHostCompute.objects.get(pk=clone_pk).name, renamed)
-        self.post(url(Names.compute_listview_api_delete, llmhost_compute_id=clone_pk))
+        self.post(web_url(WebNames.compute_delete, llmhost_compute_id=clone_pk))
         self.assertFalse(LLMHostCompute.objects.filter(pk=clone_pk).exists())
         for name, kwargs in (
-            (Names.compute_listview_api_delete, {}),
-            (Names.compute_listview_api_rename, {"new_name": "x"}),
-            (Names.compute_listview_api_clone, {"new_name": "x"}),
+            (WebNames.compute_delete, {}),
+            (WebNames.compute_rename, {"new_name": "x"}),
+            (WebNames.compute_clone, {"new_name": "x"}),
         ):
             with self.subTest(view=name):
-                self.post(url(name, llmhost_compute_id=999999999, **kwargs), status=HTTPStatus.NOT_FOUND)
+                self.post(web_url(name, llmhost_compute_id=999999999, **kwargs), status=HTTPStatus.NOT_FOUND)
 
 
 class TestLLMHostDetailViews(LLMHostTestBase):
@@ -157,6 +182,7 @@ class TestLLMHostResourceViews(ResourceViewsTestMixin, LLMHostTestBase):
 
     model = LLMHost
     reverse_names = Names
+    web_reverse_names = WebNames
     id_kwarg = "llmhost_id"
     invalidate_cache = staticmethod(invalidate_all_cached_llmhosts_for_user_profile)
     resource_name_prefix = "test_llmhost_views"
@@ -167,16 +193,22 @@ class TestLLMHostResourceViews(ResourceViewsTestMixin, LLMHostTestBase):
 
 
 class LLMHostComputeReverseNames:
-    """The LLMHostCompute view names, as ResourceViewsTestMixin names them."""
+    """The LLMHostCompute console page names, as ResourceViewsTestMixin names them."""
 
     namespace = Names.namespace
     listview = Names.compute_listview
-    listview_api = Names.compute_listview_api
-    listview_api_all = Names.compute_listview_api_all
-    listview_api_clone = Names.compute_listview_api_clone
-    listview_api_delete = Names.compute_listview_api_delete
-    listview_api_rename = Names.compute_listview_api_rename
     detailview = Names.compute_detailview
+
+
+class LLMHostComputeApiWebReverseNames:
+    """The LLMHostCompute web console api names, as ResourceViewsTestMixin names them."""
+
+    namespace = WebNames.namespace
+    listview = WebNames.compute_listview
+    listview_all = WebNames.compute_listview_all
+    clone = WebNames.compute_clone
+    delete = WebNames.compute_delete
+    rename = WebNames.compute_rename
 
 
 class TestLLMHostComputeResourceViews(ResourceViewsTestMixin, LLMHostTestBase):
@@ -184,6 +216,7 @@ class TestLLMHostComputeResourceViews(ResourceViewsTestMixin, LLMHostTestBase):
 
     model = LLMHostCompute
     reverse_names = LLMHostComputeReverseNames
+    web_reverse_names = LLMHostComputeApiWebReverseNames
     id_kwarg = "llmhost_compute_id"
     invalidate_cache = staticmethod(invalidate_all_cached_llmhost_computes_for_user_profile)
     resource_name_prefix = "test_compute_views"

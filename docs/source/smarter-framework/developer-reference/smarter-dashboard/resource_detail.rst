@@ -5,7 +5,7 @@ When a row of a web console list is chosen, the list opens the resource's detail
 ``@smarter/common``'s ``ResourceDetail``. Its Details tab is the list's own ``DetailView``. Its
 Manifest, Hierarchy and Dependencies tabs are fetched once, from the row's ``detailUrl``, which
 :class:`~smarter.apps.account.serializers.MetaDataWithOwnershipModelSerializer` adds to every list
-api's rows: ``/dashboard/api/resource/<kind>/<record locator>/``.
+api's rows: ``/api/web/dashboard/resource/<kind>/<record locator>/``.
 
 - **Manifest** is the resource's manifest, as ``smarter describe`` returns it to the resource's
   owner, as YAML.

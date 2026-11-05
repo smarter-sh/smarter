@@ -15,7 +15,7 @@
  *
  * :example:
  *
- *     <DownloadNpm apiUrl="https://customer.smarter.sh/dashboard/api/npm" />
+ *     <DownloadNpm apiUrl="https://customer.smarter.sh/api/web/dashboard/npm" />
  */
 import { loggerPrefix } from "@/const";
 import "@/components/DownloadNpm/styles.css";

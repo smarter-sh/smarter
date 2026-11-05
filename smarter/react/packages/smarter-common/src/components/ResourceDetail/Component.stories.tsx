@@ -45,7 +45,7 @@ export const LoadError: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("/dashboard/api/resource/Example/:locator/", () =>
+        http.post("/api/web/dashboard/resource/Example/:locator/", () =>
           HttpResponse.json({ error: "Example not found." }, { status: 404 }),
         ),
       ],

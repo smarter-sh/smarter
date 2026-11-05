@@ -3,6 +3,7 @@
 
 from django.test import Client
 
+from smarter.apps.llmtool.api.web.urls import PluginApiWebReverseNames
 from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
@@ -30,7 +31,7 @@ class TestPluginListView(PluginAppTestBase):
         self.assertEqual(llmtool_list["root_id"], "smarter-llmtool-list-root")
         self.assertEqual(
             llmtool_list["llmtool_list_api_url"],
-            reverse(PluginReverseNames.namespace, PluginReverseNames.listview_api_all),
+            reverse(PluginApiWebReverseNames.namespace, PluginApiWebReverseNames.listview_all),
         )
         for key in ("django_csrf_cookie_name", "django_session_cookie_name", "react_debug_mode", "smarter_request_id"):
             self.assertIn(key, llmtool_list)

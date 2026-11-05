@@ -162,8 +162,8 @@ Budget versus actual
   or to the resources they may see.
 - The **Budgets** page of the web console lists the budgets, with each resource's spending this
   billing period and in total, and a chart of its last 12 billing periods.
-- The dashboard API returns the same data, as JSON: ``POST /dashboard/api/budgets/`` for the status of
-  each budget, and ``POST /dashboard/api/budgets/<record locator>/series/?periods=12`` for a resource's
+- The dashboard API returns the same data, as JSON: ``POST /api/web/dashboard/budgets/`` for the status of
+  each budget, and ``POST /api/web/dashboard/budgets/<record locator>/series/?periods=12`` for a resource's
   budget versus actual spending of each billing period.
 
 Users see the budgets attached to themselves and to the resources they own. Staff also see those of

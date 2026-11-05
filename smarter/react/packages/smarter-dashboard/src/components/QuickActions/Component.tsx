@@ -16,7 +16,7 @@
  *
  * :example:
  *
- *     <QuickActions sessionContext={sessionContext} apiUrl="/dashboard/api/quick-actions/" />
+ *     <QuickActions sessionContext={sessionContext} apiUrl="/api/web/dashboard/quick-actions/" />
  */
 import type { SessionContext } from "@smarter/common";
 import { gettext, interpolateNodes, Loading } from "@smarter/common";
