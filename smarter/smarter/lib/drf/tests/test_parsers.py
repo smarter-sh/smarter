@@ -28,6 +28,9 @@ class TestYAMLParser(SmarterTestBase):
         with self.assertRaises(ParseError) as ctx:
             self.parser.parse(stream)
         self.assertIn("YAML parse error", str(ctx.exception))
+        # the parser's own message, which describes its internals, is not returned to the client.
+        self.assertNotIn("unclosed", str(ctx.exception))
+        self.assertNotIn("line", str(ctx.exception))
 
     def test_parse_value_error(self):
         # Simulate a ValueError by patching stream.read to raise ValueError
