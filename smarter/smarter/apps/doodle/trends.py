@@ -57,7 +57,7 @@ are a simplified version of it: step 3 checks a short list of occasion words, no
 
    .. code-block:: bash
 
-      jq -c '{date: "2026-11-04", artwork_allowed: true, regions: [{region: "ca", name: "Canada", catalog: [],
+      jq '{date: "2026-11-04", artwork_allowed: true, regions: [{region: "ca", name: "Canada", catalog: [],
         observances: [.entities[] | select(.descriptions.en.value // "" | test("festival|tournament|championship|cup|season|holiday|eclipse"; "i"))
           | {id: ("CA:" + .id), name: .labels.en.value, countries: ["CA"]}]}]}' articles.json
 
@@ -65,9 +65,24 @@ are a simplified version of it: step 3 checks a short list of occasion words, no
 
    .. code-block:: json
 
-      {"date": "2026-11-04", "artwork_allowed": true, "regions": [{"region": "ca", "name": "Canada", "catalog": [],
-       "observances": [{"id": "CA:Q139761349", "name": "Dancing with the Stars (American TV series) season 35",
-       "countries": ["CA"]}]}]}
+      {
+        "date": "2026-11-04",
+        "artwork_allowed": true,
+        "regions": [
+          {
+            "region": "ca",
+            "name": "Canada",
+            "catalog": [],
+            "observances": [
+              {
+                "id": "CA:Q139761349",
+                "name": "Dancing with the Stars (American TV series) season 35",
+                "countries": ["CA"]
+              }
+            ]
+          }
+        ]
+      }
 """
 
 import datetime
