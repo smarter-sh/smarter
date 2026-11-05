@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.3-alpha.1...v0.42.3-alpha.2) (2026-11-05)
+
+### Bug Fixes
+
+* **lib:** cache only payment answers, wire drf permission classes ([3940f2b](https://github.com/smarter-sh/smarter/commit/3940f2b3860127fca78f02a616a18e1388afde80))
+
+### Performance
+
+* **lib:** fix stale caches, lighten broker dependency queries ([c2b5c40](https://github.com/smarter-sh/smarter/commit/c2b5c408dcba016a6f5e20b07e61046dc7782684))
+
 ## [0.42.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.2...v0.42.3-alpha.1) (2026-11-04)
 
 ### Bug Fixes
