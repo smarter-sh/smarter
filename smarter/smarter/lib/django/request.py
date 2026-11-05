@@ -864,7 +864,10 @@ class SmarterRequestMixin(AccountMixin):
         if not self.is_llmclient:
             return None
 
-        hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
+        # Search only the path: a host name such as repo-explorer is never a hashed id.
+        hashed_id = None
+        if self.parsed_url:
+            hashed_id = TimestampedModel.find_hash(self.parsed_url.path)
         if hashed_id:
             return TimestampedModel.id_from_hashed_id(hashed_id)
 
@@ -1459,7 +1462,9 @@ class SmarterRequestMixin(AccountMixin):
         # ---------------------------------------------------------------------
         # workbench urls: http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
         # ---------------------------------------------------------------------
-        hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
+        hashed_id = None
+        if self.parsed_url:
+            hashed_id = TimestampedModel.find_hash(self.parsed_url.path)
         if hashed_id is None:
             return False
 

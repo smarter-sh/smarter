@@ -5,13 +5,17 @@ The tasks are called directly, which runs
 them synchronously, in this process.
 """
 
+import json
 import secrets
+
+from django.db import DataError
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.prompt.models import Prompt, PromptHistory, PromptToolCall
 from smarter.apps.prompt.tasks import (
     aggregate_prompt_history,
+    create_prompt,
     create_prompt_history,
     create_prompt_plugin_usage,
     create_prompt_tool_call_history,
@@ -68,6 +72,29 @@ class TestPromptTasks(TestAccountMixin):
         self.assertIsNone(tool_call.plugin)
         self.assertEqual(tool_call.function_name, "get_weather")
         self.assertEqual(tool_call.response, {"a": 2})
+
+    def test_create_prompt_tool_call_history_long_arguments(self):
+        """Arguments longer than 255 characters, e.g. an MCP web search, are saved in full."""
+        query = "x" * 1000
+        function_args = json.dumps({"query": query})
+        create_prompt_tool_call_history(self.prompt.id, None, "web_search", function_args, {}, {})
+        tool_call = PromptToolCall.objects.filter(prompt=self.prompt).latest("id")
+        self.addCleanup(tool_call.delete)
+        self.assertEqual(tool_call.function_name, "web_search")
+        self.assertEqual(tool_call.function_args, function_args)
+
+    def test_tasks_do_not_retry_data_errors(self):
+        """A DataError fails the same way on every retry, so no task retries it."""
+        tasks = [
+            create_prompt_history,
+            aggregate_prompt_history,
+            create_prompt,
+            create_prompt_tool_call_history,
+            create_prompt_plugin_usage,
+        ]
+        for task in tasks:
+            with self.subTest(task=task.name):
+                self.assertIn(DataError, task.dont_autoretry_for)
 
     def test_create_prompt_tool_call_history_errors(self):
         with self.assertRaises(SmarterValueError):
