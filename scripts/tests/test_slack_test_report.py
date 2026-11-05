@@ -170,7 +170,7 @@ class TestMessage(SlackTestReportTestCase):
             ":white_check_mark: *Tests #160 passed* · <https://github.com/smarter-sh/smarter|smarter-sh/smarter> · `alpha` · someone",
         )
         self.assertEqual(lines[1], ":white_check_mark: *React*: 1 passed · 1 skipped · coverage 91.2%")
-        self.assertEqual(lines[2], ":white_check_mark: *Python*: unchanged, passed in an earlier run")
+        self.assertEqual(lines[2], ":white_check_mark: *Python*: unchanged, not tested again")
         self.assertEqual(lines[3], "<https://github.com/o/r/actions/runs/1|View the run>")
 
     def test_failed_lists_and_escapes_the_failures(self):
