@@ -12,6 +12,7 @@ from django.urls import reverse
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.secret.api.web.urls import SecretApiWebReverseNames
 from smarter.apps.secret.caching import invalidate_all_cached_secrets_for_user_profile
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.urls import SecretReverseNames
@@ -23,6 +24,7 @@ class TestSecretViews(ResourceViewsTestMixin, TestAccountMixin):
 
     model = Secret
     reverse_names = SecretReverseNames
+    web_reverse_names = SecretApiWebReverseNames
     id_kwarg = "secret_id"
     invalidate_cache = staticmethod(invalidate_all_cached_secrets_for_user_profile)
     resource_name_prefix = "test_secret_views"
@@ -37,6 +39,14 @@ class TestSecretViews(ResourceViewsTestMixin, TestAccountMixin):
         """Test that the detail page does not show the secret's value."""
         response = self.client.get(self.url("detailview", hashed_id=self.resource.hashed_id))
         self.assertNotIn(b"test-secret-value", response.content)
+
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(self.web_url("listview_all"), "/api/web/secret/listview/")
+        self.assertEqual(self.web_url("listview", ownership_filter="owned"), "/api/web/secret/listview/owned/")
+        self.assertEqual(self.web_id_url("clone", 1, new_name="x"), "/api/web/secret/clone/1/x/")
+        self.assertEqual(self.web_id_url("rename", 1, new_name="x"), "/api/web/secret/rename/1/x/")
+        self.assertEqual(self.web_id_url("delete", 1), "/api/web/secret/delete/1/")
 
     def test_clone(self):
         super().test_clone()
@@ -95,7 +105,7 @@ class TestSecretViewsRefusePlatformSecrets(TestAccountMixin):
         """POST to the clone api as ``user``, and return the response."""
         self.client.force_login(user)
         url = reverse(
-            f"{SecretReverseNames.namespace}:{SecretReverseNames.listview_api_clone}",
+            f"{SecretApiWebReverseNames.namespace}:{SecretApiWebReverseNames.clone}",
             kwargs={"secret_id": secret.pk, "new_name": new_name},
         )
         return self.client.post(url)

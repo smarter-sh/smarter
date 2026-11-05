@@ -54,7 +54,9 @@ class OrchestratorListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered ``orchestrator-list`` template.
         """
         # pylint: disable=C0415
-        from smarter.apps.orchestrator.urls import OrchestratorReverseNames
+        from smarter.apps.orchestrator.api.web.urls import (
+            OrchestratorApiWebReverseNames,
+        )
 
         context = {
             "orchestrator_list": {
@@ -63,7 +65,7 @@ class OrchestratorListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "orchestrator_list_api_url": reverse(
-                    OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview_api_all
+                    OrchestratorApiWebReverseNames.namespace, OrchestratorApiWebReverseNames.listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

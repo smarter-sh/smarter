@@ -3,7 +3,7 @@ import type { OnboardingContext } from "../lib/context";
 
 export const onboardingContext: OnboardingContext = {
   enabled: true,
-  apiUrl: "/dashboard/api/onboarding/seen/",
+  apiUrl: "/api/web/dashboard/onboarding/seen/",
   seen: [],
   csrfCookieName: "csrftoken",
   cookieDomain: "localhost",

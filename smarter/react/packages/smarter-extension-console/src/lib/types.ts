@@ -32,7 +32,7 @@ export type {
  * What the app knows about the page that hosts it, from its root element's attributes.
  *
  * - session: the Django session and CSRF cookies, and the request headers, for fetchDjangoUrl.
- * - apiUrl: the api's root, e.g. /extensions/react-integration/api/, with a trailing slash.
+ * - apiUrl: the api's root, e.g. /api/web/llmtool/extensions/, with a trailing slash.
  * - listUrl: the Extensions list page, e.g. /extensions/.
  * - slug: the extension of a detail page, or undefined on the list page.
  * - canEdit: whether the user may manage extensions (a superuser); everyone else sees the pages read-only.

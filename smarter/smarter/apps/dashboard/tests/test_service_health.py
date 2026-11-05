@@ -12,8 +12,6 @@ from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.lib import json
 
-from ..const import namespace
-
 
 def broken_check() -> bool:
     raise ConnectionError("unreachable")
@@ -29,9 +27,7 @@ class TestServiceHealthApiView(TestAccountMixin):
         self.client.force_login(self.admin_user)
         service_health.cached_health_checks.invalidate()
         self.addCleanup(service_health.cached_health_checks.invalidate)
-        self.url = reverse(
-            f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.service_health}"
-        )
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.service_health}")
 
     def test_database_and_cache_checks(self):
         """Test the checks of the database and the cache, which are both up while the tests run."""

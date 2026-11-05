@@ -2490,16 +2490,16 @@ class Settings(BaseSettings):
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"fernet_encryption_key of type {type(v)} is not a SecretStr: {v}")
+        encryption_key = v.get_secret_value()
         try:
             # Decode the key using URL-safe base64
-            encryption_key = v.get_secret_value()
             decoded_key = base64.urlsafe_b64decode(encryption_key)
             # Ensure the decoded key is exactly 32 bytes
             if len(decoded_key) != 32:
                 raise ValueError("Fernet key must be exactly 32 bytes when decoded.")
         except (TypeError, ValueError, base64.binascii.Error) as e:  # type: ignore[catch-base-exception]
-
-            raise SmarterValueError(f"Invalid Fernet encryption key: {encryption_key}. Error: {e}") from e
+            # never put the key itself in the message: it is a secret, and errors are logged.
+            raise SmarterValueError(f"Invalid Fernet encryption key. Error: {e}") from e
 
         return v
 

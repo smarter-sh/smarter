@@ -25,8 +25,6 @@ from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.lib import json
 from smarter.lib.django.listview import listview_registry
 
-from ..const import namespace
-
 
 class TestParseQuery(TestAccountMixin):
     """Test how a query is understood."""
@@ -145,7 +143,7 @@ class TestGlobalSearch(TestAccountMixin):
     def test_detail_page_url(self):
         """A result's list, narrowed by its name, with its detail open, when the row has a detail."""
         entry = next(entry for entry in listview_registry() if entry.page_url == "/guardrail/")
-        row = {"name": "pii guard", "detailUrl": "/dashboard/api/resource/Guardrail/guardrail-rMQx/"}
+        row = {"name": "pii guard", "detailUrl": "/api/web/dashboard/resource/Guardrail/guardrail-rMQx/"}
         self.assertEqual(detail_page_url(entry, row), "/guardrail/?search=pii+guard&detail=guardrail-rMQx")
         self.assertIsNone(detail_page_url(entry, {"name": "a", "detailUrl": None}))
         self.assertEqual(result_of({"name": "a", "manifestUrl": "/b/"}, "/list/", "/detail/").url, "/detail/")
@@ -174,7 +172,7 @@ class TestGlobalSearchView(TestAccountMixin):
         self.client = Client()
         self.client.force_login(self.admin_user)
         self.addCleanup(self.client.logout)
-        self.url = reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.global_search}")
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.global_search}")
 
     def test_post_and_get(self):
         """The query is read from a json body, or the query parameter of a GET, and answered camelCase."""

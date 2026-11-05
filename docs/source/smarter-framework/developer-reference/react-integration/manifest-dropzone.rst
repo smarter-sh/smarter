@@ -18,7 +18,6 @@ for users who are new to working with Smarter.
    :maxdepth: 1
    :caption: Manifest Dropzone Component Technical Reference
 
-   manifest-dropzone/api
    manifest-dropzone/django-view
    manifest-dropzone/django-template
    manifest-dropzone/template-tags

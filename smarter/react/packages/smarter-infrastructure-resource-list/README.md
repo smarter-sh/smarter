@@ -13,7 +13,7 @@ The page is for superusers only, and is read-only: the platform writes the ledge
   `/infrastructure/`, renders `templates/react/infrastructure-resource-list.html`.
 - Template tag: `smarter.apps.infrastructure.templatetags.react_infrastructure_resource_list`.
 - List api: `smarter.apps.infrastructure.views.listview.InfrastructureResourceListApiView`, at
-  `/infrastructure/react-integration/api/listview/`, returns `{"summary": {...}, "objects": [...]}`.
+  `/api/web/infrastructure/listview/`, returns `{"summary": {...}, "objects": [...]}`.
 - Model: `smarter.apps.infrastructure.models.InfrastructureResource`.
 
 ## Development

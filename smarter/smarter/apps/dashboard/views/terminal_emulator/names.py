@@ -1,22 +1,18 @@
-"""Reverse names for the server logs and terminal views."""
+"""Reverse names for the Terminal page."""
 
+from smarter.apps.dashboard.views.terminal_emulator.const import terminal_namespace
+from smarter.apps.dashboard.views.terminal_emulator.reactapp import TerminalEmulatorView
 from smarter.common.utils import to_snake_case
-
-from .api.tickets import TerminalTicketApiView
-from .const import namespace, terminal_namespace
-from .reactapp import TerminalEmulatorView
-
-
-class DashboardLogsReverseNames:
-    """A class to hold the names of the logs views for easy reference throughout the codebase."""
-
-    namespace = namespace
 
 
 class DashboardTerminalReverseNames:
-    """The names of the Terminal page and its ticket api."""
+    """
+    The names of the Terminal page.
+
+    Its ticket api is in the web console's api: see
+    :class:`smarter.apps.dashboard.views.terminal_emulator.api.names.DashboardTerminalApiReverseNames`.
+    """
 
     namespace = terminal_namespace
 
     terminal_emulator_view = to_snake_case(TerminalEmulatorView.__name__)
-    ticket = to_snake_case(TerminalTicketApiView.__name__)

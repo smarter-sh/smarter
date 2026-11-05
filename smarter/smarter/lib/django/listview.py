@@ -306,6 +306,11 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
     """
     The base class of the list apis of the web console's React list views.
 
+    It is part of Smarter's Django-React integration
+    (:doc:`/smarter-framework/developer-reference/react-integration`). Each subclass is routed in
+    its app's ``api/web/urls.py``, under ``/api/web/<app label>/listview/`` (see
+    :mod:`smarter.apps.api.web`), and its list page's React app calls it.
+
     A list api returns one page of the resources that the authenticated user owns, that are
     shared with them, or both, as ``{"user": ..., "admin": ..., "objects": [...], "pagination": {...}}``.
     The page is cached per user (see :func:`cached_listview_page`), and ``?invalidate_cache=true``
@@ -547,10 +552,8 @@ class ListviewEntry(NamedTuple):
         return str(model._meta.verbose_name_plural)  # pylint: disable=W0212
 
 
-def _is_page_view(view_class: object) -> bool:
-    """Whether a view is a list's console page: a ``...ListView`` that is not a list api."""
-    if not isinstance(view_class, type):
-        return False
+def _is_page_view(view_class: type) -> bool:
+    """Whether a view class is a list's console page: a ``...ListView`` that is not a list api."""
     if not view_class.__name__.endswith(LISTVIEW_PAGE_SUFFIX):
         return False
     if issubclass(view_class, SmarterListApiView):
@@ -558,44 +561,50 @@ def _is_page_view(view_class: object) -> bool:
     return True
 
 
-def _walk_listviews(
+def _walk_pages(
     patterns: Sequence[Union[URLPattern, URLResolver]], namespaces: tuple[str, ...] = ()
-) -> Iterator[tuple[type[SmarterListApiView], str, int]]:
+) -> Iterator[tuple[str, str, int]]:
     """
-    Yield each list api of ``patterns``, the url name of its console page, and how deeply it is included.
-
-    The page is the ``...ListView`` of the same urlconf whose name matches the api's, e.g.
-    GuardrailListView for GuardrailListApiView, or else the urlconf's first ``...ListView``. Its name
-    is joined with its namespaces, e.g. ``guardrail:guardrail_list_view``. A urlconf without a page
-    yields none of its list apis.
+    Yield each list's console page of ``patterns``: its class's name, its url name, and how deeply it is included.
 
     :param patterns: The url patterns of a urlconf.
     :param namespaces: The namespaces that the urlconf is included under.
-    :returns: An iterator of ``(list api class, page url name, depth)``, where the depth is the
+    :returns: An iterator of ``(page class name, page url name, depth)``, where the url name is
+        joined with its namespaces, e.g. ``guardrail:guardrail_list_view``, and the depth is the
         number of namespaces.
     """
-    # the names of the urlconf's console pages, by their view class's name.
-    pages: dict[str, str] = {}
-    for pattern in patterns:
-        if not isinstance(pattern, URLPattern):
-            continue
-        if not pattern.name:
-            continue
-        page_view_class = getattr(pattern.callback, "view_class", None)
-        if _is_page_view(page_view_class):
-            pages[page_view_class.__name__] = pattern.name
     for pattern in patterns:
         if isinstance(pattern, URLResolver):
             namespace = (pattern.namespace,) if pattern.namespace else ()
-            yield from _walk_listviews(pattern.url_patterns, namespaces + namespace)
-        elif isinstance(pattern, URLPattern) and pages:
-            view_class = getattr(pattern.callback, "view_class", None)
-            if isinstance(view_class, type) and issubclass(view_class, SmarterListApiView):
-                page_class = view_class.__name__.replace("ListApiView", LISTVIEW_PAGE_SUFFIX)
-                page = pages.get(page_class)
-                if not page:
-                    page = next(iter(pages.values()))
-                yield view_class, ":".join(namespaces + (page,)), len(namespaces)
+            yield from _walk_pages(pattern.url_patterns, namespaces + namespace)
+            continue
+        if not pattern.name:
+            continue
+        view_class = getattr(pattern.callback, "view_class", None)
+        if not isinstance(view_class, type):
+            continue
+        if not _is_page_view(view_class):
+            continue
+        page_name = ":".join(namespaces + (pattern.name,))
+        yield view_class.__name__, page_name, len(namespaces)
+
+
+def _walk_list_apis(patterns: Sequence[Union[URLPattern, URLResolver]]) -> Iterator[type[SmarterListApiView]]:
+    """
+    Yield each list api of ``patterns``, at any depth, e.g. those under ``/api/web/``.
+
+    :param patterns: The url patterns of a urlconf.
+    :returns: An iterator of list api classes, in the urlconf's order, possibly repeated.
+    """
+    for pattern in patterns:
+        if isinstance(pattern, URLResolver):
+            yield from _walk_list_apis(pattern.url_patterns)
+            continue
+        view_class = getattr(pattern.callback, "view_class", None)
+        if not isinstance(view_class, type):
+            continue
+        if issubclass(view_class, SmarterListApiView):
+            yield view_class
 
 
 @functools.cache
@@ -603,24 +612,42 @@ def listview_registry() -> tuple[ListviewEntry, ...]:
     """
     Return every list of the web console, found in the root urlconf, once per list api.
 
-    A list is a list api (a :class:`SmarterListApiView`) and the console page whose urlconf
-    routes it, a view whose class name ends with ``ListView``. A urlconf that is included more than
-    once, e.g. the plugins' under ``/llm-tools/`` and under the dashboard, gives the page of its
-    shallowest inclusion, which the sidebar links to too. The urlconf doesn't change while the
-    process runs, so the registry is computed once per process.
+    A list is a list api (a :class:`SmarterListApiView`), which the web console's api routes
+    (``/api/web/<app>/listview/``), and its console page, the view whose class is named after the
+    api's with ``ListView`` for ``ListApiView``, e.g. GuardrailListView for GuardrailListApiView. A
+    page that is included more than once, e.g. the plugins' under ``/llm-tools/`` and under the
+    dashboard, gives the url of its shallowest inclusion, which the sidebar links to too. The
+    urlconf doesn't change while the process runs, so the registry is computed once per process.
 
     :returns: The lists, in the urlconf's order.
     """
-    pages: dict[type[SmarterListApiView], tuple[int, str]] = {}
-    for view_class, page_name, depth in _walk_listviews(get_resolver().url_patterns):
-        if view_class not in pages or depth < pages[view_class][0]:
-            pages[view_class] = (depth, page_name)
+    url_patterns = get_resolver().url_patterns
+
+    # the url name of each console page, by its class's name, from its shallowest inclusion.
+    pages: dict[str, tuple[int, str]] = {}
+    for page_class_name, page_name, depth in _walk_pages(url_patterns):
+        known = pages.get(page_class_name)
+        if known is None or depth < known[0]:
+            pages[page_class_name] = (depth, page_name)
+
     retval: list[ListviewEntry] = []
-    for view_class, (_, page_name) in pages.items():
+    seen: set[type[SmarterListApiView]] = set()
+    for view_class in _walk_list_apis(url_patterns):
+        if view_class in seen:
+            continue
+        seen.add(view_class)
+        page_class_name = view_class.__name__.replace("ListApiView", LISTVIEW_PAGE_SUFFIX)
+        page = pages.get(page_class_name)
+        if page is None:
+            logger.warning("%s.listview_registry() found no page %s for %s", logger_prefix, page_class_name, view_class)
+            continue
+        page_name = page[1]
         try:
-            retval.append(ListviewEntry(view_class=view_class, page_url=django_reverse(page_name)))
+            page_url = django_reverse(page_name)
         except NoReverseMatch:
             logger.warning("%s.listview_registry() can't reverse %s's page %s", logger_prefix, view_class, page_name)
+            continue
+        retval.append(ListviewEntry(view_class=view_class, page_url=page_url))
     return tuple(retval)
 
 

@@ -78,7 +78,7 @@ def resource_detail_url(kind: Optional[str], record_locator: Optional[str]) -> O
     .. code-block:: python
 
         resource_detail_url("Guardrail", "guardrail-rMTAwx")
-        # '/dashboard/api/resource/Guardrail/guardrail-rMTAwx/'
+        # '/api/web/dashboard/resource/Guardrail/guardrail-rMTAwx/'
 
     :param kind: The resource's SAM kind, e.g. ``Guardrail``.
     :type kind: Optional[str]
@@ -91,14 +91,12 @@ def resource_detail_url(kind: Optional[str], record_locator: Optional[str]) -> O
     from django.conf import settings
 
     from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
-    from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
     from smarter.lib.django.shortcuts import reverse
 
     if not kind or not record_locator:
         return None
     return reverse(
-        f"{DashboardReverseNames.namespace}:{DashboardApiReverseNames.namespace}:"
-        f"{DashboardApiReverseNames.resource_detail}",
+        f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.resource_detail}",
         kwargs={"kind": str(kind), "record_locator": record_locator},
         urlconf=settings.ROOT_URLCONF,
     )

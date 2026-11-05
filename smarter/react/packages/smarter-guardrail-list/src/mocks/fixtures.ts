@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Guardrail } from "@/lib/Types";
 
-export const API_URL = "/guardrail/react-integration/api/listview/";
+export const API_URL = "/api/web/guardrail/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Guardrail> = {}): Guar
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/guardrail/guardrails/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/Guardrail/guardrail-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/Guardrail/guardrail-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

@@ -9,7 +9,7 @@ how we got here:
  - /workbench/<str:name>/config/
 """
 
-from django.urls import path, re_path
+from django.urls import path
 
 from smarter.common.utils import to_snake_case
 
@@ -29,12 +29,6 @@ from .views.detailviews import (
 from .views.listview import (
     PromptListView,
 )
-from .views.listview.api import (
-    PromptListApiCloneView,
-    PromptListApiDeleteView,
-    PromptListApiRenameView,
-    PromptListApiView,
-)
 
 app_name = namespace
 
@@ -52,7 +46,9 @@ class PromptReverseNames:
 
     All Prompt endpoints in the Smarter platform are included as attributes
     of this class. This centralizes the reverse URL names for all Prompt endpoints,
-    making it easier to maintain and reference them throughout the codebase.
+    making it easier to maintain and reference them throughout the codebase. The
+    endpoints that the LLMClient list page's React app calls are in the web console's
+    api: see :class:`smarter.apps.prompt.api.web.urls.PromptApiWebReverseNames`.
 
     Usage
     -----
@@ -85,36 +81,10 @@ class PromptReverseNames:
     sandbox_by_hashed_id = to_snake_case(PromptSandboxView.__name__)
 
     listview = to_snake_case(PromptListView.__name__)
-    listview_api = to_snake_case(PromptListApiView.__name__)
-    listview_api_all = to_snake_case(PromptListApiView.__name__) + "_all"
-    listview_api_clone = to_snake_case(PromptListApiCloneView.__name__)
-    listview_api_delete = to_snake_case(PromptListApiDeleteView.__name__)
-    listview_api_rename = to_snake_case(PromptListApiRenameView.__name__)
 
 
 urlpatterns = [
     path("", PromptListView.as_view(), name=PromptReverseNames.listview),
-    path("api/listview/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api_all),
-    re_path(
-        r"^api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
-        PromptListApiView.as_view(),
-        name=PromptReverseNames.listview_api,
-    ),
-    path(
-        "api/listview/clone/<int:llmclient_id>/<str:new_name>/",
-        PromptListApiCloneView.as_view(),
-        name=PromptReverseNames.listview_api_clone,
-    ),
-    path(
-        "api/listview/delete/<int:llmclient_id>/",
-        PromptListApiDeleteView.as_view(),
-        name=PromptReverseNames.listview_api_delete,
-    ),
-    path(
-        "api/listview/rename/<int:llmclient_id>/<str:new_name>/",
-        PromptListApiRenameView.as_view(),
-        name=PromptReverseNames.listview_api_rename,
-    ),
     path("llm-clients/<str:hashed_id>/", PromptSandboxView.as_view(), name=PromptReverseNames.sandbox_by_hashed_id),
     path(
         "llm-clients/<str:hashed_id>/manifest/",

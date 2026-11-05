@@ -400,7 +400,7 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
 
         :param obj: The resource.
         :type obj: MetaDataWithOwnershipModel
-        :return: The url, e.g. ``/dashboard/api/resource/Guardrail/guardrail-rMTAwx/``, or None if the
+        :return: The url, e.g. ``/api/web/dashboard/resource/Guardrail/guardrail-rMTAwx/``, or None if the
             serializer does not know the resource's kind, or the resource has no record locator.
         :rtype: Optional[str]
         """

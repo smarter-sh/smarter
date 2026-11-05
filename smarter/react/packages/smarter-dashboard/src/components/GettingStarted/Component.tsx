@@ -20,7 +20,7 @@
  *
  * :example:
  *
- *     <GettingStarted sessionContext={sessionContext} apiUrl="/dashboard/api/getting-started/" />
+ *     <GettingStarted sessionContext={sessionContext} apiUrl="/api/web/dashboard/getting-started/" />
  */
 import { useEffect } from "react";
 import type { SessionContext } from "@smarter/common";

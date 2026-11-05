@@ -89,9 +89,6 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
             from smarter.apps.dashboard.views.views.api.urls import (
                 DashboardApiReverseNames,
             )
-            from smarter.apps.dashboard.views.views.urls import (
-                DashboardReverseNames,  # avoid circular import
-            )
 
             retval = {
                 "react_dashboard": {
@@ -100,42 +97,34 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                     "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                     "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                     "my_resources_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.my_resources,
                     ),
                     "service_health_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.service_health,
                     ),
                     "budgets_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.budgets,
                     ),
                     "activity_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.activity,
                     ),
                     "getting_started_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.getting_started,
                     ),
                     "quick_actions_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.quick_actions,
                     ),
                     "global_search_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.global_search,
                     ),
                     "charges_api_url": reverse(
-                        DashboardReverseNames.namespace,
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.token_charges,
                     ),

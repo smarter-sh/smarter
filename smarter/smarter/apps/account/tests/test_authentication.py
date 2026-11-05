@@ -34,7 +34,6 @@ AccountReverseNames:
             RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
             name="dashboard_account_dashboard",
         ),
-        path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
         path("api-keys/", APIKeyListView.as_view(), name=AccountReverseNames.API_KEYS_LIST),
         path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN),
         path("logout/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT),

@@ -15,7 +15,7 @@
  *
  * :example:
  *
- *     <RecentActivity sessionContext={sessionContext} apiUrl="/dashboard/api/activity/" />
+ *     <RecentActivity sessionContext={sessionContext} apiUrl="/api/web/dashboard/activity/" />
  */
 import type { SessionContext } from "@smarter/common";
 import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";

@@ -106,7 +106,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Inside the server.** How Smarter's API is built with Django REST Framework: URLs, views,
        authentication classes and brokers, and the three styles side by side: command-style
        ``/api/v1/cli/``, resource-style ``/api/v1/guardrails/``, and the console's
-       ``react-integration/api/``.
+       ``/api/web/``.
    * - 3
      - Lecture 8
      - **Contracts.** Pydantic request and response models, OpenAPI generation, and contract tests.

@@ -65,6 +65,12 @@ from .exceptions import SmarterExtensionManifestError
 SLUG_PATTERN = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
 """An extension's slug: lowercase letters and digits, in words separated by single hyphens."""
 MAX_SLUG_LENGTH = 32
+RESERVED_SLUGS = frozenset({"accounts", "check-updates", "install", "list", "registry", "upload"})
+"""
+Slugs that no extension may have: the Extensions pages' fixed endpoints in the web console's api,.
+
+which share ``/api/web/llmtool/extensions/`` with each extension's ``<slug>/``.
+"""
 TOOL_ENTRY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*$")
 """A tool's entry point, ``<module>:<class>``, e.g. ``weather.tools:GetWeather``."""
 DEFAULT_TIMEOUT = 30
@@ -282,6 +288,9 @@ class ExtensionSmarterTable(BaseModel):
                 f"slug {v!r} must be at most {MAX_SLUG_LENGTH} lowercase letters and digits, "
                 "in words separated by single hyphens, e.g. date-calculator"
             )
+        if v in RESERVED_SLUGS:
+            reserved = ", ".join(sorted(RESERVED_SLUGS))
+            raise ValueError(f"slug {v!r} is reserved: an extension's slug can't be one of {reserved}")
         return v
 
     @field_validator("package")

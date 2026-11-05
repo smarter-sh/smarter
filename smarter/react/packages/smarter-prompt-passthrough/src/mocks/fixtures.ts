@@ -7,7 +7,7 @@ import type { SessionContext } from "@smarter/common";
 import type { LLMProvider } from "@/components/LLMProviders";
 
 export const API_URL = "/api/v1/prompts/passthrough/";
-export const PROVIDER_API_URL = "/dashboard/passthrough/api/providers/";
+export const PROVIDER_API_URL = "/api/web/dashboard/passthrough/providers/";
 
 export const sessionContext: SessionContext = {
   ApiUrl: API_URL,
@@ -169,7 +169,7 @@ export const providerError = {
 };
 
 /** The server log stream. See smarter.apps.dashboard.views.terminal_emulator.api.streams. */
-export const LOG_STREAM_URL = "http://localhost:9357/dashboard/logs/api/stream/";
+export const LOG_STREAM_URL = "http://localhost:9357/api/web/dashboard/logs/stream/";
 
 /** The recent server logs of a prompt, which the log stream sends first, in its "bulk" event. */
 export const bulkLogs = [

@@ -79,7 +79,7 @@ export interface LLMClientArchitectureLinks {
  *       "owner": "Ada Lovelace (ada)",
  *       "recordLocator": "llmclient-rMTAwMDAxMwx",
  *       "url": "/workbench/llm-clients/rMTAwMDAxMwx/manifest/",
- *       "detailUrl": "/dashboard/api/resource/LLMClient/llmclient-rMTAwMDAxMwx/",
+ *       "detailUrl": "/api/web/dashboard/resource/LLMClient/llmclient-rMTAwMDAxMwx/",
  *       "readable": true,
  *       "children": [
  *         {
@@ -89,7 +89,7 @@ export interface LLMClientArchitectureLinks {
  *           "owner": "Ada Lovelace (ada)",
  *           "recordLocator": "pluginmeta-rMTEx",
  *           "url": "/llm-tools/plugins/rMTEx/",
- *           "detailUrl": "/dashboard/api/resource/SqlPlugin/pluginmeta-rMTEx/",
+ *           "detailUrl": "/api/web/dashboard/resource/SqlPlugin/pluginmeta-rMTEx/",
  *           "readable": true,
  *           "children": []
  *         }

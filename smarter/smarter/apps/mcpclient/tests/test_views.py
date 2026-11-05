@@ -13,6 +13,7 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.mcpclient.api.web.urls import MCPClientApiWebReverseNames as WebNames
 from smarter.apps.mcpclient.caching import (
     invalidate_all_cached_mcpclients_for_user_profile,
 )
@@ -28,6 +29,11 @@ from .base_classes import MCPCLIENT_NAME, MCPClientTestBase
 def url(name: str, **kwargs) -> str:
     """Return the url of an MCPClient dashboard view."""
     return reverse(f"{Names.namespace}:{name}", kwargs=kwargs or None)
+
+
+def web_url(name: str, **kwargs) -> str:
+    """Return the url of an MCPClient endpoint in the web console's api."""
+    return reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs or None)
 
 
 class TestMCPClientViews(MCPClientTestBase):
@@ -57,16 +63,24 @@ class TestMCPClientViews(MCPClientTestBase):
         response = self.client.get(url(Names.listview))
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(web_url(WebNames.listview_all), "/api/web/mcpclient/listview/")
+        self.assertEqual(web_url(WebNames.listview, ownership_filter="owned"), "/api/web/mcpclient/listview/owned/")
+        self.assertEqual(web_url(WebNames.clone, mcpclient_id=1, new_name="x"), "/api/web/mcpclient/clone/1/x/")
+        self.assertEqual(web_url(WebNames.rename, mcpclient_id=1, new_name="x"), "/api/web/mcpclient/rename/1/x/")
+        self.assertEqual(web_url(WebNames.delete, mcpclient_id=1), "/api/web/mcpclient/delete/1/")
+
     def test_listview_api(self):
         """Test that the list api returns the user's MCPClients."""
-        data = self.post(url(Names.listview_api_all))
+        data = self.post(web_url(WebNames.listview_all))
         self.assertIn(MCPCLIENT_NAME, [item["name"] for item in data["objects"]])
 
     def test_clone(self):
         """Test that the clone api clones an MCPClient."""
         clone_name = "test_mcpclient_clone"
         self.addCleanup(MCPClient.objects.filter(name=clone_name).delete)
-        data = self.post(url(Names.listview_api_clone, mcpclient_id=self.mcpclient.pk, new_name=clone_name))
+        data = self.post(web_url(WebNames.clone, mcpclient_id=self.mcpclient.pk, new_name=clone_name))
         self.assertEqual(data["name"], clone_name)
         clone = MCPClient.objects.get(name=clone_name, user_profile=self.user_profile)
         self.assertEqual(clone.endpoint_url, self.mcpclient.endpoint_url)
@@ -75,19 +89,19 @@ class TestMCPClientViews(MCPClientTestBase):
     def test_rename(self):
         """Test that the rename api renames an MCPClient."""
         mcpclient = self.new_mcpclient("test_mcpclient_rename")
-        data = self.post(url(Names.listview_api_rename, mcpclient_id=mcpclient.pk, new_name="test_mcpclient_renamed"))
+        data = self.post(web_url(WebNames.rename, mcpclient_id=mcpclient.pk, new_name="test_mcpclient_renamed"))
         self.assertEqual(data["name"], "test_mcpclient_renamed")
 
     def test_delete(self):
         """Test that the delete api deletes an MCPClient."""
         mcpclient = self.new_mcpclient("test_mcpclient_view_delete")
-        self.post(url(Names.listview_api_delete, mcpclient_id=mcpclient.pk))
+        self.post(web_url(WebNames.delete, mcpclient_id=mcpclient.pk))
         self.assertFalse(MCPClient.objects.filter(pk=mcpclient.pk).exists())
 
     def test_delete_not_owner(self):
         """Test that a user cannot delete an MCPClient that is only shared with them."""
         self.client.force_login(self.non_admin_user)
-        self.post(url(Names.listview_api_delete, mcpclient_id=self.mcpclient.pk), status=HTTPStatus.NOT_FOUND)
+        self.post(web_url(WebNames.delete, mcpclient_id=self.mcpclient.pk), status=HTTPStatus.NOT_FOUND)
         self.assertTrue(MCPClient.objects.filter(pk=self.mcpclient.pk).exists())
 
     def test_detailview(self):
@@ -114,6 +128,7 @@ class TestMCPClientResourceViews(ResourceViewsTestMixin, MCPClientTestBase):
 
     model = MCPClient
     reverse_names = Names
+    web_reverse_names = WebNames
     id_kwarg = "mcpclient_id"
     invalidate_cache = staticmethod(invalidate_all_cached_mcpclients_for_user_profile)
     resource_name_prefix = "test_mcpclient_resource_views"

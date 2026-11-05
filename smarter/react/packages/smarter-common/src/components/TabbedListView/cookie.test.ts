@@ -4,8 +4,8 @@ import { getCookieForUrl, getUrlPath, setCookieForUrl } from "./cookie";
 
 describe("list count cookies", () => {
   it("remembers how many objects a list had", () => {
-    setCookieForUrl("/secret/react-integration/api/listview/owned/", 7, 7);
-    expect(getCookieForUrl("/secret/react-integration/api/listview/owned/")).toBe(7);
+    setCookieForUrl("/api/web/secret/listview/owned/", 7, 7);
+    expect(getCookieForUrl("/api/web/secret/listview/owned/")).toBe(7);
   });
 
   it("returns undefined for a list it does not know", () => {

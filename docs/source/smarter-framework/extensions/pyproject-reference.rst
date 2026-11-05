@@ -59,7 +59,9 @@ Other ``[project]`` fields are allowed, and ignored.
    * - ``slug``
      - Yes
      - The Extension's permanent identifier: at most 32 lowercase letters and digits, in words
-       separated by single hyphens, e.g. ``weather`` or ``date-calculator``.
+       separated by single hyphens, e.g. ``weather`` or ``date-calculator``. It can't be
+       ``accounts``, ``check-updates``, ``install``, ``list``, ``registry`` or ``upload``, which
+       the web console uses for its own pages' endpoints.
    * - ``package``
      - Yes
      - The Python package, at the archive's root, that holds the code, e.g. ``weather``.

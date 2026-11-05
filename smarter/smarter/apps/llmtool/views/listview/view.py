@@ -54,7 +54,7 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The page.
         """
         # pylint: disable=C0415
-        from smarter.apps.llmtool.urls import PluginReverseNames
+        from smarter.apps.llmtool.api.web.urls import PluginApiWebReverseNames
 
         context = {
             "llmtool_list": {
@@ -62,7 +62,9 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "llmtool_list_api_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview_api_all),
+                "llmtool_list_api_url": reverse(
+                    PluginApiWebReverseNames.namespace, PluginApiWebReverseNames.listview_all
+                ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }
