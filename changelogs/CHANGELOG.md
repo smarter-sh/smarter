@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.4](https://github.com/smarter-sh/smarter/compare/v0.42.3...v0.42.4) (2026-11-05)
+
+### Bug Fixes
+
+* **deps:** bump pinned python requirements to their latest releases ([d4743e3](https://github.com/smarter-sh/smarter/commit/d4743e3c939daba89636760e0b4ef5219c9dd3df))
+
 ## [0.42.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.3...v0.42.4-alpha.1) (2026-11-05)
 
 ### Bug Fixes
