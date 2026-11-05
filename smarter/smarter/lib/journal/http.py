@@ -171,7 +171,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
 
             serializable_data = None
             try:
-                serializable_data = json.loads(json.dumps(data, cls=SmarterJSONEncoder))
+                serializable_data = json.to_jsonable(data)
                 # SAMJournal.user is a User, or None for an anonymous request.
                 journal_user = None
                 if user and getattr(user, "is_authenticated", False):
@@ -307,7 +307,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 stacktrace=stack_trace,
                 description=error_description,
                 status=status,
-                args=json.loads(json.dumps(args, cls=SmarterJSONEncoder)),
+                args=json.to_jsonable(args),
                 cause=cause,
                 context=context,
                 thing=str(thing),

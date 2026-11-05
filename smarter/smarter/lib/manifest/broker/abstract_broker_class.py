@@ -12,6 +12,7 @@ from typing import (
     Callable,
     ClassVar,
     Iterable,
+    Iterator,
     List,
     Optional,
     Tuple,
@@ -275,6 +276,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _ready: bool = False
     _is_ready_abstract_broker: bool = False
     _dependencies: Optional[List[SAMDependency]] = None
+    _dependency_references_only: bool = False
+    """While True, :meth:`dependency_brokers` returns references instead of brokers.
+
+    See :meth:`dependency_references`.
+    """
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -971,78 +977,65 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._orm_meta_instance = self._orm_instance
             return
 
-        self._orm_meta_instance = None
-        ModelClass = self.ORMMetaModelClass
+        self._orm_meta_instance = self.get_owned_object(self.ORMMetaModelClass, "orm_meta_instance_setter")
 
-        try:
-            self._orm_meta_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
-        except ModelClass.MultipleObjectsReturned:
-            logger.error(
-                "%s.orm_meta_instance_setter() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
-                self.abstract_broker_logger_prefix,
-                ModelClass.__name__,
-                self.name,
-                self.user_profile,
-            )
-            return None
-        except ModelClass.DoesNotExist:
-            account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-            account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
+    def owner_user_profiles(self) -> Iterator[Optional[UserProfile]]:
+        """
+        Yield the user profiles that may own the broker's resource, in the order they are tried.
+
+        They are the broker's user profile, the account admin's, and the Smarter admin's. Each one is
+        looked up only when the one before it didn't own the resource.
+
+        :returns: An iterator of the user profiles.
+        """
+        yield self.user_profile
+        account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+        account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
+        yield account_admin_user_profile
+        yield smarter_cached_objects.smarter_admin_user_profile
+
+    def get_owned_object(self, model_class: Type[models.Model], caller: str) -> Optional[models.Model]:
+        """
+        Return the row of ``model_class`` that has the broker's name, owned by the first owner that has one.
+
+        The owners are tried in the order of :meth:`owner_user_profiles`. A row that isn't found is
+        expected, e.g. for a manifest applied for the first time. Several rows for one owner, or an
+        unexpected error, are logged, and end the search.
+
+        :param model_class: The model to look the row up in.
+        :param caller: The calling method's name, for log messages.
+        :returns: The row, or None.
+        """
+        for user_profile in self.owner_user_profiles():
             try:
-                self._orm_meta_instance = ModelClass.get_cached_object(  # type: ignore
-                    name=self.name, user_profile=account_admin_user_profile
-                )
-            except ModelClass.MultipleObjectsReturned:
+                owned_object = model_class.get_cached_object(name=self.name, user_profile=user_profile)  # type: ignore
+                return owned_object
+            except model_class.MultipleObjectsReturned:  # type: ignore[attr-defined]
                 logger.error(
-                    "%s.orm_meta_instance_setter() - Multiple %s instances found for name '%s' and account admin user_profile '%s'. Cannot determine which one to use.",
+                    "%s.%s() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
                     self.abstract_broker_logger_prefix,
-                    ModelClass.__name__,
+                    caller,
+                    model_class.__name__,
                     self.name,
-                    account_admin_user_profile,
+                    user_profile,
                 )
                 return None
-            except ModelClass.DoesNotExist:
-                # finally try with Smarter platform admin user_profile
-                smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
-                try:
-                    self._orm_meta_instance = ModelClass.get_cached_object(  # type: ignore
-                        name=self.name, user_profile=smarter_admin_user_profile
-                    )
-                except ModelClass.MultipleObjectsReturned:
-                    logger.error(
-                        "%s.orm_meta_instance_setter() - Multiple %s instances found for name '%s' and Smarter admin user_profile '%s'. Cannot determine which one to use.",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
-                    )
-                    return None
-                except ModelClass.DoesNotExist:
-                    # expected: a manifest that is applied for the first time has no ORM instance yet.
-                    return None
-                # pylint: disable=broad-except
-                except Exception as e:
-                    logger.error(
-                        "%s.orm_meta_instance_setter() - unexpected error retrieving %s for %s owned by %s: %s",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
-                        e,
-                        exc_info=True,
-                    )
-                    return None
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
-                "%s.orm_meta_instance_setter() - unexpected error initializing %s from name %s and user_profile: %s. Error: %s",
-                self.abstract_broker_logger_prefix,
-                self.ORMMetaModelClass.__name__,
-                self.name,
-                self.user_profile,
-                e,
-                exc_info=True,
-            )
+            except model_class.DoesNotExist:  # type: ignore[attr-defined]
+                continue
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error(
+                    "%s.%s() - unexpected error retrieving %s for %s owned by %s: %s",
+                    self.abstract_broker_logger_prefix,
+                    caller,
+                    model_class.__name__,
+                    self.name,
+                    user_profile,
+                    e,
+                    exc_info=True,
+                )
+                return None
+        return None
 
     @property
     def orm_instance(self) -> Optional[MetaDataWithOwnershipModel]:
@@ -1075,91 +1068,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not self.user_profile:
             return None
 
-        ModelClass = self.ORMModelClass
-
-        try:
-            # first try with the user_profile
-            self._orm_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
-        except ModelClass.MultipleObjectsReturned:
-            logger.error(
-                "%s.orm_instance() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
-                self.abstract_broker_logger_prefix,
-                ModelClass.__name__,
-                self.name,
-                self.user_profile,
-            )
-            return None
-        except ModelClass.DoesNotExist:
-            # next try with account admin user_profile
-            account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-            account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
-            try:
-                self._orm_instance = ModelClass.get_cached_object(  # type: ignore
-                    name=self.name, user_profile=account_admin_user_profile
-                )
-            except ModelClass.MultipleObjectsReturned:
-                logger.error(
-                    "%s.orm_instance() - Multiple %s instances found for name '%s' and account admin user_profile '%s'. Cannot determine which one to use.",
-                    self.abstract_broker_logger_prefix,
-                    ModelClass.__name__,
-                    self.name,
-                    account_admin_user_profile,
-                )
-                return None
-            except ModelClass.DoesNotExist:
-                # finally try with Smarter platform admin user_profile
-                smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
-                try:
-                    self._orm_instance = ModelClass.get_cached_object(  # type: ignore
-                        name=self.name, user_profile=smarter_admin_user_profile
-                    )
-                except ModelClass.MultipleObjectsReturned:
-                    logger.error(
-                        "%s.orm_instance() - Multiple %s instances found for name '%s' and Smarter admin user_profile '%s'. Cannot determine which one to use.",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
-                    )
-                    return None
-                except ModelClass.DoesNotExist:
-                    # expected: a manifest that is applied for the first time has no ORM instance yet.
-                    return None
-                # pylint: disable=broad-except
-                except Exception as e:
-                    logger.error(
-                        "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
-                        self.abstract_broker_logger_prefix,
-                        ModelClass.__name__,
-                        self.name,
-                        smarter_admin_user_profile,
-                        e,
-                        exc_info=True,
-                    )
-                    return None
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error(
-                    "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
-                    self.abstract_broker_logger_prefix,
-                    ModelClass.__name__,
-                    self.name,
-                    account_admin_user_profile,
-                    e,
-                    exc_info=True,
-                )
-                return None
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
-                "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
-                self.abstract_broker_logger_prefix,
-                ModelClass.__name__,
-                self.name,
-                self.user_profile,
-                e,
-                exc_info=True,
-            )
+        self._orm_instance = self.get_owned_object(self.ORMModelClass, "orm_instance")
+        if self._orm_instance is None:
             return None
         if self.ORMModelClass == self.ORMMetaModelClass:
             self._orm_meta_instance = self._orm_instance
@@ -1531,7 +1441,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return self.dependency_tree_node(str(self.kind), instance, ancestors=frozenset())
 
     def dependency_tree_node(
-        self, kind: str, instance: models.Model, ancestors: frozenset[Optional[str]], recursive: bool = True
+        self,
+        kind: str,
+        instance: models.Model,
+        ancestors: frozenset[Optional[str]],
+        recursive: bool = True,
+        readable: Optional[bool] = None,
     ) -> SAMDependencyTreeNode:
         """Return one resource's node of :meth:`dependency_tree`, with the nodes of the resources that it uses.
 
@@ -1540,6 +1455,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :param ancestors: The record locators of the resource's ancestors in the tree.
         :param recursive: Whether the node has the nodes of the resources that it uses. A node without them
             describes the resource alone, e.g. one of the resources that depend on another, in a list.
+        :param readable: Whether the authenticated user may read the resource, when the caller already
+            knows, e.g. for a whole group of siblings at once. None checks it with :meth:`dependency_tree_readable`.
         :return: The node.
         """
         # pylint: disable=import-outside-toplevel
@@ -1549,20 +1466,28 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         record_locator: Optional[str] = getattr(instance, "record_locator", None)
         icon = sam_kind_icon(kind)
-        if not self.dependency_tree_readable(instance):
+        if readable is None:
+            readable = self.dependency_tree_readable(instance)
+        if not readable:
             return SAMDependencyTreeNode(kind=kind, icon=icon, recordLocator=record_locator, readable=False)
         children: List[SAMDependencyTreeNode] = []
         broker_class = Brokers.get_broker(kind)
         if recursive and broker_class is not None and record_locator not in ancestors:
             path = ancestors | {record_locator}
             for child_kind, rows in broker_class.references(instance):
-                unique = {row.pk: row for row in rows}
-                for row in unique.values():
+                rows_with_owners = self.with_owners(rows)
+                unique = {row.pk: row for row in rows_with_owners}
+                siblings = list(unique.values())
+                readable_pks = self.dependency_tree_readable_pks(siblings)
+                for row in siblings:
                     row_kind = child_kind
                     if not row_kind:
                         # each row has its own kind, e.g. a plugin's PluginMeta.
                         row_kind = str(getattr(row.kind, "value", row.kind))  # type: ignore[attr-defined]
-                    child = self.dependency_tree_node(row_kind, row, path)
+                    row_readable = None
+                    if readable_pks is not None:
+                        row_readable = row.pk in readable_pks
+                    child = self.dependency_tree_node(row_kind, row, path, readable=row_readable)
                     children.append(child)
         return SAMDependencyTreeNode(
             kind=kind,
@@ -1615,6 +1540,60 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if full_name:
             return f"{full_name} ({user.username})"
         return user.username
+
+    @staticmethod
+    def with_owners(rows: Iterable[models.Model]) -> Iterable[models.Model]:
+        """
+        Return the rows with their owners' user profiles and users, read in the same query.
+
+        :meth:`dependency_tree_owner` reads each row's ``user_profile.user``, which would otherwise
+        be two more queries per node.
+
+        :param rows: The rows, usually a QuerySet.
+        :returns: The QuerySet with ``select_related("user_profile__user")`` when its model has a
+            ``user_profile`` foreign key, else the rows as they are.
+        """
+        if not isinstance(rows, models.QuerySet):
+            return rows
+        field_names = set()
+        for field in rows.model._meta.get_fields():  # pylint: disable=protected-access
+            if field.many_to_one:
+                field_names.add(field.name)
+        if "user_profile" not in field_names:
+            return rows
+        try:
+            rows_with_owners = rows.select_related("user_profile__user")
+        except TypeError:
+            # e.g. a values() QuerySet, which can't select related rows.
+            return rows
+        return rows_with_owners
+
+    def dependency_tree_readable_pks(self, rows: List[models.Model]) -> Optional[set]:
+        """
+        Return the primary keys of the rows that the authenticated user may read, with one query.
+
+        :param rows: Sibling rows of :meth:`dependency_tree`.
+        :returns: The readable rows' primary keys, or None when each row must be checked by
+            :meth:`dependency_tree_readable`: without a user, for rows of several models, or for a
+            model whose manager has no read permissions.
+        """
+        if self.user is None:
+            return None
+        if not rows:
+            return None
+        model_classes = set()
+        for row in rows:
+            model_classes.add(type(row))
+        if len(model_classes) != 1:
+            return None
+        model_class = model_classes.pop()
+        manager = model_class._default_manager  # pylint: disable=protected-access
+        if not hasattr(manager, "with_read_permission_for"):
+            return None
+        pks = [row.pk for row in rows]
+        readable_rows = manager.filter(pk__in=pks).with_read_permission_for(self.user)  # type: ignore[attr-defined]
+        readable_pks = set(readable_rows.values_list("pk", flat=True))
+        return readable_pks
 
     def dependency_tree_readable(self, instance: models.Model) -> bool:
         """Return True if the authenticated user may read a resource of :meth:`dependency_tree`.
@@ -1707,9 +1686,36 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             instance_kind = kind
             if not instance_kind:
                 instance_kind = getattr(instance.kind, "value", instance.kind)  # type: ignore[attr-defined]
-            broker = self.dependency_broker(instance_kind, instance)
+            if self._dependency_references_only:
+                name = getattr(instance, "name")
+                user_profile = getattr(instance, "user_profile")
+                broker = SAMDependencyReference(kind=instance_kind, name=name, user_profile=user_profile)
+            else:
+                broker = self.dependency_broker(instance_kind, instance)
             brokers.append(broker)
         return brokers
+
+    def dependency_references(self) -> List[SAMDependency]:
+        """Return the kind, name and owner of each resource that depends on this resource, without building brokers.
+
+        It is :meth:`dependencies`, with a :class:`SAMDependencyReference` in place of each broker, for
+        the callers that need only those, such as ``describe``'s ``status.dependencies`` and the check
+        before a delete. Building a broker per dependent costs its own lookups and logging, and a
+        built-in resource can have many dependents. The dependencies are queried afresh, and the
+        brokers that :meth:`dependencies` memoized, if any, are kept for it.
+
+        :return: A reference for each resource that depends on this resource. A broker that builds
+            its dependencies without :meth:`dependency_brokers` returns brokers here too.
+        """
+        memoized = self._dependencies
+        self._dependencies = None
+        self._dependency_references_only = True
+        try:
+            references = self.dependencies()
+        finally:
+            self._dependency_references_only = False
+            self._dependencies = memoized
+        return references
 
     def verify_no_dependencies(self, command: Optional[SmarterJournalCliCommands] = None) -> None:
         """Raise an error if other resources depend on this resource.
@@ -1717,11 +1723,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         Call this in :meth:`delete`, before deleting anything.
 
         :param command: The command that is being processed.
-        :raises SAMBrokerErrorDependencies: If :meth:`dependencies` returns any brokers.
+        :raises SAMBrokerErrorDependencies: If :meth:`dependency_references` returns any.
         """
-        # query the current dependencies, not those memoized by @memoized_dependencies.
-        self._dependencies = None
-        dependencies = self.dependencies()
+        # the current dependencies, not those memoized by @memoized_dependencies.
+        dependencies = self.dependency_references()
         if dependencies:
             visible = self.visible_dependencies(dependencies)
             names = sorted(f"{dependency.kind} {dependency.name}" for dependency in visible)
@@ -1766,7 +1771,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         :return: A dict with the ``kind`` and ``name`` of each dependency that the authenticated user may read.
         """
-        visible = self.visible_dependencies()
+        dependencies = self.dependency_references()
+        visible = self.visible_dependencies(dependencies)
         visible_sorted = sorted(visible, key=lambda d: (str(d.kind), str(d.name)))
         status = [{"kind": dependency.kind, "name": dependency.name} for dependency in visible_sorted]
         return status

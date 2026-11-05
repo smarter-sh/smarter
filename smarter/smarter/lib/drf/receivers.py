@@ -1,7 +1,6 @@
 # pylint: disable=unused-argument
 """Django signal receivers of API keys (SmarterAuthToken) and of token authentication events."""
 
-from django.core import serializers
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework.exceptions import AuthenticationFailed
@@ -12,7 +11,7 @@ from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .models import SmarterAuthToken
+from .models import SmarterAuthToken, invalidate_cached_auth_tokens
 from .signals import (
     smarter_token_authentication_failure,
     smarter_token_authentication_request,
@@ -38,18 +37,20 @@ logger_prefix = logging.SmarterFormattedText.text(__name__)
 @receiver(post_save, sender=SmarterAuthToken)
 def handle_auth_token_save(sender, instance, created, **kwargs):
     """
-    Log a saved SmarterAuthToken as JSON, at DEBUG.
+    Invalidate the user's cached API keys, and log the saved SmarterAuthToken at DEBUG.
 
     :param sender: The SmarterAuthToken model.
     :param instance: The saved token.
     :param created: True if the token was created.
     :param kwargs: The rest of the signal's arguments.
     """
-    json_data = serializers.serialize("json", [instance])
+    # the user's cached API keys, by the key's name, and by its old name after a rename.
+    old_name = getattr(instance, "_loaded_name", None)
+    invalidate_cached_auth_tokens(instance.user_id, names=(instance.name, old_name))
     logger.debug(
         "%s.handle_auth_token_save() SmarterAuthToken: %s, created: %s",
         logger_prefix,
-        json_data,
+        instance,
         created,
     )
 
@@ -57,12 +58,13 @@ def handle_auth_token_save(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=SmarterAuthToken)
 def handle_smarter_auth_token_delete(sender, instance, **kwargs):
     """
-    Log a deleted SmarterAuthToken, at DEBUG.
+    Invalidate the user's cached API keys, and log the deleted SmarterAuthToken at DEBUG.
 
     :param sender: The SmarterAuthToken model.
     :param instance: The deleted token.
     :param kwargs: The rest of the signal's arguments.
     """
+    invalidate_cached_auth_tokens(instance.user_id, names=(instance.name,))
     logger.debug(
         "%s.handle_smarter_auth_token_delete() SmarterAuthToken: %s",
         logger_prefix,
