@@ -131,7 +131,7 @@ FROM kubectl AS mariadb_connector
 # - https://mariadb.com/docs/connectors/mariadb-connector-c/install-mariadb-connector-c
 # - https://mariadb.com/downloads/
 
-ARG MARIADB_VERSION=12.2
+ARG MARIADB_VERSION=12.3
 ENV MARIADB_CONFIG=/usr/bin/mariadb_config
 ENV MARIADB_CONFIG_ALTERNATIVE=/usr/local/bin/mariadb_config
 RUN curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup && \
