@@ -13,11 +13,11 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
+from smarter.apps.llmtool.api.web.urls import PluginApiWebReverseNames
 from smarter.apps.llmtool.caching import invalidate_all_cached_plugins_for_user_profile
 from smarter.apps.llmtool.extension.tests.mixins import ExtensionTestMixin
 from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import Extension, PluginMeta
-from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
 
@@ -25,7 +25,7 @@ from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase
 
 logger = logging.getLogger(__name__)
 
-NAMESPACE = PluginReverseNames.namespace
+NAMESPACE = PluginApiWebReverseNames.namespace
 
 
 class TestPluginListApiViews(PluginAppTestBase):
@@ -49,10 +49,10 @@ class TestPluginListApiViews(PluginAppTestBase):
         """Return the list api's url, for an ownership filter and query parameters."""
         if ownership_filter:
             url = reverse(
-                f"{NAMESPACE}:{PluginReverseNames.listview_api}", kwargs={"ownership_filter": ownership_filter}
+                f"{NAMESPACE}:{PluginApiWebReverseNames.listview}", kwargs={"ownership_filter": ownership_filter}
             )
         else:
-            url = reverse(f"{NAMESPACE}:{PluginReverseNames.listview_api_all}")
+            url = reverse(f"{NAMESPACE}:{PluginApiWebReverseNames.listview_all}")
         if params:
             url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
         return url
@@ -135,7 +135,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         clone_name = "test_plugin_app_api_clone"
         self.addCleanup(self.delete_plugin_by_name, clone_name)
         url = reverse(
-            f"{NAMESPACE}:{PluginReverseNames.listview_api_clone}",
+            f"{NAMESPACE}:{PluginApiWebReverseNames.clone}",
             kwargs={"llmclient_id": self.static_plugin.id, "new_name": clone_name},
         )
         data = self.post(url)
@@ -153,7 +153,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         self.addCleanup(self.delete_plugin_by_name, clone_name)
         self.client.force_login(self.non_admin_user)
         url = reverse(
-            f"{NAMESPACE}:{PluginReverseNames.listview_api_clone}",
+            f"{NAMESPACE}:{PluginApiWebReverseNames.clone}",
             kwargs={"llmclient_id": self.static_plugin.id, "new_name": clone_name},
         )
         self.post(url)
@@ -165,7 +165,7 @@ class TestPluginListApiViews(PluginAppTestBase):
     def test_clone_not_found(self):
         """Test that the clone api returns 404 for a plugin that does not exist."""
         url = reverse(
-            f"{NAMESPACE}:{PluginReverseNames.listview_api_clone}", kwargs={"llmclient_id": 999999999, "new_name": "x"}
+            f"{NAMESPACE}:{PluginApiWebReverseNames.clone}", kwargs={"llmclient_id": 999999999, "new_name": "x"}
         )
         self.post(url, status=HTTPStatus.NOT_FOUND)
 
@@ -177,7 +177,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         plugin = self.new_static_plugin("test_plugin_app_api_rename")
         self.addCleanup(self.delete_plugin_by_name, "test_plugin_app_api_renamed")
         url = reverse(
-            f"{NAMESPACE}:{PluginReverseNames.listview_api_rename}",
+            f"{NAMESPACE}:{PluginApiWebReverseNames.rename}",
             kwargs={"llmclient_id": plugin.id, "new_name": "testPluginAppApiRenamed"},
         )
         data = self.post(url)
@@ -188,7 +188,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         """Test that a user cannot rename a plugin that is only shared with them."""
         self.client.force_login(self.non_admin_user)
         url = reverse(
-            f"{NAMESPACE}:{PluginReverseNames.listview_api_rename}",
+            f"{NAMESPACE}:{PluginApiWebReverseNames.rename}",
             kwargs={"llmclient_id": self.static_plugin.id, "new_name": "stolen"},
         )
         self.post(url, status=HTTPStatus.NOT_FOUND)
@@ -200,7 +200,7 @@ class TestPluginListApiViews(PluginAppTestBase):
     def test_delete(self):
         """Test that the delete api deletes the plugin."""
         plugin = self.new_static_plugin("test_plugin_app_api_delete")
-        url = reverse(f"{NAMESPACE}:{PluginReverseNames.listview_api_delete}", kwargs={"llmclient_id": plugin.id})
+        url = reverse(f"{NAMESPACE}:{PluginApiWebReverseNames.delete}", kwargs={"llmclient_id": plugin.id})
         self.post(url)
         self.assertFalse(PluginMeta.objects.filter(id=plugin.id).exists())
         self.assertNotIn("test_plugin_app_api_delete", self.listed("owned"))
@@ -208,9 +208,7 @@ class TestPluginListApiViews(PluginAppTestBase):
     def test_delete_not_owner(self):
         """Test that a user cannot delete a plugin that is only shared with them."""
         self.client.force_login(self.non_admin_user)
-        url = reverse(
-            f"{NAMESPACE}:{PluginReverseNames.listview_api_delete}", kwargs={"llmclient_id": self.static_plugin.id}
-        )
+        url = reverse(f"{NAMESPACE}:{PluginApiWebReverseNames.delete}", kwargs={"llmclient_id": self.static_plugin.id})
         self.post(url, status=HTTPStatus.NOT_FOUND)
         self.assertTrue(PluginMeta.objects.filter(id=self.static_plugin.id).exists())
 
@@ -232,9 +230,9 @@ class TestPluginListApiViews(PluginAppTestBase):
     def test_apis_refuse_missing_parameters(self):
         """Test that the clone, delete and rename apis, called without their url parameters, are bad requests."""
         for url in (
-            self.api_url(PluginReverseNames.listview_api_clone, new_name="x"),
-            self.api_url(PluginReverseNames.listview_api_delete),
-            self.api_url(PluginReverseNames.listview_api_rename, new_name="x"),
+            self.api_url(PluginApiWebReverseNames.clone, new_name="x"),
+            self.api_url(PluginApiWebReverseNames.delete),
+            self.api_url(PluginApiWebReverseNames.rename, new_name="x"),
         ):
             with self.subTest(url=url):
                 self.assertEqual(self.call_view(url).status_code, HTTPStatus.BAD_REQUEST)
@@ -244,13 +242,13 @@ class TestPluginListApiViews(PluginAppTestBase):
         with patch("smarter.apps.llmtool.views.listview.api.PluginController") as controller:
             controller.return_value.plugin = None
             data = self.post(
-                self.api_url(PluginReverseNames.listview_api_clone, new_name="test_plugin_views_x"),
+                self.api_url(PluginApiWebReverseNames.clone, new_name="test_plugin_views_x"),
                 status=HTTPStatus.BAD_REQUEST,
             )
         self.assertIn("cannot be cloned", data["error"])
         for name, method, kwargs in (
-            (PluginReverseNames.listview_api_delete, "delete", {}),
-            (PluginReverseNames.listview_api_rename, "rename", {"new_name": "test_plugin_views_y"}),
+            (PluginApiWebReverseNames.delete, "delete", {}),
+            (PluginApiWebReverseNames.rename, "rename", {"new_name": "test_plugin_views_y"}),
         ):
             with self.subTest(api=name), patch.object(PluginMeta, method, side_effect=RuntimeError("test error")):
                 data = self.post(self.api_url(name, **kwargs), status=HTTPStatus.BAD_REQUEST)
@@ -270,7 +268,7 @@ class TestPluginListApiExtensionsView(ExtensionTestMixin):
         client = Client()
         client.force_login(user)
         self.addCleanup(client.logout)
-        url = reverse(f"{NAMESPACE}:{PluginReverseNames.listview_api_extensions}")
+        url = reverse(f"{NAMESPACE}:{PluginApiWebReverseNames.listview_extensions}")
         if params:
             url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
         response = client.post(url)
@@ -334,5 +332,5 @@ class TestPluginListApiExtensionsView(ExtensionTestMixin):
 
     def test_list_anonymous_user(self):
         """Test that an anonymous user is redirected to the login page."""
-        response = Client().post(reverse(f"{NAMESPACE}:{PluginReverseNames.listview_api_extensions}"))
+        response = Client().post(reverse(f"{NAMESPACE}:{PluginApiWebReverseNames.listview_extensions}"))
         self.assertEqual(response.status_code, 302)

@@ -17,9 +17,9 @@ export type Example = {
 };
 
 /** The url of an example's detail, as a list api's serializer sends it. See mocks/handlers.ts's detailHandler. */
-export const exampleDetailUrl = (id: number) => `/dashboard/api/resource/Example/example-r${id}/`;
+export const exampleDetailUrl = (id: number) => `/api/web/dashboard/resource/Example/example-r${id}/`;
 
-export const API_URL = "/example/react-integration/api/listview/";
+export const API_URL = "/api/web/example/listview/";
 
 export const sessionContext: SessionContext = {
   ApiUrl: API_URL,

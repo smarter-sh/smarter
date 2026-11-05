@@ -11,8 +11,6 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
-from ..const import namespace
-
 
 class TestGettingStartedApiView(TestAccountMixin):
     """Test GettingStartedView, which lists the onboarding steps of the user."""
@@ -21,9 +19,7 @@ class TestGettingStartedApiView(TestAccountMixin):
         super().setUp()
         self.client = Client()
         self.addCleanup(self.client.logout)
-        self.url = reverse(
-            f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.getting_started}"
-        )
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.getting_started}")
 
     def steps(self, user) -> dict[str, SmarterDictType]:
         self.client.force_login(user)

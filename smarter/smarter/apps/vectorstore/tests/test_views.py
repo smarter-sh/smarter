@@ -3,6 +3,9 @@
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.vectorstore.api.web.urls import (
+    VectorstoreApiWebReverseNames as WebNames,
+)
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames as Names
 
@@ -11,6 +14,10 @@ from .base_classes import VectorstoreTestBase
 
 def url(name: str, **kwargs) -> str:
     return reverse(f"{Names.namespace}:{name}", kwargs=kwargs or None)
+
+
+def web_url(name: str, **kwargs) -> str:
+    return reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs or None)
 
 
 class TestVectorstoreConsole(VectorstoreTestBase):
@@ -27,10 +34,18 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("smarter-vectorstore-list-root", response.content.decode())
 
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(web_url(WebNames.listview_all), "/api/web/vectorstore/listview/")
+        self.assertEqual(web_url(WebNames.listview, ownership_filter="owned"), "/api/web/vectorstore/listview/owned/")
+        self.assertEqual(web_url(WebNames.clone, vectorstore_id=1, new_name="x"), "/api/web/vectorstore/clone/1/x/")
+        self.assertEqual(web_url(WebNames.rename, vectorstore_id=1, new_name="x"), "/api/web/vectorstore/rename/1/x/")
+        self.assertEqual(web_url(WebNames.delete, vectorstore_id=1), "/api/web/vectorstore/delete/1/")
+
     def test_list_api(self):
         """Test that the list api returns the fields of the React app's Vectorstore type."""
         vectorstore = self.new_vectorstore("test_views_list")
-        response = self.client.post(url(Names.listview_api, ownership_filter="owned") + "?invalidate_cache=true")
+        response = self.client.post(web_url(WebNames.listview, ownership_filter="owned") + "?invalidate_cache=true")
         self.assertEqual(response.status_code, 200)
         (item,) = (o for o in response.json()["objects"] if o["name"] == vectorstore.name)
         for key in (
@@ -58,7 +73,7 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         VectorstoreMeta.objects.filter(pk=first.pk).update(vector_count=5)
         VectorstoreMeta.objects.filter(pk=second.pk).update(vector_count=10)
         expected = [first.name, second.name]
-        list_url = url(Names.listview_api, ownership_filter="owned") + "?invalidate_cache=true&page_size=100"
+        list_url = web_url(WebNames.listview, ownership_filter="owned") + "?invalidate_cache=true&page_size=100"
         for ordering, names in (("vectorCount", expected), ("-vectorCount", list(reversed(expected)))):
             data = self.client.post(f"{list_url}&ordering={ordering}").json()
             self.assertEqual(data["pagination"]["ordering"], ordering)
@@ -71,7 +86,7 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         """Test that a clone is a new, undeployed vectorstore with the same spec, and none of the original's state."""
         service = self.ready_service("test_views_clone")
         name = f"test_views_clone_copy_{self.hash_suffix}"
-        response = self.client.post(url(Names.listview_api_clone, vectorstore_id=service.vectorstore.pk, new_name=name))
+        response = self.client.post(web_url(WebNames.clone, vectorstore_id=service.vectorstore.pk, new_name=name))
         self.assertEqual(response.status_code, 200, response.content)
         clone = VectorstoreMeta.objects.get(name=name)
         self.addCleanup(clone.delete)
@@ -80,14 +95,14 @@ class TestVectorstoreConsole(VectorstoreTestBase):
             (clone.index_name, clone.endpoint_url, clone.deployed_at, clone.api_key_secret), ("", "", None, None)
         )
         self.assertEqual(clone.spec["embeddings"], service.vectorstore.spec["embeddings"])
-        conflict = self.client.post(url(Names.listview_api_clone, vectorstore_id=service.vectorstore.pk, new_name=name))
+        conflict = self.client.post(web_url(WebNames.clone, vectorstore_id=service.vectorstore.pk, new_name=name))
         self.assertEqual(conflict.status_code, 409)
 
     def test_rename(self):
         vectorstore = self.new_vectorstore("test_views_rename")
         kubernetes_name = vectorstore.kubernetes_name
         name = f"test_views_renamed_{self.hash_suffix}"
-        response = self.client.post(url(Names.listview_api_rename, vectorstore_id=vectorstore.pk, new_name=name))
+        response = self.client.post(web_url(WebNames.rename, vectorstore_id=vectorstore.pk, new_name=name))
         self.assertEqual(response.status_code, 200, response.content)
         vectorstore.refresh_from_db()
         self.assertEqual((vectorstore.name, vectorstore.kubernetes_name), (name, kubernetes_name))
@@ -95,14 +110,14 @@ class TestVectorstoreConsole(VectorstoreTestBase):
     def test_delete(self):
         """Test that delete destroys a deployed database, and refuses a protected one."""
         service = self.ready_service("test_views_delete")
-        response = self.client.post(url(Names.listview_api_delete, vectorstore_id=service.vectorstore.pk))
+        response = self.client.post(web_url(WebNames.delete, vectorstore_id=service.vectorstore.pk))
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(VectorstoreMeta.objects.filter(pk=service.vectorstore.pk).exists())
         self.assertIn("persistentvolumeclaim", self.kubernetes.deleted[-1][0])
 
         protected = self.new_vectorstore("test_views_protected")
         VectorstoreMeta.objects.filter(pk=protected.pk).update(deletion_protection=True)
-        response = self.client.post(url(Names.listview_api_delete, vectorstore_id=protected.pk))
+        response = self.client.post(web_url(WebNames.delete, vectorstore_id=protected.pk))
         self.assertEqual(response.status_code, 400)
         self.assertIn("deletionProtection", response.json()["error"])
         self.assertTrue(VectorstoreMeta.objects.filter(pk=protected.pk).exists())

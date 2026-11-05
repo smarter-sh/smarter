@@ -52,7 +52,7 @@ class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered page, whose context gives the React app its root element id, cookie names and api url.
         """
         # pylint: disable=C0415
-        from smarter.apps.connection.urls import ConnectionReverseNames
+        from smarter.apps.connection.api.web.urls import ConnectionApiWebReverseNames
 
         context = {
             "connection_list": {
@@ -61,7 +61,7 @@ class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "connection_list_api_url": reverse(
-                    ConnectionReverseNames.namespace, ConnectionReverseNames.listview_api_all
+                    ConnectionApiWebReverseNames.namespace, ConnectionApiWebReverseNames.listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

@@ -85,9 +85,9 @@ class TerminalEmulatorView(SmarterAuthenticatedNeverCachedWebView):
             with the terminal context dictionary.
         :rtype: django.http.HttpResponse
         """
-        from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
-
-        from .names import DashboardTerminalReverseNames
+        from smarter.apps.dashboard.views.terminal_emulator.api.names import (
+            DashboardTerminalApiReverseNames,
+        )
 
         context = {
             "terminal": {
@@ -97,9 +97,8 @@ class TerminalEmulatorView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "api_url": reverse(
-                    DashboardReverseNames.namespace,
-                    DashboardTerminalReverseNames.namespace,
-                    DashboardTerminalReverseNames.ticket,
+                    DashboardTerminalApiReverseNames.namespace,
+                    DashboardTerminalApiReverseNames.ticket,
                 ),  # the ticket api, whose ticket opens the terminal's WebSocket.
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

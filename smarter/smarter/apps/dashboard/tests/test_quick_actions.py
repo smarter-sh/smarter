@@ -10,8 +10,6 @@ from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
-from ..const import namespace
-
 
 class TestQuickActionsApiView(TestAccountMixin):
     """Test QuickActionsView, which lists links to the console pages that users visit most."""
@@ -20,7 +18,7 @@ class TestQuickActionsApiView(TestAccountMixin):
         super().setUp()
         self.client = Client()
         self.addCleanup(self.client.logout)
-        self.url = reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.quick_actions}")
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.quick_actions}")
 
     def quick_actions(self) -> list[SmarterDictType]:
         response = self.client.post(self.url)

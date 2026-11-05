@@ -41,7 +41,7 @@ class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered page.
         """
         # pylint: disable=C0415
-        from smarter.lib.drf.urls import AuthTokenReverseNames
+        from smarter.lib.drf.api.web.urls import AuthTokenApiWebReverseNames
 
         context = {
             "authtoken_list": {
@@ -50,7 +50,7 @@ class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "authtoken_list_api_url": reverse(
-                    AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview_api_all
+                    AuthTokenApiWebReverseNames.namespace, AuthTokenApiWebReverseNames.listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

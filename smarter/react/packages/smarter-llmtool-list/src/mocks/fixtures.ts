@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Extension, ExtensionListPage, LLMTool } from "@/lib/Types";
 
-export const API_URL = "/llm-tools/react-integration/api/listview/";
+export const API_URL = "/api/web/llmtool/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<LLMTool> = {}): LLMToo
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/llm-tools/plugins/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/${kind}/pluginmeta-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/${kind}/pluginmeta-r${id}/`,
     canDelete: true,
     ready: true,
     kind,

@@ -33,9 +33,11 @@ def onboarding(context: RequestContext) -> SmarterDictType:
     """
     # pylint: disable=import-outside-toplevel
     from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
-    from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
-    namespaces = (DashboardReverseNames.namespace, DashboardApiReverseNames.namespace)
-    api_url = reverse(*namespaces, DashboardApiReverseNames.onboarding_seen, urlconf=settings.ROOT_URLCONF)
+    api_url = reverse(
+        DashboardApiReverseNames.namespace,
+        DashboardApiReverseNames.onboarding_seen,
+        urlconf=settings.ROOT_URLCONF,
+    )
     user = get_resolved_user(context["request"].user)
     return onboarding_context(user, api_url).model_dump(mode="json", by_alias=True)
