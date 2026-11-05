@@ -28,8 +28,6 @@ class HealthzASGIMiddleware:
     """
     Answer ``GET`` and ``HEAD`` requests for ``/healthz/`` with ``200 OK``, and pass every other request to the app.
 
-    :param app: The ASGI application to wrap, e.g. Django's.
-
     Example:
 
     .. code-block:: python
@@ -38,6 +36,11 @@ class HealthzASGIMiddleware:
     """
 
     def __init__(self, app: ASGI3Application):
+        """
+        Wrap an ASGI application.
+
+        :param app: The ASGI application to wrap, e.g. Django's.
+        """
         self.app = app
 
     async def __call__(self, scope: Scope, receive: ASGIReceiveCallable, send: ASGISendCallable) -> None:
@@ -50,7 +53,10 @@ class HealthzASGIMiddleware:
         """
         if scope["type"] == "http" and scope["path"] in HEALTHZ_PATHS and scope["method"] in ("GET", "HEAD"):
             # a HEAD response has the GET response's headers, without its body.
-            body = b"OK" if scope["method"] == "GET" else b""
+            if scope["method"] == "GET":
+                body = b"OK"
+            else:
+                body = b""
             await send(
                 {
                     "type": "http.response.start",

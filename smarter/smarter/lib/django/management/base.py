@@ -57,7 +57,7 @@ class SmarterCommand(BaseCommand):
 
     .. code-block:: python
 
-        from smarter.smarter.lib.django.management.base import SmarterCommand
+        from smarter.lib.django.management.base import SmarterCommand
 
         class MyCommand(SmarterCommand):
             help = "My custom command."
@@ -82,9 +82,6 @@ class SmarterCommand(BaseCommand):
     # load_from_github called with call_command().
     _nesting = threading.local()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @property
     def is_nested(self) -> bool:
         """
@@ -100,7 +97,9 @@ class SmarterCommand(BaseCommand):
 
         The count is what :meth:`is_nested` reads. It is decremented however the command ends.
 
-        :returns: whatever Django's ``BaseCommand.execute()`` returns.
+        :param args: Passed to Django's ``BaseCommand.execute()``.
+        :param options: Passed to Django's ``BaseCommand.execute()``.
+        :returns: Whatever Django's ``BaseCommand.execute()`` returns.
         """
         SmarterCommand._nesting.depth = getattr(SmarterCommand._nesting, "depth", 0) + 1
         try:
@@ -125,10 +124,12 @@ class SmarterCommand(BaseCommand):
         """
         Log the command's success, and close its banner.
 
-        :param msg: the message to log, instead of ``<module> completed successfully.``
+        :param msg: The message to log, instead of ``<module> completed successfully.``
         """
         if self.is_nested:
-            logger.debug("%s", msg or f"{self.__module__} completed successfully.")
+            if not msg:
+                msg = f"{self.__module__} completed successfully."
+            logger.debug("%s", msg)
             return
         if msg:
             logger.info("%s", msg)
@@ -175,8 +176,8 @@ class SmarterCommand(BaseCommand):
         stack trace at DEBUG, and exits with status 1. ``--traceback`` restores Django's behavior,
         for debugging. Only the command line is affected: ``call_command()`` still raises.
 
-        :param argv: the command line, e.g. ``["manage.py", "create_user", "--username", "jdoe"]``.
-        :raises SystemExit: with status 1, after an unexpected error.
+        :param argv: The command line, e.g. ``["manage.py", "create_user", "--username", "jdoe"]``.
+        :raises SystemExit: With status 1, after an unexpected error.
         """
         try:
             super().run_from_argv(argv)
@@ -211,5 +212,11 @@ class SmarterCommand(BaseCommand):
         return parser
 
     def handle(self, *args, **options):
-        """Handle the command execution."""
+        """
+        Run the command's logic, which every subclass implements.
+
+        :param args: The command's positional arguments.
+        :param options: The command's parsed options.
+        :raises NotImplementedError: always, in this base class.
+        """
         raise NotImplementedError("Subclasses must implement the handle method.")
