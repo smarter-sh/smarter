@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.8](https://github.com/smarter-sh/smarter/compare/v0.42.7...v0.42.8) (2026-11-05)
+
+### Bug Fixes
+
+* **helm:** keep the autoscaler from evicting the only mariadb pod ([2ac6e2d](https://github.com/smarter-sh/smarter/commit/2ac6e2dad262a41a3fdad5c5af578899bf6382d6)), closes [#931](https://github.com/smarter-sh/smarter/issues/931) [#929](https://github.com/smarter-sh/smarter/issues/929)
+
+## [0.42.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.7...v0.42.8-alpha.1) (2026-11-05)
+
+### Bug Fixes
+
+* **helm:** keep the autoscaler from evicting the only mariadb pod ([2ac6e2d](https://github.com/smarter-sh/smarter/commit/2ac6e2dad262a41a3fdad5c5af578899bf6382d6)), closes [#931](https://github.com/smarter-sh/smarter/issues/931) [#929](https://github.com/smarter-sh/smarter/issues/929)
+
 ## [0.42.7](https://github.com/smarter-sh/smarter/compare/v0.42.6...v0.42.7) (2026-11-05)
 
 ### Bug Fixes

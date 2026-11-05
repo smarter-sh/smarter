@@ -17,8 +17,9 @@ run's job summaries show: the React tests (Vitest's JSON report), the Python tes
 
 A ``--*-result`` is the job's result as GitHub reports it (``success``, ``failure``, ``cancelled``
 or ``skipped``). A missing or unreadable report is left out of the message, never an error: a job
-that failed early writes none. ``--*-passed-before`` says that the suite was skipped because the
-same files passed in an earlier run (see the workflow's fingerprint job).
+that failed early writes none. ``--*-passed-before`` says that the suite was skipped because its
+files are unchanged from the base branch, or passed in an earlier run (see the workflow's
+fingerprint job).
 
 The message, in Slack's mrkdwn, is printed. scripts/slack_post.py posts it.
 """
@@ -160,12 +161,12 @@ def suite_lines(name: str, result: str, passed_before: bool, report: SuiteReport
 
     :param name: The suite's name in the message, e.g. ``React``.
     :param result: The job's result.
-    :param passed_before: Whether the suite was skipped because the same files passed before.
+    :param passed_before: Whether the suite was skipped because its files are unchanged.
     :param report: What the suite's reports say, if they could be read.
     """
     icon = ":white_check_mark:" if suite_passed(result, passed_before) else ":x:"
     if passed_before and result in ("success", "skipped") and report is None:
-        return [f"{icon} *{name}*: unchanged, passed in an earlier run"]
+        return [f"{icon} *{name}*: unchanged, not tested again"]
     if report is None:
         return [f"{icon} *{name}*: {result}, no test report"]
     parts = [f"{report.passed:,} passed"]
