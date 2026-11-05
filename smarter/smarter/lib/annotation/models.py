@@ -41,16 +41,18 @@ def annotation_root_model(model: ModelOrInstance) -> type[models.Model]:
     multi-table inheritance. Proxy models resolve to their concrete model.
 
     :param model: A model class or instance.
-    :type model: ModelOrInstance
     :returns: The root model.
-    :rtype: type[models.Model]
+    :raises TypeError: if ``model`` has no concrete model.
     """
     # pylint: disable=W0212
     concrete = model._meta.concrete_model
     if concrete is None:
         raise TypeError(f"{model} is not a concrete Django model.")
     parents = concrete._meta.get_parent_list()
-    return parents[-1] if parents else concrete
+    if not parents:
+        return concrete
+    root = parents[-1]
+    return root
 
 
 def annotation_content_type(model: ModelOrInstance) -> ContentType:
@@ -58,11 +60,11 @@ def annotation_content_type(model: ModelOrInstance) -> ContentType:
     Return the content type under which a resource's annotations are stored.
 
     :param model: A model class or instance.
-    :type model: ModelOrInstance
     :returns: The content type of :func:`annotation_root_model`.
-    :rtype: ContentType
     """
-    return ContentType.objects.get_for_model(annotation_root_model(model))
+    root_model = annotation_root_model(model)
+    content_type = ContentType.objects.get_for_model(root_model)
+    return content_type
 
 
 @cache_results(timeout=smarter_settings.cache_expiration)
@@ -75,11 +77,8 @@ def get_cached_annotations(content_type_id: int, pk: str) -> AnnotationsMap:
     directly (see :mod:`smarter.lib.annotation.receivers`).
 
     :param content_type_id: The id of the resource's content type, from :func:`annotation_content_type`.
-    :type content_type_id: int
     :param pk: The resource's primary key, as a string.
-    :type pk: str
     :returns: The annotations, in the order they were added.
-    :rtype: AnnotationsMap
     """
     rows = Annotation.objects.filter(content_type_id=content_type_id, object_id=pk).order_by("id")
     return {row.key: row.value for row in rows}
@@ -104,7 +103,6 @@ def prefetch_annotations(instances: Iterable[models.Model]) -> None:
         [llmclient.annotations for llmclient in page]  # no more queries
 
     :param instances: The resources, of one kind or several.
-    :type instances: Iterable[models.Model]
     """
     # pylint: disable=import-outside-toplevel
     from smarter.lib.django.models import MetaDataModel
@@ -114,7 +112,9 @@ def prefetch_annotations(instances: Iterable[models.Model]) -> None:
         if not isinstance(instance, MetaDataModel) or instance.pk is None:
             continue
         content_type_id = annotation_content_type(instance).pk
-        by_content_type.setdefault(content_type_id, {}).setdefault(str(instance.pk), []).append(instance)
+        by_pk = by_content_type.setdefault(content_type_id, {})
+        instances_with_pk = by_pk.setdefault(str(instance.pk), [])
+        instances_with_pk.append(instance)
     for content_type_id, by_pk in by_content_type.items():
         found: dict[str, AnnotationsMap] = {pk: {} for pk in by_pk}
         rows = Annotation.objects.filter(content_type_id=content_type_id, object_id__in=list(by_pk)).order_by("id")
@@ -133,9 +133,7 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         Return the annotations of every resource of a model, e.g. every LLMClient.
 
         :param model: A model class or instance.
-        :type model: ModelOrInstance
         :returns: The annotations.
-        :rtype: AnnotationQuerySet
         """
         return self.filter(content_type=annotation_content_type(model))
 
@@ -144,9 +142,7 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         Return the annotations of one resource.
 
         :param instance: The resource.
-        :type instance: models.Model
         :returns: The annotations.
-        :rtype: AnnotationQuerySet
         """
         return self.filter(content_type=annotation_content_type(instance), object_id=str(instance.pk))
 
@@ -155,11 +151,8 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         Return the annotations with a key, and optionally a value.
 
         :param key: The annotation key, e.g. ``acme.com/crm-account-id``.
-        :type key: str
         :param value: The value to match exactly, or ``None`` for any value.
-        :type value: Optional[str]
         :returns: The annotations.
-        :rtype: AnnotationQuerySet
         """
         queryset = self.filter(key=key)
         if value is not None:
@@ -171,9 +164,7 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         Return the annotations whose key's prefix is ``prefix``, or one of its subdomains.
 
         :param prefix: A DNS domain, e.g. ``acme.com``.
-        :type prefix: str
         :returns: The annotations.
-        :rtype: AnnotationQuerySet
         """
         return self.filter(models.Q(prefix=prefix) | models.Q(prefix__endswith="." + prefix))
 
@@ -191,11 +182,8 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
             LLMClient.objects.filter(pk__in=Annotation.objects.with_key("acme.com/id").object_ids_for(LLMClient))
 
         :param model: The resources' model.
-        :type model: ModelOrInstance
         :returns: A single-column queryset of primary keys.
-        :rtype: QuerySet
         """
-        # pylint: disable=W0212
         pk_field = annotation_root_model(model)._meta.pk  # pylint: disable=W0212
         if isinstance(pk_field, (models.AutoField, models.BigAutoField, models.IntegerField)):
             return self.annotate(resource_pk=Cast("object_id", models.BigIntegerField())).values("resource_pk")
@@ -217,7 +205,6 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
             Annotation.objects.with_key("acme.com/crm-account-id", "A-10042").resources()
 
         :returns: The resources, ordered by kind, then primary key.
-        :rtype: list[models.Model]
         """
         ids_by_content_type: dict[int, set[str]] = {}
         for content_type_id, object_id in self.values_list("content_type_id", "object_id"):
@@ -227,7 +214,6 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
             model = ContentType.objects.get_for_id(content_type_id).model_class()
             if model is None:
                 continue
-            # pylint: disable=W0212
             # pylint: disable=W0212
             retval.extend(model._default_manager.filter(pk__in=ids_by_content_type[content_type_id]).order_by("pk"))
         return retval
@@ -241,11 +227,8 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         the changes once the transaction commits.
 
         :param instance: The resource, already saved.
-        :type instance: models.Model
         :param annotations: The resource's annotations, already validated.
-        :type annotations: AnnotationsMap
         :returns: The changes, in key order.
-        :rtype: list[AnnotationChange]
         """
         # pylint: disable=import-outside-toplevel
         from smarter.lib.django.models import MetaDataModel
@@ -266,13 +249,17 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
             for key in sorted(set(existing) | set(annotations)):
                 row = existing.get(key)
                 new_value = annotations.get(key)
-                if row is None and new_value is not None:
-                    self.create(content_type=content_type, object_id=str(instance.pk), key=key, value=new_value)
-                    changes.append(AnnotationChange(key=key, old_value=None, new_value=new_value))
-                elif row is not None and new_value is None:
+                if row is None:
+                    # the key is new.
+                    if new_value is not None:
+                        self.create(content_type=content_type, object_id=str(instance.pk), key=key, value=new_value)
+                        changes.append(AnnotationChange(key=key, old_value=None, new_value=new_value))
+                elif new_value is None:
+                    # the key was removed.
                     row.delete()
                     changes.append(AnnotationChange(key=key, old_value=row.value, new_value=None))
-                elif row is not None and new_value is not None and row.value != new_value:
+                elif row.value != new_value:
+                    # the key's value changed.
                     changes.append(AnnotationChange(key=key, old_value=row.value, new_value=new_value))
                     row.value = new_value
                     row.save(update_fields=["value", "updated_at"])
@@ -295,9 +282,7 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
         ``resource_deleted=True``.
 
         :param instance: The resource being deleted.
-        :type instance: models.Model
         :returns: The removals.
-        :rtype: list[AnnotationChange]
         """
         # pylint: disable=import-outside-toplevel
         from .handlers import dispatch_annotation_changes
@@ -328,11 +313,23 @@ class AnnotationManager(models.Manager["Annotation"]):
         return self.get_queryset()
 
     def filter(self, *args, **kwargs) -> AnnotationQuerySet:
-        """Return the annotations that match the filter."""
+        """
+        Return the annotations that match the filter.
+
+        :param args: ``Q`` objects, as for :meth:`django.db.models.query.QuerySet.filter`.
+        :param kwargs: Field lookups, as for :meth:`django.db.models.query.QuerySet.filter`.
+        :returns: The annotations.
+        """
         return self.get_queryset().filter(*args, **kwargs)
 
     def exclude(self, *args, **kwargs) -> AnnotationQuerySet:
-        """Return the annotations that don't match the filter."""
+        """
+        Return the annotations that don't match the filter.
+
+        :param args: ``Q`` objects, as for :meth:`django.db.models.query.QuerySet.exclude`.
+        :param kwargs: Field lookups, as for :meth:`django.db.models.query.QuerySet.exclude`.
+        :returns: The annotations.
+        """
         return self.get_queryset().exclude(*args, **kwargs)
 
     def none(self) -> AnnotationQuerySet:
@@ -340,11 +337,21 @@ class AnnotationManager(models.Manager["Annotation"]):
         return self.get_queryset().none()
 
     def for_model(self, model: ModelOrInstance) -> AnnotationQuerySet:
-        """See :meth:`AnnotationQuerySet.for_model`."""
+        """
+        Return the annotations of every resource of a model; see :meth:`AnnotationQuerySet.for_model`.
+
+        :param model: A model class or instance.
+        :returns: The annotations.
+        """
         return self.get_queryset().for_model(model)
 
     def for_object(self, instance: models.Model) -> AnnotationQuerySet:
-        """See :meth:`AnnotationQuerySet.for_object`."""
+        """
+        Return the annotations of one resource; see :meth:`AnnotationQuerySet.for_object`.
+
+        :param instance: The resource.
+        :returns: The annotations.
+        """
         return self.get_queryset().for_object(instance)
 
     def with_key(self, key: str, value: Optional[str] = None) -> AnnotationQuerySet:
@@ -358,7 +365,12 @@ class AnnotationManager(models.Manager["Annotation"]):
         return self.get_queryset().with_key(key, value)
 
     def with_prefix(self, prefix: str) -> AnnotationQuerySet:
-        """See :meth:`AnnotationQuerySet.with_prefix`."""
+        """
+        Return the annotations whose key's prefix is ``prefix``; see :meth:`AnnotationQuerySet.with_prefix`.
+
+        :param prefix: A DNS domain, e.g. ``acme.com``.
+        :returns: The annotations.
+        """
         return self.get_queryset().with_prefix(prefix)
 
     def sync(self, instance: models.Model, annotations: AnnotationsMap) -> list[AnnotationChange]:
@@ -372,7 +384,12 @@ class AnnotationManager(models.Manager["Annotation"]):
         return self.get_queryset().sync(instance, annotations)
 
     def delete_for_object(self, instance: models.Model) -> list[AnnotationChange]:
-        """See :meth:`AnnotationQuerySet.delete_for_object`."""
+        """
+        Delete a resource's annotations; see :meth:`AnnotationQuerySet.delete_for_object`.
+
+        :param instance: The resource being deleted.
+        :returns: The removals.
+        """
         return self.get_queryset().delete_for_object(instance)
 
 
@@ -437,9 +454,19 @@ class Annotation(TimestampedModel):
     )
     value = models.TextField(blank=True, default="", help_text="The annotation value, a string.")
 
-    def save(self, *args, **kwargs):
-        """Set the prefix from the key, then save."""
-        self.prefix = split_annotation_key(self.key)[0] or ""
+    def save(self, *args, **kwargs) -> None:
+        """
+        Set the prefix from the key, then save.
+
+        When ``update_fields`` is given, ``prefix`` is added to it, so that the prefix is saved too.
+
+        :param args: Passed to Django's ``save()``.
+        :param kwargs: Passed to Django's ``save()``.
+        """
+        prefix, _name = split_annotation_key(self.key)
+        if prefix is None:
+            prefix = ""
+        self.prefix = prefix
         update_fields = kwargs.get("update_fields")
         if update_fields is not None and "prefix" not in update_fields:
             kwargs["update_fields"] = [*update_fields, "prefix"]

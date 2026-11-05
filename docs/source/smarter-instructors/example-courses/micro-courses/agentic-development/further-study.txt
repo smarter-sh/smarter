@@ -31,6 +31,14 @@
   on models, harnesses, agents and environments, and where Smarter fits; `Why LLMs Love Code, and
   What That Means for Everyone Else
   <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
-  on why LLMs do better at code than at other work. The case study `Converge or Diverge: AI Coding
-  Agents <https://smarter.sh/case-studies/ai-coding-agents>`__ turns the three-part series into a
-  lesson with labs and discussion questions.
+  on why LLMs do better at code than at other work; `Claude Code Reviews Smarter's Kubernetes Pod
+  Logs Every Day, and Proposes the Fixes
+  <https://blog.smarter.sh/2026/10/31/claude-code-pod-log-review-self-healing/>`__, on an unattended
+  agent that turns production logs into issues and pull requests; `Introducing the Smarter MCP
+  Server <https://blog.smarter.sh/2026/10/30/what-is-an-mcp-server/>`__, on the MCP server built
+  into every platform, what its tools do and how to connect to it; `How Smarter's MCP Server
+  Searches Its Own Code, Documentation and Blog
+  <https://blog.smarter.sh/2026/11/01/smarter-project-mcp-server-design/>`__, on indexing whole
+  repositories and ranking search results without embeddings. The case study `Converge or Diverge:
+  AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__ turns the three-part series
+  into a lesson with labs and discussion questions.

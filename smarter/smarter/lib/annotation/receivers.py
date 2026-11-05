@@ -21,7 +21,12 @@ def delete_annotations(sender, instance, **kwargs):
     Delete a resource's annotations when the resource is deleted.
 
     Annotations point at their resource through a content type, not a foreign key, so the database
-    doesn't cascade the deletion.
+    doesn't cascade the deletion. Instances of models that aren't a
+    :class:`~smarter.lib.django.models.MetaDataModel`, or have no primary key, are ignored.
+
+    :param sender: The model of the deleted instance.
+    :param instance: The deleted instance.
+    :param kwargs: The rest of the signal's arguments.
     """
     if not isinstance(instance, MetaDataModel) or instance.pk is None:
         return
@@ -45,8 +50,13 @@ def invalidate_cached_annotations(sender, instance: Annotation, **kwargs):
     Rows change through :meth:`~smarter.lib.annotation.models.AnnotationQuerySet.sync`, and also
     through the Django admin and direct writes, which don't go through it. Waiting for the commit
     keeps a request that reads the rows before the change commits from caching the old ones.
+
+    :param sender: The Annotation model.
+    :param instance: The saved or deleted annotation.
+    :param kwargs: The rest of the signal's arguments.
     """
-    content_type_id, object_id = instance.content_type_id, instance.object_id
+    content_type_id = instance.content_type_id
+    object_id = instance.object_id
     logger.debug(
         "%s.invalidate_cached_annotations() content_type_id=%s object_id=%s",
         logger_prefix,

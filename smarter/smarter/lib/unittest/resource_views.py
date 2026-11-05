@@ -13,7 +13,7 @@ A subclass names the app's model, url names and url parameter, and creates the r
         def create_resource(cls, name):
             return Provider.objects.create(name=name, user_profile=cls.user_profile, base_url="https://x/")
 
-The resource that setUpClass() creates is owned by the account's admin user. Each test that
+The resource that ``setUpClass()`` creates is owned by the account's admin user. Each test that
 changes a resource changes a throwaway copy, which is deleted afterwards.
 """
 
@@ -22,6 +22,7 @@ from typing import Callable, Optional
 from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.http import HttpResponse
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
@@ -31,13 +32,24 @@ from smarter.lib.typing import SmarterDictType
 
 
 class ResourceViewsTestMixin:
-    """Test the React list page, the list api, the clone, delete and rename apis, and the detail page."""
+    """
+    Test the React list page, the list api, the clone, delete and rename apis, and the detail page.
 
+    Mix it into a test base class that provides ``hash_suffix``, ``admin_user``,
+    ``user_profile`` and the :class:`unittest.TestCase` assertions, e.g. ``TestAccountMixin``.
+    """
+
+    #: The model of the resource under test.
     model: type[MetaDataModel]
+    #: The app's reverse names class, e.g. ``ProviderReverseNames``.
     reverse_names: type
+    #: The name of the url parameter that holds the resource's id.
     id_kwarg: str
+    #: The function that invalidates the list api's cache for a user profile, if the app caches it.
     invalidate_cache: Optional[Callable] = None
+    #: The prefix of the names of the resources that the tests create.
     resource_name_prefix = "test_resource_views"
+    #: The attribute of ``reverse_names`` that holds the detail page's url name.
     detail_view_name = "detailview"
 
     @classmethod
@@ -51,19 +63,19 @@ class ResourceViewsTestMixin:
         raise NotImplementedError
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         """Create the resource that the tests share."""
         super().setUpClass()  # type: ignore[misc]
         name = f"{cls.resource_name_prefix}_{cls.hash_suffix}"  # type: ignore[attr-defined]
         cls.resource = cls.create_resource(name)
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(cls) -> None:
         """Delete every resource whose name starts with ``resource_name_prefix``."""
         cls.model.objects.filter(name__startswith=cls.resource_name_prefix).delete()  # type: ignore[attr-defined]
         super().tearDownClass()  # type: ignore[misc]
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Log a test client in as the admin user, and invalidate the list cache, if the test class has one."""
         super().setUp()  # type: ignore[misc]
         self.client = Client()
@@ -85,7 +97,11 @@ class ResourceViewsTestMixin:
         """
         url_name = getattr(self.reverse_names, name)
         view_name = f"{self.reverse_names.namespace}:{url_name}"
-        return reverse(view_name, kwargs=kwargs or None)
+        url_kwargs = None
+        if kwargs:
+            url_kwargs = kwargs
+        url = reverse(view_name, kwargs=url_kwargs)
+        return url
 
     def post(self, url: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """
@@ -97,23 +113,41 @@ class ResourceViewsTestMixin:
         """
         response = self.client.post(url)
         self.assertEqual(response.status_code, status, response.content[:500])  # type: ignore[attr-defined]
-        return json.loads(response.content)
+        data = json.loads(response.content)
+        return data
 
     def listed(self, ownership_filter: Optional[str] = None, **params) -> list[str]:
-        """Return the names of the resources that the list api returns."""
+        """
+        Return the names of the resources that the list api returns.
+
+        :param ownership_filter: ``owned``, ``shared`` or ``all``, or None for the url without
+            an ownership filter.
+        :param params: Query parameters, e.g. ``ordering`` or ``page_size``.
+        :returns: The names, in the order the api returns them.
+        """
         if ownership_filter:
             url = self.url("listview_api", ownership_filter=ownership_filter)
         else:
             url = self.url("listview_api_all")
         if params:
-            url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
-        return [item["name"] for item in self.post(url)["objects"]]
+            query_parameters = [f"{key}={value}" for key, value in params.items()]
+            url += "?" + "&".join(query_parameters)
+        data = self.post(url)
+        names = [item["name"] for item in data["objects"]]
+        return names
 
     def throwaway(self, suffix: str) -> MetaDataModel:
-        """Return a new resource, which is deleted after the test."""
+        """
+        Create a new resource, which is deleted after the test.
+
+        :param suffix: A suffix that makes the name unique to the test, e.g. ``clone_source``.
+        :returns: The resource, named ``resource_name_prefix``, ``suffix`` and the test class's
+            ``hash_suffix``.
+        """
         name = f"{self.resource_name_prefix}_{suffix}_{self.hash_suffix}"  # type: ignore[attr-defined]
         self.addCleanup(self.model.objects.filter(name__startswith=name).delete)  # type: ignore[attr-defined]
-        return self.create_resource(name)
+        resource = self.create_resource(name)
+        return resource
 
     def id_url(self, name: str, resource_id: int, **kwargs) -> str:
         """
@@ -126,13 +160,23 @@ class ResourceViewsTestMixin:
         """
         return self.url(name, **{self.id_kwarg: resource_id}, **kwargs)
 
-    def call_view(self, url: str, **kwargs):
-        """Call the view of ``url`` directly, as the admin user, with ``kwargs`` in place of its url parameters."""
+    def call_view(self, url: str, **kwargs) -> HttpResponse:
+        """
+        Call the view of ``url`` directly, as the admin user, with ``kwargs`` in place of its url parameters.
+
+        It lets a test call a view with parameters that its url pattern would not route.
+
+        :param url: The url whose view to call.
+        :param kwargs: The keyword arguments that the view receives.
+        :returns: The view's response.
+        """
         view = resolve(url).func
         request = RequestFactory().post("/", HTTP_HOST="localhost:9357")
-        SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
+        session_middleware = SessionMiddleware(lambda r: None)  # type: ignore[arg-type]
+        session_middleware.process_request(request)
         request.user = self.admin_user  # type: ignore[attr-defined]
-        return view(request, **kwargs)
+        response = view(request, **kwargs)
+        return response
 
     # -------------------------------------------------------------------------
     # the React list page and its list api
@@ -170,7 +214,8 @@ class ResourceViewsTestMixin:
         self.assertTrue({"name", "createdAt", "updatedAt"} <= set(sort_fields), sort_fields)  # type: ignore[attr-defined]
         expected = [self.resource.name, resource.name]  # type: ignore[attr-defined]
         for ordering, names in (("name", expected), ("-name", list(reversed(expected)))):
-            listed = [name for name in self.listed("owned", ordering=ordering, page_size=100) if name in expected]
+            all_names = self.listed("owned", ordering=ordering, page_size=100)
+            listed = [name for name in all_names if name in expected]
             self.assertEqual(listed, names, ordering)  # type: ignore[attr-defined]
         for column in sort_fields:
             for ordering in (column, f"-{column}"):

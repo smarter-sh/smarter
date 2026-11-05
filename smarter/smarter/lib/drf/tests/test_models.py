@@ -11,9 +11,8 @@ from smarter.apps.account.tests.factories import (
     factory_account_teardown,
     mortal_user_factory,
 )
+from smarter.lib.drf.models import LAST_USED_RESOLUTION, SmarterAuthToken
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
-from ..models import SmarterAuthToken
 
 logger = getLogger(__name__)
 
@@ -163,32 +162,28 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
     def test_accessed_sets_last_used_at(self):
         with patch.object(self.auth_token, "save") as mock_save:
             self.auth_token.last_used_at = None
-            with patch("smarter.lib.drf.models.datetime") as mock_dt:
-                now = datetime(2024, 1, 1, 12, 0, 0)
-                mock_dt.now.return_value = now
+            now = timezone.now()
+            with patch("smarter.lib.drf.models.timezone.now", return_value=now):
                 self.auth_token.accessed()
-                self.assertEqual(self.auth_token.last_used_at, now)
-                mock_save.assert_called_once()
+            self.assertEqual(self.auth_token.last_used_at, now)
+            mock_save.assert_called_once()
 
-    def test_accessed_updates_if_older_than_5min(self):
+    def test_accessed_updates_if_older_than_the_resolution(self):
         with patch.object(self.auth_token, "save") as mock_save:
-            old_time = datetime.now() - timedelta(minutes=10)
-            self.auth_token.last_used_at = old_time
-            with patch("smarter.lib.drf.models.datetime") as mock_dt:
-                now = datetime.now()
-                mock_dt.now.return_value = now
+            self.auth_token.last_used_at = timezone.now() - LAST_USED_RESOLUTION - timedelta(seconds=1)
+            now = timezone.now()
+            with patch("smarter.lib.drf.models.timezone.now", return_value=now):
                 self.auth_token.accessed()
-                self.assertEqual(self.auth_token.last_used_at, now)
-                mock_save.assert_called_once()
+            self.assertEqual(self.auth_token.last_used_at, now)
+            mock_save.assert_called_once()
 
     def test_accessed_does_not_update_if_recent(self):
         with patch.object(self.auth_token, "save") as mock_save:
-            recent_time = datetime.now()
+            recent_time = timezone.now()
             self.auth_token.last_used_at = recent_time
-            with patch("smarter.lib.drf.models.datetime") as mock_dt:
-                mock_dt.now.return_value = recent_time
-                self.auth_token.accessed()
-                mock_save.assert_not_called()
+            self.auth_token.accessed()
+            self.assertEqual(self.auth_token.last_used_at, recent_time)
+            mock_save.assert_not_called()
 
     def test_str_returns_identifier(self):
         self.assertIsInstance(str(self.auth_token), str)

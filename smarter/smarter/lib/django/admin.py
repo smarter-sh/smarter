@@ -1,1 +1,1 @@
-"""Customized Django Admin console classes"""
+"""Customized Django admin console classes."""

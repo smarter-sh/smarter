@@ -455,6 +455,10 @@ Recommended Texts
 - **Reference:** Harry Percival and Bob Gregory, *Architecture Patterns with Python* (O'Reilly,
   2020), on keeping services apart from the code that calls them, as the weather Extension's
   ``services.py`` does.
+- **Reference:** `How to Build a Smarter Extension in Python With Cookiecutter
+  <https://blog.smarter.sh/2026/11/01/smarter-extension-cookiecutter-how-to/>`__, which starts
+  a new Extension from the official `template
+  <https://github.com/smarter-sh/smarter-extension-cookiecutter>`__, for the capstone.
 - **In the repository:** `protocol.py
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/protocol.py>`__,
   `toolkit.py

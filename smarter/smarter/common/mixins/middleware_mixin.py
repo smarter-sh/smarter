@@ -19,6 +19,9 @@ from .logger import logger
 
 MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGNORECASE)
 
+CLIENT_IP_META_KEYS = ("HTTP_X_FORWARDED_FOR", "HTTP_X_REAL_IP", "HTTP_CF_CONNECTING_IP", "REMOTE_ADDR")
+"""The ``request.META`` keys that :meth:`SmarterMiddlewareMixin.get_client_ip` reads, and logs when it finds no ip."""
+
 
 class SmarterMiddlewareMixin(SmarterHelperMixin):
     """
@@ -162,11 +165,16 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
             return remote_addr
 
         if request.path.replace("/", "") not in self.amnesty_urls and not smarter_settings.environment_is_local:
+            # Only the headers that locate the client are logged: request.META also holds the
+            # Authorization header and the session cookie.
+            ip_headers = {}
+            for header in CLIENT_IP_META_KEYS:
+                ip_headers[header] = request.META.get(header)
             logger.warning(
-                "%s __call()__ - Could not determine client IP: %s, Meta: %s",
+                "%s.get_client_ip() - Could not determine client IP: %s, ip headers: %s",
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request=request),
-                request.META,
+                ip_headers,
             )
         return None
 

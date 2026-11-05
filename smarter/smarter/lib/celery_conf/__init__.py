@@ -1,8 +1,14 @@
-"""Celery configuration for smarter APP."""
+"""
+The Smarter platform's Celery app.
+
+It is configured from the Django settings whose names start with ``CELERY_``, and finds the
+``tasks`` modules of every installed Django app.
+"""
 
 from celery import Celery
 
 APP = Celery("smarter")
+"""The Celery app that the Smarter workers and Celery Beat run."""
 APP.conf.task_protocol = 1
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

@@ -54,7 +54,7 @@ injection and data leaks is described in one short YAML file, and deployed with 
 Smarter is also a complete **platform for teaching AI**. Companies use it to train and retrain
 their employees, and universities and bootcamps use it to teach their students. The
 :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` includes
-:ref:`22 ready-to-teach courses <ai-training-courses>`, from prompt engineering for
+:ref:`23 ready-to-teach courses <ai-training-courses>`, from prompt engineering for
 non-programmers to Kubernetes for platform engineers. Most come as a one-day bootcamp, a
 two-week online course and a four-week online course.
 
@@ -88,8 +88,8 @@ it. Smarter gives a training program a real platform to teach on, and a library 
 teach with. Learners build working AI applications from the first hour, on the same software that
 can run them in production afterwards.
 
-**22 free courses, 63 turnkey course plans.** The
-:doc:`Free Course Catalog <smarter-instructors/example-courses/index>` has 19
+**23 free courses, 66 turnkey course plans.** The
+:doc:`Free Course Catalog <smarter-instructors/example-courses/index>` has 20
 :doc:`micro courses <smarter-instructors/example-courses/micro-courses>`, each in
 :doc:`three formats <smarter-instructors/example-courses/micro-courses/course-formats>`: an eight-hour classroom
 bootcamp, a two-week online course and a four-week online course. Its
@@ -121,6 +121,7 @@ prerequisites. A trainer can take a plan, set the dates, and teach it.
        :doc:`Full Stack <smarter-instructors/example-courses/micro-courses/full-stack-development>`,
        :doc:`API Design <smarter-instructors/example-courses/micro-courses/api-design>`,
        :doc:`Extension Development <smarter-instructors/example-courses/micro-courses/extension-development>`,
+       :doc:`AI Features in Software <smarter-instructors/example-courses/micro-courses/ai-features>`,
        :doc:`Secure Software <smarter-instructors/example-courses/micro-courses/secure-software>`,
        :doc:`Software Quality <smarter-instructors/example-courses/micro-courses/software-quality>`,
        :doc:`Software Architecture <smarter-instructors/example-courses/micro-courses/software-architecture>`,
@@ -365,7 +366,7 @@ At a glance
 - **Get started** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://docs.smarter.sh/learn/>`__
 - **Teaching and training** | :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` | :doc:`Instructor Guide <smarter-instructor>` | :doc:`Course formats <smarter-instructors/example-courses/micro-courses/course-formats>`
 
-  - 22 free courses for employees, managers, developers and platform engineers, with plans for a one-day bootcamp, a two-week online course and a four-week online course, and three 18-hour master classes, on Django, on AI application development, and on Python programming with agentic AI.
+  - 23 free courses for employees, managers, developers and platform engineers, with plans for a one-day bootcamp, a two-week online course and a four-week online course, and three 18-hour master classes, on Django, on AI application development, and on Python programming with agentic AI.
   - Per-learner budgets, separate accounts for each cohort, and a record of every prompt, on learners' laptops or on one shared Kubernetes instance.
 
 - **Platform**

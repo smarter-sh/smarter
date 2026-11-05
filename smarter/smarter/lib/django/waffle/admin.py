@@ -1,4 +1,4 @@
-"""Admin.py - Custom Django Admin for Waffle Switches."""
+"""The Django admin for waffle switches, which only superusers can see."""
 
 from waffle.admin import SwitchAdmin
 

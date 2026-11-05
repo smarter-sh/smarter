@@ -82,7 +82,12 @@ Actually Reads <https://blog.smarter.sh/2026/10/17/claude-code-data-sources/>`__
 :doc:`/smarter-framework/developer-reference/agentic-development`,
 :doc:`/smarter-framework/developer-reference/devops/test`, :doc:`ADR 024 </adr/024-broker-model>`,
 :doc:`ADR 027 </adr/027-annotations>`, `Six High-Impact Uses of Claude Code
-<https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__.
+<https://blog.smarter.sh/2026/10/23/claude-code-six-uses/>`__, `Claude Code Reviews Smarter's
+Kubernetes Pod Logs Every Day, and Proposes the Fixes
+<https://blog.smarter.sh/2026/10/31/claude-code-pod-log-review-self-healing/>`__, `Introducing the
+Smarter MCP Server <https://blog.smarter.sh/2026/10/30/what-is-an-mcp-server/>`__, `How Smarter's
+MCP Server Searches Its Own Code, Documentation and Blog
+<https://blog.smarter.sh/2026/11/01/smarter-project-mcp-server-design/>`__.
 
 **Exercises.**
 

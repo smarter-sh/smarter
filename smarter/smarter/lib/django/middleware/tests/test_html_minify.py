@@ -63,6 +63,14 @@ class TestHTMLMinifyMiddleware(SmarterTestBase):
         response = self.middleware(None).minify_response(HttpResponse(xml))
         self.assertEqual(response.content.decode(), xml)
 
+    def test_a_page_without_comments_is_not_parsed(self):
+        """A page without comments is returned as it is: there is nothing to remove."""
+        html = "<html><body><p>Hello</p></body></html>"
+        with patch("smarter.lib.django.middleware.html_minify.BeautifulSoup") as soup:
+            response = self.middleware(None).minify_response(HttpResponse(html))
+        soup.assert_not_called()
+        self.assertEqual(response.content.decode(), html)
+
     def test_decode_content(self):
         self.assertEqual(HTMLMinifyMiddleware.decode_content(b"  <p>"), "<p>")
         self.assertEqual(HTMLMinifyMiddleware.decode_content("  <p>"), "<p>")

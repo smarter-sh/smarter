@@ -82,7 +82,7 @@ jobs:
       github.event_name == 'workflow_dispatch'
       || (github.event.workflow_run.conclusion == 'success'
           && !startsWith(github.event.workflow_run.head_commit.message, 'chore(release):'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       actions: read
@@ -121,7 +121,7 @@ jobs:
   docs:
     needs: resolve
     if: needs.resolve.outputs.publish == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     environment:
       name: docs
@@ -158,15 +158,19 @@ jobs:
       # from source, against MariaDB Connector/C. Installed as in test.yml,
       # and even when the venv is restored, because the package links against
       # libmariadb at runtime.
+      #
+      # The runners are pinned to ubuntu-24.04: MariaDB's repositories lag new
+      # Ubuntu releases (26.04 had no 12.2 or MaxScale packages), and
+      # ubuntu-latest moves without notice.
       #========================================================================
       - name: Install MariaDB Connector/C
         shell: bash
         env:
-          MARIADB_VERSION: "12.2"
+          MARIADB_VERSION: "12.3"
         run: |
           curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
           chmod +x mariadb_repo_setup
-          sudo ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}"
+          sudo ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" --skip-maxscale
           rm -f mariadb_repo_setup
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat

@@ -50,6 +50,7 @@ from .validation import (
     SmarterAnnotationError,
     is_reserved_annotation_key,
     prefix_matches,
+    split_annotation_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -61,7 +62,8 @@ class AnnotationEvent:
     """What an annotation handler is called with: one changed annotation of one resource."""
 
     instance: models.Model
-    """The resource.
+    """
+    The resource.
 
     After a deletion, it is the deleted instance, and its ``pk`` may be ``None``.
     """
@@ -70,7 +72,8 @@ class AnnotationEvent:
     """The resource's model, e.g. ``llmclient.LLMClient``."""
 
     object_id: Union[int, str]
-    """The resource's primary key.
+    """
+    The resource's primary key.
 
     Unlike ``instance.pk``, it survives the resource's deletion.
     """
@@ -86,6 +89,7 @@ AnnotationHandler = Callable[[AnnotationEvent], None]
 """A function that is called with an :class:`AnnotationEvent`."""
 
 _handlers: dict[str, list[AnnotationHandler]] = {}
+"""The registered handlers, by the prefix they were registered for."""
 
 
 def register_annotation_handler(prefix: str, handler: AnnotationHandler) -> AnnotationHandler:
@@ -96,16 +100,15 @@ def register_annotation_handler(prefix: str, handler: AnnotationHandler) -> Anno
     be handled by Smarter's own code.
 
     :param prefix: A DNS domain that the integration owns, e.g. ``acme.com``.
-    :type prefix: str
     :param handler: The function to call.
-    :type handler: AnnotationHandler
     :raises SmarterAnnotationError: If the prefix isn't a DNS subdomain, or is reserved.
     :returns: The handler, so that this can be used as a decorator.
-    :rtype: AnnotationHandler
     """
     if not DNS_SUBDOMAIN_PATTERN.match(prefix):
         raise SmarterAnnotationError(f"Annotation handler prefix {prefix!r} must be a lowercase DNS subdomain.")
-    module = getattr(handler, "__module__", "") or ""
+    module = getattr(handler, "__module__", "")
+    if not module:
+        module = ""
     if is_reserved_annotation_key(prefix + "/x") and not module.startswith("smarter."):
         raise SmarterAnnotationError(
             f"Annotation prefix {prefix!r} is reserved for the Smarter Project. Use a domain that you own."
@@ -124,9 +127,7 @@ def annotation_handler(prefix: str) -> Callable[[AnnotationHandler], AnnotationH
     See :func:`register_annotation_handler`.
 
     :param prefix: A DNS domain that the integration owns, e.g. ``acme.com``.
-    :type prefix: str
     :returns: The decorator.
-    :rtype: Callable[[AnnotationHandler], AnnotationHandler]
     """
     return partial(register_annotation_handler, prefix)
 
@@ -138,9 +139,7 @@ def unregister_annotation_handler(prefix: str, handler: AnnotationHandler) -> No
     Does nothing if it isn't registered.
 
     :param prefix: The prefix it was registered for.
-    :type prefix: str
     :param handler: The handler.
-    :type handler: AnnotationHandler
     """
     handlers = _handlers.get(prefix, [])
     if handler in handlers:
@@ -154,11 +153,9 @@ def handlers_for_key(key: str) -> list[AnnotationHandler]:
     Return the handlers to call when the annotation ``key`` changes.
 
     :param key: An annotation key.
-    :type key: str
     :returns: The handlers of every registered prefix that the key's prefix matches.
-    :rtype: list[AnnotationHandler]
     """
-    key_prefix = key.split("/", 1)[0] if "/" in key else None
+    key_prefix, _name = split_annotation_key(key)
     retval: list[AnnotationHandler] = []
     for prefix, handlers in _handlers.items():
         if prefix_matches(key_prefix, prefix):
@@ -169,7 +166,16 @@ def handlers_for_key(key: str) -> list[AnnotationHandler]:
 def _send(
     instance: models.Model, object_id: Union[int, str], changes: list[AnnotationChange], resource_deleted: bool
 ) -> None:
-    """Send the signal, then call each handler with each of its changes."""
+    """
+    Send the signal, then call each handler with each of its changes.
+
+    A failing receiver or handler is logged, and doesn't stop the others.
+
+    :param instance: The resource.
+    :param object_id: The resource's primary key.
+    :param changes: What changed.
+    :param resource_deleted: True when the resource was deleted.
+    """
     # pylint: disable=W0212
     model_label = instance._meta.label  # pylint: disable=W0212
     responses = annotations_changed.send_robust(
@@ -219,11 +225,8 @@ def dispatch_annotation_changes(
     Send ``changes`` to the ``annotations_changed`` signal and the matching handlers, once the transaction commits.
 
     :param instance: The resource.
-    :type instance: models.Model
     :param changes: What changed.
-    :type changes: list[AnnotationChange]
     :param resource_deleted: True when the resource was deleted.
-    :type resource_deleted: bool
     """
     if not changes:
         return

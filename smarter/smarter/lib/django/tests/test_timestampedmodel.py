@@ -137,6 +137,16 @@ class TestTimestampedModel(TestAccountMixin):
                 with self.assertRaises(SmarterValueError):
                     self.account.save()
 
+    def test_save_error_names_the_row_not_its_values(self):
+        """The message reaches logs and api responses, so it names the model and pk, never the field values."""
+        with patch.object(Account, "validate", side_effect=SmarterValueError("invalid")):
+            with self.assertRaises(SmarterValueError) as ctx:
+                self.account.save()
+        message = str(ctx.exception)
+        self.assertIn(f"pk={self.account.pk}", message)
+        self.assertNotIn(self.account.account_number, message)
+        self.assertNotIn("field_values", message)
+
     def test_elapsed_updated_edge_cases(self):
         """Test elapsed_updated for a model that was never saved, and for a naive timestamp."""
         self.assertIsNone(Account().elapsed_updated)

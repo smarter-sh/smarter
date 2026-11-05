@@ -13,7 +13,7 @@ A subclass names the app's model, reverse names and url parameter, and creates t
         id_kwarg = "vectorsearch_id"
 
 The requests authenticate with a session of the account's admin, who is a superuser.
-test_list_with_api_key authenticates with the api key of ApiV1TestBase instead.
+``test_list_with_api_key`` authenticates with the api key of ``ApiV1TestBase`` instead.
 """
 
 from collections.abc import Callable
@@ -51,7 +51,7 @@ class ResourceApiTestMixin:
         """
         raise NotImplementedError
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Log an api client in as the admin user, and create the resource, which is deleted after the test."""
         super().setUp()  # type: ignore[misc]
         self.api_client = APIClient()
@@ -69,10 +69,18 @@ class ResourceApiTestMixin:
         :param kwargs: The url's keyword arguments.
         :returns: The url path.
         """
-        return reverse(f"{self.reverse_names.namespace}:{name}", kwargs=kwargs or None)
+        url_kwargs = None
+        if kwargs:
+            url_kwargs = kwargs
+        url = reverse(f"{self.reverse_names.namespace}:{name}", kwargs=url_kwargs)
+        return url
 
     def detail_urls(self) -> dict[str, str]:
-        """Return the resource's detail urls, by hashed id and by id, keyed by a label."""
+        """
+        Return the resource's detail urls, by hashed id and by id, keyed by a label.
+
+        :returns: A dict of ``by hashed id`` and ``by id`` to the url path.
+        """
         return {
             "by hashed id": self.url(self.view_by_hashed_id, hashed_id=self.resource.hashed_id),  # type: ignore[attr-defined]
             "by id": self.url(self.view_by_id, **{self.id_kwarg: self.resource.pk}),
@@ -130,7 +138,8 @@ class ResourceApiTestMixin:
         self.assertFalse(self.model.objects.filter(pk=self.resource.pk).exists())  # type: ignore[attr-defined]
 
     def test_default_api_get_and_options(self):
-        """Test that the default api refuses a GET, and answers an OPTIONS with its allowed methods.
+        """
+        Test that the default api refuses a GET, and answers an OPTIONS with its allowed methods.
 
         CORS preflight requests are answered by the CORS middleware, not the view.
         """

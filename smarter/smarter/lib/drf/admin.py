@@ -1,4 +1,4 @@
-"""SmarterAuthToken admin."""
+"""The Django admin of API keys, SmarterAuthToken, on Smarter's restricted admin site."""
 
 from smarter.apps.dashboard.admin import (
     SmarterStaffOnlyModelAdmin,
@@ -10,7 +10,11 @@ from .models import SmarterAuthToken
 
 # Register your models here.
 class SmarterAuthTokenAdmin(SmarterStaffOnlyModelAdmin):
-    """SmarterAuthToken model admin."""
+    """
+    Staff-only Django admin of SmarterAuthToken.
+
+    Its list shows every model field: ``__init__()`` replaces ``list_display``.
+    """
 
     # pylint: disable=C0115
     class Meta:
@@ -32,6 +36,12 @@ class SmarterAuthTokenAdmin(SmarterStaffOnlyModelAdmin):
     )
 
     def __init__(self, model, admin_site):
+        """
+        Initialize the admin, listing every field of the model.
+
+        :param model: The SmarterAuthToken model.
+        :param admin_site: The admin site.
+        """
         super().__init__(model, admin_site)
         self.list_display = [field.name for field in model._meta.fields]
 

@@ -1,7 +1,5 @@
 """
-Middleware for throttling unauthenticated clients generating excessive.
-
-HTTP 404 responses.
+Middleware that throttles unauthenticated clients that generate excessive HTTP 404 responses.
 
 This middleware detects repeated invalid URL requests from unauthenticated
 clients and temporarily blocks abusive request patterns commonly associated
@@ -180,6 +178,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
     Middleware that throttles unauthenticated clients producing excessive 404s.
 
     This mitigates:
+
     - automated scanners
     - brute-force URL probing
     - broken crawlers
@@ -199,7 +198,13 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
     )
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        """
+        Count a sync response's 404, or hand the request to :meth:`__acall__` in async mode.
 
+        :param request: The incoming request.
+        :returns: The response, or a ``403`` when the client has exceeded the throttle limit (a
+            coroutine in async mode).
+        """
         if self.async_mode:
             return self.__acall__(request)
 
@@ -209,7 +214,12 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         return self.process_response(request, response)  # type: ignore
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+        """
+        Count an async response's 404, unless ``ENABLE_MIDDLEWARE_EXCESSIVE_404`` is off.
 
+        :param request: The incoming request.
+        :returns: The response, or a ``403`` when the client has exceeded the throttle limit.
+        """
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return await super().__acall__(request)
 
@@ -255,7 +265,17 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         return self._process_response(request, response)
 
     def _process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """Shared sync/async implementation."""
+        """
+        Count an anonymous client's 404, and block the client once it reaches ``THROTTLE_LIMIT``.
+
+        This is the implementation that the sync and async entry points share. Responses other
+        than 404, ignored paths, authenticated requests and requests without a client ip are left
+        alone. Side effect: the client's counter in the cache is incremented.
+
+        :param request: The request.
+        :param response: The response from the view.
+        :returns: The response, or a ``403`` when the client has exceeded the throttle limit.
+        """
 
         if response.status_code != HTTPStatus.NOT_FOUND:
             return response
@@ -285,7 +305,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         if blocked_count >= self.THROTTLE_LIMIT:
 
             logger.warning(
-                "%s blocked client=%s count=%d",
+                "%s._process_response() blocked client=%s count=%d",
                 self.formatted_class_name,
                 client_ip,
                 blocked_count,
@@ -305,9 +325,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         Determine whether 404s on this path should never count toward the throttle.
 
         :param path: The request path.
-        :type path: str
         :returns: True for amnesty urls and JSON schema lookups.
-        :rtype: bool
         """
         return self.deserves_amnesty(path) or path.startswith(self.IGNORED_PATH_PREFIXES)
 
@@ -322,7 +340,11 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         return f"excessive_404_throttle:{client_ip}"
 
     def increment_throttle(self, throttle_key: str) -> None:
-        """Increment the client's 404 counter."""
+        """
+        Add one to a client's 404 counter in the cache, and reset its ``THROTTLE_TIMEOUT``.
+
+        :param throttle_key: The cache key of the client's counter, from :meth:`get_throttle_key`.
+        """
 
         try:
             blocked_count = cache.incr(throttle_key)
@@ -359,7 +381,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
             return
 
         logger.debug(
-            "%s 404 probe detected client=%s count=%d path=%s",
+            "%s.log_404_event() 404 probe detected client=%s count=%d path=%s",
             self.formatted_class_name,
             client_ip,
             blocked_count,

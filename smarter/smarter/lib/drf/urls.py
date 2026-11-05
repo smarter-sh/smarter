@@ -1,4 +1,4 @@
-"""URL configuration for the web platform."""
+"""URL configuration of the web console's API key (AuthToken) pages and their React list apis."""
 
 from django.urls import path, re_path
 
@@ -17,14 +17,13 @@ from .const import namespace
 
 class AuthTokenReverseNames:
     """
-    Holds named URL patterns for the account dashboard.
+    Holds the names of the API key url patterns, for ``reverse()``.
 
-    This class provides constants for all named URL patterns used in the account dashboard views.
+    Each name is ``to_snake_case()`` of its view class's name.
     """
 
     namespace = namespace
 
-    listview = to_snake_case(AuthTokenListApiView.__name__)
     detailview = to_snake_case(AuthTokenDetailView.__name__)
 
     listview = to_snake_case(AuthTokenListView.__name__)

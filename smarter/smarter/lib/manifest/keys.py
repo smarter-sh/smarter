@@ -20,8 +20,9 @@ def _models_of(annotation: Any) -> Optional[list[type[BaseModel]]]:
     """
     The Pydantic models of a field's type, e.g. ``Optional[List[Spec]]`` is ``[Spec]``.
 
-    :returns: None if a value of the type may be anything else, e.g. a dict or a str, whose
-        keys are therefore not checked.
+    :param annotation: The field's type annotation.
+    :returns: The models, or None if a value of the type may be anything else, e.g. a dict or a
+        str, whose keys are therefore not checked.
     """
     if isinstance(annotation, type) and issubclass(annotation, BaseModel):
         return [annotation]
@@ -38,14 +39,22 @@ def _models_of(annotation: Any) -> Optional[list[type[BaseModel]]]:
         return models or None
     if origin in (list, tuple, set, frozenset):
         args = [arg for arg in typing.get_args(annotation) if arg is not Ellipsis]
-        return _models_of(args[0]) if len(args) == 1 else None
+        if len(args) == 1:
+            return _models_of(args[0])
+        return None
     if origin is typing.Annotated:
-        return _models_of(typing.get_args(annotation)[0])
+        annotated_type = typing.get_args(annotation)[0]
+        return _models_of(annotated_type)
     return None
 
 
 def _field_names(model: type[BaseModel]) -> SmarterDictType:
-    """The keys that the model accepts, i.e. its field names and aliases, and their types."""
+    """
+    The keys that the model accepts, i.e. its field names and aliases, and their types.
+
+    :param model: The Pydantic model.
+    :returns: Each key's type annotation, by key.
+    """
     retval: SmarterDictType = {}
     for name, field in model.model_fields.items():
         retval[name] = field.annotation
@@ -65,6 +74,7 @@ def unknown_keys(models: Union[type[BaseModel], list[type[BaseModel]]], data: An
     :param models: The Pydantic model of the data, or the models that it may be one of.
     :param data: The manifest, or a part of it.
     :param path: The dotted path of the data in the manifest.
+    :returns: The dotted paths of the unknown keys, or an empty list.
     """
     if isinstance(data, list):
         retval = []
@@ -73,13 +83,17 @@ def unknown_keys(models: Union[type[BaseModel], list[type[BaseModel]]], data: An
         return retval
     if not isinstance(data, dict):
         return []
-    models = models if isinstance(models, list) else [models]
+    if not isinstance(models, list):
+        models = [models]
     fields: SmarterDictType = {}
     for model in models:
         fields.update(_field_names(model))
     retval = []
     for key, value in data.items():
-        key_path = f"{path}.{key}" if path else str(key)
+        if path:
+            key_path = f"{path}.{key}"
+        else:
+            key_path = str(key)
         if key not in fields:
             retval.append(key_path)
             continue
