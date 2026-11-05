@@ -35,7 +35,9 @@ class YAMLParser(BaseParser):
             data = stream.read().decode("utf-8")
             retval = yaml.load(data, Loader=YAML_LOADER)  # nosec B506 - a safe loader
         except (ValueError, yaml.YAMLError) as exc:
+            # the parser's own message stays in the log: it describes the parser's internals, and
+            # quotes the body, which the client already has.
             logger.debug("%s.parse() YAML parse error: %s", logger_prefix, exc)
-            raise ParseError(f"YAML parse error - {exc}") from exc
+            raise ParseError("YAML parse error - the request body is not valid UTF-8 YAML.") from exc
         logger.debug("%s.parse() parsed a YAML body of type %s", logger_prefix, type(retval).__name__)
         return retval
