@@ -45,17 +45,17 @@ describe("BudgetVsActualChart", () => {
     });
     let seriesUrl = "";
     server.use(
-      http.post("/dashboard/api/budgets", () => HttpResponse.json([status])),
-      http.post("/dashboard/api/budgets/:locator/series/", ({ request }) => {
+      http.post("/api/web/dashboard/budgets", () => HttpResponse.json([status])),
+      http.post("/api/web/dashboard/budgets/:locator/series/", ({ request }) => {
         seriesUrl = new URL(request.url).pathname;
         return HttpResponse.json([{ status: makeBudgetStatus({ budget: "other" }), series: [] }]);
       }),
     );
-    renderChart("/dashboard/api/budgets");
+    renderChart("/api/web/dashboard/budgets");
     expect(await screen.findByText("Total: $312.75 of $500.00")).toBeInTheDocument();
     expect(screen.getByText("Ended")).toBeInTheDocument();
     expect(screen.getByText("Blocked")).toHaveAttribute("title", "");
-    await vi.waitFor(() => expect(seriesUrl).toBe("/dashboard/api/budgets/llmclient%3Aexample/series/"));
+    await vi.waitFor(() => expect(seriesUrl).toBe("/api/web/dashboard/budgets/llmclient%3Aexample/series/"));
   });
 
   it("says when no budgets apply", async () => {

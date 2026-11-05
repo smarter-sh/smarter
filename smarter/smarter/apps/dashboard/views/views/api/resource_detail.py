@@ -41,7 +41,7 @@ class ResourceDetailView(SmarterAuthenticatedNeverCachedWebView):
 
     **Example usage**::
 
-        GET /dashboard/api/resource/Guardrail/guardrail-rMTAwx/
+        GET /api/web/dashboard/resource/Guardrail/guardrail-rMTAwx/
     """
 
     http_method_names = ["get", "post"]

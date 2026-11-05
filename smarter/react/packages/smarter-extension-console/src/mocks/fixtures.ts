@@ -14,7 +14,7 @@ import type {
   RegistryResponse,
 } from "@/lib/types";
 
-export const API_URL = "/extensions/react-integration/api/";
+export const API_URL = "/api/web/llmtool/extensions/";
 export const LIST_URL = "/extensions/";
 
 export const session: SessionContext = {

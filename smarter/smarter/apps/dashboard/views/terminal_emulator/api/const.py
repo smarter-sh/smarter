@@ -1,7 +1,5 @@
 """Constants for the dashboard's server logs api and the web console terminal."""
 
-namespace = "api"
-
 TERMINAL_WEBSOCKET_PATH = "ws/terminal/"
 """The path of the terminal's WebSocket, relative to the site's root.
 

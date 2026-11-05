@@ -1,6 +1,6 @@
 import type { BudgetPeriod, BudgetSeriesRow, BudgetUnit } from "@/components/BudgetVsActual/format";
 
-/** The status of a budget attached to a resource, from /dashboard/api/budgets/. */
+/** The status of a budget attached to a resource, from /api/web/dashboard/budgets/. */
 export interface BudgetStatus {
   budget: string;
   resource_locator: string;
@@ -23,7 +23,7 @@ export interface BudgetStatus {
   lock_reason: string | null;
 }
 
-/** One budget of a resource, with its series, from /dashboard/api/budgets/<locator>/series/. */
+/** One budget of a resource, with its series, from /api/web/dashboard/budgets/<locator>/series/. */
 export interface BudgetSeries {
   status: BudgetStatus;
   series: BudgetSeriesRow[];

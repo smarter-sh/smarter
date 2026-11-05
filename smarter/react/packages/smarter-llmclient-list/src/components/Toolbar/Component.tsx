@@ -26,7 +26,7 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
-import { fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
+import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
 import type { LLMClient } from "@/lib/Types";
@@ -196,14 +196,11 @@ export const Toolbar = ({ sessionContext, llmclient, onRequery }: ToolbarProps) 
   /**
    * POST to one of the list API's actions, e.g. clone/12/new_name/, and show the result: the
    * confirmation modal on success, else the error modal with the server's error message.
-   *
-   * Unlike the other list apps, whose actions are siblings of the list endpoint (see actionUrl()
-   * in @smarter/common), the prompt app's actions are nested under it:
-   * /workbench/api/listview/clone/<id>/<new_name>/. See smarter.apps.prompt.urls.
+   * See actionUrl() in @smarter/common for how the action's URL is built.
    */
   const runAction = (target: LLMClient, path: string, verb: "clone" | "rename" | "delete") => {
     handleCloseModal();
-    fetchDjangoUrl(sessionContext, sessionContext.ApiUrl + path, JSON.stringify({}))
+    fetchDjangoUrl(sessionContext, actionUrl(sessionContext, path), JSON.stringify({}))
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {

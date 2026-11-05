@@ -87,7 +87,7 @@ describe("ExtensionPage", () => {
   it("saves its settings", async () => {
     let body: unknown;
     server.use(
-      http.post(`${API_URL}extensions/:slug/configure/`, async ({ request }) => {
+      http.post(`${API_URL}:slug/configure/`, async ({ request }) => {
         body = await request.json();
         return HttpResponse.json({ message: "Saved the settings of Weather.", extension: makeDetail() });
       }),
@@ -106,7 +106,7 @@ describe("ExtensionPage", () => {
   it("restricts it to some accounts", async () => {
     let body: unknown;
     server.use(
-      http.post(`${API_URL}extensions/:slug/availability/`, async ({ request }) => {
+      http.post(`${API_URL}:slug/availability/`, async ({ request }) => {
         body = await request.json();
         return HttpResponse.json({
           message: "Available to 1 account(s).",
@@ -176,9 +176,7 @@ describe("ExtensionPage", () => {
 
   it("shows why an action failed", async () => {
     server.use(
-      http.post(`${API_URL}extensions/:slug/disable/`, () =>
-        HttpResponse.json({ error: "on_disable refused" }, { status: 400 }),
-      ),
+      http.post(`${API_URL}:slug/disable/`, () => HttpResponse.json({ error: "on_disable refused" }, { status: 400 })),
       ...detailHandlers(),
     );
     const user = userEvent.setup();

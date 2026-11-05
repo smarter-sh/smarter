@@ -33,26 +33,24 @@ export function listHandlers(
         action("Installed Acme CRM 1.0.0.", makeDetail({ slug: "acme-crm", detailUrl: "/extensions/acme-crm/" })),
       ),
     ),
-    http.post(`${API_URL}extensions/:slug/enable/`, () =>
-      HttpResponse.json(action("Enabled.", makeDetail({ enabled: true }))),
-    ),
-    http.post(`${API_URL}extensions/:slug/disable/`, () =>
-      HttpResponse.json(action("Disabled.", makeDetail({ enabled: false }))),
-    ),
+    http.post(`${API_URL}:slug/enable/`, () => HttpResponse.json(action("Enabled.", makeDetail({ enabled: true })))),
+    http.post(`${API_URL}:slug/disable/`, () => HttpResponse.json(action("Disabled.", makeDetail({ enabled: false })))),
   ];
 }
 
 /** The detail api of one extension, and its actions, which succeed. */
 export function detailHandlers(extension: ExtensionDetail = detail) {
   return [
-    http.post(`${API_URL}extensions/:slug/`, () => HttpResponse.json({ extension })),
-    http.post(`${API_URL}extensions/:slug/enable/`, () =>
+    // before <slug>/, as in the urlconf: accounts is one of the reserved slugs.
+    http.post(`${API_URL}accounts/`, () => HttpResponse.json({ objects: accounts })),
+    http.post(`${API_URL}:slug/`, () => HttpResponse.json({ extension })),
+    http.post(`${API_URL}:slug/enable/`, () =>
       HttpResponse.json(action(`Enabled ${extension.displayName}.`, { ...extension, enabled: true })),
     ),
-    http.post(`${API_URL}extensions/:slug/disable/`, () =>
+    http.post(`${API_URL}:slug/disable/`, () =>
       HttpResponse.json(action(`Disabled ${extension.displayName}.`, { ...extension, enabled: false })),
     ),
-    http.post(`${API_URL}extensions/:slug/update/`, () =>
+    http.post(`${API_URL}:slug/update/`, () =>
       HttpResponse.json(
         action(`Updated ${extension.displayName} to 0.2.0.`, {
           ...extension,
@@ -61,13 +59,13 @@ export function detailHandlers(extension: ExtensionDetail = detail) {
         }),
       ),
     ),
-    http.post(`${API_URL}extensions/:slug/rollback/`, () =>
+    http.post(`${API_URL}:slug/rollback/`, () =>
       HttpResponse.json(action(`Rolled ${extension.displayName} back to 0.0.9.`, extension)),
     ),
-    http.post(`${API_URL}extensions/:slug/configure/`, () =>
+    http.post(`${API_URL}:slug/configure/`, () =>
       HttpResponse.json(action(`Saved the settings of ${extension.displayName}.`, extension)),
     ),
-    http.post(`${API_URL}extensions/:slug/availability/`, async ({ request }) => {
+    http.post(`${API_URL}:slug/availability/`, async ({ request }) => {
       const body = (await request.json()) as { allAccounts: boolean };
       return HttpResponse.json(
         action(body.allAccounts ? "Available to every account." : "Available to 1 account(s).", {
@@ -76,10 +74,9 @@ export function detailHandlers(extension: ExtensionDetail = detail) {
         }),
       );
     }),
-    http.post(`${API_URL}extensions/:slug/uninstall/`, () =>
+    http.post(`${API_URL}:slug/uninstall/`, () =>
       HttpResponse.json(action(`Uninstalled ${extension.displayName}.`, null)),
     ),
-    http.post(`${API_URL}accounts/`, () => HttpResponse.json({ objects: accounts })),
   ];
 }
 

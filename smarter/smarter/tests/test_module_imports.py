@@ -1,23 +1,11 @@
-"""Test that modules which nothing else imports still load, and that their contents are well formed: the per-app api/urls.py configurations that the project urlconf does not include, and the manifest enum modules that are kept for backward compatibility."""
+"""Test that modules which nothing else imports still load, and that their contents are well formed, e.g. the manifest enum modules that are kept for backward compatibility."""
 
 import importlib
 import inspect
 
-from django.urls import URLPattern, URLResolver
-
 from smarter.common.enum import SmarterEnumAbstract as CommonSmarterEnumAbstract
 from smarter.lib.manifest.enum import SmarterEnumAbstract as ManifestSmarterEnumAbstract
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
-API_URLCONFS = [
-    "smarter.apps.account.api.urls",
-    "smarter.apps.connection.api.urls",
-    "smarter.apps.llmclient.api.urls",
-    "smarter.apps.prompt.api.urls",
-    "smarter.apps.proxy.api.urls",
-    "smarter.apps.secret.api.urls",
-    "smarter.apps.vectorstore.api.urls",
-]
 
 ENUM_MODULES = [
     "smarter.apps.connection.manifest.enum",
@@ -43,19 +31,6 @@ PLAIN_MODULES = [
 
 class TestModuleImports(SmarterTestBase):
     """Test modules that are not otherwise imported."""
-
-    def test_api_urlconfs(self):
-        """Every app api urlconf redirects its root to v1/ and includes the v1 urls."""
-        for module_name in API_URLCONFS:
-            with self.subTest(module=module_name):
-                module = importlib.import_module(module_name)
-                self.assertEqual(module.app_name, "api")
-                self.assertEqual(len(module.urlpatterns), 2)
-                redirect, include = module.urlpatterns
-                self.assertIsInstance(redirect, URLPattern)
-                self.assertEqual(redirect.callback.view_initkwargs["url"], "v1/")
-                self.assertIsInstance(include, URLResolver)
-                self.assertEqual(str(include.pattern).rstrip("/"), "v1")
 
     def test_enum_modules(self):
         """Every enum class in these modules maps upper case names to string values."""

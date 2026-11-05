@@ -82,6 +82,29 @@ class TestLLMClientReceivers(SmarterTestBase):
         receivers.handle_llmclient_undeploy(sender=None, **kwargs)
         self.tasks["undeploy_default_api"].delay.assert_called_once_with(llmclient_id=1)
 
+    def test_llmclient_called_with_a_body_queues_the_request(self):
+        """A call with a request body queues the task that records it."""
+        kwargs = signal_kwargs()
+        receivers.handle_llmclient_called(sender=None, **kwargs)
+        self.tasks["create_llmclient_request"].delay.assert_called_once_with(1, {"messages": []})
+
+    def test_llmclient_called_without_a_body_is_not_an_error(self):
+        """A request without a body, e.g. a GET that the view answers with a 405, is logged at DEBUG, not ERROR."""
+        kwargs = signal_kwargs()
+        kwargs["data"] = None
+        with patch.object(receivers, "logger") as logger:
+            receivers.handle_llmclient_called(sender=None, **kwargs)
+        logger.error.assert_not_called()
+        logger.debug.assert_called_once()
+        self.tasks["create_llmclient_request"].delay.assert_not_called()
+
+    def test_llmclient_called_without_an_llmclient_is_an_error(self):
+        """A call without an LLMClient is a programming error, logged at ERROR."""
+        with patch.object(receivers, "logger") as logger:
+            receivers.handle_llmclient_called(sender=None, data={"messages": []})
+        logger.error.assert_called_once()
+        self.tasks["create_llmclient_request"].delay.assert_not_called()
+
     def test_model_saved_receivers(self):
         """Test the post_save receivers of the llmclient models, for a created and an updated instance."""
         for name in (

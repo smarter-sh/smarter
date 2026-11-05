@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Secret } from "@/lib/Types";
 
-export const API_URL = "/secret/react-integration/api/listview/";
+export const API_URL = "/api/web/secret/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Secret> = {}): Secret 
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/secret/secrets/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/Secret/secret-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/Secret/secret-r${id}/`,
     canDelete: true,
     ready: true,
     lastAccessed: "2026-06-20T12:00:00Z",

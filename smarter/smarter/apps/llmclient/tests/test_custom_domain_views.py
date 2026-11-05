@@ -9,6 +9,7 @@ from http import HTTPStatus
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.context_processors import sidebar_context
+from smarter.apps.llmclient.api.web.urls import LLMClientApiWebReverseNames
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientCustomDomain,
@@ -19,16 +20,22 @@ from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
 
 class CustomDomainReverseNames:
-    """The CustomDomain view names, as ResourceViewsTestMixin names them."""
+    """The CustomDomain console page names, as ResourceViewsTestMixin names them."""
 
     namespace = LLMClientReverseNames.namespace
     listview = LLMClientReverseNames.custom_domain_listview
-    listview_api = LLMClientReverseNames.custom_domain_listview_api
-    listview_api_all = LLMClientReverseNames.custom_domain_listview_api_all
-    listview_api_clone = LLMClientReverseNames.custom_domain_listview_api_clone
-    listview_api_delete = LLMClientReverseNames.custom_domain_listview_api_delete
-    listview_api_rename = LLMClientReverseNames.custom_domain_listview_api_rename
     detailview = LLMClientReverseNames.custom_domain_detailview
+
+
+class CustomDomainApiWebReverseNames:
+    """The CustomDomain web console api names, as ResourceViewsTestMixin names them."""
+
+    namespace = LLMClientApiWebReverseNames.namespace
+    listview = LLMClientApiWebReverseNames.custom_domain_listview
+    listview_all = LLMClientApiWebReverseNames.custom_domain_listview_all
+    clone = LLMClientApiWebReverseNames.custom_domain_clone
+    delete = LLMClientApiWebReverseNames.custom_domain_delete
+    rename = LLMClientApiWebReverseNames.custom_domain_rename
 
 
 class TestCustomDomainViews(ResourceViewsTestMixin, TestAccountMixin):
@@ -36,6 +43,7 @@ class TestCustomDomainViews(ResourceViewsTestMixin, TestAccountMixin):
 
     model = LLMClientCustomDomain
     reverse_names = CustomDomainReverseNames
+    web_reverse_names = CustomDomainApiWebReverseNames
     id_kwarg = "custom_domain_id"
     resource_name_prefix = "test_custom_domain_views"
 
@@ -61,8 +69,18 @@ class TestCustomDomainViews(ResourceViewsTestMixin, TestAccountMixin):
         response = self.client.get(self.url("listview"))
         context = response.context["custom_domain_list"]
         self.assertEqual(context["root_id"], "smarter-custom-domain-list-root")
-        self.assertEqual(context["custom_domain_list_api_url"], self.url("listview_api_all"))
-        self.assertIn(f'smarter-custom-domain-list-api-url="{self.url("listview_api_all")}"', response.content.decode())
+        self.assertEqual(context["custom_domain_list_api_url"], self.web_url("listview_all"))
+        self.assertIn(f'smarter-custom-domain-list-api-url="{self.web_url("listview_all")}"', response.content.decode())
+
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(self.web_url("listview_all"), "/api/web/llmclient/custom-domains/listview/")
+        self.assertEqual(
+            self.web_url("listview", ownership_filter="owned"), "/api/web/llmclient/custom-domains/listview/owned/"
+        )
+        self.assertEqual(self.web_id_url("clone", 1, new_name="x"), "/api/web/llmclient/custom-domains/clone/1/x/")
+        self.assertEqual(self.web_id_url("rename", 1, new_name="x"), "/api/web/llmclient/custom-domains/rename/1/x/")
+        self.assertEqual(self.web_id_url("delete", 1), "/api/web/llmclient/custom-domains/delete/1/")
 
     def test_sidebar_links_to_the_list_page(self):
         self.assertEqual(sidebar_context()["sidebar"]["custom_domains"], self.url("listview"))
@@ -84,7 +102,7 @@ class TestCustomDomainViews(ResourceViewsTestMixin, TestAccountMixin):
         # update(), rather than save(), which sends llmclient signals.
         LLMClient.objects.filter(pk=llmclient.pk).update(custom_domain=custom_domain)
 
-        objects = self.post(self.url("listview_api_all") + "?page_size=100")["objects"]
+        objects = self.post(self.web_url("listview_all") + "?page_size=100")["objects"]
         listed = next(item for item in objects if item["name"] == custom_domain.name)
         self.assertEqual(listed["domainName"], custom_domain.domain_name)
         self.assertEqual(listed["llmclient"]["name"], llmclient.name)
@@ -95,11 +113,11 @@ class TestCustomDomainViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertIsNone(listed["verifiedAt"])
 
         # an llmclient that uses it would be deleted with it, so it cannot be deleted.
-        self.post(self.id_url("listview_api_delete", custom_domain.pk), status=HTTPStatus.BAD_REQUEST)
+        self.post(self.web_id_url("delete", custom_domain.pk), status=HTTPStatus.BAD_REQUEST)
         self.assertTrue(LLMClientCustomDomain.objects.filter(pk=custom_domain.pk).exists())
         self.assertTrue(LLMClient.objects.filter(pk=llmclient.pk).exists())
 
     def test_can_delete(self):
-        objects = self.post(self.url("listview_api_all") + "?page_size=100")["objects"]
+        objects = self.post(self.web_url("listview_all") + "?page_size=100")["objects"]
         listed = next(item for item in objects if item["name"] == self.resource.name)
         self.assertTrue(listed["canDelete"])

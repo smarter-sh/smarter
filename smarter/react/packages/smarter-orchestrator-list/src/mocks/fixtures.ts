@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Orchestrator } from "@/lib/Types";
 
-export const API_URL = "/orchestrator/react-integration/api/listview/";
+export const API_URL = "/api/web/orchestrator/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Orchestrator> = {}): O
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/orchestrator/orchestrators/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/Orchestrator/orchestrator-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/Orchestrator/orchestrator-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

@@ -11,8 +11,6 @@ from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 
-from ..const import namespace
-
 
 class TestBudgetsApi(TestAccountMixin):
     """Test BudgetsView and BudgetSeriesView."""
@@ -41,7 +39,7 @@ class TestBudgetsApi(TestAccountMixin):
         super().tearDown()
 
     def url(self, name: str, **kwargs) -> str:
-        return reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{name}", kwargs=kwargs or None)
+        return reverse(f"{DashboardApiReverseNames.namespace}:{name}", kwargs=kwargs or None)
 
     def test_budgets(self):
         """Test that a user sees the status of their own budget."""

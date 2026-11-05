@@ -57,14 +57,14 @@ describe("the api client", () => {
     await api.checkUpdates(listContext);
     await api.getAccounts(listContext);
     expect(paths).toEqual([
-      "extensions/date-calculator/",
-      "extensions/weather/enable/",
-      "extensions/weather/disable/",
-      "extensions/weather/update/",
-      "extensions/weather/rollback/",
-      "extensions/weather/configure/",
-      "extensions/weather/availability/",
-      "extensions/weather/uninstall/",
+      "date-calculator/",
+      "weather/enable/",
+      "weather/disable/",
+      "weather/update/",
+      "weather/rollback/",
+      "weather/configure/",
+      "weather/availability/",
+      "weather/uninstall/",
       "check-updates/",
       "accounts/",
     ]);

@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Connection } from "@/lib/Types";
 
-export const API_URL = "/connection/react-integration/api/listview/";
+export const API_URL = "/api/web/connection/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Connection> = {}): Con
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/connection/connections/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/SqlConnection/connectionbase-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/SqlConnection/connectionbase-r${id}/`,
     canDelete: true,
     ready: true,
     kind: "SqlConnection",

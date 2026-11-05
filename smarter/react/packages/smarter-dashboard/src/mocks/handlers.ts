@@ -52,5 +52,5 @@ export const dashboardHandlers = [
 
 /** Every dashboard api fails. */
 export const dashboardErrorHandlers = [
-  http.post("/dashboard/api/*", () => HttpResponse.json({ error: "Service unavailable" }, { status: 503 })),
+  http.post("/api/web/dashboard/*", () => HttpResponse.json({ error: "Service unavailable" }, { status: 503 })),
 ];

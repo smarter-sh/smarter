@@ -76,7 +76,7 @@ export function manyExamples(count: number): Example[] {
   return Array.from({ length: count }, (_, index) => ({
     id: index + 1,
     name: `example_${index + 1}`,
-    detailUrl: `/dashboard/api/resource/Example/example-r${index + 1}/`,
+    detailUrl: `/api/web/dashboard/resource/Example/example-r${index + 1}/`,
   }));
 }
 
@@ -119,7 +119,7 @@ export function exampleDetail(id: number, name: string, dependents = guardrailDe
 
 /** The detail api of the examples: see exampleDetailUrl. */
 export function detailHandler(dependents = guardrailDependents) {
-  return http.post("/dashboard/api/resource/Example/:locator/", ({ params }) => {
+  return http.post("/api/web/dashboard/resource/Example/:locator/", ({ params }) => {
     const id = Number(String(params.locator).replace("example-r", ""));
     const name = ownedExamples.find((example) => example.id === id)?.name ?? `example_${id}`;
     return HttpResponse.json(exampleDetail(id, name, dependents));

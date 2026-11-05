@@ -29,7 +29,7 @@ sidebar link (context_processors.py)
    - `root_id`: `"smarter-<kind>-list-root"`
    - `django_csrf_cookie_name`, `django_session_cookie_name`, and
      `cookie_domain`, from `settings`
-   - `<kind>_list_api_url`: `reverse(<App>ReverseNames.namespace, <App>ReverseNames.listview_api_all)`
+   - `<kind>_list_api_url`: `reverse(<App>ApiWebReverseNames.namespace, <App>ApiWebReverseNames.listview_all)`
    - `react_debug_mode`: the `ENABLE_REACTAPP_DEBUG_MODE` waffle switch
    - `smarter_request_id`: `self.generate_smarter_request_id()`
 2. **Template tag** (`<app>/templatetags/react_<kind>_list.py`):
@@ -42,8 +42,17 @@ sidebar link (context_processors.py)
    `dashboard/base.html`, emits the CSS in `style_extra` and the JS in
    `javascript_extra`, and renders the root `<div>`, with each context value as
    an attribute.
-4. **List API** (`<app>/views/listview/api.py`), routed in `<app>/urls.py`:
-   - `react-integration/api/listview/(owned|shared|all)/`: a subclass of
+4. **List API** (`<app>/views/listview/api.py`), routed in the **web console
+   api**, `<app>/api/web/urls.py`, at `/api/web/<app label>/`, never in the
+   app's console `urls.py` ([ADR-034](../../docs/source/adr/034-web-console-api.rst)).
+   The module has an `<App>ApiWebReverseNames` class whose `namespace` is
+   `f"{path_namespace}:{namespace}"` (`api:web:<app>`, `path_namespace` from
+   `smarter.apps.api.web.const`), and `smarter/smarter/apps/api/web/urls.py`
+   includes it, with the path `f"{<app>_namespace}/"`. Copy
+   `apps/guardrail/api/web/urls.py`, including its module docstring's paragraph
+   that names the module as part of the Django-React integration and links
+   `:doc:`/smarter-framework/developer-reference/react-integration``.
+   - `listview/(owned|shared|all)/`: a subclass of
      `SmarterListApiView` (`smarter.lib.django.listview`) that sets `model`,
      `serializer_class`, `listview_cache_kind`, `sort_fields`, and the
      `select_related`/`prefetch_related` its serializer reads. Never write its
@@ -58,8 +67,13 @@ sidebar link (context_processors.py)
      `related_rows(obj, "<accessor>", <RowModel>, ...)` from
      `smarter.lib.django.serializers`, so the prefetch is used. Check the page's
      query count with `CaptureQueriesContext`: it should not grow per row.
-   - `react-integration/api/clone/<id>/<new_name>/`,
-     `.../rename/<id>/<new_name>/`, and `.../delete/<id>/`.
+   - `clone/<id>/<new_name>/`, `rename/<id>/<new_name>/`, and `delete/<id>/`,
+     siblings of `listview/` (React's `actionUrl()` relies on it).
+   - The list page's view class is named after its api's (`GuardrailListView`
+     for `GuardrailListApiView`): `listview_registry()` pairs them by name.
+   - Any other JSON endpoint a React app calls (a dashboard widget, a
+     dialog's data) goes under `/api/web/<app label>/` too. Only pages stay
+     outside `/api/`.
    - All are POSTs, scoped to what the user may read, own, or delete. A
      superuser sees every account's rows.
 5. **Sidebar**: add the URL to `sidebar_context()` in

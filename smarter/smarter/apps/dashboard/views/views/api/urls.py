@@ -1,7 +1,20 @@
-"""URL configuration for the web platform."""
+"""
+URL configuration for the dashboard's endpoints in the web console's api.
+
+These are mounted at ``/api/web/dashboard/``, from :mod:`smarter.apps.dashboard.api.web.urls`,
+and the dashboard's React apps (the dashboard, the welcome dialog, the onboarding hints, the
+resource detail dialog) call them.
+
+These endpoints are part of Smarter's Django-React integration. The Django view that renders a
+console page reverses their urls and passes them to the page's React app, in the attributes of
+its root element, and the app calls them with the browser's Django session and CSRF token. See
+:doc:`/smarter-framework/developer-reference/react-integration`.
+"""
 
 from django.urls import path
 
+from smarter.apps.api.web.const import path_namespace
+from smarter.apps.dashboard.const import namespace
 from smarter.apps.dashboard.views.views.api.activity import ActivityView
 from smarter.apps.dashboard.views.views.api.budgets import (
     BudgetSeriesView,
@@ -22,17 +35,23 @@ from smarter.apps.dashboard.views.views.api.welcome import (
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
-from .const import namespace
-
 logger = logging.getLogger(__name__)
-
-app_name = namespace
 
 
 class DashboardApiReverseNames:
-    """A class to hold the names of the dashboard views for easy reference throughout the codebase."""
+    """
+    Reverse view names for the dashboard's endpoints in the web console's api.
 
-    namespace = namespace
+    Example
+    -------
+    .. code-block:: python
+
+        from smarter.lib.django.shortcuts import reverse
+
+        url = reverse(DashboardApiReverseNames.namespace, DashboardApiReverseNames.my_resources)
+    """
+
+    namespace = f"{path_namespace}:{namespace}"
 
     my_resources = to_snake_case(MyResourcesView.__name__)
     service_health = to_snake_case(ServiceHealthView.__name__)

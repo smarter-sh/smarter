@@ -37,10 +37,10 @@ Features
 Example Endpoints
 -----------------
 
-- ``POST /workbench/api/listview/``
-- ``POST /workbench/api/listview/all/?page=1&page_size=50&invalidate_cache=false``
-- ``POST /workbench/api/listview/owned/?page=1&page_size=25&invalidate_cache=true``
-- ``POST /workbench/api/listview/shared/?page=2&page_size=10&invalidate_cache=false``
+- ``POST /api/web/prompt/listview/``
+- ``POST /api/web/prompt/listview/all/?page=1&page_size=50&invalidate_cache=false``
+- ``POST /api/web/prompt/listview/owned/?page=1&page_size=25&invalidate_cache=true``
+- ``POST /api/web/prompt/listview/shared/?page=2&page_size=10&invalidate_cache=false``
 """
 
 from http import HTTPStatus
@@ -102,11 +102,11 @@ class PromptListApiView(SmarterListApiView):
     them, or both, cached per user. See :class:`~smarter.lib.django.listview.SmarterListApiView`.
 
     Example URL Paths:
-        /workbench/api/listview/
-        /workbench/api/listview/all/?page=1&page_size=50&invalidate_cache=false
-        /workbench/api/listview/owned/?page=1&page_size=25&invalidate_cache=true
-        /workbench/api/listview/shared/?page=2&page_size=10&search=support&ordering=-name
-        /workbench/api/listview/all/?filter=pending
+        /api/web/prompt/listview/
+        /api/web/prompt/listview/all/?page=1&page_size=50&invalidate_cache=false
+        /api/web/prompt/listview/owned/?page=1&page_size=25&invalidate_cache=true
+        /api/web/prompt/listview/shared/?page=2&page_size=10&search=support&ordering=-name
+        /api/web/prompt/listview/all/?filter=pending
     """
 
     model = LLMClient
@@ -140,8 +140,8 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
     Example URL Paths:
 
-        /workbench/api/listview/clone/<int:llmclient_id>/<str:new_name>/
-        /workbench/api/listview/clone/123/?new_name=cloned_llmclient/
+        /api/web/prompt/clone/<int:llmclient_id>/<str:new_name>/
+        /api/web/prompt/clone/123/cloned_llmclient/
 
     :param request: The HTTP request object containing the parameters for cloning.
     :type request: HttpRequest

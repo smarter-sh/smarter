@@ -52,7 +52,7 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The page.
         """
         # pylint: disable=C0415
-        from smarter.apps.vectorstore.urls import VectorstoreReverseNames
+        from smarter.apps.vectorstore.api.web.urls import VectorstoreApiWebReverseNames
 
         context = {
             "vectorstore_list": {
@@ -61,7 +61,7 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "vectorstore_list_api_url": reverse(
-                    VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview_api_all
+                    VectorstoreApiWebReverseNames.namespace, VectorstoreApiWebReverseNames.listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

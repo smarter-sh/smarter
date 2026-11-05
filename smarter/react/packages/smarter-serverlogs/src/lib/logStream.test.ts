@@ -18,8 +18,8 @@ describe("logStreamUrlForLevel", () => {
   it("adds the log level to the url, and leaves the url alone without one", () => {
     expect(logStreamUrlForLevel(LOG_STREAM_URL, DEBUG_LOG_LEVEL)).toBe(`${LOG_STREAM_URL}?level=DEBUG`);
     expect(logStreamUrlForLevel(`${LOG_STREAM_URL}?level=INFO&x=1`, "DEBUG")).toBe(`${LOG_STREAM_URL}?level=DEBUG&x=1`);
-    expect(logStreamUrlForLevel("/dashboard/logs/api/stream/", "DEBUG")).toBe(
-      `${window.location.origin}/dashboard/logs/api/stream/?level=DEBUG`,
+    expect(logStreamUrlForLevel("/api/web/dashboard/logs/stream/", "DEBUG")).toBe(
+      `${window.location.origin}/api/web/dashboard/logs/stream/?level=DEBUG`,
     );
     expect(logStreamUrlForLevel(LOG_STREAM_URL, null)).toBe(LOG_STREAM_URL);
     expect(logStreamUrlForLevel(null, "DEBUG")).toBeNull();
@@ -46,8 +46,8 @@ describe("logStreamUrlForChat", () => {
 describe("logStreamUrlForRequest", () => {
   it("narrows the stream to a request's records, at every level", () => {
     expect(logStreamUrlForRequest(LOG_STREAM_URL, "abc")).toBe(`${LOG_STREAM_URL}?request_id=abc&level=DEBUG`);
-    expect(logStreamUrlForRequest("/dashboard/logs/api/stream/", "abc", "INFO")).toBe(
-      `${window.location.origin}/dashboard/logs/api/stream/?request_id=abc&level=INFO`,
+    expect(logStreamUrlForRequest("/api/web/dashboard/logs/stream/", "abc", "INFO")).toBe(
+      `${window.location.origin}/api/web/dashboard/logs/stream/?request_id=abc&level=INFO`,
     );
   });
 
