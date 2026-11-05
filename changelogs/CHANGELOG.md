@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.3-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.42.3-alpha.2...v0.42.3-alpha.3) (2026-11-05)
+
+### Bug Fixes
+
+* **drf:** keep yaml parser internals out of the 400 response ([d64c9f5](https://github.com/smarter-sh/smarter/commit/d64c9f5b4be814e7342a1950c4d1a7e0ba4b0cf5))
+
 ## [0.42.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.3-alpha.1...v0.42.3-alpha.2) (2026-11-05)
 
 ### Bug Fixes
