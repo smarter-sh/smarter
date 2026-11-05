@@ -136,7 +136,7 @@ ENV MARIADB_CONFIG=/usr/bin/mariadb_config
 ENV MARIADB_CONFIG_ALTERNATIVE=/usr/local/bin/mariadb_config
 RUN curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup && \
     chmod +x mariadb_repo_setup && \
-    ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" && \
+    ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" --skip-maxscale && \
     apt-get update && \
     apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat mariadb-client && \
     test -x "$MARIADB_CONFIG" || (echo "mariadb_config not found at $MARIADB_CONFIG" && exit 1) && \
