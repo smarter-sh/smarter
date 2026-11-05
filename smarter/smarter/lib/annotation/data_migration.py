@@ -88,11 +88,8 @@ def copy_annotations_to_rows(app_label: str, *model_names: str) -> migrations.Ru
     are kept as JSON strings. The reverse copies the rows back into the column, as a list of one-key maps.
 
     :param app_label: The app's label, e.g. ``llmclient``.
-    :type app_label: str
     :param model_names: The models whose table has the column, e.g. ``LLMClient``.
-    :type model_names: str
     :returns: The operation.
-    :rtype: migrations.RunPython
     """
     return migrations.RunPython(_forward(app_label, model_names), _reverse(app_label, model_names))
 

@@ -51,7 +51,8 @@ recognizes. Either way, the error is returned to the LLM and never cached.
 """
 
 ToolCallErrorCheck = Callable[[JsonValue], bool]
-"""Whether a tool's result is an error.
+"""
+Whether a tool's result is an error.
 
 See :func:`is_error_result`.
 """
@@ -100,7 +101,9 @@ def is_error_result(value: JsonValue) -> bool:
                 parsed = json.loads(text)
             except ValueError:
                 return False
-            return isinstance(parsed, dict) and ERROR_KEY in parsed
+            if not isinstance(parsed, dict):
+                return False
+            return ERROR_KEY in parsed
     return False
 
 

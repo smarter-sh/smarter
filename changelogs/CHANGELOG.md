@@ -6,6 +6,45 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.3](https://github.com/smarter-sh/smarter/compare/v0.42.2...v0.42.3) (2026-11-05)
+
+### Bug Fixes
+
+* **drf:** keep yaml parser internals out of the 400 response ([d64c9f5](https://github.com/smarter-sh/smarter/commit/d64c9f5b4be814e7342a1950c4d1a7e0ba4b0cf5))
+* **lib:** cache only payment answers, wire drf permission classes ([3940f2b](https://github.com/smarter-sh/smarter/commit/3940f2b3860127fca78f02a616a18e1388afde80))
+* **lib:** stop credential leaks, fix token expiry and json encoding ([17dcee1](https://github.com/smarter-sh/smarter/commit/17dcee1ad4fa2253a69843e0a8a885722f26dbad))
+
+### Performance
+
+* **lib:** authenticate api keys once per request, cut redis calls ([4719073](https://github.com/smarter-sh/smarter/commit/4719073fa759a72e4d3526f8279817130b518008))
+* **lib:** fix stale caches, lighten broker dependency queries ([c2b5c40](https://github.com/smarter-sh/smarter/commit/c2b5c408dcba016a6f5e20b07e61046dc7782684))
+
+## [0.42.3-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.42.3-alpha.2...v0.42.3-alpha.3) (2026-11-05)
+
+### Bug Fixes
+
+* **drf:** keep yaml parser internals out of the 400 response ([d64c9f5](https://github.com/smarter-sh/smarter/commit/d64c9f5b4be814e7342a1950c4d1a7e0ba4b0cf5))
+
+## [0.42.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.3-alpha.1...v0.42.3-alpha.2) (2026-11-05)
+
+### Bug Fixes
+
+* **lib:** cache only payment answers, wire drf permission classes ([3940f2b](https://github.com/smarter-sh/smarter/commit/3940f2b3860127fca78f02a616a18e1388afde80))
+
+### Performance
+
+* **lib:** fix stale caches, lighten broker dependency queries ([c2b5c40](https://github.com/smarter-sh/smarter/commit/c2b5c408dcba016a6f5e20b07e61046dc7782684))
+
+## [0.42.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.2...v0.42.3-alpha.1) (2026-11-04)
+
+### Bug Fixes
+
+* **lib:** stop credential leaks, fix token expiry and json encoding ([17dcee1](https://github.com/smarter-sh/smarter/commit/17dcee1ad4fa2253a69843e0a8a885722f26dbad))
+
+### Performance
+
+* **lib:** authenticate api keys once per request, cut redis calls ([4719073](https://github.com/smarter-sh/smarter/commit/4719073fa759a72e4d3526f8279817130b518008))
+
 ## [0.42.2](https://github.com/smarter-sh/smarter/compare/v0.42.1...v0.42.2) (2026-11-04)
 
 ### Bug Fixes

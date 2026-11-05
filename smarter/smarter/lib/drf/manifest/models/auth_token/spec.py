@@ -1,4 +1,4 @@
-"""Smarter API SmarterAuthToken - SmarterAuthToken.spec"""
+"""The Pydantic models of a SmarterAuthToken manifest's ``spec`` and ``spec.config``."""
 
 import os
 from typing import ClassVar
@@ -13,7 +13,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMSmarterAuthTokenSpecConfig(AbstractSAMSpecBase):
-    """Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec.config"""
+    """Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec.config."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
 
@@ -28,7 +28,7 @@ class SAMSmarterAuthTokenSpecConfig(AbstractSAMSpecBase):
 
 
 class SAMSmarterAuthTokenSpec(AbstractSAMSpecBase):
-    """Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec"""
+    """Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

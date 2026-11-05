@@ -1,4 +1,4 @@
-"""Smarter API Manifest - SmarterAuthToken.status"""
+"""The Pydantic model of a SmarterAuthToken manifest's read-only ``status``."""
 
 import os
 from datetime import datetime

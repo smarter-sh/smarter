@@ -39,9 +39,7 @@ def closing_connections(view: Callable[..., HttpResponse]) -> Callable[..., Http
     crashes Sphinx when autodoc renders it.
 
     :param view: An error view, e.g. :func:`django.views.defaults.page_not_found`.
-    :type view: Callable[..., HttpResponse]
     :returns: The view, closing the current thread's connections after it runs.
-    :rtype: Callable[..., HttpResponse]
     """
 
     @wraps(view)

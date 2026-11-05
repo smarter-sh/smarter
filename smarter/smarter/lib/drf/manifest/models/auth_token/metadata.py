@@ -1,4 +1,4 @@
-"""Smarter API SmarterAuthToken - SmarterAuthToken.metadata"""
+"""The Pydantic model of a SmarterAuthToken manifest's ``metadata``."""
 
 import os
 from typing import ClassVar

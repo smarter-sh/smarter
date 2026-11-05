@@ -64,8 +64,13 @@ Each course plan lists every file that it uses under *Smarter in the Source Code
 :doc:`ADR 003 on Kubernetes </adr/003-kubernetes>`, `One Image, Laptop to Production: The Case for
 Smarter on Docker and Kubernetes <https://blog.smarter.sh/2026/04/11/smarter-docker-kubernetes/>`__,
 `Route 53 and cert-manager: One DNS Record and One TLS Certificate per Deployed LLM
-<https://blog.smarter.sh/2026/03/24/smarter-per-host-dns-tls/>`__, and the case study `What
-Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
+<https://blog.smarter.sh/2026/03/24/smarter-per-host-dns-tls/>`__, `Running Smarter in Production on
+Amazon EKS: Architecture, Security, Cost and Scale
+<https://blog.smarter.sh/2026/11/03/smarter-production-kubernetes-eks/>`__, `Calico Network
+Policies: Pod Labels as Smarter's Network Boundary
+<https://blog.smarter.sh/2026/10/25/calico-network-policy-labels/>`__, `Build a Slack Bot With a
+Smarter LLMClient <https://blog.smarter.sh/2026/10/31/slack-bot-llmclient-kubernetes/>`__, and the
+case study `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__.
 
 **Exercises.**
 

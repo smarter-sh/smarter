@@ -1,6 +1,8 @@
 # pylint: disable=wrong-import-position
 """Test MetaDataModel model."""
 
+from unittest.mock import patch
+
 from django.db.models.query import QuerySet
 
 from smarter.apps.account.models import Account
@@ -59,3 +61,24 @@ class TestMetaDataModel(TestAccountMixin):
         cached_accounts = Account.get_cached_objects()  # type: ignore
         self.assertIsInstance(cached_accounts, QuerySet)
         self.assertIn(self.account, cached_accounts)
+
+    def test_rename_invalidates_the_old_name(self):
+        """After a rename, the old name no longer finds the row in the cache."""
+        old_name = self.account.name
+        new_name = f"renamed_{self.hash_suffix}"
+        account = Account.objects.get(pk=self.account.pk)
+        self.assertEqual(Account.get_cached_object(name=old_name).pk, account.pk)  # type: ignore
+        account.name = new_name
+        account.save()
+        self.addCleanup(Account.objects.filter(pk=account.pk).update, name=old_name)
+        self.addCleanup(Account.invalidate_cached_name, new_name)
+        with self.assertRaises(Account.DoesNotExist):
+            Account.get_cached_object(name=old_name)  # type: ignore
+        self.assertEqual(Account.get_cached_object(name=new_name).pk, account.pk)  # type: ignore
+
+    def test_the_unfiltered_list_is_not_cached(self):
+        """The unfiltered list reads the database, so a new row is in it at once."""
+        with patch("smarter.lib.django.models.timestamped_model.cache_results") as cache_results:
+            accounts = Account.get_cached_objects()  # type: ignore
+        cache_results.assert_not_called()
+        self.assertIn(self.account, accounts)

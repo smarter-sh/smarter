@@ -9,11 +9,10 @@ subclass only names the kind and its Django model::
         model = Provider
 
 A subclass whose example manifest needs other resources to exist, or other changes, overrides
-prepare_manifest().
+``prepare_manifest()``.
 """
 
 from http import HTTPStatus
-from typing import Any
 from urllib.parse import urlencode
 
 from django.db import models
@@ -33,14 +32,25 @@ NOT_FOUND = (HTTPStatus.NOT_FOUND, HTTPStatus.BAD_REQUEST, HTTPStatus.SERVICE_UN
 
 
 class CliBrokerTestMixin:
-    """Test a kind's broker through the api/v1/cli/ commands."""
+    """
+    Test a kind's broker through the api/v1/cli/ commands.
+
+    Mix it into a test base class that provides ``hash_suffix``, ``get_response()`` and the
+    :class:`unittest.TestCase` assertions, e.g. ``ApiV1TestBase``.
+    """
 
     kind: str
     model: type[models.Model]
     name_prefix = "test_cli_broker"
 
-    def setUp(self):
-        """Give the test a unique resource name, and delete the resources with that name after it."""
+    def setUp(self) -> None:
+        """
+        Name the test's resource, and delete the resources with that name after the test.
+
+        The name is ``name_prefix`` plus the test class's ``hash_suffix``, so it is unique to the
+        test class, and every test of the class uses the same name. The cleanup deletes every
+        resource whose name starts with it.
+        """
         super().setUp()  # type: ignore[misc]
         self.name = f"{self.name_prefix}_{self.hash_suffix}"  # type: ignore[attr-defined]
         self.addCleanup(self.model.objects.filter(name__startswith=self.name).delete)  # type: ignore[attr-defined]
@@ -54,7 +64,9 @@ class CliBrokerTestMixin:
         :param params: Query parameters, e.g. ``name``.
         :returns: The url path, with its query string.
         """
-        kwargs = {SAMKeys.KIND.value: self.kind} if with_kind else None
+        kwargs = None
+        if with_kind:
+            kwargs = {SAMKeys.KIND.value: self.kind}
         view_name = ApiV1CliReverseViews.namespace + getattr(ApiV1CliReverseViews, command)
         url = reverse(view_name, kwargs=kwargs)
         if not params:
@@ -66,7 +78,7 @@ class CliBrokerTestMixin:
         self,
         command: str,
         status: HTTPStatus | tuple[HTTPStatus, ...] = HTTPStatus.OK,
-        data=None,
+        data: SmarterDictType | None = None,
         with_kind: bool = True,
         **params,
     ) -> SmarterDictType:
@@ -82,27 +94,45 @@ class CliBrokerTestMixin:
         """
         path = self.cli_url(command, with_kind, **params)
         response, received = self.get_response(path=path, data=data)  # type: ignore[attr-defined]
-        statuses = status if isinstance(status, tuple) else (status,)
+        if isinstance(status, tuple):
+            statuses = status
+        else:
+            statuses = (status,)
         self.assertIn(received, statuses, msg=f"{command}: {response}")  # type: ignore[attr-defined]
         return response
 
     def example_manifest(self) -> SmarterDictType:
-        """Return the kind's example manifest, from the ``example_manifest`` command."""
+        """
+        Return the kind's example manifest, from the ``example_manifest`` command.
+
+        :returns: The manifest.
+        """
         response = self.cli("example_manifest")
         manifest = response["data"]
         self.assertEqual(manifest[SAMKeys.KIND.value], self.kind)  # type: ignore[attr-defined]
         return manifest
 
     def prepare_manifest(self, manifest: SmarterDictType) -> SmarterDictType:
-        """Return the example manifest, renamed for this test, without the status that apply ignores."""
+        """
+        Return the example manifest, renamed for this test, without the status that apply ignores.
+
+        :param manifest: The example manifest. It is changed in place.
+        :returns: The manifest.
+        """
         manifest[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value] = self.name
         manifest.pop(SAMKeys.STATUS.value, None)
         return manifest
 
     def apply(self) -> SmarterDictType:
-        """Apply the example manifest, renamed for this test, and return the response's json."""
-        manifest = self.prepare_manifest(self.example_manifest())
-        return self.cli("apply", data=manifest, with_kind=False)
+        """
+        Apply the example manifest, renamed for this test.
+
+        :returns: The response's json.
+        """
+        example = self.example_manifest()
+        manifest = self.prepare_manifest(example)
+        response = self.cli("apply", data=manifest, with_kind=False)
+        return response
 
     def test_example_manifest(self):
         """The example manifest is of this kind, and has a spec."""
@@ -129,7 +159,7 @@ class CliBrokerTestMixin:
         self.assertIn(self.name, str(self.cli("get")))  # type: ignore[attr-defined]
 
     def test_unknown_name(self):
-        """Test that describing or deleting a resource that does not exist is refused, as brokers do, with a 503."""
+        """Test that describing or deleting a resource that does not exist is refused, with a 404, 400 or 503."""
         for command in ("describe", "delete"):
             with self.subTest(command=command):  # type: ignore[attr-defined]
                 self.cli(command, status=NOT_FOUND, name="no_such_resource")

@@ -79,7 +79,9 @@ in the Source Code*.
 OpenAPI Contract: One Extensibility Model for Python, Go, React and VS Code
 <https://blog.smarter.sh/2026/09/05/smarter-openapi-contract/>`__, `Getting Started With
 smarter-api, the Smarter Python SDK
-<https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__.
+<https://blog.smarter.sh/2026/06/06/getting-started-smarter-api/>`__, `How Smarter's
+Kubernetes-Style Annotations Trace Every Resource to Its GitHub Commit
+<https://blog.smarter.sh/2026/10/31/sam-annotations-github-provenance/>`__.
 
 **Exercises.**
 

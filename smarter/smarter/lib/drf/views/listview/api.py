@@ -1,9 +1,5 @@
 # pylint: disable=W0613
-"""
-This module contains views to implement the React.
-
-AuthToken list view in the Smarter Dashboard.
-"""
+"""The json apis of the web console's React list app of API keys (AuthTokens): list, clone, delete and rename."""
 
 from http import HTTPStatus
 
@@ -26,19 +22,10 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class AuthTokenListApiView(SmarterListApiView):
     """
-    Render the authtoken list view for the Smarter Workbench web console.
+    Return one page of the API keys available to the authenticated user, as json.
 
-    This view displays all authtokens available to the authenticated user as cards, providing a quick overview and access to authtoken details.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with a card for each authtoken, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
+    This is the list api of the ``smarter-authtoken-list`` React app. See
+    :class:`~smarter.lib.django.listview.SmarterListApiView` for the response and its caching.
     """
 
     model = AuthToken
@@ -47,11 +34,11 @@ class AuthTokenListApiView(SmarterListApiView):
 
 
 class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
-    """Clone a authtoken for the authenticated user."""
+    """Clone an API key for the authenticated user."""
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
+        """The view's dotted class name and instance id, formatted for log messages."""
         class_name = f"{__name__}.{AuthTokenListApiCloneView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -59,21 +46,19 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         """
         Handle POST requests to clone an existing AuthToken.
 
-        Validates input
-        parameters, checks for the existence of the AuthToken to be cloned, and
-        creates a new AuthToken with the specified name. Invalidates the cache
-        for the user's LLMClients after cloning.
+        Validates the url parameters, checks that the user may read the AuthToken to be cloned,
+        and creates a new AuthToken, owned by the user, with the new name in snake_case.
+        Invalidates the user's cached AuthTokens after cloning.
 
-        :param request: The HTTP request object containing the parameters for cloning.
-        :type request: HttpRequest
+        :param request: The HTTP request.
         :param args: Additional positional arguments (not used).
-        :param kwargs: Additional keyword arguments, including:
+        :param kwargs: The url parameters:
 
-            - authtoken_id (str): The ID of the AuthToken to be cloned.
-            - new_name (str): The new name for the cloned AuthToken.
+            - ``authtoken_id``: The ``key_id`` of the AuthToken to be cloned.
+            - ``new_name``: The new name for the cloned AuthToken.
 
-        :returns: A JsonResponse containing the serialized data of the newly cloned AuthToken if successful, or an error message if the cloning fails.
-        :rtype: JsonResponse
+        :returns: A JsonResponse with the serialized clone, or an error message with status 400
+            or 404.
         """
         authtoken_id = kwargs.get("authtoken_id")
         new_name = kwargs.get("new_name")
@@ -117,11 +102,11 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
-    """Delete a authtoken for the authenticated user."""
+    """Delete an API key of the authenticated user."""
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
+        """The view's dotted class name and instance id, formatted for log messages."""
         class_name = f"{__name__}.{AuthTokenListApiDeleteView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -129,20 +114,16 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         Handle POST requests to delete an existing AuthToken.
 
-        Validates input
-        parameters, checks for the existence of the AuthToken to be deleted, and
-        deletes the AuthToken if it exists. Invalidates the cache for the user's
-        LLMClients after deletion.
+        Validates the url parameter, checks that the user owns the AuthToken to be deleted,
+        and deletes it. Invalidates the user's cached AuthTokens after deletion.
 
-        :param request: The HTTP request object containing the parameters for deletion.
-        :type request: HttpRequest
+        :param request: The HTTP request.
         :param args: Additional positional arguments (not used).
-        :param kwargs: Additional keyword arguments, including:
+        :param kwargs: The url parameters:
 
-            - authtoken_id (str): The ID of the AuthToken to be deleted.
+            - ``authtoken_id``: The ``key_id`` of the AuthToken to be deleted.
 
         :returns: A JsonResponse indicating the success or failure of the deletion.
-        :rtype: JsonResponse
         """
         authtoken_id = kwargs.get("authtoken_id")
         if not authtoken_id:
@@ -178,11 +159,11 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
-    """Rename a authtoken for the authenticated user."""
+    """Rename an API key of the authenticated user."""
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
+        """The view's dotted class name and instance id, formatted for log messages."""
         class_name = f"{__name__}.{AuthTokenListApiRenameView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
@@ -190,21 +171,19 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         """
         Handle POST requests to rename an existing AuthToken.
 
-        Validates input
-        parameters, checks for the existence of the AuthToken to be renamed, and
-        renames the AuthToken if it exists. Invalidates the cache for the user's
-        LLMClients after renaming.
+        Validates the url parameters, checks that the user owns the AuthToken to be renamed,
+        and renames it, with the new name in snake_case. Invalidates the user's cached
+        AuthTokens after renaming.
 
-        :param request: The HTTP request object containing the parameters for renaming.
-        :type request: HttpRequest
+        :param request: The HTTP request.
         :param args: Additional positional arguments (not used).
-        :param kwargs: Additional keyword arguments, including:
+        :param kwargs: The url parameters:
 
-            - authtoken_id (str): The ID of the AuthToken to be renamed.
-            - new_name (str): The new name for the AuthToken.
+            - ``authtoken_id``: The ``key_id`` of the AuthToken to be renamed.
+            - ``new_name``: The new name for the AuthToken.
 
-        :returns: A JsonResponse indicating the success or failure of the renaming.
-        :rtype: JsonResponse
+        :returns: A JsonResponse with the serialized AuthToken, or an error message with status
+            400 or 404.
         """
         authtoken_id = kwargs.get("authtoken_id")
         new_name = kwargs.get("new_name")
