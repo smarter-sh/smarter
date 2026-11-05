@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.5](https://github.com/smarter-sh/smarter/compare/v0.42.4...v0.42.5) (2026-11-05)
+
+### Bug Fixes
+
+* **llmclient:** log a request without a body at DEBUG in handle_llmclient_called(), not ERROR ([6f030a3](https://github.com/smarter-sh/smarter/commit/6f030a309d617c23fb7d557eef2c50af452ba421)), closes [#925](https://github.com/smarter-sh/smarter/issues/925)
+* **settings:** keep the Fernet key out of its validation error ([9e0da64](https://github.com/smarter-sh/smarter/commit/9e0da644d27b18aa5c2532c1c8b18bf093d4bde7))
+
+### Refactoring
+
+* **api:** delete the per-app api urlconfs that nothing mounts ([16f0a5c](https://github.com/smarter-sh/smarter/commit/16f0a5c4ada9e0ccc23fa2eac25723226ab38ff6))
+* **api:** move the console's React endpoints under /api/web/ ([0928951](https://github.com/smarter-sh/smarter/commit/0928951c891503f37bc307d7aff58523ad87839e))
+
 ## [0.42.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.5-alpha.1...v0.42.5-alpha.2) (2026-11-05)
 
 ### Bug Fixes
