@@ -44,9 +44,42 @@ class TestTimestampedModel(TestAccountMixin):
         """Test finding a hashed ID substring in a value."""
 
         hashed_id = self.account.hashed_id
-        value = f"Some value containing the hashed ID: {hashed_id}"
-        found_hash = Account.find_hash(value)
-        self.assertEqual(found_hash, hashed_id)
+        for value in (
+            f"/workbench/llm-clients/{hashed_id}/prompt/",
+            f"/workbench/llm-clients/{hashed_id}",
+            hashed_id,
+        ):
+            with self.subTest(value=value):
+                self.assertEqual(Account.find_hash(value), hashed_id)
+
+    def test_find_hash_only_matches_whole_path_segments(self):
+        """
+        An r...x substring inside a word, or a segment that doesn't decode, isn't a hashed ID.
+
+        Regression test for https://github.com/smarter-sh/smarter/issues/924: ``repo-ex`` in
+        ``repo-explorer`` was taken for a hashed id.
+        """
+        hashed_id = self.account.hashed_id
+        for value in (
+            "http://repo-explorer.example.com/",
+            "/api/v1/llm-clients/repo-explorer/prompt/",
+            "/api/v1/llm-clients/rex/prompt/",
+            "/api/v1/llm-clients/repo-ex/prompt/",
+            f"/api/v1/llm-clients/x{hashed_id}/prompt/",
+            f"Some value containing the hashed ID: {hashed_id}",
+        ):
+            with self.subTest(value=value):
+                self.assertIsNone(Account.find_hash(value))
+        self.assertIsNone(Account.hash_regex().search("http://repo-explorer.example.com/"))
+        # A look-alike segment is skipped, and the real hashed id after it is found.
+        self.assertEqual(Account.find_hash(f"/repo-ex/{hashed_id}/"), hashed_id)
+
+    def test_failed_decode_logs_a_warning_not_an_error(self):
+        """A hashed id that doesn't decode comes from the client, so it is a WARNING, not an ERROR."""
+        with patch("smarter.lib.django.models.timestamped_model.logger") as mock_logger:
+            self.assertIsNone(Account.id_from_hashed_id("repo-ex"))
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
 
     def test_record_locator(self):
         """Test that record_locator returns the expected string format."""
