@@ -8756,7 +8756,6 @@
           "function_args": {
             "anyOf": [
               {
-                "maxLength": 255,
                 "type": "string"
               },
               {
@@ -9576,7 +9575,6 @@
           "function_args": {
             "anyOf": [
               {
-                "maxLength": 255,
                 "type": "string"
               },
               {

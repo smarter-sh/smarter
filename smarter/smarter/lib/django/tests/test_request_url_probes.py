@@ -9,6 +9,7 @@ exercised, and the classifications that matter are asserted.
 
 import inspect
 from functools import cached_property
+from unittest.mock import patch
 from urllib.parse import urlsplit
 
 from django.test import RequestFactory
@@ -126,6 +127,10 @@ class TestSmarterRequestUrlProbes(TestAccountMixin):
         self.assertEqual(
             self.srm("http://localhost:9357/api/v1/llm-clients/rMTAwMDAxNgx/prompt/").smarter_request_llmclient_id, 16
         )
+        self.assertEqual(
+            self.srm("http://localhost:9357/workbench/llm-clients/rMTAwMDAxNgx/prompt/").smarter_request_llmclient_id,
+            16,
+        )
         for url in (
             "http://localhost:9357/api/v1/workbench/not-a-number/prompt/",
             "http://localhost:9357/api/v1/llm-clients/xrMTAwMDAxNgx/prompt/",
@@ -136,6 +141,21 @@ class TestSmarterRequestUrlProbes(TestAccountMixin):
         ):
             with self.subTest(url=url):
                 self.assertFalse(self.srm(url).is_llmclient_smarter_api_url)
+
+    def test_llmclient_host_name_is_not_a_hashed_id(self):
+        """
+        A named url whose host contains r...x, e.g. repo-explorer, has no hashed id and logs nothing.
+
+        Regression test for https://github.com/smarter-sh/smarter/issues/924, where ``repo-ex`` was
+        taken for a hashed id and every request to the llmclient logged a decode ERROR.
+        """
+        url = "http://repo-explorer.3141-5926-5359.api.localhost:9357/"
+        with patch("smarter.lib.django.models.timestamped_model.logger") as mock_logger:
+            srm = self.srm(url)
+            self.assertTrue(srm.is_llmclient_named_url)
+            self.assertIsNone(srm.smarter_request_llmclient_id)
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_not_called()
 
     def test_session_key(self):
         """Test that the session key is read from the url, the request body, or a cookie."""
