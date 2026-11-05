@@ -24,7 +24,9 @@ class PromptToolCall(TimestampedModel):
     prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
     function_name = models.CharField(max_length=255, blank=True, null=True)
-    function_args = models.CharField(max_length=255, blank=True, null=True)
+    # The tool call's arguments, as the LLM sent them. Unbounded: a web search
+    # query or a list of URLs is routinely longer than 255 characters.
+    function_args = models.TextField(blank=True, null=True)
     request = models.JSONField(
         blank=True,
         null=True,
