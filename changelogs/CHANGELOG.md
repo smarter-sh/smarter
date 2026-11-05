@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.5-alpha.1...v0.42.5-alpha.2) (2026-11-05)
+
+### Bug Fixes
+
+* **llmclient:** log a request without a body at DEBUG in handle_llmclient_called(), not ERROR ([6f030a3](https://github.com/smarter-sh/smarter/commit/6f030a309d617c23fb7d557eef2c50af452ba421)), closes [#925](https://github.com/smarter-sh/smarter/issues/925)
+
 ## [0.42.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.4...v0.42.5-alpha.1) (2026-11-05)
 
 ### Bug Fixes
