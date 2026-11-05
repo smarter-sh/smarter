@@ -523,7 +523,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :param kwargs: Ignored here; subclasses that override this method use them.
         :returns: The model instance.
         :raises NotImplementedError: if called on an abstract model class.
-        :raises DoesNotExist: the model's ``DoesNotExist``, if ``pk`` is missing or no row has it.
+        :raises ~django.core.exceptions.ObjectDoesNotExist: the model's ``DoesNotExist``, if ``pk``
+            is missing or no row has it.
         """
         logger_prefix = SmarterFormattedText.text(__name__ + "." + TimestampedModel.__name__)
 

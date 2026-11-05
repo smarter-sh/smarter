@@ -319,10 +319,10 @@ class MetaDataModel(TimestampedModel):
         :param kwargs: Passed on to :meth:`TimestampedModel.get_cached_object` for a lookup by pk.
         :returns: The model instance.
         :raises NotImplementedError: if called on an abstract model class.
-        :raises DoesNotExist: the model's ``DoesNotExist``, if neither ``pk`` nor ``name`` is given,
-            or no row matches.
-        :raises MultipleObjectsReturned: the model's ``MultipleObjectsReturned``, if several rows
-            have the name.
+        :raises ~django.core.exceptions.ObjectDoesNotExist: the model's ``DoesNotExist``, if neither
+            ``pk`` nor ``name`` is given, or no row matches.
+        :raises ~django.core.exceptions.MultipleObjectsReturned: the model's
+            ``MultipleObjectsReturned``, if several rows have the name.
         """
         class_prefix = SmarterFormattedText.text(__name__ + "." + MetaDataModel.__name__)
 
