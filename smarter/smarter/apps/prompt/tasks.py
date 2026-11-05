@@ -7,6 +7,8 @@ Celery workers in order to avoid blocking the main app thread. This is advance w
 future high-traffic scenarios.
 """
 
+from django.db import DataError
+
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.conf import smarter_settings
@@ -33,9 +35,13 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_level = logger.getEffectiveLevel()
 module_prefix = "smarter.apps.prompt.tasks."
 
+# Errors that fail the same way on every retry, e.g. a value too long for its column.
+NOT_RETRYABLE = (DataError,)
+
 
 @app.task(
     autoretry_for=(Exception,),
+    dont_autoretry_for=NOT_RETRYABLE,
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
@@ -66,6 +72,7 @@ def create_prompt_history(prompt_id, request, response, messages):
 
 @app.task(
     autoretry_for=(Exception,),
+    dont_autoretry_for=NOT_RETRYABLE,
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
@@ -77,6 +84,7 @@ def aggregate_prompt_history():
 
 @app.task(
     autoretry_for=(Exception,),
+    dont_autoretry_for=NOT_RETRYABLE,
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
@@ -93,6 +101,7 @@ def create_prompt(session_key, llmclient_id):
 
 @app.task(
     autoretry_for=(Exception,),
+    dont_autoretry_for=NOT_RETRYABLE,
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
@@ -136,6 +145,7 @@ def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, fu
 
 @app.task(
     autoretry_for=(Exception,),
+    dont_autoretry_for=NOT_RETRYABLE,
     retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
