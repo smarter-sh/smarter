@@ -24,8 +24,11 @@ The following symbols are re-exported unmodified from :mod:`json`:
 
 import datetime
 import decimal
+import functools
 import json
+import logging as std_logging
 import uuid
+from collections.abc import Callable
 
 # pylint: disable=unused-import
 from json import (  # unmodified re-export
@@ -34,24 +37,38 @@ from json import (  # unmodified re-export
     load,
     loads,
 )
+from typing import Any, Optional
 
+from django.utils.functional import Promise
 from pydantic import HttpUrl, TypeAdapter
 
-from smarter.lib import logging
+# The standard library's logging, not smarter.lib.logging: smarter.lib.logging imports
+# this module (through console_helpers), so importing it here would be circular.
+# smarter.lib.logging.getLogger is this same function.
+logger = std_logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-formatted_logger_prefix = "SmarterJSONEncoder"
 
-
-class Promise:
+def _logger_prefix() -> str:
     """
-    Base class for the proxy class created in the closure of the lazy function.
+    Return this module's formatted log prefix.
 
-    It's used to recognize promises in code.
+    ``console_helpers`` is imported on use, not at import, because it imports this module.
+
+    :returns: The formatted module name.
     """
+    # pylint: disable=import-outside-toplevel
+    from smarter.common.helpers.console_helpers import SmarterFormattedText
+
+    return SmarterFormattedText.text(__name__)
 
 
-def _get_duration_components(duration):
+def _get_duration_components(duration: datetime.timedelta) -> tuple[int, int, int, int, int]:
+    """
+    Split a timedelta into days, hours, minutes, seconds and microseconds.
+
+    :param duration: The timedelta.
+    :returns: A tuple of ``(days, hours, minutes, seconds, microseconds)``.
+    """
     days = duration.days
     seconds = duration.seconds
     microseconds = duration.microseconds
@@ -62,24 +79,25 @@ def _get_duration_components(duration):
     hours = minutes // 60
     minutes %= 60
 
-    return days, hours, minutes, seconds, microseconds
+    components = (days, hours, minutes, seconds, microseconds)
+    return components
 
 
-def is_aware(value):
+def is_aware(value: datetime.datetime | datetime.time) -> bool:
     """
-    Determine if a given datetime.datetime is aware.
+    Return whether a datetime or time is timezone-aware.
 
     The concept is defined in Python's docs:
     https://docs.python.org/library/datetime.html#datetime.tzinfo
 
-    Assuming value.tzinfo is either None or a proper datetime.tzinfo,
-    value.utcoffset() implements the appropriate logic.
+    :param value: The datetime or time.
+    :returns: True if ``value.utcoffset()`` is not None.
     """
-    return value.utcoffset() is not None
+    offset = value.utcoffset()
+    return offset is not None
 
 
-# pylint: disable=C0209
-def duration_iso_string(duration):
+def duration_iso_string(duration: datetime.timedelta) -> str:
     """
     Format a timedelta as an ISO 8601 duration, e.g. ``P1DT02H03M04.000005S``.
 
@@ -93,21 +111,43 @@ def duration_iso_string(duration):
         sign = ""
 
     days, hours, minutes, seconds, microseconds = _get_duration_components(duration)
-    ms = ".{:06d}".format(microseconds) if microseconds else ""
-    return "{}P{}DT{:02d}H{:02d}M{:02d}{}S".format(sign, days, hours, minutes, seconds, ms)
+    ms = ""
+    if microseconds:
+        ms = f".{microseconds:06d}"
+    iso_string = f"{sign}P{days}DT{hours:02d}H{minutes:02d}M{seconds:02d}{ms}S"
+    return iso_string
+
+
+def _is_class(o: object, module: str, *names: str) -> bool:
+    """
+    Return whether ``o``'s class has one of ``names`` and is defined in ``module``.
+
+    It identifies a class by name, so that the class need not be imported, e.g. to avoid
+    import timing issues during startup.
+
+    :param o: The value.
+    :param module: The dotted name of the module that defines the class.
+    :param names: The class names to accept.
+    :returns: True if ``type(o).__name__`` is one of ``names`` and ``type(o).__module__`` is
+        ``module``.
+    """
+    value_class = type(o)
+    if value_class.__name__ not in names:
+        return False
+    class_module = getattr(value_class, "__module__", None)
+    return class_module == module
 
 
 class SmarterJSONEncoder(json.JSONEncoder):
     """
-    JSONEncoder subclass that knows how to encode odd types like.
+    A JSON encoder for the types that :class:`json.JSONEncoder` can't serialize.
 
-     - date/time
-     - decimal
-     - UUIDs
-     - TaggableManager
+    It handles dates and times, decimals, UUIDs, Django's lazy strings, sets, Pydantic urls,
+    generic relations and taggit's tags and managers. :func:`dumps` uses it by default, and
+    Django model fields use it as their ``encoder``.
     """
 
-    def default(self, o):
+    def default(self, o: Any) -> Any:
         """
         Encode a value that :class:`json.JSONEncoder` can't.
 
@@ -120,8 +160,8 @@ class SmarterJSONEncoder(json.JSONEncoder):
         :raises ValueError: For a timezone-aware time.
         :raises TypeError: For any other type, from :meth:`json.JSONEncoder.default`.
         """
-        # TaggableManager support (import inside to avoid startup issues)
-        # most common cases. pass back the super().default(o)
+        # Types that json.JSONEncoder handles itself never reach default(). When called
+        # directly, pass them to super().default(), which raises TypeError.
         if isinstance(o, (str, int, float, type(None), bool)):
             return super().default(o)
         # See "Date Time String Format" in the ECMA-262 specification.
@@ -153,54 +193,100 @@ class SmarterJSONEncoder(json.JSONEncoder):
             # Handle Django's GenericRelatedObjectManager and Django's
             # TaggableManager without importing them directly in order to avoid
             # import timing issues during startup.
-            if (
-                type(o).__name__ == "GenericRelatedObjectManager"
-                and getattr(type(o), "__module__", None) == "django.contrib.contenttypes.fields"
-            ):
+            if _is_class(o, "django.contrib.contenttypes.fields", "GenericRelatedObjectManager"):
                 return list(o.all())
 
             # Handle TaggedItem
-            if type(o).__name__ == "Tag" and getattr(type(o), "__module__", None) == "taggit.models":
+            if _is_class(o, "taggit.models", "Tag"):
                 # e.g. a TaggableManager field of model_to_dict(), which is a list of Tags.
                 return o.name
-            if type(o).__name__ == "TaggedItem" and getattr(type(o), "__module__", None) == "taggit.models":
+            if _is_class(o, "taggit.models", "TaggedItem"):
                 retval = o.tag.name
-                logger.debug("%s.default() Serializing TaggedItem with tag: %s", formatted_logger_prefix, retval)
+                logger.debug(
+                    "%s.SmarterJSONEncoder.default() Serializing TaggedItem with tag: %s", _logger_prefix(), retval
+                )
                 return retval
 
             # Handle TaggableManager
-            if (
-                type(o).__name__ in ("TaggableManager", "_TaggableManager")
-                and getattr(type(o), "__module__", None) == "taggit.managers"
-            ):
+            if _is_class(o, "taggit.managers", "TaggableManager", "_TaggableManager"):
                 retval = list(o.all().values_list("name", flat=True))
-                logger.debug("%s.default() Serializing TaggableManager with tags: %s", formatted_logger_prefix, retval)
+                logger.debug(
+                    "%s.SmarterJSONEncoder.default() Serializing TaggableManager with tags: %s",
+                    _logger_prefix(),
+                    retval,
+                )
                 return retval
 
             return super().default(o)
 
 
-def dumps(
-    obj,
-    *,
-    skipkeys=False,
-    ensure_ascii=True,
-    check_circular=True,
-    allow_nan=True,
-    cls=None,
-    indent=None,
-    separators=None,
-    default=None,
-    sort_keys=False,
-    **kw,
-):
+@functools.cache
+def with_str_fallback(encoder_class: type[json.JSONEncoder]) -> type[json.JSONEncoder]:
     """
-    JSON dump with.
+    Return a subclass of ``encoder_class`` that serializes any value it can't encode with :func:`str`.
 
-    - SmarterJSONEncoder as default encoder
-    - indent of 2
-    - default of str
+    The encoder's own :meth:`~json.JSONEncoder.default` runs first, so its types keep their
+    format, e.g. a datetime is still an ISO 8601 string. The subclass is built once per
+    encoder class.
+
+    :param encoder_class: The encoder to extend.
+    :returns: The extended encoder class.
     """
+
+    class StrFallbackEncoder(encoder_class):
+        """Encode with ``encoder_class``, else with :func:`str`."""
+
+        def default(self, o: Any) -> Any:
+            """
+            Encode ``o`` with the parent encoder, else as ``str(o)``.
+
+            :param o: The value.
+            :returns: A JSON-serializable value.
+            """
+            try:
+                return super().default(o)
+            except TypeError:
+                return str(o)
+
+    StrFallbackEncoder.__name__ = f"{encoder_class.__name__}WithStrFallback"
+    return StrFallbackEncoder
+
+
+def dumps(
+    obj: object,
+    *,
+    skipkeys: bool = False,
+    ensure_ascii: bool = True,
+    check_circular: bool = True,
+    allow_nan: bool = True,
+    cls: type[json.JSONEncoder] | None = None,
+    indent: int | str | None = None,
+    separators: tuple[str, str] | None = None,
+    default: Callable[[object], object] | None = None,
+    sort_keys: bool = False,
+    **kw: object,
+) -> str:
+    """
+    Serialize ``obj`` to a JSON string, with Smarter's defaults.
+
+    The arguments are those of :func:`json.dumps`, with these defaults:
+
+    - ``cls`` is :class:`SmarterJSONEncoder`.
+    - ``indent`` is 2.
+    - A value that the encoder can't serialize becomes ``str(value)``, unless ``default``
+      is given. The encoder still handles its own types first.
+
+    :param obj: The value to serialize.
+    :returns: The JSON string.
+    """
+    encoder_class = cls
+    if encoder_class is None:
+        encoder_class = SmarterJSONEncoder
+    if default is None:
+        encoder_class = with_str_fallback(encoder_class)
+
+    if indent is None:
+        indent = 2
 
     return json.dumps(
         obj,
@@ -208,13 +294,35 @@ def dumps(
         ensure_ascii=ensure_ascii,
         check_circular=check_circular,
         allow_nan=allow_nan,
-        cls=cls or SmarterJSONEncoder,
-        indent=2 if indent is None else indent,
+        cls=encoder_class,
+        indent=indent,
         separators=separators,
-        default=default or str,
+        default=default,
         sort_keys=sort_keys,
         **kw,
     )
+
+
+def to_jsonable(obj: Any, cls: Optional[type[json.JSONEncoder]] = None) -> Any:
+    """
+    Return ``obj`` as plain JSON data: dicts, lists, strings, numbers, booleans and None.
+
+    It is ``json.loads(dumps(obj))``, without the indentation: an indented dump runs in pure
+    Python, while a compact one runs in the standard library's C encoder. Use it to snapshot
+    data, e.g. before storing it in a ``JSONField``.
+
+    :param obj: The value to convert.
+    :param cls: The encoder; :class:`SmarterJSONEncoder` by default. Values it can't encode
+        become ``str(value)``.
+    :returns: The JSON data.
+    """
+    encoder_class = cls
+    if encoder_class is None:
+        encoder_class = SmarterJSONEncoder
+    encoder_class = with_str_fallback(encoder_class)
+    text = json.dumps(obj, cls=encoder_class, separators=(",", ":"))
+    data = json.loads(text)
+    return data
 
 
 __all__ = [
@@ -224,4 +332,5 @@ __all__ = [
     "dumps",
     "load",
     "loads",
+    "to_jsonable",
 ]

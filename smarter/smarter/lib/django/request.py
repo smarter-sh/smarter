@@ -3,7 +3,8 @@
 Smarter request mixin.
 
 This is a helper class for the Django request object that resolves
-known url patterns for Smarter llmclients. key features include:
+known url patterns for Smarter llmclients. Its key features are:
+
 - lazy loading of the user, account, user profile and session_key.
 - meta data for describing llmclient characteristics.
 - session_key generation.
@@ -17,7 +18,7 @@ import re
 import uuid
 from datetime import datetime
 from functools import cache, cached_property
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from unittest.mock import MagicMock
 from urllib.parse import ParseResult, urlparse
 
@@ -88,8 +89,13 @@ STATIC_FILE_EXTENSIONS = (
 
 
 # pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
+def should_log(level: int) -> bool:
+    """
+    Check if logging should be done based on the waffle switch.
+
+    :param level: The log level of the message. It is ignored: the switch turns every level on or off.
+    :returns: True if the ``REQUEST_MIXIN_LOGGING`` waffle switch is active.
+    """
     return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
 
 
@@ -209,22 +215,27 @@ class SmarterRequestMixin(AccountMixin):
         self._url_account_number: Optional[str] = None
         self._parsed_url: Optional[ParseResult] = None
         self._params: Optional[QueryDict] = None
-        self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
+        self._session_key: Optional[str] = kwargs.pop("session_key", None)
         self._data: Optional[SmarterDictType] = None
         self._cache_key: Optional[str] = None
         self._srm_ready: bool = False
 
-        request = request or next((req for req in args if isinstance(req, SMARTER_REQUEST_CLASSES)), None)
+        # Each of these is taken from its keyword argument, or else from the first positional
+        # argument of its class.
+        if not request:
+            request = next((arg for arg in args if isinstance(arg, SMARTER_REQUEST_CLASSES)), None)
         # the arguments that are passed to the parent AccountMixin class.
-        user = kwargs.pop("user", None) or next((user for user in args if isinstance(user, User)), None)
+        user = kwargs.pop("user", None)
+        if not user:
+            user = next((arg for arg in args if isinstance(arg, User)), None)
         if user:
             self._smarter_request_user = user
-        user_profile = kwargs.pop("user_profile", None) or next(
-            (user_profile for user_profile in args if isinstance(user_profile, UserProfile)), None
-        )
-        account = kwargs.pop("account", None) or next(
-            (account for account in args if isinstance(account, Account)), None
-        )
+        user_profile = kwargs.pop("user_profile", None)
+        if not user_profile:
+            user_profile = next((arg for arg in args if isinstance(arg, UserProfile)), None)
+        account = kwargs.pop("account", None)
+        if not account:
+            account = next((arg for arg in args if isinstance(arg, Account)), None)
         self._smarter_request = request
         AccountMixin.__init__(
             self,
@@ -256,8 +267,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         String representation of the instance, naming its concrete class.
 
-        :return: A string describing the instance.
-        :rtype: str
+        :returns: A string describing the instance.
         """
         return (
             f"{self.__class__.__name__}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
@@ -267,8 +277,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Developer representation of the instance, which is the same as :meth:`__str__`.
 
-        :return: A string representation suitable for debugging.
-        :rtype: str
+        :returns: A string representation suitable for debugging.
         """
         return self.__str__()
 
@@ -276,8 +285,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Boolean representation of the SmarterRequestMixin instance.
 
-        :return: True if the instance is srm_ready, False otherwise.
-        :rtype: bool
+        :returns: True if the instance is srm_ready, False otherwise, including when checking raises.
         """
         try:
             return self.srm_ready
@@ -295,8 +303,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Hash representation of the SmarterRequestMixin instance.
 
-        :return: An integer hash of the instance.
-        :rtype: int
+        :returns: An integer hash of the instance's url and user profile.
         """
         return hash(
             (
@@ -310,10 +317,8 @@ class SmarterRequestMixin(AccountMixin):
         Equality comparison for SmarterRequestMixin instances, by url and user_profile.
 
         :param other: Another object to compare.
-        :type other: object
-        :return: True if the instances are equal, or ``NotImplemented`` if
+        :returns: True if the instances are equal, or ``NotImplemented`` if
             ``other`` is not a :class:`SmarterRequestMixin`.
-        :rtype: bool
         """
         if not isinstance(other, SmarterRequestMixin):
             return NotImplemented
@@ -331,7 +336,6 @@ class SmarterRequestMixin(AccountMixin):
         :param request: The HTTP request object to be associated with this mixin instance.
         :param user: The user associated with the request, if available.
         :param kwargs: Keyword arguments passed to the setup method.
-        :return: None
         """
         logger.debug(
             "%s.setup() called with args: %s, kwargs: %s, request: %s, user: %s",
@@ -348,8 +352,8 @@ class SmarterRequestMixin(AccountMixin):
         """
         Invalidates all cached properties on the instance to force re-evaluation.
 
-        This method removes all attributes cached by `@cached_property` decorators
-        from the instance's `__dict__`. It is useful for testing or when the request
+        This method removes all attributes cached by ``@cached_property`` decorators
+        from the instance's ``__dict__``. It is useful for testing or when the request
         object changes and you need to ensure that all dependent properties are recalculated.
 
         Example::
@@ -380,7 +384,7 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             req = request_mixin.smarter_request
 
-        :return: The current request object.
+        :returns: The current request object.
         """
         return self._smarter_request
 
@@ -397,7 +401,7 @@ class SmarterRequestMixin(AccountMixin):
         self._smarter_request = request
         self._data = None
         if request is not None:
-            url = smarter_build_absolute_uri(request) if request else None
+            url = smarter_build_absolute_uri(request)
             if not url:
                 raise SmarterValueError(
                     f"{self.srm_formatted_class_name}.smarter_request setter - could not build url from request: {request}"
@@ -436,92 +440,94 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             user = request_mixin.smarter_request_user
 
-        :return: The user associated with the request, or None if not available.
+        :returns: The user associated with the request, or None if not available.
         """
         return self._smarter_request_user
+
+    def _header(self, name: str) -> Optional[str]:
+        """
+        Return the value of a request header.
+
+        :param name: The header's name, e.g. ``"Authorization"``.
+        :returns: The header's value, or None if there is no request, the request has no
+            headers, or the header is missing.
+        """
+        if not self._smarter_request:
+            return None
+        if not hasattr(self._smarter_request, "headers"):
+            return None
+        return self._smarter_request.headers.get(name)
 
     @property
     def smarter_client(self) -> Optional[str]:
         """
         Get the smarter client name from the request.
 
-        This property checks for the "X-Smarter-Client" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-Client" header in the request headers.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             client_name = request_mixin.smarter_client
 
-        :return: The value of the "X-Smarter-Client" header as a string, or None if not present.
+        :returns: The value of the "X-Smarter-Client" header as a string, or None if not present.
         """
-        return (
-            self._smarter_request.headers.get("X-Smarter-Client")
-            if self._smarter_request and hasattr(self._smarter_request, "headers")
-            else None
-        )
+        return self._header("X-Smarter-Client")
 
     @property
     def smarter_client_version(self) -> Optional[str]:
         """
         Get the smarter client version from the request.
 
-        This property checks for the "X-Smarter-ClientVersion" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-ClientVersion" header in the request headers.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             client_version = request_mixin.smarter_client_version
 
-        :return: The value of the "X-Smarter-ClientVersion" header as a string, or None if not present.
+        :returns: The value of the "X-Smarter-ClientVersion" header as a string, or None if not present.
         """
-        return (
-            self._smarter_request.headers.get("X-Smarter-ClientVersion")
-            if self._smarter_request and hasattr(self._smarter_request, "headers")
-            else None
-        )
+        return self._header("X-Smarter-ClientVersion")
 
     @property
     def smarter_client_type(self) -> Optional[str]:
         """
         Get the smarter client type from the request.
 
-        This property checks for the "X-Smarter-ClientType" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-ClientType" header in the request headers.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             client_type = request_mixin.smarter_client_type
 
-        :return: The value of the "X-Smarter-ClientType" header as a string, or None if not present.
+        :returns: The value of the "X-Smarter-ClientType" header as a string, or None if not present.
         """
-        return (
-            self._smarter_request.headers.get("X-Smarter-ClientType")
-            if self._smarter_request and hasattr(self._smarter_request, "headers")
-            else None
-        )
+        return self._header("X-Smarter-ClientType")
 
     @property
     def smarter_request_id(self) -> Optional[str]:
         """
         Get the smarter request ID from the request.
 
-        This property checks for the "X-Smarter-RequestId" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-RequestId" header in the request headers.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             request_id = request_mixin.smarter_request_id
 
-        :return: The value of the "X-Smarter-RequestId" header as a string, or None if not present.
+        :returns: The value of the "X-Smarter-RequestId" header as a string, or None if not present.
         """
-        return (
-            self._smarter_request.headers.get("X-Smarter-RequestId")
-            if self._smarter_request and hasattr(self._smarter_request, "headers")
-            else None
-        )
+        return self._header("X-Smarter-RequestId")
 
     def generate_smarter_request_id(self) -> str:
-        """Generates a unique identifier for the request."""
+        """
+        Generate a unique identifier for the request.
+
+        :returns: A random uuid4, as 32 hexadecimal characters.
+        """
         return uuid.uuid4().hex
 
     @property
@@ -529,20 +535,16 @@ class SmarterRequestMixin(AccountMixin):
         """
         Get the smarter capabilities from the request.
 
-        This property checks for the "X-Smarter-Capabilities" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-Capabilities" header in the request headers.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             capabilities = request_mixin.smarter_capabilities
 
-        :return: The value of the "X-Smarter-Capabilities" header as a string, or None if not present.
+        :returns: The value of the "X-Smarter-Capabilities" header as a string, or None if not present.
         """
-        return (
-            self._smarter_request.headers.get("X-Smarter-Capabilities")
-            if self._smarter_request and hasattr(self._smarter_request, "headers")
-            else None
-        )
+        return self._header("X-Smarter-Capabilities")
 
     @property
     def auth_header(self) -> Optional[str]:
@@ -554,29 +556,25 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             print(request_mixin.auth_header)
 
-        This property checks for the "Authorization" header in the request headers or in the Django META dictionary.
+        This property checks for the "Authorization" header in the request headers.
 
-        :return: The value of the "Authorization" header as a string, or None if not present.
+        :returns: The value of the "Authorization" header as a string, or None if not present.
         """
-        return (
-            self._smarter_request.headers.get("Authorization")
-            if self._smarter_request and hasattr(self._smarter_request, "headers")
-            else None
-        )
+        return self._header("Authorization")
 
     @cached_property
     def api_token(self) -> Optional[bytes]:
         """
-        Get the API token from the request.
+        Get the API token from the request's ``Authorization`` header.
 
-        :return: The API token as bytes if present in the Authorization header, otherwise None.
+        The header's value is ``Token <key>`` or ``Bearer <key>``.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             token = request_mixin.api_token
 
-        :return: The API token as bytes, or None if not present.
+        :returns: The API token as bytes, or None if the header is missing or has neither prefix.
         """
         if isinstance(self.auth_header, str) and self.auth_header.startswith("Token "):
             return self.auth_header.split("Token ")[1].encode()
@@ -592,15 +590,13 @@ class SmarterRequestMixin(AccountMixin):
 
         The request is considered "qualified" if **all** of the following are true:
 
-        - The request object (`self._smarter_request`) is present.
+        - The request object (``self._smarter_request``) is present.
         - The URL path is present and non-empty.
-        - The request does **not** originate from an internal AWS Kubernetes subnet (netloc starts with `192.168`).
-        - The path is **not** in the list of `amnesty_urls`.
-        - The path does **not** start with `/admin/`.
-        - The path does **not** start with `/docs/`.
-        - The path does **not** end with a static file extension (e.g., `.css`, `.js`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.woff`, `.woff2`, `.ttf`, `.eot`, `.ico`).
-
-        :return: True if the request passes all checks and is of interest, otherwise False.
+        - The request does **not** originate from an internal AWS Kubernetes subnet (netloc starts with ``192.168``).
+        - The path is **not** in the list of ``amnesty_urls``.
+        - The path does **not** start with ``/admin/``.
+        - The path does **not** start with ``/docs/``.
+        - The path does **not** end with a static file extension (see :data:`STATIC_FILE_EXTENSIONS`).
 
         Example::
 
@@ -613,6 +609,8 @@ class SmarterRequestMixin(AccountMixin):
             static_request = SmarterRequestMixin(static_asset_request)
             if not static_request.qualified_request:
                 print("This request is not of interest.")
+
+        :returns: True if the request passes all checks and is of interest, otherwise False.
         """
         if not self._smarter_request:
             return False
@@ -644,13 +642,13 @@ class SmarterRequestMixin(AccountMixin):
         """
         The string representation of the ParseResult object stored in _parsed_url.
 
-        :return: The URL as a string.
-
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             url_str = request_mixin.url
             print(url_str)  # e.g., 'https://example.com/path/'
+
+        :returns: The URL as a string.
         """
         if not self.smarter_request:
             return None
@@ -684,13 +682,13 @@ class SmarterRequestMixin(AccountMixin):
         """
         Expose the private ParseResult URL object as a public property.
 
-        :return: The parsed URL as a `ParseResult` object.
-
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             parsed = request_mixin.parsed_url
             print(parsed.netloc)  # e.g., 'example.com'
+
+        :returns: The parsed URL, or None if there is no url.
         """
         if self._parsed_url is None:
             if isinstance(self._url, ParseResult) and self.smarter_request:
@@ -706,13 +704,13 @@ class SmarterRequestMixin(AccountMixin):
         """
         Extract the path parts from the URL.
 
-        :return: A list of strings representing each part of the URL path.
-
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             parts = request_mixin.url_path_parts
             print(parts)  # e.g., ['api', 'v1', 'workbench', '1', 'prompt']
+
+        :returns: A list of strings representing each part of the URL path.
         """
         if not self.parsed_url:
             return []
@@ -729,13 +727,13 @@ class SmarterRequestMixin(AccountMixin):
         This extracts the query string parameters from the request object and converts them to a dictionary.
         Used in child views to pass optional command-line parameters to the broker.
 
-        :return: QueryDict containing the query string parameters.
-
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             params = request_mixin.params
             print(params)  # e.g., {'session_key': 'abc123', 'uid': 'xyz'}
+
+        :returns: QueryDict containing the query string parameters.
         """
         if not self.smarter_request:
             logger.warning(
@@ -773,13 +771,13 @@ class SmarterRequestMixin(AccountMixin):
 
         This is assumed to be a combination of the machine MAC address and the hostname.
 
-        :return: The client UID as a string, or None if not available.
-
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             uid = request_mixin.uid
             print(uid)  # e.g., '00:1A:2B:3C:4D:5E-myhost'
+
+        :returns: The client UID as a string, or None if not available.
         """
         return self.params.get("uid") if isinstance(self.params, QueryDict) else None
 
@@ -788,23 +786,21 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns a cache key for the request.
 
-        This is used to cache the prompt request thread. The key is a combination of:
+        This is used to cache the prompt request thread. The key is the sha256 hash of:
+
         - the class name,
-        - authenticated username,
-        - the prompt name,
-        - and the client UID.
+        - the request's user, or ``"Anonymous"``,
+        - and the client UID (:attr:`uid`), or ``"unknown_uid"``.
 
         Currently used by the ApiV1CliPromptConfigApiView and ApiV1CliPromptApiView as a means of sharing the session_key.
-
-        :param name: A generic object or resource name.
-        :param uid: UID of the client, assumed to have been created from the machine MAC address and the hostname of the client.
-        :return: A unique cache key string.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             key = request_mixin.cache_key
             print(key)  # e.g., 'a1b2c3d4e5f6...'
+
+        :returns: A unique cache key string, or None if there is no request.
         """
         if self._cache_key:
             return self._cache_key
@@ -817,7 +813,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
 
         uid = self.uid or "unknown_uid"
-        username = getattr(self.smarter_request, "user", "Anonymous") if self.smarter_request else "Anonymous"
+        username = getattr(self.smarter_request, "user", "Anonymous")
         raw_string = f"{self.__class__.__name__}_{str(username)}_cache_key()_{str(uid)}"
         hash_object = hashlib.sha256()
         hash_object.update(raw_string.encode())
@@ -834,18 +830,21 @@ class SmarterRequestMixin(AccountMixin):
         The session_key is a unique identifier for a prompt session.
         It is used to identify the prompt session across multiple requests.
         If the session_key is not already set, it attempts to find it
-        in the URL parameters. Barring that, it generates a new one.
-
-        :return: The session key as a string.
+        in the request (see :meth:`find_session_key`). Barring that, it generates a new one.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             session_key = request_mixin.session_key
             print(session_key)  # e.g., '38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc'
+
+        :returns: The session key as a string.
         """
         if not self._session_key:
-            self._session_key = self.find_session_key() or self.generate_session_key()
+            session_key = self.find_session_key()
+            if not session_key:
+                session_key = self.generate_session_key()
+            self._session_key = session_key
             SmarterValidator.validate_session_key(self._session_key)
         return self._session_key
 
@@ -854,14 +853,13 @@ class SmarterRequestMixin(AccountMixin):
         """
         Extract the llmclient id from the URL.
 
-        Example:
+        For example, for this url the property decodes the hashed id ``rMTAwMDAyNwx`` into the
+        llmclient's id::
 
             http://localhost:9357/workbench/llm-clients/rMTAwMDAyNwx/prompt/
 
-            returns the pk id that when decoded from the hashed ID format
-            corresponds to the llmclient id.
-
-        :return: The llmclient id as an integer, or None if not found.
+        :returns: The llmclient id as an integer, or None if not found. A named url and a sandbox
+            url without a hashed id return None.
         """
         if not self.is_llmclient:
             return None
@@ -872,7 +870,11 @@ class SmarterRequestMixin(AccountMixin):
 
         if self.is_llmclient_smarter_api_url:
             path_parts = self.url_path_parts
-            return int(path_parts[3]) if isinstance(path_parts, list) and len(path_parts) > 3 else None
+            if not isinstance(path_parts, list):
+                return None
+            if len(path_parts) <= 3:
+                return None
+            return int(path_parts[3])
 
         if self.is_llmclient_named_url:
             # can't get from LLMClient bc of circular import
@@ -881,19 +883,19 @@ class SmarterRequestMixin(AccountMixin):
         if self.is_llmclient_sandbox_url:
             return None
 
+        return None
+
     @property
     def url_account_number(self) -> Optional[str]:
         """
-        Extract the account number from the URL using the pattern defined in.
+        Extract the account number from the URL, using ``SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN``.
 
-        SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.
+        For example, this url returns ``"3141-5926-5359"``::
 
-        Example:
             http://example.3141-5926-5359.api.localhost:9357/config
 
-            returns "3141-5926-5359"
-
-        :return: The account number as a string, or None if not found.
+        :returns: The account number as a string, or None if there is no request, the request is
+            not qualified, or the url has no account number.
         """
         if self._url_account_number:
             return self._url_account_number
@@ -910,39 +912,27 @@ class SmarterRequestMixin(AccountMixin):
         """
         Extract the llmclient name from the URL.
 
-        Example:
+        For example, this url returns ``"example"``::
+
             http://example.3141-5926-5359.api.localhost:9357/config
 
-            returns "example"
-
-        :return: The llmclient name as a string, or None if not found.
+        :returns: The llmclient name as a string, or None if not found.
         """
         if not self.is_llmclient:
             return None
 
         # 1.) http://example-username.api.localhost:9357/config
         if self.is_llmclient_named_url and self.parsed_url is not None:
-            netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
-            retval = netloc_parts[0] if netloc_parts else None
-
-            # if the name is hyphenated, then split on hyphen and take first part.
-            if retval and "-" in retval:
-                retval = retval.split("-")[0]
-
-            retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
-            return retval
+            netloc = self.parsed_url.netloc
+            first_label = None
+            if netloc:
+                first_label = netloc.split(".")[0]
+            return self._llmclient_name_from_url_part(first_label)
 
         # 2.) example: http://localhost:9357/workbench/<str:name>/config/
         if self.is_llmclient_sandbox_url:
             try:
-                retval = self.url_path_parts[1]
-
-                # if the name is hyphenated, then split on hyphen and take first part.
-                if retval and "-" in retval:
-                    retval = retval.split("-")[0]
-
-                retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
-                return retval
+                return self._llmclient_name_from_url_part(self.url_path_parts[1])
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
@@ -960,14 +950,7 @@ class SmarterRequestMixin(AccountMixin):
         #     http://localhost:9357/api/v1/cli/prompt/<str:name>/
         if self.is_llmclient_cli_api_url:
             try:
-                retval = self.url_path_parts[-1]
-
-                # if the name is hyphenated, then split on hyphen and take first part.
-                if retval and "-" in retval:
-                    retval = retval.split("-")[0]
-
-                retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
-                return retval
+                return self._llmclient_name_from_url_part(self.url_path_parts[-1])
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
@@ -978,35 +961,54 @@ class SmarterRequestMixin(AccountMixin):
 
         return None
 
+    @staticmethod
+    def _llmclient_name_from_url_part(part: Optional[str]) -> Optional[str]:
+        """
+        Convert a part of a url, a host label or a path segment, to an llmclient name.
+
+        A hyphenated part is cut at its first hyphen, and the rest is converted from an
+        RFC 1034 compliant name to snake case.
+
+        :param part: The url part, or None.
+        :returns: The llmclient name, or None if ``part`` is None.
+        """
+        name = part
+        if name and "-" in name:
+            name = name.split("-")[0]
+        if isinstance(name, str):
+            name = rfc1034_compliant_to_snake(name)
+        return name
+
     @property
-    def timestamp(self):
+    def timestamp(self) -> datetime:
         """
         Create a consistent timestamp based on the time that this object was instantiated.
-
-        :return: The timestamp as a `datetime` object.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             ts = request_mixin.timestamp
             print(ts)  # e.g., 2025-12-01 12:34:56.789012
+
+        :returns: The time at which this object was instantiated.
         """
         return self._timestamp
 
     @cached_property
-    def data(self) -> Optional[Union[SmarterDictType, list, str]]:
+    def data(self) -> Optional[Union[SmarterDictType, list[Any], str]]:
         """
         Get the request body data as a dictionary, list or str.
 
         Used for setting the session_key.
-
-        :return: The request body data as a dict, list, or str, or None if not available.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             data = request_mixin.data
             print(data)  # e.g., {'session_key': 'abc123', ...}
+
+        :returns: The request body parsed as json or yaml, an empty dict if the body is empty or
+            can't be parsed, or None if there is no request or the request is not qualified.
         """
         if self._data:
             return self._data
@@ -1089,23 +1091,22 @@ class SmarterRequestMixin(AccountMixin):
         """
         Generate a unique string based on several request attributes.
 
-        This string is used for generating `session_key` and `client_key`.
+        This string is used for generating ``session_key`` and ``client_key``.
 
         The unique string is composed of:
-            - Account number
-            - URL
-            - User agent
-            - IP address
-            - Timestamp
 
-        Returns:
-            str: A unique string representing the client and request context.
+        - Account number, when there is an account
+        - URL
+        - User agent
+        - IP address
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             unique_str = request_mixin.unique_client_string
             print(unique_str)
+
+        :returns: A unique string representing the client and request context.
         """
         if not self.account:
             return f"{self.url}{self.user_agent}{self.ip_address}"
@@ -1117,16 +1118,16 @@ class SmarterRequestMixin(AccountMixin):
         Get the client's IP address from the request object.
 
         This property attempts to extract the IP address from the request's META dictionary,
-        using the "REMOTE_ADDR" key. If the IP address is not available, it returns None.
-
-        Returns:
-            Optional[str]: The client's IP address as a string, or None if not found.
+        using the ``REMOTE_ADDR`` key.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             ip = request_mixin.ip_address
             print(ip)  # e.g., '192.168.1.100'
+
+        :returns: The client's IP address, the placeholder ``"ip_address"`` if ``REMOTE_ADDR`` is
+            missing or empty, or None if the request has no META dictionary.
         """
         if (
             self.smarter_request is not None
@@ -1142,16 +1143,16 @@ class SmarterRequestMixin(AccountMixin):
         Get the client's user agent string from the request object.
 
         This property attempts to extract the user agent from the request's META dictionary,
-        using the "HTTP_USER_AGENT" key. If the user agent is not available, it returns a default value.
-
-        Returns:
-            Optional[str]: The client's user agent string, or None if not found.
+        using the ``HTTP_USER_AGENT`` key.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             ua = request_mixin.user_agent
             print(ua)  # e.g., 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...'
+
+        :returns: The client's user agent string, the placeholder ``"user_agent"`` if the header is
+            missing, or None if the request has no META dictionary.
         """
         if (
             self.smarter_request is not None
@@ -1169,16 +1170,16 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_config(self) -> bool:
         """
-        Returns True if the URL resolves to a config endpoint.
+        Return True if the URL resolves to a config endpoint.
 
-        Examples:
+        Examples::
+
             http://testserver/api/v1/cli/prompt/config/testc7098865f39202d5/
             http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
             http://localhost:9357/api/v1/workbench/<int:llmclient_id>/prompt/config/
             http://example.api.localhost:9357/config
 
-        Returns:
-            bool: True if the URL is a config endpoint, otherwise False.
+        :returns: True if the URL is an llmclient url whose path includes ``config``, otherwise False.
         """
         if not self.is_llmclient:
             return False
@@ -1191,10 +1192,9 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_dashboard(self) -> bool:
         """
-        Returns True if the URL resolves to a dashboard endpoint.
+        Return True if the URL resolves to a dashboard endpoint.
 
-        Returns:
-            bool: True if the URL is a dashboard endpoint, otherwise False.
+        :returns: True if the URL's path ends with ``/dashboard/``, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -1214,10 +1214,9 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_workbench(self) -> bool:
         """
-        Returns True if the URL resolves to a workbench endpoint.
+        Return True if the URL resolves to a workbench endpoint.
 
-        Returns:
-            bool: True if the URL is a workbench endpoint, otherwise False.
+        :returns: True if the URL's path ends with ``/workbench/``, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -1237,63 +1236,65 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_environment_root_domain(self) -> bool:
         """
-        Returns True if the URL resolves to the environment root domain.
+        Return True if the URL resolves to the environment root domain.
 
-        Returns:
-            bool: True if the URL is the environment root domain, otherwise False.
+        :returns: True if the URL's host is the environment's platform domain and its path is
+            ``/``, otherwise False.
         """
         if not self.smarter_request:
             return False
         if not self.parsed_url:
             return False
-
-        netloc_match = self.parsed_url.netloc == smarter_settings.environment_platform_domain
-        if not netloc_match:
+        if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
             return False
-        path_match = self.parsed_url.path == "/"
-        if not path_match:
+        if self.parsed_url.path != "/":
             return False
-        return netloc_match and path_match
+        return True
 
     @cached_property
     def is_llmclient(self) -> bool:
         """
-        Returns True if the URL resolves to an llmclient endpoint.
+        Return True if the URL resolves to an llmclient endpoint.
 
-        Conditions are checked in a lazy sequence to avoid unnecessary processing.
+        Conditions are checked in a lazy sequence to avoid unnecessary processing. The order
+        matters: :attr:`is_llmclient_named_url` loads the url's account as a side effect.
 
-        Examples:
-            - http://localhost:9357/api/v1/prompt/1/prompt/
-            - http://localhost:9357/api/v1/cli/prompt/example/
-            - http://example.3141-5926-5359.api.localhost:9357/
-            - http://localhost:9357/api/v1/llm-clients/1556/prompt/
-            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
-            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
-            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
+        Examples::
 
-        Returns:
-            bool: True if the URL is an llmclient endpoint, otherwise False.
+            http://localhost:9357/api/v1/prompt/1/prompt/
+            http://localhost:9357/api/v1/cli/prompt/example/
+            http://example.3141-5926-5359.api.localhost:9357/
+            http://localhost:9357/api/v1/llm-clients/1556/prompt/
+            http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
+            http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
+            http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
+
+        :returns: True if the request is qualified and its URL is a named, sandbox, smarter api
+            or cli api llmclient url, otherwise False.
         """
-
-        retval = self.qualified_request and (
-            self.is_llmclient_named_url
-            or self.is_llmclient_sandbox_url
-            or self.is_llmclient_smarter_api_url
-            or self.is_llmclient_cli_api_url
-        )
-        return retval
+        if not self.qualified_request:
+            return False
+        if self.is_llmclient_named_url:
+            return True
+        if self.is_llmclient_sandbox_url:
+            return True
+        if self.is_llmclient_smarter_api_url:
+            return True
+        if self.is_llmclient_cli_api_url:
+            return True
+        return False
 
     @cached_property
     def is_smarter_api(self) -> bool:
         """
-        Returns True if the URL is of the form http://localhost:9357/api/v1/.
+        Return True if the URL is of the form ``http://localhost:9357/api/v1/``.
 
-        Examples:
-            - path_parts: ['api', 'v1', 'llm-clients', '1', 'prompt']
-            - http://api.localhost:9357/
+        Examples::
 
-        Returns:
-            bool: True if the URL matches the smarter API pattern, otherwise False.
+            path_parts: ['api', 'v1', 'llm-clients', '1', 'prompt']
+            http://api.localhost:9357/
+
+        :returns: True if ``api`` is a segment of the URL's path or a label of its host, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -1311,21 +1312,22 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_llmclient_smarter_api_url(self) -> bool:
         """
-        Returns True if the URL is of the form:
+        Return True if the URL is a smarter api llmclient endpoint.
 
-            - http://localhost:9357/api/v1/llm-clients/32/config/
+        These are the forms of the url::
 
-            - http://localhost:9357/api/v1/workbench/1/prompt/
-              path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
+            http://localhost:9357/api/v1/llm-clients/32/config/
 
-            - http://localhost:9357/api/v1/llm-clients/1556/prompt/
-              path_parts: ['api', 'v1', 'llm-clients', '<int:pk>', 'prompt']
+            http://localhost:9357/api/v1/workbench/1/prompt/
+            path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
 
-            - http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/prompt/
-              path_parts: ['api', 'v1', 'llm-clients', '<str:hashed_id>', 'prompt']
+            http://localhost:9357/api/v1/llm-clients/1556/prompt/
+            path_parts: ['api', 'v1', 'llm-clients', '<int:pk>', 'prompt']
 
-        Returns:
-            bool: True if the URL matches a smarter API llmclient endpoint, otherwise False.
+            http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/prompt/
+            path_parts: ['api', 'v1', 'llm-clients', '<str:hashed_id>', 'prompt']
+
+        :returns: True if the URL matches a smarter API llmclient endpoint, otherwise False.
         """
         if not self.qualified_request:
             return False
@@ -1354,13 +1356,13 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_llmclient_cli_api_url(self) -> bool:
         """
-        Returns True if the URL is of the form http://localhost:9357/api/v1/cli/prompt/example/.
+        Return True if the URL is of the form ``http://localhost:9357/api/v1/cli/prompt/example/``.
 
-        The expected path parts are:
+        The expected path parts are::
+
             ['api', 'v1', 'cli', 'prompt', 'example']
 
-        Returns:
-            bool: True if the URL matches the CLI llmclient API pattern, otherwise False.
+        :returns: True if the URL matches the CLI llmclient API pattern, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -1381,22 +1383,25 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_llmclient_named_url(self) -> bool:
         """
-        Returns True if the url is of the form:
+        Return True if the url is a deployed LLMClient's own host.
 
-            - https://example-username.3141-5926-5359.api.example.com/
-            - http://example-username.3141-5926-5359.api.localhost:9357/
-            - http://example-username.3141-5926-5359.api.localhost:9357/config/
-            - http://example-username.3141-5926-5359.api.localhost:9357/prompt/
+        These are the forms of the url::
 
-        Returns:
-            bool: True if the URL matches the named llmclient pattern, otherwise False.
+            https://example-username.3141-5926-5359.api.example.com/
+            http://example-username.3141-5926-5359.api.localhost:9357/
+            http://example-username.3141-5926-5359.api.localhost:9357/config/
+            http://example-username.3141-5926-5359.api.localhost:9357/prompt/
+
+        As a side effect, when the url has an account number and :attr:`account` is not set,
+        the account is loaded from the account number.
+
+        :returns: True if the URL matches the named llmclient pattern, otherwise False.
         """
-
         if not self.qualified_request:
             return False
         if not self.url:
             return False
-        if not smarter_settings.environment_api_domain in self.url:
+        if smarter_settings.environment_api_domain not in self.url:
             return False
 
         # Accept only the paths that a deployed LLMClient's own host serves, with or without a
@@ -1419,25 +1424,19 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_llmclient_sandbox_url(self) -> bool:
         """
-        Example URLs for llmclient sandbox endpoints.
+        Return True if the URL is an llmclient sandbox endpoint.
 
-        Examples:
-            Web console urls:
-            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
-            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
-            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
+        Web console urls::
 
-            Api urls:
-            - http://localhost:9357/api/v1/prompt/1/prompt/
-            - http://localhost:9357/api/v1/prompt/1/config/
+            http://localhost:9357/workbench/llm-clients/<str:hashed_id>/prompt/
+            http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
+            http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
 
-            Manifest view urls:
-            https://alpha.platform.smarter.sh/workbench/llm-clients/hashed_id/
-            https://<environment_domain>/workbench/llm-clients/<str:hashed_id>/
-            path_parts: ['workbench', 'llm-clients', 'rxy123hashedx']
+        Api urls::
 
-        Returns:
-            bool: True if the URL matches an llmclient sandbox endpoint, otherwise False.
+            http://localhost:9357/api/v1/prompt/1/prompt/
+
+        :returns: True if the URL matches an llmclient sandbox endpoint, otherwise False.
         """
         if not self.qualified_request:
             return False
@@ -1486,13 +1485,9 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_default_domain(self) -> bool:
         """
-        Returns True if the URL is the default domain for the environment.
+        Return True if the URL is on the default api domain for the environment, e.g. ``api.alpha.platform.smarter.sh``.
 
-        Example:
-            api.alpha.platform.smarter.sh
-
-        :return:
-            bool: True if the URL is the default environment domain, otherwise False.
+        :returns: True if the URL contains the environment's api domain, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -1503,14 +1498,13 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def path(self) -> Optional[str]:
         """
-        Extracts the path from the URL.
+        Extract the path from the URL.
 
-        :return:
-            Optional[str]: The path as a string, or None if not found.
+        For example, this url returns ``'/llm-client/'``::
 
-        Examples:
-            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
-              returns '/llm-client/'
+            https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
+
+        :returns: The path, ``/`` for an empty path, or None if there is no request or url.
         """
         if not self.smarter_request:
             return None
@@ -1521,16 +1515,16 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def root_domain(self) -> Optional[str]:
         """
-        Extracts the root domain from the URL.
-
-        :return: The root domain or None if not found.
+        Extract the root domain from the URL.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             print(request_mixin.root_domain)
-            # For 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/' → 'smarter.sh'
+            # For 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/' → 'example.com'
             # For 'http://localhost:9357/' → 'localhost'
+
+        :returns: The root domain, or None if not found.
         """
         if not self.smarter_request:
             return None
@@ -1551,9 +1545,7 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def subdomain(self) -> Optional[str]:
         """
-        Extracts the subdomain from the URL.
-
-        :return: The subdomain or None if not found.
+        Extract the subdomain from the URL.
 
         Example::
 
@@ -1561,6 +1553,8 @@ class SmarterRequestMixin(AccountMixin):
             sub = request_mixin.subdomain
             print(sub)  # e.g., 'hr.3141-5926-5359.alpha' for
                         # 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/'
+
+        :returns: The subdomain, or None if not found.
         """
         if not self.smarter_request:
             return None
@@ -1572,14 +1566,13 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def api_subdomain(self) -> Optional[str]:
         """
-        Extracts the API subdomain from the URL.
+        Extract the API subdomain, the first label of the host, from an llmclient URL.
 
-        :return: The API subdomain or None if not found.
+        For example, this url returns ``'hr'``::
 
-        example::
+            https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
 
-            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
-            returns 'hr'
+        :returns: The API subdomain, or None if the url is not an llmclient url.
         """
         if not self.smarter_request:
             return None
@@ -1592,27 +1585,26 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def domain(self) -> Optional[str]:
         """
-        Extracts the domain from the URL.
+        Extract the domain, the host and port, from the URL.
 
-        :return: The domain or None if not found.
+        For example, this url returns ``'hr.3141-5926-5359.alpha.api.example.com'``::
 
-        examples::
+            https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
 
-            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
-              returns 'hr.3141-5926-5359.alpha.api.example.com'
+        :returns: The domain, or None if there is no request or url.
         """
         if not self.smarter_request:
             return None
         if not self.parsed_url:
             return None
-        return self.parsed_url.netloc if self.parsed_url else None
+        return self.parsed_url.netloc
 
     @cached_property
     def srm_formatted_class_name(self) -> str:
         """
         Returns the class name in a formatted string along with the name of this mixin.
 
-        :return: Formatted class name string.
+        :returns: Formatted class name string.
         """
         class_name = f"{__name__}.{SmarterRequestMixin.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
@@ -1624,7 +1616,7 @@ class SmarterRequestMixin(AccountMixin):
 
         This is a convenience property to check if the request is srm_ready.
 
-        :return: True if the request mixin is srm_ready, False otherwise.
+        :returns: True if the request mixin is srm_ready, False otherwise.
         """
         if self._srm_ready:
             return self._srm_ready
@@ -1663,7 +1655,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns a string representation of the request mixin's srm_ready state.
 
-        :return: A string indicating whether the request mixin is srm_ready or not.
+        :returns: A string indicating whether the request mixin is srm_ready or not.
         """
 
         return self.formatted_state_ready if self.srm_ready else self.formatted_state_not_ready
@@ -1671,22 +1663,22 @@ class SmarterRequestMixin(AccountMixin):
     # --------------------------------------------------------------------------
     # instance methods
     # --------------------------------------------------------------------------
-    def get_cookie_value(self, cookie_name):
+    def get_cookie_value(self, cookie_name: str) -> Optional[str]:
         """
         Retrieve the value of a cookie from the request object.
 
-        :param request: Django HttpRequest object
-        :param cookie_name: Name of the cookie to retrieve
-        :return: Value of the cookie or None if the cookie does not exist
+        :param cookie_name: Name of the cookie to retrieve.
+        :returns: Value of the cookie, or None if there is no request or the cookie does not exist.
         """
         if self.smarter_request and self.smarter_request.COOKIES:
             return self.smarter_request.COOKIES.get(cookie_name)
+        return None
 
     def generate_session_key(self) -> str:
         """
-        Generate a session_key based on a unique string and the current datetime.
+        Generate a new, random session_key.
 
-        :return: A unique session key string.
+        :returns: A random 64 character session key.
         """
         session_key = hash_factory(length=64)
         return session_key
@@ -1701,14 +1693,13 @@ class SmarterRequestMixin(AccountMixin):
         of failing.
 
         :param session_key: The raw value that the request carries, or None.
-        :type session_key: Optional[str]
         :param source: Where the value came from, for the log, e.g. ``"cookie"``.
-        :type source: str
         :returns: The session key, stripped of whitespace and of a trailing slash, or None if
             the value is missing or malformed.
-        :rtype: Optional[str]
         """
-        session_key = session_key.strip().rstrip("/") if isinstance(session_key, str) else None
+        if not isinstance(session_key, str):
+            return None
+        session_key = session_key.strip().rstrip("/")
         if not session_key:
             return None
         if not SmarterValidator.is_valid_session_key(session_key):
@@ -1722,21 +1713,21 @@ class SmarterRequestMixin(AccountMixin):
 
     def find_session_key(self) -> Optional[str]:
         """
-        Returns the unique prompt session key value for this request.
+        Return the unique prompt session key value for this request.
 
         The session_key is managed by the /config/ endpoint for the llmclient. The React app calls this endpoint at app initialization to get a JSON dict that includes, among other info, this session_key, which uniquely identifies the device and the individual llmclient session for the device.
 
-        For subsequent prompt prompt requests, the session_key is intended to be sent in the body of the request as a key-value pair, e.g. {"session_key": "1234567890"}.
+        For subsequent prompt requests, the session_key is intended to be sent in the body of the request as a key-value pair, e.g. ``{"session_key": "1234567890"}``.
 
-        This method will also check the request headers and cookies for the session_key. The session key can be found in one of the following:
+        The session key is looked for in these places, in this order, and the first well formed
+        one (see :meth:`accepted_session_key`) is returned:
 
-         - URL parameter: http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-         - Request JSON body: {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - Request header: {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - Cookie
-         - A session_key generator
+        - The URL, e.g. ``http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a``
+        - The request body: ``{'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}``
+        - A cookie
+        - The request's GET parameters
 
-        :return: The session key as a string, or None if not found.
+        :returns: The session key as a string, or None if not found.
         """
         if self._session_key:
             return self._session_key
@@ -1744,7 +1735,10 @@ class SmarterRequestMixin(AccountMixin):
         session_key: Optional[str]
 
         # this is our expected case. we look for the session key in the parsed url.
-        session_key = self.accepted_session_key(session_key_from_url(self.url) if self.url else None, "url")
+        url_session_key = None
+        if self.url:
+            url_session_key = session_key_from_url(self.url)
+        session_key = self.accepted_session_key(url_session_key, "url")
         if session_key:
             return session_key
 
@@ -1760,33 +1754,27 @@ class SmarterRequestMixin(AccountMixin):
             return session_key
 
         # finally, we look for it in the GET parameters.
-        session_key = self.accepted_session_key(
-            self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) if self.smarter_request else None,
-            "get() parameters",
-        )
+        get_session_key = None
+        if self.smarter_request:
+            get_session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = self.accepted_session_key(get_session_key, "get() parameters")
         if session_key:
             return session_key
 
         return None
 
-    def eval_llmclient_url(self):
+    def eval_llmclient_url(self) -> None:
         """
-        If we are an llmclient, based on analysis of the URL format then we need to make a follow up check of the user and account.
+        Resolve the account and user of a request to a deployed LLMClient's own host.
 
-        Examples:
+        For a named url, e.g. ``http://example.3141-5926-5359.api.localhost:9357/``, the account
+        is loaded from the url's account number when :attr:`account` is not already set, and then,
+        when :attr:`user` is not set, the user becomes that account's admin user.
 
-            - http://example.3141-5926-5359.api.localhost:9357/
-            - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
-            - http://localhost:9357/api/v1/cli/prompt/example/
+        Other llmclient urls, the smarter api and cli api urls, need no follow up here. A request
+        that is not an llmclient request is left as it is.
 
-        1.) For named urls, we extract the account number from the url,
-            then we load the account and admin user for that account.
-
-        2.) For smarter api urls, we would extract the llmclient id from the url,
-            then we would load the llmclient, account, and admin user for that account.
-
-        3.) For cli api urls, we would extract the llmclient name from the url,
-            then we would load the llmclient, account, and admin user for that account.
+        :returns: None. Sets :attr:`account` and :attr:`user` as a side effect.
         """
         if not self.is_llmclient:
             return
@@ -1798,22 +1786,30 @@ class SmarterRequestMixin(AccountMixin):
                     self.account = Account.get_cached_object(account_number=account_number)  # type: ignore
             if self.account and not self.user:
                 self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-        if self.is_llmclient_smarter_api_url:
-            # https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
-            pass
-        if self.is_llmclient_cli_api_url:
-            # http://localhost:9357/api/v1/cli/prompt/example/
-            pass
 
     # pylint: disable=W0221
     def authenticate(self) -> bool:
-        """Authenticates the request using the provided API token."""
-        if self.api_token:
-            return super().authenticate(api_token=self.api_token)
-        return False
+        """
+        Authenticate the request using the API token in its ``Authorization`` header.
 
-    def clear_cached_properties(self):
-        """Clears all cached properties in this mixin."""
+        The request is passed along, so that a token that was already authenticated for it, e.g.
+        by the token middleware or by :class:`~smarter.apps.account.mixins.AccountMixin`'s own
+        initialization, is not authenticated again.
+
+        :returns: True if the request carries an API token and the parent's ``authenticate()``
+            accepts it, otherwise False.
+        """
+        if not self.api_token:
+            return False
+        is_authenticated = super().authenticate(api_token=self.api_token, request=self._smarter_request)
+        return is_authenticated
+
+    def clear_cached_properties(self) -> None:
+        """
+        Clear the request, its parsed values, and all cached properties in this mixin.
+
+        :returns: None.
+        """
         self._smarter_request = None
         self._url = None
         self._url_account_number = None
@@ -1847,16 +1843,19 @@ class SmarterRequestMixin(AccountMixin):
             self.user_profile if self.user_profile else "Anonymous",
         )
 
-    def log_ready_status(self):
-        """Logs the ready status of the view."""
-        msg = f"{self.formatted_class_name} is {self.ready_state}"
-        logger.info(msg)
+    def log_ready_status(self) -> None:
+        """
+        Log the ready status of the instance, at INFO.
+
+        :returns: None.
+        """
+        logger.info("%s.log_ready_status() is %s", self.formatted_class_name, self.ready_state)
 
     def to_json(self) -> SmarterDictType:
         """
-        Serializes the object.
+        Serialize the object.
 
-        :return: A dictionary representation of the object.
+        :returns: A dictionary representation of the object, with the auth header and api token masked.
         """
         retval = {
             "srm_ready": self.srm_ready,
@@ -1907,9 +1906,7 @@ class SmarterRequestMixin(AccountMixin):
         certain authentication or permission checks for internal requests.
 
         :param request: The Django request object.
-        :type request: HttpRequest
-        :return: True if it's an internal API request, False otherwise.
-        :rtype: bool
+        :returns: True if it's an internal API request, False otherwise.
         """
         retval = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
         logger.debug(
@@ -1928,12 +1925,11 @@ class SmarterRequestMixin(AccountMixin):
         a custom attribute on the request object. This can be used in middleware or views
         to indicate that the request should be treated as internal.
 
-        :param request: The Django request object.
-        :type request: HttpRequest
+        :param request: The Django request object, or a DRF request, whose wrapped Django request
+            is flagged too.
         :param value: The value to set for the internal API request attribute (default is True).
-        :type value: bool
-        :return: The modified Django request object.
-        :rtype: HttpRequest
+        :returns: The modified request object.
+        :raises SmarterValueError: If ``request`` is not a Django ``HttpRequest`` or a DRF ``Request``.
         """
         if not isinstance(request, (HttpRequest, RestFrameworkRequest)):
             raise SmarterValueError(f"Expected request to be an instance of HttpRequest, got {type(request).__name__}")
@@ -1952,8 +1948,12 @@ class SmarterRequestMixin(AccountMixin):
 
     @property
     def is_authenticated(self) -> bool:
-        """Returns True if the request is authenticated, False otherwise."""
+        """
+        Return True if the request's user is authenticated.
 
+        :returns: The request user's ``is_authenticated``, or False if there is no request or
+            user, or checking it raises.
+        """
         try:
             return self.smarter_request.user.is_authenticated  # type: ignore
         except AttributeError:

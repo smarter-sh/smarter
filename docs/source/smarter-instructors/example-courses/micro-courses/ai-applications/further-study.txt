@@ -23,9 +23,14 @@
   <https://blog.smarter.sh/2026/10/26/smarter-chat-wordpress/>`__, with a plugin or a script tag;
   `Why LLMs Love Code, and What That Means for Everyone Else
   <https://blog.smarter.sh/2026/07/09/why-llms-love-code-and-what-that-means-for-everyone-else/>`__,
-  on why LLMs do better at code than at other work. The case studies `Stackademy Online Coding
-  Academy <https://smarter.sh/case-studies/stackademy>`__, on tool calling over private data,
-  `The Smarter Project MCP Server <https://smarter.sh/case-studies/mcp-server>`__, on retrieval
-  and tools for an LLM, and `Guardrails: Can You Trust the Model?
-  <https://smarter.sh/case-studies/guardrails>`__, on prompt injection, untrusted output and URLs
-  a model chooses, are lessons with labs, discussion questions and live assistants.
+  on why LLMs do better at code than at other work; `Introducing the Smarter MCP Server
+  <https://blog.smarter.sh/2026/10/30/what-is-an-mcp-server/>`__, on the MCP server built into every
+  platform, what its tools do and how to connect to it; `Smarter's MCP Server Gives Sysadmins Live
+  Platform Diagnostics in a Chat
+  <https://blog.smarter.sh/2026/11/03/smarter-operations-mcp-server/>`__, on staff-only tools that
+  read the platform's pods, logs and user accounts for a help desk. The case studies `Stackademy
+  Online Coding Academy <https://smarter.sh/case-studies/stackademy>`__, on tool calling over
+  private data, `The Smarter Project MCP Server <https://smarter.sh/case-studies/mcp-server>`__, on
+  retrieval and tools for an LLM, and `Guardrails: Can You Trust the Model?
+  <https://smarter.sh/case-studies/guardrails>`__, on prompt injection, untrusted output and URLs a
+  model chooses, are lessons with labs, discussion questions and live assistants.

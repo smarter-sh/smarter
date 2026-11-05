@@ -22,6 +22,10 @@ class AnnotationAdmin(SmarterStaffOnlyModelAdmin):
 
         Saving a row makes the cached annotations of the resource that it points at stale. Moving
         the row to another resource would leave the first resource's cached annotations unchanged.
+
+        :param request: The admin request.
+        :param obj: The annotation being edited, or None when one is being added.
+        :returns: The read-only fields, plus ``content_type`` and ``object_id`` for an existing annotation.
         """
         readonly = tuple(super().get_readonly_fields(request, obj))
         if obj is not None:

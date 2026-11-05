@@ -1,6 +1,4 @@
-"""
-Smarter Middleware classes.
-"""
+"""Smarter's Django middleware classes."""
 
 from .cors import SmarterCorsMiddleware
 from .csrf import SmarterCsrfViewMiddleware

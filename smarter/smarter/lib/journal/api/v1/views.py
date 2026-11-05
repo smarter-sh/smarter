@@ -44,15 +44,21 @@ SORT_FIELDS = {
     "command": "command",
     "statusCode": "status_code",
 }
-"""The columns that the list may be sorted by.
+"""
+The columns that the list may be sorted by.
 
 See :data:`smarter.lib.django.pagination.DEFAULT_SORT_FIELDS`.
 """
 
 
 def journal_entries() -> QuerySet[SAMJournal]:
-    """Every journal entry, newest first, with its user."""
-    return SAMJournal.objects.select_related("user").order_by("-created_at")
+    """
+    Return every journal entry, newest first, with its user.
+
+    :returns: The journal entries, with each entry's user fetched in the same query.
+    """
+    entries = SAMJournal.objects.select_related("user").order_by("-created_at")
+    return entries
 
 
 class SAMJournalView(SmarterAdminAPIView):
@@ -80,20 +86,24 @@ class SAMJournalView(SmarterAdminAPIView):
         return Response(SAMJournalApiEntry.from_model(journal).model_dump(mode="json"))
 
     def post(self, request: Request, key: str, *args, **kwargs):
-        """Same as get().
+        """
+        Same as ``get()``: Smarter detail views are also served by POST.
 
-        Smarter detail views are also served by POST.
+        :param request: The request.
+        :param key: The journal entry's key.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :returns: The entry as a :class:`SAMJournalApiEntry` dict.
+        :raises Http404: If there is no entry with this key.
         """
         return self.get(request, key, *args, **kwargs)
 
 
 class SAMJournalListView(SmarterAdminListAPIView):
     """
-    One page of the journal entries, newest first, without their request and response documents: a.
+    One page of the journal entries, newest first, without their request and response documents.
 
-    :class:`SAMJournalApiPage`.
-
-    The query parameters ``page``, ``page_size``, ``search`` and ``ordering`` are those of
+    The response is a :class:`SAMJournalApiPage`. The query parameters ``page``, ``page_size``, ``search`` and ``ordering`` are those of
     :func:`smarter.lib.django.pagination.paginate_listview`. A search matches an entry's key, thing or
     command.
     """
@@ -105,7 +115,16 @@ class SAMJournalListView(SmarterAdminListAPIView):
         return journal_entries()
 
     def list(self, request: Request, *args, **kwargs):
-        """Return one page of the journal entries, and a description of the page."""
+        """
+        Return one page of the journal entries, and a description of the page.
+
+        Sends the ``journal_entries_listed`` signal.
+
+        :param request: The request, whose query parameters choose the page, search and ordering.
+        :param args: Unused.
+        :param kwargs: Unused.
+        :returns: A :class:`SAMJournalApiPage`, as JSON.
+        """
         page, pagination = paginate_listview(
             request, self.get_queryset(), search_fields=SEARCH_FIELDS, sort_fields=SORT_FIELDS
         )
@@ -118,8 +137,12 @@ class SAMJournalListView(SmarterAdminListAPIView):
         return JsonResponse(response.model_dump(mode="json"))
 
     def post(self, request: Request, *args, **kwargs):
-        """Same as get().
+        """
+        Same as ``get()``: Smarter list views are also served by POST.
 
-        Smarter list views are also served by POST.
+        :param request: The request.
+        :param args: Passed to :meth:`list`.
+        :param kwargs: Passed to :meth:`list`.
+        :returns: A :class:`SAMJournalApiPage`, as JSON.
         """
         return self.list(request, *args, **kwargs)

@@ -1,4 +1,4 @@
-"""Django template tags for the authtoken list app."""
+"""Django template tags of the API key (authtoken) list React app."""
 
 from django import template
 
@@ -60,8 +60,8 @@ Example manifest.json structure:
 @register.simple_tag
 def authtoken_list_react_assets() -> ReactAppAssets:
     """
-    Load CSS and JS files for a React app entry point.
+    Return the CSS and JS files of the authtoken list React app, from its Vite manifest.json.
 
-    based on its manifest.json.
+    :returns: The app's assets.
     """
     return templatetag_manager.reactapp_build_assets

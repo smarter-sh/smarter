@@ -1,4 +1,4 @@
-"""Django ORM base model."""
+"""The abstract base model of every Smarter Django model, with timestamps, hashed ids and caching."""
 
 import base64
 import datetime
@@ -19,7 +19,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
-from smarter.lib.json import SmarterJSONEncoder
+from smarter.lib.json import SmarterJSONEncoder, to_jsonable
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
@@ -28,8 +28,13 @@ cache_prefix = f"{__name__}."
 
 
 # pylint: disable=W0613
-def should_log_verbose(level):
-    """Check if logging should be done based on the waffle switch."""
+def should_log_verbose(level: int) -> bool:
+    """
+    Return whether verbose logging is on, from the ``smarter_settings.verbose_logging`` setting.
+
+    :param level: The log level of the message, which is ignored.
+    :returns: True if verbose logging is on.
+    """
     return smarter_settings.verbose_logging
 
 
@@ -38,7 +43,7 @@ verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)  # type
 
 class TimestampedModel(models.Model, SmarterHelperMixin):
     """
-    Abstract base model for all Django ORM models in the Smarter project, providing automatic timestamp fields and utility methods.
+    Abstract base model for all Django models in Smarter, with automatic timestamp fields and utility methods.
 
     This class should be used as the base class for all models in the project to ensure
     consistent tracking of creation and modification times. It adds ``created_at`` and
@@ -48,7 +53,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
     .. code-block:: python
 
-        from smarter.smarter.lib.django.models import TimestampedModel
+        from smarter.lib.django.models import TimestampedModel
 
         class MyModel(TimestampedModel):
             name = models.CharField(max_length=100)
@@ -59,7 +64,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         print(obj.updated_at)  # Timestamp of last update
 
         # Checking elapsed time since last update
-        seconds = obj.elapsed_updated()
+        seconds = obj.elapsed_updated
         print(f"Seconds since last update: {seconds}")
 
     **Parameters:**
@@ -76,7 +81,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         - If you override ``save()``, ensure you call ``super().save(*args, **kwargs)`` to retain validation and timestamp behavior.
         - The ``elapsed_updated`` property expects ``updated_at`` to be set; if not, it returns ``None``.
-        - Passing a non-datetime object to ``elapsed_updated`` will raise a ``TypeError``.
         - The hashed ID methods provide a way to encode and decode object IDs for use in URLs
           in cases where you want to avoid exposing raw database IDs.
     """
@@ -124,7 +128,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         hashed IDs from strings, including when embedded in URLs.
 
         :returns: A regex pattern for matching hashed IDs.
-        :rtype: re.Pattern
         """
         if cls._hash_regex is None:
             cls._hash_regex = re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
@@ -139,7 +142,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         By default, it returns False, indicating that the base TimestampedModel is not billable.
 
         :returns: True if the instance is billable, False otherwise.
-        :rtype: bool
         """
         return False
 
@@ -149,7 +151,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         Check if the model instance is ready for use.
 
         :returns: True if the instance is ready, False otherwise.
-        :rtype: bool
         """
         return self.pk is not None
 
@@ -159,6 +160,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         Returns a URL-friendly hashed version of the object's ID for use in URLs and other contexts where an obscured, non-identifying, non-sequential identifier is preferred.
 
         Encoding scheme:
+
         1. Take the object's ID and add a large constant (HASH_FLOOR) to ensure it's not easily guessable.
         2. Convert the resulting number to a string and encode it using URL-safe base64 encoding.
         3. Remove any padding characters from the encoded string.
@@ -172,11 +174,13 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             print(obj.id)  # e.g., 123
             print(obj.hashed_id)  # e.g., "rc2x"
 
-        :returns: Hashed ID string (URL-safe, no padding)
-        :rtype: str
+        :returns: Hashed ID string (URL-safe, no padding).
         """
         id_value = int(self.id) + self.HASH_FLOOR  # type: ignore[union-attr]
-        encoded = str(base64.urlsafe_b64encode(str(id_value).encode()).decode().rstrip("="))
+        id_bytes = str(id_value).encode()
+        encoded_bytes = base64.urlsafe_b64encode(id_bytes)
+        encoded_text = encoded_bytes.decode()
+        encoded = encoded_text.rstrip("=")
         padded_encoded = f"{self.HASH_PREFIX}{encoded}{self.HASH_SUFFIX}"
         return padded_encoded
 
@@ -185,7 +189,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         """
         Decodes a hashed ID back to the original object ID.
 
-        decoding scheme:
+        Decoding scheme:
+
         1. Validate that the hashed ID starts with the expected prefix and ends with the expected suffix.
         2. Remove the prefix and suffix to isolate the base64-encoded string.
         3. Add padding if necessary to make the length of the encoded string a multiple of 4.
@@ -205,7 +210,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         :param hashed_id: The hashed ID string to decode (URL-safe, no padding).
         :returns: The original object ID if decoding is successful, otherwise None.
-        :rtype: Optional[int]
         """
         logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.id_from_hashed_id()"
         try:
@@ -244,7 +248,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             return None
         # pylint: disable=broad-except
         except Exception as e:
-            logging.exception(
+            logger.exception(
                 "%s Unexpected error while decoding %s.hashed_id '%s': %s",
                 logger_prefix,
                 cls.__name__,
@@ -260,11 +264,10 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         :param value: The string to search for a hashed ID.
         :returns: The first matching hashed ID if found, otherwise None.
-        :rtype: Optional[str]
         """
         logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.find_hash()"
         verbose_logger.debug(
-            "%s.find_hash() - Searching for hashed ID in value: %s",
+            "%s - Searching for hashed ID in value: %s",
             logger_prefix,
             value,
         )
@@ -273,13 +276,13 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         retval = match.group(0) if match else None
         if retval:
             verbose_logger.debug(
-                "%s.find_hash() - Found hashed ID: %s",
+                "%s - Found hashed ID: %s",
                 logger_prefix,
                 retval,
             )
         else:
             verbose_logger.debug(
-                "%s.find_hash() - No hashed ID found in value: %s",
+                "%s - No hashed ID found in value: %s",
                 logger_prefix,
                 value,
             )
@@ -307,15 +310,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         If validation fails, a :exc:`django.core.exceptions.ValidationError` is raised with detailed
         information about the error, the arguments passed, the model class, and the current field values.
 
-        Parameters
-        ----------
-        *args
-            Positional arguments passed to the parent ``save()`` method. These are forwarded to Django's ORM.
-        **kwargs
-            Keyword arguments passed to the parent ``save()`` method. These are forwarded to Django's ORM.
+        **Example**
 
-        Examples
-        --------
         .. code-block:: python
 
             obj = MyModel(name="Example")
@@ -331,16 +327,23 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             - If you override this method in a subclass, always call ``super().save(*args, **kwargs)`` to retain validation and timestamp functionality.
             - If validation fails, no data will be saved to the database.
+
+        :param args: Positional arguments, forwarded to Django's ``save()``.
+        :param kwargs: Keyword arguments, forwarded to Django's ``save()``.
+        :raises SmarterValueError: if :meth:`validate` raises any exception. Its message names the
+            model and the row's primary key, never the field values: a row can hold secrets, and
+            the message reaches logs and api error responses.
         """
+        model_name = self.__class__.__name__
         try:
             self.validate()
         except (ValidationError, SmarterValueError) as e:
             raise SmarterValueError(
-                f"TimestampedModel().save() validation error: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
+                f"TimestampedModel().save() validation error: {e} | model={model_name} pk={self.pk}"
             ) from e
         except Exception as e:
             raise SmarterValueError(
-                f"TimestampedModel().save() unexpected error during validation: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
+                f"TimestampedModel().save() unexpected error during validation: {e} | model={model_name} pk={self.pk}"
             ) from e
         super().save(*args, **kwargs)
 
@@ -357,8 +360,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             print(obj.id)  # e.g., 123
             print(obj.record_locator)  # e.g., "llmclient-rc2x"
 
-        :returns: Record locator string (URL-safe, no padding)
-        :rtype: str
+        :returns: Record locator string (URL-safe, no padding).
         """
         prefix = str(self.__class__.__name__).lower()
         return f"{prefix}-{self.hashed_id}"
@@ -381,8 +383,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             print(retrieved_obj)  # Should be the same as obj
 
         :param locator: The record locator string to decode and search for.
-        :returns: The model instance if found, otherwise None.
-        :rtype: Optional[TimestampedModel]
+        :returns: The model instance if found, otherwise None. A failure to decode or find the
+            object is logged, and returns None.
         """
         logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.get_object_by_locator()"
         verbose_logger.debug(
@@ -428,7 +430,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             return obj  # type: ignore[return-value]
         # pylint: disable=broad-except
         except Exception as e:
-            logging.exception(
+            logger.exception(
                 "%s Unexpected error while retrieving object with locator '%s': %s",
                 logger_prefix,
                 locator,
@@ -439,48 +441,22 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @property
     def elapsed_updated(self, dt=None) -> Optional[int]:
         """
-        Calculate the absolute time difference in seconds between a given datetime and the model's ``updated_at`` timestamp.
+        The number of whole seconds since the model's ``updated_at`` timestamp.
 
-        This property is useful for determining how much time has elapsed since the model instance was last updated,
-        or for comparing the ``updated_at`` field to any arbitrary datetime.
+        It is a property, so it always compares ``updated_at`` with the current time: the ``dt``
+        parameter can't be passed, and is always None. A naive ``updated_at`` is compared with
+        the naive current time, and an aware one with the current UTC time.
 
-        **Parameters:**
-
-        - dt (datetime, optional):
-          The reference datetime to compare against ``updated_at``.
-          - If ``dt`` is not provided, the current time is used.
-          - Both naive and timezone-aware datetime objects are supported; the method will handle conversions as needed.
-
-        **Returns:**
-
-        - int or None:
-          The absolute difference in seconds between ``updated_at`` and ``dt``.
-          Returns ``None`` if ``updated_at`` is not set.
-
-        **Example Usage:**
+        **Example**
 
         .. code-block:: python
 
             obj = MyModel.objects.get(pk=1)
-            # Time since last update
             seconds = obj.elapsed_updated
             print(f"Seconds since last update: {seconds}")
 
-            # Compare to a specific datetime
-            import datetime
-            dt = datetime.datetime(2025, 12, 1, 12, 0, 0)
-            diff = obj.elapsed_updated(dt)
-            print(f"Seconds between updated_at and 2025-12-01 12:00:00: {diff}")
-
-        .. note::
-
-            - Handles both naive and aware datetime objects, converting as necessary to ensure accurate calculation.
-            - If ``updated_at`` is not set (e.g., the object has not been saved), returns ``None``.
-
-        .. attention::
-
-            - If ``dt`` is provided and is not a ``datetime.datetime`` instance, a ``TypeError`` will be raised.
-            - Always ensure that ``updated_at`` is set before relying on this property for calculations.
+        :returns: The absolute difference in seconds between ``updated_at`` and now, or None if
+            ``updated_at`` is not set, e.g. because the object has not been saved.
         """
         utc = datetime.timezone.utc
         if not self.updated_at:
@@ -508,19 +484,19 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         including timestamps and any complex data types, are properly serialized.
 
         :returns: A dictionary representation of the model instance suitable for JSON serialization.
-        :rtype: SmarterDictType
+        :raises SmarterValueError: if the instance can't be serialized.
         """
         try:
             data = model_to_dict(self)
             data["record_locator"] = self.record_locator
             data["elapsed_updated"] = self.elapsed_updated
-            return json.loads(json.dumps(data, cls=SmarterJSONEncoder))
+            return to_jsonable(data)
         except Exception as e:
-            logging.exception(
-                "%s.to_json() - Error serializing model to JSON. model=%s, field_values=%s, exception: %s",
+            logger.exception(
+                "%s.to_json() - Error serializing model to JSON. model=%s, pk=%s, exception: %s",
                 self.formatted_class_name,
                 self.__class__.__name__,
-                self.__dict__,
+                self.pk,
                 e,
             )
             raise SmarterValueError(f"Error serializing model to JSON: {e}") from e
@@ -535,22 +511,22 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         This method is selectively overridden in models that inherit from TimestampedModel to provide class-specific
         function parameters.
 
-        Example usage:
+        **Example**
 
         .. code-block:: python
 
             # Retrieve by primary key
             instance = MyModel.get_cached_object(pk=1)
 
-        :param invalidate: Whether to invalidate the cache for this retrieval.
-        :type invalidate: bool, optional
+        :param invalidate: Whether to drop the cached row, and read it again from the database.
         :param pk: The primary key of the model instance to retrieve.
-        :type pk: int, optional
-
-        :returns: The model instance if found, otherwise None.
-        :rtype: Optional[models.Model]
+        :param kwargs: Ignored here; subclasses that override this method use them.
+        :returns: The model instance.
+        :raises NotImplementedError: if called on an abstract model class.
+        :raises ~django.core.exceptions.ObjectDoesNotExist: the model's ``DoesNotExist``, if ``pk``
+            is missing or no row has it.
         """
-        logger_prefix = SmarterFormattedText.text(__name__ + "." + TimestampedModel.__name__ + ".get_cached_object()")
+        logger_prefix = SmarterFormattedText.text(__name__ + "." + TimestampedModel.__name__)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -562,7 +538,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             try:
                 verbose_logger.debug(
-                    "%s.get_cached_object() %s called with pk: %s, invalidate=%s",
+                    "%s._get_model_by_pk() %s called with pk: %s, invalidate=%s",
                     logger_prefix,
                     class_name,
                     pk,
@@ -589,7 +565,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             _get_model_by_pk.invalidate(pk, cls.__name__)
 
         if not pk:
-            verbose_logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
+            verbose_logger.debug("%s.get_cached_object() called with no pk", logger_prefix)
             raise cls.DoesNotExist(f"Must provide a 'pk' to retrieve a {cls.__name__} object.")
 
         # same args as invalidate() above, so that both produce the same cache key
@@ -598,50 +574,46 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["TimestampedModel"]:
         """
-        Retrieve model instances using caching to optimize performance.
+        Return every row of the model.
 
-        This method is selectively overridden in models that inherit from
-        TimestampedModel to provide class-specific function parameters.
+        Subclasses override it with filters, e.g. a user profile, and cache those results. The
+        unfiltered list is not cached: a queryset is lazy, so returning it costs nothing, while
+        caching it would store the whole table in Redis, and refill it after every save.
 
-        Example usage:
+        **Example**
 
         .. code-block:: python
 
             # Retrieve all instances
             instances = MyModel.get_cached_objects()
 
-        :param invalidate: Whether to invalidate the cache for this retrieval.
-        :type invalidate: bool
+        :param invalidate: Accepted for the subclasses' signature. Nothing is cached here.
+        :param kwargs: Ignored here; subclasses that override this method use them.
         :returns: A queryset of all model instances.
-        :rtype: QuerySet
+        :raises NotImplementedError: if called on an abstract model class.
         """
-        logger_prefix = SmarterFormattedText.text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        verbose_logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
-
         if cls._meta.abstract:
             raise NotImplementedError(
                 "get_cached_objects() must be called on a concrete model class, not an abstract base class."
             )
 
-        @cache_results(timeout=cls.cache_expiration)
-        def _get_all_models(class_name: str = cls.__name__) -> QuerySet["TimestampedModel"]:
-            retval = cls.objects.all()
-            verbose_logger.debug(
-                "%s._get_all_models() fetched and cached all %s instances",
-                logger_prefix,
-                class_name,
-            )
-            return retval
-
-        if invalidate:
-            _get_all_models.invalidate(cls.__name__)
-
-        return _get_all_models()
+        queryset = cls.objects.all()
+        return queryset
 
     def __str__(self) -> str:
+        """
+        Return the model's class name and id, e.g. ``LLMClient(id=1)``.
+
+        :returns: The short description of the row.
+        """
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
 
     def __repr__(self) -> str:
+        """
+        Return the model's class name, id and timestamps, for debugging.
+
+        :returns: The description of the row.
+        """
         return f"<{self.__class__.__name__} id={getattr(self, 'id', None)} created_at={self.created_at} updated_at={self.updated_at}>"
 
 
