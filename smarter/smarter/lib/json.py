@@ -37,7 +37,7 @@ from json import (  # unmodified re-export
     load,
     loads,
 )
-from typing import Any
+from typing import Any, Optional
 
 from django.utils.functional import Promise
 from pydantic import HttpUrl, TypeAdapter
@@ -303,6 +303,28 @@ def dumps(
     )
 
 
+def to_jsonable(obj: Any, cls: Optional[type[json.JSONEncoder]] = None) -> Any:
+    """
+    Return ``obj`` as plain JSON data: dicts, lists, strings, numbers, booleans and None.
+
+    It is ``json.loads(dumps(obj))``, without the indentation: an indented dump runs in pure
+    Python, while a compact one runs in the standard library's C encoder. Use it to snapshot
+    data, e.g. before storing it in a ``JSONField``.
+
+    :param obj: The value to convert.
+    :param cls: The encoder; :class:`SmarterJSONEncoder` by default. Values it can't encode
+        become ``str(value)``.
+    :returns: The JSON data.
+    """
+    encoder_class = cls
+    if encoder_class is None:
+        encoder_class = SmarterJSONEncoder
+    encoder_class = with_str_fallback(encoder_class)
+    text = json.dumps(obj, cls=encoder_class, separators=(",", ":"))
+    data = json.loads(text)
+    return data
+
+
 __all__ = [
     "JSONDecodeError",
     "JSONDecoder",
@@ -310,4 +332,5 @@ __all__ = [
     "dumps",
     "load",
     "loads",
+    "to_jsonable",
 ]

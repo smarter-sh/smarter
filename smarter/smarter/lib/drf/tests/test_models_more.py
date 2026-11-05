@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import timedelta
-from unittest.mock import patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.models import SmarterAuthToken
@@ -97,19 +96,32 @@ class TestSmarterAuthTokenMore(TestAccountMixin):
         """Without a user profile or user, the query falls back to the base class's."""
         self.assertIsNotNone(SmarterAuthToken.get_cached_objects(invalidate=True))
 
-    def test_get_cached_objects_when_the_query_fails(self):
-        """The cached queries retry without select_related() when it fails, once or twice."""
-        manager = SmarterAuthToken.objects
-        real = manager.select_related
-        for side_effect in ([Exception("first"), real("user_profile")], Exception("always")):
-            with self.subTest(side_effect=side_effect):
-                with patch.object(manager, "select_related", side_effect=side_effect):
-                    by_profile = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile, invalidate=True)
-                self.assertIn(self.token, list(by_profile))
-                if isinstance(side_effect, list):
-                    side_effect = [Exception("first"), real("user_profile")]
-                with patch.object(manager, "select_related", side_effect=side_effect):
-                    by_name = SmarterAuthToken.get_cached_objects(
-                        user_profile=self.user_profile, name=self.token.name, invalidate=True
-                    )
-                self.assertIn(self.token, list(by_name))
+    def test_a_new_key_is_in_the_cached_list_at_once(self):
+        """Saving a key invalidates its user's cached keys."""
+        cached = list(SmarterAuthToken.get_cached_objects(user_profile=self.user_profile))
+        new_token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
+            user_profile=self.user_profile, name="test_models_more_new", user=self.admin_user
+        )
+        self.assertNotIn(new_token, cached)
+        self.assertIn(new_token, list(SmarterAuthToken.get_cached_objects(user_profile=self.user_profile)))
+
+    def test_a_deleted_key_leaves_the_cached_list_at_once(self):
+        by_name = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile, name=self.token.name)
+        self.assertEqual(list(by_name), [self.token])
+        self.token.delete()
+        self.assertEqual(
+            list(SmarterAuthToken.get_cached_objects(user_profile=self.user_profile, name=self.token.name)), []
+        )
+
+    def test_a_renamed_key_leaves_its_old_name(self):
+        """After a rename, the old name finds nothing, and the new name finds the key."""
+        old_name = self.token.name
+        token = SmarterAuthToken.objects.get(pk=self.token.pk)
+        self.assertEqual(
+            list(SmarterAuthToken.get_cached_objects(user_profile=self.user_profile, name=old_name)), [token]
+        )
+        token.name = "test_models_more_renamed"
+        token.save()
+        self.assertEqual(list(SmarterAuthToken.get_cached_objects(user_profile=self.user_profile, name=old_name)), [])
+        renamed = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile, name="test_models_more_renamed")
+        self.assertEqual(list(renamed), [token])

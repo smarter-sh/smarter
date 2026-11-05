@@ -107,6 +107,9 @@ class MetaDataModel(TimestampedModel):
     _prefetched_annotations: Optional[AnnotationsMap] = None
     """Annotations read for a whole list of resources by :func:`smarter.lib.annotation.models.prefetch_annotations`."""
 
+    _loaded_name: Optional[str] = None
+    """The name the row had when it was loaded or last saved, so that :meth:`save` can invalidate it after a rename."""
+
     @property
     def annotations(self) -> AnnotationsMap:
         """
@@ -441,7 +444,41 @@ class MetaDataModel(TimestampedModel):
             # and get_cached_object() refuses to look one up.
             if self.name:
                 self.__class__.get_cached_object(invalidate=True, name=self.name)  # type: ignore
-            self.__class__.get_cached_objects(invalidate=True)  # type: ignore
+            # a rename leaves the old name's cached copy behind, which would still return this row.
+            loaded_name = self._loaded_name
+            if loaded_name and loaded_name != self.name:
+                self.invalidate_cached_name(loaded_name)
+        self._loaded_name = self.name
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        """
+        Load a row, and remember its name, so that :meth:`save` can tell a rename.
+
+        :param db: The database alias.
+        :param field_names: The loaded fields' names.
+        :param values: The loaded fields' values.
+        :returns: The instance.
+        """
+        instance = super().from_db(db, field_names, values)
+        # a deferred name is not loaded, and is not read here, which would query it.
+        instance._loaded_name = instance.__dict__.get("name")
+        return instance
+
+    @classmethod
+    def invalidate_cached_name(cls, name: str) -> None:
+        """
+        Drop the cached copy of the row that had ``name``, without reading anything.
+
+        :meth:`get_cached_object` with ``invalidate=True`` would look the name up again, and a
+        renamed row no longer has it.
+
+        :param name: The name the row was cached by.
+        """
+        try:
+            cls.get_cached_object(invalidate=True, name=name)  # type: ignore
+        except cls.DoesNotExist:
+            pass
 
     def __str__(self) -> str:
         """

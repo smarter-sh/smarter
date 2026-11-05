@@ -2,6 +2,7 @@
 
 import hmac
 import uuid
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Optional
@@ -370,128 +371,67 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         **kwargs,
     ) -> models.QuerySet["SmarterAuthToken"]:
         """
-        Return a user profile's API keys, optionally only those with a name, from the cache.
+        Return the API keys of a user profile's user, optionally only those with a name, from the cache.
 
-        :param invalidate: If True, invalidate the cached results for this user profile and name first.
-        :param user_profile: The user profile whose API keys are returned.
+        The results are cached by :func:`cached_auth_tokens`, and invalidated whenever an API key
+        is saved or deleted (see :mod:`smarter.lib.drf.receivers`).
+
+        :param invalidate: If True, drop the cached result for this user profile and name first.
+        :param user_profile: The user profile whose user's API keys are returned.
         :param user: The user whose API keys are returned, used if ``user_profile`` is not given.
         :param name: If given, only the API keys with this name are returned.
         :param kwargs: Accepted for compatibility with the base class, and ignored.
-        :returns: A queryset of the matching API keys.
+        :returns: A queryset of the matching API keys, or every API key if neither
+            ``user_profile`` nor ``user`` is given.
         """
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{cls.__name__}.get_cached_objects()"
-        logger.debug(
-            "%s called with user_profile=%s, user=%s, name=%s, invalidate=%s",
-            logger_prefix,
-            user_profile,
-            user,
-            name,
-            invalidate,
-        )
-
-        # pylint: disable=W0613
-        @cache_results(cls.cache_expiration)
-        def _get_cached_objects_for_user_profile(user_profile_id: int) -> models.QuerySet["SmarterAuthToken"]:
-            """
-            Return the user profile's API keys, cached by ``user_profile_id``.
-
-            :param user_profile_id: The id of the user profile, the cache key.
-            :returns: A queryset of the user profile's API keys.
-            """
-            if not user_profile:
-                return cls.objects.none()
-
-            try:
-                queryset = cls.objects.select_related(
-                    "user_profile", "user_profile__account", "user_profile__user"
-                ).filter(user=user_profile.cached_user)
-                logger.debug(
-                    "%s._get_cached_objects_for_user_profile() fetched and cached objects for user_profile_id: %s",
-                    logger_prefix,
-                    user_profile_id,
-                )
-                return queryset
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error(
-                    "%s._get_cached_objects_for_user_profile() error retrieving cached objects: %s", logger_prefix, e
-                )
-                try:
-                    queryset = cls.objects.select_related(
-                        "user_profile", "user_profile__account", "user_profile__user"
-                    ).filter(user=user_profile.cached_user)
-                    return queryset
-                except Exception as e2:
-                    logger.error(
-                        "%s._get_cached_objects_for_user_profile() error retrieving objects without cache: %s",
-                        logger_prefix,
-                        e2,
-                    )
-                    queryset = cls.objects.filter(user=user_profile.cached_user)
-                    return queryset
-
-        # pylint: disable=W0613
-        @cache_results(cls.cache_expiration)
-        def _get_cached_objects_for_user_profile_and_name(
-            user_profile_id: int, name: str
-        ) -> models.QuerySet["SmarterAuthToken"]:
-            """
-            Return the user profile's API keys with a name, cached by ``user_profile_id`` and name.
-
-            :param user_profile_id: The id of the user profile, part of the cache key.
-            :param name: The name of the API keys.
-            :returns: A queryset of the matching API keys.
-            """
-            if not user_profile:
-                return cls.objects.none()
-
-            try:
-                queryset = cls.objects.select_related(
-                    "user_profile", "user_profile__account", "user_profile__user"
-                ).filter(user=user_profile.cached_user, name=name)
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error(
-                    "%s._get_cached_objects_for_user_profile_and_name() error retrieving cached objects: %s",
-                    logger_prefix,
-                    e,
-                )
-                try:
-                    queryset = cls.objects.select_related(
-                        "user_profile", "user_profile__account", "user_profile__user"
-                    ).filter(user=user_profile.cached_user, name=name)
-                except Exception as e2:
-                    logger.error(
-                        "%s._get_cached_objects_for_user_profile_and_name() error retrieving objects without cache: %s",
-                        logger_prefix,
-                        e2,
-                    )
-                    queryset = cls.objects.filter(user=user_profile.cached_user, name=name)
-            logger.debug(
-                "%s._get_cached_objects_for_user_profile_and_name() fetched and cached objects for user_profile_id: %s, name: %s",
-                logger_prefix,
-                user_profile_id,
-                name,
-            )
-            return queryset
-
-        if invalidate:
-            # Invalidate the cache for both functions
-            _get_cached_objects_for_user_profile.invalidate(user_profile_id=user_profile.id if user_profile else None)  # type: ignore
-            _get_cached_objects_for_user_profile_and_name.invalidate(
-                user_profile_id=user_profile.id if user_profile else None, name=name  # type: ignore
-            )
-
-        if not user_profile and user:
+        if user_profile is None and user is not None:
             user_profile = UserProfile.get_cached_object(user=user)
 
-        if user_profile and name:
-            return _get_cached_objects_for_user_profile_and_name(user_profile.id, name)  # type: ignore
-        elif user_profile:
-            return _get_cached_objects_for_user_profile(user_profile.id)  # type: ignore
-        else:
-            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate, taggit=False)  # type: ignore
+        if user_profile is None:
+            return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
+
+        if invalidate:
+            cached_auth_tokens.invalidate(user_profile.id, name)
+
+        auth_tokens = cached_auth_tokens(user_profile.id, name)
+        return auth_tokens
 
     def __str__(self) -> str:
         """Return the key's name, user and masked digest."""
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)
+
+
+@cache_results(SmarterAuthToken.cache_expiration)
+def cached_auth_tokens(user_profile_id: int, name: Optional[str]) -> models.QuerySet[SmarterAuthToken]:
+    """
+    Return the API keys of a user profile's user, optionally only those with a name.
+
+    An API key belongs to a user, so every profile of the user sees the same keys.
+    :func:`invalidate_cached_auth_tokens` drops the results of each of them.
+
+    :param user_profile_id: The id of the user profile, part of the cache key.
+    :param name: The name of the API keys, or None for all of them, part of the cache key.
+    :returns: A queryset of the matching API keys.
+    """
+    user_ids = UserProfile.objects.filter(pk=user_profile_id).values_list("user_id", flat=True)
+    queryset = SmarterAuthToken.objects.select_related(
+        "user_profile", "user_profile__account", "user_profile__user"
+    ).filter(user_id__in=user_ids)
+    if name is not None:
+        queryset = queryset.filter(name=name)
+    return queryset
+
+
+def invalidate_cached_auth_tokens(user_id: int, names: Iterable[Optional[str]]) -> None:
+    """
+    Drop the cached API keys of every profile of a user, for all names and for each of ``names``.
+
+    :param user_id: The id of the user whose API keys changed.
+    :param names: The names to drop, e.g. a key's new and old name. None and blank names are skipped.
+    """
+    user_profile_ids = UserProfile.objects.filter(user_id=user_id).values_list("pk", flat=True)
+    for user_profile_id in user_profile_ids:
+        cached_auth_tokens.invalidate(user_profile_id, None)
+        for name in names:
+            if name:
+                cached_auth_tokens.invalidate(user_profile_id, name)

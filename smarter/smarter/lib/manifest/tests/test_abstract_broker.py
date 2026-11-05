@@ -48,6 +48,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerInternalError,
+    SAMDependencyReference,
     dependents_exist,
 )
 from smarter.lib.manifest.record_locator import console_url
@@ -176,6 +177,41 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         self.assertIs(SAMGuardrailBroker.has_dependents(guardrail), True)
         dependencies = self.orm_broker(self.user_profile).dependencies()
         self.assertEqual([(d.kind, d.name) for d in dependencies], [("LLMClient", self.name)])
+
+    def test_dependency_references_build_no_brokers(self):
+        """References give the kind, name and account of each dependent, without building its broker."""
+        guardrail = self.create_guardrail(self.user_profile)
+        llmclient = LLMClient.objects.create(name=self.name, user_profile=self.user_profile)
+        self.addCleanup(llmclient.delete)
+        LLMClientGuardrails.objects.create(llmclient=llmclient, guardrail=guardrail)
+        broker = self.orm_broker(self.user_profile)
+        brokers = broker.dependencies()
+        with patch.object(broker, "dependency_broker") as dependency_broker:
+            references = broker.dependency_references()
+        dependency_broker.assert_not_called()
+        self.assertEqual([(r.kind, r.name, r.account) for r in references], [("LLMClient", self.name, self.account)])
+        self.assertIsInstance(references[0], SAMDependencyReference)
+        # the memoized brokers are kept for dependencies().
+        self.assertIs(broker.dependencies(), brokers)
+
+    def test_dependency_tree_readable_pks(self):
+        """Sibling rows are checked with one query, which agrees with the check of each row."""
+        guardrail = self.create_guardrail(self.user_profile)
+        broker = self.orm_broker(self.user_profile)
+        readable_pks = broker.dependency_tree_readable_pks([guardrail])
+        self.assertEqual(readable_pks, {guardrail.pk})
+        self.assertEqual(guardrail.pk in readable_pks, broker.dependency_tree_readable(guardrail))
+        self.assertIsNone(broker.dependency_tree_readable_pks([]))
+        self.assertIsNone(broker.dependency_tree_readable_pks([guardrail, self.account]))
+
+    def test_with_owners(self):
+        """A QuerySet of owned rows reads their owners in the same query; anything else is unchanged."""
+        rows = Guardrail.objects.filter(user_profile=self.user_profile)
+        self.assertIn("user_profile", str(AbstractBroker.with_owners(rows).query))
+        plain_list = [object()]
+        self.assertIs(AbstractBroker.with_owners(plain_list), plain_list)
+        budgets = Budget.objects.all()
+        self.assertIs(AbstractBroker.with_owners(budgets), budgets)
 
     def test_dependency_brokers_for_a_missing_resource(self):
         """Test that a resource that does not exist has no dependencies."""

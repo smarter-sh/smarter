@@ -129,3 +129,14 @@ class TestDumps(SmarterTestBase):
         self.assertEqual(
             json.dumps({"b": 1, "a": 2}, indent=1, sort_keys=True, separators=(",", ":")), '{\n "a":2,\n "b":1\n}'
         )
+
+    def test_to_jsonable(self):
+        """Test that to_jsonable() returns plain JSON data, encoded by the SmarterJSONEncoder, else str()."""
+
+        class Thing:
+            def __str__(self):
+                return "a thing"
+
+        when = datetime.datetime(2026, 1, 2, 3, 4, 5, tzinfo=datetime.timezone.utc)
+        data = json.to_jsonable({"when": when, "ids": {1}, "thing": Thing(), "n": 1.5})
+        self.assertEqual(data, {"when": "2026-01-02T03:04:05Z", "ids": [1], "thing": "a thing", "n": 1.5})

@@ -19,7 +19,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
-from smarter.lib.json import SmarterJSONEncoder
+from smarter.lib.json import SmarterJSONEncoder, to_jsonable
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
@@ -330,17 +330,20 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         :param args: Positional arguments, forwarded to Django's ``save()``.
         :param kwargs: Keyword arguments, forwarded to Django's ``save()``.
-        :raises SmarterValueError: if :meth:`validate` raises any exception.
+        :raises SmarterValueError: if :meth:`validate` raises any exception. Its message names the
+            model and the row's primary key, never the field values: a row can hold secrets, and
+            the message reaches logs and api error responses.
         """
+        model_name = self.__class__.__name__
         try:
             self.validate()
         except (ValidationError, SmarterValueError) as e:
             raise SmarterValueError(
-                f"TimestampedModel().save() validation error: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
+                f"TimestampedModel().save() validation error: {e} | model={model_name} pk={self.pk}"
             ) from e
         except Exception as e:
             raise SmarterValueError(
-                f"TimestampedModel().save() unexpected error during validation: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
+                f"TimestampedModel().save() unexpected error during validation: {e} | model={model_name} pk={self.pk}"
             ) from e
         super().save(*args, **kwargs)
 
@@ -487,13 +490,13 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             data = model_to_dict(self)
             data["record_locator"] = self.record_locator
             data["elapsed_updated"] = self.elapsed_updated
-            return json.loads(json.dumps(data, cls=SmarterJSONEncoder))
+            return to_jsonable(data)
         except Exception as e:
             logger.exception(
-                "%s.to_json() - Error serializing model to JSON. model=%s, field_values=%s, exception: %s",
+                "%s.to_json() - Error serializing model to JSON. model=%s, pk=%s, exception: %s",
                 self.formatted_class_name,
                 self.__class__.__name__,
-                self.__dict__,
+                self.pk,
                 e,
             )
             raise SmarterValueError(f"Error serializing model to JSON: {e}") from e
@@ -570,10 +573,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["TimestampedModel"]:
         """
-        Retrieve model instances using caching to optimize performance.
+        Return every row of the model.
 
-        This method is selectively overridden in models that inherit from
-        TimestampedModel to provide class-specific function parameters.
+        Subclasses override it with filters, e.g. a user profile, and cache those results. The
+        unfiltered list is not cached: a queryset is lazy, so returning it costs nothing, while
+        caching it would store the whole table in Redis, and refill it after every save.
 
         **Example**
 
@@ -582,33 +586,18 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             # Retrieve all instances
             instances = MyModel.get_cached_objects()
 
-        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :param invalidate: Accepted for the subclasses' signature. Nothing is cached here.
         :param kwargs: Ignored here; subclasses that override this method use them.
         :returns: A queryset of all model instances.
         :raises NotImplementedError: if called on an abstract model class.
         """
-        logger_prefix = SmarterFormattedText.text(__name__ + "." + cls.__name__)
-        verbose_logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
-
         if cls._meta.abstract:
             raise NotImplementedError(
                 "get_cached_objects() must be called on a concrete model class, not an abstract base class."
             )
 
-        @cache_results(timeout=cls.cache_expiration)
-        def _get_all_models(class_name: str = cls.__name__) -> QuerySet["TimestampedModel"]:
-            retval = cls.objects.all()
-            verbose_logger.debug(
-                "%s._get_all_models() fetched and cached all %s instances",
-                logger_prefix,
-                class_name,
-            )
-            return retval
-
-        if invalidate:
-            _get_all_models.invalidate(cls.__name__)
-
-        return _get_all_models()
+        queryset = cls.objects.all()
+        return queryset
 
     def __str__(self) -> str:
         """
