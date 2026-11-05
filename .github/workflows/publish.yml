@@ -162,7 +162,7 @@ jobs:
       - name: Install MariaDB Connector/C
         shell: bash
         env:
-          MARIADB_VERSION: "12.2"
+          MARIADB_VERSION: "12.3"
         run: |
           curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
           chmod +x mariadb_repo_setup
