@@ -1,20 +1,17 @@
 """
-Smarter.lib.logging.waffle_switched_logger
-==========================================
-
 Conditional logger wrapper for the Smarter application.
 
 This module provides a logger wrapper, :class:`WaffleSwitchedLoggerWrapper`, that enables conditional logging
 based on a user-supplied function. This allows for dynamic control of logging behavior at runtime, such as
 toggling detailed logging with a feature flag (e.g., Django Waffle switches).
 
-Classes
--------
-WaffleSwitchedLoggerWrapper
-    A logger wrapper that only emits log messages if a condition function returns True for the given log level.
+**Classes:**
 
-Examples
---------
+- :class:`WaffleSwitchedLoggerWrapper`: a logger wrapper that only emits log messages if a condition
+  function returns True for the given log level.
+
+**Example:**
+
 To use the conditional logger wrapper with a Django Waffle switch::
 
     import logging
@@ -44,33 +41,45 @@ class WaffleSwitchedLoggerWrapper:
     """
     A wrapper around a standard logger that adds conditional logic.
 
-    Usage:
-        .. code-block:: python
+    **Usage:**
 
-            import logging
+    .. code-block:: python
 
-            from smarter.lib.django import waffle
-            from smarter.lib.django.waffle import SmarterWaffleSwitches
-            from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+        import logging
 
-            def should_log_detailed(level):
-                return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+        from smarter.lib.django import waffle
+        from smarter.lib.django.waffle import SmarterWaffleSwitches
+        from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-            base_logger = logging.getLogger(__name__)
-            logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_detailed)
+        def should_log_detailed(level):
+            return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
-            logger.debug("This is a debug message.")
+        base_logger = logging.getLogger(__name__)
+        logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_detailed)
+
+        logger.debug("This is a debug message.")
+
+    :param logger: The logger to wrap.
+    :param condition_func: Called with a log level; the message is logged only if it returns True.
+        None means always log, at the levels that the wrapped logger is enabled for.
     """
 
-    # log entries will be forced at this level and above
+    #: Log entries are always emitted at this level and above, whatever the condition says.
     REQUIRED_LOG_LEVEL = logging.WARNING
 
-    def __init__(self, logger: logging.Logger, condition_func: Optional[Callable] = None):
+    def __init__(self, logger: logging.Logger, condition_func: Optional[Callable[[int], bool]] = None):
         self._logger = logger
         self._condition_func = condition_func
 
     def should_log(self, level: int = logging.DEBUG) -> bool:
-        """Check if we should log based on custom conditions."""
+        """
+        Check if we should log based on custom conditions.
+
+        :param level: The log level, e.g. ``logging.INFO``.
+        :returns: False if the wrapped logger isn't enabled for ``level``, else the condition's
+            answer (False if it needs a synchronous database call from async code), or True
+            if there is no condition.
+        """
         if not self._logger.isEnabledFor(level):
             return False
 
@@ -90,7 +99,7 @@ class WaffleSwitchedLoggerWrapper:
         :param args: The message's arguments.
         :param kwargs: Passed to the wrapped logger.
         """
-        if self.should_log(logging.DEBUG) or logging.DEBUG >= self.REQUIRED_LOG_LEVEL:
+        if logging.DEBUG >= self.REQUIRED_LOG_LEVEL or self.should_log(logging.DEBUG):
             self._logger.debug(msg, *args, **kwargs)
 
     def info(self, msg: Any, *args, **kwargs):
@@ -101,7 +110,7 @@ class WaffleSwitchedLoggerWrapper:
         :param args: The message's arguments.
         :param kwargs: Passed to the wrapped logger.
         """
-        if self.should_log(logging.INFO) or logging.INFO >= self.REQUIRED_LOG_LEVEL:
+        if logging.INFO >= self.REQUIRED_LOG_LEVEL or self.should_log(logging.INFO):
             self._logger.info(msg, *args, **kwargs)
 
     def warning(self, msg: Any, *args, **kwargs):
@@ -112,7 +121,7 @@ class WaffleSwitchedLoggerWrapper:
         :param args: The message's arguments.
         :param kwargs: Passed to the wrapped logger.
         """
-        if self.should_log(logging.WARNING) or logging.WARNING >= self.REQUIRED_LOG_LEVEL:
+        if logging.WARNING >= self.REQUIRED_LOG_LEVEL or self.should_log(logging.WARNING):
             self._logger.warning(msg, *args, **kwargs)
 
     def error(self, msg: Any, *args, **kwargs):
@@ -123,7 +132,7 @@ class WaffleSwitchedLoggerWrapper:
         :param args: The message's arguments.
         :param kwargs: Passed to the wrapped logger.
         """
-        if self.should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
+        if logging.ERROR >= self.REQUIRED_LOG_LEVEL or self.should_log(logging.ERROR):
             self._logger.error(msg, *args, **kwargs)
 
     def critical(self, msg: Any, *args, **kwargs):
@@ -134,7 +143,7 @@ class WaffleSwitchedLoggerWrapper:
         :param args: The message's arguments.
         :param kwargs: Passed to the wrapped logger.
         """
-        if self.should_log(logging.CRITICAL) or logging.CRITICAL >= self.REQUIRED_LOG_LEVEL:
+        if logging.CRITICAL >= self.REQUIRED_LOG_LEVEL or self.should_log(logging.CRITICAL):
             self._logger.critical(msg, *args, **kwargs)
 
     def exception(self, msg: Any, *args, exc_info=True, **kwargs):
@@ -146,7 +155,7 @@ class WaffleSwitchedLoggerWrapper:
         :param exc_info: Whether to log the current exception's stack trace.
         :param kwargs: Passed to the wrapped logger.
         """
-        if self.should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
+        if logging.ERROR >= self.REQUIRED_LOG_LEVEL or self.should_log(logging.ERROR):
             self._logger.exception(msg, *args, exc_info=exc_info, **kwargs)
 
     def log(self, level: int, msg: Any, *args, **kwargs):
@@ -158,20 +167,19 @@ class WaffleSwitchedLoggerWrapper:
         :param args: The message's arguments.
         :param kwargs: Passed to the wrapped logger.
         """
-        if self.should_log(level) or level >= self.REQUIRED_LOG_LEVEL:
+        if level >= self.REQUIRED_LOG_LEVEL or self.should_log(level):
             self._logger.log(level, msg, *args, **kwargs)
 
     def __getattr__(self, name: str) -> Any:
         """
-        Delegate everything that the wrapper does not define, e.g. ``isEnabledFor()``,.
+        Delegate everything that the wrapper does not define to the wrapped logger.
 
-        ``name`` or ``handlers``, to the wrapped logger, so the wrapper can stand in for it.
-
-        The logging methods are defined above, so that the condition always applies to them.
+        For example ``isEnabledFor()``, ``name`` or ``handlers``, so that the wrapper can stand in
+        for the logger. The logging methods are defined above, so that the condition always
+        applies to them.
 
         :param name: The attribute name.
-        :type name: str
-        :return: The wrapped logger's attribute.
+        :returns: The wrapped logger's attribute.
         :raises AttributeError: If neither the wrapper nor the wrapped logger has the attribute.
         """
         if name == "_logger":
@@ -182,12 +190,20 @@ class WaffleSwitchedLoggerWrapper:
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} logger={self._logger.name}>"
 
-    def set_condition(self, condition_func: Callable):
-        """Update the condition function."""
+    def set_condition(self, condition_func: Callable[[int], bool]) -> None:
+        """
+        Update the condition function.
+
+        :param condition_func: Called with a log level; the message is logged only if it returns True.
+        """
         self._condition_func = condition_func
 
     def getEffectiveLevel(self) -> int:
-        """Get the effective logging level of the underlying logger."""
+        """
+        Get the effective logging level of the underlying logger.
+
+        :returns: The wrapped logger's effective level, e.g. ``logging.INFO``.
+        """
         return self._logger.getEffectiveLevel()
 
 

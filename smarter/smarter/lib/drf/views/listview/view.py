@@ -1,9 +1,5 @@
 # pylint: disable=W0613
-"""
-This module contains views to implement the React.
-
-AuthToken list view in the Smarter Dashboard.
-"""
+"""The web console page that hosts the React list app of the user's API keys (AuthTokens)."""
 
 from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
@@ -20,19 +16,10 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Render the authtoken list view for the Smarter Workbench web console.
+    Render the API key list page of the Smarter Workbench web console.
 
-    This view displays all authtokens available to the authenticated user as cards, providing a quick overview and access to authtoken details.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with a card for each authtoken, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
+    The page hosts the ``smarter-authtoken-list`` React app, which lists the API keys available to
+    the authenticated user, from :class:`~smarter.lib.drf.views.listview.api.AuthTokenListApiView`.
     """
 
     template_path = "react/authtoken-list.html"
@@ -40,7 +27,7 @@ class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
 
     @property
     def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
+        """The view's dotted class name and instance id, formatted for log messages."""
         class_name = f"{__name__}.{AuthTokenListView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 

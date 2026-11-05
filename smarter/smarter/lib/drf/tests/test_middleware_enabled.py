@@ -14,12 +14,16 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
 from django.test import RequestFactory
 from django.utils import timezone
+from rest_framework.request import Request
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
-from smarter.lib.drf.token_authentication import SmarterAnonymousUser
+from smarter.lib.drf.token_authentication import (
+    SmarterAnonymousUser,
+    SmarterTokenAuthentication,
+)
 
 MODULE = "smarter.lib.drf.middleware"
 API_PATH = "/api/v1/cli/whoami/"
@@ -57,6 +61,28 @@ class TestSmarterTokenAuthenticationMiddlewareEnabled(ApiV1TestBase):
         self.assertEqual(response.content, b"ok")
         self.assertEqual(request.user, self.admin_user)
         success.send.assert_called_once()
+
+    def test_valid_token_does_not_log_the_user_in(self):
+        """The token's user is the request's user, without a session login, which would write last_login."""
+        self.admin_user.refresh_from_db()
+        last_login = self.admin_user.last_login
+        request = self.request(authorization=f"Token {self.token_key}")
+        session_key = request.session.session_key
+        self.middleware(request)
+        self.admin_user.refresh_from_db()
+        self.assertEqual(self.admin_user.last_login, last_login)
+        self.assertEqual(request.session.session_key, session_key)
+        self.assertNotIn("_auth_user_id", request.session)
+        self.assertEqual(asyncio.run(request.auser()), self.admin_user)
+
+    def test_the_token_is_authenticated_once_per_request(self):
+        """A later check of the same request's token, e.g. by DRF, reuses the middleware's."""
+        request = self.request(authorization=f"Token {self.token_key}")
+        self.middleware(request)
+        with patch.object(SmarterTokenAuthentication, "authenticate_credentials") as authenticate_credentials:
+            user, _ = SmarterTokenAuthentication().authenticate(Request(request))
+        authenticate_credentials.assert_not_called()
+        self.assertEqual(user, self.admin_user)
 
     def test_invalid_token(self):
         """Test that an invalid token returns a 401, without calling the view."""

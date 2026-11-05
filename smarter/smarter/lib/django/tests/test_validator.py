@@ -124,6 +124,19 @@ class TestSmarterValidator(SmarterTestBase):
         with self.assertRaises(SmarterValueError):
             SmarterValidator.validate_url("notaurl")
 
+    def test_is_local_url(self):
+        """Only the url's own scheme and host make it local."""
+        self.assertTrue(SmarterValidator.is_local_url("http://localhost/"))
+        self.assertTrue(SmarterValidator.is_local_url("http://localhost:9357/api/"))
+        self.assertTrue(SmarterValidator.is_local_url("https://127.0.0.1"))
+        self.assertTrue(SmarterValidator.is_local_url("http://testserver/x"))
+        self.assertFalse(SmarterValidator.is_local_url("https://example.com/?next=http://localhost"))
+        self.assertFalse(SmarterValidator.is_local_url("ftp://localhost/"))
+
+    def test_urlify_keeps_an_existing_scheme(self):
+        """In the local environment, whose default scheme is http, an https url stays https."""
+        self.assertEqual(SmarterValidator.urlify("https://example.com/a"), "https://example.com/a/")
+
     def test_validate_hostname(self):
         SmarterValidator.validate_hostname("localhost")
         with self.assertRaises(SmarterValueError):

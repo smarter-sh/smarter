@@ -69,6 +69,36 @@ class TestHttpAnonymousRequestSerializer(SmarterTestBase):
         self.assertEqual(rep["encoding"], "utf-8")
         self.assertEqual(rep["content_type"], "application/json")
 
+    def test_credentials_are_never_serialized(self):
+        """The api key, session cookie and csrf token never reach the journal."""
+        request = HttpRequest()
+        request.method = "POST"
+        request.path = "/api/v1/cli/apply/"
+        request.META = {
+            "HTTP_AUTHORIZATION": "Token not-a-real-key",
+            "HTTP_COOKIE": "sessionid=not-a-real-session",
+            "HTTP_X_CSRFTOKEN": "not-a-real-csrf-token",
+            "HTTP_USER_AGENT": "test-agent",
+            "SERVER_NAME": "testserver",
+        }
+        request.COOKIES = {"sessionid": "not-a-real-session"}
+        rep = HttpAnonymousRequestSerializer(instance=request).data
+        self.assertNotIn("COOKIES", rep)
+        self.assertEqual(rep["META"], {"HTTP_USER_AGENT": "test-agent", "SERVER_NAME": "testserver"})
+        self.assertNotIn("not-a-real", str(rep))
+
+    def test_meta_that_is_not_a_dict(self):
+        serializer = HttpAnonymousRequestSerializer()
+        obj = MagicMock()
+        obj.META = None
+        self.assertEqual(serializer.get_META(obj), {})
+
+    def test_get_url_without_build_absolute_uri(self):
+        serializer = HttpAnonymousRequestSerializer()
+        obj = MagicMock()
+        obj.request = object()
+        self.assertIsNone(serializer.get_url(obj))
+
     def test_create_and_update(self):
         serializer = HttpAnonymousRequestSerializer()
         validated_data = self.data.copy()

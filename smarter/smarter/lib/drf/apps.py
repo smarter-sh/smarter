@@ -1,4 +1,4 @@
-"""Plugin app configuration."""
+"""Django app configuration of smarter.lib.drf, which holds API keys and token authentication."""
 
 from django.apps import AppConfig
 
@@ -20,8 +20,12 @@ class DrfConfig(AppConfig, SmarterHelperMixin):
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
-        """Import signals."""
-        from . import receivers  # noqa: F401
-        from . import signals  # noqa: F401
+        """Connect the app's signal receivers, by importing them."""
+        from . import receivers, signals  # noqa: F401
 
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.upper()}", self.formatted_state_ready)
+        logger.debug(
+            "%s.DrfConfig.ready() %s app is %s",
+            logging.SmarterFormattedText.text(__name__),
+            f"{SMARTER_APP_NAME} {app_name.upper()}",
+            self.formatted_state_ready,
+        )
