@@ -20,7 +20,7 @@ export function listHandlers(response: BudgetListResponse = listResponse) {
 
 /** The delete api, which succeeds. */
 export const deleteHandlers = [
-  http.post("/budget/react-integration/api/delete/:id/", ({ params }) =>
+  http.post("/api/web/account/budget/delete/:id/", ({ params }) =>
     HttpResponse.json({ message: `Budget ${params.id} deleted.` }),
   ),
 ];

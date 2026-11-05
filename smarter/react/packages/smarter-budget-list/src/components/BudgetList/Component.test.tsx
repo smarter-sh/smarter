@@ -57,7 +57,7 @@ describe("BudgetList", () => {
     let deleted = "";
     server.use(
       ...listHandlers(),
-      http.post("/budget/react-integration/api/delete/:id/", ({ params }) => {
+      http.post("/api/web/account/budget/delete/:id/", ({ params }) => {
         deleted = String(params.id);
         return HttpResponse.json({});
       }),
@@ -170,7 +170,7 @@ describe("BudgetList", () => {
   ])("shows why a delete failed", async (response, message) => {
     server.use(
       ...listHandlers(),
-      http.post("/budget/react-integration/api/delete/:id/", () => response.clone()),
+      http.post("/api/web/account/budget/delete/:id/", () => response.clone()),
     );
     vi.spyOn(window, "confirm").mockReturnValue(true);
     const user = userEvent.setup();

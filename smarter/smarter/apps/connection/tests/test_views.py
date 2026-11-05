@@ -11,6 +11,9 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
+from smarter.apps.connection.api.web.urls import (
+    ConnectionApiWebReverseNames as WebNames,
+)
 from smarter.apps.connection.caching import (
     invalidate_all_cached_connections_for_user_profile,
 )
@@ -38,6 +41,9 @@ class ViewTestMixin:
     def url(self, name: str, **kwargs) -> str:
         return reverse(f"{NAMESPACE}:{name}", kwargs=kwargs or None)
 
+    def web_url(self, name: str, **kwargs) -> str:
+        return reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs or None)
+
     def post(self, url: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """POST to ``url``, assert the response's status, and return its json."""
         response = self.client.post(url)
@@ -51,9 +57,9 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
     def listed(self, ownership_filter=None, **params) -> list[str]:
         """Return the names of the connections that the list api returns."""
         if ownership_filter:
-            url = self.url(ConnectionReverseNames.listview_api, ownership_filter=ownership_filter)
+            url = self.web_url(WebNames.listview, ownership_filter=ownership_filter)
         else:
-            url = self.url(ConnectionReverseNames.listview_api_all)
+            url = self.web_url(WebNames.listview_all)
         if params:
             url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
         data = self.post(url)
@@ -74,19 +80,31 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIn(b"smarter-connection-list-root", response.content)
 
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(self.web_url(WebNames.listview_all), "/api/web/connection/listview/")
+        self.assertEqual(
+            self.web_url(WebNames.listview, ownership_filter="owned"), "/api/web/connection/listview/owned/"
+        )
+        self.assertEqual(self.web_url(WebNames.clone, connection_id=1, new_name="x"), "/api/web/connection/clone/1/x/")
+        self.assertEqual(
+            self.web_url(WebNames.rename, connection_id=1, new_name="x"), "/api/web/connection/rename/1/x/"
+        )
+        self.assertEqual(self.web_url(WebNames.delete, connection_id=1), "/api/web/connection/delete/1/")
+
     # -------------------------------------------------------------------------
     # ConnectionListApiView
     # -------------------------------------------------------------------------
     def test_list(self):
         """Test that the list api returns the user, the smarter admin user, and the connections."""
-        data = self.post(self.url(ConnectionReverseNames.listview_api_all))
+        data = self.post(self.web_url(WebNames.listview_all))
         self.assertIn("user", data)
         self.assertIn("admin", data)
         self.assertIn(self.connection_django_model.name, [c["name"] for c in data["objects"]])  # type: ignore[union-attr]
 
     def test_list_get(self):
         """Test that a GET is answered as a POST."""
-        response = self.client.get(self.url(ConnectionReverseNames.listview_api_all))
+        response = self.client.get(self.web_url(WebNames.listview_all))
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_list_filters(self):
@@ -109,7 +127,7 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
     def test_list_anonymous_user(self):
         """Test that an anonymous user is redirected to the login page."""
         self.client.logout()
-        response = self.client.post(self.url(ConnectionReverseNames.listview_api_all))
+        response = self.client.post(self.web_url(WebNames.listview_all))
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     # -------------------------------------------------------------------------
@@ -119,8 +137,8 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
         """Test that the clone api creates an ApiConnection named new_name, and returns it."""
         clone_name = "test_connection_views_clone"
         self.addCleanup(ApiConnection.objects.filter(name=clone_name).delete)
-        url = self.url(
-            ConnectionReverseNames.listview_api_clone,
+        url = self.web_url(
+            WebNames.clone,
             connection_id=self.connection_django_model.id,  # type: ignore[union-attr]
             new_name=clone_name,
         )
@@ -131,7 +149,7 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
     def test_delete(self):
         """Test that the delete api deletes the connection."""
         connection = self.new_connection("test_connection_views_delete")
-        self.post(self.url(ConnectionReverseNames.listview_api_delete, connection_id=connection.id))
+        self.post(self.web_url(WebNames.delete, connection_id=connection.id))
         self.assertFalse(ApiConnection.objects.filter(pk=connection.pk).exists())
 
     def test_rename(self):
@@ -139,9 +157,7 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
         connection = self.new_connection("test_connection_views_rename")
         new_name = "test_connection_views_renamed"
         self.addCleanup(ApiConnection.objects.filter(name=new_name).delete)
-        data = self.post(
-            self.url(ConnectionReverseNames.listview_api_rename, connection_id=connection.id, new_name=new_name)
-        )
+        data = self.post(self.web_url(WebNames.rename, connection_id=connection.id, new_name=new_name))
         self.assertEqual(data["name"], new_name)
         self.assertEqual(ApiConnection.objects.get(pk=connection.pk).name, new_name)
 
@@ -149,9 +165,9 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
         """Test that the clone, delete and rename apis answer an unknown connection_id with a 404."""
         connection_id = 999999999
         for url in (
-            self.url(ConnectionReverseNames.listview_api_clone, connection_id=connection_id, new_name="x"),
-            self.url(ConnectionReverseNames.listview_api_delete, connection_id=connection_id),
-            self.url(ConnectionReverseNames.listview_api_rename, connection_id=connection_id, new_name="x"),
+            self.web_url(WebNames.clone, connection_id=connection_id, new_name="x"),
+            self.web_url(WebNames.delete, connection_id=connection_id),
+            self.web_url(WebNames.rename, connection_id=connection_id, new_name="x"),
         ):
             with self.subTest(url=url):
                 data = self.post(url, status=HTTPStatus.NOT_FOUND)
@@ -166,16 +182,16 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
 
     def test_list_invalid_ownership_filter(self):
         """Test that an unknown ownership filter, which the url pattern doesn't route, is a bad request."""
-        url = self.url(ConnectionReverseNames.listview_api, ownership_filter="all")
+        url = self.web_url(WebNames.listview, ownership_filter="all")
         self.assertEqual(self.call_view(url, ownership_filter="nobody").status_code, HTTPStatus.BAD_REQUEST)
 
     def test_apis_refuse_missing_parameters(self):
         """Test that the clone, delete and rename apis, called without their url parameters, are bad requests."""
         connection_id = self.connection_django_model.id  # type: ignore[union-attr]
         for url in (
-            self.url(ConnectionReverseNames.listview_api_clone, connection_id=connection_id, new_name="x"),
-            self.url(ConnectionReverseNames.listview_api_delete, connection_id=connection_id),
-            self.url(ConnectionReverseNames.listview_api_rename, connection_id=connection_id, new_name="x"),
+            self.web_url(WebNames.clone, connection_id=connection_id, new_name="x"),
+            self.web_url(WebNames.delete, connection_id=connection_id),
+            self.web_url(WebNames.rename, connection_id=connection_id, new_name="x"),
         ):
             with self.subTest(url=url):
                 self.assertEqual(self.call_view(url).status_code, HTTPStatus.BAD_REQUEST)
@@ -185,21 +201,23 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
         connection = self.new_connection("test_connection_views_errors")
         for name, model, method, kwargs in (
             (
-                ConnectionReverseNames.listview_api_clone,
+                WebNames.clone,
                 ApiConnection,
                 "clone",
                 {"new_name": "test_connection_views_x"},
             ),
-            (ConnectionReverseNames.listview_api_delete, ConnectionBase, "delete", {}),
+            (WebNames.delete, ConnectionBase, "delete", {}),
             (
-                ConnectionReverseNames.listview_api_rename,
+                WebNames.rename,
                 ConnectionBase,
                 "rename",
                 {"new_name": "test_connection_views_y"},
             ),
         ):
             with self.subTest(api=name), patch.object(model, method, side_effect=RuntimeError("test error")):
-                data = self.post(self.url(name, connection_id=connection.id, **kwargs), status=HTTPStatus.BAD_REQUEST)
+                data = self.post(
+                    self.web_url(name, connection_id=connection.id, **kwargs), status=HTTPStatus.BAD_REQUEST
+                )
                 self.assertIn("test error", data["error"])
         self.assertTrue(ApiConnection.objects.filter(pk=connection.pk, name=connection.name).exists())
 

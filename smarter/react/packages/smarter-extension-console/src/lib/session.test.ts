@@ -10,7 +10,7 @@ function root(id: string, attributes: Record<string, string>): HTMLElement {
 }
 
 const ATTRIBUTES = {
-  "smarter-extension-api-url": "/extensions/react-integration/api/",
+  "smarter-extension-api-url": "/api/web/llmtool/extensions/",
   "smarter-extension-list-url": "/extensions/",
   "django-csrf-cookie-name": "csrftoken",
   "django-session-cookie-name": "sessionid",
@@ -21,7 +21,7 @@ const ATTRIBUTES = {
 describe("readContext", () => {
   it("reads the list page's context, without a slug", () => {
     const context = readContext(root(LIST_ROOT_ID, ATTRIBUTES));
-    expect(context.apiUrl).toBe("/extensions/react-integration/api/");
+    expect(context.apiUrl).toBe("/api/web/llmtool/extensions/");
     expect(context.listUrl).toBe("/extensions/");
     expect(context.slug).toBeUndefined();
     expect(context.session.debugMode).toBe(true);

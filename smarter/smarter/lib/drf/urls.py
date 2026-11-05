@@ -1,15 +1,14 @@
-"""URL configuration of the web console's API key (AuthToken) pages and their React list apis."""
+"""
+URL configuration of the web console's API key (AuthToken) pages.
 
-from django.urls import path, re_path
+The endpoints that the list page's React app calls are in the web console's api: see
+:mod:`smarter.lib.drf.api.web.urls`.
+"""
+
+from django.urls import path
 
 from smarter.common.utils import to_snake_case
 from smarter.lib.drf.views.detailview import AuthTokenDetailView
-from smarter.lib.drf.views.listview.api import (
-    AuthTokenListApiCloneView,
-    AuthTokenListApiDeleteView,
-    AuthTokenListApiRenameView,
-    AuthTokenListApiView,
-)
 from smarter.lib.drf.views.listview.view import AuthTokenListView
 
 from .const import namespace
@@ -19,7 +18,8 @@ class AuthTokenReverseNames:
     """
     Holds the names of the API key url patterns, for ``reverse()``.
 
-    Each name is ``to_snake_case()`` of its view class's name.
+    Each name is ``to_snake_case()`` of its view class's name. The endpoints that the list page's
+    React app calls are in :class:`smarter.lib.drf.api.web.urls.AuthTokenApiWebReverseNames`.
     """
 
     namespace = namespace
@@ -27,39 +27,11 @@ class AuthTokenReverseNames:
     detailview = to_snake_case(AuthTokenDetailView.__name__)
 
     listview = to_snake_case(AuthTokenListView.__name__)
-    listview_api = to_snake_case(AuthTokenListApiView.__name__)
-    listview_api_all = to_snake_case(AuthTokenListApiView.__name__) + "_all"
-    listview_api_clone = to_snake_case(AuthTokenListApiCloneView.__name__)
-    listview_api_delete = to_snake_case(AuthTokenListApiDeleteView.__name__)
-    listview_api_rename = to_snake_case(AuthTokenListApiRenameView.__name__)
 
 
 app_name = namespace
 
 urlpatterns = [
     path("", AuthTokenListView.as_view(), name=AuthTokenReverseNames.listview),
-    path(
-        "react-integration/api/listview/", AuthTokenListApiView.as_view(), name=AuthTokenReverseNames.listview_api_all
-    ),
-    re_path(
-        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
-        AuthTokenListApiView.as_view(),
-        name=AuthTokenReverseNames.listview_api,
-    ),
-    path(
-        "react-integration/api/clone/<uuid:authtoken_id>/<str:new_name>/",
-        AuthTokenListApiCloneView.as_view(),
-        name=AuthTokenReverseNames.listview_api_clone,
-    ),
-    path(
-        "react-integration/api/delete/<uuid:authtoken_id>/",
-        AuthTokenListApiDeleteView.as_view(),
-        name=AuthTokenReverseNames.listview_api_delete,
-    ),
-    path(
-        "react-integration/api/rename/<uuid:authtoken_id>/<str:new_name>/",
-        AuthTokenListApiRenameView.as_view(),
-        name=AuthTokenReverseNames.listview_api_rename,
-    ),
     path("<uuid:authtoken_id>/", AuthTokenDetailView.as_view(), name=AuthTokenReverseNames.detailview),
 ]

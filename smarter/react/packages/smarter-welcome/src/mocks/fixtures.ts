@@ -8,7 +8,7 @@ import type { SessionContext } from "@smarter/common";
 import type { AppContext, WelcomeApiResponse } from "@/lib/Types";
 
 export const sessionContext: SessionContext = {
-  ApiUrl: "/dashboard/api/welcome/",
+  ApiUrl: "/api/web/dashboard/welcome/",
   csrfCookieName: "csrftoken",
   djangoSessionCookieName: "sessionid",
   cookieDomain: "localhost",
@@ -23,8 +23,8 @@ const STATIC_URL = "http://localhost:9357/static/";
 
 export const appContext: AppContext = {
   sessionContext,
-  apiUrl: "/dashboard/api/welcome/",
-  dismissApiUrl: "/dashboard/api/welcome/dismiss/",
+  apiUrl: "/api/web/dashboard/welcome/",
+  dismissApiUrl: "/api/web/dashboard/welcome/dismiss/",
   show: true,
   showAtStartup: true,
   firstName: "Ada",

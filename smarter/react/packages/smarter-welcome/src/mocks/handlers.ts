@@ -22,6 +22,6 @@ export const noWeatherHandlers = [
 
 /** Both welcome apis fail. */
 export const welcomeErrorHandlers = [
-  http.post("/dashboard/api/welcome/*", () => HttpResponse.json({ error: "Service unavailable" }, { status: 503 })),
+  http.post("/api/web/dashboard/welcome/*", () => HttpResponse.json({ error: "Service unavailable" }, { status: 503 })),
   http.post(appContext.apiUrl, () => HttpResponse.json({ error: "Service unavailable" }, { status: 503 })),
 ];

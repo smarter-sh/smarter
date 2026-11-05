@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.account.api.web.urls import AccountApiWebReverseNames as WebNames
 from smarter.apps.account.models import Budget, Charge, ChargeTypes
 from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -14,6 +15,10 @@ from smarter.apps.account.views.budget.urls import BudgetReverseNames
 
 def url(name: str, **kwargs) -> str:
     return reverse(f"{BudgetReverseNames.namespace}:{name}", kwargs=kwargs or None)
+
+
+def web_url(name: str, **kwargs) -> str:
+    return reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs or None)
 
 
 class TestBudgetConsole(TestAccountMixin):
@@ -54,12 +59,17 @@ class TestBudgetConsole(TestAccountMixin):
         response = self.client.get(url(BudgetReverseNames.listview))
         self.assertEqual(response.status_code, 200)
         self.assertIn("smarter-budget-list-root", response.content.decode())
-        self.assertIn(url(BudgetReverseNames.listview_api), response.content.decode())
+        self.assertIn(web_url(WebNames.budget_listview), response.content.decode())
+
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(web_url(WebNames.budget_listview), "/api/web/account/budget/listview/")
+        self.assertEqual(web_url(WebNames.budget_delete, budget_id=1), "/api/web/account/budget/delete/1/")
 
     def test_list_api(self):
         """Test that a user sees the budgets attached to them, with their spending, and a superuser sees all."""
         self.client.force_login(self.non_admin_user)
-        response = self.client.post(url(BudgetReverseNames.listview_api))
+        response = self.client.post(web_url(WebNames.budget_listview))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()["isSuperuser"])
         self.assertIn(self.budget.name, self.names(response))
@@ -73,19 +83,19 @@ class TestBudgetConsole(TestAccountMixin):
         self.assertEqual(budget["manifestUrl"], url(BudgetReverseNames.detailview, hashed_id=self.budget.hashed_id))
 
         self.client.force_login(self.admin_user)
-        response = self.client.post(url(BudgetReverseNames.listview_api))
+        response = self.client.post(web_url(WebNames.budget_listview))
         self.assertTrue(response.json()["isSuperuser"])
         self.assertIn(self.other.name, self.names(response))
 
     def test_delete_api(self):
         """Test that only superusers may delete a budget."""
         self.client.force_login(self.non_admin_user)
-        response = self.client.post(url(BudgetReverseNames.listview_api_delete, budget_id=self.other.pk))
+        response = self.client.post(web_url(WebNames.budget_delete, budget_id=self.other.pk))
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Budget.objects.filter(pk=self.other.pk).exists())
 
         self.client.force_login(self.admin_user)
-        response = self.client.post(url(BudgetReverseNames.listview_api_delete, budget_id=self.other.pk))
+        response = self.client.post(web_url(WebNames.budget_delete, budget_id=self.other.pk))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Budget.objects.filter(pk=self.other.pk).exists())
 
@@ -104,5 +114,5 @@ class TestBudgetConsole(TestAccountMixin):
         self.client.force_login(self.non_admin_user)
         response = self.client.get(reverse("dashboard:dashboard"))
         self.assertEqual(response.status_code, 200)
-        self.assertIn('smarter-budgets-api-url="/dashboard/api/budgets/"', response.content.decode())
+        self.assertIn('smarter-budgets-api-url="/api/web/dashboard/budgets/"', response.content.decode())
         self.assertIn(url(BudgetReverseNames.listview), response.content.decode())

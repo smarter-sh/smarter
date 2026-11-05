@@ -14,6 +14,7 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.guardrail.api.web.urls import GuardrailApiWebReverseNames as WebNames
 from smarter.apps.guardrail.caching import (
     invalidate_all_cached_guardrails_for_user_profile,
 )
@@ -29,6 +30,10 @@ from .base_classes import GuardrailTestBase
 
 def url(name: str, **kwargs) -> str:
     return reverse(f"{Names.namespace}:{name}", kwargs=kwargs or None)
+
+
+def web_url(name: str, **kwargs) -> str:
+    return reverse(f"{WebNames.namespace}:{name}", kwargs=kwargs or None)
 
 
 class TestGuardrailViews(GuardrailTestBase):
@@ -57,16 +62,24 @@ class TestGuardrailViews(GuardrailTestBase):
         self.client.logout()
         self.assertEqual(self.client.get(url(Names.listview)).status_code, HTTPStatus.FOUND)
 
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(web_url(WebNames.listview_all), "/api/web/guardrail/listview/")
+        self.assertEqual(web_url(WebNames.listview, ownership_filter="owned"), "/api/web/guardrail/listview/owned/")
+        self.assertEqual(web_url(WebNames.clone, guardrail_id=1, new_name="x"), "/api/web/guardrail/clone/1/x/")
+        self.assertEqual(web_url(WebNames.rename, guardrail_id=1, new_name="x"), "/api/web/guardrail/rename/1/x/")
+        self.assertEqual(web_url(WebNames.delete, guardrail_id=1), "/api/web/guardrail/delete/1/")
+
     def test_listview_api(self):
         """Test that the list api returns the user's Guardrails."""
-        data = self.post(url(Names.listview_api_all))
+        data = self.post(web_url(WebNames.listview_all))
         self.assertIn(self.guardrail.name, [item["name"] for item in data["objects"]])
 
     def test_listview_api_can_delete(self):
         """Test that the list api reports canDelete, which is false while an LLMClient uses the Guardrail."""
 
         def can_delete() -> bool:
-            data = self.post(url(Names.listview_api_all))
+            data = self.post(web_url(WebNames.listview_all))
             return next(item["canDelete"] for item in data["objects"] if item["name"] == self.guardrail.name)
 
         self.assertIs(can_delete(), True)
@@ -77,13 +90,13 @@ class TestGuardrailViews(GuardrailTestBase):
 
     def test_clone_rename_delete(self):
         """Test the clone, rename and delete apis, which used the wrong url parameter name."""
-        clone = self.post(url(Names.listview_api_clone, guardrail_id=self.guardrail.pk, new_name="test_views_clone"))
+        clone = self.post(web_url(WebNames.clone, guardrail_id=self.guardrail.pk, new_name="test_views_clone"))
         self.addCleanup(Guardrail.objects.filter(name__startswith="test_views_clone").delete)
         clone_pk = Guardrail.objects.get(name="test_views_clone", user_profile=self.user_profile).pk
         self.assertEqual(clone["name"], "test_views_clone")
-        renamed = self.post(url(Names.listview_api_rename, guardrail_id=clone_pk, new_name="test_views_clone_renamed"))
+        renamed = self.post(web_url(WebNames.rename, guardrail_id=clone_pk, new_name="test_views_clone_renamed"))
         self.assertEqual(renamed["name"], "test_views_clone_renamed")
-        self.post(url(Names.listview_api_delete, guardrail_id=clone_pk))
+        self.post(web_url(WebNames.delete, guardrail_id=clone_pk))
         self.assertFalse(Guardrail.objects.filter(pk=clone_pk).exists())
 
     def test_detailview(self):
@@ -116,6 +129,7 @@ class TestGuardrailResourceViews(ResourceViewsTestMixin, GuardrailTestBase):
 
     model = Guardrail
     reverse_names = Names
+    web_reverse_names = WebNames
     id_kwarg = "guardrail_id"
     invalidate_cache = staticmethod(invalidate_all_cached_guardrails_for_user_profile)
     resource_name_prefix = "test_guardrail_resource_views"
