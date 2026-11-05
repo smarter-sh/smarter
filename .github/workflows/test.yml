@@ -6,10 +6,11 @@
 # The jobs:
 #
 #   fingerprint    Hashes the files each suite depends on (python: smarter/smarter,
-#                  react: smarter/react), and looks for a
-#                  record that those exact files already passed. If they
-#                  did, that suite is skipped and still reported as passing,
-#                  so unchanged code isn't tested twice. See the job.
+#                  react: smarter/react). When the pull request leaves them
+#                  as the base branch has them, or an earlier run passed on
+#                  those exact files, that suite is skipped and still
+#                  reported as passing, so unchanged code isn't tested
+#                  twice. See the job.
 #   react         Prettier, ESLint, TypeScript and the Vitest unit tests of
 #                  smarter/react, as make react-lint and make react-test do.
 #                  Uploads its coverage to Codecov (flag: react). A few
@@ -135,75 +136,75 @@ env:
 
 jobs:
   #----------------------------------------------------------------------------
-  # Skip tests that already passed on exactly these files.
+  # Skip the suites whose files a pull request doesn't change.
   #
-  # Fingerprints what each suite depends on, as a hash of the git tree ids of
-  # its files, and looks in the Actions cache for a marker saying that a run
-  # with that fingerprint passed. react and the python shards are skipped
-  # when theirs is found, and python-report and react still report success,
-  # so a re-push, rebase or comment-only change that leaves those files as
-  # they were passes in a minute instead of re-running everything.
+  # scripts/suite_fingerprints.py lists the files each suite depends on, and
+  # hashes them. A suite is skipped, and python-report and react still report
+  # success, when either:
   #
-  # The two suites have separate source trees, so each has its own
-  # fingerprint, and a change to one tree doesn't rerun the other's tests:
+  #   - its files are the same as the base branch's (HEAD^1 of the merge
+  #     commit). Those passed the suite in the pull request that merged them.
+  #     So a pull request of documentation, Helm values or change logs runs
+  #     neither suite, and one of React code runs only react; or
+  #   - an earlier run of the same pull request saved a pass marker for
+  #     exactly these files, in the Actions cache. So a re-push or rebase
+  #     that leaves the files as they were passes in a minute.
   #
-  #   python   smarter/smarter, manage.py, requirements/ and .coveragerc; the
-  #            files the Dockerfile copies into data/ (docs/, README.md,
-  #            CHANGELOG.md, ...), which the docs app serves and its tests
-  #            request, so a docs change runs the Python tests again; and the
-  #            few files in smarter/react that the Python tests read:
-  #            react/i18n (update_console_messages), the onboarding app's
-  #            const.ts (test_onboarding), and each package's package.json
-  #            and vite.config.ts, which name the built pages that the
-  #            console's templates load.
+  # The two suites have separate source trees, so a change to one doesn't
+  # rerun the other's tests:
+  #
+  #   python   smarter/smarter, manage.py, requirements/ and .coveragerc;
+  #            README.md and CODE_OF_CONDUCT.md, which the docs app serves;
+  #            what builds the platform (Dockerfile, Makefile, ...); and the
+  #            few files in smarter/react that the Python tests read. Not
+  #            docs/, which no Python test reads, and not
+  #            changelogs/CHANGELOG.md, which every release rewrites.
   #   react    smarter/react, which is self-contained: its tests read nothing
   #            outside it.
   #
-  # Both include this workflow.
+  # Both include this workflow and the script. The script's SUITES has the
+  # exact lists.
   #
   # Markers are saved after a pass, by react and by python-report. GitHub
   # scopes caches to a ref: a pull request's run sees the markers of earlier
-  # runs of the same pull request and of main, not of its head branch, so the
-  # first run of a new pull request always runs everything.
+  # runs of the same pull request, not of its head branch, and the Tests
+  # never run on main. That is why the base branch comparison is needed.
   #----------------------------------------------------------------------------
   fingerprint:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
-      python-key: ${{ steps.keys.outputs.python }}
-      python-passed: ${{ steps.python.outputs.cache-hit }}
-      react-key: ${{ steps.keys.outputs.react }}
-      react-passed: ${{ steps.react.outputs.cache-hit }}
+      python-key: ${{ steps.keys.outputs.python-key }}
+      python-passed: ${{ steps.keys.outputs.python-changed == 'false' || steps.python.outputs.cache-hit == 'true' }}
+      react-key: ${{ steps.keys.outputs.react-key }}
+      react-passed: ${{ steps.keys.outputs.react-changed == 'false' || steps.react.outputs.cache-hit == 'true' }}
     steps:
+      # A pull request's checkout is its merge commit. Depth 2 also fetches
+      # its first parent, HEAD^1: the base branch, which the change is
+      # compared with.
       - name: Checkout code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 2
 
-      # git ls-files -s prints each matching file's mode, blob id and path,
-      # and takes glob pathspecs. The hash of that listing changes when, and
-      # only when, one of the files is added, removed or changed.
+      # A workflow_dispatch run has no merge commit, so it compares with
+      # nothing, and relies on the pass markers alone.
       - name: Fingerprint the tested files
         id: keys
         shell: bash
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && 'HEAD^1' || '' }}
         run: |
-          fingerprint() {
-            git ls-files -s -- "$@" | git hash-object --stdin
-          }
-          PYTHON=$(fingerprint smarter/smarter smarter/manage.py smarter/requirements smarter/.coveragerc \
-            smarter/react/i18n smarter/react/packages/smarter-onboarding/src/lib/const.ts \
-            'smarter/react/packages/*/package.json' 'smarter/react/packages/*/vite.config.ts' \
-            docs README.md changelogs/CHANGELOG.md CODE_OF_CONDUCT.md \
-            Dockerfile .dockerignore docker-compose.yml Makefile .env.example package.json \
-            .github/workflows/test.yml .github/actions/react-build)
-          REACT=$(fingerprint smarter/react .github/workflows/test.yml)
-          echo "python=tests-passed-python-$PYTHON" >> "$GITHUB_OUTPUT"
-          echo "react=tests-passed-react-$REACT" >> "$GITHUB_OUTPUT"
+          args=()
+          [ -n "$BASE" ] && args+=(--base "$BASE")
+          python3 -I scripts/suite_fingerprints.py "${args[@]}" | tee -a "$GITHUB_OUTPUT"
 
       - name: Look for a python pass
         id: python
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .tests-passed
-          key: ${{ steps.keys.outputs.python }}
+          key: ${{ steps.keys.outputs.python-key }}
           lookup-only: true
 
       - name: Look for a react pass
@@ -211,16 +212,30 @@ jobs:
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: .tests-passed
-          key: ${{ steps.keys.outputs.react }}
+          key: ${{ steps.keys.outputs.react-key }}
           lookup-only: true
 
       - name: Summary
         shell: bash
+        env:
+          PYTHON_CHANGED: ${{ steps.keys.outputs.python-changed }}
+          PYTHON_HIT: ${{ steps.python.outputs.cache-hit }}
+          REACT_CHANGED: ${{ steps.keys.outputs.react-changed }}
+          REACT_HIT: ${{ steps.react.outputs.cache-hit }}
         run: |
+          status() {
+            if [ "$1" = "false" ]; then
+              echo "unchanged from the base branch, skipped"
+            elif [ "$2" = "true" ]; then
+              echo "passed before, skipped"
+            else
+              echo "changed, testing"
+            fi
+          }
           {
             echo "### Fingerprints"
-            echo "- python: ${{ steps.python.outputs.cache-hit == 'true' && 'passed before, skipped' || 'new, testing' }}"
-            echo "- react: ${{ steps.react.outputs.cache-hit == 'true' && 'passed before, skipped' || 'new, testing' }}"
+            echo "- python: $(status "$PYTHON_CHANGED" "$PYTHON_HIT")"
+            echo "- react: $(status "$REACT_CHANGED" "$REACT_HIT")"
           } >> "$GITHUB_STEP_SUMMARY"
 
   #----------------------------------------------------------------------------
@@ -895,7 +910,7 @@ jobs:
         if: needs.fingerprint.outputs.python-passed == 'true'
         shell: bash
         run: |
-          echo "These files passed the Python tests in an earlier run, so the shards were skipped." >> "$GITHUB_STEP_SUMMARY"
+          echo "The files the Python tests depend on are unchanged from the base branch, or passed in an earlier run, so the shards were skipped." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Checkout code
         if: needs.python.result != 'skipped'
