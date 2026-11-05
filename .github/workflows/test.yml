@@ -167,7 +167,7 @@ jobs:
   # first run of a new pull request always runs everything.
   #----------------------------------------------------------------------------
   fingerprint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       python-key: ${{ steps.keys.outputs.python }}
@@ -243,7 +243,7 @@ jobs:
   react:
     needs: fingerprint
     if: ${{ !cancelled() && needs.fingerprint.outputs.react-passed != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
       run:
@@ -327,7 +327,7 @@ jobs:
   # seconds.
   #----------------------------------------------------------------------------
   slack-bot:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout code
@@ -363,7 +363,7 @@ jobs:
     needs: fingerprint
     if: ${{ !cancelled() && needs.fingerprint.outputs.python-passed != 'true' }}
     name: python (shard ${{ matrix.shard }} of 8)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -429,15 +429,19 @@ jobs:
       # Mirrors the mariadb_connector stage of the Dockerfile. This runs even
       # when the venv is restored from cache, because the compiled package
       # links against libmariadb at runtime.
+      #
+      # The runners are pinned to ubuntu-24.04: MariaDB's repositories lag new
+      # Ubuntu releases (26.04 had no 12.2 or MaxScale packages), and
+      # ubuntu-latest moves without notice.
       #------------------------------------------------------------------------
       - name: Install MariaDB Connector/C
         shell: bash
         env:
-          MARIADB_VERSION: "12.2"
+          MARIADB_VERSION: "12.3"
         run: |
           curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
           chmod +x mariadb_repo_setup
-          sudo ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}"
+          sudo ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" --skip-maxscale
           rm -f mariadb_repo_setup
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat
@@ -884,7 +888,7 @@ jobs:
   python-report:
     needs: [fingerprint, python]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Passed before
@@ -1008,7 +1012,7 @@ jobs:
   notify:
     needs: [fingerprint, react, slack-bot, python-report]
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout code

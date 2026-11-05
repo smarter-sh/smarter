@@ -26,6 +26,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class SmarterAnonRateThrottle(AnonRateThrottle):
@@ -90,10 +91,15 @@ def throttle_wait(request: HttpRequest, view) -> Optional[int]:
             waits.append(throttle.wait())
     if not waits:
         return None
-    wait = max((w for w in waits if w is not None), default=1)
+    # a throttle's wait() is None when it can't say how long to wait.
+    known_waits = []
+    for throttle_wait_seconds in waits:
+        if throttle_wait_seconds is not None:
+            known_waits.append(throttle_wait_seconds)
+    wait = max(known_waits, default=1)
     logger.warning(
         "%s.throttle_wait() throttled %s %s for %s seconds",
-        __name__,
+        logger_prefix,
         request.method,
         request.path,
         wait,

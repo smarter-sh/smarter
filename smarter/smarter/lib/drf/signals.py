@@ -1,4 +1,4 @@
-"""Signals for the Smarter API."""
+"""Signals of token authentication: a request, a success and a failure."""
 
 from django.dispatch import Signal
 

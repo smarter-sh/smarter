@@ -22,7 +22,7 @@ from typing import Optional, TypeVar, Union
 from django.db import models
 from django.db.models.query import QuerySet
 
-from .contract import AnnotationRequirement
+from .contract import AnnotationOperator, AnnotationRequirement
 from .models import Annotation, annotation_content_type
 from .validation import SmarterAnnotationError, validate_annotation_key
 
@@ -37,10 +37,8 @@ def parse_annotation_requirement(requirement: str) -> AnnotationRequirement:
     Parse one requirement, e.g. ``acme.com/crm-id=A-10042``.
 
     :param requirement: ``key``, ``!key``, ``key=value``, ``key==value`` or ``key!=value``.
-    :type requirement: str
     :raises SmarterAnnotationError: If the requirement or its key is invalid.
     :returns: The requirement.
-    :rtype: AnnotationRequirement
     """
     text = requirement.strip()
     if not text:
@@ -65,10 +63,8 @@ def parse_annotation_selector(selector: AnnotationSelector) -> list[AnnotationRe
     Parse a selector into its requirements.
 
     :param selector: One requirement, a list of them, or ``None``.
-    :type selector: AnnotationSelector
     :raises SmarterAnnotationError: If a requirement is invalid.
     :returns: The requirements, empty for ``None``.
-    :rtype: list[AnnotationRequirement]
     """
     if selector is None:
         return []
@@ -95,19 +91,18 @@ def filter_by_annotations(queryset: QuerySetType, selector: AnnotationSelector) 
     As in Kubernetes, ``key!=value`` also matches resources that don't have the key.
 
     :param queryset: Resources of one model, e.g. ``LLMClient.objects.with_read_permission_for(user)``.
-    :type queryset: QuerySet
     :param selector: One requirement, a list of them, or ``None``.
-    :type selector: AnnotationSelector
     :raises SmarterAnnotationError: If a requirement is invalid.
     :returns: The filtered queryset.
-    :rtype: QuerySet
     """
     requirements = parse_annotation_selector(selector)
     if not requirements:
         return queryset
     content_type = annotation_content_type(queryset.model)
     for requirement in requirements:
-        value: Optional[str] = requirement.value if requirement.operator in ("equals", "not_equals") else None
+        value: Optional[str] = None
+        if requirement.operator in ("equals", "not_equals"):
+            value = requirement.value
         matching = Annotation.objects.filter(content_type=content_type).with_key(requirement.key, value)
         object_ids = matching.object_ids_for(queryset.model)
         if requirement.operator in ("exists", "equals"):
@@ -122,18 +117,16 @@ def model_with_annotation(model: type[models.Model], key: str, value: Optional[s
     Return every resource of ``model`` that has the annotation ``key``, with ``value`` if given.
 
     :param model: The model, e.g. ``LLMClient``.
-    :type model: type[models.Model]
     :param key: The annotation key.
-    :type key: str
     :param value: The value to match, or ``None`` for any value.
-    :type value: Optional[str]
     :returns: The resources.
-    :rtype: QuerySet
     """
-    requirement = AnnotationRequirement(
-        key=validate_annotation_key(key), operator="exists" if value is None else "equals", value=value
-    )
-    return filter_by_annotations(model._default_manager.all(), [requirement])  # pylint: disable=W0212
+    operator: AnnotationOperator = "equals"
+    if value is None:
+        operator = "exists"
+    requirement = AnnotationRequirement(key=validate_annotation_key(key), operator=operator, value=value)
+    resources = filter_by_annotations(model._default_manager.all(), [requirement])  # pylint: disable=W0212
+    return resources
 
 
 __all__ = [

@@ -76,7 +76,9 @@ and httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
 Schemas: Tenant Isolation as Queryset Rules, and a Profile Switcher That Can't Be Spoofed
 <https://blog.smarter.sh/2026/01/15/smarter-tenant-isolation-django-querysets/>`__, `Helm, cosign
 and Amazon ECR: What Smarter's Supply Chain Verifies, and What It Takes on Trust
-<https://blog.smarter.sh/2026/04/23/helm-cosign-supply-chain/>`__.
+<https://blog.smarter.sh/2026/04/23/helm-cosign-supply-chain/>`__, `Calico Network Policies: Pod
+Labels as Smarter's Network Boundary
+<https://blog.smarter.sh/2026/10/25/calico-network-policy-labels/>`__.
 
 **Exercises.**
 

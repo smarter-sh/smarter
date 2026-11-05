@@ -1,14 +1,22 @@
-"""This module defines an enumeration for OpenAI function calling types.
+"""
+Enumerations of the keys and values of OpenAI's function calling tool definitions.
 
-"type": "function",
-"function": {
-    "name": self.function_calling_identifier,
-    "description": self.plugin_meta.description if self.plugin_meta else "No description provided.",
-    "parameters": {
-        "type": "object",
-        "properties": properties,
-        "required": [],
-    },
+A tool definition looks like this, e.g. as a plugin builds it:
+
+.. code-block:: python
+
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather in a city.",
+            "parameters": {
+                "type": "object",
+                "properties": properties,
+                "required": [],
+            },
+        },
+    }
 """
 
 from smarter.common.enum import SmarterEnumAbstract
@@ -28,9 +36,13 @@ class OpenAIToolCall(SmarterEnumAbstract):
     REQUIRED = "required"
 
     @classmethod
-    def all(cls):
-        """Return every member's value."""
-        return [
+    def all(cls) -> list["OpenAIToolCall"]:
+        """
+        Return the members that a tool definition uses: every member except ``DEFAULT``.
+
+        :returns: The members, not their values.
+        """
+        members = [
             cls.TYPE,
             cls.FUNCTION,
             cls.NAME,
@@ -40,6 +52,7 @@ class OpenAIToolCall(SmarterEnumAbstract):
             cls.PROPERTIES,
             cls.REQUIRED,
         ]
+        return members
 
 
 class OpenAIToolTypes(SmarterEnumAbstract):
@@ -50,10 +63,15 @@ class OpenAIToolTypes(SmarterEnumAbstract):
     RETRIEVAL = "retrieval"
 
     @classmethod
-    def all(cls):
-        """Return every member's value."""
-        return [
+    def all(cls) -> list["OpenAIToolTypes"]:
+        """
+        Return every member.
+
+        :returns: The members, not their values.
+        """
+        members = [
             cls.FUNCTION,
             cls.CODE_INTERPRETER,
             cls.RETRIEVAL,
         ]
+        return members

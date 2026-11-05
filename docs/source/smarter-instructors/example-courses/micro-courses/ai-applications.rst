@@ -77,7 +77,10 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 :doc:`/smarter-resources/smarter-vectorsearch`, :doc:`/smarter-resources/smarter-mcpclient`,
 :doc:`/smarter-resources/smarter-connection`, :doc:`/smarter-resources/llmtool/plugin/sql`,
 :doc:`/smarter-resources/smarter-orchestrator`, :doc:`/smarter-resources/llmtool/nlp`, `Getting
-Started with Smarter's CLI <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__.
+Started with Smarter's CLI <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__,
+`Introducing the Smarter MCP Server <https://blog.smarter.sh/2026/10/30/what-is-an-mcp-server/>`__,
+`Smarter's MCP Server Gives Sysadmins Live Platform Diagnostics in a Chat
+<https://blog.smarter.sh/2026/11/03/smarter-operations-mcp-server/>`__.
 
 **Exercises.**
 

@@ -1,8 +1,9 @@
-# pylint: disable=missing-module-docstring,missing-function-docstring,missing-class-docstring
 """
-LinkedIn OAuth1 and OAuth2 backend, docs at:
+LinkedIn OpenID Connect and OAuth2 backends for python-social-auth.
 
-    https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+They adapt the backends that python-social-auth documents at
+https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html to LinkedIn's
+current api.
 """
 
 import datetime
@@ -16,6 +17,7 @@ from social_core.exceptions import AuthCanceled, AuthTokenError
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class LinkedinOpenIdConnect(OpenIdConnectAuth):
@@ -35,9 +37,17 @@ class LinkedinOpenIdConnect(OpenIdConnectAuth):
     # else our request falls back to basic auth which is not supported.
     TOKEN_ENDPOINT_AUTH_METHOD = "client_secret_post"
 
-    def validate_claims(self, id_token):
-        """Copy of the regular validate_claims method without the nonce validation."""
+    def validate_claims(self, id_token: dict) -> None:
+        """
+        Validate the id token's claims, like the base class, but without the nonce validation.
 
+        LinkedIn does not provide a nonce, so only the ``nbf`` (not before) and ``iat`` (issued
+        at) claims are checked.
+
+        :param id_token: The decoded id token.
+        :raises AuthTokenError: If the token is not valid yet, or was issued more than
+            ``ID_TOKEN_MAX_AGE`` seconds ago.
+        """
         utc_timestamp = timegm(datetime.datetime.now(timezone.utc).utctimetuple())
 
         if "nbf" in id_token and utc_timestamp < id_token["nbf"]:
@@ -59,7 +69,7 @@ class LinkedinOAuth2(BaseOAuth2):
     AUTHORIZATION_URL = "https://www.linkedin.com/oauth/v2/authorization"
     ACCESS_TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
     USER_DETAILS_URL = "https://api.linkedin.com/v2/userinfo?projection=({projection})"
-    USER_EMAILS_URL = "https://api.linkedin.com/v2/emailAddress" "?q=members&projection=(elements*(handle~))"
+    USER_EMAILS_URL = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))"
     ACCESS_TOKEN_METHOD = "POST"
     REDIRECT_STATE = False
     DEFAULT_SCOPE = ["openid", "profile", "email"]
@@ -72,22 +82,40 @@ class LinkedinOAuth2(BaseOAuth2):
         ("refresh_token_expires_in", "refresh_expires_in"),
     ]
 
-    def user_details_url(self):
-        """Return the userinfo url, projecting ``id``, ``firstName``, ``lastName`` and the ``FIELD_SELECTORS`` setting."""
-        extra_field_selectors = self.setting("FIELD_SELECTORS", [])
+    def _field_selectors(self) -> list:
+        """
+        Return the ``FIELD_SELECTORS`` setting: the extra profile fields to request.
+
+        :returns: The field selectors, or an empty list if the setting is missing or None.
+        """
+        field_selectors = self.setting("FIELD_SELECTORS", [])
         # a FIELD_SELECTORS setting of None means no extra fields.
-        if extra_field_selectors is None:
-            extra_field_selectors = []
+        if field_selectors is None:
+            field_selectors = []
+        return field_selectors
+
+    def user_details_url(self) -> str:
+        """
+        Return the userinfo url, projecting ``id``, ``firstName``, ``lastName`` and the ``FIELD_SELECTORS`` setting.
+
+        :returns: The url.
+        """
+        extra_field_selectors = self._field_selectors()
         # use set() since LinkedIn fails when values are duplicated
         unique_field_selectors = set(["id", "firstName", "lastName"] + extra_field_selectors)
         fields_selectors = list(unique_field_selectors)
         # user sort to ease the tests URL mocking
         fields_selectors.sort()
         fields_selectors = ",".join(fields_selectors)
-        return self.USER_DETAILS_URL.format(projection=fields_selectors)
+        url = self.USER_DETAILS_URL.format(projection=fields_selectors)
+        return url
 
-    def user_emails_url(self):
-        """Return the url of the user's email addresses."""
+    def user_emails_url(self) -> str:
+        """
+        Return the url of the user's email addresses.
+
+        :returns: The url.
+        """
         return self.USER_EMAILS_URL
 
     def user_data(self, access_token, *args, **kwargs):
@@ -101,10 +129,7 @@ class LinkedinOAuth2(BaseOAuth2):
         """
         response = self.get_json(self.user_details_url(), headers=self.user_data_headers(access_token))
 
-        field_selectors = self.setting("FIELD_SELECTORS", [])
-        # a FIELD_SELECTORS setting of None means no extra fields.
-        if field_selectors is None:
-            field_selectors = []
+        field_selectors = self._field_selectors()
         if "emailAddress" in set(field_selectors):
             emails = self.email_data(access_token, *args, **kwargs)
             if emails:
@@ -124,30 +149,46 @@ class LinkedinOAuth2(BaseOAuth2):
         response = self.get_json(self.user_emails_url(), headers=self.user_data_headers(access_token))
         email_addresses = []
         for element in response.get("elements", []):
-            email_address = element.get("handle~", {}).get("emailAddress")
+            handle = element.get("handle~", {})
+            email_address = handle.get("emailAddress")
             email_addresses.append(email_address)
-        return list(filter(None, email_addresses))
+        non_empty_email_addresses = list(filter(None, email_addresses))
+        return non_empty_email_addresses
 
-    def get_user_details(self, response):
-        """Return user details from Linkedin account."""
+    def get_user_details(self, response: dict) -> dict:
+        """
+        Return the user's details from their LinkedIn profile.
 
-        def get_localized_name(name):
+        A profile without both a first and a last name gets ``unknown`` names, and one without
+        an email address gets ``unknown@mail.com``.
+
+        :param response: The profile, from :meth:`user_data`.
+        :returns: A dict of ``username``, ``fullname``, ``first_name``, ``last_name`` and
+            ``email``.
+        """
+
+        def get_localized_name(name: dict) -> str:
             """
-            FirstName & Last Name object.
+            Return a ``firstName`` or ``lastName`` object's name in its preferred locale.
 
-            {
-                  'localized': {
-                     'en_US': 'Smith'
-                  },
-                  'preferredLocale': {
-                     'country': 'US',
-                     'language': 'en'
-                  }
-            }
-            :return the localizedName from the lastName object
+            The object looks like this:
+
+            .. code-block:: python
+
+                {
+                    "localized": {"en_US": "Smith"},
+                    "preferredLocale": {"country": "US", "language": "en"},
+                }
+
+            :param name: The name object.
+            :returns: The name in the preferred locale, or an empty string if it has none.
             """
-            locale = "{}_{}".format(name["preferredLocale"]["language"], name["preferredLocale"]["country"])
-            return name["localized"].get(locale, "")
+            preferred_locale = name["preferredLocale"]
+            language = preferred_locale["language"]
+            country = preferred_locale["country"]
+            locale = f"{language}_{country}"
+            localized_name = name["localized"].get(locale, "")
+            return localized_name
 
         response_first_name = response.get("firstName")
         response_last_name = response.get("lastName")
@@ -167,12 +208,15 @@ class LinkedinOAuth2(BaseOAuth2):
             "last_name": last_name,
             "email": email,
         }
-        logger.info("User details: %s", retval)
+        # The details are personal data (name, email), so only the username is logged.
+        logger.debug("%s.LinkedinOAuth2.get_user_details() username=%s", logger_prefix, retval["username"])
         return retval
 
-    def user_data_headers(self, access_token):
+    def user_data_headers(self, access_token: str) -> dict:
         """
         Return the headers of LinkedIn api requests: the bearer token, and ``Accept-Language`` if ``FORCE_PROFILE_LANGUAGE`` is set.
+
+        A ``FORCE_PROFILE_LANGUAGE`` of True means the strategy's current language.
 
         :param access_token: The OAuth2 access token.
         :returns: The headers.
@@ -180,7 +224,9 @@ class LinkedinOAuth2(BaseOAuth2):
         headers = {}
         lang = self.setting("FORCE_PROFILE_LANGUAGE")
         if lang:
-            headers["Accept-Language"] = lang if lang is not True else self.strategy.get_language()
+            if lang is True:
+                lang = self.strategy.get_language()
+            headers["Accept-Language"] = lang
         headers["Authorization"] = f"Bearer {access_token}"
         return headers
 
@@ -197,7 +243,7 @@ class LinkedinOAuth2(BaseOAuth2):
         kwargs["params"] = kwargs.pop("data")
         return super().request_access_token(*args, **kwargs)
 
-    def process_error(self, data):
+    def process_error(self, data: dict) -> None:
         """
         Raise on an OAuth2 error, or on a LinkedIn ``serviceErrorCode``.
 
@@ -206,7 +252,10 @@ class LinkedinOAuth2(BaseOAuth2):
         """
         super().process_error(data)
         if data.get("serviceErrorCode"):
-            raise AuthCanceled(self, data.get("message") or data.get("status"))
+            reason = data.get("message")
+            if not reason:
+                reason = data.get("status")
+            raise AuthCanceled(self, reason)
 
 
 class LinkedinMobileOAuth2(LinkedinOAuth2):
@@ -214,7 +263,7 @@ class LinkedinMobileOAuth2(LinkedinOAuth2):
 
     name = "linkedin-mobile-oauth2"
 
-    def user_data_headers(self, access_token):
+    def user_data_headers(self, access_token: str) -> dict:
         """
         Return the parent's headers, plus ``x-li-src: msdk``.
 
