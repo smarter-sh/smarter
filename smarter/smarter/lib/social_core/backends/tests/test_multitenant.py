@@ -23,6 +23,7 @@ from smarter.lib.social_core.backends.multitenant import (
     DjangoModelBackendMultitenant,
     GithubOAuth2Multitenant,
     GoogleOAuth2Multitenant,
+    subscription_status_code,
     verify_payment_status,
 )
 
@@ -30,8 +31,9 @@ MODULE = "smarter.lib.social_core.backends.multitenant"
 
 
 def verify(username: str) -> bool:
-    """Call verify_payment_status() without its cache."""
-    return verify_payment_status.__wrapped__(username)
+    """Call verify_payment_status() with the subscription status api's answer for the user uncached."""
+    subscription_status_code.invalidate(username)
+    return verify_payment_status(username)
 
 
 class TestVerifyPaymentStatus(TestAccountMixin):
@@ -61,6 +63,33 @@ class TestVerifyPaymentStatus(TestAccountMixin):
             ):
                 self.assertEqual(verify(self.non_admin_user.username), expected)
             self.assertEqual(get.call_args.kwargs["headers"]["X-Client-Username"], self.non_admin_user.username)
+
+    def test_server_errors_fail_open(self):
+        """A 5xx of the status api is a failure, not an inactive subscription."""
+        with patch(f"{MODULE}.requests.get", return_value=MagicMock(status_code=HTTPStatus.BAD_GATEWAY)):
+            self.assertTrue(verify(self.non_admin_user.username))
+
+    def test_a_failure_is_not_cached(self):
+        """After a failure, the next sign-in asks the status api again."""
+        username = self.non_admin_user.username
+        subscription_status_code.invalidate(username)
+        with patch(f"{MODULE}.requests.get", side_effect=Timeout()):
+            self.assertTrue(verify_payment_status(username))
+        with patch(f"{MODULE}.requests.get", return_value=MagicMock(status_code=HTTPStatus.PAYMENT_REQUIRED)) as get:
+            self.assertFalse(verify_payment_status(username))
+            self.assertFalse(verify_payment_status(username))
+        get.assert_called_once()
+        subscription_status_code.invalidate(username)
+
+    def test_the_switch_is_never_cached(self):
+        """Turning multitenant authentication off applies at once, whatever the status api answered before."""
+        username = self.non_admin_user.username
+        subscription_status_code.invalidate(username)
+        with patch(f"{MODULE}.requests.get", return_value=MagicMock(status_code=HTTPStatus.PAYMENT_REQUIRED)):
+            self.assertFalse(verify_payment_status(username))
+        with patch(f"{MODULE}.switch_is_active", return_value=False):
+            self.assertTrue(verify_payment_status(username))
+        subscription_status_code.invalidate(username)
 
     def test_errors_fail_open(self):
         for error in (Timeout(), HTTPError(), ConnectionError(), TooManyRedirects(), RequestException(), ValueError()):

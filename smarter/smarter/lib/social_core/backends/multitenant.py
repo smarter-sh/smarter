@@ -13,7 +13,8 @@ To verify subscription status, use the following API call:
       -H 'X-Client-Domain: platform.smarter.sh' \
       -H 'X-Client-Username: <username>'
 
-It returns HTTP 200 if the subscription is active, and a 4xx status otherwise.
+It returns HTTP 200 if the subscription is active, and a 4xx status otherwise. Only that
+answer is cached (:func:`subscription_status_code`); a failure is never cached.
 """
 
 from http import HTTPStatus
@@ -24,7 +25,7 @@ from django.contrib import messages
 from django.contrib.auth.backends import ModelBackend
 from django.shortcuts import redirect
 from django.utils.translation import gettext as _
-from requests.exceptions import HTTPError, RequestException, Timeout, TooManyRedirects
+from requests.exceptions import RequestException, Timeout
 from social_core.backends.github import GithubOAuth2
 from social_core.backends.google import GoogleOAuth2
 
@@ -50,53 +51,55 @@ see https://github.com/smarter-sh/account-manager
 """
 
 
-@cache_results()
-def verify_payment_status(username: str) -> bool:
-    """
-    Verify the payment status of a user by making an API call to the Account Manager subscription status endpoint.
+class SubscriptionStatusUnavailable(Exception):
+    """The Account Manager's subscription status endpoint answered with a server error."""
 
-    Returns True if the subscription is active, False otherwise. In case of errors, defaults to returning True to
-    avoid blocking access due to transient issues.
+
+@cache_results()
+def subscription_status_code(username: str) -> int:
+    """
+    Return the Account Manager's http status for a user's subscription: 200 if it is active.
+
+    Only this call is cached, and only its answers: a transport error or a server error raises,
+    so that it is never cached, and the next sign-in asks again. Cheaper checks, and the waffle
+    switch, run before it in :func:`verify_payment_status`, uncached, so that a change to them
+    applies at once.
 
     :param username: The user's username. It is the cache key, so it must be the string, not the User.
-    :returns: True if the subscription is active, or the status can't be checked.
+    :returns: The http status code, 200 or a 4xx.
+    :raises requests.RequestException: If the endpoint can't be reached.
+    :raises SubscriptionStatusUnavailable: If the endpoint answers with a 5xx status.
     """
-
-    def handle_error(err_type: str, err: Exception, stack_info: bool = False) -> None:
-        """
-        Log an error of the subscription status API call.
-
-        :param err_type: The kind of error, e.g. ``Timeout``.
-        :param err: The exception.
-        :param stack_info: Whether to log the stack.
-        """
-        logger.error(
-            "%s.verify_payment_status() %s error occurred while verifying payment status for user %s: %s",
-            logger_prefix,
-            err_type,
-            username,
-            err,
-            stack_info=stack_info,
-        )
-
-    DEFAULT_ERROR_RESPONSE = True
     headers = {
         "accept": "application/json",
         "X-Client-Domain": smarter_settings.environment_platform_domain,
         "X-Client-Username": username,
     }
+    response = requests.get(SUBSCRIPTION_STATUS_API_URL, headers=headers, timeout=5)
+    status_code = response.status_code
+    logger.info(
+        "%s.subscription_status_code() Subscription status API response for user %s: %s",
+        logger_prefix,
+        username,
+        status_code,
+    )
+    if status_code >= HTTPStatus.INTERNAL_SERVER_ERROR:
+        raise SubscriptionStatusUnavailable(f"subscription status api answered {status_code}")
+    return status_code
 
-    # Superusers are always allowed access
-    try:
-        User.objects.get(username=username, is_superuser=True, is_active=True)
-        logger.info(
-            "%s.verify_payment_status() User %s is a superuser; skipping payment status check.", logger_prefix, username
-        )
-        return True
-    except User.DoesNotExist:
-        # User is not a superuser, proceed to check subscription status
-        pass
 
+def verify_payment_status(username: str) -> bool:
+    """
+    Verify the payment status of a user with the Account Manager's subscription status endpoint.
+
+    Returns True if the subscription is active, False otherwise. Superusers, and every user
+    while multitenant authentication is off, pass without a call. When the status can't be
+    checked, it fails open and returns True, to avoid blocking access due to transient issues.
+    Only the endpoint's answer is cached, by :func:`subscription_status_code`.
+
+    :param username: The user's username.
+    :returns: True if the subscription is active, or the status can't be checked.
+    """
     # check to see if multitenant authentication is enabled
     if not switch_is_active(SmarterWaffleSwitches.ENABLE_MULTITENANT_AUTHENTICATION):
         logger.info(
@@ -106,43 +109,48 @@ def verify_payment_status(username: str) -> bool:
         )
         return True
 
-    # --------------------------------------------------------------------------
-    # Make the API call to check subscription status
-    # --------------------------------------------------------------------------
-    try:
-        response = requests.get(SUBSCRIPTION_STATUS_API_URL, headers=headers, timeout=5)
+    # Superusers are always allowed access
+    is_superuser = User.objects.filter(username=username, is_superuser=True, is_active=True).exists()
+    if is_superuser:
         logger.info(
-            "%s.verify_payment_status() Subscription status API response for user %s: %s",
-            logger_prefix,
-            username,
-            response.status_code,
+            "%s.verify_payment_status() User %s is a superuser; skipping payment status check.", logger_prefix, username
         )
-        return response.status_code == HTTPStatus.OK
+        return True
+
+    try:
+        status_code = subscription_status_code(username)
     except Timeout as timeout_err:
-        handle_error("Timeout", timeout_err)
-        return DEFAULT_ERROR_RESPONSE
-    except HTTPError as http_err:
-        handle_error("HTTP", http_err, stack_info=True)
-        return DEFAULT_ERROR_RESPONSE
-    except ConnectionError as conn_err:
-        handle_error("Connection", conn_err, stack_info=True)
-        return DEFAULT_ERROR_RESPONSE
-    except TooManyRedirects as redirects_err:
-        handle_error("Too many redirects", redirects_err, stack_info=True)
-        return DEFAULT_ERROR_RESPONSE
-    except RequestException as req_err:
-        handle_error("Request", req_err, stack_info=True)
-        return DEFAULT_ERROR_RESPONSE
+        log_status_error("Timeout", username, timeout_err)
+        return True
+    except (RequestException, SubscriptionStatusUnavailable) as request_err:
+        log_status_error(type(request_err).__name__, username, request_err, stack_info=True)
+        return True
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error(
-            "%s.verify_payment_status() Unexpected error occurred while verifying payment status for user %s: %s",
-            logger_prefix,
-            username,
-            e,
-            stack_info=True,
-        )
-        return DEFAULT_ERROR_RESPONSE
+        log_status_error("Unexpected", username, e, stack_info=True)
+        return True
+
+    is_active = status_code == HTTPStatus.OK
+    return is_active
+
+
+def log_status_error(err_type: str, username: str, err: Exception, stack_info: bool = False) -> None:
+    """
+    Log an error of the subscription status API call.
+
+    :param err_type: The kind of error, e.g. ``Timeout``.
+    :param username: The user whose status was checked.
+    :param err: The exception.
+    :param stack_info: Whether to log the stack.
+    """
+    logger.error(
+        "%s.verify_payment_status() %s error occurred while verifying payment status for user %s: %s",
+        logger_prefix,
+        err_type,
+        username,
+        err,
+        stack_info=stack_info,
+    )
 
 
 class PaymentVerifiedUserDetailsMixin:
