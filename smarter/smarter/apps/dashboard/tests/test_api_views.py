@@ -15,8 +15,6 @@ from smarter.apps.llmtool.models import Extension
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
-from ..const import namespace
-
 COUNTERS = (
     my_resources.get_pending_deployments,
     my_resources.get_llmclients,
@@ -43,7 +41,7 @@ class TestDashboardApiViews(TestAccountMixin):
         self.client.force_login(self.admin_user)
 
     def url(self, name: str, **kwargs) -> str:
-        return reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{name}", kwargs=kwargs or None)
+        return reverse(f"{DashboardApiReverseNames.namespace}:{name}", kwargs=kwargs or None)
 
     def my_resources(self) -> SmarterDictType:
         response = self.client.post(self.url(DashboardApiReverseNames.my_resources))

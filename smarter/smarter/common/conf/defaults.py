@@ -169,6 +169,7 @@ class SettingsDefaults:
         re.compile(r"^/$"),
         re.compile(r"^/static(/.*)?$"),
         re.compile(r"^/api/v\d+(\.\d+)?/.+"),
+        re.compile(r"^/api/web/.+"),
         re.compile(r"^/dashboard(/.*)?$"),
         re.compile(r"^/docs/manifest(/.*)?$"),
         re.compile(r"^/docs/json-schema(/.*)?$"),

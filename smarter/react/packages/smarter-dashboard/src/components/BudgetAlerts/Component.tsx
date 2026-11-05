@@ -15,7 +15,7 @@
  *
  * :example:
  *
- *     <BudgetAlerts sessionContext={sessionContext} apiUrl="/dashboard/api/budgets/" />
+ *     <BudgetAlerts sessionContext={sessionContext} apiUrl="/api/web/dashboard/budgets/" />
  */
 import type { ReactNode } from "react";
 import type { SessionContext } from "@smarter/common";

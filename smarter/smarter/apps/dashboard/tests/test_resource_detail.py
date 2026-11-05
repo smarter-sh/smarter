@@ -27,13 +27,11 @@ from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json
 from smarter.lib.django.listview import ListviewPageRequest
 
-from ..const import namespace
-
 
 def detail_url(kind: str, record_locator: str) -> str:
     """The url of a resource's detail."""
     return reverse(
-        f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.resource_detail}",
+        f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.resource_detail}",
         kwargs={"kind": kind, "record_locator": record_locator},
     )
 

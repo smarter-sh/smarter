@@ -9,7 +9,6 @@ from smarter.apps.dashboard.views.views import (
     DashboardView,
     EmailAdded,
 )
-from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
 from smarter.apps.llmtool import urls as plugin_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
@@ -30,7 +29,6 @@ class DashboardReverseNames:
 
 urlpatterns = [
     path("", DashboardView.as_view(), name=DashboardReverseNames.dashboard),
-    path("api/", include(dashboard_api_urls, namespace=dashboard_api_urls.app_name)),
     path("account/", include(account_urls)),
     path("plugins/", include(plugin_urls)),
     path("help/", RedirectView.as_view(url="/docs/"), name="help"),

@@ -54,7 +54,7 @@ class GuardrailListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered page.
         """
         # pylint: disable=C0415
-        from smarter.apps.guardrail.urls import GuardrailReverseNames
+        from smarter.apps.guardrail.api.web.urls import GuardrailApiWebReverseNames
 
         context = {
             "guardrail_list": {
@@ -63,7 +63,7 @@ class GuardrailListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "guardrail_list_api_url": reverse(
-                    GuardrailReverseNames.namespace, GuardrailReverseNames.listview_api_all
+                    GuardrailApiWebReverseNames.namespace, GuardrailApiWebReverseNames.listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

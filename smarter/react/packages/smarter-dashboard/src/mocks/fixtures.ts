@@ -10,7 +10,7 @@ import type { TokenUsageSeries } from "@/components/TokenUsage/types";
 import type { AppContextInterface } from "@/main";
 
 export const sessionContext: SessionContext = {
-  ApiUrl: "/dashboard/api/",
+  ApiUrl: "/api/web/dashboard/",
   csrfCookieName: "csrftoken",
   djangoSessionCookieName: "sessionid",
   cookieDomain: "localhost",
@@ -22,14 +22,14 @@ export const sessionContext: SessionContext = {
 
 export const appContext: AppContextInterface = {
   sessionContext,
-  myResourcesApiUrl: "/dashboard/api/my-resources/",
-  serviceHealthApiUrl: "/dashboard/api/service-health/",
-  chargesApiUrl: "/dashboard/api/charges/",
-  budgetsApiUrl: "/dashboard/api/budgets/",
-  activityApiUrl: "/dashboard/api/activity/",
-  gettingStartedApiUrl: "/dashboard/api/getting-started/",
-  quickActionsApiUrl: "/dashboard/api/quick-actions/",
-  globalSearchApiUrl: "/dashboard/api/search/",
+  myResourcesApiUrl: "/api/web/dashboard/my-resources/",
+  serviceHealthApiUrl: "/api/web/dashboard/service-health/",
+  chargesApiUrl: "/api/web/dashboard/charges/",
+  budgetsApiUrl: "/api/web/dashboard/budgets/",
+  activityApiUrl: "/api/web/dashboard/activity/",
+  gettingStartedApiUrl: "/api/web/dashboard/getting-started/",
+  quickActionsApiUrl: "/api/web/dashboard/quick-actions/",
+  globalSearchApiUrl: "/api/web/dashboard/search/",
 };
 
 /** The global search's response to "tag:production", in two lists. */

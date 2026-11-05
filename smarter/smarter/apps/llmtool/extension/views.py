@@ -11,9 +11,9 @@ availability or the platform admin's Secrets, and without any action.
 - **An extension** (``/extensions/<slug>/``): its documentation, tools, settings, availability,
   versions and resources, and every action on it.
 
-The api is a set of POST endpoints, under ``/extensions/react-integration/api/``. The actions are
-for superusers only; the list, the registry and an extension's detail are read-only for everyone
-else. Each validates its request and builds its response with the models of
+The api is a set of POST endpoints in the web console's api, under ``/api/web/llmtool/extensions/``
+(see :mod:`smarter.apps.llmtool.extension.api.web.urls`). The actions are for superusers only; the
+list, the registry and an extension's detail are read-only for everyone else. Each validates its request and builds its response with the models of
 :mod:`~smarter.apps.llmtool.extension.contract`, and carries out its action with the
 :class:`~smarter.apps.llmtool.extension.installer.ExtensionInstaller` or the
 :mod:`~smarter.apps.llmtool.extension.registry` client, as the admin console and the management
@@ -279,6 +279,10 @@ class ExtensionPageView(SmarterAuthenticatedNeverCachedWebView):
     def page_context(self, **extra: str) -> dict:
         """The template's context: the React app's root element's attributes."""
         # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmtool.extension.api.web.urls import (
+            ExtensionApiWebReverseNames,
+        )
+
         from .urls import ExtensionReverseNames
 
         return {
@@ -287,7 +291,7 @@ class ExtensionPageView(SmarterAuthenticatedNeverCachedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "extension_api_url": reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.api_root),
+                "extension_api_url": reverse(ExtensionApiWebReverseNames.namespace, ExtensionApiWebReverseNames.root),
                 "extension_list_url": reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
                 "can_edit": "true" if self.request.user.is_superuser else "false",  # type: ignore[union-attr]
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),

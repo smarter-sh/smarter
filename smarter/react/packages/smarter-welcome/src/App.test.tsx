@@ -26,7 +26,7 @@ describe("App", () => {
   it("spotlights the sidebar's LLM Clients link once the dialog is closed, not while it is open", async () => {
     const user = userEvent.setup();
     useWelcomeApis();
-    server.use(http.post("/dashboard/api/onboarding/seen/", () => HttpResponse.json({ seen: [] })));
+    server.use(http.post("/api/web/dashboard/onboarding/seen/", () => HttpResponse.json({ seen: [] })));
     const link = document.createElement("a");
     link.href = "/workbench/";
     link.setAttribute("data-smarter-onboarding", "sidebar-llmclients");
@@ -44,7 +44,7 @@ describe("App", () => {
     } as DOMRect);
     const onboarding = {
       enabled: true,
-      apiUrl: "/dashboard/api/onboarding/seen/",
+      apiUrl: "/api/web/dashboard/onboarding/seen/",
       seen: [],
       csrfCookieName: "csrftoken",
       cookieDomain: "localhost",

@@ -9,7 +9,7 @@ import SidebarHint from "@/components/SidebarHint/Component";
 
 const context: OnboardingContext = {
   enabled: true,
-  apiUrl: "/dashboard/api/onboarding/seen/",
+  apiUrl: "/api/web/dashboard/onboarding/seen/",
   seen: [],
   csrfCookieName: "csrftoken",
   cookieDomain: "localhost",

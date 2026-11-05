@@ -45,7 +45,7 @@ class TestReactOnboarding(TestAccountMixin):
             state = react_onboarding.onboarding({"request": request})
         self.assertTrue(state["enabled"])
         self.assertEqual(state["seen"], [])
-        self.assertEqual(state["apiUrl"], "/dashboard/api/onboarding/seen/")
+        self.assertEqual(state["apiUrl"], "/api/web/dashboard/onboarding/seen/")
         request.user = AnonymousUser()
         with override_switch(SWITCH, active=True):
             self.assertFalse(react_onboarding.onboarding({"request": request})["enabled"])

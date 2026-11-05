@@ -6,6 +6,7 @@ A subclass names the app's model, url names and url parameter, and creates the r
     class TestProviderViews(ResourceViewsTestMixin, TestAccountMixin):
         model = Provider
         reverse_names = ProviderReverseNames
+        web_reverse_names = ProviderApiWebReverseNames
         id_kwarg = "llmclient_id"
         invalidate_cache = staticmethod(invalidate_all_cached_providers_for_user_profile)
 
@@ -41,8 +42,10 @@ class ResourceViewsTestMixin:
 
     #: The model of the resource under test.
     model: type[MetaDataModel]
-    #: The app's reverse names class, e.g. ``ProviderReverseNames``.
+    #: The app's reverse names class for its console pages, e.g. ``ProviderReverseNames``.
     reverse_names: type
+    #: The app's reverse names class for its web console api, e.g. ``ProviderApiWebReverseNames``.
+    web_reverse_names: type
     #: The name of the url parameter that holds the resource's id.
     id_kwarg: str
     #: The function that invalidates the list api's cache for a user profile, if the app caches it.
@@ -87,21 +90,43 @@ class ResourceViewsTestMixin:
     # -------------------------------------------------------------------------
     # helpers
     # -------------------------------------------------------------------------
-    def url(self, name: str, **kwargs) -> str:
+    @staticmethod
+    def reverse_attribute(reverse_names: type, name: str, **kwargs) -> str:
         """
-        Reverse one of the app's url names, by the attribute of ``reverse_names`` that holds it.
+        Reverse a url name, by the attribute of a reverse names class that holds it.
 
-        :param name: The attribute's name, e.g. ``listview_api``.
+        :param reverse_names: The reverse names class, e.g. ``ProviderReverseNames``.
+        :param name: The attribute's name, e.g. ``listview``.
         :param kwargs: The url's keyword arguments.
         :returns: The url path.
         """
-        url_name = getattr(self.reverse_names, name)
-        view_name = f"{self.reverse_names.namespace}:{url_name}"
+        url_name = getattr(reverse_names, name)
+        view_name = f"{reverse_names.namespace}:{url_name}"
         url_kwargs = None
         if kwargs:
             url_kwargs = kwargs
         url = reverse(view_name, kwargs=url_kwargs)
         return url
+
+    def url(self, name: str, **kwargs) -> str:
+        """
+        Reverse one of the app's console page url names, by the attribute of ``reverse_names`` that holds it.
+
+        :param name: The attribute's name, e.g. ``listview``.
+        :param kwargs: The url's keyword arguments.
+        :returns: The url path.
+        """
+        return self.reverse_attribute(self.reverse_names, name, **kwargs)
+
+    def web_url(self, name: str, **kwargs) -> str:
+        """
+        Reverse one of the app's web console api url names, by the attribute of ``web_reverse_names`` that holds it.
+
+        :param name: The attribute's name, e.g. ``listview_all``.
+        :param kwargs: The url's keyword arguments.
+        :returns: The url path.
+        """
+        return self.reverse_attribute(self.web_reverse_names, name, **kwargs)
 
     def post(self, url: str, status: int = HTTPStatus.OK) -> SmarterDictType:
         """
@@ -126,9 +151,9 @@ class ResourceViewsTestMixin:
         :returns: The names, in the order the api returns them.
         """
         if ownership_filter:
-            url = self.url("listview_api", ownership_filter=ownership_filter)
+            url = self.web_url("listview", ownership_filter=ownership_filter)
         else:
-            url = self.url("listview_api_all")
+            url = self.web_url("listview_all")
         if params:
             query_parameters = [f"{key}={value}" for key, value in params.items()]
             url += "?" + "&".join(query_parameters)
@@ -149,16 +174,16 @@ class ResourceViewsTestMixin:
         resource = self.create_resource(name)
         return resource
 
-    def id_url(self, name: str, resource_id: int, **kwargs) -> str:
+    def web_id_url(self, name: str, resource_id: int, **kwargs) -> str:
         """
-        Reverse one of the app's url names for a resource, by its id.
+        Reverse one of the app's web console api url names for a resource, by its id.
 
-        :param name: The attribute of ``reverse_names`` that holds the url name.
+        :param name: The attribute of ``web_reverse_names`` that holds the url name, e.g. ``clone``.
         :param resource_id: The resource's id, passed as ``id_kwarg``.
         :param kwargs: More url keyword arguments.
         :returns: The url path.
         """
-        return self.url(name, **{self.id_kwarg: resource_id}, **kwargs)
+        return self.web_url(name, **{self.id_kwarg: resource_id}, **kwargs)
 
     def call_view(self, url: str, **kwargs) -> HttpResponse:
         """
@@ -189,11 +214,11 @@ class ResourceViewsTestMixin:
 
     def test_list_api(self):
         """Test that the list api returns the user, the smarter admin, and the resource, also for a GET."""
-        data = self.post(self.url("listview_api_all"))
+        data = self.post(self.web_url("listview_all"))
         self.assertIn("user", data)  # type: ignore[attr-defined]
         self.assertIn("admin", data)  # type: ignore[attr-defined]
         self.assertIn(self.resource.name, [item["name"] for item in data["objects"]])  # type: ignore[attr-defined]
-        response = self.client.get(self.url("listview_api_all"))
+        response = self.client.get(self.web_url("listview_all"))
         self.assertEqual(response.status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
 
     def test_list_api_filters(self):
@@ -208,7 +233,7 @@ class ResourceViewsTestMixin:
         """Test that the list api sorts by name in either direction, and by every column that it describes as sortable."""
         # the throwaway's name follows the resource's: "..._zz_sorted_<hash>" after "..._<hash>".
         resource = self.throwaway("zz_sorted")
-        url = self.url("listview_api", ownership_filter="owned") + "?invalidate_cache=true&page_size=100"
+        url = self.web_url("listview", ownership_filter="owned") + "?invalidate_cache=true&page_size=100"
         data = self.post(url)
         sort_fields = data["pagination"]["sortFields"]
         self.assertTrue({"name", "createdAt", "updatedAt"} <= set(sort_fields), sort_fields)  # type: ignore[attr-defined]
@@ -230,54 +255,54 @@ class ResourceViewsTestMixin:
         """Test that the clone api copies the resource for the user, and that an unknown resource is a 404."""
         resource = self.throwaway("clone_source")
         clone_name = f"{resource.name}_copy"
-        data = self.post(self.id_url("listview_api_clone", resource.pk, new_name=clone_name))
+        data = self.post(self.web_id_url("clone", resource.pk, new_name=clone_name))
         self.assertEqual(data["name"], clone_name)  # type: ignore[attr-defined]
         self.assertTrue(self.model.objects.filter(name=clone_name, user_profile=self.user_profile).exists())  # type: ignore[attr-defined]
-        self.post(self.id_url("listview_api_clone", 999999999, new_name="x"), status=HTTPStatus.NOT_FOUND)
+        self.post(self.web_id_url("clone", 999999999, new_name="x"), status=HTTPStatus.NOT_FOUND)
 
     def test_delete(self):
         """Test that the delete api deletes the resource, and that an unknown resource is a 404."""
         resource = self.throwaway("delete")
-        self.post(self.id_url("listview_api_delete", resource.pk))
+        self.post(self.web_id_url("delete", resource.pk))
         self.assertFalse(self.model.objects.filter(pk=resource.pk).exists())  # type: ignore[attr-defined]
-        self.post(self.id_url("listview_api_delete", 999999999), status=HTTPStatus.NOT_FOUND)
+        self.post(self.web_id_url("delete", 999999999), status=HTTPStatus.NOT_FOUND)
 
     def test_rename(self):
         """Test that the rename api renames the resource, and that an unknown resource is a 404."""
         resource = self.throwaway("rename")
         new_name = f"{resource.name}_renamed"
-        data = self.post(self.id_url("listview_api_rename", resource.pk, new_name=new_name))
+        data = self.post(self.web_id_url("rename", resource.pk, new_name=new_name))
         self.assertEqual(data["name"], new_name)  # type: ignore[attr-defined]
         self.assertEqual(self.model.objects.get(pk=resource.pk).name, new_name)  # type: ignore[attr-defined]
-        self.post(self.id_url("listview_api_rename", 999999999, new_name="x"), status=HTTPStatus.NOT_FOUND)
+        self.post(self.web_id_url("rename", 999999999, new_name="x"), status=HTTPStatus.NOT_FOUND)
 
     def test_list_api_invalid_ownership_filter(self):
         """Test that an unknown ownership filter, which the url pattern doesn't route, is a bad request."""
-        response = self.call_view(self.url("listview_api", ownership_filter="all"), ownership_filter="nobody")
+        response = self.call_view(self.web_url("listview", ownership_filter="all"), ownership_filter="nobody")
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])  # type: ignore[attr-defined]
 
     def test_apis_refuse_missing_parameters(self):
         """Test that the clone, delete and rename apis, called without their url parameters, are bad requests."""
         for name, kwargs in (
-            ("listview_api_clone", {"new_name": "x"}),
-            ("listview_api_delete", {}),
-            ("listview_api_rename", {"new_name": "x"}),
+            ("clone", {"new_name": "x"}),
+            ("delete", {}),
+            ("rename", {"new_name": "x"}),
         ):
             with self.subTest(api=name):  # type: ignore[attr-defined]
-                response = self.call_view(self.id_url(name, self.resource.pk, **kwargs))  # type: ignore[attr-defined]
+                response = self.call_view(self.web_id_url(name, self.resource.pk, **kwargs))  # type: ignore[attr-defined]
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])  # type: ignore[attr-defined]
 
     def test_apis_report_errors(self):
         """Test that an error while cloning, deleting or renaming a resource is a bad request."""
         resource = self.throwaway("errors")
         for name, method, kwargs in (
-            ("listview_api_clone", "clone", {"new_name": f"{resource.name}_copy"}),
-            ("listview_api_delete", "delete", {}),
-            ("listview_api_rename", "rename", {"new_name": f"{resource.name}_renamed"}),
+            ("clone", "clone", {"new_name": f"{resource.name}_copy"}),
+            ("delete", "delete", {}),
+            ("rename", "rename", {"new_name": f"{resource.name}_renamed"}),
         ):
             with self.subTest(api=name):  # type: ignore[attr-defined]
                 with patch.object(self.model, method, side_effect=RuntimeError("test error")):
-                    data = self.post(self.id_url(name, resource.pk, **kwargs), status=HTTPStatus.BAD_REQUEST)
+                    data = self.post(self.web_id_url(name, resource.pk, **kwargs), status=HTTPStatus.BAD_REQUEST)
                 self.assertIn("test error", data["error"])  # type: ignore[attr-defined]
         self.assertTrue(self.model.objects.filter(pk=resource.pk, name=resource.name).exists())  # type: ignore[attr-defined]
 

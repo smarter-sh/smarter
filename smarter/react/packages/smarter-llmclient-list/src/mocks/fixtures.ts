@@ -6,10 +6,10 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { LLMClient } from "@/lib/Types";
 
-export const API_URL = "/workbench/api/listview/";
+export const API_URL = "/api/web/prompt/listview/";
 
 /** The base url of the clone, rename and delete apis. */
-export const ACTIONS_URL = API_URL;
+export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
 
 export const sessionContext: SessionContext = {
   ApiUrl: API_URL,
@@ -79,7 +79,7 @@ export function makeObject(id: number, overrides: Partial<LLMClient> = {}): LLMC
     urlChatConfig: `http://localhost:9357/api/v1/llm-clients/hashed${id}/config/`,
     urlChatapp: `http://localhost:9357/workbench/llm-clients/hashed${id}/chat/`,
     manifestUrl: `http://localhost:9357/workbench/llm-clients/hashed${id}/manifest/`,
-    detailUrl: `/dashboard/api/resource/LLMClient/llmclient-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/LLMClient/llmclient-r${id}/`,
     ready: true,
     canDelete: true,
     deployed: false,

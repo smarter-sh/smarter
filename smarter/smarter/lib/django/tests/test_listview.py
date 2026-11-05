@@ -14,9 +14,9 @@ from django.urls import resolve, reverse
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.connection.models import ApiConnection
+from smarter.apps.guardrail.api.web.urls import GuardrailApiWebReverseNames
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
-from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.guardrail.views.listview.api import GuardrailListApiView
 from smarter.common.conf import smarter_settings
 from smarter.lib import json
@@ -123,7 +123,7 @@ class TestSmarterListApiView(TestAccountMixin):
     def listed(self, ownership_filter: str = "owned", **params) -> dict:
         """Return the Guardrail list api's response, for the admin user."""
         url = reverse(
-            f"{GuardrailReverseNames.namespace}:{GuardrailReverseNames.listview_api}",
+            f"{GuardrailApiWebReverseNames.namespace}:{GuardrailApiWebReverseNames.listview}",
             kwargs={"ownership_filter": ownership_filter},
         )
         if params:
