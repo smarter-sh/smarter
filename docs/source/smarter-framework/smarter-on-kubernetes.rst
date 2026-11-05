@@ -65,11 +65,12 @@ differs.
      - ``smarter-mariadb`` and ``smarter-redis`` containers, with local volumes.
      - MySQL or MariaDB and Redis, inside the cluster or managed by the cloud
        (``database.type`` and the ``SMARTER_MYSQL_*`` and ``CACHES_LOCATION`` values). The
-       chart's own Redis is a single pod on a ReadWriteOnce volume, so any eviction stops it for
-       about a minute. Its pod tells the cluster autoscaler not to evict it
-       (``cluster-autoscaler.kubernetes.io/safe-to-evict: "false"``), and its PodDisruptionBudget
-       (``minAvailable: 1``) makes a node drain wait until an operator deletes the pod. Its image
-       is pinned by digest (``redis.image.digest``), since Bitnami publishes it only as ``latest``.
+       chart's own MariaDB and Redis are each a single pod on a ReadWriteOnce volume, so any
+       eviction stops them for about a minute. Their pods tell the cluster autoscaler not to evict
+       them (``cluster-autoscaler.kubernetes.io/safe-to-evict: "false"``), and their
+       PodDisruptionBudgets (``minAvailable: 1``) make a node drain wait until an operator deletes
+       the pod. Their images are pinned by digest (``mariadb.image.digest`` and
+       ``redis.image.digest``), since Bitnami publishes them only as ``latest``.
 
 The two Celery queues are separate on purpose. The infrastructure queue carries the slow tasks that
 deploy, verify and destroy DNS records, ingresses, certificates, node groups and databases, so that
