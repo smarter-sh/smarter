@@ -6,7 +6,7 @@ import type { SessionContext } from "@smarter/common";
 
 import type { InfrastructureResource, InfrastructureResourceSummary } from "@/lib/Types";
 
-export const API_URL = "/infrastructure/react-integration/api/listview/";
+export const API_URL = "/api/web/infrastructure/listview/";
 
 export const sessionContext: SessionContext = {
   ApiUrl: API_URL,

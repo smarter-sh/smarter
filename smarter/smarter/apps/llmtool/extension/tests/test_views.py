@@ -8,15 +8,18 @@ from django.test import Client
 from waffle.models import Switch
 
 from smarter.apps.llmtool.extension import views
-from smarter.apps.llmtool.extension.urls import API
+from smarter.apps.llmtool.extension.api.web.urls import (
+    ExtensionApiWebReverseNames as WebNames,
+)
 from smarter.apps.llmtool.models import Extension, ExtensionSetting
 from smarter.apps.secret.models import Secret
+from smarter.lib.django.shortcuts import reverse
 
 from .mixins import ECHO_SECRET, ExtensionTestMixin, fixture_archive
 from .test_registry import RegistryTestMixin
 
 PAGE = "/extensions/"
-BASE = f"/extensions/{API}"
+BASE = "/api/web/llmtool/extensions/"
 SECRET_VALUE = "never-show-this-value"
 
 
@@ -77,6 +80,20 @@ class TestExtensionPages(ConsoleClientMixin, ExtensionTestMixin):
         self.assertEqual(self.client_for(self.non_admin_user).get(PAGE + "echo/").status_code, 404)
         self.assertEqual(self.client.get(PAGE + "echo/").status_code, 200)
 
+    def test_web_api_paths(self):
+        """The api is in the web console's api, and the page gives the React app its root."""
+        self.assertEqual(reverse(WebNames.namespace, WebNames.root), BASE)
+        self.assertEqual(reverse(WebNames.namespace, WebNames.list), BASE + "list/")
+        self.assertEqual(reverse(WebNames.namespace, WebNames.check_updates), BASE + "check-updates/")
+        self.assertEqual(
+            reverse(f"{WebNames.namespace}:{WebNames.enable}", kwargs={"slug": "echo"}),
+            BASE + "echo/enable/",
+        )
+        self.assertEqual(
+            reverse(f"{WebNames.namespace}:{WebNames.uninstall}", kwargs={"slug": "echo"}),
+            BASE + "echo/uninstall/",
+        )
+
     def test_api_is_post_only(self):
         """The api answers only POST."""
         self.assertEqual(self.client.get(BASE + "list/").status_code, 405)
@@ -103,23 +120,23 @@ class TestExtensionApiReadOnly(ConsoleClientMixin, ExtensionTestMixin):
         """The detail leaves out the settings, the accounts, the admin's Secrets and who installed each version."""
         self.install_echo()
         self.secret("echo_read_only_key")
-        detail = self.post("extensions/echo/", client=self.mortal)["extension"]
+        detail = self.post("echo/", client=self.mortal)["extension"]
         self.assertEqual((detail["settings"], detail["accounts"], detail["availableSecrets"]), ([], [], []))
         self.assertIsNone(detail["versions"][0]["installedBy"])
         self.assertIn("ext_echo_echo", [tool["functionName"] for tool in detail["tools"]])
-        self.assertTrue(self.post("extensions/echo/")["extension"]["availableSecrets"])
+        self.assertTrue(self.post("echo/")["extension"]["availableSecrets"])
 
     def test_restricted_detail(self):
         """The detail of an extension that the user's account may not use is a 404."""
         extension = self.install_echo()
         extension.all_accounts = False
         extension.save()
-        self.post("extensions/echo/", client=self.mortal, expect=404)
+        self.post("echo/", client=self.mortal, expect=404)
 
     def test_actions_are_forbidden(self):
         """Every action, and the accounts, are for superusers only."""
         self.install_echo()
-        for path in ("extensions/echo/enable/", "extensions/echo/uninstall/", "accounts/", "check-updates/"):
+        for path in ("echo/enable/", "echo/uninstall/", "accounts/", "check-updates/"):
             self.assertIn("superusers", self.post(path, client=self.mortal, expect=403)["error"])
         self.assertIsNotNone(Extension.objects.filter(slug="echo").first())
 
@@ -146,7 +163,7 @@ class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
     def test_detail(self):
         """The detail has the extension's tools, settings, switches, versions and resources."""
         self.install_echo()
-        detail = self.post("extensions/echo/")["extension"]
+        detail = self.post("echo/")["extension"]
         self.assertIn("ext_echo_echo", [tool["functionName"] for tool in detail["tools"]])
         self.assertEqual(detail["missingSettings"], ["api_key"])
         api_key = next(setting for setting in detail["settings"] if setting["name"] == "api_key")
@@ -159,14 +176,14 @@ class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
         self.assertTrue(detail["versions"][0]["isInstalled"])
         self.assertIn("Echoes what it is sent", detail["docsHtml"])
         self.assertIsNone(detail["loadError"])
-        self.assertIn("unknown", self.post("extensions/nope/", expect=404)["error"] + "unknown")
+        self.assertIn("unknown", self.post("nope/", expect=404)["error"] + "unknown")
 
     def test_configure_and_enable(self):
         """Settings are saved, a typed secret becomes a Secret whose value is never returned, and the extension is enabled."""
         self.install_echo()
-        self.assertIn("api_key", self.post("extensions/echo/enable/", expect=400)["error"])
+        self.assertIn("api_key", self.post("echo/enable/", expect=400)["error"])
         data = self.post(
-            "extensions/echo/configure/",
+            "echo/configure/",
             {"values": {"repeat": 2, "greeting": "hi"}, "secrets": {"api_key": {"value": SECRET_VALUE}}},
         )
         self.addCleanup(Secret.objects.filter(name="extension_echo_api_key").delete)
@@ -177,18 +194,18 @@ class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
         self.assertIsNone(settings["api_key"]["value"])
         self.assertEqual(Secret.objects.get(name="extension_echo_api_key").get_secret(), SECRET_VALUE)
 
-        data = self.post("extensions/echo/enable/")
+        data = self.post("echo/enable/")
         self.assertTrue(data["extension"]["enabled"])
         self.assertEqual(data["message"], "Enabled Echo.")
-        self.assertFalse(self.post("extensions/echo/disable/")["extension"]["enabled"])
+        self.assertFalse(self.post("echo/disable/")["extension"]["enabled"])
 
     def test_configure_with_an_existing_secret_and_clear(self):
         """A secret setting uses an existing Secret, and is cleared with neither."""
         self.install_echo()
         secret = self.secret("echo_views_key")
-        self.post("extensions/echo/configure/", {"secrets": {"api_key": {"secretId": secret.pk}}})
+        self.post("echo/configure/", {"secrets": {"api_key": {"secretId": secret.pk}}})
         self.assertEqual(ExtensionSetting.objects.get(extension__slug="echo", name="api_key").secret, secret)
-        self.post("extensions/echo/configure/", {"secrets": {"api_key": {}}, "values": {"greeting": None}})
+        self.post("echo/configure/", {"secrets": {"api_key": {}}, "values": {"greeting": None}})
         self.assertFalse(ExtensionSetting.objects.filter(extension__slug="echo", name="api_key").exists())
 
     def test_configure_errors(self):
@@ -202,24 +219,20 @@ class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
         ]
         for body, message in cases:
             with self.subTest(body=body):
-                self.assertIn(message, self.post("extensions/echo/configure/", body, expect=400)["error"])
-        response = self.client.post(
-            BASE + "extensions/echo/configure/", data="{not json", content_type="application/json"
-        )
+                self.assertIn(message, self.post("echo/configure/", body, expect=400)["error"])
+        response = self.client.post(BASE + "echo/configure/", data="{not json", content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
     def test_availability(self):
         """An extension is restricted to listed accounts, or made available to all."""
         self.install_echo()
-        data = self.post("extensions/echo/availability/", {"allAccounts": False, "accountIds": [self.account.pk]})
+        data = self.post("echo/availability/", {"allAccounts": False, "accountIds": [self.account.pk]})
         self.assertFalse(data["extension"]["allAccounts"])
         self.assertEqual([account["id"] for account in data["extension"]["accounts"]], [self.account.pk])
-        self.assertIn("every account", self.post("extensions/echo/availability/", {"allAccounts": True})["message"])
+        self.assertIn("every account", self.post("echo/availability/", {"allAccounts": True})["message"])
         self.assertIn(
             "do not exist",
-            self.post("extensions/echo/availability/", {"allAccounts": False, "accountIds": [999999999]}, expect=400)[
-                "error"
-            ],
+            self.post("echo/availability/", {"allAccounts": False, "accountIds": [999999999]}, expect=400)["error"],
         )
         accounts = self.post("accounts/")["objects"]
         self.assertIn(self.account.pk, [account["id"] for account in accounts])
@@ -229,16 +242,14 @@ class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
         self.install_echo()
         old = Extension.objects.get(slug="echo").installed_version
         self.installer.install(fixture_archive("echo", version="1.1.0"))
-        data = self.post("extensions/echo/rollback/", {"versionId": old.pk})  # type: ignore[union-attr]
+        data = self.post("echo/rollback/", {"versionId": old.pk})  # type: ignore[union-attr]
         self.assertEqual(data["extension"]["installedVersion"], "1.0.0")
-        self.assertIn(
-            "no version", self.post("extensions/echo/rollback/", {"versionId": 999999999}, expect=400)["error"]
-        )
+        self.assertIn("no version", self.post("echo/rollback/", {"versionId": 999999999}, expect=400)["error"])
 
     def test_uninstall(self):
         """Uninstalling returns no extension, and deletes it."""
         self.install_echo()
-        data = self.post("extensions/echo/uninstall/")
+        data = self.post("echo/uninstall/")
         self.assertIsNone(data["extension"])
         self.assertFalse(Extension.objects.filter(slug="echo").exists())
 
@@ -259,13 +270,13 @@ class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
         """An unexpected exception, e.g. in a lifecycle hook, is a 500 with its message."""
         self.install_echo()
         with patch.object(views.ExtensionInstaller, "disable", side_effect=RuntimeError("boom")):
-            self.assertIn("RuntimeError: boom", self.post("extensions/echo/disable/", expect=500)["error"])
+            self.assertIn("RuntimeError: boom", self.post("echo/disable/", expect=500)["error"])
 
     def test_detail_of_broken_code(self):
         """An extension whose code no longer loads shows why, without tools."""
         self.install_echo()
         with patch.object(views, "load_version", side_effect=views.SmarterExtensionException("cannot import")):
-            detail = self.post("extensions/echo/")["extension"]
+            detail = self.post("echo/")["extension"]
         self.assertEqual(detail["loadError"], "cannot import")
         self.assertEqual(detail["tools"], [])
 
@@ -273,7 +284,7 @@ class TestExtensionApi(ConsoleClientMixin, ExtensionTestMixin):
         """A switch's state is reported."""
         self.install_echo()
         Switch.objects.filter(name="ext_echo_verbose").update(active=True)
-        self.assertTrue(self.post("extensions/echo/")["extension"]["switches"][0]["active"])
+        self.assertTrue(self.post("echo/")["extension"]["switches"][0]["active"])
 
 
 class TestExtensionRegistryApi(ConsoleClientMixin, RegistryTestMixin):
@@ -306,7 +317,7 @@ class TestExtensionRegistryApi(ConsoleClientMixin, RegistryTestMixin):
         echo = self.post("registry/")["objects"][0]
         self.assertEqual((echo["action"], echo["installedVersion"]), ("update", "1.0.0"))
         self.assertIn("Echo 1.1.0", self.post("check-updates/")["message"])
-        data = self.post("extensions/echo/update/")
+        data = self.post("echo/update/")
         self.assertEqual(data["extension"]["installedVersion"], "1.1.0")
         self.assertEqual(self.post("registry/")["objects"][0]["action"], "installed")
         self.assertIn("up to date", self.post("check-updates/")["message"])

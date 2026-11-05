@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Proxy } from "@/lib/Types";
 
-export const API_URL = "/proxy/react-integration/api/listview/";
+export const API_URL = "/api/web/proxy/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Proxy> = {}): Proxy {
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/proxy/proxies/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/Proxy/proxy-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/Proxy/proxy-r${id}/`,
     canDelete: true,
     provider: 1,
     providerName: "openai",

@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { LLMHostCompute } from "@/lib/Types";
 
-export const API_URL = "/llmhost/compute/react-integration/api/listview/";
+export const API_URL = "/api/web/llmhost/compute/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<LLMHostCompute> = {}):
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/llmhost/compute/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/LLMHostCompute/llmhostcompute-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/LLMHostCompute/llmhostcompute-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

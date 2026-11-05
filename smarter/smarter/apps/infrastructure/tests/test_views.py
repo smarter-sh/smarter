@@ -6,6 +6,7 @@ from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.infrastructure.api.web.urls import InfrastructureApiWebReverseNames
 from smarter.apps.infrastructure.models import InfrastructureResource
 from smarter.apps.infrastructure.urls import InfrastructureReverseNames
 from smarter.apps.infrastructure.views.listview import DEFAULT_PAGE_SIZE, summary
@@ -14,6 +15,10 @@ from smarter.lib.typing import SmarterDictType
 
 def url(name: str) -> str:
     return reverse(f"{InfrastructureReverseNames.namespace}:{name}")
+
+
+def web_url(name: str) -> str:
+    return reverse(f"{InfrastructureApiWebReverseNames.namespace}:{name}")
 
 
 class TestInfrastructureResourceConsole(TestAccountMixin):
@@ -50,9 +55,13 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("smarter-infrastructure-resource-list-root", content)
-        self.assertIn(url(InfrastructureReverseNames.listview_api), content)
+        self.assertIn(web_url(InfrastructureApiWebReverseNames.listview), content)
         # the sidebar links to the page, for superusers.
         self.assertIn(f'href="{url(InfrastructureReverseNames.listview)}"', content)
+
+    def test_web_api_paths(self):
+        """Test that the list page's endpoint is in the web console's api."""
+        self.assertEqual(web_url(InfrastructureApiWebReverseNames.listview), "/api/web/infrastructure/listview/")
 
     def test_list_view_is_for_superusers(self):
         self.client.force_login(self.non_admin_user)
@@ -63,7 +72,7 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
         """The list API returns the ledger, newest first, and its summary."""
         self.client.force_login(self.admin_user)
         response = self.client.post(
-            url(InfrastructureReverseNames.listview_api), data="{}", content_type="application/json"
+            web_url(InfrastructureApiWebReverseNames.listview), data="{}", content_type="application/json"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -77,7 +86,7 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
 
     def post(self, body) -> SmarterDictType:
         response = self.client.post(
-            url(InfrastructureReverseNames.listview_api),
+            web_url(InfrastructureApiWebReverseNames.listview),
             data=body if isinstance(body, str) else json.dumps(body),
             content_type="application/json",
         )
@@ -133,7 +142,7 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
 
     def test_list_api_is_for_superusers(self):
         self.client.force_login(self.non_admin_user)
-        response = self.client.post(url(InfrastructureReverseNames.listview_api))
+        response = self.client.post(web_url(InfrastructureApiWebReverseNames.listview))
         self.assertEqual(response.status_code, 403)
         self.assertIn("superusers", response.json()["error"])
 

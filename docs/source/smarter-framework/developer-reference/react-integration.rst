@@ -44,7 +44,8 @@ the Django runtime:
 7. The browser downloads the React bundles.
 8. React IIFE (Immediately Invoked Function Expression) mounts onto a designated DOM element.
 9. React reads runtime configuration from HTML attributes.
-10. React begins communicating with backend APIs.
+10. React begins communicating with backend APIs, the :doc:`web console api <web-console-api>`
+    under ``/api/web/``.
 
 This architecture creates a lightweight integration boundary between Django
 and React without requiring hardcoded asset references, inline bootstrap
@@ -110,7 +111,7 @@ passes configuration data into React during application initialization.
 
   <div
     id="smarter-terminal-emulator-root"
-    smarter-api-path="/dashboard/terminal/api/ticket/"
+    smarter-api-path="/api/web/dashboard/terminal/ticket/"
     smarter-cookie-domain="alpha.platform.example.com"
     smarter-csrf-cookie-name="csrftoken"
     smarter-django-session-cookie-name="sessionid"
@@ -521,7 +522,7 @@ Application:
 
   <div
     id="smarter-terminal-emulator-root"
-    smarter-api-path="/dashboard/terminal/api/ticket/"
+    smarter-api-path="/api/web/dashboard/terminal/ticket/"
     smarter-cookie-domain="alpha.platform.example.com"
     smarter-csrf-cookie-name="csrftoken"
     smarter-django-session-cookie-name="sessionid"

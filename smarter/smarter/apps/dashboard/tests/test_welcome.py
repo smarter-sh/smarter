@@ -16,8 +16,6 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
-from ..const import namespace
-
 
 class TestWelcomeApiViews(TestAccountMixin):
     """Test WelcomeView and WelcomeDismissView, and the welcome dialog's root element on console pages."""
@@ -26,10 +24,8 @@ class TestWelcomeApiViews(TestAccountMixin):
         super().setUp()
         self.client = Client()
         self.addCleanup(self.client.logout)
-        self.url = reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.welcome}")
-        self.dismiss_url = reverse(
-            f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.welcome_dismiss}"
-        )
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.welcome}")
+        self.dismiss_url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.welcome_dismiss}")
         self.addCleanup(self.forget_welcome)
         self.forget_welcome()
 

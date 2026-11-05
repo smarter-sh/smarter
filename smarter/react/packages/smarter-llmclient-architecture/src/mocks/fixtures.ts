@@ -15,7 +15,7 @@ function leaf(
   recordLocator: string,
   url: string | null,
 ): SAMDependencyTreeNode {
-  const detailUrl = `/dashboard/api/resource/${kind}/${recordLocator}/`;
+  const detailUrl = `/api/web/dashboard/resource/${kind}/${recordLocator}/`;
   return { kind, icon, name, owner: OWNER, recordLocator, url, detailUrl, readable: true, children: [] };
 }
 

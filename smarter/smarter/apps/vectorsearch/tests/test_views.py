@@ -6,6 +6,7 @@ See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
+from smarter.apps.vectorsearch.api.web.urls import VectorsearchApiWebReverseNames
 from smarter.apps.vectorsearch.caching import (
     invalidate_all_cached_vectorsearchs_for_user_profile,
 )
@@ -20,6 +21,7 @@ class TestVectorsearchViews(ResourceViewsTestMixin, TestAccountMixin):
 
     model = Vectorsearch
     reverse_names = VectorsearchReverseNames
+    web_reverse_names = VectorsearchApiWebReverseNames
     id_kwarg = "vectorsearch_id"
     invalidate_cache = staticmethod(invalidate_all_cached_vectorsearchs_for_user_profile)
     resource_name_prefix = "test_vectorsearch_views"
@@ -56,6 +58,14 @@ class TestVectorsearchViews(ResourceViewsTestMixin, TestAccountMixin):
                 embeddings_provider=cls.provider,
             )
         return Vectorsearch.objects.create(name=name, user_profile=cls.user_profile, vectorstore=cls.vectorstore)
+
+    def test_web_api_paths(self):
+        """Test that the list page's endpoints are in the web console's api."""
+        self.assertEqual(self.web_url("listview_all"), "/api/web/vectorsearch/listview/")
+        self.assertEqual(self.web_url("listview", ownership_filter="owned"), "/api/web/vectorsearch/listview/owned/")
+        self.assertEqual(self.web_id_url("clone", 1, new_name="x"), "/api/web/vectorsearch/clone/1/x/")
+        self.assertEqual(self.web_id_url("rename", 1, new_name="x"), "/api/web/vectorsearch/rename/1/x/")
+        self.assertEqual(self.web_id_url("delete", 1), "/api/web/vectorsearch/delete/1/")
 
     def test_clone(self):
         super().test_clone()

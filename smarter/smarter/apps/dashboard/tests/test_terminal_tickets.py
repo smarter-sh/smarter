@@ -9,15 +9,14 @@ from django.urls import resolve
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.views.terminal_emulator.api import tickets
+from smarter.apps.dashboard.views.terminal_emulator.api.names import (
+    DashboardTerminalApiReverseNames,
+)
 from smarter.apps.dashboard.views.terminal_emulator.api.tickets import (
     TICKET_CACHE_PREFIX,
     issue_ticket,
     redeem_ticket,
 )
-from smarter.apps.dashboard.views.terminal_emulator.names import (
-    DashboardTerminalReverseNames,
-)
-from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.lib import json
 from smarter.lib.django.shortcuts import reverse
 
@@ -64,11 +63,7 @@ class TestTicketApi(TestAccountMixin):
         super().setUp()
         self.client = Client()
         self.addCleanup(self.client.logout)
-        self.url = reverse(
-            DashboardReverseNames.namespace,
-            DashboardTerminalReverseNames.namespace,
-            DashboardTerminalReverseNames.ticket,
-        )
+        self.url = reverse(DashboardTerminalApiReverseNames.namespace, DashboardTerminalApiReverseNames.ticket)
 
     def test_a_superuser_gets_a_ticket(self):
         self.client.force_login(self.admin_user)
