@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.6](https://github.com/smarter-sh/smarter/compare/v0.42.5...v0.42.6) (2026-11-05)
+
+### Bug Fixes
+
+* **django:** match hashed ids only as whole url path segments ([e47268c](https://github.com/smarter-sh/smarter/commit/e47268cced22801c2d39b250e7c002a1c3d0cf57)), closes [#924](https://github.com/smarter-sh/smarter/issues/924)
+* **prompt:** save long tool call arguments, don't retry DataError ([f546cd1](https://github.com/smarter-sh/smarter/commit/f546cd1979fd62e712da1b50e4c320f84ef47853)), closes [#923](https://github.com/smarter-sh/smarter/issues/923)
+
+## [0.42.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.5...v0.42.6-alpha.1) (2026-11-05)
+
+### Bug Fixes
+
+* **django:** match hashed ids only as whole url path segments ([e47268c](https://github.com/smarter-sh/smarter/commit/e47268cced22801c2d39b250e7c002a1c3d0cf57)), closes [#924](https://github.com/smarter-sh/smarter/issues/924)
+* **prompt:** save long tool call arguments, don't retry DataError ([f546cd1](https://github.com/smarter-sh/smarter/commit/f546cd1979fd62e712da1b50e4c320f84ef47853)), closes [#923](https://github.com/smarter-sh/smarter/issues/923)
+
 ## [0.42.5](https://github.com/smarter-sh/smarter/compare/v0.42.4...v0.42.5) (2026-11-05)
 
 ### Bug Fixes
