@@ -7,7 +7,7 @@ import { server } from "@test/server";
 
 import useDashboardApi from "@/hooks/useDashboardApi";
 
-const URL = "/dashboard/api/x/";
+const URL = "/api/web/dashboard/x/";
 const KEY = `smarter_dashboard_api:${URL}`;
 const MINUTE = 60 * 1000;
 const NOW = Date.UTC(2026, 9, 17, 12, 0, 0);

@@ -52,7 +52,7 @@ class LLMHostListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered page.
         """
         # pylint: disable=C0415
-        from smarter.apps.llmhost.urls import LLMHostReverseNames
+        from smarter.apps.llmhost.api.web.urls import LLMHostApiWebReverseNames
 
         context = {
             "llmhost_list": {
@@ -60,7 +60,9 @@ class LLMHostListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "llmhost_list_api_url": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview_api_all),
+                "llmhost_list_api_url": reverse(
+                    LLMHostApiWebReverseNames.namespace, LLMHostApiWebReverseNames.listview_all
+                ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }
@@ -105,7 +107,7 @@ class LLMHostComputeListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered page.
         """
         # pylint: disable=C0415
-        from smarter.apps.llmhost.urls import LLMHostReverseNames
+        from smarter.apps.llmhost.api.web.urls import LLMHostApiWebReverseNames
 
         context = {
             "llmhost_compute_list": {
@@ -114,7 +116,7 @@ class LLMHostComputeListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "llmhost_compute_list_api_url": reverse(
-                    LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview_api_all
+                    LLMHostApiWebReverseNames.namespace, LLMHostApiWebReverseNames.compute_listview_all
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),

@@ -60,7 +60,7 @@ export async function post<T>(context: ConsoleContext, path: string, body: objec
 }
 
 /** The url of an endpoint of one extension. */
-const of = (slug: string, action = "") => `extensions/${encodeURIComponent(slug)}/${action ? `${action}/` : ""}`;
+const of = (slug: string, action = "") => `${encodeURIComponent(slug)}/${action ? `${action}/` : ""}`;
 
 export const listExtensions = (context: ConsoleContext) => post<ExtensionListResponse>(context, "list/");
 export const getRegistry = (context: ConsoleContext, refresh = false) =>

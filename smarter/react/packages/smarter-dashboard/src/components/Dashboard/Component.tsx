@@ -27,8 +27,8 @@
  * :example:
  *
  *     <Dashboard
- *       myResourcesApiUrl="https://customer.smarter.sh/dashboard/api/my-resources"
- *       serviceHealthApiUrl="https://customer.smarter.sh/dashboard/api/service-health"
+ *       myResourcesApiUrl="https://customer.smarter.sh/api/web/dashboard/my-resources"
+ *       serviceHealthApiUrl="https://customer.smarter.sh/api/web/dashboard/service-health"
  *       csrfCookieName="csrftoken"
  *       csrftoken="token-value"
  *       djangoSessionCookieName="sessionid"

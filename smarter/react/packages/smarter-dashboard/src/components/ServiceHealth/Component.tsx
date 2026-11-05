@@ -30,7 +30,7 @@
  *
  * :example:
  *
- *     <ServiceHealth sessionContext={sessionContext} apiUrl="/dashboard/api/service-health/" />
+ *     <ServiceHealth sessionContext={sessionContext} apiUrl="/api/web/dashboard/service-health/" />
  */
 import type { SessionContext } from "@smarter/common";
 import { gettext, interpolate, ngettext } from "@smarter/common";

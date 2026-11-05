@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Vectorsearch } from "@/lib/Types";
 
-export const API_URL = "/vectorsearch/react-integration/api/listview/";
+export const API_URL = "/api/web/vectorsearch/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Vectorsearch> = {}): V
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/vectorsearch/vectorsearches/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/Vectorsearch/vectorsearch-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/Vectorsearch/vectorsearch-r${id}/`,
     canDelete: true,
     ready: true,
     rfc1034CompliantName: `example-${id}`,

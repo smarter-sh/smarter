@@ -1,7 +1,9 @@
 """Tests of smarter.apps.llmtool.extension.manifest."""
 
+from smarter.apps.llmtool.extension.api.web import urls as extension_web_urls
 from smarter.apps.llmtool.extension.exceptions import SmarterExtensionManifestError
 from smarter.apps.llmtool.extension.manifest import (
+    RESERVED_SLUGS,
     ExtensionManifest,
     ExtensionSettingSpec,
     ExtensionSettingType,
@@ -97,6 +99,22 @@ class TestExtensionManifest(SmarterTestBase):
                 )
                 with self.assertRaises(SmarterExtensionManifestError):
                     ExtensionManifest.from_pyproject(text)
+
+    def test_reserved_slugs(self):
+        """A slug can't be one of the Extensions api's fixed endpoints, which share its url space."""
+        for reserved in RESERVED_SLUGS:
+            with self.subTest(slug=reserved):
+                with self.assertRaisesRegex(SmarterExtensionManifestError, "reserved"):
+                    ExtensionManifest.from_pyproject(manifest_text(slug=f'"{reserved}"'))
+
+    def test_reserved_slugs_match_the_api(self):
+        """Every fixed endpoint of the Extensions api is reserved, so no extension's <slug>/ is shadowed."""
+        fixed = set()
+        for pattern in extension_web_urls.urlpatterns:
+            route = str(pattern.pattern)
+            if route and "<" not in route:
+                fixed.add(route.rstrip("/"))
+        self.assertEqual(fixed, set(RESERVED_SLUGS))
 
     def test_duplicates(self):
         """Tools, settings and switches must be unique."""

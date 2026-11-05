@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { AuthToken } from "@/lib/Types";
 
-export const API_URL = "/authtoken/react-integration/api/listview/";
+export const API_URL = "/api/web/authtoken/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -42,7 +42,7 @@ export function makeObject(id: number, overrides: Partial<AuthToken> = {}): Auth
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/authtoken/authtokens/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/AuthToken/smarterauthtoken-${keyId}/`,
+    detailUrl: `/api/web/dashboard/resource/AuthToken/smarterauthtoken-${keyId}/`,
     canDelete: true,
     ready: true,
     isActive: true,

@@ -16,8 +16,6 @@ from smarter.lib import json
 from smarter.lib.journal.models import SAMJournal
 from smarter.lib.typing import SmarterDictType
 
-from ..const import namespace
-
 
 class TestActivityApiView(TestAccountMixin):
     """Test ActivityView, which lists the user's recent manifest commands from the journal."""
@@ -27,7 +25,7 @@ class TestActivityApiView(TestAccountMixin):
         self.client = Client()
         self.addCleanup(self.client.logout)
         self.client.force_login(self.admin_user)
-        self.url = reverse(f"{namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.activity}")
+        self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.activity}")
 
     def journal(self, user, command: str, status_code: int = HTTPStatus.OK, response=None) -> SAMJournal:
         entry = SAMJournal.objects.create(

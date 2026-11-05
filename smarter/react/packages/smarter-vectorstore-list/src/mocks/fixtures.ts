@@ -6,7 +6,7 @@ import type { SessionContext, UserProfile } from "@smarter/common";
 
 import type { Vectorstore } from "@/lib/Types";
 
-export const API_URL = "/vectorstore/react-integration/api/listview/";
+export const API_URL = "/api/web/vectorstore/listview/";
 
 /** The base url of the clone, rename and delete apis. */
 export const ACTIONS_URL = API_URL.replace(/listview\/$/, "");
@@ -40,7 +40,7 @@ export function makeObject(id: number, overrides: Partial<Vectorstore> = {}): Ve
     annotations: {},
     userProfile: USER_PROFILE,
     manifestUrl: `/vectorstore/vectorstores/hashed${id}/`,
-    detailUrl: `/dashboard/api/resource/Vectorstore/vectorstoremeta-r${id}/`,
+    detailUrl: `/api/web/dashboard/resource/Vectorstore/vectorstoremeta-r${id}/`,
     canDelete: true,
     spec: {},
     backend: "qdrant",

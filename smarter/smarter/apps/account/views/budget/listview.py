@@ -56,7 +56,7 @@ def budget_list_item(view: SmarterAuthenticatedNeverCachedWebView, budget: Budge
     # pylint: disable=C0415
     from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 
-    series_name = f"dashboard:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.budget_series}"
+    series_name = f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.budget_series}"
     resources = []
     for constraint in constraints:
         status = {
@@ -88,7 +88,7 @@ class BudgetListView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The rendered template, with the app's root element settings.
         """
         # pylint: disable=C0415
-        from .urls import BudgetReverseNames
+        from smarter.apps.account.api.web.urls import AccountApiWebReverseNames
 
         context = {
             "budget_list": {
@@ -96,7 +96,9 @@ class BudgetListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "budget_list_api_url": reverse(BudgetReverseNames.namespace, BudgetReverseNames.listview_api),
+                "budget_list_api_url": reverse(
+                    AccountApiWebReverseNames.namespace, AccountApiWebReverseNames.budget_listview
+                ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }

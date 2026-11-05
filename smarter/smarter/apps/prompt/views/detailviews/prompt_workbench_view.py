@@ -268,22 +268,16 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         :rtype: str
         """
         # pylint: disable=C0415
-        from smarter.apps.dashboard.views.terminal_emulator.api.urls import (
+        from smarter.apps.dashboard.views.terminal_emulator.api.names import (
             DashboardLogsApiReverseNames,
         )
         from smarter.apps.dashboard.views.terminal_emulator.enabled import (
             server_logs_enabled,
         )
-        from smarter.apps.dashboard.views.terminal_emulator.names import (
-            DashboardLogsReverseNames,
-        )
-        from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
         if not server_logs_enabled():
             return ""
         return reverse(
-            DashboardReverseNames.namespace,
-            DashboardLogsReverseNames.namespace,
             DashboardLogsApiReverseNames.namespace,
             DashboardLogsApiReverseNames.stream,
         )

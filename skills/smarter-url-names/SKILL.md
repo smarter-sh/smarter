@@ -12,7 +12,9 @@ attribute. Rename the view and every name follows; mistype the attribute and Pyt
 not a user at runtime.
 
 The decision and its reasons are [ADR-032](../../docs/source/adr/032-url-names.rst). The newest, cleanest examples to copy: `apps/guardrail/urls.py`, `apps/llmclient/urls.py`,
-`apps/prompt/urls.py` (console pages), and `apps/guardrail/api/v1/urls.py` (an api).
+`apps/prompt/urls.py` (console pages), `apps/guardrail/api/v1/urls.py` (an api), and
+`apps/guardrail/api/web/urls.py` (the web console api, `/api/web/<app>/`, which holds every JSON
+endpoint a console React app calls: see [ADR-034](../../docs/source/adr/034-web-console-api.rst)).
 
 ## The pattern
 
@@ -55,7 +57,6 @@ class GuardrailReverseNames:
 
     listview = to_snake_case(GuardrailListView.__name__)
     detailview = to_snake_case(GuardrailDetailView.__name__)
-    listview_api_all = to_snake_case(GuardrailListApiView.__name__) + "_all"
 
 
 urlpatterns = [
@@ -79,7 +80,8 @@ The rules:
   underscore. (`apps/llmclient/api/v1/urls.py` and `apps/vectorsearch/api/v1/urls.py` define them
   without one, which gives names such as `llm_client_viewby_id`: don't copy that.)
 - **Name the class** `<App>ReverseNames` for console pages, `<App>ApiV1ReverseViews` for an api
-  version. Both shapes are the same; only the suffix differs, for historical reasons.
+  version, `<App>ApiWebReverseNames` for the web console api (its `namespace` is
+  `f"{path_namespace}:{namespace}"`, i.e. `api:web:<app>`). Both shapes are the same; only the suffix differs, for historical reasons.
 - **Import the views at module level.** If that makes a circular import, put the class in a
   `names.py` beside `urls.py` and import it from both (`dashboard/views/terminal_emulator/names.py`).
 

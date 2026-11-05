@@ -47,7 +47,7 @@ Example index.html
         id="smarter-dashboard-root"
         smarter-csrf-cookie-name="csrftoken"
         smarter-django-session-cookie-name="sessionid"
-        smarter-api-path="/dashboard/logs/api/stream/"
+        smarter-api-path="/api/web/dashboard/logs/stream/"
         >
       </div>
     </body>

@@ -102,19 +102,12 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         from smarter.apps.dashboard.views.passthrough.api.urls import (
             PassthroughApiReverseNames,
         )
-        from smarter.apps.dashboard.views.passthrough.urls import (
-            PassthroughReverseNames,
-        )
         from smarter.apps.dashboard.views.terminal_emulator.api.names import (
             DashboardLogsApiReverseNames,
         )
         from smarter.apps.dashboard.views.terminal_emulator.enabled import (
             server_logs_enabled,
         )
-        from smarter.apps.dashboard.views.terminal_emulator.names import (
-            DashboardLogsReverseNames,
-        )
-        from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
         api_path = reverse(
             ":".join([PromptAPINamespace.namespace, PromptAPINamespace.passthrough]),
@@ -126,19 +119,15 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         api_url = urljoin(smarter_settings.environment_platform_url, api_path)
 
         provider_api_path = reverse(
-            DashboardReverseNames.namespace,
-            PassthroughReverseNames.namespace,
             PassthroughApiReverseNames.namespace,
             PassthroughApiReverseNames.api_providers,
         )
-        # example: https://alpha.ubc.smarter.sh/dashboard/passthrough/api/providers/
+        # example: https://alpha.ubc.smarter.sh/api/web/dashboard/passthrough/providers/
         provider_api_url = urljoin(smarter_settings.environment_platform_url, provider_api_path)
 
-        # example: /dashboard/logs/api/stream/. Empty while server logs are disabled.
+        # example: /api/web/dashboard/logs/stream/. Empty while server logs are disabled.
         log_stream_url = (
             reverse(
-                DashboardReverseNames.namespace,
-                DashboardLogsReverseNames.namespace,
                 DashboardLogsApiReverseNames.namespace,
                 DashboardLogsApiReverseNames.stream,
             )
