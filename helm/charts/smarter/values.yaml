@@ -446,7 +446,28 @@ mysql:
 mariadb:
   enabled: true
   nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
+  # Bitnami publishes bitnami/mariadb only as `latest`, so a version tag can't be pinned. The
+  # digest pins the image, so that a pod rescheduled onto a new node runs the same MariaDB as
+  # before, and never a new major version against the existing data directory. A digest
+  # replaces the tag in the pod's image reference. This one is MariaDB 13.1.1 (amd64 and arm64).
+  # To upgrade, take the digest of the new `latest`, e.g. with
+  # `docker buildx imagetools inspect bitnami/mariadb:latest`.
+  image:
+    digest: "sha256:687181819d6e3f04124a21aec1aeef1d8a5d6a924c0d8e8f0cf66b8f0ce15a7c"
   primary:
+    # MariaDB is one pod on a ReadWriteOnce volume, so any eviction is a database outage of
+    # about a minute, while the new pod waits for the volume to detach from the old node
+    # (issue #931, as for Redis in #929). This annotation stops the cluster autoscaler from
+    # scaling down MariaDB's node.
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+    # The chart's default PodDisruptionBudget is maxUnavailable: 1, which allows evicting the
+    # only pod. minAvailable: 1 blocks every voluntary eviction. A node drain, or a managed node
+    # group upgrade, then waits for an operator to delete the pod by hand, at a time they choose.
+    pdb:
+      create: true
+      minAvailable: 1
+      maxUnavailable: ""
     # Smarter stores emoji and other 4-byte characters (prompts, manifests,
     # chat history), which need utf8mb4. The Bitnami chart's default my.cnf sets
     # character-set-server=UTF8, which is the 3-byte utf8mb3. Command-line flags
@@ -462,8 +483,6 @@ mariadb:
       limits:
         cpu: 2
         memory: 4Gi
-    image:
-      pullPolicy: Always
     livenessProbe:
       enabled: true
       initialDelaySeconds: 30
