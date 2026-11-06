@@ -180,7 +180,8 @@ class TestRegistryInstall(RegistryTestMixin):
     """Test installing and updating extensions from the registry."""
 
     def test_install_and_update(self):
-        """An install records the source, badge and publisher; an update is found and installed."""
+        """An install records the source, badge and publisher; an update is found, counted and installed."""
+        updates_before = registry.update_count()
         extension = registry.install_from_registry("echo", "1.0.0", user=self.admin_user)
         self.assertEqual(extension.source, ExtensionSource.REGISTRY)
         self.assertEqual(extension.trust_badge, ExtensionTrustBadge.OFFICIAL)
@@ -191,9 +192,11 @@ class TestRegistryInstall(RegistryTestMixin):
 
         self.assertEqual([item.slug for item in registry.check_for_updates()], ["echo"])
         self.assertEqual(check_extension_updates(), ["echo"])
+        self.assertEqual(registry.update_count(), updates_before + 1)
         extension = registry.install_from_registry("echo", user=self.admin_user)
         self.assertEqual(extension.installed_version.version, "1.1.0")  # type: ignore[union-attr]
         self.assertEqual(registry.check_for_updates(), [])
+        self.assertEqual(registry.update_count(), updates_before)
 
     def test_install_errors(self):
         """Unknown extensions and versions, and uploads with the same slug, are refused."""
