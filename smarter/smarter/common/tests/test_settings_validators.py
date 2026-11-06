@@ -8,11 +8,13 @@ exception, e.g. a TypeError or an AttributeError, is a bug in the validator.
 """
 
 import inspect
+import os
 from unittest.mock import Mock, PropertyMock, patch
 
 from pydantic import SecretStr
 
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.defaults import github_token_env
 from smarter.common.conf.env import DEFAULT_MISSING_VALUE
 from smarter.common.conf.settings import Settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
@@ -280,17 +282,39 @@ class TestSettingsMethods(SmarterTestBase):
         self.assertEqual(call(Settings.validate_aws_eks_cluster_name, "my-cluster", {}), "my-cluster")
         self.assertIsNone(call(Settings.validate_smtp_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
 
-    def test_github_api_token(self):
+    def test_github_token(self):
         """Test that the GitHub token is None when missing, or a placeholder, and must be a SecretStr."""
         module = "smarter.common.conf.settings"
-        for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr(DEFAULT_MISSING_VALUE)):
+        placeholders = (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml"))
+        for value in placeholders:
             with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
-                defaults.GITHUB_API_TOKEN = None
-                self.assertIsNone(call(Settings.validate_github_api_token, value, {}))
-        token = SecretStr("github-token")
-        self.assertIs(call(Settings.validate_github_api_token, token, {}), token)
+                defaults.GITHUB_TOKEN = None
+                self.assertIsNone(call(Settings.validate_github_token, value, {}))
+        token = SecretStr("ghp_" + "x" * 36)
+        self.assertIs(call(Settings.validate_github_token, token, {}), token)
         with self.assertRaises(SmarterConfigurationError):
-            call(Settings.validate_github_api_token, "github-token", {})
+            call(Settings.validate_github_token, "github-token", {})
+
+    def test_github_token_names(self):
+        """Test that GITHUB_TOKEN wins, then GH_TOKEN, then the old GITHUB_API_TOKEN, each with or without SMARTER_."""
+        names = ("GITHUB_TOKEN", "GH_TOKEN", "GITHUB_API_TOKEN")
+        cleared = {}
+        for name in names:
+            cleared[name] = ""
+            cleared[f"SMARTER_{name}"] = ""
+        cases = (
+            ({"GITHUB_TOKEN": "a", "GH_TOKEN": "b", "GITHUB_API_TOKEN": "c"}, "a"),
+            ({"GH_TOKEN": "b", "SMARTER_GITHUB_API_TOKEN": "c"}, "b"),
+            ({"SMARTER_GITHUB_API_TOKEN": "c"}, "c"),
+            ({}, None),
+        )
+        for environment, expected in cases:
+            with self.subTest(environment=environment), patch.dict(os.environ, {**cleared, **environment}):
+                token = github_token_env()
+                if expected is None:
+                    self.assertIsNone(token)
+                else:
+                    self.assertEqual(token.get_secret_value(), expected)
 
     def test_slack_bot_token(self):
         """Test that the Slack bot token is None when missing, or a placeholder, and must be a SecretStr."""

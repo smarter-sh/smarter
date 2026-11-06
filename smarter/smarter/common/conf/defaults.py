@@ -54,6 +54,29 @@ def optional_secret_env(var_name: str) -> Optional[SecretStr]:
     return None if value is None or is_missing_value(value) else SecretStr(value)
 
 
+GITHUB_TOKEN_NAMES = ("GITHUB_TOKEN", "GH_TOKEN", "GITHUB_API_TOKEN")
+"""
+The environment variables that hold the platform's GitHub token, in the order they are read.
+
+``GITHUB_TOKEN`` is the name that GitHub Actions and most tools use, and ``GH_TOKEN`` is the GitHub
+CLI's. ``GITHUB_API_TOKEN`` is the name that Smarter used before, still read so that an existing
+deployment keeps working. Each may also have the ``SMARTER_`` prefix.
+"""
+
+
+def github_token_env() -> Optional[SecretStr]:
+    """
+    Return the platform's GitHub token, from the first of :data:`GITHUB_TOKEN_NAMES` that is set.
+
+    :returns: The token, or None if none of them is set, or each holds a placeholder.
+    """
+    for name in GITHUB_TOKEN_NAMES:
+        token = optional_secret_env(name)
+        if token is not None:
+            return token
+    return None
+
+
 class DjangoPermittedStorages:
     """Django permitted storage backends."""
 
@@ -211,7 +234,7 @@ class SettingsDefaults:
         fernet = generate_fernet_encryption_key()
     FERNET_ENCRYPTION_KEY = SecretStr(fernet)
 
-    GITHUB_API_TOKEN: Optional[SecretStr] = optional_secret_env("GITHUB_API_TOKEN")
+    GITHUB_TOKEN: Optional[SecretStr] = github_token_env()
 
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
 
