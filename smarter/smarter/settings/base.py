@@ -24,6 +24,7 @@ import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
+import django
 from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
@@ -671,10 +672,23 @@ CACHE_OPTIONS = {
 }
 """The OPTIONS of the Redis cache in every environment."""
 
+CACHE_KEY_PREFIX = f"django{django.__version__}"
+"""
+The KEY_PREFIX of the ``default`` cache, e.g. ``django6.0.10``.
+
+The cache pickles model instances (``@cache_results``, waffle), and Django only promises that a
+pickled model instance can be loaded by the Django version that pickled it. During a rolling
+update, pods on the old and the new Django version share one Redis, so without this prefix each
+would load the other's instances. With it, a Django upgrade starts with a cold cache. The
+``sessions`` cache has no prefix, so that an upgrade doesn't log anyone out: sessions hold no
+model instances.
+"""
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://:smarter@smarter-redis:6379/1",
+        "KEY_PREFIX": CACHE_KEY_PREFIX,
         "OPTIONS": CACHE_OPTIONS,
     },
     "sessions": {

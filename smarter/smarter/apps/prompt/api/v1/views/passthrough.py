@@ -158,7 +158,10 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
         try:
             data: SmarterDictType = json.loads(request.body.decode("utf-8"))
         except json.JSONDecodeError as e:
-            logger.error("%s JSON decode error: %s. Raw request body: %s", logger_prefix, e, request.body)
+            # a client error, answered with 400. Never log the body: it holds the
+            # system prompt and the user's messages.
+            body_size = len(request.body)
+            logger.warning("%s JSON decode error: %s. Request body: %s bytes", logger_prefix, e, body_size)
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
 
         # process the request using the appropriate handler for the specified provider.
