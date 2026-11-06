@@ -17,7 +17,10 @@ from smarter.apps.mcpserver.protocol.tools.status import (
     PlatformStatusTool,
 )
 from smarter.apps.mcpserver.services.status.feeds import AwsEvent, ProviderStatus
-from smarter.apps.mcpserver.services.status.platform import DatabaseLoad
+from smarter.apps.mcpserver.services.status.platform import (
+    DatabaseLoad,
+    HealthCheckResult,
+)
 from smarter.common.conf import smarter_settings
 
 from .operations_base import TICKET, OperationsTestBase
@@ -38,7 +41,12 @@ class StatusToolsTestBase(OperationsTestBase):
 
     def setUp(self):
         super().setUp()
-        self.checks = [("Database", True), ("Cache", True), ("Task Broker", True), ("Workers", True)]
+        self.checks = [
+            HealthCheckResult("Database", True),
+            HealthCheckResult("Cache", True),
+            HealthCheckResult("Task Broker", True),
+            HealthCheckResult("Workers", True),
+        ]
         self.depths = {DEFAULT_QUEUE: 0, INFRASTRUCTURE_QUEUE: 0}
         self.database = DatabaseLoad(connections=10, max_connections=150, running=1, slow_queries=0)
         self.providers = [
@@ -92,7 +100,7 @@ class TestPlatformStatusTool(StatusToolsTestBase):
         self.assertEqual(self.audit_rows().first().tool, "platform_status")
 
     def test_services_and_upstream(self):
-        self.checks[3] = ("Workers", False)
+        self.checks[3] = HealthCheckResult("Workers", False, "TimeoutError: no worker answered")
         self.depths = {DEFAULT_QUEUE: 120, INFRASTRUCTURE_QUEUE: None}
         self.database = DatabaseLoad(connections=140, max_connections=150)
         self.providers[0] = ProviderStatus(
@@ -101,14 +109,14 @@ class TestPlatformStatusTool(StatusToolsTestBase):
         self.aws_events = [EVENT]
         self.unread_feeds = ["EC2"]
         text = self.status()
-        self.assertIn("The Workers health check failed.", text)
+        self.assertIn("The Workers health check failed: TimeoutError: no worker answered.", text)
         self.assertIn(f"120 tasks are waiting in the Celery queue {DEFAULT_QUEUE}", text)
         self.assertIn(f"The Celery queue {INFRASTRUCTURE_QUEUE} could not be read.", text)
         self.assertIn("The database has 140 of 150 connections in use.", text)
         self.assertIn("OpenAI reports Major Outage", text)
         self.assertIn("AWS EKS event: Increased API error rates (2026-11-02 20:00:00 UTC).", text)
         self.assertIn("- AWS EC2: could not be read", text)
-        self.assertIn("- Workers: FAILED", text)
+        self.assertIn("- Workers: FAILED, TimeoutError: no worker answered", text)
         self.assertIn(f"- Celery queue {INFRASTRUCTURE_QUEUE}: unknown", text)
 
     def test_database_down(self):

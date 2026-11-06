@@ -274,12 +274,12 @@ class TestSkillSources(SmarterTestBase):
 
     def test_github_api_headers_without_a_token(self):
         """Test that GitHub api requests are anonymous without a token."""
-        with mock.patch(f"{SKILL_SOURCES_MODULE}.smarter_settings", mock.MagicMock(github_api_token=None)):
+        with mock.patch(f"{SKILL_SOURCES_MODULE}.smarter_settings", mock.MagicMock(github_token=None)):
             self.assertEqual(github_api_headers(), {"Accept": "application/vnd.github+json"})
 
     def test_list_github_skill_files_sends_the_token(self):
         """Test that the git trees api request is authenticated with the token, and the raw files are not."""
-        settings = mock.MagicMock(github_api_token=SecretStr("test-token"))
+        settings = mock.MagicMock(github_token=SecretStr("test-token"))
         with mock.patch(f"{SKILL_SOURCES_MODULE}.smarter_settings", settings), mock_skill_host() as host:
             retrieve_skill(SKILL_REMOTE_URL)
         authorization = {call["url"]: call["headers"].get("Authorization") for call in host.calls}
@@ -292,7 +292,7 @@ class TestSkillSources(SmarterTestBase):
         host = FakeSkillHost()
         host.add(SKILL_REMOTE_TREE_URL, status_code=301, headers={"Location": "https://example.com/tree"})
         host.add("https://example.com/tree", b"{}")
-        settings = mock.MagicMock(github_api_token=SecretStr("test-token"))
+        settings = mock.MagicMock(github_token=SecretStr("test-token"))
         with mock.patch(f"{SKILL_SOURCES_MODULE}.smarter_settings", settings), mock_skill_host(host):
             with self.assertRaises(SkillSourceError):
                 list_github_skill_files(parse_source_url(SKILL_REMOTE_URL))

@@ -34,6 +34,7 @@ from smarter.apps.mcpserver.services.status.cluster import (
     ClusterSnapshot,
     NodeStatus,
     PodStatus,
+    WarningEvent,
     cluster_snapshot,
     percent,
 )
@@ -45,6 +46,7 @@ from smarter.apps.mcpserver.services.status.feeds import (
 )
 from smarter.apps.mcpserver.services.status.platform import (
     DatabaseLoad,
+    HealthCheckResult,
     database_load,
     health_checks,
     queue_depths,
@@ -154,7 +156,7 @@ def node_observations(nodes: list[NodeStatus]) -> list[str]:
 
 
 def service_observations(
-    checks: list[tuple[str, bool]],
+    checks: list[HealthCheckResult],
     depths: dict[str, Optional[int]],
     database: Optional[DatabaseLoad],
 ) -> list[str]:
@@ -171,9 +173,9 @@ def service_observations(
     :returns: One sentence per problem, or an empty list if there is none.
     """
     found = []
-    for name, healthy in checks:
-        if not healthy:
-            found.append(f"The {name} health check failed.")
+    for check in checks:
+        if not check.healthy:
+            found.append(f"The {check.name} health check failed: {check.error}.")
     for queue, depth in depths.items():
         if depth is None:
             found.append(f"The Celery queue {queue} could not be read.")
@@ -185,6 +187,38 @@ def service_observations(
     connection_use = percent(database.connections, database.max_connections)
     if connection_use is not None and connection_use >= DATABASE_BUSY_PERCENT:
         found.append(f"The database has {database.connections} of {database.max_connections} connections in use.")
+    return found
+
+
+PROBE_SERVER_ERROR = "HTTP probe failed with statuscode: 5"
+"""The start of the message of a Kubernetes event whose HTTP probe answered a server error, e.g. 500."""
+
+
+def probe_error_observations(events: list[WarningEvent]) -> list[str]:
+    """
+    Say where to find why a pod's HTTP probe answered a server error, e.g. ``Internal Server Error``.
+
+    Kubernetes records only the status code of a probe, never the response or the traceback, so an
+    event such as ``Readiness probe failed: HTTP probe failed with statuscode: 500`` can't be
+    diagnosed by itself. The app server logs the traceback, at ERROR, as ``Internal Server Error:
+    /readiness/``, at the time of the event.
+
+    :param events: The namespace's warning events.
+    :returns: One sentence per pod whose probe answered a server error, or an empty list.
+    """
+    found = []
+    seen = set()
+    for event in events:
+        if PROBE_SERVER_ERROR not in event.message:
+            continue
+        if event.object in seen:
+            continue
+        seen.add(event.object)
+        found.append(
+            f"{event.object}'s probe answered a server error ({event.count} times, last at {utc(event.last_seen)}). "
+            "Kubernetes keeps no traceback: find it with search_logs, at level ERROR, with the text "
+            "'Internal Server Error', in the pod's log at that time."
+        )
     return found
 
 
@@ -213,7 +247,7 @@ def upstream_observations(providers: list[ProviderStatus], aws_events: list[AwsE
 
 def observations(
     snapshot: ClusterSnapshot,
-    checks: list[tuple[str, bool]],
+    checks: list[HealthCheckResult],
     depths: dict[str, Optional[int]],
     database: Optional[DatabaseLoad],
     providers: list[ProviderStatus],
@@ -238,6 +272,7 @@ def observations(
     found += node_observations(snapshot.nodes)
     if snapshot.events:
         found.append(f"{len(snapshot.events)} Kubernetes warning events in the period.")
+    found += probe_error_observations(snapshot.events)
     found += service_observations(checks, depths, database)
     found += upstream_observations(providers, aws_events)
     for error in snapshot.errors:
@@ -273,8 +308,8 @@ class PlatformStatus:
     snapshot: ClusterSnapshot
     """The environment's pods, the cluster's nodes, and the namespace's warning events."""
 
-    checks: list[tuple[str, bool]]
-    """The dashboard's health checks: each one's name, and whether it passed."""
+    checks: list[HealthCheckResult]
+    """The dashboard's health checks: each one's name, whether it passed, and why not."""
 
     depths: dict[str, Optional[int]]
     """The number of tasks waiting in each Celery queue, or None for a queue that could not be read."""

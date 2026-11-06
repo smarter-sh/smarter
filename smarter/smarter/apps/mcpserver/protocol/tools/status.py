@@ -41,7 +41,10 @@ from smarter.apps.mcpserver.services.status.cluster import (
     percent,
 )
 from smarter.apps.mcpserver.services.status.feeds import AwsEvent, ProviderStatus
-from smarter.apps.mcpserver.services.status.platform import DatabaseLoad
+from smarter.apps.mcpserver.services.status.platform import (
+    DatabaseLoad,
+    HealthCheckResult,
+)
 from smarter.apps.mcpserver.services.status.report import (
     eks_status,
     platform_status,
@@ -215,7 +218,7 @@ class PlatformStatusTool(StaffTool):
 
     @staticmethod
     def services_section(
-        checks: list[tuple[str, bool]],
+        checks: list[HealthCheckResult],
         depths: dict[str, Optional[int]],
         database: Optional[DatabaseLoad],
     ) -> list[str]:
@@ -228,9 +231,11 @@ class PlatformStatusTool(StaffTool):
         :returns: The section's lines: one bullet per health check, per queue, and for the database.
         """
         lines = []
-        for name, healthy in checks:
-            state = "healthy" if healthy else "FAILED"
-            lines.append(f"- {name}: {state}")
+        for check in checks:
+            if check.healthy:
+                lines.append(f"- {check.name}: healthy")
+            else:
+                lines.append(f"- {check.name}: FAILED, {check.error}")
         for queue, depth in depths.items():
             waiting = "unknown" if depth is None else f"{depth} waiting"
             lines.append(f"- Celery queue {queue}: {waiting}")

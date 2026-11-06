@@ -7,6 +7,8 @@ from asgiref.sync import async_to_sync
 from django.apps import apps
 from django.db.models.signals import post_delete, post_save
 from django.db.utils import OperationalError
+from django_redis.exceptions import ConnectionInterrupted
+from redis.exceptions import TimeoutError as RedisTimeoutError
 from waffle import get_waffle_switch_model
 
 from smarter.lib.django.waffle import (
@@ -233,6 +235,49 @@ class TestSwitchCache(SmarterTestBase):
         name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
         with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
             self.assertTrue(async_to_sync(async_switch_is_active)(name))
+
+    def cache_down_model(self, error: Exception, stored: object) -> MagicMock:
+        """Return a patched Switch model whose cached read raises ``error``, and whose table holds ``stored``."""
+        model = MagicMock()
+        model.get.side_effect = error
+        model.objects.filter.return_value.first.return_value = stored
+        return model
+
+    def test_reads_the_database_when_the_cache_fails(self):
+        """Test that a Redis outage reads the switch from the database, with one warning line, rather than raising."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        errors = (
+            RedisTimeoutError("Timeout reading from socket"),
+            ConnectionInterrupted(connection=None),
+        )
+        for error in errors:
+            with self.subTest(error=type(error).__name__):
+                clear_switch_cache()
+                model = self.cache_down_model(error, MagicMock(active=True))
+                with (
+                    patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=model),
+                    self.assertLogs(IS_ACTIVE, level="WARNING") as logs,
+                ):
+                    self.assertTrue(switch_is_active(name))
+                model.objects.filter.assert_called_once_with(name=name)
+                self.assertIn("reading switch", logs.output[0])
+                self.assertNotIn("Traceback", "\n".join(logs.output))
+
+    def test_a_switch_missing_from_the_database_has_its_default(self):
+        """Test that the fallback answers a switch's Smarter default when its row doesn't exist."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        default = bool(smarter_waffle_switches.switches[name].default)
+        model = self.cache_down_model(RedisTimeoutError("down"), None)
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=model):
+            self.assertEqual(switch_is_active(name), default)
+
+    def test_cache_and_database_down(self):
+        """Test that a switch is inactive when neither Redis nor the database answers."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        model = self.cache_down_model(RedisTimeoutError("down"), None)
+        model.objects.filter.side_effect = OperationalError("database is gone")
+        with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=model):
+            self.assertFalse(switch_is_active(name))
 
 
 class TestSwitchNames(SmarterTestBase):

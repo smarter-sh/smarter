@@ -85,6 +85,10 @@ env:
   SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # Optional. The platform's GitHub token, smarter_settings.github_token: SkillPlugin skill downloads
+  # (any token), and the bug reports that Smarter Sysadmin opens (a classic ghp_ token with the
+  # public_repo scope). Without it, create_bug_report says bug reports are not configured.
+  GITHUB_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_GOOGLE_MAPS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_INTERNAL_IP_PREFIXES: "192.168."
@@ -490,6 +494,13 @@ mariadb:
       timeoutSeconds: 5
       failureThreshold: 6
       successThreshold: 1
+    # The annotation and the PodDisruptionBudget above stop only voluntary evictions. A spot node
+    # that AWS reclaims takes MariaDB with it, whatever they say (issue #942: every node was spot,
+    # and MariaDB went down when its node was replaced). On a cluster with an on-demand node group,
+    # pin MariaDB to it, e.g. on EKS:
+    #   nodeSelector:
+    #     eks.amazonaws.com/capacityType: ON_DEMAND
+    # Leave it empty while every node is spot, or the pod can't be scheduled.
     nodeSelector: {}
     readinessProbe:
       enabled: true
@@ -543,6 +554,12 @@ redis:
       create: true
       minAvailable: 1
       maxUnavailable: ""
+    # As for MariaDB: a reclaimed spot node takes Redis with it (issue #942). On a cluster with an
+    # on-demand node group, pin Redis to it, e.g. on EKS:
+    #   nodeSelector:
+    #     eks.amazonaws.com/capacityType: ON_DEMAND
+    # Leave it empty while every node is spot, or the pod can't be scheduled.
+    nodeSelector: {}
     containerSecurityContext:
       enabled: true
     persistence:
