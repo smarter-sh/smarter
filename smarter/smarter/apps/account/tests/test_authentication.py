@@ -31,6 +31,7 @@ from .mixins import TestAccountMixin
 logger = logging.getLogger(__name__)
 
 LOGIN_VIEW = "smarter.apps.account.views.authentication.login_view"
+SIGN_IN = "smarter.apps.account.sign_in"
 
 
 class TestLoginView(TestAccountMixin):
@@ -108,7 +109,7 @@ class TestLoginView(TestAccountMixin):
         request.session.save()
 
         view = LoginView()
-        with patch(f"{LOGIN_VIEW}.log_login_failure") as log_login_failure:
+        with patch(f"{SIGN_IN}.log_login_failure") as log_login_failure:
             response = view.post(request)
         self.assertEqual(
             response.status_code,
@@ -127,7 +128,7 @@ class TestLoginView(TestAccountMixin):
         request.session.save()
 
         view = LoginView()
-        with patch(f"{LOGIN_VIEW}.log_login_failure") as log_login_failure:
+        with patch(f"{SIGN_IN}.log_login_failure") as log_login_failure:
             response = view.post(request)
         self.assertEqual(
             response.status_code,
@@ -148,7 +149,7 @@ class TestLoginView(TestAccountMixin):
 
         view = LoginView()
         with (
-            patch(f"{LOGIN_VIEW}.authenticate", side_effect=RuntimeError("boom")),
+            patch(f"{LOGIN_VIEW}.sign_in_with_email", side_effect=RuntimeError("boom")),
             patch(f"{LOGIN_VIEW}.log_login_failure") as log_login_failure,
             patch(f"{LOGIN_VIEW}.logger") as view_logger,
         ):

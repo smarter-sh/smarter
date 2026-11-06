@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 22:15+0000\n"
+"POT-Creation-Date: 2026-11-06 22:29+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -91,7 +91,7 @@ msgstr ""
 "O Smarter guarda apenas um hash da chave, por isso ela não pode ser exibida "
 "novamente. O ID dela é o seu identificador público."
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-console/src/App.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-console/src/App.tsx, react/packages/smarter-console/src/routes/PasswordResetPage.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Loading..."
 msgstr "Carregando..."
 
@@ -1043,6 +1043,14 @@ msgstr "Excluir: excluir esta conexão"
 msgid "The console couldn't reach the server."
 msgstr "O console não conseguiu se conectar ao servidor."
 
+#. Translators: used in react/packages/smarter-console/src/lib/account.ts
+msgid "Your session has expired. Reload the page, and try again."
+msgstr "Sua sessão expirou. Recarregue a página e tente novamente."
+
+#. Translators: used in react/packages/smarter-console/src/lib/account.ts
+msgid "An unknown error occurred. Please try again later."
+msgstr "Ocorreu um erro desconhecido. Tente novamente mais tarde."
+
 #. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
 msgid "Welcome, %(name)s"
 msgstr "Boas-vindas, %(name)s"
@@ -1051,13 +1059,41 @@ msgstr "Boas-vindas, %(name)s"
 msgid "Open the dashboard"
 msgstr "Abrir o painel"
 
-#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+#. Translators: used in react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Sign Out"
+msgstr "Sair"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
 msgid "Sign In"
 msgstr "Entrar"
 
 #. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
-msgid "Sign in to Smarter"
-msgstr "Entrar no Smarter"
+msgid "Sign in with Google"
+msgstr "Entrar com o Google"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
+msgid "Sign in with GitHub"
+msgstr "Entrar com o GitHub"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Email"
+msgstr "E-mail"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Password"
+msgstr "Senha"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
+msgid "Forgot Password ?"
+msgstr "Esqueceu a senha?"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
+msgid "Not a Member yet?"
+msgstr "Ainda não é membro?"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
+msgid "Sign up"
+msgstr "Cadastre-se"
 
 #. Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
 msgid "Page not found"
@@ -1066,6 +1102,50 @@ msgstr "Página não encontrada"
 #. Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
 msgid "Return Home"
 msgstr "Voltar ao início"
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
+msgid "Send a new link"
+msgstr "Enviar um novo link"
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
+msgid "New password"
+msgstr "Nova senha"
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
+msgid "Confirm the new password"
+msgstr "Confirme a nova senha"
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
+msgid "Set the new password"
+msgstr "Salvar a nova senha"
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
+msgid "Reset your password"
+msgstr "Redefina sua senha"
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
+msgid "Back to sign in"
+msgstr "Voltar para o login"
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
+msgid "Enter your email to reset your password."
+msgstr "Digite seu e-mail para redefinir sua senha."
+
+#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
+msgid "Send the link"
+msgstr "Enviar o link"
+
+#. Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Sign Up"
+msgstr "Cadastre-se"
+
+#. Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Registration is closed."
+msgstr "As inscrições estão fechadas."
+
+#. Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Already have an account?"
+msgstr "Já tem uma conta?"
 
 #. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
 msgid "Your Custom Domains"
@@ -1824,10 +1904,6 @@ msgstr "Remover foto de perfil"
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
 msgid "Welcome Tour"
 msgstr "Tour de boas-vindas"
-
-#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
-msgid "Sign Out"
-msgstr "Sair"
 
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/lib/api.ts
 msgid "The profile image could not be saved."
@@ -9973,6 +10049,9 @@ msgstr "O endereço de e-mail é obrigatório"
 msgid "Email and/or password do not match."
 msgstr "O e-mail e/ou a senha não correspondem."
 
+#~ msgid "Sign in to Smarter"
+#~ msgstr "Entrar no Smarter"
+
 #~ msgid "incorrect username or password."
 #~ msgstr "nome de usuário ou senha incorretos."
 
@@ -10141,9 +10220,6 @@ msgstr "O e-mail e/ou a senha não correspondem."
 
 #~ msgid "Current Password is required"
 #~ msgstr "A senha atual é obrigatória"
-
-#~ msgid "New Password is required"
-#~ msgstr "A nova senha é obrigatória"
 
 #~ msgid "Confirm Password is required"
 #~ msgstr "A confirmação da senha é obrigatória"

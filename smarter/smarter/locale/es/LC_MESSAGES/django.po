@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 21:46+0000\n"
+"POT-Creation-Date: 2026-11-06 22:29+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -15,6 +15,60 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: smarter/apps/account/api/web/views.py
+msgid "Too many attempts. Try again in a minute."
+msgstr "Demasiados intentos. Inténtalo de nuevo en un minuto."
+
+#: smarter/apps/account/api/web/views.py
+msgid "The request is invalid."
+msgstr "La solicitud no es válida."
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/login_view.py
+msgid "Email and/or password do not match."
+msgstr "El correo electrónico y/o la contraseña no coinciden."
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/account_views.py
+msgid "Registration is closed."
+msgstr "El registro está cerrado."
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/account_views.py
+msgid "An account with this email address already exists. Please sign in."
+msgstr ""
+"Ya existe una cuenta con esta dirección de correo electrónico. Inicia sesión."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Please correct the errors below."
+msgstr "Corrige los errores que se indican a continuación."
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/login_view.py
+msgid "An unknown error occurred. Please try again later."
+msgstr "Se produjo un error desconocido. Inténtalo de nuevo más tarde."
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"If an account has this email address, we have sent it a link to reset the "
+"password."
+msgstr ""
+"Si hay una cuenta con esta dirección de correo electrónico, le hemos enviado "
+"un enlace para restablecer la contraseña."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Choose a new password."
+msgstr "Elige una contraseña nueva."
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/password_management.py
+msgid "Passwords do not match."
+msgstr "Las contraseñas no coinciden."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Your password has been changed. Sign in with it."
+msgstr "Tu contraseña ha cambiado. Inicia sesión con ella."
 
 #: smarter/apps/account/management/commands/create_user.py
 msgid "Your Smarter user account has been created"
@@ -49,14 +103,15 @@ msgstr "¡Te damos la bienvenida a Smarter!"
 msgid "Join the Smarter community on Slack"
 msgstr "Únete a la comunidad de Smarter en Slack"
 
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "An account with this email address already exists. Please sign in."
-msgstr ""
-"Ya existe una cuenta con esta dirección de correo electrónico. Inicia sesión."
+#: smarter/apps/account/password_reset.py
+msgid "Reset your password"
+msgstr "Restablece tu contraseña"
 
+#: smarter/apps/account/password_reset.py
 #: smarter/apps/account/views/authentication/account_views.py
-msgid "Registration is closed."
-msgstr "El registro está cerrado."
+msgid "Invalid password reset link. User does not exist."
+msgstr ""
+"Enlace de restablecimiento de contraseña no válido. El usuario no existe."
 
 #: smarter/apps/account/views/authentication/account_views.py
 msgid "User not found. Please log in to activate your account."
@@ -65,20 +120,6 @@ msgstr "Usuario no encontrado. Inicia sesión para activar tu cuenta."
 #: smarter/apps/account/views/authentication/account_views.py
 msgid "Activate your account."
 msgstr "Activa tu cuenta."
-
-#: smarter/apps/account/views/authentication/account_views.py
-#: smarter/apps/account/views/password_management.py
-msgid "Invalid password reset link. User does not exist."
-msgstr ""
-"Enlace de restablecimiento de contraseña no válido. El usuario no existe."
-
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "Email and/or password do not match."
-msgstr "El correo electrónico y/o la contraseña no coinciden."
-
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "An unknown error occurred. Please try again later."
-msgstr "Se produjo un error desconocido. Inténtalo de nuevo más tarde."
 
 #: smarter/apps/account/views/authentication/login_view.py
 msgid "Received invalid responses."
@@ -101,10 +142,6 @@ msgid "Email address is invalid."
 msgstr "La dirección de correo electrónico no es válida."
 
 #: smarter/apps/account/views/password_management.py
-msgid "Reset your password"
-msgstr "Restablece tu contraseña"
-
-#: smarter/apps/account/views/password_management.py
 msgid "Email sent."
 msgstr "Correo enviado."
 
@@ -115,10 +152,6 @@ msgstr "Falta uidb64 o el token en la URL."
 #: smarter/apps/account/views/password_management.py
 msgid "input form is invalid."
 msgstr "el formulario no es válido."
-
-#: smarter/apps/account/views/password_management.py
-msgid "Passwords do not match."
-msgstr "Las contraseñas no coinciden."
 
 #: smarter/apps/account/views/unsubscribe.py
 msgid ""
@@ -738,10 +771,10 @@ msgid ""
 "AI application without writing code."
 msgstr ""
 "<strong>Un enfoque sin código para crear recursos de IA.</strong> Cada "
-"recurso de %(product_name)s es un breve <a "
-"href=\"https://docs.smarter.sh/smarter-framework/smarter-manifests.html\" "
-"rel=\"noopener\" target=\"_blank\">manifiesto YAML</a>, así que puedes crear "
-"y gestionar una aplicación de IA funcional sin escribir código."
+"recurso de %(product_name)s es un breve <a href=\"https://docs.smarter.sh/"
+"smarter-framework/smarter-manifests.html\" rel=\"noopener\" "
+"target=\"_blank\">manifiesto YAML</a>, así que puedes crear y gestionar una "
+"aplicación de IA funcional sin escribir código."
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
@@ -856,12 +889,12 @@ msgid ""
 "docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
 "rel=\"noopener\" target=\"_blank\">running from source</a> for developers."
 msgstr ""
-"<strong>Guías de despliegue</strong> para <a "
-"href=\"https://docs.smarter.sh/smarter-platform/installation/production-deployment.html\" "
-"rel=\"noopener\" target=\"_blank\">producción</a>, un <a "
-"href=\"https://docs.smarter.sh/smarter-platform/installation/quick-start.html\" "
-"rel=\"noopener\" target=\"_blank\">Quick Start</a> para evaluarlo y <a "
-"href=\"https://docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
+"<strong>Guías de despliegue</strong> para <a href=\"https://docs.smarter.sh/"
+"smarter-platform/installation/production-deployment.html\" rel=\"noopener\" "
+"target=\"_blank\">producción</a>, un <a href=\"https://docs.smarter.sh/"
+"smarter-platform/installation/quick-start.html\" rel=\"noopener\" "
+"target=\"_blank\">Quick Start</a> para evaluarlo y <a href=\"https://"
+"docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
 "rel=\"noopener\" target=\"_blank\">ejecución desde el código fuente</a> para "
 "desarrolladores."
 

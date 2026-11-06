@@ -44,6 +44,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = session.language.bidi ? "rtl" : "ltr";
   }, [session]);
 
-  const value = useMemo<SessionState>(() => ({ session, error, refresh }), [session, error, refresh]);
+  const replace = useCallback((next: ConsoleSession) => {
+    setSession(next);
+    setError(null);
+  }, []);
+
+  const value = useMemo<SessionState>(() => ({ session, error, refresh, replace }), [session, error, refresh, replace]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

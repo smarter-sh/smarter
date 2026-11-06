@@ -8,10 +8,12 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.translation import gettext as _
 
-from smarter.apps.account.models import User
-from smarter.apps.account.urls import AccountReverseNames
-from smarter.apps.infrastructure.services import infrastructure
-from smarter.common.exceptions import SmarterValueError
+from smarter.apps.account.password_reset import (
+    PasswordResetLinkError,
+    password_reset_link,
+    send_password_reset_email,
+    user_from_reset_link,
+)
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
@@ -19,24 +21,31 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
-from smarter.lib.django.token_generators import (
-    ExpiringTokenGenerator,
-    SmarterTokenConversionError,
-    SmarterTokenExpiredError,
-    SmarterTokenIntegrityError,
-    SmarterTokenParseError,
-)
 from smarter.lib.django.views import SmarterNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
 
+def link_error_response(request, error: PasswordResetLinkError) -> HttpResponse:
+    """
+    The error page of a password reset link that can't be used.
+
+    :param request: The request.
+    :param error: Why the link can't be used.
+    :returns: A 404, 403 or 400 page.
+    """
+    message = str(error)
+    if error.status == HTTPStatus.NOT_FOUND:
+        return SmarterHttpResponseNotFound(request=request, error_message=message)
+    if error.status == HTTPStatus.FORBIDDEN:
+        return SmarterHttpResponseForbidden(request=request, error_message=message)
+    return SmarterHttpResponseBadRequest(request=request, error_message=message)
+
+
 # pylint: disable=W0613
 class PasswordResetRequestView(SmarterNeverCachedWebView):
     """View for requesting a password reset email."""
-
-    expiring_token = ExpiringTokenGenerator()
 
     class EmailForm(forms.Form):
         """Form for the sign-in page."""
@@ -51,16 +60,14 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         """
         Generate a password reset link for the given user.
 
+        See :func:`smarter.apps.account.password_reset.password_reset_link`.
+
         :param request: The request, for the link's host.
         :param user: The User.
         :returns: The link.
         :raises SmarterValueError: when ``user`` is not a User.
         """
-        if not isinstance(user, User):
-            raise SmarterValueError("Invalid user object.")
-        return self.expiring_token.encode_link(
-            request=request, user=user, reverse_link=AccountReverseNames.PASSWORD_RESET_LINK  # type: ignore
-        )
+        return password_reset_link(request, user)
 
     def get(self, request, *args, **kwargs):
         """
@@ -87,22 +94,10 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
             return SmarterHttpResponseBadRequest(request=request, error_message=_("Email address is invalid."))
         email = form.cleaned_data["email"]
         try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            # Do not reveal if the email is not in the system.
-            return HttpResponse("", status=HTTPStatus.OK.value)
-        # an email address belongs to one user: migration account.0012_unique_user_email made it unique.
-
-        self.password_reset_link = self.generate_password_reset_link(request, user)
-        context = {"password_reset": {"url": self.password_reset_link}}
-        body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
-        if isinstance(body, HttpResponse):
-            # the template failed to render, and render_clean_html() logged why.
-            return body
-        subject = _("Reset your password")
-        to = email
-        # the reset link is a secret, so the admin gets no blind copy.
-        infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, bcc_admin=False)
+            send_password_reset_email(request, email)
+        except RuntimeError:
+            return HttpResponse(status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        # the same answer whether or not a user has the address, so that it isn't revealed.
         return HttpResponse(_("Email sent."), status=HTTPStatus.OK.value)
 
 
@@ -110,7 +105,6 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
     """View for resetting password."""
 
     template_path = "account/authentication/new-password.html"
-    expiring_token = ExpiringTokenGenerator()
     uidb64: str = ""
     token: str = ""
 
@@ -139,23 +133,9 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
 
         logger.debug("%s.get() initialized", self.formatted_class_name)
         try:
-            user = self.expiring_token.decode_link(uidb64=self.uidb64, token=self.token)
-            logger.debug("%s.get() user: %s", self.formatted_class_name, user)
-        except User.DoesNotExist:
-            return SmarterHttpResponseNotFound(
-                request=request, error_message=_("Invalid password reset link. User does not exist.")
-            )
-        except (
-            TypeError,
-            ValueError,
-            OverflowError,
-            SmarterTokenParseError,
-            SmarterTokenConversionError,
-            SmarterTokenIntegrityError,
-        ) as e:
-            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
-        except SmarterTokenExpiredError as e:
-            return SmarterHttpResponseForbidden(request=request, error_message=str(e))
+            user = user_from_reset_link(self.uidb64, self.token)
+        except PasswordResetLinkError as e:
+            return link_error_response(request, e)
 
         logger.debug("%s.get() finalizing", self.formatted_class_name)
         context = {"form": form, "password_reset": {"uidb64": self.uidb64, "token": self.token, "user": user}}
@@ -186,22 +166,9 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             return SmarterHttpResponseBadRequest(request=request, error_message=_("Passwords do not match."))
 
         try:
-            user = self.expiring_token.decode_link(uidb64=self.uidb64, token=self.token)
-        except User.DoesNotExist:
-            return SmarterHttpResponseNotFound(
-                request=request, error_message=_("Invalid password reset link. User does not exist.")
-            )
-        except (
-            TypeError,
-            ValueError,
-            OverflowError,
-            SmarterTokenParseError,
-            SmarterTokenConversionError,
-            SmarterTokenIntegrityError,
-        ) as e:
-            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
-        except SmarterTokenExpiredError as e:
-            return SmarterHttpResponseForbidden(request=request, error_message=str(e))
+            user = user_from_reset_link(self.uidb64, self.token)
+        except PasswordResetLinkError as e:
+            return link_error_response(request, e)
 
         user.set_password(password)
         user.save()

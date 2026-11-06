@@ -10,6 +10,8 @@ export interface SessionState {
   error: Error | null;
   /** Load the session again, after signing in or out, or changing profile. */
   refresh: () => Promise<void>;
+  /** Use a session that an api call returned, e.g. signing in, without loading it again. */
+  replace: (session: ConsoleSession) => void;
 }
 
 export const SessionContext = createContext<SessionState | null>(null);

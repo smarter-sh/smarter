@@ -10,6 +10,7 @@ from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
 from .const import namespace
+from .password_reset import PASSWORD_RESET_LINK_NAME
 from .views.authentication import (
     AccountActivateView,
     AccountActivationEmailView,
@@ -44,7 +45,7 @@ class AccountReverseNames:
     ACCOUNT_ACTIVATE = "account_activate"
     ACCOUNT_INACTIVE = "account_inactive"
     ACCOUNT_PASSWORD_RESET_REQUEST = "account_password_reset_request"
-    PASSWORD_RESET_LINK = "password_reset_link"
+    PASSWORD_RESET_LINK = PASSWORD_RESET_LINK_NAME
 
     unsubscribe = to_snake_case(AccountUnsubscribeView.__name__)
     email_welcome = to_snake_case(EmailWelcomeView.__name__)

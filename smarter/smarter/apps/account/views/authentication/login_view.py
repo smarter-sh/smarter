@@ -4,7 +4,6 @@ import traceback
 from typing import Optional, Union
 
 from django import forms
-from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.translation import gettext as _
 
@@ -12,10 +11,10 @@ from smarter.apps.account.login_audit import (
     LoginFailure,
     log_login_failure,
     login_identity,
-    password_failure,
 )
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.account.oauth import github_oauth_enabled, google_oauth_enabled
+from smarter.apps.account.sign_in import sign_in_with_email
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -143,23 +142,13 @@ class LoginView(SmarterNeverCachedWebView):
         authenticated_user: Optional[User] = None
         if form.is_valid():
             email = form.cleaned_data["email"]
+            password = form.cleaned_data["password"]
             try:
-                user = User.objects.get(email=form.cleaned_data["email"])
-                password = form.cleaned_data["password"]
-                authenticated_user = authenticate(request, username=user.username, password=password)  # type: ignore[assignment]
+                authenticated_user = sign_in_with_email(request, email, password)
                 if authenticated_user is not None:
-                    login(request, authenticated_user)
-                    logger.debug(
-                        "%s.LoginView.post() authentication succeeded for identity %s",
-                        self.formatted_class_name,
-                        login_identity(email),
-                    )
                     return redirect_and_expire_cache(path="/")
-                log_login_failure(email, password_failure(user))
-                return self.invalid_credentials_response(request)
-            except User.DoesNotExist:
-                # the same response as a wrong password, so that sign-in doesn't reveal which emails have accounts.
-                log_login_failure(email, LoginFailure.UNKNOWN_ACCOUNT)
+                # an unknown email and a wrong password get the same response, so that sign-in doesn't
+                # reveal which emails have accounts.
                 return self.invalid_credentials_response(request)
             # pylint: disable=W0718
             except Exception as e:

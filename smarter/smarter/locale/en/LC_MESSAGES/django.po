@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 21:46+0000\n"
+"POT-Creation-Date: 2026-11-06 22:29+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -16,6 +16,57 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: smarter/apps/account/api/web/views.py
+msgid "Too many attempts. Try again in a minute."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid "The request is invalid."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/login_view.py
+msgid "Email and/or password do not match."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/account_views.py
+msgid "Registration is closed."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/account_views.py
+msgid "An account with this email address already exists. Please sign in."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid "Please correct the errors below."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/authentication/login_view.py
+msgid "An unknown error occurred. Please try again later."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"If an account has this email address, we have sent it a link to reset the "
+"password."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid "Choose a new password."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+#: smarter/apps/account/views/password_management.py
+msgid "Passwords do not match."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid "Your password has been changed. Sign in with it."
+msgstr ""
 
 #: smarter/apps/account/management/commands/create_user.py
 msgid "Your Smarter user account has been created"
@@ -43,12 +94,13 @@ msgstr ""
 msgid "Join the Smarter community on Slack"
 msgstr ""
 
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "An account with this email address already exists. Please sign in."
+#: smarter/apps/account/password_reset.py
+msgid "Reset your password"
 msgstr ""
 
+#: smarter/apps/account/password_reset.py
 #: smarter/apps/account/views/authentication/account_views.py
-msgid "Registration is closed."
+msgid "Invalid password reset link. User does not exist."
 msgstr ""
 
 #: smarter/apps/account/views/authentication/account_views.py
@@ -57,19 +109,6 @@ msgstr ""
 
 #: smarter/apps/account/views/authentication/account_views.py
 msgid "Activate your account."
-msgstr ""
-
-#: smarter/apps/account/views/authentication/account_views.py
-#: smarter/apps/account/views/password_management.py
-msgid "Invalid password reset link. User does not exist."
-msgstr ""
-
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "Email and/or password do not match."
-msgstr ""
-
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "An unknown error occurred. Please try again later."
 msgstr ""
 
 #: smarter/apps/account/views/authentication/login_view.py
@@ -93,10 +132,6 @@ msgid "Email address is invalid."
 msgstr ""
 
 #: smarter/apps/account/views/password_management.py
-msgid "Reset your password"
-msgstr ""
-
-#: smarter/apps/account/views/password_management.py
 msgid "Email sent."
 msgstr ""
 
@@ -106,10 +141,6 @@ msgstr ""
 
 #: smarter/apps/account/views/password_management.py
 msgid "input form is invalid."
-msgstr ""
-
-#: smarter/apps/account/views/password_management.py
-msgid "Passwords do not match."
 msgstr ""
 
 #: smarter/apps/account/views/unsubscribe.py

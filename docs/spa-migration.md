@@ -30,10 +30,13 @@ that replace the views in phase 1: bugs 4 (side effects on GET) and 5 (rate limi
 - `/workbench/llm-clients/<id>/` is not dead: the workbench passes it to Smarter Chat, which
   appends `config/`. It moves with the workbench endpoints in phase 2.
 
-**Phase 1 status.** Done: `GET /api/web/session/` with its contract, and `@smarter/console` with React
-Router, the session provider, the sign-in guard, a first shell, and generated contract types. Next: the
-account endpoints under `/api/web/account/` and the sign-in pages, the shell's sidebar and user menu, and
-Django serving the console's `index.html` for migrated paths.
+**Phase 1 status.** Done: `GET /api/web/session/` with its contract; `@smarter/console` with React Router,
+the session provider, the sign-in guard, a first shell, and generated contract types; the account api
+(`login/`, `logout/`, `register/`, `password-reset-request/`, `password-reset/<uidb64>/<token>/`) with
+the per-address credentials rate limit, which closes bug 5; and the console's sign-in, sign-up, sign-out
+and password reset pages. Next: Django serving the console's `index.html` at `/login/`, `/register/`,
+`/password-reset-request/` and `/password-reset-link/...`, then deleting their Django views and templates;
+the shell's sidebar and user menu; and what follows a sign-up (activation).
 
 ## Development
 
