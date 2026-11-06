@@ -6,7 +6,8 @@ from unittest import mock
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from smarter.apps.account import password_reset
+from smarter.apps.account import email_links, password_reset
+from smarter.apps.account.email_links import EmailLinkError
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.exceptions import SmarterValueError
 
@@ -33,7 +34,7 @@ class TestPasswordReset(TestAccountMixin):
             password_reset.password_reset_link(self.request, "not a user")  # type: ignore[arg-type]
 
     def test_bad_link(self):
-        with self.assertRaises(password_reset.PasswordResetLinkError) as raised:
+        with self.assertRaises(EmailLinkError) as raised:
             password_reset.user_from_reset_link("bm90LWEtdXNlcg", "not-a-token")
         self.assertIn(raised.exception.status, (HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND))
 
@@ -49,7 +50,7 @@ class TestPasswordReset(TestAccountMixin):
     def test_email_that_cannot_render(self):
         """A template that fails to render raises, and sends nothing."""
         failed = HttpResponse(status=HTTPStatus.INTERNAL_SERVER_ERROR)
-        with mock.patch.object(password_reset.SmarterView, "render_clean_html", return_value=failed):
+        with mock.patch.object(email_links.SmarterView, "render_clean_html", return_value=failed):
             with self.assertRaises(RuntimeError):
                 password_reset.send_password_reset_email(self.request, self.non_admin_user.email)
         self.infrastructure.email.send_email.assert_not_called()

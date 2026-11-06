@@ -11,6 +11,6 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App appContext={appContext} />);
     await user.click(screen.getByRole("button", { name: "ada@example.edu" }));
-    expect(screen.getByRole("link", { name: "Sign Out" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeInTheDocument();
   });
 });

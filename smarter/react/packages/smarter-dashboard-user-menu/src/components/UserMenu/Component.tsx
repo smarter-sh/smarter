@@ -12,6 +12,8 @@
  *
  * :param appContext: The root element's attributes.
  * :param onSwitched: Passed to the Change Profile dialog. Reloads the page by default.
+ * :param onSignedOut: Called with the sign-in page's url once Sign Out has signed the user out, with the
+ *   console's account api. Goes to that page by default.
  */
 import { useId, useState } from "react";
 import { getCookie, gettext, useDropdown } from "@smarter/common";
@@ -20,24 +22,43 @@ import ChangeProfile from "@/components/ChangeProfile";
 import LanguageMenu from "@/components/LanguageMenu";
 import MenuHeader from "@/components/MenuHeader";
 import ProfileImageItems from "@/components/ProfileImageItems";
+import { signOut } from "@/lib/api";
+import { loggerPrefix } from "@/lib/const";
 import type { AppContext } from "@/lib/Types";
 
 interface UserMenuProps {
   appContext: AppContext;
   onSwitched?: () => void;
+  onSignedOut?: (loginUrl: string) => void;
 }
 
-function UserMenu({ appContext, onSwitched }: UserMenuProps) {
+const goTo = (url: string) => window.location.assign(url);
+
+function UserMenu({ appContext, onSwitched, onSignedOut = goTo }: UserMenuProps) {
   const { sessionContext, isAuthenticated, user, urls } = appContext;
   const { open, setOpen, toggle, rootRef, buttonRef, menuId } = useDropdown();
   const [changingProfile, setChangingProfile] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState(appContext.profileImageUrl);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const fileInputId = useId();
   const csrfToken = getCookie({ name: sessionContext.csrfCookieName, domain: sessionContext.cookieDomain }) || "";
 
   const openChangeProfile = () => {
     setOpen(false);
     setChangingProfile(true);
+  };
+
+  const signOutAndLeave = () => {
+    setSigningOut(true);
+    setSignOutError(null);
+    signOut(sessionContext, urls.logout)
+      .then(() => onSignedOut(urls.login))
+      .catch((err: Error) => {
+        console.error(loggerPrefix, "Error signing out", err);
+        setSignOutError(err.message);
+        setSigningOut(false);
+      });
   };
 
   const closeChangeProfile = () => {
@@ -116,10 +137,22 @@ function UserMenu({ appContext, onSwitched }: UserMenuProps) {
               </button>
             </div>
             <div className="menu-item px-5">
-              <a href={urls.logout} className="menu-link px-5">
+              <button
+                type="button"
+                className="menu-link px-5 w-100 border-0 bg-transparent"
+                disabled={signingOut}
+                onClick={signOutAndLeave}
+              >
                 {gettext("Sign Out")}
-              </a>
+              </button>
             </div>
+            {signOutError && (
+              <div className="menu-item px-5">
+                <div className="px-5 text-danger fs-7" role="alert">
+                  {signOutError}
+                </div>
+              </div>
+            )}
           </>
         )}
         {!isAuthenticated && (

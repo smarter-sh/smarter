@@ -26,7 +26,7 @@ Phase 0 can ship to `alpha` on its own, and so can each page in phases 1 to 3.
 that replace the views in phase 1: bugs 4 (side effects on GET) and 5 (rate limit). The frame bugs
 (8 to 12, 14 to 16) go away with the templates in phases 1 and 2.
 
-- `/account/activation/` stays until phase 1 decides what follows a self-registration.
+- `/account/activation/` stayed until phase 1 decided what follows a self-registration: it is deleted.
 - `/workbench/llm-clients/<id>/` is not dead: the workbench passes it to Smarter Chat, which
   appends `config/`. It moves with the workbench endpoints in phase 2.
 
@@ -37,9 +37,15 @@ the per-address credentials rate limit, which closes bug 5; and the console's si
 and password reset pages, with the Doodle. Django serves the console's `index.html` at `/login/`,
 `/register/`, `/password-reset-request/` and `/password-reset-link/<uidb64>/<token>/`
 (`smarter.apps.dashboard.views.console_app`), and their Django views, templates, scripts and the doodle's
-template tag are deleted. Next: the shell's sidebar and user menu; `/account/inactive/` and
-`/account/already-associated/`; signing out of Django's pages through the api (bug 4); and what follows a
-sign-up (activation).
+template tag are deleted.
+
+Email verification: a sign-up creates an inactive user and emails an activation link
+(`smarter.apps.account.activation`, sharing `smarter.apps.account.email_links` with password reset). The
+account api adds `activate/<uidb64>/<token>/` (POST, signs in) and `activation-resend/`, and sign-in answers
+403 for the right password of an account that is waiting. The console serves `/account/activate/...`,
+`/account/inactive/` and `/account/already-associated/`, and their Django views and templates are deleted,
+with `/account/activation/`. The user menu signs out with `POST /api/web/account/logout/`, and Django's
+`/logout/` is gone, which closes bug 4. Next: the shell's sidebar and user menu.
 
 ## Development
 
@@ -257,7 +263,8 @@ Security first. Fix these in phase 0 or in the endpoint that replaces the view.
    only the link on the sign-in page is hidden.
 3. **Account enumeration.** Login answers "Unknown user <email>" with a 403 for unknown addresses
    (`login_view.py:248`), and 400 for a wrong password.
-4. **Side effects on GET.** Logout and account activation act on GET.
+4. **Side effects on GET.** Logout and account activation act on GET. Fixed in phase 1: both are POSTs
+   to the account api.
 5. **No rate limit** on password reset requests.
 6. **`/register/` redirects to `/welcome/`,** which doesn't exist.
 7. **The sign-in page's JS expects 401** for a wrong password, but the view returns 400, so nothing
@@ -310,9 +317,10 @@ Security first. Fix these in phase 0 or in the endpoint that replaces the view.
 - **Self-registration stays.** `/register/` is ported, gated on the server by
   `ENABLE_ACCOUNT_REGISTRATION`.
 - **Router:** React Router.
+- **Email verification.** A password sign-up is inactive until its user follows the emailed activation
+  link. Users that social sign-in creates stay inactive until an administrator activates them.
 
 ## Open questions
 
-- What should happen after self-registration (UserProfile, activation email)?
 - Does `/api/v1/llm-clients/<id>/config/` return the same config as the workbench's `config/`?
 - Does `readable_instance()` match the detail views' lookup?

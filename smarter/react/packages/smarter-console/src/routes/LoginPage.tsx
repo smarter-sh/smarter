@@ -10,7 +10,8 @@ import { Link, Navigate, useSearchParams } from "react-router";
 import { AuthCard } from "@/components/AuthCard";
 import { FormError, TextField } from "@/components/FormFields";
 import type { AccountErrors } from "@/contract.gen";
-import { accountErrors, signIn } from "@/lib/account";
+import { accountErrors, isInactiveAccount, signIn } from "@/lib/account";
+import { INACTIVE_PATH } from "@/lib/const";
 import { nextRoute } from "@/lib/next";
 import { useConsoleSession } from "@/session/context";
 
@@ -28,6 +29,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<AccountErrors>(NO_ERRORS);
+  const [inactive, setInactive] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   if (!session) return null;
@@ -42,10 +44,13 @@ export function LoginPage() {
     if (!session) return;
     setSubmitting(true);
     setErrors(NO_ERRORS);
+    setInactive(false);
     try {
       replace(await signIn(session.cookies, { email, password }));
     } catch (e) {
       setErrors(accountErrors(e));
+      // the right password of an account that isn't activated yet.
+      setInactive(isInactiveAccount(e));
       setSubmitting(false);
     }
   }
@@ -68,6 +73,11 @@ export function LoginPage() {
       )}
       <form onSubmit={(event) => void handleSubmit(event)} noValidate>
         <FormError message={errors.detail} />
+        {inactive && (
+          <p className="text-center">
+            <Link to={INACTIVE_PATH}>{gettext("Send a new activation link")}</Link>
+          </p>
+        )}
         <TextField
           label={gettext("Email")}
           type="email"

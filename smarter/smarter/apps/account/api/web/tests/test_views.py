@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from django.test import Client, RequestFactory
 from waffle.testutils import override_switch
 
+from smarter.apps.account.activation import activation_link
 from smarter.apps.account.api.web import views
 from smarter.apps.account.api.web.contract import AccountErrors, AccountMessage
 from smarter.apps.account.api.web.urls import AccountApiWebReverseNames
@@ -25,6 +26,8 @@ PASSWORD = "Correct-Horse-Battery-9"
 """A password that Django's validators accept."""
 
 RESET_MODULE = "smarter.apps.account.password_reset"
+ACTIVATION_MODULE = "smarter.apps.account.activation"
+LINKS_MODULE = "smarter.apps.account.email_links"
 CSRF_MODULE = "smarter.lib.django.middleware.csrf"
 
 # each test signs in from its own address, so that the credentials rate limit, which is counted per
@@ -127,6 +130,15 @@ class TestSignIn(AccountApiTestBase):
         response = self.client.get(account_url(AccountApiWebReverseNames.sign_in))
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
+    def test_inactive_account(self):
+        """The right password of an account that isn't activated yet gets 403; a wrong one, the usual 400."""
+        User.objects.filter(pk=self.user.pk).update(is_active=False)
+        response = self.post(AccountApiWebReverseNames.sign_in, {"email": self.email, "password": PASSWORD})
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertIn("isn't activated yet", self.errors(response).detail)
+        response = self.post(AccountApiWebReverseNames.sign_in, {"email": self.email, "password": "nope"})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
     def test_rate_limit(self):
         """Too many attempts from one address are refused with 429 and Retry-After."""
         with mock.patch.object(views, "credentials_throttle_wait", return_value=42):
@@ -145,17 +157,28 @@ class TestSignUp(AccountApiTestBase):
         switch = override_switch(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION, active=True)
         switch.enable()
         self.addCleanup(switch.disable)
+        patcher = mock.patch(f"{ACTIVATION_MODULE}.infrastructure")
+        self.infrastructure = patcher.start()
+        self.addCleanup(patcher.stop)
 
     def sign_up(self, email: str, password: str = PASSWORD):
         return self.post(AccountApiWebReverseNames.sign_up, {"email": email, "password": password})
 
     def test_sign_up(self):
-        """A new user is created and signed in."""
+        """A new user is created inactive, isn't signed in, and is emailed an activation link."""
         response = self.sign_up(self.new_email)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        session = ConsoleSession.model_validate(response.json())
-        self.assertTrue(session.is_authenticated)
-        self.assertTrue(User.objects.filter(email=self.new_email).exists())
+        AccountMessage.model_validate(response.json())
+        user = User.objects.get(email=self.new_email)
+        self.assertFalse(user.is_active)
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertEqual(self.infrastructure.email.send_email.call_args.kwargs["to"], self.new_email)
+
+    def test_email_that_cannot_render(self):
+        """The user is created, and can ask for a new link; the response is a 500."""
+        with mock.patch.object(views, "sign_up", side_effect=RuntimeError("template")):
+            response = self.sign_up(self.new_email)
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def test_switched_off(self):
         """While registration is off, the endpoint is not found, and creates nobody."""
@@ -249,7 +272,7 @@ class TestPasswordReset(AccountApiTestBase):
         self.assertEqual(self.client.get(url).status_code, HTTPStatus.OK)
         bad = account_url(AccountApiWebReverseNames.password_reset, uidb64=self.uidb64, token="not-a-token")
         self.assertEqual(self.client.get(bad).status_code, HTTPStatus.BAD_REQUEST)
-        with mock.patch(f"{RESET_MODULE}.expiring_token") as token:
+        with mock.patch(f"{LINKS_MODULE}.expiring_token") as token:
             token.decode_link.side_effect = SmarterTokenExpiredError("expired")
             self.assertEqual(self.client.get(url).status_code, HTTPStatus.FORBIDDEN)
             token.decode_link.side_effect = User.DoesNotExist()
@@ -275,3 +298,79 @@ class TestPasswordReset(AccountApiTestBase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password(PASSWORD))
+
+
+class TestActivation(AccountApiTestBase):
+    """POST /api/web/account/activate/<uidb64>/<token>/ and activation-resend/."""
+
+    def setUp(self):
+        super().setUp()
+        User.objects.filter(pk=self.user.pk).update(is_active=False)
+        self.user.refresh_from_db()
+        patcher = mock.patch(f"{ACTIVATION_MODULE}.infrastructure")
+        self.infrastructure = patcher.start()
+        self.addCleanup(patcher.stop)
+        request = RequestFactory().get("/", HTTP_HOST="testserver")
+        link_path = urlparse(activation_link(request, self.user)).path
+        # /account/activate/<uidb64>/<token>/
+        _, _, _, self.uidb64, self.token, _ = link_path.split("/")
+
+    def activate(self, token: str = ""):
+        return self.post(AccountApiWebReverseNames.activate, {}, uidb64=self.uidb64, token=token or self.token)
+
+    def resend(self, email: str):
+        return self.post(AccountApiWebReverseNames.activation_resend, {"email": email})
+
+    def test_urls(self):
+        self.assertEqual(
+            account_url(AccountApiWebReverseNames.activate, uidb64="MQ", token="t"), "/api/web/account/activate/MQ/t/"
+        )
+        self.assertEqual(
+            account_url(AccountApiWebReverseNames.activation_resend), "/api/web/account/activation-resend/"
+        )
+
+    def test_activate(self):
+        """The link activates the user, and answers with their session; it can't be used again."""
+        response = self.activate()
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        session = ConsoleSession.model_validate(response.json())
+        self.assertTrue(session.is_authenticated)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+        self.client.logout()
+        self.assertEqual(self.activate().status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_bad_link(self):
+        response = self.activate(token="not-a-token")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            self.client.get(account_url(AccountApiWebReverseNames.activate, uidb64="MQ", token="t")).status_code,
+            HTTPStatus.METHOD_NOT_ALLOWED,
+        )
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+
+    def test_resend_answers_alike(self):
+        """A waiting account, an active one and an unknown address get the same answer; only the first an email."""
+        waiting = self.resend(self.email)
+        active = self.resend(self.non_admin_user.email)
+        unknown = self.resend("nobody@example.com")
+        self.assertEqual(waiting.status_code, HTTPStatus.OK)
+        self.assertEqual(waiting.json(), active.json())
+        self.assertEqual(waiting.json(), unknown.json())
+        AccountMessage.model_validate(waiting.json())
+        self.infrastructure.email.send_email.assert_called_once()
+        self.assertEqual(self.infrastructure.email.send_email.call_args.kwargs["to"], self.email)
+
+    def test_resend_errors(self):
+        """An invalid address or body is refused; an email that can't be rendered is a 500; and it is rate limited."""
+        response = self.resend("not-an-email")
+        self.assertIn("email", self.errors(response).field_errors)
+        response = self.post(AccountApiWebReverseNames.activation_resend, {})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        with mock.patch.object(views, "resend_activation_email", side_effect=RuntimeError("template")):
+            response = self.resend(self.email)
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        with mock.patch.object(views, "credentials_throttle_wait", return_value=5):
+            response = self.resend(self.email)
+        self.assertEqual(response.status_code, HTTPStatus.TOO_MANY_REQUESTS)

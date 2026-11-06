@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 22:58+0000\n"
+"POT-Creation-Date: 2026-11-06 23:34+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -1024,12 +1024,58 @@ msgstr ""
 msgid "An unknown error occurred. Please try again later."
 msgstr ""
 
+#. Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx
+msgid "Activate your account"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx, react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx
+msgid "Send a new activation link"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx
+msgid "Activating your account..."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx, react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx, react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/PasswordResetPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
+msgid "Back to sign in"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx
+msgid "Social Account Already Associated"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx
+msgid ""
+"The social account you tried to associate is already linked to another user "
+"on this platform."
+msgstr ""
+
 #. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
 msgid "Welcome, %(name)s"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
 msgid "Open the dashboard"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
+msgid "Your account isn't active"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
+msgid ""
+"If you signed up with a password, follow the link that we emailed you to "
+"activate your account."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
+msgid ""
+"If you signed in with Google or GitHub, an administrator activates your "
+"account."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Email"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
@@ -1046,10 +1092,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
 msgid "Sign in with GitHub"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
-msgid "Email"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
@@ -1096,10 +1138,6 @@ msgstr ""
 msgid "Reset your password"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
-msgid "Back to sign in"
-msgstr ""
-
 #. Translators: used in react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
 msgid "Enter your email to reset your password."
 msgstr ""
@@ -1114,6 +1152,14 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
 msgid "Registration is closed."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Check your email"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
+msgid "Didn't get the email?"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx

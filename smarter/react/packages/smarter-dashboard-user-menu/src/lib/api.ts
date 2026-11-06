@@ -29,6 +29,20 @@ export async function postUserProfiles(
 }
 
 /**
+ * Sign out, with the console's account api.
+ *
+ * @param sessionContext - The cookies and headers of the request.
+ * @param url - The sign-out api's url, /api/web/account/logout/.
+ * @throws Error with the response's status, if it fails.
+ */
+export async function signOut(sessionContext: SessionContext, url: string): Promise<void> {
+  const response = await fetchDjangoUrl(sessionContext, url, "{}");
+  if (!response.ok) {
+    throw new Error(interpolate(gettext("Request failed: %(status)s"), { status: response.status }));
+  }
+}
+
+/**
  * Upload (POST, with a form whose profile_image is the file) or remove (DELETE) the user's profile image.
  *
  * @param sessionContext - The cookies of the request.

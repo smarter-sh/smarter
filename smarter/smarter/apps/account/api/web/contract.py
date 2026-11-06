@@ -1,9 +1,10 @@
 """
 The contract of the console's account api, ``/api/web/account/``: its request bodies and responses, as Pydantic models.
 
-Signing in, signing out and signing up answer with the new
-:class:`~smarter.apps.api.web.session.contract.ConsoleSession`, so that the console needn't ask again. The
-password reset endpoints answer with an :class:`AccountMessage`. A refused request answers with an
+Signing in, signing out and activating an account answer with the new
+:class:`~smarter.apps.api.web.session.contract.ConsoleSession`, so that the console needn't ask again.
+Signing up, asking for a new activation link and the password reset endpoints answer with an
+:class:`AccountMessage`. A refused request answers with an
 :class:`AccountErrors`: a message for the whole form, and one or more messages per field, which the
 console shows beside the fields. The JSON is camelCase.
 
@@ -36,6 +37,12 @@ class PasswordResetRequest(ConsoleSessionModel):
     email: str = Field(..., description="The email address to send the link to.")
 
 
+class ActivationResendRequest(ConsoleSessionModel):
+    """The body of ``POST /api/web/account/activation-resend/``."""
+
+    email: str = Field(..., description="The email address to send a new activation link to.")
+
+
 class NewPasswordRequest(ConsoleSessionModel):
     """The body of ``POST /api/web/account/password-reset/<uidb64>/<token>/``."""
 
@@ -59,7 +66,7 @@ class AccountErrors(ConsoleSessionModel):
     )
 
 
-REQUEST_MODELS = (SignInRequest, SignUpRequest, PasswordResetRequest, NewPasswordRequest)
+REQUEST_MODELS = (SignInRequest, SignUpRequest, ActivationResendRequest, PasswordResetRequest, NewPasswordRequest)
 """What the console sends."""
 
 RESPONSE_MODELS = (AccountMessage, AccountErrors)
@@ -67,6 +74,7 @@ RESPONSE_MODELS = (AccountMessage, AccountErrors)
 
 __all__ = [
     "AccountErrors",
+    "ActivationResendRequest",
     "AccountMessage",
     "NewPasswordRequest",
     "PasswordResetRequest",

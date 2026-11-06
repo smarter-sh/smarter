@@ -10,6 +10,10 @@ from typing import Optional
 from django.contrib.auth import authenticate, login
 from django.http import HttpRequest
 
+from smarter.apps.account.activation import (
+    can_activate_by_email,
+    send_activation_email,
+)
 from smarter.apps.account.login_audit import (
     LoginFailure,
     log_login_failure,
@@ -63,22 +67,39 @@ def email_is_taken(email: str) -> bool:
     return User.objects.filter(email__iexact=email).exists()
 
 
+def awaits_activation(email: str, password: str) -> bool:
+    """
+    Whether this email address and password are those of a user who hasn't activated their account yet.
+
+    Only someone who knows the password is told, so the answer doesn't reveal which addresses have accounts.
+
+    :param email: The email address.
+    :param password: The password.
+    :returns: True for an inactive user who may activate by email, and whose password this is.
+    """
+    user = User.objects.filter(email__iexact=email).first()
+    if user is None:
+        return False
+    if not can_activate_by_email(user):
+        return False
+    return user.check_password(password)
+
+
 def sign_up(request: HttpRequest, email: str, password: str) -> User:
     """
-    Create a user whose username and email address are ``email``, and sign them in.
+    Create an inactive user whose username and email address are ``email``, and email them an activation link.
 
-    The caller checks first that the address is free and that the password is acceptable.
+    The user can sign in once they follow the link, which proves that the address is theirs. See
+    :mod:`smarter.apps.account.activation`. The caller checks first that the address is free and that the
+    password is acceptable.
 
-    :param request: The request, whose session the new user is signed in to.
+    :param request: The request, for the link's host and the email's template context.
     :param email: The email address, which is also the username.
     :param password: The password.
-    :returns: The new, signed-in user.
-    :raises RuntimeError: when the new user can't be authenticated, which is a bug.
+    :returns: The new, inactive user.
+    :raises RuntimeError: when the email's template can't be rendered.
     """
-    User.objects.create_user(email, password=password, email=email)
-    authenticated_user = authenticate(request, username=email, password=password)
-    if authenticated_user is None:
-        raise RuntimeError(f"{logger_prefix}.sign_up() authentication failed immediately after registration.")
-    login(request, authenticated_user)
-    logger.info("%s.sign_up() created and signed in identity %s", logger_prefix, login_identity(email))
-    return authenticated_user  # type: ignore[return-value]
+    user = User.objects.create_user(email, password=password, email=email, is_active=False)
+    logger.info("%s.sign_up() created identity %s", logger_prefix, login_identity(email))
+    send_activation_email(request, user)
+    return user

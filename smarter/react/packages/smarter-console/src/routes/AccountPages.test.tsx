@@ -1,4 +1,4 @@
-/** The sign-in, sign-up, sign-out and password reset pages, driven through the console's router. */
+/** The sign-in, sign-up, activation, sign-out and password reset pages, driven through the console's router. */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -55,6 +55,23 @@ describe("the sign-in page", () => {
     await user.click(screen.getByRole("button", { name: "Sign In" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Email and/or password do not match.");
     expect(screen.getByRole("button", { name: "Sign In" })).toBeEnabled();
+  });
+
+  it("offers a new activation link for an account that isn't activated yet", async () => {
+    server.use(
+      visitorSessionHandler,
+      accountErrorsHandler(accountUrls.signIn, "Your account isn't activated yet.", {}, 403),
+    );
+    mountAt("/login");
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Password"), "Correct-Horse-Battery-9");
+    await user.click(screen.getByRole("button", { name: "Sign In" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Your account isn't activated yet.");
+    expect(screen.getByRole("link", { name: "Send a new activation link" })).toHaveAttribute(
+      "href",
+      "/account/inactive",
+    );
   });
 
   it("explains an expired session, and a failure that the api didn't explain", async () => {
@@ -156,14 +173,21 @@ describe("signing out", () => {
 });
 
 describe("the sign-up page", () => {
-  it("signs up, and goes home", async () => {
-    server.use(visitorSessionHandler, accountSessionHandler(accountUrls.signUp, userSession));
+  it("signs up, and says to check the email for the activation link", async () => {
+    server.use(
+      visitorSessionHandler,
+      http.post(accountUrls.signUp, () =>
+        HttpResponse.json({ detail: "We have emailed you a link to activate your account." }),
+      ),
+    );
     mountAt("/register");
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText("Email"), "ada@example.com");
     await user.type(screen.getByLabelText("Password"), "Correct-Horse-Battery-9");
     await user.click(screen.getByRole("button", { name: "Sign Up" }));
-    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Check your email" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("We have emailed you a link to activate your account.");
+    expect(screen.getByRole("link", { name: "Didn't get the email?" })).toHaveAttribute("href", "/account/inactive");
   });
 
   it("shows each field's errors beside it", async () => {
@@ -263,5 +287,81 @@ describe("resetting a password", () => {
     mountAt(linkPath);
     expect(await screen.findByRole("alert")).toHaveTextContent("The link has expired.");
     expect(screen.getByRole("link", { name: "Send a new link" })).toHaveAttribute("href", "/password-reset-request");
+  });
+});
+
+describe("activating an account", () => {
+  const linkPath = "/account/activate/MTk1NA/token-1/";
+  const apiUrl = accountUrls.activate("MTk1NA", "token-1");
+
+  it("activates the account once, signs in, and goes home", async () => {
+    let posts = 0;
+    server.use(
+      visitorSessionHandler,
+      http.post(apiUrl, () => {
+        posts += 1;
+        return HttpResponse.json(userSession);
+      }),
+    );
+    const router = mountAt(linkPath);
+    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/");
+    expect(posts).toBe(1);
+  });
+
+  it("explains a link that can't be used, and offers a new one", async () => {
+    server.use(visitorSessionHandler, accountErrorsHandler(apiUrl, "The link has expired.", {}, 403));
+    mountAt(linkPath);
+    expect(await screen.findByRole("alert")).toHaveTextContent("The link has expired.");
+    expect(screen.getByRole("link", { name: "Send a new activation link" })).toHaveAttribute(
+      "href",
+      "/account/inactive",
+    );
+  });
+
+  it("sends a signed-in user home", async () => {
+    server.use(userSessionHandler);
+    mountAt(linkPath);
+    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
+  });
+});
+
+describe("the inactive account page", () => {
+  it("emails a new activation link, and says so", async () => {
+    let body: unknown = null;
+    server.use(
+      visitorSessionHandler,
+      http.post(accountUrls.activationResend, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ detail: "If an account with this email address is waiting, we sent a link." });
+      }),
+    );
+    mountAt("/account/inactive/");
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Email"), "ada@example.com");
+    await user.click(screen.getByRole("button", { name: "Send a new activation link" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("we sent a link");
+    expect(body).toEqual({ email: "ada@example.com" });
+  });
+
+  it("shows an invalid address's error", async () => {
+    server.use(
+      visitorSessionHandler,
+      accountErrorsHandler(accountUrls.activationResend, "Please correct the errors below.", {
+        email: ["Enter a valid email address."],
+      }),
+    );
+    mountAt("/account/inactive/");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Send a new activation link" }));
+    expect(await screen.findByText("Enter a valid email address.")).toBeInTheDocument();
+  });
+});
+
+describe("the already associated page", () => {
+  it("says that the social account belongs to another user", async () => {
+    server.use(visitorSessionHandler);
+    mountAt("/account/already-associated/");
+    expect(await screen.findByRole("heading", { name: "Social Account Already Associated" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to sign in" })).toHaveAttribute("href", "/login");
   });
 });
