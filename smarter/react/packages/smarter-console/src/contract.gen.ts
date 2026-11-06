@@ -4,10 +4,40 @@
  */
 
 /**
- * What the web console needs to start, from GET /api/web/session/: the user, the account, the platform's branding, its sign-in options, features and languages, and the state of the welcome dialog and onboarding hints. Generated from smarter.apps.api.web.session.contract; do not edit.
+ * What the web console needs to start, from GET /api/web/session/: the user, the account, the platform's branding, its sign-in options, features and languages, and the state of the welcome dialog and onboarding hints; and the requests and responses of its account api, /api/web/account/. Generated from smarter.apps.api.web.session.contract and smarter.apps.account.api.web.contract; do not edit.
  */
 export interface SmarterWebConsoleSessionContract {
   [k: string]: unknown;
+}
+/**
+ * A request that was refused, with why.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "AccountErrors".
+ */
+export interface AccountErrors {
+  /**
+   * Why, for the whole form, in the session's language.
+   */
+  detail: string;
+  /**
+   * The messages of each field that was refused, by its camelCase name; empty when none was.
+   */
+  fieldErrors: {
+    [k: string]: string[];
+  };
+}
+/**
+ * A request that succeeded, with a message for the user.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "AccountMessage".
+ */
+export interface AccountMessage {
+  /**
+   * What happened, in the session's language.
+   */
+  detail: string;
 }
 /**
  * The account that the console acts for: that of the user's selected profile.
@@ -343,4 +373,64 @@ export interface ConsoleWelcome {
    * Whether the dialog opens by itself each time the user signs in.
    */
   showAtStartup: boolean;
+}
+/**
+ * The body of ``POST /api/web/account/password-reset/<uidb64>/<token>/``.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "NewPasswordRequest".
+ */
+export interface NewPasswordRequest {
+  /**
+   * The new password, which Django's password validators must accept.
+   */
+  password: string;
+  /**
+   * The new password again.
+   */
+  passwordConfirm: string;
+}
+/**
+ * The body of ``POST /api/web/account/password-reset-request/``.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "PasswordResetRequest".
+ */
+export interface PasswordResetRequest {
+  /**
+   * The email address to send the link to.
+   */
+  email: string;
+}
+/**
+ * The body of ``POST /api/web/account/login/``.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "SignInRequest".
+ */
+export interface SignInRequest {
+  /**
+   * The email address.
+   */
+  email: string;
+  /**
+   * The password.
+   */
+  password: string;
+}
+/**
+ * The body of ``POST /api/web/account/register/``.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "SignUpRequest".
+ */
+export interface SignUpRequest {
+  /**
+   * The email address, which is also the username.
+   */
+  email: string;
+  /**
+   * The password, which Django's password validators must accept.
+   */
+  password: string;
 }

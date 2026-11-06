@@ -4,11 +4,11 @@ import traceback
 from typing import Union
 
 from django import forms
-from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.translation import gettext as _
 
 from smarter.apps.account.models import User, get_resolved_user
+from smarter.apps.account.sign_in import email_is_taken, sign_up
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -85,7 +85,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
             :raises forms.ValidationError: when a user already has it.
             """
             email = self.cleaned_data["email"]
-            if User.objects.filter(email__iexact=email).exists():
+            if email_is_taken(email):
                 raise forms.ValidationError(_("An account with this email address already exists. Please sign in."))
             return email
 
@@ -148,19 +148,10 @@ class AccountRegisterView(SmarterNeverCachedWebView):
         )
         form = AccountRegisterView.SignUpForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data["email"]
             email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
-            User.objects.create_user(username, password=password, email=email)
-            authenticated_user = authenticate(request, username=username, password=password)
-            if authenticated_user is not None:
-                login(request, authenticated_user)
-                return redirect_and_expire_cache(path="/")
-            else:
-                # pylint: disable=broad-exception-raised
-                raise Exception(
-                    f"{self.formatted_class_name}.post() Authentication failed immediately after registration. This is a bug."
-                )
+            sign_up(request, email, password)
+            return redirect_and_expire_cache(path="/")
         return self.get(request=request)
 
 

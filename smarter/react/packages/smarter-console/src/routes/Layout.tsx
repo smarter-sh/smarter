@@ -3,14 +3,31 @@
  * the page itself below it. The sidebar and the user menu move in as the console's pages do.
  */
 import { gettext } from "@smarter/common";
+import { useState } from "react";
 import { Link, Outlet } from "react-router";
 
+import { signOut } from "@/lib/account";
+import { loggerPrefix } from "@/lib/const";
 import { useConsoleSession } from "@/session/context";
 
 export function Layout() {
-  const { session } = useConsoleSession();
+  const { session, replace, refresh } = useConsoleSession();
+  const [signingOut, setSigningOut] = useState(false);
   if (!session) return null;
   const { branding, user, account } = session;
+
+  async function handleSignOut() {
+    if (!session) return;
+    setSigningOut(true);
+    try {
+      // the visitor's session sends RequireAuth to the sign-in page.
+      replace(await signOut(session.cookies));
+    } catch (e) {
+      console.error(`${loggerPrefix} Layout could not sign out:`, e);
+      await refresh();
+      setSigningOut(false);
+    }
+  }
   return (
     <div className="d-flex flex-column min-vh-100">
       <header className="d-flex align-items-center gap-4 px-6 py-4 border-bottom">
@@ -27,6 +44,16 @@ export function Layout() {
               </div>
             )}
           </div>
+        )}
+        {user && (
+          <button
+            type="button"
+            className="btn btn-sm btn-light"
+            disabled={signingOut}
+            onClick={() => void handleSignOut()}
+          >
+            {gettext("Sign Out")}
+          </button>
         )}
       </header>
       <main className="flex-grow-1 p-6">

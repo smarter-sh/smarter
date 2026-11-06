@@ -188,14 +188,29 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (ConsoleSession,)
 
 
 def contract_schema() -> SmarterDictType:
-    """The contract's JSON Schema (draft 2020-12): one definition, in ``$defs``, per model."""
+    """
+    The contract's JSON Schema (draft 2020-12): one definition, in ``$defs``, per model.
+
+    It also has the models of the console's account api, :mod:`smarter.apps.account.api.web.contract`,
+    so that the console generates every type it sends and receives from one schema.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.account.api.web import contract as account_contract
+
+    models = []
+    for model in RESPONSE_MODELS + account_contract.RESPONSE_MODELS:
+        models.append((model, "serialization"))
+    for model in account_contract.REQUEST_MODELS:
+        models.append((model, "validation"))
     _, schema = models_json_schema(
-        [(model, "serialization") for model in RESPONSE_MODELS],
+        models,
         title="Smarter web console session contract",
         description=(
             "What the web console needs to start, from GET /api/web/session/: the user, the account, the "
             "platform's branding, its sign-in options, features and languages, and the state of the welcome "
-            "dialog and onboarding hints. Generated from smarter.apps.api.web.session.contract; do not edit."
+            "dialog and onboarding hints; and the requests and responses of its account api, /api/web/account/. "
+            "Generated from smarter.apps.api.web.session.contract and smarter.apps.account.api.web.contract; "
+            "do not edit."
         ),
     )
     return {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": SCHEMA_ID, **schema}

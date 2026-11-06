@@ -17,3 +17,18 @@ export const visitorSessionHandler = sessionHandler(visitorSession);
 export const sessionErrorHandler = http.get(SESSION_API_URL, () =>
   HttpResponse.json({ error: "Server error" }, { status: 500 }),
 );
+
+/** The account api answers with this session after signing in, out or up. */
+export function accountSessionHandler(url: string, session: ConsoleSession) {
+  return http.post(url, () => HttpResponse.json(session));
+}
+
+/** The account api refuses with these errors and status. */
+export function accountErrorsHandler(
+  url: string,
+  detail: string,
+  fieldErrors: Record<string, string[]> = {},
+  status = 400,
+) {
+  return http.post(url, () => HttpResponse.json({ detail, fieldErrors }, { status }));
+}

@@ -44,10 +44,7 @@ describe("the console", () => {
     expect(await screen.findByRole("heading", { name: "Sign In" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/login");
     expect(router.state.location.search).toBe("?next=%2Fsecret%2F%3Ftab%3Dshared");
-    expect(screen.getByRole("link", { name: "Sign in to Smarter" })).toHaveAttribute(
-      "href",
-      "http://localhost:9357/login/",
-    );
+    expect(screen.getByLabelText("Email")).toBeInTheDocument();
   });
 
   it("sends a signed-in user on from the sign-in page", async () => {

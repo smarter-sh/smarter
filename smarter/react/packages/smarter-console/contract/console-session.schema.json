@@ -1,5 +1,44 @@
 {
   "$defs": {
+    "AccountErrors": {
+      "additionalProperties": false,
+      "description": "A request that was refused, with why.",
+      "properties": {
+        "detail": {
+          "description": "Why, for the whole form, in the session's language.",
+          "title": "Detail",
+          "type": "string"
+        },
+        "fieldErrors": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "The messages of each field that was refused, by its camelCase name; empty when none was.",
+          "title": "Fielderrors",
+          "type": "object"
+        }
+      },
+      "required": ["detail", "fieldErrors"],
+      "title": "AccountErrors",
+      "type": "object"
+    },
+    "AccountMessage": {
+      "additionalProperties": false,
+      "description": "A request that succeeded, with a message for the user.",
+      "properties": {
+        "detail": {
+          "description": "What happened, in the session's language.",
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": ["detail"],
+      "title": "AccountMessage",
+      "type": "object"
+    },
     "ConsoleAccount": {
       "additionalProperties": false,
       "description": "The account that the console acts for: that of the user's selected profile.",
@@ -519,10 +558,81 @@
       "required": ["showAtStartup", "show"],
       "title": "ConsoleWelcome",
       "type": "object"
+    },
+    "NewPasswordRequest": {
+      "additionalProperties": false,
+      "description": "The body of ``POST /api/web/account/password-reset/<uidb64>/<token>/``.",
+      "properties": {
+        "password": {
+          "description": "The new password, which Django's password validators must accept.",
+          "title": "Password",
+          "type": "string"
+        },
+        "passwordConfirm": {
+          "description": "The new password again.",
+          "title": "Passwordconfirm",
+          "type": "string"
+        }
+      },
+      "required": ["password", "passwordConfirm"],
+      "title": "NewPasswordRequest",
+      "type": "object"
+    },
+    "PasswordResetRequest": {
+      "additionalProperties": false,
+      "description": "The body of ``POST /api/web/account/password-reset-request/``.",
+      "properties": {
+        "email": {
+          "description": "The email address to send the link to.",
+          "title": "Email",
+          "type": "string"
+        }
+      },
+      "required": ["email"],
+      "title": "PasswordResetRequest",
+      "type": "object"
+    },
+    "SignInRequest": {
+      "additionalProperties": false,
+      "description": "The body of ``POST /api/web/account/login/``.",
+      "properties": {
+        "email": {
+          "description": "The email address.",
+          "title": "Email",
+          "type": "string"
+        },
+        "password": {
+          "description": "The password.",
+          "title": "Password",
+          "type": "string"
+        }
+      },
+      "required": ["email", "password"],
+      "title": "SignInRequest",
+      "type": "object"
+    },
+    "SignUpRequest": {
+      "additionalProperties": false,
+      "description": "The body of ``POST /api/web/account/register/``.",
+      "properties": {
+        "email": {
+          "description": "The email address, which is also the username.",
+          "title": "Email",
+          "type": "string"
+        },
+        "password": {
+          "description": "The password, which Django's password validators must accept.",
+          "title": "Password",
+          "type": "string"
+        }
+      },
+      "required": ["email", "password"],
+      "title": "SignUpRequest",
+      "type": "object"
     }
   },
   "$id": "https://smarter.sh/schemas/console-session.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "What the web console needs to start, from GET /api/web/session/: the user, the account, the platform's branding, its sign-in options, features and languages, and the state of the welcome dialog and onboarding hints. Generated from smarter.apps.api.web.session.contract; do not edit.",
+  "description": "What the web console needs to start, from GET /api/web/session/: the user, the account, the platform's branding, its sign-in options, features and languages, and the state of the welcome dialog and onboarding hints; and the requests and responses of its account api, /api/web/account/. Generated from smarter.apps.api.web.session.contract and smarter.apps.account.api.web.contract; do not edit.",
   "title": "Smarter web console session contract"
 }

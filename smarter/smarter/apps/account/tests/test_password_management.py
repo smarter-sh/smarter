@@ -18,7 +18,7 @@ from smarter.apps.account.views.password_management import PasswordResetRequestV
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.token_generators import SmarterTokenExpiredError
 
-MODULE = "smarter.apps.account.views.password_management"
+RESET_MODULE = "smarter.apps.account.password_reset"
 
 
 class TestPasswordManagement(TestAccountMixin):
@@ -27,7 +27,7 @@ class TestPasswordManagement(TestAccountMixin):
     def setUp(self):
         super().setUp()
         self.client = Client()
-        patcher = patch(f"{MODULE}.infrastructure")
+        patcher = patch(f"{RESET_MODULE}.infrastructure")
         self.infrastructure = patcher.start()
         self.addCleanup(patcher.stop)
         self.request_url = reverse(AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST)
@@ -76,7 +76,7 @@ class TestPasswordManagement(TestAccountMixin):
         good = {"password": "x", "password_confirm": "x"}
         self.assertIn(self.client.get(invalid).status_code, (HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND))
         self.assertIn(self.client.post(invalid, good).status_code, (HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND))
-        with patch(f"{MODULE}.PasswordResetView.expiring_token") as token:
+        with patch(f"{RESET_MODULE}.expiring_token") as token:
             token.decode_link.side_effect = SmarterTokenExpiredError("expired")
             self.assertEqual(self.client.get(self.link_path).status_code, HTTPStatus.FORBIDDEN)
             self.assertEqual(self.client.post(self.link_path, good).status_code, HTTPStatus.FORBIDDEN)
