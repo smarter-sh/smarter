@@ -12,7 +12,7 @@ container's own filesystem, lasts as long as the pod.
 - data/media: Django's media storage, when the platform is not configured for S3
 - data/manifests/example_manifests: the output of manage.py generate_example_manifests
 
-The rest of data/, e.g. data/docs, stays the image's own, read from the image.
+The rest of data/ stays the image's own, read from the image.
 */}}
 {{- define "smarter.writableVolumes" -}}
 - name: smarter-tmp

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 23:40+0000\n"
+"POT-Creation-Date: 2026-11-06 21:46+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -517,7 +517,7 @@ msgstr "Cerrar"
 msgid "Detail"
 msgstr "Detalle"
 
-#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/settings/deactivate-account.js
+#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Yes"
 msgstr "Sí"
 
@@ -2333,7 +2333,7 @@ msgstr "Más información"
 msgid "The publisher's trust badge"
 msgstr "La insignia de confianza del publicador"
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/secrets.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
+#. Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js
 msgid "Dismiss"
 msgstr "Descartar"
 
@@ -9956,19 +9956,19 @@ msgstr "Ingresa una contraseña válida"
 msgid "The password confirmation is required"
 msgstr "La confirmación de la contraseña es obligatoria"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/dashboard/settings/signin-methods.js
+#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
 msgid "The password and its confirm are not the same"
 msgstr "La contraseña y su confirmación no coinciden"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/dashboard/billing/payment-method.js
+#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js
 msgid "Sorry, the email is incorrect, please try again."
 msgstr "El correo es incorrecto. Inténtalo de nuevo."
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/settings/deactivate-account.js, smarter/static/js/account/dashboard/settings/signin-methods.js, smarter/static/js/coming-soon.js
+#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
 msgid "Ok, got it!"
 msgstr "¡Entendido!"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/settings/deactivate-account.js, smarter/static/js/account/dashboard/settings/signin-methods.js, smarter/static/js/coming-soon.js
+#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
 msgid "Sorry, looks like there are some errors detected, please try again."
 msgstr "Parece que se detectaron algunos errores. Inténtalo de nuevo."
 
@@ -9986,251 +9986,197 @@ msgstr ""
 "Revisa tu correo. Te acabamos de enviar un enlace para restablecer la "
 "contraseña."
 
-#. Translators: used in smarter/static/js/account/authentication/sign-in.js, smarter/static/js/account/dashboard/settings/signin-methods.js, smarter/static/js/coming-soon.js
+#. Translators: used in smarter/static/js/account/authentication/sign-in.js
 msgid "The value is not a valid email address"
 msgstr "El valor no es una dirección de correo válida"
 
-#. Translators: used in smarter/static/js/account/authentication/sign-in.js, smarter/static/js/coming-soon.js
+#. Translators: used in smarter/static/js/account/authentication/sign-in.js
 msgid "Email address is required"
 msgstr "La dirección de correo es obligatoria"
 
 #. Translators: used in smarter/static/js/account/authentication/sign-in.js
-msgid "incorrect username or password."
-msgstr "nombre de usuario o contraseña incorrectos."
+msgid "Email and/or password do not match."
+msgstr "El correo electrónico y/o la contraseña no coinciden."
 
-#. Translators: used in smarter/static/js/account/authentication/sign-in.js
-msgid "user not found."
-msgstr "usuario no encontrado."
+#~ msgid "incorrect username or password."
+#~ msgstr "nombre de usuario o contraseña incorrectos."
 
-#. Translators: used in smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/secret.js
-msgid "Description is required"
-msgstr "La descripción es obligatoria"
+#~ msgid "user not found."
+#~ msgstr "usuario no encontrado."
 
-#. Translators: used in smarter/static/js/account/dashboard/api-key.js
-msgid "Copied API key to the clipboard."
-msgstr "Se copió la clave de API al portapapeles."
+#~ msgid "Description is required"
+#~ msgstr "La descripción es obligatoria"
 
-#. Translators: used in smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/settings/deactivate-account.js
-msgid "Ok"
-msgstr "Aceptar"
+#~ msgid "Copied API key to the clipboard."
+#~ msgstr "Se copió la clave de API al portapapeles."
 
-#. Translators: used in smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/secret.js
-msgid "An error occurred"
-msgstr "Ocurrió un error"
+#~ msgid "Ok"
+#~ msgstr "Aceptar"
 
-#. Translators: used in smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/secrets.js
-msgid "Live Mode"
-msgstr "Modo en vivo"
+#~ msgid "An error occurred"
+#~ msgstr "Ocurrió un error"
 
-#. Translators: used in smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/secrets.js
-msgid "Sandbox Mode"
-msgstr "Modo de pruebas"
+#~ msgid "Live Mode"
+#~ msgstr "Modo en vivo"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "First name is required"
-msgstr "El nombre es obligatorio"
+#~ msgid "Sandbox Mode"
+#~ msgstr "Modo de pruebas"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "Last name is required"
-msgstr "El apellido es obligatorio"
+#~ msgid "First name is required"
+#~ msgstr "El nombre es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Country is required"
-msgstr "El país es obligatorio"
+#~ msgid "Last name is required"
+#~ msgstr "El apellido es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Address 1 is required"
-msgstr "La dirección 1 es obligatoria"
+#~ msgid "Country is required"
+#~ msgstr "El país es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Address 2 is required"
-msgstr "La dirección 2 es obligatoria"
+#~ msgid "Address 1 is required"
+#~ msgstr "La dirección 1 es obligatoria"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "City is required"
-msgstr "La ciudad es obligatoria"
+#~ msgid "Address 2 is required"
+#~ msgstr "La dirección 2 es obligatoria"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "State is required"
-msgstr "El estado es obligatorio"
+#~ msgid "City is required"
+#~ msgstr "La ciudad es obligatoria"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Postcode is required"
-msgstr "El código postal es obligatorio"
+#~ msgid "State is required"
+#~ msgstr "El estado es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Form has been successfully submitted!"
-msgstr "¡El formulario se envió correctamente!"
+#~ msgid "Postcode is required"
+#~ msgstr "El código postal es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Are you sure you would like to cancel?"
-msgstr "¿Seguro que quieres cancelar?"
+#~ msgid "Form has been successfully submitted!"
+#~ msgstr "¡El formulario se envió correctamente!"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Yes, cancel it!"
-msgstr "¡Sí, cancelar!"
+#~ msgid "Are you sure you would like to cancel?"
+#~ msgstr "¿Seguro que quieres cancelar?"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "No, return"
-msgstr "No, volver"
+#~ msgid "Yes, cancel it!"
+#~ msgstr "¡Sí, cancelar!"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Your form has not been cancelled!."
-msgstr "¡Tu formulario no se canceló!"
+#~ msgid "No, return"
+#~ msgstr "No, volver"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Are you sure you would like to delete selected address ?"
-msgstr "¿Seguro que quieres eliminar la dirección seleccionada?"
+#~ msgid "Your form has not been cancelled!."
+#~ msgstr "¡Tu formulario no se canceló!"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-msgid "Your selected address has been successfully deleted"
-msgstr "La dirección seleccionada se eliminó correctamente"
+#~ msgid "Are you sure you would like to delete selected address ?"
+#~ msgstr "¿Seguro que quieres eliminar la dirección seleccionada?"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Name on card is required"
-msgstr "El nombre en la tarjeta es obligatorio"
+#~ msgid "Your selected address has been successfully deleted"
+#~ msgstr "La dirección seleccionada se eliminó correctamente"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Card member is required"
-msgstr "El titular de la tarjeta es obligatorio"
+#~ msgid "Name on card is required"
+#~ msgstr "El nombre en la tarjeta es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Card number is not valid"
-msgstr "El número de tarjeta no es válido"
+#~ msgid "Card member is required"
+#~ msgstr "El titular de la tarjeta es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Month is required"
-msgstr "El mes es obligatorio"
+#~ msgid "Card number is not valid"
+#~ msgstr "El número de tarjeta no es válido"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Year is required"
-msgstr "El año es obligatorio"
+#~ msgid "Month is required"
+#~ msgstr "El mes es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "CVV is required"
-msgstr "El CVV es obligatorio"
+#~ msgid "Year is required"
+#~ msgstr "El año es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "CVV must contain only digits"
-msgstr "El CVV solo debe contener dígitos"
+#~ msgid "CVV is required"
+#~ msgstr "El CVV es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "CVV must contain 3 to 4 digits only"
-msgstr "El CVV debe tener solo de 3 a 4 dígitos"
+#~ msgid "CVV must contain only digits"
+#~ msgstr "El CVV solo debe contener dígitos"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "New payment method saved."
-msgstr "Se guardó el nuevo método de pago."
+#~ msgid "CVV must contain 3 to 4 digits only"
+#~ msgstr "El CVV debe tener solo de 3 a 4 dígitos"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Please correct the following errors and try again."
-msgstr "Corrige los siguientes errores e inténtalo de nuevo."
+#~ msgid "New payment method saved."
+#~ msgstr "Se guardó el nuevo método de pago."
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Are you sure you want to cancel?"
-msgstr "¿Seguro que quieres cancelar?"
+#~ msgid "Please correct the following errors and try again."
+#~ msgstr "Corrige los siguientes errores e inténtalo de nuevo."
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Edit Payment Method: %(id)s"
-msgstr "Editar método de pago: %(id)s"
+#~ msgid "Are you sure you want to cancel?"
+#~ msgstr "¿Seguro que quieres cancelar?"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Hmmmm, please try again."
-msgstr "Mmm, inténtalo de nuevo."
+#~ msgid "Edit Payment Method: %(id)s"
+#~ msgstr "Editar método de pago: %(id)s"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid ""
-"Sorry, looks like the server couldn't process your request. Please try again."
-msgstr ""
-"Parece que el servidor no pudo procesar tu solicitud. Inténtalo de nuevo."
+#~ msgid "Hmmmm, please try again."
+#~ msgstr "Mmm, inténtalo de nuevo."
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Delete this payment method?"
-msgstr "¿Eliminar este método de pago?"
+#~ msgid ""
+#~ "Sorry, looks like the server couldn't process your request. Please try "
+#~ "again."
+#~ msgstr ""
+#~ "Parece que el servidor no pudo procesar tu solicitud. Inténtalo de nuevo."
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Your selected card has been successfully deleted"
-msgstr "La tarjeta seleccionada se eliminó correctamente"
+#~ msgid "Delete this payment method?"
+#~ msgstr "¿Eliminar este método de pago?"
 
-#. Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-msgid "Oops."
-msgstr "Ups."
+#~ msgid "Your selected card has been successfully deleted"
+#~ msgstr "La tarjeta seleccionada se eliminó correctamente"
 
-#. Translators: used in smarter/static/js/account/dashboard/secret.js
-msgid "Value is required"
-msgstr "El valor es obligatorio"
+#~ msgid "Oops."
+#~ msgstr "Ups."
 
-#. Translators: used in smarter/static/js/account/dashboard/secret.js
-msgid "Copied Secret to the clipboard."
-msgstr "Se copió el secreto al portapapeles."
+#~ msgid "Value is required"
+#~ msgstr "El valor es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "Company name is required"
-msgstr "El nombre de la empresa es obligatorio"
+#~ msgid "Copied Secret to the clipboard."
+#~ msgstr "Se copió el secreto al portapapeles."
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "Contact phone number is required"
-msgstr "El teléfono de contacto es obligatorio"
+#~ msgid "Company name is required"
+#~ msgstr "El nombre de la empresa es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "Please select a country"
-msgstr "Selecciona un país"
+#~ msgid "Contact phone number is required"
+#~ msgstr "El teléfono de contacto es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "Please select a timezone"
-msgstr "Selecciona una zona horaria"
+#~ msgid "Please select a country"
+#~ msgstr "Selecciona un país"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "Please select at least one communication method"
-msgstr "Selecciona al menos un medio de comunicación"
+#~ msgid "Please select a timezone"
+#~ msgstr "Selecciona una zona horaria"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-msgid "Please select a language"
-msgstr "Selecciona un idioma"
+#~ msgid "Please select at least one communication method"
+#~ msgstr "Selecciona al menos un medio de comunicación"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-msgid "Please check the box to deactivate your account"
-msgstr "Marca la casilla para desactivar tu cuenta"
+#~ msgid "Please select a language"
+#~ msgstr "Selecciona un idioma"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-msgid "Are you sure you would like to deactivate your account?"
-msgstr "¿Seguro que quieres desactivar tu cuenta?"
+#~ msgid "Please check the box to deactivate your account"
+#~ msgstr "Marca la casilla para desactivar tu cuenta"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-msgid "Your account has been deactivated."
-msgstr "Tu cuenta se desactivó."
+#~ msgid "Are you sure you would like to deactivate your account?"
+#~ msgstr "¿Seguro que quieres desactivar tu cuenta?"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-msgid "Account not deactivated."
-msgstr "La cuenta no se desactivó."
+#~ msgid "Your account has been deactivated."
+#~ msgstr "Tu cuenta se desactivó."
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-msgid "Email is required"
-msgstr "El correo es obligatorio"
+#~ msgid "Account not deactivated."
+#~ msgstr "La cuenta no se desactivó."
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-msgid "Password is required"
-msgstr "La contraseña es obligatoria"
+#~ msgid "Email is required"
+#~ msgstr "El correo es obligatorio"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-msgid "Sent password reset. Please check your email"
-msgstr "Se envió el restablecimiento de contraseña. Revisa tu correo"
+#~ msgid "Password is required"
+#~ msgstr "La contraseña es obligatoria"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-msgid "Current Password is required"
-msgstr "La contraseña actual es obligatoria"
+#~ msgid "Sent password reset. Please check your email"
+#~ msgstr "Se envió el restablecimiento de contraseña. Revisa tu correo"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-msgid "New Password is required"
-msgstr "La nueva contraseña es obligatoria"
+#~ msgid "Current Password is required"
+#~ msgstr "La contraseña actual es obligatoria"
 
-#. Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-msgid "Confirm Password is required"
-msgstr "La confirmación de la contraseña es obligatoria"
+#~ msgid "New Password is required"
+#~ msgstr "La nueva contraseña es obligatoria"
 
-#. Translators: used in smarter/static/js/coming-soon.js
-msgid "Added"
-msgstr "Agregado"
+#~ msgid "Confirm Password is required"
+#~ msgstr "La confirmación de la contraseña es obligatoria"
+
+#~ msgid "Added"
+#~ msgstr "Agregado"
 
 #~ msgid "Manifest Editor"
 #~ msgstr "Editor de manifiestos"

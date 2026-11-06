@@ -96,13 +96,10 @@ var KTSigninGeneral = (function () {
               .then((response) => {
                 if (response.ok) {
                   window.location.href = "/";
-                }
-                if (response.status === 401) {
+                } else if (response.status === 400) {
+                  // the view answers an unknown email and a wrong password alike.
                   var div = document.querySelector("#error-message");
-                  div.textContent = gettext("incorrect username or password.");
-                } else if (response.status === 403) {
-                  var div = document.querySelector("#error-message");
-                  div.textContent = gettext("user not found.");
+                  div.textContent = gettext("Email and/or password do not match.");
                 } else {
                   throw new Error(`HTTP error status: ${response.status}`);
                 }

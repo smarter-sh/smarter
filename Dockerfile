@@ -279,20 +279,7 @@ RUN if [ "$ENVIRONMENT" != "local" ] ; then \
 
 ################################# data #################################
 FROM permissions AS data
-# Add our source code and make the 'smarter' directory the working directory
-# we want this to be the last step so that we can take advantage of Docker's
-# caching mechanism.
 WORKDIR /home/smarter_user/
-
-COPY --chown=smarter_user:smarter_user ./docs ./data/docs
-COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
-COPY --chown=smarter_user:smarter_user ./changelogs/CHANGELOG.md ./data/docs/CHANGELOG.md
-COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
-COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
-COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
-COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
-
-
 
 ############################## collect_assets ##################################
 # This is a Django application, so we need to collect static assets.

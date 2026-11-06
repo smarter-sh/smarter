@@ -227,7 +227,7 @@ gettext("Close (Esc)");
 gettext("Close");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
 gettext("Detail");
-// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/settings/deactivate-account.js
+// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("Yes");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("No");
@@ -984,7 +984,7 @@ gettext("Learn how");
 gettext("Learn more");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("The publisher's trust badge");
-// Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/secrets.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
+// Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js
 gettext("Dismiss");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("Working");
@@ -4088,13 +4088,13 @@ gettext("The password is required");
 gettext("Please enter valid password");
 // Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
 gettext("The password confirmation is required");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/dashboard/settings/signin-methods.js
+// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
 gettext("The password and its confirm are not the same");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/dashboard/billing/payment-method.js
+// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js
 gettext("Sorry, the email is incorrect, please try again.");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/settings/deactivate-account.js, smarter/static/js/account/dashboard/settings/signin-methods.js, smarter/static/js/coming-soon.js
+// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
 gettext("Ok, got it!");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js, smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/settings/deactivate-account.js, smarter/static/js/account/dashboard/settings/signin-methods.js, smarter/static/js/coming-soon.js
+// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
 gettext("Sorry, looks like there are some errors detected, please try again.");
 // Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
 gettext("Not a valid email address");
@@ -4102,125 +4102,9 @@ gettext("Not a valid email address");
 gettext("Please type your email address");
 // Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
 gettext("Check your email. We just sent you a password reset link.");
-// Translators: used in smarter/static/js/account/authentication/sign-in.js, smarter/static/js/account/dashboard/settings/signin-methods.js, smarter/static/js/coming-soon.js
+// Translators: used in smarter/static/js/account/authentication/sign-in.js
 gettext("The value is not a valid email address");
-// Translators: used in smarter/static/js/account/authentication/sign-in.js, smarter/static/js/coming-soon.js
+// Translators: used in smarter/static/js/account/authentication/sign-in.js
 gettext("Email address is required");
 // Translators: used in smarter/static/js/account/authentication/sign-in.js
-gettext("incorrect username or password.");
-// Translators: used in smarter/static/js/account/authentication/sign-in.js
-gettext("user not found.");
-// Translators: used in smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/secret.js
-gettext("Description is required");
-// Translators: used in smarter/static/js/account/dashboard/api-key.js
-gettext("Copied API key to the clipboard.");
-// Translators: used in smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js, smarter/static/js/account/dashboard/secret.js, smarter/static/js/account/dashboard/settings/deactivate-account.js
-gettext("Ok");
-// Translators: used in smarter/static/js/account/dashboard/api-key.js, smarter/static/js/account/dashboard/secret.js
-gettext("An error occurred");
-// Translators: used in smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/secrets.js
-gettext("Live Mode");
-// Translators: used in smarter/static/js/account/dashboard/api-keys.js, smarter/static/js/account/dashboard/secrets.js
-gettext("Sandbox Mode");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("First name is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("Last name is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Country is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Address 1 is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Address 2 is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("City is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("State is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Postcode is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Form has been successfully submitted!");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Are you sure you would like to cancel?");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Yes, cancel it!");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("No, return");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js, smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Your form has not been cancelled!.");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Are you sure you would like to delete selected address ?");
-// Translators: used in smarter/static/js/account/dashboard/billing/billing-address.js
-gettext("Your selected address has been successfully deleted");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Name on card is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Card member is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Card number is not valid");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Month is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Year is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("CVV is required");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("CVV must contain only digits");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("CVV must contain 3 to 4 digits only");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("New payment method saved.");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Please correct the following errors and try again.");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Are you sure you want to cancel?");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Edit Payment Method: %(id)s");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Hmmmm, please try again.");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Sorry, looks like the server couldn't process your request. Please try again.");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Delete this payment method?");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Your selected card has been successfully deleted");
-// Translators: used in smarter/static/js/account/dashboard/billing/payment-method.js
-gettext("Oops.");
-// Translators: used in smarter/static/js/account/dashboard/secret.js
-gettext("Value is required");
-// Translators: used in smarter/static/js/account/dashboard/secret.js
-gettext("Copied Secret to the clipboard.");
-// Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("Company name is required");
-// Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("Contact phone number is required");
-// Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("Please select a country");
-// Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("Please select a timezone");
-// Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("Please select at least one communication method");
-// Translators: used in smarter/static/js/account/dashboard/settings/account-details.js, smarter/static/js/account/dashboard/user-detail.js
-gettext("Please select a language");
-// Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-gettext("Please check the box to deactivate your account");
-// Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-gettext("Are you sure you would like to deactivate your account?");
-// Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-gettext("Your account has been deactivated.");
-// Translators: used in smarter/static/js/account/dashboard/settings/deactivate-account.js
-gettext("Account not deactivated.");
-// Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-gettext("Email is required");
-// Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-gettext("Password is required");
-// Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-gettext("Sent password reset. Please check your email");
-// Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-gettext("Current Password is required");
-// Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-gettext("New Password is required");
-// Translators: used in smarter/static/js/account/dashboard/settings/signin-methods.js
-gettext("Confirm Password is required");
-// Translators: used in smarter/static/js/coming-soon.js
-gettext("Added");
+gettext("Email and/or password do not match.");

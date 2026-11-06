@@ -21,6 +21,15 @@ cookie names and element ids become frontend constants and aren't listed.
 
 Phase 0 can ship to `alpha` on its own, and so can each page in phases 1 to 3.
 
+**Phase 0 status.** Done: everything under [Delete](#delete), except `/account/activation/` and
+`/workbench/llm-clients/<id>/` (see below), and bugs 1, 2, 3, 6, 7 and 13. Left for the endpoints
+that replace the views in phase 1: bugs 4 (side effects on GET) and 5 (rate limit). The frame bugs
+(8 to 12, 14 to 16) go away with the templates in phases 1 and 2.
+
+- `/account/activation/` stays until phase 1 decides what follows a self-registration.
+- `/workbench/llm-clients/<id>/` is not dead: the workbench passes it to Smarter Chat, which
+  appends `config/`. It moves with the workbench endpoints in phase 2.
+
 ## Development
 
 - The SPA runs on the Vite dev server, `http://localhost:5173/` (not yet built).
@@ -254,6 +263,8 @@ Security first. Fix these in phase 0 or in the endpoint that replaces the view.
 14. **The authtoken list never receives its debug flag:** the template emits `smarter-debug-mode`,
     the app reads `react-debug-mode`.
 15. **`footer.contact_url`** is a hard-coded personal URL (`context_processors.py:478`).
+16. **`400.html` always says "Forbidden."** instead of the response's message, so every 400 page
+    shows the wrong text.
 
 ## Phase 4 findings: separate hosts
 

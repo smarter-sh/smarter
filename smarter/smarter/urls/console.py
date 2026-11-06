@@ -26,7 +26,6 @@ from smarter.apps.account.views.authentication import (
 from smarter.apps.account.views.budget import urls as budget_urls
 from smarter.apps.account.views.budget.const import namespace as budget_namespace
 from smarter.apps.account.views.password_management import (
-    PasswordConfirmView,
     PasswordResetRequestView,
     PasswordResetView,
 )
@@ -223,7 +222,6 @@ urlpatterns = [
         PasswordResetRequestView.as_view(),
         name=AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST,
     ),
-    path("password-confirm/", PasswordConfirmView.as_view(), name=AccountReverseNames.ACCOUNT_PASSWORD_CONFIRM),
     path(
         "password-reset-link/<uidb64>/<token>/",
         PasswordResetView.as_view(),

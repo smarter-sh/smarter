@@ -3,7 +3,6 @@
 from .account_views import (
     AccountActivateView,
     AccountActivationEmailView,
-    AccountDeactivateView,
     AccountInactiveView,
     AccountRegisterView,
 )
@@ -16,7 +15,6 @@ __all__ = [
     "AccountRegisterView",
     "AccountActivateView",
     "AccountActivationEmailView",
-    "AccountDeactivateView",
     "LoginView",
     "LogoutView",
     "SocialAuthAlreadyAssociatedView",

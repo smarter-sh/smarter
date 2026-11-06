@@ -1,16 +1,13 @@
 # pylint: disable=W0613
 """Django REST framework base views for /docs/ brokered viewsets, manifest and schema."""
 
-import os
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlparse
 
 import httpx
-import markdown
 from django.core.handlers.asgi import ASGIRequest
 from django.http.response import HttpResponse, HttpResponseBadRequest
-from django.shortcuts import render
 from django.test import RequestFactory
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -26,11 +23,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import (
-    SmarterAuthenticatedWebView,
-    SmarterWebHtmlView,
-    SmarterWebTxtView,
-)
+from smarter.lib.django.views import SmarterAuthenticatedWebView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.typing import SmarterDictType
 
@@ -39,9 +32,6 @@ if TYPE_CHECKING:
     from rest_framework.views import AsView
 
 logger = logging.getLogger(__name__)
-
-# note: this is the path from the Docker container, not the GitHub repo.
-DOCS_PATH = "/home/smarter_user/data/docs/"
 
 
 class DocsError(SmarterException):
@@ -304,74 +294,9 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
     def post(self, request: ASGIRequest, *args, **kwargs):
-        """Refuse POST, with ``400``.
-
-        Its message says PATCH.
-        """
-        return HttpResponseBadRequest("PATCH method not supported for this view.")
+        """Refuse POST, with ``400``."""
+        return HttpResponseBadRequest("POST method not supported for this view.")
 
     def delete(self, request: ASGIRequest, *args, **kwargs):
         """Refuse DELETE, with ``400``."""
         return HttpResponseBadRequest("DELETE method not supported for this view.")
-
-
-# ------------------------------------------------------------------------------
-# Public Access Base Views
-# ------------------------------------------------------------------------------
-class TxtBaseView(SmarterWebTxtView):
-    """Text base view."""
-
-    template_path = "docs/txt_file.html"
-    text_file: Optional[str] = None
-    title: Optional[str] = None
-    leader: Optional[str] = None
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render :attr:`text_file`, with :attr:`title` and :attr:`leader`.
-
-        :param request: The request.
-        :returns: The rendered page.
-        :raises DocsError: when :attr:`text_file` is not set.
-        """
-        file_path = self.text_file
-        if not file_path:
-            raise DocsError("self.text_file not set.")
-
-        with open(file_path, encoding="utf-8") as text_file:
-            text_content = text_file.read()
-
-        context = {
-            "filecontents_html": text_content,
-            "title": self.title,
-            "leader": self.leader,
-        }
-        return render(request, self.template_path, context=context)
-
-
-class MarkdownBaseView(SmarterWebHtmlView):
-    """Markdown base view."""
-
-    template_path = "docs/markdown.html"
-    markdown_file: Optional[str] = None
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render :attr:`markdown_file`, a file in ``DOCS_PATH``, as HTML.
-
-        :param request: The request.
-        :returns: The rendered page.
-        :raises DocsError: when :attr:`markdown_file` is not set.
-        """
-        if not self.markdown_file:
-            raise DocsError("self.markdown_file not set.")
-        file_path = os.path.join(DOCS_PATH, self.markdown_file)
-        with open(file_path, encoding="utf-8") as markdown_file:
-            md_text = markdown_file.read()
-
-        html = markdown.markdown(md_text)
-        context = {
-            "markdown_html": html,
-        }
-
-        return render(request, self.template_path, context=context)

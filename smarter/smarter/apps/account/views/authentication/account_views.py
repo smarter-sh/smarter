@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.lib import logging
+from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
@@ -63,7 +64,12 @@ class AccountInactiveView(SmarterNeverCachedWebView):
 
 
 class AccountRegisterView(SmarterNeverCachedWebView):
-    """View for signing up."""
+    """
+    View for signing up.
+
+    Sign-up is open only while the ``ENABLE_ACCOUNT_REGISTRATION`` switch is active. Otherwise
+    the page and its form answer ``404``, as if they didn't exist.
+    """
 
     class SignUpForm(forms.Form):
         """Form for the sign-in page."""
@@ -84,6 +90,20 @@ class AccountRegisterView(SmarterNeverCachedWebView):
             return email
 
     template_path = "account/authentication/sign-up.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Answer ``404`` to every method while registration is switched off.
+
+        Hiding the sign-up link isn't enough: the form must refuse a POST too.
+
+        :param request: The request.
+        :returns: The view's response, or ``404``.
+        """
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION):
+            logger.debug("%s.dispatch() registration is switched off.", self.formatted_class_name)
+            return SmarterHttpResponseNotFound(request=request, error_message=_("Registration is closed."))
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
         """
@@ -110,7 +130,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
 
     def post(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
         """
-        Create a User from the sign-up form, sign them in, and redirect to ``/welcome/``.
+        Create a User from the sign-up form, sign them in, and redirect to ``/``.
 
         The email address is also the username. An invalid form is rendered again.
 
@@ -135,7 +155,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
             authenticated_user = authenticate(request, username=username, password=password)
             if authenticated_user is not None:
                 login(request, authenticated_user)
-                return redirect_and_expire_cache(path="/welcome/")
+                return redirect_and_expire_cache(path="/")
             else:
                 # pylint: disable=broad-exception-raised
                 raise Exception(
@@ -286,18 +306,3 @@ class AccountActivateView(SmarterNeverCachedWebView):
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         return self.clean_http_response(request, template_path=self.template_path)
-
-
-# ------------------------------------------------------------------------------
-# Private Access Views
-# ------------------------------------------------------------------------------
-class AccountDeactivateView(SmarterAuthenticatedNeverCachedWebView):
-    """View for the account deactivation page."""
-
-    template_path = "account/account-deactivated.html"
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{AccountDeactivateView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)

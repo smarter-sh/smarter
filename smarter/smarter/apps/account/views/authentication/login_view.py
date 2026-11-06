@@ -21,7 +21,6 @@ from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
-    SmarterHttpResponseForbidden,
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.views import (
@@ -207,10 +206,21 @@ class LoginView(SmarterNeverCachedWebView):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
+    def invalid_credentials_response(self, request) -> SmarterHttpResponseBadRequest:
+        """
+        Answer a failed sign-in, whether the email is unknown or the password is wrong.
+
+        Both cases get the same status and message, so that the response doesn't reveal
+        which email addresses have accounts.
+
+        :param request: The request.
+        :returns: A ``400`` response.
+        """
+        return SmarterHttpResponseBadRequest(request=request, error_message=_("Email and/or password do not match."))
+
     def post(self, request, *args, **kwargs) -> Union[
         HttpResponseRedirect,
         SmarterHttpResponseBadRequest,
-        SmarterHttpResponseForbidden,
         SmarterHttpResponseServerError,
     ]:
         """Handle POST request to log in user with email and password."""
@@ -239,14 +249,11 @@ class LoginView(SmarterNeverCachedWebView):
                     )
                     return redirect_and_expire_cache(path="/")
                 log_login_failure(email, password_failure(user))
-                return SmarterHttpResponseBadRequest(
-                    request=request, error_message=_("Username and/or password do not match.")
-                )
+                return self.invalid_credentials_response(request)
             except User.DoesNotExist:
+                # the same response as a wrong password, so that sign-in doesn't reveal which emails have accounts.
                 log_login_failure(email, LoginFailure.UNKNOWN_ACCOUNT)
-                return SmarterHttpResponseForbidden(
-                    request=request, error_message=_("Invalid login attempt. Unknown user %(email)s") % {"email": email}
-                )
+                return self.invalid_credentials_response(request)
             # pylint: disable=W0718
             except Exception as e:
                 log_login_failure(email, LoginFailure.ERROR)

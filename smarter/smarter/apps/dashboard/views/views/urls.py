@@ -1,18 +1,12 @@
 """URL configuration for the web platform."""
 
-from django.urls import include, path
+from django.urls import path
 from django.views.generic.base import RedirectView
 
-from smarter.apps.account import urls as account_urls
 from smarter.apps.dashboard.const import namespace
-from smarter.apps.dashboard.views.views import (
-    DashboardView,
-    EmailAdded,
-)
-from smarter.apps.llmtool import urls as plugin_urls
+from smarter.apps.dashboard.views.views import DashboardView
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
-from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
@@ -24,16 +18,12 @@ class DashboardReverseNames:
     namespace = namespace
 
     dashboard = namespace
-    email_added = to_snake_case(EmailAdded.__name__)
 
 
 urlpatterns = [
     path("", DashboardView.as_view(), name=DashboardReverseNames.dashboard),
-    path("account/", include(account_urls)),
-    path("plugins/", include(plugin_urls)),
     path("help/", RedirectView.as_view(url="/docs/"), name="help"),
     path("support/", RedirectView.as_view(url="/docs/"), name="support"),
-    path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
 ]
 
 if smarter_settings.enable_dropzone_manifest_apply:
