@@ -12,7 +12,9 @@ in the request's ``Authorization: Bearer`` header (see :mod:`smarter.apps.mcpser
 :func:`validate_token` accepts only a classic token, ``ghp_...``, which can write to any
 public repository with the ``public_repo`` scope. A fine-grained token, ``github_pat_...``,
 can write only to the repositories of the account or organization that it was created for,
-so it is refused with an explanation. The platform holds no GitHub credential that can write.
+so it is refused with an explanation. The public tools never use the platform's own token,
+``smarter_settings.github_token``: only the staff-only bug reports do (see
+:mod:`smarter.apps.mcpserver.services.github.bug_reports`).
 
 The token is sent only to ``api.github.com``, without redirects, and is never logged, cached,
 stored, or passed as a tool argument, which the LLM would see. :func:`explain_failure` turns
