@@ -323,7 +323,9 @@ def handle_chat_response_success(
     if prompt:
         create_prompt_history.delay(prompt.id, request_data, response_data, messages)  # type: ignore
     else:
-        logger.warning(
+        # DEBUG, not WARNING: expected for the passthrough api, whose OpenAIPassthroughClient
+        # never has a Prompt.
+        logger.debug(
             "%s No prompt object provided, skipping prompt history creation",
             f"{logger_prefix}.handle_chat_response_success()",
         )
