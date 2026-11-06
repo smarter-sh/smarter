@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.9-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.9-alpha.1...v0.42.9-alpha.2) (2026-11-06)
+
+### Bug Fixes
+
+* **settings:** prefix default cache keys with the django version ([ef9a490](https://github.com/smarter-sh/smarter/commit/ef9a490d043fa3c775ff4ae61164af954cb5a236)), closes [#936](https://github.com/smarter-sh/smarter/issues/936)
+
 ## [0.42.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.8...v0.42.9-alpha.1) (2026-11-06)
 
 ### Bug Fixes
