@@ -27,3 +27,13 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
             receivers.handle_chat_session_invoked(sender=SmarterTestBase, instance=MagicMock(), request=None)
         mock_logger.debug.assert_called_once()
         mock_logger.info.assert_not_called()
+
+    def test_chat_response_success_without_a_prompt_logs_no_warning(self):
+        """The passthrough api never has a Prompt, so a response without one is expected: no warning, no history."""
+        with patch.object(receivers, "logger") as mock_logger:
+            with patch.object(receivers, "create_prompt_history") as mock_task:
+                receivers.handle_chat_response_success(
+                    sender=SmarterTestBase, prompt=None, request=None, response=None
+                )
+        mock_logger.warning.assert_not_called()
+        mock_task.delay.assert_not_called()
