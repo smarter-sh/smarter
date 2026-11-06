@@ -7,7 +7,7 @@ The MCPServer's two sets of tools, one for each of its endpoints, in the order t
   caller's GitHub token, report issues and propose fixes.
 - :data:`STAFF_TOOL_CLASSES`: the staff-only tools, served at ``/api/v1/mcp/smarter-operations/`` by
   :class:`~smarter.apps.mcpserver.protocol.staff.StaffEndpoint`. They read this platform's health,
-  its pod logs and its users' accounts, for its staff.
+  its pod logs and its users' accounts, for its staff, and report the bugs that they diagnose.
 
 Each tool is a thin adapter of a service of :mod:`smarter.apps.mcpserver.services`, in
 :mod:`smarter.apps.mcpserver.protocol.tools`. Smarter's built-in MCPClients ``smarter_project``
@@ -21,6 +21,7 @@ LLMClients may call (``allowedTools``).
     be documented.
 """
 
+from smarter.apps.mcpserver.protocol.tools.bug_reports import CreateBugReportTool
 from smarter.apps.mcpserver.protocol.tools.github import (
     CloseIssueTool,
     CommentOnIssueTool,
@@ -94,12 +95,14 @@ STAFF_TOOL_CLASSES: tuple[type[StaffTool], ...] = (
     ListLogSourcesTool,
     UserSupportSnapshotTool,
     CheckReplyTool,
+    CreateBugReportTool,
 )
 """
 Every staff-only tool, in the order that tools/list lists them.
 
 The order follows a help desk investigation: the platform's health first, then its logs, then one
-user's account, and last the check of the reply to that user.
+user's account, then the check of the reply to that user, and last the bug report, the one tool
+that writes.
 """
 
 __all__ = ["PUBLIC_TOOL_CLASSES", "STAFF_TOOL_CLASSES"]

@@ -11,7 +11,8 @@ data that is not public, so each :class:`StaffTool`:
 - records every call in :class:`~smarter.apps.mcpserver.models.OperationsToolCall`, the audit
   trail, whether or not it fails,
 - is never cached: its data changes from minute to minute,
-- only reads.
+- only reads, except ``create_bug_report``, which opens a GitHub issue (see
+  :mod:`~smarter.apps.mcpserver.protocol.tools.bug_reports`).
 
 A tool's result that contains text from the logs, or from users, starts with
 :data:`UNTRUSTED_DATA_NOTICE`: a user can put text into a log line, e.g. with a prompt, so the
@@ -121,7 +122,7 @@ class StaffTool(MCPToolBase):
     """The Pydantic model of the tool's arguments, a subclass of :class:`StaffToolArguments`."""
 
     read_only: ClassVar[bool] = True
-    """Every operations tool only reads."""
+    """An operations tool only reads, unless it says otherwise, as ``create_bug_report`` does."""
 
     def __init__(self, user: Optional[User]):
         """
