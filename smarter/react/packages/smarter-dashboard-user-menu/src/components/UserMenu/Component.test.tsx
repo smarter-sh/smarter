@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { anonymousAppContext, appContext, singleProfileAppContext } from "@/mocks/fixtures";
-import { userProfileHandlers } from "@/mocks/handlers";
+import { signOutErrorHandler, signOutHandler, userProfileHandlers } from "@/mocks/handlers";
 import { server } from "@test/server";
 
 import UserMenu from "@/components/UserMenu/Component";
@@ -46,7 +46,7 @@ describe("UserMenu", () => {
     expect(screen.getByRole("button", { name: "Remove Profile Image" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Change Profile" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Welcome Tour" })).toHaveAttribute("data-smarter-welcome-open", "true");
-    expect(screen.getByRole("link", { name: "Sign Out" })).toHaveAttribute("href", "/logout/");
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeInTheDocument();
   });
 
   it("has no Change Profile item, and no account, for a user with one profile", () => {
@@ -69,7 +69,7 @@ describe("UserMenu", () => {
     render(<UserMenu appContext={anonymousAppContext} />);
     expect(screen.getByRole("link", { name: "Sign In" })).toHaveAttribute("href", "/login/");
     expect(screen.getByRole("button", { name: /Language/ })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sign Out" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sign Out" })).not.toBeInTheDocument();
     expect(screen.queryByText("Change Profile Image")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Welcome Tour" })).not.toBeInTheDocument();
   });
@@ -80,6 +80,29 @@ describe("UserMenu", () => {
     await user.click(menuButton());
     await user.click(screen.getByRole("button", { name: "Welcome Tour" }));
     expect(menuButton()).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("signs out with the account api, then goes to the sign-in page", async () => {
+    const user = userEvent.setup();
+    server.use(signOutHandler);
+    const onSignedOut = vi.fn();
+    render(<UserMenu appContext={appContext} onSignedOut={onSignedOut} />);
+    await user.click(menuButton());
+    await user.click(screen.getByRole("button", { name: "Sign Out" }));
+    await waitFor(() => expect(onSignedOut).toHaveBeenCalledWith("/login/"));
+  });
+
+  it("stays, and says why, when signing out fails", async () => {
+    const user = userEvent.setup();
+    server.use(signOutErrorHandler);
+    const onSignedOut = vi.fn();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<UserMenu appContext={appContext} onSignedOut={onSignedOut} />);
+    await user.click(menuButton());
+    await user.click(screen.getByRole("button", { name: "Sign Out" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Request failed: 403");
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeEnabled();
+    expect(onSignedOut).not.toHaveBeenCalled();
   });
 
   it("opens the Change Profile dialog, closes the menu, and returns the focus when the dialog closes", async () => {

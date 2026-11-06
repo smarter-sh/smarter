@@ -13,6 +13,7 @@ from django.template.context import RequestContext
 from django.templatetags.static import static
 from django.utils import translation
 
+from smarter.apps.account.api.web.urls import AccountApiWebReverseNames
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
@@ -122,7 +123,9 @@ def dashboard_user_menu(context: RequestContext) -> dict[str, str | bool | int]:
         "user_profiles_api_url": account_url(DashboardNamedUrls.ACCOUNT_USER_PROFILES),
         "user_profile_select_api_url": account_url(DashboardNamedUrls.ACCOUNT_USER_PROFILE_SELECT),
         "login_url": settings.LOGIN_URL,
-        "logout_url": "/logout/",
+        "logout_url": reverse(
+            AccountApiWebReverseNames.namespace, AccountApiWebReverseNames.sign_out, urlconf=settings.ROOT_URLCONF
+        ),
         "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
         "smarter_request_id": uuid.uuid4().hex,
     }

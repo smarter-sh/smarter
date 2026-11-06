@@ -51,7 +51,7 @@ export const appContext: AppContext = {
     userProfilesApi: "/account/dashboard/user-profiles/",
     userProfileSelectApi: "/account/dashboard/user-profiles/select/",
     login: "/login/",
-    logout: "/logout/",
+    logout: "/api/web/account/logout/",
   },
 };
 

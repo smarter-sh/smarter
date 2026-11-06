@@ -15,7 +15,8 @@ badge), and these items:
   :doc:`../smarter-dashboard/views/authentication/profile_image`.
 - **Change Profile**, for a user with more than one UserProfile, below.
 - **Welcome Tour**, which opens the :doc:`welcome dialog <welcome>`.
-- **Sign Out**. An anonymous request gets **Sign In**, and the Language item.
+- **Sign Out**, which posts to the account api, ``/api/web/account/logout/``, then goes to the sign-in
+  page. An anonymous request gets **Sign In**, and the Language item.
 
 The menu is the ``@smarter/dashboard-user-menu`` React app, which
 ``templates/dashboard/navbar.html`` includes on every page, through

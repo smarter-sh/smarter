@@ -11,7 +11,7 @@ profile image opens it. It shows their name, email and role, and has these items
   profiles, with each one's account number, account name and creation date, and
   makes the console act as the chosen one for the rest of the session.
 - **Welcome Tour**, which opens the welcome dialog, `@smarter/welcome`
-- **Sign Out**, or **Sign In** for an anonymous request
+- **Sign Out** (a POST to `/api/web/account/logout/`), or **Sign In** for an anonymous request
 
 This component is served by Django, on every console page. See also:
 

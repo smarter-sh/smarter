@@ -15,7 +15,7 @@ PASSWORD = "Correct-Horse-Battery-9"
 
 
 class TestSignIn(TestAccountMixin):
-    """Test sign_in_with_email(), email_is_taken() and sign_up()."""
+    """Test sign_in_with_email(), email_is_taken(), awaits_activation() and sign_up()."""
 
     def setUp(self):
         super().setUp()
@@ -46,16 +46,23 @@ class TestSignIn(TestAccountMixin):
         self.assertTrue(sign_in.email_is_taken(self.email.upper()))
         self.assertFalse(sign_in.email_is_taken("nobody@example.com"))
 
-    def test_sign_up(self):
+    def test_sign_up_creates_an_inactive_user_and_emails_the_link(self):
+        """A new user can't sign in until they follow the emailed link."""
         email = f"sign_up_{self.hash_suffix}@example.com"
         self.addCleanup(User.objects.filter(email=email).delete)
-        user = sign_in.sign_up(self.request(), email, PASSWORD)
+        request = self.request()
+        with mock.patch.object(sign_in, "send_activation_email") as send_activation_email:
+            user = sign_in.sign_up(request, email, PASSWORD)
         self.assertEqual(user.username, email)
+        self.assertFalse(user.is_active)
+        self.assertTrue(user.check_password(PASSWORD))
+        send_activation_email.assert_called_once_with(request, user)
+        self.assertIsNone(sign_in.sign_in_with_email(self.request(), email, PASSWORD))
 
-    def test_sign_up_that_cannot_sign_in_is_a_bug(self):
-        """A new user that can't be authenticated at once raises, rather than leaving the session empty."""
-        email = f"sign_up_bug_{self.hash_suffix}@example.com"
-        self.addCleanup(User.objects.filter(email=email).delete)
-        with mock.patch.object(sign_in, "authenticate", return_value=None):
-            with self.assertRaises(RuntimeError):
-                sign_in.sign_up(self.request(), email, PASSWORD)
+    def test_awaits_activation(self):
+        """Only the right password of an inactive user who signed up with one says the account is waiting."""
+        self.assertFalse(sign_in.awaits_activation(self.email, PASSWORD))
+        User.objects.filter(pk=self.user.pk).update(is_active=False)
+        self.assertTrue(sign_in.awaits_activation(self.email.upper(), PASSWORD))
+        self.assertFalse(sign_in.awaits_activation(self.email, "wrong"))
+        self.assertFalse(sign_in.awaits_activation("nobody@example.com", PASSWORD))

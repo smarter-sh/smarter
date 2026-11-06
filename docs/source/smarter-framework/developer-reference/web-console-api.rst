@@ -166,7 +166,7 @@ Signing in
 ----------
 
 The console's sign-in pages call the account api, under ``/api/web/account/``. Signing in, signing out
-and signing up answer with the new session, so that the console needn't ask for it again. A refused
+and activating an account answer with the new session, so that the console needn't ask for it again. A refused
 request answers with :class:`~smarter.apps.account.api.web.contract.AccountErrors`: a message for the
 whole form, and the messages of each field, which the console shows beside it.
 
@@ -178,22 +178,35 @@ whole form, and the messages of each field, which the console shows beside it.
      - Does
    * - ``login/``
      - Signs in with an email address and password. An unknown address and a wrong password get the
-       same answer, so that it doesn't reveal which addresses have accounts.
+       same answer, so that it doesn't reveal which addresses have accounts. The right password of an
+       account that isn't activated yet gets ``403``, and a message that says so.
    * - ``logout/``
-     - Signs out.
+     - Signs out. The console's sign-out, and the user menu's **Sign Out**, call it.
    * - ``register/``
-     - Creates a user and signs them in, while the ``ENABLE_ACCOUNT_REGISTRATION`` switch is on;
-       otherwise ``404``. The password must pass Django's password validators.
+     - Creates an inactive user, and emails them a link to activate their account, while the
+       ``ENABLE_ACCOUNT_REGISTRATION`` switch is on; otherwise ``404``. The password must pass Django's
+       password validators.
+   * - ``activate/<uidb64>/<token>/``
+     - Activates the account of an emailed link, and signs its user in. Signing in uses the link up.
+   * - ``activation-resend/``
+     - Emails a new activation link, and answers the same whether or not the address has an account
+       that is waiting to be activated.
    * - ``password-reset-request/``
      - Emails a password reset link, and answers the same whether or not the address has an account.
    * - ``password-reset/<uidb64>/<token>/``
      - ``GET`` checks an emailed link; ``POST`` sets the new password, which must pass the validators.
 
-Signing in, signing up and asking for a password reset are limited to ten a minute per IP address, by
-:class:`~smarter.lib.drf.throttling.SmarterCredentialsRateThrottle`, on top of the api's general rate
-limits. Every ``POST`` needs the CSRF token that the session api sets. Social sign-in stays a redirect
-flow, through ``/social-auth/``, and the emailed password reset links keep their path,
-``/password-reset-link/<uidb64>/<token>/``, which the console serves.
+Signing in, signing up and asking for an activation or password reset link are limited to ten a
+minute per IP address, by :class:`~smarter.lib.drf.throttling.SmarterCredentialsRateThrottle`, on top
+of the api's general rate limits. Every ``POST`` needs the CSRF token that the session api sets. Social
+sign-in stays a redirect flow, through ``/social-auth/``. The emailed links keep their paths, which the
+console serves: ``/account/activate/<uidb64>/<token>/`` and ``/password-reset-link/<uidb64>/<token>/``.
+
+A user who signs up with a password proves that the email address is theirs by following the activation
+link (:mod:`smarter.apps.account.activation`). Users that social sign-in creates are inactive too, but an
+administrator activates them, and they can't ask for an activation link: see ``SOCIAL_AUTH_CREATE_USERS``
+in ``settings/base.py``. The pipeline sends them to ``/account/inactive/`` meanwhile, which the console
+serves, as it does ``/account/already-associated/``, for a social account that belongs to another user.
 
 The other endpoints
 -------------------
@@ -274,4 +287,16 @@ Technical Reference
     :members:
 
 .. automodule:: smarter.apps.account.api.web.views
+    :members:
+
+.. automodule:: smarter.apps.account.sign_in
+    :members:
+
+.. automodule:: smarter.apps.account.activation
+    :members:
+
+.. automodule:: smarter.apps.account.password_reset
+    :members:
+
+.. automodule:: smarter.apps.account.email_links
     :members:

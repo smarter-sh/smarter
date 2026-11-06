@@ -21,6 +21,14 @@ export const userProfilesErrorHandlers = [
   ),
 ];
 
+/** The account api signs the user out. */
+export const signOutHandler = http.post(appContext.urls.logout, () => HttpResponse.json({ isAuthenticated: false }));
+
+/** The account api refuses to sign the user out, e.g. without the CSRF token. */
+export const signOutErrorHandler = http.post(appContext.urls.logout, () =>
+  HttpResponse.json({ detail: "Forbidden" }, { status: 403 }),
+);
+
 /** The profile image api accepts an upload, and a removal. */
 export const profileImageHandlers = [
   http.post(appContext.urls.profileImageApi, () =>

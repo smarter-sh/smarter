@@ -18,7 +18,6 @@ from waffle import get_waffle_switch_model
 from smarter.apps.account import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.urls import AccountReverseNames
-from smarter.apps.account.views.authentication import LogoutView
 from smarter.apps.account.views.budget import urls as budget_urls
 from smarter.apps.account.views.budget.const import namespace as budget_namespace
 from smarter.apps.api import urls
@@ -192,7 +191,6 @@ urlpatterns = [
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     # the pages of the single-page console. See smarter.apps.dashboard.views.console_app.
     path("login/", ConsoleAppView.as_view(), name=ConsoleReverseNames.login_view),
-    path("logout/", LogoutView.as_view(), name="logout_view"),
     path("llmclient/", include(llmclient_urls, namespace=llmclient_namespace)),
     path("llmhost/", include(llmhost_urls, namespace=llmhost_namespace)),
     path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),

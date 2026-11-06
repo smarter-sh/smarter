@@ -39,6 +39,20 @@
       "title": "AccountMessage",
       "type": "object"
     },
+    "ActivationResendRequest": {
+      "additionalProperties": false,
+      "description": "The body of ``POST /api/web/account/activation-resend/``.",
+      "properties": {
+        "email": {
+          "description": "The email address to send a new activation link to.",
+          "title": "Email",
+          "type": "string"
+        }
+      },
+      "required": ["email"],
+      "title": "ActivationResendRequest",
+      "type": "object"
+    },
     "ConsoleAccount": {
       "additionalProperties": false,
       "description": "The account that the console acts for: that of the user's selected profile.",

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 22:58+0000\n"
+"POT-Creation-Date: 2026-11-06 23:34+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -16,6 +16,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: smarter/apps/account/activation.py
+msgid "Activate your account."
+msgstr "Activa tu cuenta."
+
+#: smarter/apps/account/api/web/views.py
+msgid "An unknown error occurred. Please try again later."
+msgstr "Se produjo un error desconocido. Inténtalo de nuevo más tarde."
+
 #: smarter/apps/account/api/web/views.py
 msgid "Too many attempts. Try again in a minute."
 msgstr "Demasiados intentos. Inténtalo de nuevo en un minuto."
@@ -23,6 +31,14 @@ msgstr "Demasiados intentos. Inténtalo de nuevo en un minuto."
 #: smarter/apps/account/api/web/views.py
 msgid "The request is invalid."
 msgstr "La solicitud no es válida."
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"Your account isn't activated yet. Follow the link that we emailed you, or "
+"ask for a new one."
+msgstr ""
+"Tu cuenta aún no está activada. Sigue el enlace que te enviamos por correo "
+"electrónico o pide uno nuevo."
 
 #: smarter/apps/account/api/web/views.py
 msgid "Email and/or password do not match."
@@ -42,8 +58,19 @@ msgid "Please correct the errors below."
 msgstr "Corrige los errores que se indican a continuación."
 
 #: smarter/apps/account/api/web/views.py
-msgid "An unknown error occurred. Please try again later."
-msgstr "Se produjo un error desconocido. Inténtalo de nuevo más tarde."
+msgid ""
+"We have emailed you a link to activate your account. Follow it to sign in."
+msgstr ""
+"Te enviamos por correo electrónico un enlace para activar tu cuenta. Síguelo "
+"para iniciar sesión."
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"If an account with this email address is waiting to be activated, we have "
+"sent it a new link."
+msgstr ""
+"Si hay una cuenta con esta dirección de correo electrónico pendiente de "
+"activación, le enviamos un enlace nuevo."
 
 #: smarter/apps/account/api/web/views.py
 msgid ""
@@ -64,6 +91,10 @@ msgstr "Las contraseñas no coinciden."
 #: smarter/apps/account/api/web/views.py
 msgid "Your password has been changed. Sign in with it."
 msgstr "Tu contraseña ha cambiado. Inicia sesión con ella."
+
+#: smarter/apps/account/email_links.py
+msgid "Invalid link. The user does not exist."
+msgstr "Enlace no válido. El usuario no existe."
 
 #: smarter/apps/account/management/commands/create_user.py
 msgid "Your Smarter user account has been created"
@@ -89,7 +120,6 @@ msgstr ""
 "Contraseña: %(password)s\n"
 
 #: smarter/apps/account/models/account_contact.py
-#: smarter/templates/account/welcome.html
 msgid "Welcome to Smarter!"
 msgstr "¡Te damos la bienvenida a Smarter!"
 
@@ -101,20 +131,6 @@ msgstr "Únete a la comunidad de Smarter en Slack"
 #: smarter/apps/account/password_reset.py
 msgid "Reset your password"
 msgstr "Restablece tu contraseña"
-
-#: smarter/apps/account/password_reset.py
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "Invalid password reset link. User does not exist."
-msgstr ""
-"Enlace de restablecimiento de contraseña no válido. El usuario no existe."
-
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "User not found. Please log in to activate your account."
-msgstr "Usuario no encontrado. Inicia sesión para activar tu cuenta."
-
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "Activate your account."
-msgstr "Activa tu cuenta."
 
 #: smarter/apps/account/views/dashboard/profile_image.py
 msgid "Choose an image to upload."
@@ -180,38 +196,6 @@ msgstr "Error del sistema"
 #: smarter/templates/500.html
 msgid "A system error has occurred."
 msgstr "Ocurrió un error del sistema."
-
-#: smarter/templates/account/account-inactive.html
-msgid "Your Account is Inactive."
-msgstr "Tu cuenta está inactiva."
-
-#: smarter/templates/account/account-inactive.html
-#: smarter/templates/account/activation.html
-msgid ""
-"Look for an email from us with instructions on how to activate your account."
-msgstr "Busca un correo nuestro con instrucciones para activar tu cuenta."
-
-#: smarter/templates/account/account-inactive.html
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-#: smarter/templates/cms/base/menu/authentication.html
-msgid "Login"
-msgstr "Iniciar sesión"
-
-#: smarter/templates/account/activation.html
-msgid "Activate Your Account."
-msgstr "Activa tu cuenta."
-
-#: smarter/templates/account/activation.html
-msgid "Didn't receive an email?"
-msgstr "¿No recibiste el correo?"
-
-#: smarter/templates/account/activation.html
-msgid "Try Again"
-msgstr "Intentar de nuevo"
-
-#: smarter/templates/account/activation.html
-msgid "Skip for now"
-msgstr "Omitir por ahora"
 
 #: smarter/templates/account/authentication/email/account-activation.html
 msgid "Activate Your Account"
@@ -293,18 +277,6 @@ msgstr "Restablecer contraseña"
 #: smarter/templates/account/authentication/email/password-reset.html
 msgid "Or, talk to a human!"
 msgstr "¡O habla con una persona!"
-
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-msgid "Social Account Already Associated"
-msgstr "La cuenta social ya está asociada"
-
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-msgid ""
-"The social account you tried to associate is already linked to another user "
-"on this platform."
-msgstr ""
-"La cuenta social que intentaste asociar ya está vinculada a otro usuario de "
-"esta plataforma."
 
 #: smarter/templates/account/email/slack-invitation.html
 msgid "The Smarter Project on Slack"
@@ -867,17 +839,6 @@ msgstr ""
 msgid "Unsubscribe"
 msgstr "Darme de baja"
 
-#: smarter/templates/account/welcome.html
-msgid ""
-"This is your opportunity to take prompt engineering <br />to the next level!"
-msgstr ""
-"¡Esta es tu oportunidad de llevar la ingeniería de prompts <br />al "
-"siguiente nivel!"
-
-#: smarter/templates/account/welcome.html
-msgid "Go To Dashboard"
-msgstr "Ir al panel"
-
 #: smarter/templates/admin/base_site.html
 msgid "Django site admin"
 msgstr "Sitio de administración de Django"
@@ -922,6 +883,10 @@ msgstr "API"
 #: smarter/templates/dashboard/sidebar.html
 msgid "OpenAPI Contract"
 msgstr "Contrato OpenAPI"
+
+#: smarter/templates/cms/base/menu/authentication.html
+msgid "Login"
+msgstr "Iniciar sesión"
 
 #: smarter/templates/cms/base/menu/authentication.html
 msgid "Logout"
@@ -1401,6 +1366,49 @@ msgstr "Esquemas JSON de SAM"
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr "Acerca del contrato"
+
+#~ msgid "User not found. Please log in to activate your account."
+#~ msgstr "Usuario no encontrado. Inicia sesión para activar tu cuenta."
+
+#~ msgid "Your Account is Inactive."
+#~ msgstr "Tu cuenta está inactiva."
+
+#~ msgid ""
+#~ "Look for an email from us with instructions on how to activate your "
+#~ "account."
+#~ msgstr "Busca un correo nuestro con instrucciones para activar tu cuenta."
+
+#~ msgid "Activate Your Account."
+#~ msgstr "Activa tu cuenta."
+
+#~ msgid "Didn't receive an email?"
+#~ msgstr "¿No recibiste el correo?"
+
+#~ msgid "Try Again"
+#~ msgstr "Intentar de nuevo"
+
+#~ msgid "Skip for now"
+#~ msgstr "Omitir por ahora"
+
+#~ msgid "Social Account Already Associated"
+#~ msgstr "La cuenta social ya está asociada"
+
+#~ msgid ""
+#~ "The social account you tried to associate is already linked to another "
+#~ "user on this platform."
+#~ msgstr ""
+#~ "La cuenta social que intentaste asociar ya está vinculada a otro usuario "
+#~ "de esta plataforma."
+
+#~ msgid ""
+#~ "This is your opportunity to take prompt engineering <br />to the next "
+#~ "level!"
+#~ msgstr ""
+#~ "¡Esta es tu oportunidad de llevar la ingeniería de prompts <br />al "
+#~ "siguiente nivel!"
+
+#~ msgid "Go To Dashboard"
+#~ msgstr "Ir al panel"
 
 #~ msgid "Received invalid responses."
 #~ msgstr "Se recibieron respuestas no válidas."

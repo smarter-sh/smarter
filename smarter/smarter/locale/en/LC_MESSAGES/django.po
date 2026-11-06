@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 22:58+0000\n"
+"POT-Creation-Date: 2026-11-06 23:34+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -17,12 +17,26 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: smarter/apps/account/activation.py
+msgid "Activate your account."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid "An unknown error occurred. Please try again later."
+msgstr ""
+
 #: smarter/apps/account/api/web/views.py
 msgid "Too many attempts. Try again in a minute."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
 msgid "The request is invalid."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"Your account isn't activated yet. Follow the link that we emailed you, or "
+"ask for a new one."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
@@ -42,7 +56,14 @@ msgid "Please correct the errors below."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
-msgid "An unknown error occurred. Please try again later."
+msgid ""
+"We have emailed you a link to activate your account. Follow it to sign in."
+msgstr ""
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"If an account with this email address is waiting to be activated, we have "
+"sent it a new link."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
@@ -63,6 +84,10 @@ msgstr ""
 msgid "Your password has been changed. Sign in with it."
 msgstr ""
 
+#: smarter/apps/account/email_links.py
+msgid "Invalid link. The user does not exist."
+msgstr ""
+
 #: smarter/apps/account/management/commands/create_user.py
 msgid "Your Smarter user account has been created"
 msgstr ""
@@ -80,7 +105,6 @@ msgid ""
 msgstr ""
 
 #: smarter/apps/account/models/account_contact.py
-#: smarter/templates/account/welcome.html
 msgid "Welcome to Smarter!"
 msgstr ""
 
@@ -91,19 +115,6 @@ msgstr ""
 
 #: smarter/apps/account/password_reset.py
 msgid "Reset your password"
-msgstr ""
-
-#: smarter/apps/account/password_reset.py
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "Invalid password reset link. User does not exist."
-msgstr ""
-
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "User not found. Please log in to activate your account."
-msgstr ""
-
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "Activate your account."
 msgstr ""
 
 #: smarter/apps/account/views/dashboard/profile_image.py
@@ -167,38 +178,6 @@ msgstr ""
 
 #: smarter/templates/500.html
 msgid "A system error has occurred."
-msgstr ""
-
-#: smarter/templates/account/account-inactive.html
-msgid "Your Account is Inactive."
-msgstr ""
-
-#: smarter/templates/account/account-inactive.html
-#: smarter/templates/account/activation.html
-msgid ""
-"Look for an email from us with instructions on how to activate your account."
-msgstr ""
-
-#: smarter/templates/account/account-inactive.html
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-#: smarter/templates/cms/base/menu/authentication.html
-msgid "Login"
-msgstr ""
-
-#: smarter/templates/account/activation.html
-msgid "Activate Your Account."
-msgstr ""
-
-#: smarter/templates/account/activation.html
-msgid "Didn't receive an email?"
-msgstr ""
-
-#: smarter/templates/account/activation.html
-msgid "Try Again"
-msgstr ""
-
-#: smarter/templates/account/activation.html
-msgid "Skip for now"
 msgstr ""
 
 #: smarter/templates/account/authentication/email/account-activation.html
@@ -275,16 +254,6 @@ msgstr ""
 
 #: smarter/templates/account/authentication/email/password-reset.html
 msgid "Or, talk to a human!"
-msgstr ""
-
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-msgid "Social Account Already Associated"
-msgstr ""
-
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-msgid ""
-"The social account you tried to associate is already linked to another user "
-"on this platform."
 msgstr ""
 
 #: smarter/templates/account/email/slack-invitation.html
@@ -716,15 +685,6 @@ msgstr ""
 msgid "Unsubscribe"
 msgstr ""
 
-#: smarter/templates/account/welcome.html
-msgid ""
-"This is your opportunity to take prompt engineering <br />to the next level!"
-msgstr ""
-
-#: smarter/templates/account/welcome.html
-msgid "Go To Dashboard"
-msgstr ""
-
 #: smarter/templates/admin/base_site.html
 msgid "Django site admin"
 msgstr ""
@@ -768,6 +728,10 @@ msgstr ""
 #: smarter/templates/cms/base/menu/api.html
 #: smarter/templates/dashboard/sidebar.html
 msgid "OpenAPI Contract"
+msgstr ""
+
+#: smarter/templates/cms/base/menu/authentication.html
+msgid "Login"
 msgstr ""
 
 #: smarter/templates/cms/base/menu/authentication.html

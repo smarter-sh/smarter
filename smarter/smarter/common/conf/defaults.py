@@ -198,7 +198,6 @@ class SettingsDefaults:
         re.compile(r"^/docs/json-schema(/.*)?$"),
         re.compile(r"^/config/?$"),
         re.compile(r"^/login/?$"),
-        re.compile(r"^/logout/?$"),
         re.compile(r"^/admin/?$"),
     ]
 

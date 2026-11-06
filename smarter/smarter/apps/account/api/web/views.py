@@ -1,9 +1,11 @@
 """
-The console's account api, ``/api/web/account/``: signing in and out, signing up, and resetting a password.
+The console's account api, ``/api/web/account/``: signing in and out, signing up and activating an account,.
+
+and resetting a password.
 
 These replace what the server-rendered sign-in pages' forms did, as JSON for the single-page console
 (ADR-035). Every POST needs the CSRF token, which ``GET /api/web/session/`` sets. Signing in, signing up and
-asking for a password reset are limited per IP address by
+asking for an activation or password reset link are limited per IP address by
 :class:`~smarter.lib.drf.throttling.SmarterCredentialsRateThrottle`. The bodies and responses are the models
 of :mod:`smarter.apps.account.api.web.contract`.
 
@@ -24,21 +26,28 @@ from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from pydantic import ValidationError
 
+from smarter.apps.account.activation import activate, resend_activation_email
 from smarter.apps.account.api.web.contract import (
     AccountErrors,
     AccountMessage,
+    ActivationResendRequest,
     NewPasswordRequest,
     PasswordResetRequest,
     SignInRequest,
     SignUpRequest,
 )
+from smarter.apps.account.email_links import EmailLinkError
 from smarter.apps.account.models import User
 from smarter.apps.account.password_reset import (
-    PasswordResetLinkError,
     send_password_reset_email,
     user_from_reset_link,
 )
-from smarter.apps.account.sign_in import email_is_taken, sign_in_with_email, sign_up
+from smarter.apps.account.sign_in import (
+    awaits_activation,
+    email_is_taken,
+    sign_in_with_email,
+    sign_up,
+)
 from smarter.apps.api.web.session.contract import ConsoleSessionModel
 from smarter.apps.api.web.session.views import console_session
 from smarter.lib import json, logging
@@ -94,6 +103,28 @@ def session_response(request: HttpRequest) -> JsonResponse:
     :returns: The new :class:`~smarter.apps.api.web.session.contract.ConsoleSession`, as JSON.
     """
     return JsonResponse(console_session(request).to_json(), status=HTTPStatus.OK)
+
+
+def unknown_error_response() -> JsonResponse:
+    """
+    The response to a request that failed on the server, e.g. an email that couldn't be rendered.
+
+    :returns: 500, with a message for the user.
+    """
+    return errors_response(
+        _("An unknown error occurred. Please try again later."),
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+
+def link_error_response(error: EmailLinkError) -> JsonResponse:
+    """
+    The response to an emailed link that can't be used.
+
+    :param error: Why.
+    :returns: 404, 403 or 400, with the reason.
+    """
+    return errors_response(str(error), status=error.status)
 
 
 def throttled_response(wait: int) -> JsonResponse:
@@ -186,7 +217,7 @@ class SignInApiView(AccountApiView):
 
         :param request: The request, whose body is a :class:`~smarter.apps.account.api.web.contract.SignInRequest`.
         :returns: The new session; 400 with :class:`~smarter.apps.account.api.web.contract.AccountErrors`;
-            or 429.
+            403 for the right password of an account that isn't activated yet; or 429.
         """
         throttled = self.throttle_credentials(request)
         if throttled is not None:
@@ -196,9 +227,15 @@ class SignInApiView(AccountApiView):
         except InvalidRequest:
             return errors_response(_("The request is invalid."))
         user = sign_in_with_email(request, body.email, body.password)
-        if user is None:
-            return errors_response(_("Email and/or password do not match."))
-        return session_response(request)
+        if user is not None:
+            return session_response(request)
+        if awaits_activation(body.email, body.password):
+            # only someone who knows the password learns that the account is waiting.
+            return errors_response(
+                _("Your account isn't activated yet. Follow the link that we emailed you, or ask for a new one."),
+                status=HTTPStatus.FORBIDDEN,
+            )
+        return errors_response(_("Email and/or password do not match."))
 
 
 class SignOutApiView(AccountApiView):
@@ -217,18 +254,19 @@ class SignOutApiView(AccountApiView):
 
 class SignUpApiView(AccountApiView):
     """
-    ``POST /api/web/account/register/``: create an account's user, and sign in.
+    ``POST /api/web/account/register/``: create an inactive user, and email them an activation link.
 
     It answers 404 while the ``ENABLE_ACCOUNT_REGISTRATION`` switch is off, as the sign-up page does.
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Create the user, sign them in, and answer with the new session.
+        Create the user, and email them a link to activate their account.
 
         :param request: The request, whose body is a :class:`~smarter.apps.account.api.web.contract.SignUpRequest`.
-        :returns: The new session; 400 with the email's and password's errors; 404 while sign-up is
-            switched off; or 429.
+        :returns: 200 with an :class:`~smarter.apps.account.api.web.contract.AccountMessage`; 400 with the
+            email's and password's errors; 404 while sign-up is switched off; 429; or 500 if the email
+            can't be rendered.
         """
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION):
             return errors_response(_("Registration is closed."), status=HTTPStatus.NOT_FOUND)
@@ -254,8 +292,72 @@ class SignUpApiView(AccountApiView):
         if field_errors:
             return errors_response(_("Please correct the errors below."), field_errors)
 
-        sign_up(request, body.email, body.password)
+        try:
+            sign_up(request, body.email, body.password)
+        except RuntimeError:
+            # the user exists, inactive, and can ask for a new link once the template is fixed.
+            logger.error("%s.SignUpApiView.post() could not render the activation email.", logger_prefix)
+            return unknown_error_response()
+        return message_response(_("We have emailed you a link to activate your account. Follow it to sign in."))
+
+
+class ActivateApiView(AccountApiView):
+    """
+    ``POST /api/web/account/activate/<uidb64>/<token>/``: activate an account with its emailed link, and sign in.
+
+    The console serves the emailed link, ``/account/activate/<uidb64>/<token>/``, and calls this with its
+    two parts. It isn't rate limited: the token is the credential, and a guess can't be checked faster than
+    the password reset link's.
+    """
+
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Activate the link's user, sign them in, and answer with the new session.
+
+        :param request: The request.
+        :param kwargs: ``uidb64`` and ``token``.
+        :returns: The new session, or 404, 403 or 400 for a link that can't be used.
+        """
+        try:
+            activate(request, kwargs["uidb64"], kwargs["token"])
+        except EmailLinkError as e:
+            return link_error_response(e)
         return session_response(request)
+
+
+class ActivationResendApiView(AccountApiView):
+    """``POST /api/web/account/activation-resend/``: email a new activation link."""
+
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Email a new link to the address's inactive user, if they may activate by email.
+
+        The answer is the same either way.
+
+        :param request: The request, whose body is an
+            :class:`~smarter.apps.account.api.web.contract.ActivationResendRequest`.
+        :returns: 200 with an :class:`~smarter.apps.account.api.web.contract.AccountMessage`; 400 for an
+            invalid address; 429; or 500 if the email can't be rendered.
+        """
+        throttled = self.throttle_credentials(request)
+        if throttled is not None:
+            return throttled
+        try:
+            body = self.read_body(request, ActivationResendRequest)
+        except InvalidRequest:
+            return errors_response(_("The request is invalid."))
+        invalid_email = email_errors(body.email)
+        if invalid_email:
+            return errors_response(_("Please correct the errors below."), {"email": invalid_email})
+        try:
+            resend_activation_email(request, body.email)
+        except RuntimeError:
+            logger.error("%s.ActivationResendApiView.post() could not render the email.", logger_prefix)
+            return unknown_error_response()
+        # the same answer whether or not the address has an inactive account, so that it isn't revealed.
+        return message_response(
+            _("If an account with this email address is waiting to be activated, we have sent it a new link.")
+        )
 
 
 class PasswordResetRequestApiView(AccountApiView):
@@ -284,10 +386,7 @@ class PasswordResetRequestApiView(AccountApiView):
             send_password_reset_email(request, body.email)
         except RuntimeError:
             logger.error("%s.PasswordResetRequestApiView.post() could not render the email.", logger_prefix)
-            return errors_response(
-                _("An unknown error occurred. Please try again later."),
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            return unknown_error_response()
         # the same answer whether or not a user has the address, so that it isn't revealed.
         return message_response(
             _("If an account has this email address, we have sent it a link to reset the password.")
@@ -304,15 +403,6 @@ class PasswordResetApiView(AccountApiView):
 
     http_method_names = ["get", "post"]
 
-    def link_error(self, error: PasswordResetLinkError) -> JsonResponse:
-        """
-        The response to a link that can't be used.
-
-        :param error: Why.
-        :returns: 404, 403 or 400, with the reason.
-        """
-        return errors_response(str(error), status=error.status)
-
     def get(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Check that the link can be used, before the console asks for the new password.
@@ -323,8 +413,8 @@ class PasswordResetApiView(AccountApiView):
         """
         try:
             user_from_reset_link(kwargs["uidb64"], kwargs["token"])
-        except PasswordResetLinkError as e:
-            return self.link_error(e)
+        except EmailLinkError as e:
+            return link_error_response(e)
         return message_response(_("Choose a new password."))
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
@@ -338,8 +428,8 @@ class PasswordResetApiView(AccountApiView):
         """
         try:
             user = user_from_reset_link(kwargs["uidb64"], kwargs["token"])
-        except PasswordResetLinkError as e:
-            return self.link_error(e)
+        except EmailLinkError as e:
+            return link_error_response(e)
         try:
             body = self.read_body(request, NewPasswordRequest)
         except InvalidRequest:

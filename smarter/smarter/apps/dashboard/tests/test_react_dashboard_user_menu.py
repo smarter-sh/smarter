@@ -66,7 +66,7 @@ class TestReactDashboardUserMenu(TestAccountMixin):
         self.assertEqual(attributes["profile_image_api_url"], "/account/dashboard/profile-image/")
         self.assertEqual(attributes["user_profiles_api_url"], "/account/dashboard/user-profiles/")
         self.assertEqual(attributes["user_profile_select_api_url"], "/account/dashboard/user-profiles/select/")
-        self.assertEqual(attributes["logout_url"], "/logout/")
+        self.assertEqual(attributes["logout_url"], "/api/web/account/logout/")
         self.assertEqual(attributes["current_language"], "en")
         self.assertEqual(len(attributes["smarter_request_id"]), 32)
 

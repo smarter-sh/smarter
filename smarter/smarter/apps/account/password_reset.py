@@ -1,28 +1,22 @@
 """
 Password reset links: making one, emailing it, and reading it back.
 
-A link is ``/password-reset-link/<uidb64>/<token>/``, which expires. The console serves the link's page,
-and its account api, :mod:`smarter.apps.account.api.web.views`, uses these functions. Emails that were sent
-before the console served it keep working: the link's path is the same.
+A link is ``/password-reset-link/<uidb64>/<token>/``, which expires: see :mod:`smarter.apps.account.email_links`.
+The console serves the link's page, and its account api, :mod:`smarter.apps.account.api.web.views`, uses these
+functions. Emails that were sent before the console served it keep working: the link's path is the same.
 """
 
-from http import HTTPStatus
-
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest
 from django.utils.translation import gettext as _
 
+from smarter.apps.account.email_links import (
+    email_link,
+    render_email,
+    user_from_email_link,
+)
 from smarter.apps.account.models import User
 from smarter.apps.infrastructure.services import infrastructure
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
-from smarter.lib.django.token_generators import (
-    ExpiringTokenGenerator,
-    SmarterTokenConversionError,
-    SmarterTokenExpiredError,
-    SmarterTokenIntegrityError,
-    SmarterTokenParseError,
-)
-from smarter.lib.django.views import SmarterView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
@@ -34,22 +28,6 @@ PASSWORD_RESET_LINK_NAME = "password_reset_link"
 EMAIL_TEMPLATE_PATH = "account/authentication/email/password-reset.html"
 """The email's template."""
 
-expiring_token = ExpiringTokenGenerator()
-
-
-class PasswordResetLinkError(Exception):
-    """
-    A password reset link that can't be used.
-
-    :param message: Why, for the user.
-    :param status: The http status that answers it: 404 for an unknown user, 403 for an expired link,
-        400 for a malformed one.
-    """
-
-    def __init__(self, message: str, status: HTTPStatus):
-        super().__init__(message)
-        self.status = status
-
 
 def password_reset_link(request: HttpRequest, user: User) -> str:
     """
@@ -60,9 +38,7 @@ def password_reset_link(request: HttpRequest, user: User) -> str:
     :returns: The link.
     :raises SmarterValueError: when ``user`` is not a User.
     """
-    if not isinstance(user, User):
-        raise SmarterValueError("Invalid user object.")
-    return expiring_token.encode_link(request=request, user=user, reverse_link=PASSWORD_RESET_LINK_NAME)  # type: ignore[arg-type]
+    return email_link(request, user, PASSWORD_RESET_LINK_NAME)
 
 
 def send_password_reset_email(request: HttpRequest, email: str) -> bool:
@@ -82,12 +58,8 @@ def send_password_reset_email(request: HttpRequest, email: str) -> bool:
     except User.DoesNotExist:
         logger.debug("%s.send_password_reset_email() no user has the address.", logger_prefix)
         return False
-    link = password_reset_link(request, user)
-    context = {"password_reset": {"url": link}}
-    body = SmarterView().render_clean_html(request, template_path=EMAIL_TEMPLATE_PATH, context=context)
-    if isinstance(body, HttpResponse):
-        # render_clean_html() logged why the template failed.
-        raise RuntimeError(f"{logger_prefix}.send_password_reset_email() could not render {EMAIL_TEMPLATE_PATH}.")
+    context = {"password_reset": {"url": password_reset_link(request, user)}}
+    body = render_email(request, EMAIL_TEMPLATE_PATH, context)
     # the reset link is a secret, so the admin gets no blind copy.
     infrastructure.email.send_email(subject=_("Reset your password"), body=body, to=email, html=True, bcc_admin=False)
     return True
@@ -100,22 +72,6 @@ def user_from_reset_link(uidb64: str, token: str) -> User:
     :param uidb64: The link's encoded user id.
     :param token: The link's token.
     :returns: The user.
-    :raises PasswordResetLinkError: when the link is unknown, malformed or expired.
+    :raises EmailLinkError: when the link is unknown, malformed or expired.
     """
-    try:
-        return expiring_token.decode_link(uidb64=uidb64, token=token)
-    except User.DoesNotExist as e:
-        raise PasswordResetLinkError(
-            _("Invalid password reset link. User does not exist."), HTTPStatus.NOT_FOUND
-        ) from e
-    except SmarterTokenExpiredError as e:
-        raise PasswordResetLinkError(str(e), HTTPStatus.FORBIDDEN) from e
-    except (
-        TypeError,
-        ValueError,
-        OverflowError,
-        SmarterTokenParseError,
-        SmarterTokenConversionError,
-        SmarterTokenIntegrityError,
-    ) as e:
-        raise PasswordResetLinkError(str(e), HTTPStatus.BAD_REQUEST) from e
+    return user_from_email_link(uidb64, token)

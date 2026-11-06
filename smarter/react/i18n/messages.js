@@ -486,10 +486,30 @@ gettext("Contact Us");
 gettext("Your session has expired. Reload the page, and try again.");
 // Translators: used in react/packages/smarter-console/src/lib/account.ts
 gettext("An unknown error occurred. Please try again later.");
+// Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx
+gettext("Activate your account");
+// Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx, react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx
+gettext("Send a new activation link");
+// Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx
+gettext("Activating your account...");
+// Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx, react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx, react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/PasswordResetPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
+gettext("Back to sign in");
+// Translators: used in react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx
+gettext("Social Account Already Associated");
+// Translators: used in react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx
+gettext("The social account you tried to associate is already linked to another user on this platform.");
 // Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
 gettext("Welcome, %(name)s");
 // Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
 gettext("Open the dashboard");
+// Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
+gettext("Your account isn't active");
+// Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
+gettext("If you signed up with a password, follow the link that we emailed you to activate your account.");
+// Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
+gettext("If you signed in with Google or GitHub, an administrator activates your account.");
+// Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
+gettext("Email");
 // Translators: used in react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
 gettext("Sign Out");
 // Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
@@ -498,8 +518,6 @@ gettext("Sign In");
 gettext("Sign in with Google");
 // Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
 gettext("Sign in with GitHub");
-// Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
-gettext("Email");
 // Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
 gettext("Password");
 // Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
@@ -522,8 +540,6 @@ gettext("Confirm the new password");
 gettext("Set the new password");
 // Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
 gettext("Reset your password");
-// Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
-gettext("Back to sign in");
 // Translators: used in react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
 gettext("Enter your email to reset your password.");
 // Translators: used in react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx
@@ -532,6 +548,10 @@ gettext("Send the link");
 gettext("Sign Up");
 // Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
 gettext("Registration is closed.");
+// Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
+gettext("Check your email");
+// Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
+gettext("Didn't get the email?");
 // Translators: used in react/packages/smarter-console/src/routes/RegisterPage.tsx
 gettext("Already have an account?");
 // Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx

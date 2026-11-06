@@ -3,7 +3,7 @@ URL configuration for the Account app's endpoints in the web console's api.
 
 These are mounted at ``/api/web/account/``. The Budget list page's React app calls the ones under
 ``/api/web/account/budget/``, and the single-page console calls the others, which sign in and out, sign
-up and reset a password. See :mod:`smarter.apps.api.web`, :mod:`smarter.apps.account.views.budget.listview`
+up, activate an account and reset a password. See :mod:`smarter.apps.api.web`, :mod:`smarter.apps.account.views.budget.listview`
 and :mod:`smarter.apps.account.api.web.views`.
 
 These endpoints are part of Smarter's Django-React integration. The Django view that renders a
@@ -15,6 +15,8 @@ its root element, and the app calls them with the browser's Django session and C
 from django.urls import path
 
 from smarter.apps.account.api.web.views import (
+    ActivateApiView,
+    ActivationResendApiView,
     PasswordResetApiView,
     PasswordResetRequestApiView,
     SignInApiView,
@@ -54,6 +56,8 @@ class AccountApiWebReverseNames:
     sign_in = to_snake_case(SignInApiView.__name__)
     sign_out = to_snake_case(SignOutApiView.__name__)
     sign_up = to_snake_case(SignUpApiView.__name__)
+    activate = to_snake_case(ActivateApiView.__name__)
+    activation_resend = to_snake_case(ActivationResendApiView.__name__)
     password_reset_request = to_snake_case(PasswordResetRequestApiView.__name__)
     password_reset = to_snake_case(PasswordResetApiView.__name__)
 
@@ -62,6 +66,12 @@ urlpatterns = [
     path("login/", SignInApiView.as_view(), name=AccountApiWebReverseNames.sign_in),
     path("logout/", SignOutApiView.as_view(), name=AccountApiWebReverseNames.sign_out),
     path("register/", SignUpApiView.as_view(), name=AccountApiWebReverseNames.sign_up),
+    path("activate/<uidb64>/<token>/", ActivateApiView.as_view(), name=AccountApiWebReverseNames.activate),
+    path(
+        "activation-resend/",
+        ActivationResendApiView.as_view(),
+        name=AccountApiWebReverseNames.activation_resend,
+    ),
     path(
         "password-reset-request/",
         PasswordResetRequestApiView.as_view(),

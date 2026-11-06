@@ -40,6 +40,18 @@ export interface AccountMessage {
   detail: string;
 }
 /**
+ * The body of ``POST /api/web/account/activation-resend/``.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "ActivationResendRequest".
+ */
+export interface ActivationResendRequest {
+  /**
+   * The email address to send a new activation link to.
+   */
+  email: string;
+}
+/**
  * The account that the console acts for: that of the user's selected profile.
  *
  * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema

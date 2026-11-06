@@ -14,6 +14,9 @@ export const SESSION_API_URL = "/api/web/session/";
 /** The console's sign-in route. */
 export const LOGIN_PATH = "/login";
 
+/** The page of an account that isn't active, which the social sign-in pipeline redirects to as well. */
+export const INACTIVE_PATH = "/account/inactive";
+
 /** The query parameter that carries the route to return to after signing in. */
 export const NEXT_PARAMETER = "next";
 
