@@ -30,9 +30,15 @@ that replace the views in phase 1: bugs 4 (side effects on GET) and 5 (rate limi
 - `/workbench/llm-clients/<id>/` is not dead: the workbench passes it to Smarter Chat, which
   appends `config/`. It moves with the workbench endpoints in phase 2.
 
+**Phase 1 status.** Done: `GET /api/web/session/` with its contract, and `@smarter/console` with React
+Router, the session provider, the sign-in guard, a first shell, and generated contract types. Next: the
+account endpoints under `/api/web/account/` and the sign-in pages, the shell's sidebar and user menu, and
+Django serving the console's `index.html` for migrated paths.
+
 ## Development
 
-- The SPA runs on the Vite dev server, `http://localhost:5173/` (not yet built).
+- The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with
+  `npm run dev -w @smarter/console` in `smarter/react`, then open `http://localhost:5173/`.
 - Vite proxies `/api/`, `/admin/`, `/social-auth/`, `/static/`, `/jsi18n/`, `/i18n/` and `/ws/` to
   `http://localhost:9357/`, so the session and CSRF cookies are first-party.
 - The Django console keeps running at `http://localhost:9357/` for pages not yet migrated.

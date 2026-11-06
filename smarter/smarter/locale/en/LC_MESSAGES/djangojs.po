@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 21:46+0000\n"
+"POT-Creation-Date: 2026-11-06 22:15+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -80,7 +80,7 @@ msgid ""
 "its public identifier."
 msgstr ""
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-console/src/App.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Loading..."
 msgstr ""
 
@@ -446,7 +446,7 @@ msgstr ""
 msgid "The detail of %(name)s could not be loaded: %(error)s"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
+#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-console/src/App.tsx
 msgid "Try again"
 msgstr ""
 
@@ -518,7 +518,7 @@ msgstr ""
 msgid "Owner email"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Account"
 msgstr ""
 
@@ -994,6 +994,34 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 msgid "Delete: Delete this connection resource"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/App.tsx
+msgid "The console couldn't reach the server."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
+msgid "Welcome, %(name)s"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
+msgid "Open the dashboard"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Sign In"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
+msgid "Sign in to Smarter"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
+msgid "Page not found"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
+msgid "Return Home"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
@@ -1701,10 +1729,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
 msgid "Remove Profile Image"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
-msgid "Sign In"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx

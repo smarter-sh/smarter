@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smarter</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <!-- the console's theme, served by the backend until the console has its own styles. -->
+    <link href="/static/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/static/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+
+    <!-- the messages in the session's language: defines window.django.gettext(), which @smarter/common's i18n calls. -->
+    <script src="/jsi18n/"></script>
+  </head>
+  <body>
+    <div id="smarter-console-root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
