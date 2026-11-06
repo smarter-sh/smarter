@@ -679,6 +679,29 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(error.description, "LLMClient not found.")
         self.assertNotIn("stacktrace", response.json()["error"])
 
+    def test_config_not_found_is_not_an_error_log(self):
+        """Test that a request for a deleted or unknown LLMClient's config, the client's error, writes no ERROR log."""
+        module = "smarter.apps.prompt.views.detailviews.prompt_config_view"
+        unknown = LLMClient(id=999999999)
+        url = self.url("config_by_hashed_id", hashed_id=unknown.hashed_id)
+        with self.assertNoLogs(module, level="ERROR"):
+            response = self.client.post(url)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_config_get_when_not_allowed_is_a_warning(self):
+        """Test that a GET while the ALLOW_API_GET switch is inactive is a 405, logged at WARNING, not ERROR."""
+        module = "smarter.apps.prompt.views.detailviews.prompt_config_view"
+        url = self.url("config_by_hashed_id", hashed_id=self.resource.hashed_id)
+        with (
+            patch(f"{module}.waffle.switch_is_active", return_value=False),
+            self.assertLogs(module, level="WARNING") as logs,
+        ):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        levels = [record.levelname for record in logs.records]
+        self.assertIn("WARNING", levels)
+        self.assertNotIn("ERROR", levels)
+
     def test_config_is_csrf_exempt(self):
         """Test that the config api, which only reads, accepts a POST without a CSRF token."""
         self.assertTrue(getattr(PromptConfigView.as_view(), "csrf_exempt", False))
