@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 17:50+0000\n"
+"POT-Creation-Date: 2026-11-06 21:46+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -50,6 +50,15 @@ msgid "Join the Smarter community on Slack"
 msgstr "Únete a la comunidad de Smarter en Slack"
 
 #: smarter/apps/account/views/authentication/account_views.py
+msgid "An account with this email address already exists. Please sign in."
+msgstr ""
+"Ya existe una cuenta con esta dirección de correo electrónico. Inicia sesión."
+
+#: smarter/apps/account/views/authentication/account_views.py
+msgid "Registration is closed."
+msgstr "El registro está cerrado."
+
+#: smarter/apps/account/views/authentication/account_views.py
 msgid "User not found. Please log in to activate your account."
 msgstr "Usuario no encontrado. Inicia sesión para activar tu cuenta."
 
@@ -64,18 +73,12 @@ msgstr ""
 "Enlace de restablecimiento de contraseña no válido. El usuario no existe."
 
 #: smarter/apps/account/views/authentication/login_view.py
-msgid "Username and/or password do not match."
-msgstr "El nombre de usuario o la contraseña no coinciden."
+msgid "Email and/or password do not match."
+msgstr "El correo electrónico y/o la contraseña no coinciden."
 
 #: smarter/apps/account/views/authentication/login_view.py
-#, python-format
-msgid "Invalid login attempt. Unknown user %(email)s"
-msgstr "Intento de inicio de sesión no válido. Usuario desconocido %(email)s"
-
-#: smarter/apps/account/views/authentication/login_view.py
-#, python-format
-msgid "An unknown error occurred %(error)s"
-msgstr "Ocurrió un error desconocido %(error)s"
+msgid "An unknown error occurred. Please try again later."
+msgstr "Se produjo un error desconocido. Inténtalo de nuevo más tarde."
 
 #: smarter/apps/account/views/authentication/login_view.py
 msgid "Received invalid responses."
@@ -125,19 +128,13 @@ msgstr ""
 "Este enlace para darte de baja no es válido. Copia el enlace completo del "
 "correo e inténtalo de nuevo."
 
-#: smarter/apps/dashboard/views/views/coming_soon.py
-msgid "We'll notify you when the launch date nears."
-msgstr "Te avisaremos cuando se acerque la fecha de lanzamiento."
-
-#: smarter/apps/dashboard/views/views/coming_soon.py
-#, python-format
-msgid "%(email)s is already in our contact list. We'll keep you updated."
-msgstr ""
-"%(email)s ya está en nuestra lista de contactos. Te mantendremos al tanto."
-
 #: smarter/lib/social_core/backends/multitenant.py
 msgid "Your subscription is not active. Please check your payment status."
 msgstr "Tu suscripción no está activa. Revisa el estado de tu pago."
+
+#: smarter/lib/tests/test_json.py
+msgid "Name"
+msgstr "Nombre"
 
 #: smarter/templates/400.html
 msgid "Bad Request"
@@ -176,22 +173,6 @@ msgstr "Error del sistema"
 msgid "A system error has occurred."
 msgstr "Ocurrió un error del sistema."
 
-#: smarter/templates/account/account-deactivated.html
-msgid "Your account is deactivated"
-msgstr "Tu cuenta está desactivada"
-
-#: smarter/templates/account/account-deactivated.html
-msgid ""
-"Sorry to see you go! We hope to see you back soon. <br />We'll keep the "
-"lights on for you."
-msgstr ""
-"¡Lamentamos que te vayas! Esperamos verte pronto de nuevo. <br />Te "
-"dejaremos las luces encendidas."
-
-#: smarter/templates/account/account-deactivated.html
-msgid "Go to Home Page"
-msgstr "Ir a la página de inicio"
-
 #: smarter/templates/account/account-inactive.html
 msgid "Your Account is Inactive."
 msgstr "Tu cuenta está inactiva."
@@ -223,11 +204,6 @@ msgstr "Intentar de nuevo"
 #: smarter/templates/account/activation.html
 msgid "Skip for now"
 msgstr "Omitir por ahora"
-
-#: smarter/templates/account/authentication/base.html
-#: smarter/templates/account/dashboard/overview.html
-msgid "Learn more"
-msgstr "Más información"
 
 #: smarter/templates/account/authentication/base.html
 #: smarter/templates/dashboard/footer.html
@@ -316,7 +292,6 @@ msgid "Thank you for being part of %(product_name)s!"
 msgstr "¡Gracias por ser parte de %(product_name)s!"
 
 #: smarter/templates/account/authentication/email/password-reset.html
-#: smarter/templates/account/dashboard/settings.html
 msgid "Reset Password"
 msgstr "Restablecer contraseña"
 
@@ -331,7 +306,6 @@ msgstr "Restablecimiento de contraseña"
 #: smarter/templates/account/authentication/new-password.html
 #: smarter/templates/account/authentication/sign-in.html
 #: smarter/templates/account/authentication/sign-up.html
-#: smarter/templates/account/dashboard/settings.html
 msgid "Password"
 msgstr "Contraseña"
 
@@ -354,23 +328,8 @@ msgstr "Enviar"
 #: smarter/templates/account/authentication/password-reset-request.html
 #: smarter/templates/account/authentication/sign-in.html
 #: smarter/templates/account/authentication/sign-up.html
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/coming-soon.html
 msgid "Please wait..."
 msgstr "Espera un momento..."
-
-#: smarter/templates/account/authentication/password-confirmation.html
-msgid "Password is changed"
-msgstr "Se cambió la contraseña"
-
-#: smarter/templates/account/authentication/password-confirmation.html
-msgid "Time to get back to work!"
-msgstr "¡Es hora de volver al trabajo!"
-
-#: smarter/templates/account/authentication/password-confirmation.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in"
-msgstr "Iniciar sesión"
 
 #: smarter/templates/account/authentication/password-reset-request.html
 #: smarter/templates/account/authentication/sign-in.html
@@ -384,18 +343,10 @@ msgstr "Ingresa tu correo para restablecer tu contraseña."
 #: smarter/templates/account/authentication/password-reset-request.html
 #: smarter/templates/account/authentication/sign-in.html
 #: smarter/templates/account/authentication/sign-up.html
-#: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/account/dashboard/user.html
-#: smarter/templates/account/dashboard/users.html
-#: smarter/templates/coming-soon.html
 msgid "Email"
 msgstr "Correo electrónico"
 
 #: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/dashboard/api-key.html
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/account/dashboard/user.html
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -440,6 +391,10 @@ msgstr "Acepto los <a href=\"#\" class=\"ms-1 link-primary\">Términos</a>"
 msgid "Already have an Account?"
 msgstr "¿Ya tienes una cuenta?"
 
+#: smarter/templates/account/authentication/sign-up.html
+msgid "Sign in"
+msgstr "Iniciar sesión"
+
 #: smarter/templates/account/authentication/social-auth-already-associated.html
 msgid "Social Account Already Associated"
 msgstr "La cuenta social ya está asociada"
@@ -451,922 +406,6 @@ msgid ""
 msgstr ""
 "La cuenta social que intentaste asociar ya está vinculada a otro usuario de "
 "esta plataforma."
-
-#: smarter/templates/account/dashboard/activity.html
-msgid "Account Activity"
-msgstr "Actividad de la cuenta"
-
-#: smarter/templates/account/dashboard/activity.html
-#: smarter/templates/account/dashboard/base.html
-msgid "Activity"
-msgstr "Actividad"
-
-#: smarter/templates/account/dashboard/api-key.html
-#: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/account/dashboard/user.html
-msgid "Account Settings"
-msgstr "Configuración de la cuenta"
-
-#: smarter/templates/account/dashboard/api-key.html
-#: smarter/templates/account/dashboard/api-keys.html
-#: smarter/templates/account/dashboard/base.html
-#: smarter/templates/dashboard/sidebar.html
-msgid "API Keys"
-msgstr "Claves de API"
-
-#: smarter/templates/account/dashboard/api-key.html
-#: smarter/templates/account/dashboard/base.html
-msgid "New API Key"
-msgstr "Nueva clave de API"
-
-#: smarter/templates/account/dashboard/api-key.html
-msgid "A description for this API key. Be concise ..."
-msgstr "Una descripción de esta clave de API. Sé breve..."
-
-#: smarter/templates/account/dashboard/api-key.html
-msgid "True"
-msgstr "Verdadero"
-
-#: smarter/templates/account/dashboard/api-key.html
-msgid "False"
-msgstr "Falso"
-
-#: smarter/templates/account/dashboard/api-key.html
-msgid "API Key"
-msgstr "Clave de API"
-
-#: smarter/templates/account/dashboard/api-key.html
-msgid ""
-"We will only show this value once. Store your api key value in a safe "
-"location."
-msgstr ""
-"Solo mostraremos este valor una vez. Guarda tu clave de API en un lugar "
-"seguro."
-
-#: smarter/templates/account/dashboard/api-key.html
-msgid "Save"
-msgstr "Guardar"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Account API Keys"
-msgstr "Claves de API de la cuenta"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "API Key Management"
-msgstr "Administración de claves de API"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Live Mode"
-msgstr "Modo en vivo"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid ""
-"You're in sandbox mode. Your API keys can presently only be used for testing "
-"purposes, and can only be used by authenticated users in your account. "
-"Switch to live mode when you're ready to go to production. <a class=\"fw-"
-"bold\" href=\"#\">Learn More</a>."
-msgstr ""
-"Estás en modo de pruebas. Por ahora tus claves de API solo pueden usarse "
-"para pruebas, y solo por usuarios autenticados de tu cuenta. Cambia al modo "
-"en vivo cuando estés listo para pasar a producción. <a class=\"fw-bold\" "
-"href=\"#\">Más información</a>."
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "How to setup your API"
-msgstr "Cómo configurar tu API"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid ""
-"Watch this 5-minute how-to video on getting your API setup <br />for "
-"production use."
-msgstr ""
-"Mira este video de 5 minutos sobre cómo configurar tu API <br />para "
-"producción."
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Watch Now"
-msgstr "Ver ahora"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Best Practices"
-msgstr "Buenas prácticas"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid ""
-"Follow these best practices to ensure your Smarter API is secure and "
-"reliable. <br />This includes setting up rate limits, monitoring usage, "
-"doing security"
-msgstr ""
-"Sigue estas buenas prácticas para que tu API de Smarter sea segura y "
-"confiable. <br />Esto incluye configurar límites de solicitudes, monitorear "
-"el uso y hacer controles de seguridad"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Learn"
-msgstr "Aprender"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Description"
-msgstr "Descripción"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Secret Key"
-msgstr "Clave secreta"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Created"
-msgstr "Creada"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Last Used"
-msgstr "Último uso"
-
-#: smarter/templates/account/dashboard/api-keys.html
-#: smarter/templates/account/dashboard/users.html
-msgid "Never"
-msgstr "Nunca"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Deactivate"
-msgstr "Desactivar"
-
-#: smarter/templates/account/dashboard/api-keys.html
-msgid "Activate"
-msgstr "Activar"
-
-#: smarter/templates/account/dashboard/api-keys.html
-#: smarter/templates/account/dashboard/billing.html
-msgid "Delete"
-msgstr "Eliminar"
-
-#: smarter/templates/account/dashboard/base.html
-msgid "Account Overview"
-msgstr "Resumen de la cuenta"
-
-#: smarter/templates/account/dashboard/base.html
-msgid "Home"
-msgstr "Inicio"
-
-#: smarter/templates/account/dashboard/base.html
-msgid "Account"
-msgstr "Cuenta"
-
-#: smarter/templates/account/dashboard/base.html
-msgid "New User"
-msgstr "Nuevo usuario"
-
-#: smarter/templates/account/dashboard/base.html
-msgid "New Secret"
-msgstr "Nuevo secreto"
-
-#: smarter/templates/account/dashboard/base.html
-msgid "New Payment Method"
-msgstr "Nuevo método de pago"
-
-#: smarter/templates/account/dashboard/base.html
-msgid "Overview"
-msgstr "Resumen"
-
-#: smarter/templates/account/dashboard/base.html
-#: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/account/dashboard/user.html
-#: smarter/templates/dashboard/sidebar.html
-msgid "Settings"
-msgstr "Configuración"
-
-#: smarter/templates/account/dashboard/base.html
-#: smarter/templates/account/dashboard/users.html
-msgid "Users"
-msgstr "Usuarios"
-
-#: smarter/templates/account/dashboard/base.html
-#: smarter/templates/account/dashboard/billing.html
-msgid "Billing"
-msgstr "Facturación"
-
-#: smarter/templates/account/dashboard/base.html
-#: smarter/templates/account/dashboard/statements.html
-msgid "Statements"
-msgstr "Estados de cuenta"
-
-#: smarter/templates/account/dashboard/base.html
-#: smarter/templates/dashboard/sidebar.html
-msgid "Secrets"
-msgstr "Secretos"
-
-#: smarter/templates/account/dashboard/base.html
-#: smarter/templates/account/dashboard/logs.html
-msgid "Logs"
-msgstr "Registros"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Account Billing"
-msgstr "Facturación de la cuenta"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Payment Methods"
-msgstr "Métodos de pago"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Credit / Debit Card"
-msgstr "Tarjeta de crédito / débito"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Paypal"
-msgstr "PayPal"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "My Cards"
-msgstr "Mis tarjetas"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Primary"
-msgstr "Principal"
-
-#: smarter/templates/account/dashboard/billing.html
-#, python-format
-msgid "Expires %(card_expiration_month)s/%(card_expiration_year)s"
-msgstr "Vence %(card_expiration_month)s/%(card_expiration_year)s"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/account/dashboard/user.html
-msgid "Edit"
-msgstr "Editar"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Important"
-msgstr "Importante"
-
-#: smarter/templates/account/dashboard/billing.html
-#, python-format
-msgid ""
-"Please review our <a href=\"https://%(smarter_marketing_site_url)s/terms-of-"
-"service/\" class=\"fw-bold me-1\">Terms of Service</a> before adding <br /"
-">your new payment card."
-msgstr ""
-"Revisa nuestros <a href=\"https://%(smarter_marketing_site_url)s/terms-of-"
-"service/\" class=\"fw-bold me-1\">Términos del servicio</a> antes de agregar "
-"<br />tu nueva tarjeta de pago."
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Add Card"
-msgstr "Agregar tarjeta"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "My Paypal"
-msgstr "Mi PayPal"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid ""
-"To use PayPal as your payment method, you will need to make pre-payments "
-"each month before your bill is due."
-msgstr ""
-"Para usar PayPal como método de pago, deberás hacer pagos anticipados cada "
-"mes antes de la fecha de vencimiento de tu factura."
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Select an option"
-msgstr "Selecciona una opción"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Pay with Paypal"
-msgstr "Pagar con PayPal"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Billing Addresses"
-msgstr "Direcciones de facturación"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/settings.html
-msgid "Address 1"
-msgstr "Dirección 1"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "New Address"
-msgstr "Nueva dirección"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Tax Location"
-msgstr "Ubicación fiscal"
-
-#: smarter/templates/account/dashboard/billing.html
-#, python-format
-msgid ""
-"United States - 10%% VAT <br /> <a class=\"fw-bold\" href=\"#\">More Info</a>"
-msgstr ""
-"Estados Unidos - 10%% IVA <br /> <a class=\"fw-bold\" href=\"#\">Más "
-"información</a>"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Add New Card"
-msgstr "Agregar nueva tarjeta"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Name On Card"
-msgstr "Nombre en la tarjeta"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Specify a card holder's name"
-msgstr "Indica el nombre del titular de la tarjeta"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Full name"
-msgstr "Nombre completo"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Card Number"
-msgstr "Número de tarjeta"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "xxxx xxxx xxxx xxxx"
-msgstr "xxxx xxxx xxxx xxxx"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Expiration Date"
-msgstr "Fecha de vencimiento"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Month"
-msgstr "Mes"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Year"
-msgstr "Año"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "CVV"
-msgstr "CVV"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Enter a card CVV code"
-msgstr "Ingresa el código CVV de la tarjeta"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid ""
-"<span class=\"indicator-label\">Submit</span> <span class=\"indicator-"
-"progress\">Please wait... <span class=\"spinner-border spinner-border-sm "
-"align-middle ms-2\"></span></span>"
-msgstr ""
-"<span class=\"indicator-label\">Enviar</span> <span class=\"indicator-"
-"progress\">Espera un momento... <span class=\"spinner-border spinner-border-"
-"sm align-middle ms-2\"></span></span>"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Add New Address"
-msgstr "Agregar nueva dirección"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Warning"
-msgstr "Advertencia"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Updating address may affect your <a href=\"#\">Tax Location</a>"
-msgstr ""
-"Actualizar la dirección puede afectar tu <a href=\"#\">ubicación fiscal</a>"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/user.html
-msgid "First name"
-msgstr "Nombre"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/user.html
-msgid "Last name"
-msgstr "Apellido"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/overview.html
-msgid "Country"
-msgstr "País"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Your payment statements may very based on selected country"
-msgstr "Tus estados de cuenta pueden variar según el país seleccionado"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a Country..."
-msgstr "Selecciona un país..."
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Address Line 1"
-msgstr "Dirección, línea 1"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Address Line 2"
-msgstr "Dirección, línea 2"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/settings.html
-msgid "City"
-msgstr "Ciudad"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "State / Province"
-msgstr "Estado / Provincia"
-
-#: smarter/templates/account/dashboard/billing.html
-msgid "Post Code"
-msgstr "Código postal"
-
-#: smarter/templates/account/dashboard/billing.html
-#: smarter/templates/account/dashboard/settings.html
-msgid "Discard"
-msgstr "Descartar"
-
-#: smarter/templates/account/dashboard/logs.html
-msgid "Account Logs"
-msgstr "Registros de la cuenta"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Profile Details"
-msgstr "Datos del perfil"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Full Name"
-msgstr "Nombre completo"
-
-#: smarter/templates/account/dashboard/overview.html
-#: smarter/templates/account/dashboard/settings.html
-msgid "Company"
-msgstr "Empresa"
-
-#: smarter/templates/account/dashboard/overview.html
-#: smarter/templates/account/dashboard/settings.html
-msgid "Contact Phone"
-msgstr "Teléfono de contacto"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Phone number must be active"
-msgstr "El número de teléfono debe estar activo"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid ""
-"<span class=\"fw-bold fs-6 text-gray-800 me-2\">044 3276 454 935</span> "
-"<span class=\"badge badge-success\">Verified</span>"
-msgstr ""
-"<span class=\"fw-bold fs-6 text-gray-800 me-2\">044 3276 454 935</span> "
-"<span class=\"badge badge-success\">Verificado</span>"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Company Site"
-msgstr "Sitio web de la empresa"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Country of origination"
-msgstr "País de origen"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Germany"
-msgstr "Alemania"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Allow Changes"
-msgstr "Permitir cambios"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Yes"
-msgstr "Sí"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "We need your attention!"
-msgstr "¡Necesitamos tu atención!"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid ""
-"Your payment was declined. To start using tools, please <a class=\"fw-bold\" "
-"href=\"/dashboard/account/dashboard/billing/\">Add Payment Method</a>."
-msgstr ""
-"Se rechazó tu pago. Para empezar a usar las herramientas, <a class=\"fw-"
-"bold\" href=\"/dashboard/account/dashboard/billing/\">agrega un método de "
-"pago</a>."
-
-#: smarter/templates/account/dashboard/overview.html
-msgid ""
-"<span class=\"card-label fw-bold text-gray-900\">Top Selling Categories</"
-"span> <span class=\"text-gray-500 pt-2 fw-semibold fs-6\">8k social "
-"visitors</span>"
-msgstr ""
-"<span class=\"card-label fw-bold text-gray-900\">Categorías más vendidas</"
-"span> <span class=\"text-gray-500 pt-2 fw-semibold fs-6\">8 mil visitantes "
-"de redes sociales</span>"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Quick Actions"
-msgstr "Acciones rápidas"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "New Ticket"
-msgstr "Nuevo ticket"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "New Customer"
-msgstr "Nuevo cliente"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid ""
-"<span class=\"menu-title\">New Group</span> <span class=\"menu-arrow\"></"
-"span>"
-msgstr ""
-"<span class=\"menu-title\">Nuevo grupo</span> <span class=\"menu-arrow\"></"
-"span>"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Admin Group"
-msgstr "Grupo de administradores"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Staff Group"
-msgstr "Grupo de personal"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Member Group"
-msgstr "Grupo de miembros"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "New Contact"
-msgstr "Nuevo contacto"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Generate Reports"
-msgstr "Generar informes"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid ""
-"Have you tried <br />the <span class=\"fw-bolder\">Mobile Application ?</"
-"span>"
-msgstr ""
-"¿Ya probaste <br />la <span class=\"fw-bolder\">aplicación móvil?</span>"
-
-#: smarter/templates/account/dashboard/overview.html
-msgid "Try now"
-msgstr "Pruébala ahora"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Account Details"
-msgstr "Datos de la cuenta"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Account Number"
-msgstr "Número de cuenta"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "We will use this legal name for invoices and contracts."
-msgstr "Usaremos esta razón social en facturas y contratos."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Company name"
-msgstr "Nombre de la empresa"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Legal name of your company, for invoicing and contractual purposes."
-msgstr "Razón social de tu empresa, para facturación y contratos."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Address"
-msgstr "Dirección"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Address 2"
-msgstr "Dirección 2"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "State"
-msgstr "Estado"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Postal Code"
-msgstr "Código postal"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a Country"
-msgstr "Selecciona un país"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a country..."
-msgstr "Selecciona un país..."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Phone number"
-msgstr "Número de teléfono"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Language"
-msgstr "Idioma"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a Language"
-msgstr "Selecciona un idioma"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a language..."
-msgstr "Selecciona un idioma..."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a Language..."
-msgstr "Selecciona un idioma..."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Time Zone"
-msgstr "Zona horaria"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a Timezone"
-msgstr "Selecciona una zona horaria"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a timezone.."
-msgstr "Selecciona una zona horaria..."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a Timezone.."
-msgstr "Selecciona una zona horaria..."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Currency"
-msgstr "Moneda"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a Currency"
-msgstr "Selecciona una moneda"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Select a currency.."
-msgstr "Selecciona una moneda..."
-
-#: smarter/templates/account/dashboard/settings.html
-#: smarter/templates/account/dashboard/user.html
-msgid "Save Changes"
-msgstr "Guardar cambios"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Sign-in Method"
-msgstr "Método de inicio de sesión"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Email Address"
-msgstr "Dirección de correo electrónico"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Enter New Email Address"
-msgstr "Ingresa la nueva dirección de correo"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Confirm Password"
-msgstr "Confirmar contraseña"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Update Email"
-msgstr "Actualizar correo"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Change Email"
-msgstr "Cambiar correo"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Current Password"
-msgstr "Contraseña actual"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "New Password"
-msgstr "Nueva contraseña"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Confirm New Password"
-msgstr "Confirmar nueva contraseña"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Password must be at least 8 character and contain symbols"
-msgstr "La contraseña debe tener al menos 8 caracteres e incluir símbolos"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Update Password"
-msgstr "Actualizar contraseña"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Secure Your Account"
-msgstr "Protege tu cuenta"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid ""
-"Two-factor authentication adds an extra layer of security to your account. "
-"To log in, in addition you'll need to provide a 6 digit code"
-msgstr ""
-"La autenticación de dos factores agrega una capa adicional de seguridad a tu "
-"cuenta. Para iniciar sesión, también deberás ingresar un código de 6 dígitos"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Enable"
-msgstr "Habilitar"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Connected Accounts"
-msgstr "Cuentas conectadas"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid ""
-"Two-factor authentication adds an extra layer of security to your account. "
-"To log in, in you'll need to provide a 4 digit amazing code. <a href=\"#\" "
-"class=\"fw-bold\">Learn More</a>"
-msgstr ""
-"La autenticación de dos factores agrega una capa adicional de seguridad a tu "
-"cuenta. Para iniciar sesión, deberás ingresar un código de 4 dígitos. <a "
-"href=\"#\" class=\"fw-bold\">Más información</a>"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Google"
-msgstr "Google"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Plan properly your workflow"
-msgstr "Planifica bien tu flujo de trabajo"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Github"
-msgstr "GitHub"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Keep eye on on your Repositories"
-msgstr "No pierdas de vista tus repositorios"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Slack"
-msgstr "Slack"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Integrate Projects Discussions"
-msgstr "Integra las conversaciones de tus proyectos"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Email Preferences"
-msgstr "Preferencias de correo"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Successful Payments"
-msgstr "Pagos exitosos"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Receive a notification for every successful payment."
-msgstr "Recibe una notificación por cada pago exitoso."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Payouts"
-msgstr "Pagos salientes"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Receive a notification for every initiated payout."
-msgstr "Recibe una notificación por cada pago saliente iniciado."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Fee Collection"
-msgstr "Cobro de comisiones"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Receive a notification each time you collect a fee from sales"
-msgstr "Recibe una notificación cada vez que cobres una comisión por ventas"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Customer Payment Dispute"
-msgstr "Disputa de pago de un cliente"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid ""
-"Receive a notification if a payment is disputed by a customer and for "
-"dispute purposes."
-msgstr ""
-"Recibe una notificación si un cliente disputa un pago y para fines de la "
-"disputa."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Refund Alerts"
-msgstr "Alertas de reembolso"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid ""
-"Receive a notification if a payment is stated as risk by the Finance "
-"Department."
-msgstr ""
-"Recibe una notificación si el Departamento de Finanzas marca un pago como "
-"riesgoso."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Invoice Payments"
-msgstr "Pagos de facturas"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid ""
-"Receive a notification if a customer sends an incorrect amount to pay their "
-"invoice."
-msgstr ""
-"Recibe una notificación si un cliente envía un monto incorrecto para pagar "
-"su factura."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Webhook API Endpoints"
-msgstr "Endpoints de API de webhooks"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Receive notifications for consistently failing webhook API endpoints."
-msgstr ""
-"Recibe notificaciones de los endpoints de API de webhooks que fallan "
-"constantemente."
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Notifications"
-msgstr "Notificaciones"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Phone"
-msgstr "Teléfono"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Billing Updates"
-msgstr "Novedades de facturación"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "New Team Members"
-msgstr "Nuevos miembros del equipo"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Completed Projects"
-msgstr "Proyectos completados"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Newsletters"
-msgstr "Boletines"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "Deactivate Account"
-msgstr "Desactivar cuenta"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "You Are Deactivating Your Account"
-msgstr "Estás desactivando tu cuenta"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid ""
-"For extra security, this requires you to confirm your email or phone number "
-"when you reset yousignr password. <br /> <a class=\"fw-bold\" "
-"href=\"#\">Learn more</a>"
-msgstr ""
-"Por seguridad, deberás confirmar tu correo o número de teléfono al "
-"restablecer tu contraseña. <br /> <a class=\"fw-bold\" href=\"#\">Más "
-"información</a>"
-
-#: smarter/templates/account/dashboard/settings.html
-msgid "I confirm my account deactivation"
-msgstr "Confirmo la desactivación de mi cuenta"
-
-#: smarter/templates/account/dashboard/statements.html
-msgid "Account Statements"
-msgstr "Estados de cuenta"
-
-#: smarter/templates/account/dashboard/user.html
-msgid "Create New User"
-msgstr "Crear nuevo usuario"
-
-#: smarter/templates/account/dashboard/user.html
-#: smarter/templates/account/dashboard/users.html
-msgid "Username"
-msgstr "Nombre de usuario"
-
-#: smarter/templates/account/dashboard/user.html
-msgid "Your data remains private."
-msgstr "Tus datos siguen siendo privados."
-
-#: smarter/templates/account/dashboard/user.html
-msgid "Email address"
-msgstr "Dirección de correo electrónico"
-
-#: smarter/templates/account/dashboard/user.html
-msgid "First Name"
-msgstr "Nombre"
-
-#: smarter/templates/account/dashboard/user.html
-msgid "Last Name"
-msgstr "Apellido"
-
-#: smarter/templates/account/dashboard/user.html
-#: smarter/templates/account/dashboard/users.html
-msgid "Admin"
-msgstr "Administrador"
-
-#: smarter/templates/account/dashboard/users.html
-msgid "Account Users"
-msgstr "Usuarios de la cuenta"
-
-#: smarter/templates/account/dashboard/users.html
-msgid "First"
-msgstr "Nombre"
-
-#: smarter/templates/account/dashboard/users.html
-msgid "Last"
-msgstr "Apellido"
-
-#: smarter/templates/account/dashboard/users.html
-msgid "Last Login"
-msgstr "Último inicio de sesión"
 
 #: smarter/templates/account/email/slack-invitation.html
 msgid "The Smarter Project on Slack"
@@ -1670,40 +709,39 @@ msgstr ""
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
-"<strong><a href=\"https://docs.smarter.sh/smarter-resources/"
-"smarter-llmtool.html\" rel=\"noopener\" target=\"_blank\">Plugins</a> for "
-"LLM tool calling</strong> that connect an LLM to SQL databases, remote REST "
-"APIs, web search, image search, Agent Skills and static data. Your data "
-"stays where it is: the LLM only sees the query results and responses that it "
-"asks for. <a href=\"https://docs.smarter.sh/smarter-framework/"
-"smarter-extensions.html\" rel=\"noopener\" target=\"_blank\">Extensions</a>, "
-"which the platform administrator installs, add tools written in Python."
+"<strong><a href=\"https://docs.smarter.sh/smarter-resources/smarter-"
+"llmtool.html\" rel=\"noopener\" target=\"_blank\">Plugins</a> for LLM tool "
+"calling</strong> that connect an LLM to SQL databases, remote REST APIs, web "
+"search, image search, Agent Skills and static data. Your data stays where it "
+"is: the LLM only sees the query results and responses that it asks for. <a "
+"href=\"https://docs.smarter.sh/smarter-framework/smarter-extensions.html\" "
+"rel=\"noopener\" target=\"_blank\">Extensions</a>, which the platform "
+"administrator installs, add tools written in Python."
 msgstr ""
-"<strong><a href=\"https://docs.smarter.sh/smarter-resources/"
-"smarter-llmtool.html\" rel=\"noopener\" target=\"_blank\">Plugins</a> para "
-"la llamada a herramientas de los LLM</strong>, que conectan un LLM con bases "
-"de datos SQL, APIs REST remotas, búsqueda web, búsqueda de imágenes, Agent "
+"<strong><a href=\"https://docs.smarter.sh/smarter-resources/smarter-"
+"llmtool.html\" rel=\"noopener\" target=\"_blank\">Plugins</a> para la "
+"llamada a herramientas de los LLM</strong>, que conectan un LLM con bases de "
+"datos SQL, APIs REST remotas, búsqueda web, búsqueda de imágenes, Agent "
 "Skills y datos estáticos. Tus datos se quedan donde están: el LLM solo ve "
 "los resultados de las consultas y las respuestas que pide. Las <a "
-"href=\"https://docs.smarter.sh/smarter-framework/smarter-"
-"extensions.html\" rel=\"noopener\" target=\"_blank\">extensiones</a>, que "
-"instala el administrador de la plataforma, añaden herramientas escritas en "
-"Python."
+"href=\"https://docs.smarter.sh/smarter-framework/smarter-extensions.html\" "
+"rel=\"noopener\" target=\"_blank\">extensiones</a>, que instala el "
+"administrador de la plataforma, añaden herramientas escritas en Python."
 
 #: smarter/templates/account/email/welcome.html
 #, python-format
 msgid ""
 "<strong>A no-code approach to authoring AI resources.</strong> Every "
-"resource in %(product_name)s is a short <a href=\"https://docs.smarter.sh/en/"
-"latest/smarter-framework/smarter-manifests.html\" rel=\"noopener\" "
+"resource in %(product_name)s is a short <a href=\"https://docs.smarter.sh/"
+"smarter-framework/smarter-manifests.html\" rel=\"noopener\" "
 "target=\"_blank\">YAML manifest</a>, so you can build and manage a working "
 "AI application without writing code."
 msgstr ""
 "<strong>Un enfoque sin código para crear recursos de IA.</strong> Cada "
-"recurso de %(product_name)s es un breve <a href=\"https://docs.smarter.sh/en/"
-"latest/smarter-framework/smarter-manifests.html\" rel=\"noopener\" "
-"target=\"_blank\">manifiesto YAML</a>, así que puedes crear y gestionar una "
-"aplicación de IA funcional sin escribir código."
+"recurso de %(product_name)s es un breve <a "
+"href=\"https://docs.smarter.sh/smarter-framework/smarter-manifests.html\" "
+"rel=\"noopener\" target=\"_blank\">manifiesto YAML</a>, así que puedes crear "
+"y gestionar una aplicación de IA funcional sin escribir código."
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
@@ -1756,13 +794,13 @@ msgstr ""
 #: smarter/templates/account/email/welcome.html
 msgid ""
 "<strong>Cost accounting</strong> of every LLM request, by account, user and "
-"chat session <a href=\"https://docs.smarter.sh/smarter-platform/"
-"cost-accounting.html\" rel=\"noopener\" target=\"_blank\">[learn more]</a>"
+"chat session <a href=\"https://docs.smarter.sh/smarter-platform/cost-"
+"accounting.html\" rel=\"noopener\" target=\"_blank\">[learn more]</a>"
 msgstr ""
 "<strong>Contabilidad de costos</strong> de cada solicitud a un LLM, por "
-"cuenta, usuario y sesión de chat <a href=\"https://docs.smarter.sh/"
-"smarter-platform/cost-accounting.html\" rel=\"noopener\" "
-"target=\"_blank\">[más información]</a>"
+"cuenta, usuario y sesión de chat <a href=\"https://docs.smarter.sh/smarter-"
+"platform/cost-accounting.html\" rel=\"noopener\" target=\"_blank\">[más "
+"información]</a>"
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
@@ -1771,21 +809,20 @@ msgid ""
 "kubernetes.html\" rel=\"noopener\" target=\"_blank\">[learn more]</a>"
 msgstr ""
 "<strong>Funciona en Kubernetes</strong>, en tus propias instalaciones o en "
-"la nube <a href=\"https://docs.smarter.sh/smarter-framework/"
-"technologies/kubernetes.html\" rel=\"noopener\" target=\"_blank\">[más "
-"información]</a>"
+"la nube <a href=\"https://docs.smarter.sh/smarter-framework/technologies/"
+"kubernetes.html\" rel=\"noopener\" target=\"_blank\">[más información]</a>"
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
 "<strong>Developer tools</strong>: a command-line interface, a REST API, and "
-"SDKs for Python, Node.js and Go <a href=\"https://docs.smarter.sh/"
-"smarter-framework/apis-and-sdks.html\" rel=\"noopener\" "
-"target=\"_blank\">[learn more]</a>"
+"SDKs for Python, Node.js and Go <a href=\"https://docs.smarter.sh/smarter-"
+"framework/apis-and-sdks.html\" rel=\"noopener\" target=\"_blank\">[learn "
+"more]</a>"
 msgstr ""
 "<strong>Herramientas para desarrolladores</strong>: una interfaz de línea de "
 "comandos, una API REST y SDKs para Python, Node.js y Go <a href=\"https://"
-"docs.smarter.sh/smarter-framework/apis-and-sdks.html\" "
-"rel=\"noopener\" target=\"_blank\">[más información]</a>"
+"docs.smarter.sh/smarter-framework/apis-and-sdks.html\" rel=\"noopener\" "
+"target=\"_blank\">[más información]</a>"
 
 #: smarter/templates/account/email/welcome.html
 #, python-format
@@ -1811,23 +848,22 @@ msgstr ""
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
-"<strong>Deployment guides</strong> for <a href=\"https://docs.smarter.sh/en/"
-"latest/smarter-platform/installation/production-deployment.html\" "
-"rel=\"noopener\" target=\"_blank\">production</a>, a <a href=\"https://"
-"docs.smarter.sh/smarter-platform/installation/quick-start.html\" "
-"rel=\"noopener\" target=\"_blank\">Quick Start</a> for evaluation, and <a "
-"href=\"https://docs.smarter.sh/smarter-framework/guides/developer-"
-"setup.html\" rel=\"noopener\" target=\"_blank\">running from source</a> for "
-"developers."
+"<strong>Deployment guides</strong> for <a href=\"https://docs.smarter.sh/"
+"smarter-platform/installation/production-deployment.html\" rel=\"noopener\" "
+"target=\"_blank\">production</a>, a <a href=\"https://docs.smarter.sh/"
+"smarter-platform/installation/quick-start.html\" rel=\"noopener\" "
+"target=\"_blank\">Quick Start</a> for evaluation, and <a href=\"https://"
+"docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
+"rel=\"noopener\" target=\"_blank\">running from source</a> for developers."
 msgstr ""
-"<strong>Guías de despliegue</strong> para <a href=\"https://docs.smarter.sh/"
-"en/latest/smarter-platform/installation/production-deployment.html\" "
-"rel=\"noopener\" target=\"_blank\">producción</a>, un <a href=\"https://"
-"docs.smarter.sh/smarter-platform/installation/quick-start.html\" "
+"<strong>Guías de despliegue</strong> para <a "
+"href=\"https://docs.smarter.sh/smarter-platform/installation/production-deployment.html\" "
+"rel=\"noopener\" target=\"_blank\">producción</a>, un <a "
+"href=\"https://docs.smarter.sh/smarter-platform/installation/quick-start.html\" "
 "rel=\"noopener\" target=\"_blank\">Quick Start</a> para evaluarlo y <a "
-"href=\"https://docs.smarter.sh/smarter-framework/guides/developer-"
-"setup.html\" rel=\"noopener\" target=\"_blank\">ejecución desde el código "
-"fuente</a> para desarrolladores."
+"href=\"https://docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
+"rel=\"noopener\" target=\"_blank\">ejecución desde el código fuente</a> para "
+"desarrolladores."
 
 #: smarter/templates/account/email/welcome.html
 msgid "Sorry, your browser doesn't support embedded videos."
@@ -2001,18 +1037,6 @@ msgstr "Esquemas"
 msgid "Manifests"
 msgstr "Manifiestos"
 
-#: smarter/templates/coming-soon.html
-msgid "Smarter Is Launching Soon"
-msgstr "Smarter se lanza pronto"
-
-#: smarter/templates/coming-soon.html
-msgid "An enterprise class plugin-based AI chat solution"
-msgstr "Una solución de chat con IA basada en plugins, de nivel empresarial"
-
-#: smarter/templates/coming-soon.html
-msgid "Notify Me"
-msgstr "Avísame"
-
 #: smarter/templates/common/cookie-notice.html
 msgid "Cookie notice"
 msgstr "Aviso de cookies"
@@ -2028,15 +1052,6 @@ msgstr "Política de privacidad"
 #: smarter/templates/common/cookie-notice.html
 msgid "Close"
 msgstr "Cerrar"
-
-#: smarter/templates/dashboard/email-added.html
-#, python-format
-msgid "We added %(email)s to our mailing list."
-msgstr "Agregamos %(email)s a nuestra lista de correo."
-
-#: smarter/templates/dashboard/email-added.html
-msgid "You're All Set!"
-msgstr "¡Todo listo!"
 
 #: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
 msgid "Light"
@@ -2103,6 +1118,10 @@ msgid "Orchestrators"
 msgstr "Orquestadores"
 
 #: smarter/templates/dashboard/sidebar.html
+msgid "API Keys"
+msgstr "Claves de API"
+
+#: smarter/templates/dashboard/sidebar.html
 msgid "Custom Domains"
 msgstr "Dominios personalizados"
 
@@ -2155,6 +1174,10 @@ msgid "Guardrails"
 msgstr "Guardrails"
 
 #: smarter/templates/dashboard/sidebar.html
+msgid "Secrets"
+msgstr "Secretos"
+
+#: smarter/templates/dashboard/sidebar.html
 msgid "Read the Docs"
 msgstr "Leer la documentación"
 
@@ -2175,6 +1198,10 @@ msgstr "Esquemas JSON"
 #, python-format
 msgid "GitHub Change Log %(version)s"
 msgstr "Registro de cambios en GitHub %(version)s"
+
+#: smarter/templates/dashboard/sidebar.html
+msgid "Settings"
+msgstr "Configuración"
 
 #: smarter/templates/dashboard/sidebar.html
 msgid "Infrastructure Resources"
@@ -2468,6 +1495,741 @@ msgstr "Esquemas JSON de SAM"
 msgid "About the contract"
 msgstr "Acerca del contrato"
 
+#, python-format
+#~ msgid "Invalid login attempt. Unknown user %(email)s"
+#~ msgstr ""
+#~ "Intento de inicio de sesión no válido. Usuario desconocido %(email)s"
+
+#~ msgid "We'll notify you when the launch date nears."
+#~ msgstr "Te avisaremos cuando se acerque la fecha de lanzamiento."
+
+#, python-format
+#~ msgid "%(email)s is already in our contact list. We'll keep you updated."
+#~ msgstr ""
+#~ "%(email)s ya está en nuestra lista de contactos. Te mantendremos al tanto."
+
+#~ msgid "Your account is deactivated"
+#~ msgstr "Tu cuenta está desactivada"
+
+#~ msgid ""
+#~ "Sorry to see you go! We hope to see you back soon. <br />We'll keep the "
+#~ "lights on for you."
+#~ msgstr ""
+#~ "¡Lamentamos que te vayas! Esperamos verte pronto de nuevo. <br />Te "
+#~ "dejaremos las luces encendidas."
+
+#~ msgid "Go to Home Page"
+#~ msgstr "Ir a la página de inicio"
+
+#~ msgid "Learn more"
+#~ msgstr "Más información"
+
+#~ msgid "Password is changed"
+#~ msgstr "Se cambió la contraseña"
+
+#~ msgid "Time to get back to work!"
+#~ msgstr "¡Es hora de volver al trabajo!"
+
+#~ msgid "Account Activity"
+#~ msgstr "Actividad de la cuenta"
+
+#~ msgid "Activity"
+#~ msgstr "Actividad"
+
+#~ msgid "Account Settings"
+#~ msgstr "Configuración de la cuenta"
+
+#~ msgid "New API Key"
+#~ msgstr "Nueva clave de API"
+
+#~ msgid "A description for this API key. Be concise ..."
+#~ msgstr "Una descripción de esta clave de API. Sé breve..."
+
+#~ msgid "True"
+#~ msgstr "Verdadero"
+
+#~ msgid "False"
+#~ msgstr "Falso"
+
+#~ msgid "API Key"
+#~ msgstr "Clave de API"
+
+#~ msgid ""
+#~ "We will only show this value once. Store your api key value in a safe "
+#~ "location."
+#~ msgstr ""
+#~ "Solo mostraremos este valor una vez. Guarda tu clave de API en un lugar "
+#~ "seguro."
+
+#~ msgid "Save"
+#~ msgstr "Guardar"
+
+#~ msgid "Account API Keys"
+#~ msgstr "Claves de API de la cuenta"
+
+#~ msgid "API Key Management"
+#~ msgstr "Administración de claves de API"
+
+#~ msgid "Live Mode"
+#~ msgstr "Modo en vivo"
+
+#~ msgid ""
+#~ "You're in sandbox mode. Your API keys can presently only be used for "
+#~ "testing purposes, and can only be used by authenticated users in your "
+#~ "account. Switch to live mode when you're ready to go to production. <a "
+#~ "class=\"fw-bold\" href=\"#\">Learn More</a>."
+#~ msgstr ""
+#~ "Estás en modo de pruebas. Por ahora tus claves de API solo pueden usarse "
+#~ "para pruebas, y solo por usuarios autenticados de tu cuenta. Cambia al "
+#~ "modo en vivo cuando estés listo para pasar a producción. <a class=\"fw-"
+#~ "bold\" href=\"#\">Más información</a>."
+
+#~ msgid "How to setup your API"
+#~ msgstr "Cómo configurar tu API"
+
+#~ msgid ""
+#~ "Watch this 5-minute how-to video on getting your API setup <br />for "
+#~ "production use."
+#~ msgstr ""
+#~ "Mira este video de 5 minutos sobre cómo configurar tu API <br />para "
+#~ "producción."
+
+#~ msgid "Watch Now"
+#~ msgstr "Ver ahora"
+
+#~ msgid "Best Practices"
+#~ msgstr "Buenas prácticas"
+
+#~ msgid ""
+#~ "Follow these best practices to ensure your Smarter API is secure and "
+#~ "reliable. <br />This includes setting up rate limits, monitoring usage, "
+#~ "doing security"
+#~ msgstr ""
+#~ "Sigue estas buenas prácticas para que tu API de Smarter sea segura y "
+#~ "confiable. <br />Esto incluye configurar límites de solicitudes, "
+#~ "monitorear el uso y hacer controles de seguridad"
+
+#~ msgid "Learn"
+#~ msgstr "Aprender"
+
+#~ msgid "Description"
+#~ msgstr "Descripción"
+
+#~ msgid "Secret Key"
+#~ msgstr "Clave secreta"
+
+#~ msgid "Created"
+#~ msgstr "Creada"
+
+#~ msgid "Last Used"
+#~ msgstr "Último uso"
+
+#~ msgid "Never"
+#~ msgstr "Nunca"
+
+#~ msgid "Deactivate"
+#~ msgstr "Desactivar"
+
+#~ msgid "Activate"
+#~ msgstr "Activar"
+
+#~ msgid "Delete"
+#~ msgstr "Eliminar"
+
+#~ msgid "Account Overview"
+#~ msgstr "Resumen de la cuenta"
+
+#~ msgid "Home"
+#~ msgstr "Inicio"
+
+#~ msgid "Account"
+#~ msgstr "Cuenta"
+
+#~ msgid "New User"
+#~ msgstr "Nuevo usuario"
+
+#~ msgid "New Secret"
+#~ msgstr "Nuevo secreto"
+
+#~ msgid "New Payment Method"
+#~ msgstr "Nuevo método de pago"
+
+#~ msgid "Overview"
+#~ msgstr "Resumen"
+
+#~ msgid "Users"
+#~ msgstr "Usuarios"
+
+#~ msgid "Billing"
+#~ msgstr "Facturación"
+
+#~ msgid "Statements"
+#~ msgstr "Estados de cuenta"
+
+#~ msgid "Logs"
+#~ msgstr "Registros"
+
+#~ msgid "Account Billing"
+#~ msgstr "Facturación de la cuenta"
+
+#~ msgid "Payment Methods"
+#~ msgstr "Métodos de pago"
+
+#~ msgid "Credit / Debit Card"
+#~ msgstr "Tarjeta de crédito / débito"
+
+#~ msgid "Paypal"
+#~ msgstr "PayPal"
+
+#~ msgid "My Cards"
+#~ msgstr "Mis tarjetas"
+
+#~ msgid "Primary"
+#~ msgstr "Principal"
+
+#, python-format
+#~ msgid "Expires %(card_expiration_month)s/%(card_expiration_year)s"
+#~ msgstr "Vence %(card_expiration_month)s/%(card_expiration_year)s"
+
+#~ msgid "Edit"
+#~ msgstr "Editar"
+
+#~ msgid "Important"
+#~ msgstr "Importante"
+
+#, python-format
+#~ msgid ""
+#~ "Please review our <a href=\"https://%(smarter_marketing_site_url)s/terms-"
+#~ "of-service/\" class=\"fw-bold me-1\">Terms of Service</a> before adding "
+#~ "<br />your new payment card."
+#~ msgstr ""
+#~ "Revisa nuestros <a href=\"https://%(smarter_marketing_site_url)s/terms-of-"
+#~ "service/\" class=\"fw-bold me-1\">Términos del servicio</a> antes de "
+#~ "agregar <br />tu nueva tarjeta de pago."
+
+#~ msgid "Add Card"
+#~ msgstr "Agregar tarjeta"
+
+#~ msgid "My Paypal"
+#~ msgstr "Mi PayPal"
+
+#~ msgid ""
+#~ "To use PayPal as your payment method, you will need to make pre-payments "
+#~ "each month before your bill is due."
+#~ msgstr ""
+#~ "Para usar PayPal como método de pago, deberás hacer pagos anticipados "
+#~ "cada mes antes de la fecha de vencimiento de tu factura."
+
+#~ msgid "Select an option"
+#~ msgstr "Selecciona una opción"
+
+#~ msgid "Pay with Paypal"
+#~ msgstr "Pagar con PayPal"
+
+#~ msgid "Billing Addresses"
+#~ msgstr "Direcciones de facturación"
+
+#~ msgid "Address 1"
+#~ msgstr "Dirección 1"
+
+#~ msgid "New Address"
+#~ msgstr "Nueva dirección"
+
+#~ msgid "Tax Location"
+#~ msgstr "Ubicación fiscal"
+
+#, python-format
+#~ msgid ""
+#~ "United States - 10%% VAT <br /> <a class=\"fw-bold\" href=\"#\">More "
+#~ "Info</a>"
+#~ msgstr ""
+#~ "Estados Unidos - 10%% IVA <br /> <a class=\"fw-bold\" href=\"#\">Más "
+#~ "información</a>"
+
+#~ msgid "Add New Card"
+#~ msgstr "Agregar nueva tarjeta"
+
+#~ msgid "Name On Card"
+#~ msgstr "Nombre en la tarjeta"
+
+#~ msgid "Specify a card holder's name"
+#~ msgstr "Indica el nombre del titular de la tarjeta"
+
+#~ msgid "Full name"
+#~ msgstr "Nombre completo"
+
+#~ msgid "Card Number"
+#~ msgstr "Número de tarjeta"
+
+#~ msgid "xxxx xxxx xxxx xxxx"
+#~ msgstr "xxxx xxxx xxxx xxxx"
+
+#~ msgid "Expiration Date"
+#~ msgstr "Fecha de vencimiento"
+
+#~ msgid "Month"
+#~ msgstr "Mes"
+
+#~ msgid "Year"
+#~ msgstr "Año"
+
+#~ msgid "CVV"
+#~ msgstr "CVV"
+
+#~ msgid "Enter a card CVV code"
+#~ msgstr "Ingresa el código CVV de la tarjeta"
+
+#~ msgid ""
+#~ "<span class=\"indicator-label\">Submit</span> <span class=\"indicator-"
+#~ "progress\">Please wait... <span class=\"spinner-border spinner-border-sm "
+#~ "align-middle ms-2\"></span></span>"
+#~ msgstr ""
+#~ "<span class=\"indicator-label\">Enviar</span> <span class=\"indicator-"
+#~ "progress\">Espera un momento... <span class=\"spinner-border spinner-"
+#~ "border-sm align-middle ms-2\"></span></span>"
+
+#~ msgid "Add New Address"
+#~ msgstr "Agregar nueva dirección"
+
+#~ msgid "Warning"
+#~ msgstr "Advertencia"
+
+#~ msgid "Updating address may affect your <a href=\"#\">Tax Location</a>"
+#~ msgstr ""
+#~ "Actualizar la dirección puede afectar tu <a href=\"#\">ubicación fiscal</"
+#~ "a>"
+
+#~ msgid "First name"
+#~ msgstr "Nombre"
+
+#~ msgid "Last name"
+#~ msgstr "Apellido"
+
+#~ msgid "Country"
+#~ msgstr "País"
+
+#~ msgid "Your payment statements may very based on selected country"
+#~ msgstr "Tus estados de cuenta pueden variar según el país seleccionado"
+
+#~ msgid "Select a Country..."
+#~ msgstr "Selecciona un país..."
+
+#~ msgid "Address Line 1"
+#~ msgstr "Dirección, línea 1"
+
+#~ msgid "Address Line 2"
+#~ msgstr "Dirección, línea 2"
+
+#~ msgid "City"
+#~ msgstr "Ciudad"
+
+#~ msgid "State / Province"
+#~ msgstr "Estado / Provincia"
+
+#~ msgid "Post Code"
+#~ msgstr "Código postal"
+
+#~ msgid "Discard"
+#~ msgstr "Descartar"
+
+#~ msgid "Account Logs"
+#~ msgstr "Registros de la cuenta"
+
+#~ msgid "Profile Details"
+#~ msgstr "Datos del perfil"
+
+#~ msgid "Full Name"
+#~ msgstr "Nombre completo"
+
+#~ msgid "Company"
+#~ msgstr "Empresa"
+
+#~ msgid "Contact Phone"
+#~ msgstr "Teléfono de contacto"
+
+#~ msgid "Phone number must be active"
+#~ msgstr "El número de teléfono debe estar activo"
+
+#~ msgid ""
+#~ "<span class=\"fw-bold fs-6 text-gray-800 me-2\">044 3276 454 935</span> "
+#~ "<span class=\"badge badge-success\">Verified</span>"
+#~ msgstr ""
+#~ "<span class=\"fw-bold fs-6 text-gray-800 me-2\">044 3276 454 935</span> "
+#~ "<span class=\"badge badge-success\">Verificado</span>"
+
+#~ msgid "Company Site"
+#~ msgstr "Sitio web de la empresa"
+
+#~ msgid "Country of origination"
+#~ msgstr "País de origen"
+
+#~ msgid "Germany"
+#~ msgstr "Alemania"
+
+#~ msgid "Allow Changes"
+#~ msgstr "Permitir cambios"
+
+#~ msgid "Yes"
+#~ msgstr "Sí"
+
+#~ msgid "We need your attention!"
+#~ msgstr "¡Necesitamos tu atención!"
+
+#~ msgid ""
+#~ "Your payment was declined. To start using tools, please <a class=\"fw-"
+#~ "bold\" href=\"/dashboard/account/dashboard/billing/\">Add Payment Method</"
+#~ "a>."
+#~ msgstr ""
+#~ "Se rechazó tu pago. Para empezar a usar las herramientas, <a class=\"fw-"
+#~ "bold\" href=\"/dashboard/account/dashboard/billing/\">agrega un método de "
+#~ "pago</a>."
+
+#~ msgid ""
+#~ "<span class=\"card-label fw-bold text-gray-900\">Top Selling Categories</"
+#~ "span> <span class=\"text-gray-500 pt-2 fw-semibold fs-6\">8k social "
+#~ "visitors</span>"
+#~ msgstr ""
+#~ "<span class=\"card-label fw-bold text-gray-900\">Categorías más vendidas</"
+#~ "span> <span class=\"text-gray-500 pt-2 fw-semibold fs-6\">8 mil "
+#~ "visitantes de redes sociales</span>"
+
+#~ msgid "Quick Actions"
+#~ msgstr "Acciones rápidas"
+
+#~ msgid "New Ticket"
+#~ msgstr "Nuevo ticket"
+
+#~ msgid "New Customer"
+#~ msgstr "Nuevo cliente"
+
+#~ msgid ""
+#~ "<span class=\"menu-title\">New Group</span> <span class=\"menu-arrow\"></"
+#~ "span>"
+#~ msgstr ""
+#~ "<span class=\"menu-title\">Nuevo grupo</span> <span class=\"menu-"
+#~ "arrow\"></span>"
+
+#~ msgid "Admin Group"
+#~ msgstr "Grupo de administradores"
+
+#~ msgid "Staff Group"
+#~ msgstr "Grupo de personal"
+
+#~ msgid "Member Group"
+#~ msgstr "Grupo de miembros"
+
+#~ msgid "New Contact"
+#~ msgstr "Nuevo contacto"
+
+#~ msgid "Generate Reports"
+#~ msgstr "Generar informes"
+
+#~ msgid ""
+#~ "Have you tried <br />the <span class=\"fw-bolder\">Mobile Application ?</"
+#~ "span>"
+#~ msgstr ""
+#~ "¿Ya probaste <br />la <span class=\"fw-bolder\">aplicación móvil?</span>"
+
+#~ msgid "Try now"
+#~ msgstr "Pruébala ahora"
+
+#~ msgid "Account Details"
+#~ msgstr "Datos de la cuenta"
+
+#~ msgid "Account Number"
+#~ msgstr "Número de cuenta"
+
+#~ msgid "We will use this legal name for invoices and contracts."
+#~ msgstr "Usaremos esta razón social en facturas y contratos."
+
+#~ msgid "Company name"
+#~ msgstr "Nombre de la empresa"
+
+#~ msgid "Legal name of your company, for invoicing and contractual purposes."
+#~ msgstr "Razón social de tu empresa, para facturación y contratos."
+
+#~ msgid "Address"
+#~ msgstr "Dirección"
+
+#~ msgid "Address 2"
+#~ msgstr "Dirección 2"
+
+#~ msgid "State"
+#~ msgstr "Estado"
+
+#~ msgid "Postal Code"
+#~ msgstr "Código postal"
+
+#~ msgid "Select a Country"
+#~ msgstr "Selecciona un país"
+
+#~ msgid "Select a country..."
+#~ msgstr "Selecciona un país..."
+
+#~ msgid "Phone number"
+#~ msgstr "Número de teléfono"
+
+#~ msgid "Language"
+#~ msgstr "Idioma"
+
+#~ msgid "Select a Language"
+#~ msgstr "Selecciona un idioma"
+
+#~ msgid "Select a language..."
+#~ msgstr "Selecciona un idioma..."
+
+#~ msgid "Select a Language..."
+#~ msgstr "Selecciona un idioma..."
+
+#~ msgid "Time Zone"
+#~ msgstr "Zona horaria"
+
+#~ msgid "Select a Timezone"
+#~ msgstr "Selecciona una zona horaria"
+
+#~ msgid "Select a timezone.."
+#~ msgstr "Selecciona una zona horaria..."
+
+#~ msgid "Select a Timezone.."
+#~ msgstr "Selecciona una zona horaria..."
+
+#~ msgid "Currency"
+#~ msgstr "Moneda"
+
+#~ msgid "Select a Currency"
+#~ msgstr "Selecciona una moneda"
+
+#~ msgid "Select a currency.."
+#~ msgstr "Selecciona una moneda..."
+
+#~ msgid "Save Changes"
+#~ msgstr "Guardar cambios"
+
+#~ msgid "Sign-in Method"
+#~ msgstr "Método de inicio de sesión"
+
+#~ msgid "Email Address"
+#~ msgstr "Dirección de correo electrónico"
+
+#~ msgid "Enter New Email Address"
+#~ msgstr "Ingresa la nueva dirección de correo"
+
+#~ msgid "Confirm Password"
+#~ msgstr "Confirmar contraseña"
+
+#~ msgid "Update Email"
+#~ msgstr "Actualizar correo"
+
+#~ msgid "Change Email"
+#~ msgstr "Cambiar correo"
+
+#~ msgid "Current Password"
+#~ msgstr "Contraseña actual"
+
+#~ msgid "New Password"
+#~ msgstr "Nueva contraseña"
+
+#~ msgid "Confirm New Password"
+#~ msgstr "Confirmar nueva contraseña"
+
+#~ msgid "Password must be at least 8 character and contain symbols"
+#~ msgstr "La contraseña debe tener al menos 8 caracteres e incluir símbolos"
+
+#~ msgid "Update Password"
+#~ msgstr "Actualizar contraseña"
+
+#~ msgid "Secure Your Account"
+#~ msgstr "Protege tu cuenta"
+
+#~ msgid ""
+#~ "Two-factor authentication adds an extra layer of security to your "
+#~ "account. To log in, in addition you'll need to provide a 6 digit code"
+#~ msgstr ""
+#~ "La autenticación de dos factores agrega una capa adicional de seguridad a "
+#~ "tu cuenta. Para iniciar sesión, también deberás ingresar un código de 6 "
+#~ "dígitos"
+
+#~ msgid "Enable"
+#~ msgstr "Habilitar"
+
+#~ msgid "Connected Accounts"
+#~ msgstr "Cuentas conectadas"
+
+#~ msgid ""
+#~ "Two-factor authentication adds an extra layer of security to your "
+#~ "account. To log in, in you'll need to provide a 4 digit amazing code. <a "
+#~ "href=\"#\" class=\"fw-bold\">Learn More</a>"
+#~ msgstr ""
+#~ "La autenticación de dos factores agrega una capa adicional de seguridad a "
+#~ "tu cuenta. Para iniciar sesión, deberás ingresar un código de 4 dígitos. "
+#~ "<a href=\"#\" class=\"fw-bold\">Más información</a>"
+
+#~ msgid "Google"
+#~ msgstr "Google"
+
+#~ msgid "Plan properly your workflow"
+#~ msgstr "Planifica bien tu flujo de trabajo"
+
+#~ msgid "Github"
+#~ msgstr "GitHub"
+
+#~ msgid "Keep eye on on your Repositories"
+#~ msgstr "No pierdas de vista tus repositorios"
+
+#~ msgid "Slack"
+#~ msgstr "Slack"
+
+#~ msgid "Integrate Projects Discussions"
+#~ msgstr "Integra las conversaciones de tus proyectos"
+
+#~ msgid "Email Preferences"
+#~ msgstr "Preferencias de correo"
+
+#~ msgid "Successful Payments"
+#~ msgstr "Pagos exitosos"
+
+#~ msgid "Receive a notification for every successful payment."
+#~ msgstr "Recibe una notificación por cada pago exitoso."
+
+#~ msgid "Payouts"
+#~ msgstr "Pagos salientes"
+
+#~ msgid "Receive a notification for every initiated payout."
+#~ msgstr "Recibe una notificación por cada pago saliente iniciado."
+
+#~ msgid "Fee Collection"
+#~ msgstr "Cobro de comisiones"
+
+#~ msgid "Receive a notification each time you collect a fee from sales"
+#~ msgstr "Recibe una notificación cada vez que cobres una comisión por ventas"
+
+#~ msgid "Customer Payment Dispute"
+#~ msgstr "Disputa de pago de un cliente"
+
+#~ msgid ""
+#~ "Receive a notification if a payment is disputed by a customer and for "
+#~ "dispute purposes."
+#~ msgstr ""
+#~ "Recibe una notificación si un cliente disputa un pago y para fines de la "
+#~ "disputa."
+
+#~ msgid "Refund Alerts"
+#~ msgstr "Alertas de reembolso"
+
+#~ msgid ""
+#~ "Receive a notification if a payment is stated as risk by the Finance "
+#~ "Department."
+#~ msgstr ""
+#~ "Recibe una notificación si el Departamento de Finanzas marca un pago como "
+#~ "riesgoso."
+
+#~ msgid "Invoice Payments"
+#~ msgstr "Pagos de facturas"
+
+#~ msgid ""
+#~ "Receive a notification if a customer sends an incorrect amount to pay "
+#~ "their invoice."
+#~ msgstr ""
+#~ "Recibe una notificación si un cliente envía un monto incorrecto para "
+#~ "pagar su factura."
+
+#~ msgid "Webhook API Endpoints"
+#~ msgstr "Endpoints de API de webhooks"
+
+#~ msgid ""
+#~ "Receive notifications for consistently failing webhook API endpoints."
+#~ msgstr ""
+#~ "Recibe notificaciones de los endpoints de API de webhooks que fallan "
+#~ "constantemente."
+
+#~ msgid "Notifications"
+#~ msgstr "Notificaciones"
+
+#~ msgid "Phone"
+#~ msgstr "Teléfono"
+
+#~ msgid "Billing Updates"
+#~ msgstr "Novedades de facturación"
+
+#~ msgid "New Team Members"
+#~ msgstr "Nuevos miembros del equipo"
+
+#~ msgid "Completed Projects"
+#~ msgstr "Proyectos completados"
+
+#~ msgid "Newsletters"
+#~ msgstr "Boletines"
+
+#~ msgid "Deactivate Account"
+#~ msgstr "Desactivar cuenta"
+
+#~ msgid "You Are Deactivating Your Account"
+#~ msgstr "Estás desactivando tu cuenta"
+
+#~ msgid ""
+#~ "For extra security, this requires you to confirm your email or phone "
+#~ "number when you reset yousignr password. <br /> <a class=\"fw-bold\" "
+#~ "href=\"#\">Learn more</a>"
+#~ msgstr ""
+#~ "Por seguridad, deberás confirmar tu correo o número de teléfono al "
+#~ "restablecer tu contraseña. <br /> <a class=\"fw-bold\" href=\"#\">Más "
+#~ "información</a>"
+
+#~ msgid "I confirm my account deactivation"
+#~ msgstr "Confirmo la desactivación de mi cuenta"
+
+#~ msgid "Account Statements"
+#~ msgstr "Estados de cuenta"
+
+#~ msgid "Create New User"
+#~ msgstr "Crear nuevo usuario"
+
+#~ msgid "Username"
+#~ msgstr "Nombre de usuario"
+
+#~ msgid "Your data remains private."
+#~ msgstr "Tus datos siguen siendo privados."
+
+#~ msgid "Email address"
+#~ msgstr "Dirección de correo electrónico"
+
+#~ msgid "First Name"
+#~ msgstr "Nombre"
+
+#~ msgid "Last Name"
+#~ msgstr "Apellido"
+
+#~ msgid "Admin"
+#~ msgstr "Administrador"
+
+#~ msgid "Account Users"
+#~ msgstr "Usuarios de la cuenta"
+
+#~ msgid "First"
+#~ msgstr "Nombre"
+
+#~ msgid "Last"
+#~ msgstr "Apellido"
+
+#~ msgid "Last Login"
+#~ msgstr "Último inicio de sesión"
+
+#~ msgid "Smarter Is Launching Soon"
+#~ msgstr "Smarter se lanza pronto"
+
+#~ msgid "An enterprise class plugin-based AI chat solution"
+#~ msgstr "Una solución de chat con IA basada en plugins, de nivel empresarial"
+
+#~ msgid "Notify Me"
+#~ msgstr "Avísame"
+
+#, python-format
+#~ msgid "We added %(email)s to our mailing list."
+#~ msgstr "Agregamos %(email)s a nuestra lista de correo."
+
+#~ msgid "You're All Set!"
+#~ msgstr "¡Todo listo!"
+
 #~ msgid "Swagger"
 #~ msgstr "Swagger"
 
@@ -2611,9 +2373,6 @@ msgstr "Acerca del contrato"
 
 #~ msgid "Your account's api keys"
 #~ msgstr "Las claves de API de tu cuenta"
-
-#~ msgid "Name"
-#~ msgstr "Nombre"
 
 #~ msgid "Owner"
 #~ msgstr "Propietario"

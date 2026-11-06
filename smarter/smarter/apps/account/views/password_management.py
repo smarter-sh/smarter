@@ -206,9 +206,3 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
         user.set_password(password)
         user.save()
         return redirect(settings.LOGIN_URL)
-
-
-class PasswordConfirmView(SmarterNeverCachedWebView):
-    """View for resetting password."""
-
-    template_path = "account/authentication/password-confirmation.html"

@@ -1,63 +1,5 @@
 # pylint: disable=wrong-import-position,W0613
-"""
-Test Authentication.
-
-AccountReverseNames:
-    Class to hold named URL patterns for the account app.
-    This class provides constants for all named URL patterns used in the account dashboard views.
-    The names follow the convention: 'account_<view_name>'.
-    These are referenced in Django templates as 'reverse' or 'url' tags.
-
-    .. usage-example::
-
-    .. html::
-
-    <a href="{% url 'dashboard_account_dashboard_overview' %}">Go to Dashboard Overview</a>
-
-    API_KEYS_LIST = "api_keys_list"
-    ACCOUNT_LOGIN = "account_login"
-    ACCOUNT_LOGOUT = "account_logout"
-    ACCOUNT_REGISTER = "account_register"
-    ACCOUNT_ACTIVATION = "account_activation"
-    ACCOUNT_ACTIVATE = "account_activate"
-    ACCOUNT_DEACTIVATE = "account_deactivate"
-    ACCOUNT_INACTIVE = "account_inactive"
-    ACCOUNT_PASSWORD_RESET_REQUEST = "account_password_reset_request"
-    ACCOUNT_PASSWORD_CONFIRM = "account_password_confirm"
-    ACCOUNT_USER = "account_user"
-    ACCOUNT_USERS = "account_users"
-    PASSWORD_RESET_LINK = "password_reset_link"
-
-    urlpatterns = [
-        path(
-            "",
-            RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
-            name="dashboard_account_dashboard",
-        ),
-        path("api-keys/", APIKeyListView.as_view(), name=AccountReverseNames.API_KEYS_LIST),
-        path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN),
-        path("logout/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT),
-        path("inactive/", AccountInactiveView.as_view(), name=AccountReverseNames.ACCOUNT_INACTIVE),
-        path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
-        # account lifecycle
-        path("register/", AccountRegisterView.as_view(), name=AccountReverseNames.ACCOUNT_REGISTER),
-        path("activation/", AccountActivationEmailView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATION),
-        path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATE),
-        path("deactivate/", AccountDeactivateView.as_view(), name=AccountReverseNames.ACCOUNT_DEACTIVATE),
-        # password management
-        path(
-            "password-reset-request/",
-            PasswordResetRequestView.as_view(),
-            name=AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST,
-        ),
-        path("password-confirm/", PasswordConfirmView.as_view(), name=AccountReverseNames.ACCOUNT_PASSWORD_CONFIRM),
-        path(
-            "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountReverseNames.PASSWORD_RESET_LINK
-        ),
-        path("users/", UsersView.as_view(), name=AccountReverseNames.ACCOUNT_USERS),
-        path("user/<int:user_id>/", UserView.as_view(), name=AccountReverseNames.ACCOUNT_USER),
-    ]
-"""
+"""Test the sign-in, sign-out, registration and account lifecycle views."""
 
 from http import HTTPStatus
 from unittest.mock import patch
@@ -65,6 +7,8 @@ from unittest.mock import patch
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
+from django.test import Client
+from waffle.testutils import override_switch
 
 from smarter.apps.account.login_audit import LoginFailure, password_failure
 from smarter.apps.account.models import User
@@ -80,6 +24,7 @@ from smarter.apps.account.views.authentication import (
 # our stuff
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .mixins import TestAccountMixin
 
@@ -92,7 +37,7 @@ class TestLoginView(TestAccountMixin):
     """
     Test Account LoginView.
 
-    path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN)
+    path("login/", LoginView.as_view(), name="login_view")
     """
 
     test_logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestLoginView()"
@@ -173,7 +118,7 @@ class TestLoginView(TestAccountMixin):
         log_login_failure.assert_called_once_with(self.admin_user.email, password_failure(self.admin_user))
 
     def test_post_login_unknown_user(self):
-        """POST unknown email should return forbidden."""
+        """POST unknown email gets the same response as a wrong password, so it doesn't reveal who has an account."""
         data = {"email": "unknown@example.com", "password": "irrelevant"}
         request = self.request_factory().post("/login/", data)
         request.user = AnonymousUser()
@@ -186,9 +131,10 @@ class TestLoginView(TestAccountMixin):
             response = view.post(request)
         self.assertEqual(
             response.status_code,
-            HTTPStatus.FORBIDDEN,
-            f"Expected FORBIDDEN for unknown user but got {response.status_code}",
+            HTTPStatus.BAD_REQUEST,
+            f"Expected BAD_REQUEST for unknown user but got {response.status_code}",
         )
+        self.assertNotIn(b"unknown@example.com", response.content)
         log_login_failure.assert_called_once_with("unknown@example.com", LoginFailure.UNKNOWN_ACCOUNT)
 
     def test_post_login_exception(self):
@@ -435,7 +381,7 @@ class TestLogoutView(TestAccountMixin):
     """
     Test Account LogoutView.
 
-    path("login/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT)
+    path("logout/", LogoutView.as_view(), name="logout_view")
     """
 
     test_logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestLogoutView()"
@@ -540,9 +486,9 @@ class TestAccountInactiveView(TestAccountMixin):
 
 class TestAccountRegisterView(TestAccountMixin):
     """
-    Test AccountRegisterView.
+    Test AccountRegisterView, with the ENABLE_ACCOUNT_REGISTRATION switch on.
 
-    path("register/", AccountRegisterView.as_view(), name=AccountReverseNames.ACCOUNT_REGISTER)
+    path("register/", AccountRegisterView.as_view(), name=ConsoleReverseNames.register_view)
     """
 
     test_logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestAccountRegisterView()"
@@ -551,6 +497,9 @@ class TestAccountRegisterView(TestAccountMixin):
         """Set up for each test."""
         self.test_create_username = f"newuser_{self.hash_suffix}@example.com"
         super().setUp()
+        switch = override_switch(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION, active=True)
+        switch.enable()
+        self.addCleanup(switch.disable)
 
     def tearDown(self):
 
@@ -585,7 +534,7 @@ class TestAccountRegisterView(TestAccountMixin):
         self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_register_view_valid_form(self):
-        """POST valid registration data should create user, log in, and redirect to /welcome/."""
+        """POST valid registration data should create user, log in, and redirect to the console's home."""
         data = {
             "email": self.test_create_username,
             "password": "testpass123",
@@ -603,13 +552,11 @@ class TestAccountRegisterView(TestAccountMixin):
             f"Expected FOUND for valid registration POST but got {response.status_code}",
         )
         if hasattr(response, "url"):
-            self.assertEqual(response.url, "/welcome/")  # type: ignore
+            self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_register_stores_the_browser_language(self):
         """A console sign-up stores the browser's language as the user's preference, and is welcomed in it."""
         # pylint: disable=import-outside-toplevel
-        from django.test import Client
-
         from smarter.apps.account.models import AccountContact, UserProfile
 
         self.addCleanup(AccountContact.objects.filter(email=self.test_create_username).delete)
@@ -644,6 +591,22 @@ class TestAccountRegisterView(TestAccountMixin):
             HTTPStatus.OK,
             f"Expected OK for invalid registration POST but got {response.status_code}",
         )
+
+
+class TestAccountRegisterViewSwitchedOff(TestAccountMixin):
+    """With the ENABLE_ACCOUNT_REGISTRATION switch off, the sign-up page and its form answer 404."""
+
+    def test_register_is_not_found_and_creates_no_user(self):
+        """Neither GET nor POST works, and a POST creates no user."""
+        email = f"closed_{self.hash_suffix}@example.com"
+        self.addCleanup(User.objects.filter(email=email).delete)
+        client = Client()
+        with override_switch(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION, active=False):
+            get_response = client.get("/register/")
+            post_response = client.post("/register/", {"email": email, "password": "testpass123"})
+        self.assertEqual(get_response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(post_response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertFalse(User.objects.filter(email=email).exists())
 
 
 class TestAccountActivationEmailView(TestAccountMixin):

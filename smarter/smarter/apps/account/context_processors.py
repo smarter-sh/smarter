@@ -24,7 +24,6 @@ def base(request):
         "account": {
             "registration_url": "/register/",
             "welcome_url": "/account/welcome/",
-            "deactivate_url": "/account/deactivate/",
         }
     }
     account_authentication_context = {

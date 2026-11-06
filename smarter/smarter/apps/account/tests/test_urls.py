@@ -1,15 +1,20 @@
 # pylint: disable=wrong-import-position
-"""Test API end points."""
+"""Test the account app's urls, and that its retired urls are gone."""
+
+from http import HTTPStatus
 
 from django.test import Client
+from waffle.testutils import override_switch
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.django.shortcuts import reverse
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.urls.console import ConsoleReverseNames
 
 
 class TestUrls(TestAccountMixin):
-    """Test Account views."""
+    """Test the account urls of the console urlconf."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -17,33 +22,51 @@ class TestUrls(TestAccountMixin):
         self.client = Client()
 
     def tearDown(self):
-
-        if self.client is not None:
-            self.client.logout()
-        self.client = None
+        self.client.logout()
         super().tearDown()
 
-    def test_account_view(self):
-        """test that we can see the account view and that it matches the account data."""
-        namespace = "account"
+    def verify_response(self, reverse_name: str, status_code: int):
+        """Assert that GET of a named url returns status_code."""
+        url = reverse(reverse_name)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status_code, url)
 
-        def verify_response(reverse_name: str, status_code):
-            url = reverse(reverse_name)
-            print(f"Testing URL: {url}")
-            if not self.client:
-                self.fail("Client is not initialized.")
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, status_code)
+    def test_root_account_urls(self):
+        """Sign-in, sign-out, registration and password reset are served at the root."""
+        self.verify_response("login_view", HTTPStatus.OK)
+        self.verify_response("logout_view", HTTPStatus.FOUND)
+        with override_switch(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION, active=True):
+            self.verify_response(ConsoleReverseNames.register_view, HTTPStatus.OK)
+        self.verify_response("account_password_reset_request", HTTPStatus.OK)
 
-        verify_response(f"{namespace}:account_login", 200)
-        verify_response(f"{namespace}:account_logout", 302)
-        verify_response(f"{namespace}:account_register", 200)
+    def test_retired_urls_are_gone(self):
+        """
+        The duplicate and dead account urls answer 404, even for a staff user.
 
-        # these were moved to the console root in v0.13.210
-        verify_response("account_password_reset_request", 200)
-        verify_response("account_password_confirm", 200)
+        ``/account/user/<id>/`` let staff edit any user's ``is_superuser`` flag.
+        """
+        self.client.force_login(self.admin_user)
+        retired_paths = [
+            "/account/login/",
+            "/account/logout/",
+            "/account/register/",
+            "/account/api-keys/",
+            "/account/users/",
+            f"/account/user/{self.non_admin_user.pk}/",
+            "/account/deactivate/",
+            "/password-confirm/",
+            "/dashboard/account/login/",
+            "/dashboard/plugins/",
+        ]
+        for path in retired_paths:
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, path)
 
-        if not self.client:
-            self.fail("Client is not initialized.")
-        self.client.force_login(self.non_admin_user)
-        verify_response(f"{namespace}:account_deactivate", 200)
+        # a POST to the old user page must not change anyone
+        response = self.client.post(
+            f"/account/user/{self.non_admin_user.pk}/",
+            data={"is_superuser": "on", "is_staff": "on"},
+        )
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.non_admin_user.refresh_from_db()
+        self.assertFalse(self.non_admin_user.is_superuser)

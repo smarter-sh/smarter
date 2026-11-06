@@ -1,6 +1,5 @@
 """Unit tests for password_management.py module."""
 
-import re
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
@@ -9,10 +8,7 @@ from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.urls import AccountReverseNames
-from smarter.apps.account.views.password_management import (
-    PasswordResetRequestView,
-    PasswordResetView,
-)
+from smarter.apps.account.views.password_management import PasswordResetRequestView
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -91,23 +87,3 @@ class TestPasswordManagementResetView(TestAccountMixin):
 
         response = self.client.get(reset_link)
         self.assertIn(response.status_code, [HTTPStatus.OK, HTTPStatus.FOUND])
-
-
-class TestPasswordConfirmView(TestAccountMixin):
-    """Unit tests for password confirm view."""
-
-    def setUp(self):
-        super().setUp()
-        self.admin_user.is_superuser = True
-        self.admin_user.save()
-        self.client = Client()
-
-    def test_page_renders(self):
-        """GET with valid token returns 200."""
-        reverse_name = AccountReverseNames.ACCOUNT_PASSWORD_CONFIRM
-        url = reverse(reverse_name)
-        factory = RequestFactory()
-        request = factory.get(url)
-        request.user = self.admin_user
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
