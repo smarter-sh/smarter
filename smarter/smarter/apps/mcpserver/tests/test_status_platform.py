@@ -6,6 +6,7 @@ from amqp.exceptions import ChannelError
 
 from smarter.apps.mcpserver.services.status import platform
 from smarter.apps.mcpserver.services.status.platform import (
+    HealthCheckResult,
     as_number,
     database_load,
     health_checks,
@@ -97,11 +98,17 @@ class TestHealthChecks(SmarterTestBase):
     """Test health_checks(), which runs the dashboard's own checks."""
 
     def test_health_checks(self):
-        results = [{"name": "Database", "healthy": True}, {"name": "Workers", "healthy": False}]
+        results = [
+            {"name": "Database", "healthy": True, "error": ""},
+            {"name": "Workers", "healthy": False, "error": "TimeoutError: no answer"},
+        ]
         with mock.patch(
             "smarter.apps.dashboard.views.views.api.service_health.run_health_checks", return_value=results
         ):
-            self.assertEqual(health_checks(), [("Database", True), ("Workers", False)])
+            self.assertEqual(
+                health_checks(),
+                [HealthCheckResult("Database", True), HealthCheckResult("Workers", False, "TimeoutError: no answer")],
+            )
 
     def test_module_logger(self):
         self.assertTrue(platform.logger_prefix)

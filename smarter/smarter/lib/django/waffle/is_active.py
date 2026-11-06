@@ -9,6 +9,8 @@ from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 from django.db.models.signals import post_delete, post_save
 from django.db.utils import OperationalError, ProgrammingError
+from django_redis.exceptions import ConnectionInterrupted
+from redis.exceptions import RedisError
 from waffle import get_waffle_switch_model
 from waffle.utils import get_cache
 
@@ -59,6 +61,28 @@ DB_EXCEPTIONS: tuple[type[BaseException], ...] = (OperationalError, ProgrammingE
 for _driver_error in (MySQLdbOperationalError, MariaDBOperationalError, MariaDBProgrammingError):
     if _driver_error is not None:
         DB_EXCEPTIONS += (_driver_error,)
+
+CACHE_EXCEPTIONS: tuple[type[BaseException], ...] = (ConnectionInterrupted, RedisError)
+"""The errors of waffle's cache, Redis, e.g. while Redis restarts, after which a switch is read from the database."""
+
+
+def switch_from_database(switch_name: str) -> bool:
+    """
+    Read a switch's state from the database, without waffle's cache.
+
+    :func:`switch_is_active` calls it when the cache, Redis, can't be read, e.g. while its pod
+    restarts on another node. Every request checks switches, in middleware and in switched loggers,
+    so without it each request, the readiness probe's included, would fail with a 500 until Redis
+    is back (issue #941).
+
+    :param switch_name: The name of the switch.
+    :returns: Whether the switch is active, or its Smarter default if it isn't in the database.
+    """
+    switch = get_waffle_switch_model().objects.filter(name=switch_name).first()
+    if switch is None:
+        defaults = smarter_waffle_switches.switches[switch_name]  # type: ignore[index]
+        return bool(defaults.default)
+    return bool(switch.active)
 
 
 def cached_switch_state(switch_name: str) -> Optional[bool]:
@@ -140,7 +164,8 @@ def switch_is_active(switch_name: str) -> bool:
 
     :param switch_name: The name of the Waffle switch to check.
     :returns: True if the switch is active, False otherwise, including when the app registry or
-        the database isn't ready, or the name isn't a :class:`SmarterWaffleSwitches` switch.
+        the database isn't ready, or the name isn't a :class:`SmarterWaffleSwitches` switch. When
+        the cache can't be read, the switch is read from the database (see :func:`switch_from_database`).
     """
     # The remembered state comes first: this runs on every log call of a switched logger.
     # A state is only remembered after the apps and the database were ready.
@@ -168,10 +193,15 @@ def switch_is_active(switch_name: str) -> bool:
         logger.error("%s switch_name '%s' is not a valid SmarterWaffleSwitches attribute", prefix, switch_name)
         return False
     try:
-        switch = get_waffle_switch_model().get(switch_name)
-        if not switch.pk:
-            switch = create_missing_switch(switch_name)
-        is_active = switch.is_active()
+        try:
+            switch = get_waffle_switch_model().get(switch_name)
+            if not switch.pk:
+                switch = create_missing_switch(switch_name)
+            is_active = switch.is_active()
+        except CACHE_EXCEPTIONS as e:
+            # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+            logger.warning("%s the cache failed, reading switch %s from the database: %s", prefix, switch_name, e)
+            is_active = switch_from_database(switch_name)
         _switch_cache[switch_name] = (is_active, time.monotonic() + SWITCH_CACHE_SECONDS)
         return is_active
     except (*DB_EXCEPTIONS, AppRegistryNotReady) as e:

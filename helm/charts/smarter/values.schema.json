@@ -142,6 +142,7 @@
         "SMARTER_ADMIN_USERNAME": { "type": "string" },
         "SMARTER_ADMIN_PASSWORD": { "type": "string" },
         "SMARTER_ADMIN_EMAIL": { "type": "string" },
+        "GITHUB_TOKEN": { "type": "string" },
         "SMARTER_SLACK_APP_TOKEN": { "type": "string" },
         "SMARTER_SLACK_BOT_TOKEN": { "type": "string" },
         "SMTP_HOST": { "type": "string" },

@@ -41,11 +41,19 @@ class TestServiceHealthApiView(TestAccountMixin):
             self.assertEqual(
                 service_health.run_health_checks(),
                 [
-                    {"name": "Up", "healthy": True},
-                    {"name": "Down", "healthy": False},
-                    {"name": "Broken", "healthy": False},
+                    {"name": "Up", "healthy": True, "error": ""},
+                    {"name": "Down", "healthy": False, "error": service_health.CHECK_DID_NOT_PASS},
+                    {"name": "Broken", "healthy": False, "error": "ConnectionError: unreachable"},
                 ],
             )
+
+    def test_the_widget_gets_no_errors(self):
+        """Test that the errors, which are for staff, are left out of the dashboard's response."""
+        checks = {"Broken": broken_check}
+        with patch.dict(service_health.HEALTH_CHECKS, checks, clear=True):
+            response = self.client.post(self.url)
+        data = json.loads(response.content)
+        self.assertEqual(data["health_checks"], [{"name": "Broken", "healthy": False}])
 
     def test_service_health(self):
         """Test that the response has the versions, the checks, and the percentage of checks that passed."""
