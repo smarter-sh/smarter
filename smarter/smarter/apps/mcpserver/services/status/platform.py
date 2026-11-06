@@ -223,7 +223,21 @@ def database_load() -> DatabaseLoad:
     )
 
 
-def health_checks() -> list[tuple[str, bool]]:
+@dataclass(frozen=True)
+class HealthCheckResult:
+    """One of the dashboard's health checks, as ``platform_status`` reports it."""
+
+    name: str
+    """The check's name, e.g. ``Workers``."""
+
+    healthy: bool
+    """Whether it passed."""
+
+    error: str = ""
+    """Why it failed, e.g. ``TimeoutError: Timeout connecting to server``, or an empty string if it passed."""
+
+
+def health_checks() -> list[HealthCheckResult]:
     """
     Run the web console dashboard's health checks, now.
 
@@ -236,7 +250,7 @@ def health_checks() -> list[tuple[str, bool]]:
     connection to the Celery broker, and a ping of the Celery workers, which waits up to half a second
     for their answers.
 
-    :returns: The name of each check, and whether it passed, e.g. ``[("Database", True), ...]``.
+    :returns: Each check's name, whether it passed, and why not, so that a failure can be diagnosed.
     """
     # pylint: disable=import-outside-toplevel
     from smarter.apps.dashboard.views.views.api.service_health import (
@@ -247,8 +261,10 @@ def health_checks() -> list[tuple[str, bool]]:
     for check in run_health_checks():
         name = str(check["name"])
         healthy = bool(check["healthy"])
-        results.append((name, healthy))
+        error = str(check.get("error") or "")
+        result = HealthCheckResult(name=name, healthy=healthy, error=error)
+        results.append(result)
     return results
 
 
-__all__ = ["DatabaseLoad", "database_load", "health_checks", "queue_depths", "task_queues"]
+__all__ = ["DatabaseLoad", "HealthCheckResult", "database_load", "health_checks", "queue_depths", "task_queues"]
