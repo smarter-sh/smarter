@@ -149,7 +149,7 @@ Builds and Static Files
 ``smarter/smarter/static/react/@smarter/workbench/``, with a ``manifest.json`` that has a ``_custom``
 entry of the build's time, version and environment. ``collectstatic`` copies it into
 ``staticfiles``, from which it is served. In development, use ``make react-build``, and restart
-``smarter-app`` afterwards: the template tag caches the manifest, including a missing one. The
+``smarter-api`` afterwards: the template tag caches the manifest, including a missing one. The
 workbench's tests and type check import the library too, so ``make react-test`` and
 ``make react-lint`` build it first (``npm run build:deps``).
 

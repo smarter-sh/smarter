@@ -43,7 +43,7 @@ The models are used, not just documented:
   (``src/contract.test.ts``), so its tests can't pass against responses that the backend never sends.
 
 After changing a model, run ``make chat-contract``, which regenerates the schema and the examples in
-the ``smarter-app`` container, copies it into Smarter Chat, and regenerates the TypeScript types. Commit
+the ``smarter-api`` container, copies it into Smarter Chat, and regenerates the TypeScript types. Commit
 both repositories.
 
 .. literalinclude:: ../../../../smarter/smarter/apps/prompt/contract/chat-contract.schema.json

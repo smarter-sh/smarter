@@ -56,7 +56,7 @@ Compose and the Makefile
      - What Smarter does
      - Where to look
    * - Six services
-     - ``smarter-mariadb``, ``smarter-redis``, ``smarter-app`` (uvicorn, restarted by watchmedo
+     - ``smarter-mariadb``, ``smarter-redis``, ``smarter-api`` (uvicorn, restarted by watchmedo
        when a Python file changes), ``smarter-worker`` and ``smarter-worker-infrastructure`` (two
        Celery workers on separate queues) and ``smarter-beat`` (the Celery scheduler). How the
        infrastructure worker waits for DNS and certificates: "Waiting without blocking" in `What

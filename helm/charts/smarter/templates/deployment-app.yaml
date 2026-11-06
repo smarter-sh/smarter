@@ -1,7 +1,10 @@
 # -----------------------------------------------------------------------------------
 # Deployment Manifest for Smarter Application
 #
-# This file defines the main Deployment resource for the Smarter app.
+# This file defines the main Deployment resource for the Smarter app, the api, named
+# <appName>-api. While app.legacyName.enabled is true it also renders a twin under the
+# api's old name, <appName>: see smarter.apiNames in _helpers.tpl. Their pods share the
+# label app.kubernetes.io/component: api, which the Services select.
 #
 # - Maintainer: <your team/contact>
 # - Purpose: Deploys the main application container with Helm templating.
@@ -20,26 +23,31 @@
 # between backing services. If the label is missing then the network policies are
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
+{{- range $index, $name := splitList "," (include "smarter.apiNames" .) }}
+{{- if $index }}
+---
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
-    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
-    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+    meta.helm.sh/release-name: "{{ $.Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ $.Values.namespace }}"
+    meta.helm.sh/application-version: "{{ $.Chart.Version }}"
   labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.global.appName }}"
-    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
-  name: "{{ .Values.global.appName }}"
-  namespace: "{{ .Values.namespace }}"
+    helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $name }}"
+    app.kubernetes.io/component: api
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
+  name: "{{ $name }}"
+  namespace: "{{ $.Values.namespace }}"
 spec:
   progressDeadlineSeconds: 600
-  replicas: {{ .Values.app.replicaCount }}
+  replicas: {{ $.Values.app.replicaCount }}
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: "{{ .Values.global.appName }}"
+      app.kubernetes.io/name: "{{ $name }}"
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -48,63 +56,64 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/env: "{{ include (print $.Template.BasePath "/secret-env.yaml") . | sha256sum }}"
+        checksum/env: "{{ include (print $.Template.BasePath "/secret-env.yaml") $ | sha256sum }}"
       labels:
-        app.kubernetes.io/name: "{{ .Values.global.appName }}"
-        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
-        meta.helm.sh/application-version: "{{ .Chart.Version }}"
+        app.kubernetes.io/name: "{{ $name }}"
+        app.kubernetes.io/component: api
+        app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
+        meta.helm.sh/application-version: "{{ $.Chart.Version }}"
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
       affinity:
-        {{- toYaml .Values.global.affinity | nindent 8 }}
+        {{- toYaml $.Values.global.affinity | nindent 8 }}
       tolerations:
-        {{- toYaml .Values.global.tolerations | nindent 8 }}
+        {{- toYaml $.Values.global.tolerations | nindent 8 }}
       containers:
-        - name: "{{ .Values.global.appName }}"
-          image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
+        - name: "{{ $.Values.global.appName }}"
+          image: '{{ $.Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" $.Values.global.image.repository $.Values.global.image.tag) }}'
           command:
             - "uvicorn"
             - "smarter.asgi:application"
             - "--host"
             - "0.0.0.0"
             - "--port"
-            - "{{ .Values.deployment.containerPort }}"
-            - "--workers={{ .Values.app.workers | default 2 }}"
-            {{- if .Values.app.limitConcurrency }}
-            - "--limit-concurrency={{ .Values.app.limitConcurrency }}"
+            - "{{ $.Values.deployment.containerPort }}"
+            - "--workers={{ $.Values.app.workers | default 2 }}"
+            {{- if $.Values.app.limitConcurrency }}
+            - "--limit-concurrency={{ $.Values.app.limitConcurrency }}"
             {{- end }}
             - "--timeout-keep-alive=15"
             - "--timeout-graceful-shutdown=30"
             # Django has no ASGI lifespan support, so turn it off instead of logging a
             # "lifespan protocol appears unsupported" line for each worker.
             - "--lifespan=off"
-          imagePullPolicy: '{{ .Values.global.image.pullPolicy | default "Always" }}'
+          imagePullPolicy: '{{ $.Values.global.image.pullPolicy | default "Always" }}'
           resources:
-            {{- toYaml .Values.app.resources | nindent 12 }}
+            {{- toYaml $.Values.app.resources | nindent 12 }}
           # the platform's environment, from the Secret in secret-env.yaml
           envFrom:
             - secretRef:
-                name: "{{ .Values.global.appName }}-env"
+                name: "{{ $.Values.global.appName }}-env"
           env:
-            {{- range $env := .Values.app.env }}
+            {{- range $env := $.Values.app.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
             {{- end }}
             {{- /* Web server only: see app.databaseReadTimeout in values.yaml. */}}
-            {{- if .Values.app.databaseReadTimeout }}
+            {{- if $.Values.app.databaseReadTimeout }}
             - name: SMARTER_DATABASE_READ_TIMEOUT
-              value: {{ .Values.app.databaseReadTimeout | quote }}
+              value: {{ $.Values.app.databaseReadTimeout | quote }}
             {{- end }}
             {{- /* Web server only: see app.promptThreads in values.yaml. */}}
-            {{- if .Values.app.promptThreads }}
+            {{- if $.Values.app.promptThreads }}
             - name: SMARTER_PROMPT_THREADS
-              value: {{ .Values.app.promptThreads | quote }}
+              value: {{ $.Values.app.promptThreads | quote }}
             {{- end }}
           securityContext:
-            {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
+            {{- toYaml $.Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
-            {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
-            {{- with .Values.app.extraVolumeMounts }}
+            {{- include "smarter.writableVolumeMounts" $ | nindent 12 }}
+            {{- with $.Values.app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           # The probes, tuned for a server that loads in about 10 seconds:
@@ -121,7 +130,7 @@ spec:
           startupProbe:
             httpGet:
               path: /healthz/
-              port: {{ .Values.deployment.containerPort }}
+              port: {{ $.Values.deployment.containerPort }}
               httpHeaders:
               - name: Host
                 value: localhost
@@ -133,7 +142,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /readiness/
-              port: {{ .Values.deployment.containerPort }}
+              port: {{ $.Values.deployment.containerPort }}
               httpHeaders:
               - name: Host
                 value: localhost
@@ -145,7 +154,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz/
-              port: {{ .Values.deployment.containerPort }}
+              port: {{ $.Values.deployment.containerPort }}
               httpHeaders:
               - name: Host
                 value: localhost
@@ -162,13 +171,13 @@ spec:
               exec:
                 command: ["sleep", "5"]
           ports:
-            - containerPort: {{ .Values.deployment.containerPort }}
+            - containerPort: {{ $.Values.deployment.containerPort }}
               protocol: TCP
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
       volumes:
-        {{- include "smarter.writableVolumes" . | nindent 8 }}
-        {{- with .Values.app.extraVolumes }}
+        {{- include "smarter.writableVolumes" $ | nindent 8 }}
+        {{- with $.Values.app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       terminationGracePeriodSeconds: 45
@@ -177,5 +186,6 @@ spec:
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext:
-        {{- toYaml .Values.global.podSecurityContext | nindent 8 }}
+        {{- toYaml $.Values.global.podSecurityContext | nindent 8 }}
       shareProcessNamespace: false
+{{- end }}

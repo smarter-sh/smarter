@@ -12,7 +12,7 @@ endif
 PIP := $(PYTHON) -m pip
 
 # scaffold .env from .env.example, with a new Fernet key, which encrypts Secrets. Every process
-# (smarter-app, the workers, each manage.py call) must share it to decrypt the others' Secrets.
+# (smarter-api, the workers, each manage.py call) must share it to decrypt the others' Secrets.
 ifeq ("$(wildcard .env)","")
     $(shell cp .env.example .env)
     $(shell echo "SMARTER_FERNET_ENCRYPTION_KEY=$$(openssl rand -base64 32 | tr '+/' '-_')" >> .env)
@@ -127,14 +127,14 @@ analyze:
 	@echo "==============================================================================="
 	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
-# docker exec smarter-app bash -c "coverage run manage.py test smarter.apps.llmtool && coverage report -m && coverage html"
+# docker exec smarter-api bash -c "coverage run manage.py test smarter.apps.llmtool && coverage report -m && coverage html"
 # Celery Beat is stopped while the tests run, as in docker-test.
 coverage:
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."
 	@echo "==============================================================================="
 	docker stop smarter-beat > /dev/null || true
-	docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"; status=$$?; \
+	docker exec smarter-api bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"; status=$$?; \
 	docker start smarter-beat > /dev/null; \
 	exit $$status
 
@@ -185,7 +185,7 @@ docker-init:
 	docker-compose up -d && \
 	docker exec smarter-mariadb bash -c "sleep 20; until echo '\q' | mariadb -u smarter -psmarter; do echo 'Waiting for MariaDB to be ready...'; sleep 10; done" && \
 	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' && \
-	docker exec smarter-app bash -c "\
+	docker exec smarter-api bash -c "\
 		python manage.py reset_cache && \
 		python manage.py makemigrations && python manage.py migrate && \
 		python manage.py initialize_platform" && \
@@ -222,9 +222,9 @@ docker-run:
 # and are skipped by default. They are slow: a deploy can wait up to 40 minutes for a
 # TLS certificate. To include them, pass the environment variable into the container
 # (exporting it on the host has no effect):
-#   docker exec -e SMARTER_TEST_INFRASTRUCTURE=true smarter-app bash -c "python manage.py test smarter"
+#   docker exec -e SMARTER_TEST_INFRASTRUCTURE=true smarter-api bash -c "python manage.py test smarter"
 # To run only the infrastructure tests:
-#   docker exec smarter-app bash -c "python manage.py test smarter --tag infrastructure"
+#   docker exec smarter-api bash -c "python manage.py test smarter --tag infrastructure"
 # See smarter/smarter/lib/unittest/runner.py.
 #
 # Celery Beat is stopped while the tests run, and started again afterwards, even when a
@@ -235,7 +235,7 @@ docker-run:
 docker-test:
 	make docker-check
 	docker stop smarter-beat > /dev/null || true
-	docker exec smarter-app bash -c "python manage.py test smarter"; status=$$?; \
+	docker exec smarter-api bash -c "python manage.py test smarter"; status=$$?; \
 	docker start smarter-beat > /dev/null; \
 	exit $$status
 
@@ -386,87 +386,87 @@ react-storybook:
 	cd smarter/react/packages/$(or $(APP),smarter-dashboard) && npm run storybook
 
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
-# (smarter.apps.prompt.contract.models), in the smarter-app container, and copy the schema into
+# (smarter.apps.prompt.contract.models), in the smarter-api container, and copy the schema into
 # Smarter Chat, which generates its TypeScript types from it. Run it after changing the
 # models, and commit the changes.
 CHAT_CONTRACT_SCHEMA := smarter/apps/prompt/contract/chat-contract.schema.json
 CHAT_CONTRACT_EXAMPLE := smarter/apps/prompt/contract/chat-contract.example.json
 chat-contract:
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_schema"
-	docker cp smarter-app:/home/smarter_user/smarter/$(CHAT_CONTRACT_SCHEMA) smarter/$(CHAT_CONTRACT_SCHEMA)
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_example"
-	docker cp smarter-app:/home/smarter_user/smarter/$(CHAT_CONTRACT_EXAMPLE) smarter/$(CHAT_CONTRACT_EXAMPLE)
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_schema"
+	docker cp smarter-api:/home/smarter_user/smarter/$(CHAT_CONTRACT_SCHEMA) smarter/$(CHAT_CONTRACT_SCHEMA)
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_example"
+	docker cp smarter-api:/home/smarter_user/smarter/$(CHAT_CONTRACT_EXAMPLE) smarter/$(CHAT_CONTRACT_EXAMPLE)
 	cp smarter/$(CHAT_CONTRACT_SCHEMA) $(SMARTER_CHAT_DIR)/contract/chat-contract.schema.json
 	cd $(SMARTER_CHAT_DIR) && npm run contract:types
 
 # Regenerate the web console's message catalogs, smarter/smarter/locale/<language>/LC_MESSAGES/django.po
 # (Django templates and Python) and djangojs.po (the React apps), for every language in settings.LANGUAGES,
-# or only LANGUAGE=<code>, and compile them, in the smarter-app container. Translations already in the
+# or only LANGUAGE=<code>, and compile them, in the smarter-api container. Translations already in the
 # .po files are kept. Run make build first, so that the container has the current templates and code.
 I18N_LOCALE_DIR := smarter/locale
 i18n-messages:
 	cd smarter/react && npm run i18n:extract
-	docker cp smarter/react/i18n/messages.js smarter-app:/home/smarter_user/smarter/react/i18n/messages.js
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py update_console_messages $(if $(LANGUAGE),--language $(LANGUAGE),)"
+	docker cp smarter/react/i18n/messages.js smarter-api:/home/smarter_user/smarter/react/i18n/messages.js
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py update_console_messages $(if $(LANGUAGE),--language $(LANGUAGE),)"
 	mkdir -p smarter/$(I18N_LOCALE_DIR)
-	docker cp smarter-app:/home/smarter_user/smarter/$(I18N_LOCALE_DIR)/. smarter/$(I18N_LOCALE_DIR)/
+	docker cp smarter-api:/home/smarter_user/smarter/$(I18N_LOCALE_DIR)/. smarter/$(I18N_LOCALE_DIR)/
 
-# Regenerate the web console's Extensions api contract from its Pydantic models, in the smarter-app
+# Regenerate the web console's Extensions api contract from its Pydantic models, in the smarter-api
 # container, copy it into @smarter/extension-console, and regenerate that package's TypeScript types.
 EXTENSION_CONTRACT_SCHEMA := smarter/apps/llmtool/extension/extension-console.schema.json
 extension-contract:
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_console_schema"
-	docker cp smarter-app:/home/smarter_user/smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/$(EXTENSION_CONTRACT_SCHEMA)
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_console_schema"
+	docker cp smarter-api:/home/smarter_user/smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/$(EXTENSION_CONTRACT_SCHEMA)
 	cp smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/react/packages/smarter-extension-console/contract/extension-console.schema.json
 	cd smarter/react/packages/smarter-extension-console && npm run contract:types
 
 # Regenerate the LLMTool list's Extensions tab api contract from its Pydantic models, in the
-# smarter-app container, copy it into @smarter/llmtool-list, and regenerate that package's TypeScript types.
+# smarter-api container, copy it into @smarter/llmtool-list, and regenerate that package's TypeScript types.
 LLMTOOL_LIST_CONTRACT_SCHEMA := smarter/apps/llmtool/views/listview/extension-list.schema.json
 llmtool-list-contract:
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_list_schema"
-	docker cp smarter-app:/home/smarter_user/smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA)
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_list_schema"
+	docker cp smarter-api:/home/smarter_user/smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA)
 	cp smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmtool-list/contract/extension-list.schema.json
 	cd smarter/react/packages/smarter-llmtool-list && npm run contract:types
 
-# Regenerate the LLMClient deployment page's contract from its Pydantic models, in the smarter-app
+# Regenerate the LLMClient deployment page's contract from its Pydantic models, in the smarter-api
 # container, copy it into @smarter/llmclient-deployment, and regenerate that package's TypeScript types.
 LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA := smarter/apps/llmclient/views/llmclient-deployment.schema.json
 llmclient-deployment-contract:
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_deployment_schema"
-	docker cp smarter-app:/home/smarter_user/smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA)
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_deployment_schema"
+	docker cp smarter-api:/home/smarter_user/smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA)
 	cp smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmclient-deployment/contract/llmclient-deployment.schema.json
 	cd smarter/react/packages/smarter-llmclient-deployment && npm run contract:types
 
 # Regenerate the contract of the workbench's Architecture tab, an LLMClient's tree of SAM resources, from its
-# Pydantic models, in the smarter-app container, copy it into @smarter/llmclient-architecture, and regenerate
+# Pydantic models, in the smarter-api container, copy it into @smarter/llmclient-architecture, and regenerate
 # that package's TypeScript types.
 LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA := smarter/apps/prompt/views/detailviews/llmclient-architecture.schema.json
 llmclient-architecture-contract:
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_architecture_schema"
-	docker cp smarter-app:/home/smarter_user/smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA)
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_architecture_schema"
+	docker cp smarter-api:/home/smarter_user/smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA)
 	cp smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmclient-architecture/contract/llmclient-architecture.schema.json
 	cd smarter/react/packages/smarter-llmclient-architecture && npm run contract:types
 
 # Regenerate the web console session's contract, GET /api/web/session/, from its Pydantic models, in the
-# smarter-app container, copy it into @smarter/console, and regenerate that package's TypeScript types.
+# smarter-api container, copy it into @smarter/console, and regenerate that package's TypeScript types.
 CONSOLE_SESSION_CONTRACT_SCHEMA := smarter/apps/api/web/session/console-session.schema.json
 console-session-contract:
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_console_session_schema"
-	docker cp smarter-app:/home/smarter_user/smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA)
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_console_session_schema"
+	docker cp smarter-api:/home/smarter_user/smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA)
 	cp smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/react/packages/smarter-console/contract/console-session.schema.json
 	cd smarter/react/packages/smarter-console && npm run contract:types
 
-# Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-app
+# Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-api
 # container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the
 # smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
 # journal contract or the cli api, and commit the files.
 API_CONTRACT_DIR := smarter/apps/api/v1/contract
 api-contract:
-	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_api_contract"
-	docker cp smarter-app:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/openapi.json smarter/$(API_CONTRACT_DIR)/openapi.json
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_api_contract"
+	docker cp smarter-api:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/openapi.json smarter/$(API_CONTRACT_DIR)/openapi.json
 	rm -f smarter/$(API_CONTRACT_DIR)/sam/*.schema.json
-	docker cp smarter-app:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/sam/. smarter/$(API_CONTRACT_DIR)/sam/
+	docker cp smarter-api:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/sam/. smarter/$(API_CONTRACT_DIR)/sam/
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
@@ -547,7 +547,7 @@ help:
 	@echo '<************************** Docker **************************>'
 	@echo 'docker-check           - Verify Docker is installed and running'
 	@echo 'docker-init            - Initialize MariaDB and create the smarter database'
-	@echo 'docker-shell           - Open a shell in the smarter-app Docker container'
+	@echo 'docker-shell           - Open a shell in the smarter-api Docker container'
 	@echo 'docker-build           - Build all Docker containers using docker-compose'
 	@echo 'docker-run             - Start all Docker containers using docker-compose'
 	@echo 'docker-test            - Run Python-Django unit tests in Docker'

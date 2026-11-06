@@ -17,7 +17,7 @@ describe("banner", () => {
     const text = banner(sessionInfo);
     expect(text.endsWith("\r\n")).toBe(true);
     expect(text).not.toMatch(/[^\r]\n/);
-    expect(text).toContain("smarter-app-7d9f8c6b5-x2kqp");
+    expect(text).toContain("smarter-api-7d9f8c6b5-x2kqp");
     expect(text).toContain("when the server restarts, or is redeployed or scaled down,");
     expect(text).toContain("after 30 minutes without input, and after 8 hours in any case.");
   });

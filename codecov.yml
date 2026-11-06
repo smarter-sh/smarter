@@ -5,7 +5,7 @@
 # .github/workflows/test.yml uploads two coverage reports, each under its own
 # flag, so that the README can show a badge for each:
 #
-# - python: the unit tests run with coverage inside the smarter-app
+# - python: the unit tests run with coverage inside the smarter-api
 #   container, where the repository's smarter/ folder is
 #   /home/smarter_user/smarter/. The python-report job combines the shards'
 #   data and already maps those paths back to the repository's, so the fix

@@ -258,6 +258,14 @@ app:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  # The api's Deployment, Service, HorizontalPodAutoscaler and PodDisruptionBudget are named
+  # <appName>-api. While legacyName is enabled, each also has a twin under the old name,
+  # <appName>, and both Services reach both Deployments' pods, so that renaming them drops no
+  # request, and the Ingresses that still name the old Service keep working. Turn it off in the
+  # release after the rename, once smarter-infrastructure's ingress and every LLMClient's ingress
+  # name <appName>-api. See smarter.apiNames in _helpers.tpl.
+  legacyName:
+    enabled: true
 
 names:
   mysqlName: mysql
@@ -752,7 +760,7 @@ alloy:
           }
           selectors {
             role  = "pod"
-            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-beat,mariadb)"
+            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-api,{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-beat,mariadb)"
           }
         }
 

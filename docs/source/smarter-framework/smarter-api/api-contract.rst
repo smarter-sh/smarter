@@ -121,7 +121,7 @@ The contract is code, in :mod:`smarter.apps.api.v1.contract`:
      - The committed OpenAPI document.
 
 After changing any of the models, or a route that the document covers, run ``make api-contract``. It runs
-``manage.py export_api_contract`` in the ``smarter-app`` container, copies the files back to your
+``manage.py export_api_contract`` in the ``smarter-api`` container, copies the files back to your
 working tree, and you commit them.
 
 The tests make the contract hard to break by accident. They fail when:

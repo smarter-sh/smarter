@@ -4,7 +4,7 @@
 # 1. every toctree entry and :doc: target names an existing .rst file,
 # 2. every .. literalinclude:: / .. include:: target exists, and
 # 3. every .. automodule:: / .. autoclass:: / ... target imports, with Django set
-#    up, inside the smarter-app container (skipped when it is not running).
+#    up, inside the smarter-api container (skipped when it is not running).
 #
 # usage, from the repository root:
 #   skills/smarter-sphinx-docs/scripts/check-docs.sh [page.rst ...]
@@ -84,8 +84,8 @@ targets=$(grep -ho '^\.\. auto\(module\|class\|function\|method\|attribute\|data
   awk '{print $NF}' | sort -u)
 if [ -z "$targets" ]; then
   echo "none"
-elif ! docker ps --format '{{.Names}}' | grep -qx smarter-app; then
-  echo "skipped: smarter-app is not running"
+elif ! docker ps --format '{{.Names}}' | grep -qx smarter-api; then
+  echo "skipped: smarter-api is not running"
 else
   # manage.py shell sets up Django with the container's settings module.
   code='
@@ -105,7 +105,7 @@ for target in os.environ["AUTODOC_TARGETS"].split():
         print("BROKEN  " + target + ": " + str(e))
 print("ok" if not bad else str(bad) + " broken")
 '
-  output=$(docker exec -e AUTODOC_TARGETS="$targets" -e CODE="$code" smarter-app \
+  output=$(docker exec -e AUTODOC_TARGETS="$targets" -e CODE="$code" smarter-api \
     bash -c 'cd /home/smarter_user/smarter && python manage.py shell -c "$CODE"' 2>/dev/null | grep -E '^(BROKEN|ok$|[0-9]+ broken$)')
   echo "$output"
   if [ "$output" != "ok" ]; then

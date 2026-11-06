@@ -252,5 +252,5 @@ class TestRegistryIndexSchema(SmarterTestBase):
             committed,
             json.loads(json.dumps(registry.index_json_schema())),
             "The registry index's JSON Schema is out of date. Run `python manage.py export_extension_registry_schema` "
-            "in the smarter-app container, copy the file to the host, and to the registry's schema/ directory.",
+            "in the smarter-api container, copy the file to the host, and to the registry's schema/ directory.",
         )

@@ -85,7 +85,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - 45
      - **Lab 1: Find your way around.** Use the Django shell (``python manage.py shell`` in the
-       ``smarter-app`` container) to query guardrails and secrets, follow a URL to its view, and
+       ``smarter-api`` container) to query guardrails and secrets, follow a URL to its view, and
        map the files of the ``secret`` app. Produces Assignment 1.
    * - 3
      - 45

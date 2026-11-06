@@ -156,7 +156,7 @@ Copy the closest existing list package, then rename it everywhere.
 5. `make react-install`, then build: `cd smarter/react && npm run build -w @smarter/<kind>-list`.
    Vite writes the bundle and `manifest.json` into
    `smarter/smarter/static/react/@smarter/<kind>-list/`, which isn't committed.
-   Copy it into `smarter-app` (`smarter-docker-environment`) to see it in the
+   Copy it into `smarter-api` (`smarter-docker-environment`) to see it in the
    console.
 
 See [references/canonical-django-react-reference.md](references/canonical-django-react-reference.md)
@@ -195,7 +195,7 @@ with `DOCKER_COLLECT_STATIC_FILES=false`, so it uses the host's previously
 collected `smarter/staticfiles/`, in which a new or rebuilt app is missing. The
 template tag then finds no `manifest.json` and emits no script tags.
 
-- Check `staticfiles/react/<app>/manifest.json` in `smarter-app` first.
+- Check `staticfiles/react/<app>/manifest.json` in `smarter-api` first.
 - Use `make react-build` (npm build, collectstatic, image build), not
   `make build`, after any React change. It is safe to run without asking:
   its output (`smarter/staticfiles/`, `smarter/smarter/static/react/`, the
@@ -203,4 +203,4 @@ template tag then finds no `manifest.json` and emits no script tags.
   it's done, so run it in the foreground. Unlike `make run`, it doesn't
   restart the containers: follow it with `make run` in the background.
 - The template tag caches a missing manifest for the life of the process, so
-  restart `smarter-app` after fixing the static files.
+  restart `smarter-api` after fixing the static files.

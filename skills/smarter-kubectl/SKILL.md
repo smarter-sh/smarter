@@ -64,15 +64,16 @@ state doesn't persist between Bash calls, so define the function in each call th
 
 The Helm chart (`helm/charts/smarter/templates/`) runs these, selected by `app.kubernetes.io/name`:
 
-| Label                           | What                                                       | Pod name                                                   |
-| ------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
-| `smarter`                       | the app server, `uvicorn --workers=2` (two processes each) | `smarter-<rs hash>-<id>`                                   |
-| `smarter-worker`                | Celery worker, default queue                               | `smarter-worker-<rs hash>-<id>`                            |
-| `smarter-worker-infrastructure` | Celery worker for DNS, certificate and Kubernetes tasks    | `smarter-worker-infrastructure-...`                        |
-| `smarter-beat`                  | Celery beat, the scheduler (exactly one)                   | `smarter-beat-...`                                         |
-| `smarter-bastion`               | a shell for operators                                      | `smarter-bastion-...`                                      |
-| (StatefulSets)                  | MariaDB and Redis                                          | `smarter-mariadb-0`, `smarter-redis-...`                   |
-| (Jobs)                          | the init job on each deploy, the daily MySQL backup        | `smarter-smarter-job-init-...`, `smarter-mysql-backup-...` |
+| Label                           | What                                                                               | Pod name                                                   |
+| ------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `smarter-api`                   | the api server, `uvicorn --workers=2` (two processes each)                         | `smarter-api-<rs hash>-<id>`                               |
+| `smarter`                       | the api's old name: a twin of `smarter-api` while `app.legacyName.enabled` is true | `smarter-<rs hash>-<id>`                                   |
+| `smarter-worker`                | Celery worker, default queue                                                       | `smarter-worker-<rs hash>-<id>`                            |
+| `smarter-worker-infrastructure` | Celery worker for DNS, certificate and Kubernetes tasks                            | `smarter-worker-infrastructure-...`                        |
+| `smarter-beat`                  | Celery beat, the scheduler (exactly one)                                           | `smarter-beat-...`                                         |
+| `smarter-bastion`               | a shell for operators                                                              | `smarter-bastion-...`                                      |
+| (StatefulSets)                  | MariaDB and Redis                                                                  | `smarter-mariadb-0`, `smarter-redis-...`                   |
+| (Jobs)                          | the init job on each deploy, the daily MySQL backup                                | `smarter-smarter-job-init-...`, `smarter-mysql-backup-...` |
 
 ## Common reads
 
@@ -104,7 +105,7 @@ the pod's start, not the start of the incident. State the time span you have.
 **Which release ran when.** Each deploy makes a new ReplicaSet, which keeps the image tag:
 
 ```bash
-k get rs -l app.kubernetes.io/name=smarter -o jsonpath='{range .items[*]}{.metadata.creationTimestamp} {.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}{end}' | sort
+k get rs -l app.kubernetes.io/name=smarter-api -o jsonpath='{range .items[*]}{.metadata.creationTimestamp} {.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}{end}' | sort
 ```
 
 The one with replicas > 0 is live. Compare its tag with git tags to find the commits in play.
