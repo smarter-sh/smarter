@@ -24,7 +24,7 @@ pages are small React apps.
 | `Makefile`                   | Developer commands (`make coverage`, `make react-test`, ...)                 |
 
 Host path `smarter/smarter/<path>` is `/home/smarter_user/smarter/smarter/<path>`
-inside the `smarter-app` container.
+inside the `smarter-api` container.
 
 ## Non-negotiable rules
 
@@ -32,7 +32,7 @@ inside the `smarter-app` container.
    command text. Never run `git commit`, `git add`, `git reset`, `git push`, or
    anything else that changes the repository's history or index. See
    `smarter-git-commits`.
-2. **Never touch real infrastructure from tests.** The `smarter-app` container's
+2. **Never touch real infrastructure from tests.** The `smarter-api` container's
    kubeconfig points at the real EKS cluster, and its AWS and Route53
    credentials are live. Fake or mock every Kubernetes, DNS, ACM, and AWS call.
    See `smarter-infrastructure-safety`.

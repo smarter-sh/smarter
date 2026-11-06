@@ -7,25 +7,32 @@
 # between backing services. If the label is missing then the network policies are
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
+{{- range $index, $name := splitList "," (include "smarter.apiNames" .) }}
+{{- if $index }}
+---
+{{- end }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ .Values.global.appName }}"
-  namespace: "{{ .Values.env.NAMESPACE }}"
+  name: "{{ $name }}"
+  namespace: "{{ $.Values.env.NAMESPACE }}"
   annotations:
-    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
-    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
-    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+    meta.helm.sh/release-name: "{{ $.Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ $.Values.namespace }}"
+    meta.helm.sh/application-version: "{{ $.Chart.Version }}"
   labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
-    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $name }}"
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 spec:
+  # both Deployments' pods, while the legacy name lasts. See smarter.apiNames in _helpers.tpl.
   selector:
-    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/component: api
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
   ports:
-    - port: {{ .Values.service.port }}
+    - port: {{ $.Values.service.port }}
       protocol: TCP
-      targetPort: {{ .Values.service.targetPort }}
+      targetPort: {{ $.Values.service.targetPort }}
   sessionAffinity: None
   type: ClusterIP
+{{- end }}

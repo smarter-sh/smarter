@@ -95,7 +95,7 @@ side.
 | A new style setting              | The styles model of the LLMClient manifest, the contract, then the css variable in `src/lib/styles.ts` and `styles.css`                                                                                              |
 | Anything user-facing             | `docs/source/smarter-framework/smarter-chat*.rst` (evergreen prose; load `smarter-sphinx-docs`)                                                                                                                      |
 
-`make chat-contract` runs in the `smarter-app` container. Commit the platform's
+`make chat-contract` runs in the `smarter-api` container. Commit the platform's
 model, the schema in `smarter/smarter/apps/prompt/contract/`, and this package's
 `contract/` and `src/contract.gen.ts` together.
 

@@ -218,6 +218,13 @@ class Command(SmarterCommand):
             logger.error("Failed to verify DNS configuration: %s", e)
 
         try:
+            # the api's Kubernetes Service was renamed to smarter-api: point every deployed LLMClient's ingress
+            # at it, before a later release removes the old Service. It does nothing without Kubernetes.
+            call_command("retarget_llmclient_ingresses")
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to retarget the LLMClient ingresses: %s", e)
+
+        try:
             # read-only: record the Kubernetes cluster's resources in the ledger now, rather than
             # 15 minutes later when Celery Beat first runs it. It exits on failure, e.g. no cluster.
             call_command("sync_infrastructure_inventory")

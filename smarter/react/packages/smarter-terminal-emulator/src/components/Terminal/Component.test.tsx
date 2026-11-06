@@ -54,14 +54,14 @@ describe("TerminalEmulator", () => {
     const socket = await connect();
     act(() => socket.emitJson(sessionMessage));
     expect(screen.getByRole("status")).toHaveTextContent("connected");
-    expect(screen.getByText("smarter_user@smarter-app-7d9f8c6b5-x2kqp")).toBeInTheDocument();
-    expect(output()).toContain("bash --login on smarter-app-7d9f8c6b5-x2kqp, as smarter_user, pid 4242.");
+    expect(screen.getByText("smarter_user@smarter-api-7d9f8c6b5-x2kqp")).toBeInTheDocument();
+    expect(output()).toContain("bash --login on smarter-api-7d9f8c6b5-x2kqp, as smarter_user, pid 4242.");
     expect(output()).toContain("This session can end suddenly");
     expect(output()).toContain("after 30 minutes without input, and after 8 hours in any case.");
     expect(output()).toContain("a poor place for long-running processes");
 
-    act(() => socket.emitOutput("smarter_user@smarter-app:~$ "));
-    expect(output().endsWith("smarter_user@smarter-app:~$ ")).toBe(true);
+    act(() => socket.emitOutput("smarter_user@smarter-api:~$ "));
+    expect(output().endsWith("smarter_user@smarter-api:~$ ")).toBe(true);
   });
 
   it("sends what is typed, and the terminal's new size", async () => {

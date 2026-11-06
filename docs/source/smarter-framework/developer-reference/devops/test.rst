@@ -23,10 +23,10 @@ To run the test suite locally, use the following command from the project root:
 
 .. code-block:: console
 
-  docker exec smarter-app bash -c "python manage.py test smarter"
+  docker exec smarter-api bash -c "python manage.py test smarter"
 
   # or, to run tests for a specific app
-  docker exec smarter-app bash -c "python manage.py test smarter.apps.account"
+  docker exec smarter-api bash -c "python manage.py test smarter.apps.account"
 
   # or
   make test
@@ -67,7 +67,7 @@ To generate a code coverage report, use the following command from the project r
 
 .. code-block:: console
 
-  docker exec smarter-app bash -c "coverage run manage.py test && coverage report -m && coverage html"
+  docker exec smarter-api bash -c "coverage run manage.py test && coverage report -m && coverage html"
 
   # or
   make coverage

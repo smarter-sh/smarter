@@ -41,7 +41,7 @@ A field description counts too: it's in the schema, and in the SDKs' docstrings.
 
 ## Regenerate
 
-The export runs **in the smarter-app container**, which must run your current
+The export runs **in the smarter-api container**, which must run your current
 code (see `smarter-docker-environment`):
 
 ```console
@@ -59,7 +59,7 @@ temporary folder and diffs, without writing to the repository: use it to answer
 Then run the contract tests:
 
 ```console
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.api.v1.contract"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.api.v1.contract"
 ```
 
 They make one real, billable LLM request (the prompt test), which is fine.

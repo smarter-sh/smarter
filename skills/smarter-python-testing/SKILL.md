@@ -1,19 +1,19 @@
 ---
 name: smarter-python-testing
-description: Use when writing, fixing, or running Smarter's Django unit tests, or raising coverage. Covers where tests run (the smarter-app container), the base classes (SmarterTestBase, TestAccountMixin, TestSAMBrokerBaseClass, ResourceViewsTestMixin), fixtures and cleanup without transaction rollback, Celery and infrastructure mocking, the infrastructure tag, and the coverage workflow.
+description: Use when writing, fixing, or running Smarter's Django unit tests, or raising coverage. Covers where tests run (the smarter-api container), the base classes (SmarterTestBase, TestAccountMixin, TestSAMBrokerBaseClass, ResourceViewsTestMixin), fixtures and cleanup without transaction rollback, Celery and infrastructure mocking, the infrastructure tag, and the coverage workflow.
 ---
 
 # Smarter Python Testing
 
 ## Where tests run
 
-Tests run inside the `smarter-app` Docker container, against its MariaDB,
+Tests run inside the `smarter-api` Docker container, against its MariaDB,
 Redis, and live dev server on port 9357. The host has no runnable test
 environment.
 
 ```console
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.llmclient"
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.llmclient.tests.test_custom_domain_views"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.llmclient"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.llmclient.tests.test_custom_domain_views"
 ```
 
 - **The container has no bind mount of the source.** Sync your edited files
@@ -44,7 +44,7 @@ docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.
   coverage report alone is not a result: always confirm the pass and fail counts.
 
   ```console
-  docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter --noinput > /tmp/test.log 2>&1; grep -aE '^Ran |^OK|^FAILED|^(ERROR|FAIL):' /tmp/test.log"
+  docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter --noinput > /tmp/test.log 2>&1; grep -aE '^Ran |^OK|^FAILED|^(ERROR|FAIL):' /tmp/test.log"
   ```
 
 ## Layout and conventions
@@ -168,7 +168,7 @@ below the 90% target are also frowned upon. (see `smarter-development`).
 
 ```console
 make coverage
-# = docker exec smarter-app bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"
+# = docker exec smarter-api bash -c "coverage run --source=smarter manage.py test smarter && coverage report -m && coverage xml"
 #   with smarter-beat stopped while it runs
 ```
 

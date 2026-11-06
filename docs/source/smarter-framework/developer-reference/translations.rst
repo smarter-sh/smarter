@@ -149,7 +149,7 @@ After changing marked text, regenerate the catalogs, with the containers running
    make i18n-messages
 
 ``make i18n-messages`` runs ``npm run i18n:extract``, then the ``update_console_messages`` management
-command in the ``smarter-app`` container, which runs ``makemessages`` for both domains and every
+command in the ``smarter-api`` container, which runs ``makemessages`` for both domains and every
 language in ``settings.LANGUAGES``, keeping the translations already in the ``.po`` files, then
 ``compilemessages``. It copies the catalogs back to the host. Commit the changed ``.po`` files and
 ``messages.js``. ``make i18n-messages LANGUAGE=es`` updates one language, and so does

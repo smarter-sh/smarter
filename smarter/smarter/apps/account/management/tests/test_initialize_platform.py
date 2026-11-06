@@ -55,6 +55,8 @@ class TestInitializePlatform(CommandTestBase):
         self.assertEqual(retired, first_load + 1)
         self.assertEqual(call.call_args_list[retired].kwargs, {"username": "admin"})
         self.assertIn("verify_dns_configuration", names)
+        # every deployment points the LLMClients' ingresses at the api's renamed Service.
+        self.assertEqual(names[-2], "retarget_llmclient_ingresses")
         self.assertEqual(names[-1], "sync_infrastructure_inventory")
 
     def test_inventory_exit_is_logged(self):
@@ -67,6 +69,17 @@ class TestInitializePlatform(CommandTestBase):
         with patch(f"{MODULE}.call_command", side_effect=call), patch(f"{MODULE}.logger") as logger:
             self.run_command("initialize_platform", password="pw")
         logger.error.assert_called_once_with("Failed to sync the infrastructure inventory: %s", ANY)
+
+    def test_retarget_failure_is_logged(self):
+        """Test that retarget_llmclient_ingresses failing, e.g. a cluster error, doesn't stop initialize_platform."""
+
+        def call(name, **kwargs):
+            if name == "retarget_llmclient_ingresses":
+                raise RuntimeError("cluster")
+
+        with patch(f"{MODULE}.call_command", side_effect=call), patch(f"{MODULE}.logger") as logger:
+            self.run_command("initialize_platform", password="pw")
+        logger.error.assert_called_once_with("Failed to retarget the LLMClient ingresses: %s", ANY)
 
     def test_failures_are_logged(self):
         """Test that a failure of an optional initialization command doesn't stop the others."""

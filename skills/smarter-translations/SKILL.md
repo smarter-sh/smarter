@@ -64,7 +64,7 @@ make build && make run      # run_in_background: true, then wait for the 302
 make i18n-messages          # or LANGUAGE=es for one language
 ```
 
-It runs `npm run i18n:extract`, copies `messages.js` into smarter-app, runs
+It runs `npm run i18n:extract`, copies `messages.js` into smarter-api, runs
 `manage.py update_console_messages` there (makemessages for `django` from the project root, and for
 `djangojs` from `react/i18n` only, then compilemessages), and copies `smarter/smarter/locale` back.
 A second run changes only `POT-Creation-Date`. Commit the `.po` files and `messages.js`; `*.mo` is

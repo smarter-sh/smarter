@@ -1,6 +1,6 @@
 ---
 name: smarter-docker-environment
-description: Use whenever Smarter code must run in its Docker containers (smarter-app, smarter-worker, smarter-worker-infrastructure, smarter-beat), for tests, migrations, manage.py commands or the dev server. Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
+description: Use whenever Smarter code must run in its Docker containers (smarter-api, smarter-worker, smarter-worker-infrastructure, smarter-beat), for tests, migrations, manage.py commands or the dev server. Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
 ---
 
 # Smarter Docker Environment
@@ -29,7 +29,7 @@ description: Use whenever Smarter code must run in its Docker containers (smarte
 
 | Container                          | Role                                                                            |
 | ---------------------------------- | ------------------------------------------------------------------------------- |
-| `smarter-app`                      | Django dev server on http://localhost:9357, and where tests and `manage.py` run |
+| `smarter-api`                      | Django dev server on http://localhost:9357, and where tests and `manage.py` run |
 | `smarter-worker`                   | Celery worker for operational tasks                                             |
 | `smarter-worker-infrastructure`    | Celery worker for infrastructure tasks (deploys, DNS, certificates)             |
 | `smarter-beat`                     | Celery beat scheduler                                                           |
@@ -40,7 +40,7 @@ in every app container. The working directory for `manage.py` is
 `/home/smarter_user/smarter`.
 
 ```console
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py <command>"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py <command>"
 ```
 
 ### Local hostnames
@@ -65,7 +65,7 @@ never deploy an LLMClient for real to try (see `smarter-infrastructure-safety`).
 There's **no bind mount** of the source. Edits on the host do nothing until they
 reach the containers, which can drift far behind the host, by dozens of files
 and unapplied migrations. Celery tasks run in the workers, so a stale worker runs
-stale task code even when smarter-app is current.
+stale task code even when smarter-api is current.
 
 > **`make run` never returns.** It is `docker compose up`, attached to the
 > containers' logs. Run in a foreground Bash call, it blocks the agent until the
@@ -84,7 +84,7 @@ shell), then wait for the dev server and apply any migrations:
 ```console
 make build && make run          # in the background
 until [ "$(curl -s -o /dev/null -w '%{http_code}' localhost:9357/)" = "302" ]; do sleep 2; done
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
 ```
 
 `make build` doesn't collect static files. After a React change, use
@@ -95,7 +95,7 @@ infrastructure.
 **When a rebuild isn't possible**, e.g. while the user is running the stack
 themselves, [scripts/sync-changed-files.sh](scripts/sync-changed-files.sh)
 copies the files that git lists as changed or new into every app container,
-fixes their ownership, restarts smarter-app, and waits for the dev server. It
+fixes their ownership, restarts smarter-api, and waits for the dev server. It
 takes seconds.
 
 ```console
@@ -114,7 +114,7 @@ skills/smarter-docker-environment/scripts/sync-to-containers.sh apps/llmclient l
 ## docker cp traps
 
 - **Copying a directory into an existing directory nests it.**
-  `docker cp apps/foo smarter-app:/.../apps/foo` creates `.../apps/foo/foo`.
+  `docker cp apps/foo smarter-api:/.../apps/foo` creates `.../apps/foo/foo`.
   Copy files individually, or remove the target first, but see the next point.
 - **Never `rm -rf` a directory in a container without diffing first.** Files
   created inside the container (by migrations, earlier sessions, or
@@ -126,7 +126,7 @@ skills/smarter-docker-environment/scripts/sync-to-containers.sh apps/llmclient l
 - **Several copies in a row can kill the dev server.** Its auto-reloader is
   interrupted mid-restart. Tests that `apply_manifest()` over HTTP then fail with
   `httpx.ConnectError: Connection refused`. After syncing, run
-  `docker restart smarter-app` and wait until `curl localhost:9357/` returns 302.
+  `docker restart smarter-api` and wait until `curl localhost:9357/` returns 302.
 
 ## Copying files out
 
@@ -134,7 +134,7 @@ Generated files (migrations, `coverage.xml`) are written in the container.
 Copy them back to the host so they become part of the change:
 
 ```console
-docker cp smarter-app:/home/smarter_user/smarter/smarter/apps/widget/migrations/0001_initial.py smarter/smarter/apps/widget/migrations/
+docker cp smarter-api:/home/smarter_user/smarter/smarter/apps/widget/migrations/0001_initial.py smarter/smarter/apps/widget/migrations/
 ```
 
 ## Shell notes (zsh on the host)
@@ -149,13 +149,13 @@ docker cp smarter-app:/home/smarter_user/smarter/smarter/apps/widget/migrations/
 
   ```zsh
   # a function that takes the varying arguments as "$@"
-  run() { docker exec -e ENVIRONMENT=prod "$@" smarter-app python -c '...'; }
+  run() { docker exec -e ENVIRONMENT=prod "$@" smarter-api python -c '...'; }
   run -e SMARTER_MYSQL_PASSWORD=p4ss
   run -e SMARTER_MYSQL_PASSWORD=SET-ME-PLEASE
 
   # or an array, expanded with "${args[@]}"
   args=(-e ENVIRONMENT=prod -e SMARTER_MYSQL_PASSWORD=p4ss)
-  docker exec "${args[@]}" smarter-app ...
+  docker exec "${args[@]}" smarter-api ...
   ```
 
   `${=var}` forces word-splitting in zsh, but it breaks on values with spaces.

@@ -19,7 +19,7 @@ holds only what applies to nearly every task.
    command as text. Never run `git commit`, `git add`, `git reset`, `git push`
    or anything else that changes the index or history. Format and authorship
    are in `smarter-git-commits`.
-2. **The local containers hold live credentials.** `smarter-app` and the
+2. **The local containers hold live credentials.** `smarter-api` and the
    worker containers have a kubeconfig for the real EKS cluster and working
    AWS/Route53 credentials. Fake every Kubernetes, DNS, ACM and AWS call in
    tests, and don't run commands that write to real infrastructure; hand the
@@ -78,7 +78,7 @@ configure the in-memory provider.
 
 ## Containers
 
-Services in `docker-compose.yml`: `smarter-app` (Django dev server on
+Services in `docker-compose.yml`: `smarter-api` (Django dev server on
 `localhost:9357`), `smarter-worker`, `smarter-worker-infrastructure`,
 `smarter-beat`, `smarter-mariadb`, `smarter-redis`.
 
@@ -97,7 +97,7 @@ Services in `docker-compose.yml`: `smarter-app` (Django dev server on
 - `docker cp dir target` nests into `target/dir` when the target exists, and
   leaves files owned by root. Chown them to `smarter_user`.
 - Several `docker cp`s in a row can kill the dev server. After syncing,
-  `docker restart smarter-app` and wait for `curl localhost:9357/` to return
+  `docker restart smarter-api` and wait for `curl localhost:9357/` to return
   302 before running tests.
 - Never `rm -rf` a directory inside a container without first checking for
   files that exist only there.
@@ -109,8 +109,8 @@ Services in `docker-compose.yml`: `smarter-app` (Django dev server on
 # Stop Celery Beat first and start it after: its scheduled tasks change the
 # rows of running tests (make docker-test and make coverage do this for you).
 docker stop smarter-beat
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter"
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.<app>"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.<app>"
 docker start smarter-beat
 make coverage
 
@@ -129,7 +129,7 @@ make react-build   # npm build + collectstatic + image build
 After React changes, use `make react-build`, not `make build`. `make build`
 uses the host's previously collected `smarter/staticfiles/`, so a new React
 app has no `manifest.json` and its page renders an empty root with no console
-errors. The template tag caches a missing manifest, so restart `smarter-app`
+errors. The template tag caches a missing manifest, so restart `smarter-api`
 after fixing staticfiles.
 
 ## Conventions

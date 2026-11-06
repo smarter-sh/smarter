@@ -66,7 +66,7 @@ Django apps, which run on Linux.
     │                                                                                      │
     │  Debian (python slim) container image  ·  kubectl                                    │
     │  ┌──────────────┐ ┌──────────────┐ ┌───────────────────────────┐ ┌──────────────────┐│
-    │  │ smarter-app  │ │ smarter-beat │ │ smarter-worker            │ │ smarter-mariadb  ││
+    │  │ smarter-api  │ │ smarter-beat │ │ smarter-worker            │ │ smarter-mariadb  ││
     │  │ (Django)     │ │ (Celery beat)│ │ smarter-worker-infra      │ │ smarter-redis    ││
     │  └──────────────┘ └──────────────┘ └───────────────────────────┘ └──────────────────┘│
     │  Production: Kubernetes (AWS EKS)                                                    │
@@ -78,7 +78,7 @@ Linux
 Smarter ships as a single Docker image, built on the official Debian-based
 Python slim image, with ``kubectl`` added so that the platform can manage the
 Kubernetes resources of deployed applications. The same image runs as the
-Django application server (``smarter-app``), the Celery workers
+Django application server (``smarter-api``), the Celery workers
 (``smarter-worker`` and ``smarter-worker-infrastructure``) and the Celery beat
 scheduler (``smarter-beat``). MariaDB holds the data and Redis serves as both
 the cache and the Celery message broker. In production all of these run on

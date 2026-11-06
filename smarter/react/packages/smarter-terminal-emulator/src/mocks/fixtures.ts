@@ -21,7 +21,7 @@ export const sessionContext: SessionContext = {
 export const ticket = { ticket: "a-single-use-ticket", url: WEBSOCKET_PATH };
 
 export const sessionInfo: SessionInfo = {
-  hostname: "smarter-app-7d9f8c6b5-x2kqp",
+  hostname: "smarter-api-7d9f8c6b5-x2kqp",
   user: "smarter_user",
   command: "bash --login",
   pid: 4242,
@@ -31,4 +31,4 @@ export const sessionInfo: SessionInfo = {
 
 export const sessionMessage = { type: "session", ...sessionInfo };
 
-export const prompt = "\x1b[32msmarter_user@smarter-app\x1b[0m:\x1b[34m~\x1b[0m$ ";
+export const prompt = "\x1b[32msmarter_user@smarter-api\x1b[0m:\x1b[34m~\x1b[0m$ ";

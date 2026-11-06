@@ -10,7 +10,7 @@ import { TICKET_URL, prompt, sessionMessage, ticket } from "./fixtures";
 const encoder = new TextEncoder();
 
 const answers: Record<string, string> = {
-  hostname: "smarter-app-7d9f8c6b5-x2kqp",
+  hostname: "smarter-api-7d9f8c6b5-x2kqp",
   whoami: "smarter_user",
   pwd: "/home/smarter_user",
   ls: "smarter  venv",

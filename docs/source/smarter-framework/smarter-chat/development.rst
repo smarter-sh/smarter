@@ -80,10 +80,10 @@ element to the workbench url of one of your LLMClients, for example
 **The web console itself.** ``make react-build``, from the repository's root, builds Smarter Chat's
 library, then every React app, the workbench among them, into Django's static files, collects them,
 and builds the Docker image. Then restart
-``smarter-app``, and open an LLMClient's workbench. Use ``make react-build``, not ``make build``,
+``smarter-api``, and open an LLMClient's workbench. Use ``make react-build``, not ``make build``,
 which reuses the static files that were collected before. A page whose React app is missing its
 build renders an empty root element, with no console errors, and the template tag caches the
-missing manifest until ``smarter-app`` restarts.
+missing manifest until ``smarter-api`` restarts.
 
 
 Builds
