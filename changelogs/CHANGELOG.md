@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.11-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.42.11-alpha.1...v0.42.11-alpha.2) (2026-11-06)
+
+### Bug Fixes
+
+* **console:** remove dead pages and close three sign-in security holes ([ab94076](https://github.com/smarter-sh/smarter/commit/ab94076fa0691715fa446e89fa6a1604104da2a2))
+
 ## [0.42.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.10...v0.42.11-alpha.1) (2026-11-06)
 
 ### Bug Fixes
