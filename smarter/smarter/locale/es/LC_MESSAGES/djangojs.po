@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 21:46+0000\n"
+"POT-Creation-Date: 2026-11-06 22:15+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -90,7 +90,7 @@ msgstr ""
 "Smarter guarda solo un hash de la clave, así que no se puede volver a "
 "mostrar. Su ID es su identificador público."
 
-#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+#. Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-console/src/App.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Loading..."
 msgstr "Cargando..."
 
@@ -473,7 +473,7 @@ msgstr "Dependencias"
 msgid "The detail of %(name)s could not be loaded: %(error)s"
 msgstr "No se pudo cargar el detalle de %(name)s: %(error)s"
 
-#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
+#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-console/src/App.tsx
 msgid "Try again"
 msgstr "Reintentar"
 
@@ -545,7 +545,7 @@ msgstr "Propietario"
 msgid "Owner email"
 msgstr "Correo del propietario"
 
-#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Account"
 msgstr "Cuenta"
 
@@ -1042,6 +1042,34 @@ msgstr ""
 #. Translators: used in react/packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 msgid "Delete: Delete this connection resource"
 msgstr "Eliminar: elimina este recurso de conexión"
+
+#. Translators: used in react/packages/smarter-console/src/App.tsx
+msgid "The console couldn't reach the server."
+msgstr "La consola no pudo conectarse con el servidor."
+
+#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
+msgid "Welcome, %(name)s"
+msgstr "Te damos la bienvenida, %(name)s"
+
+#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
+msgid "Open the dashboard"
+msgstr "Abrir el panel"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Sign In"
+msgstr "Iniciar sesión"
+
+#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
+msgid "Sign in to Smarter"
+msgstr "Iniciar sesión en Smarter"
+
+#. Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
+msgid "Page not found"
+msgstr "Página no encontrada"
+
+#. Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
+msgid "Return Home"
+msgstr "Volver al inicio"
 
 #. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
 msgid "Your Custom Domains"
@@ -1796,10 +1824,6 @@ msgstr "Personal"
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
 msgid "Remove Profile Image"
 msgstr "Quitar imagen de perfil"
-
-#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
-msgid "Sign In"
-msgstr "Iniciar sesión"
 
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
 msgid "Welcome Tour"
@@ -10000,9 +10024,6 @@ msgstr "El correo electrónico y/o la contraseña no coinciden."
 
 #~ msgid "incorrect username or password."
 #~ msgstr "nombre de usuario o contraseña incorrectos."
-
-#~ msgid "user not found."
-#~ msgstr "usuario no encontrado."
 
 #~ msgid "Description is required"
 #~ msgstr "La descripción es obligatoria"

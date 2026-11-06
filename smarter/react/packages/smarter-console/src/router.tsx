@@ -1,0 +1,30 @@
+/**
+ * The console's routes.
+ *
+ * Pages move here from Django one at a time (ADR-035, docs/spa-migration.md): each gets a route below, and
+ * Django serves the console's index.html at the same path.
+ */
+import type { RouteObject } from "react-router";
+
+import { HomePage } from "@/routes/HomePage";
+import { Layout } from "@/routes/Layout";
+import { LoginPage } from "@/routes/LoginPage";
+import { NotFoundPage } from "@/routes/NotFoundPage";
+import { RequireAuth } from "@/routes/RequireAuth";
+import { LOGIN_PATH } from "@/lib/const";
+
+export const routes: RouteObject[] = [
+  { path: LOGIN_PATH, element: <LoginPage /> },
+  {
+    path: "/",
+    element: (
+      <RequireAuth>
+        <Layout />
+      </RequireAuth>
+    ),
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: "*", element: <NotFoundPage /> },
+    ],
+  },
+];

@@ -1,0 +1,528 @@
+{
+  "$defs": {
+    "ConsoleAccount": {
+      "additionalProperties": false,
+      "description": "The account that the console acts for: that of the user's selected profile.",
+      "properties": {
+        "accountNumber": {
+          "description": "The account's number, e.g. 3141-5926-5359.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "name": {
+          "description": "The account's company name.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": ["accountNumber", "name"],
+      "title": "ConsoleAccount",
+      "type": "object"
+    },
+    "ConsoleBadges": {
+      "additionalProperties": false,
+      "description": "The counts that the sidebar shows beside its items.",
+      "properties": {
+        "extensionUpdates": {
+          "description": "Installed extensions with an update; 0 for a user who isn't a superuser.",
+          "title": "Extensionupdates",
+          "type": "integer"
+        }
+      },
+      "required": ["extensionUpdates"],
+      "title": "ConsoleBadges",
+      "type": "object"
+    },
+    "ConsoleBranding": {
+      "additionalProperties": false,
+      "description": "The platform's identity and contacts, which the console shows in its header, footer and sign-in pages.",
+      "properties": {
+        "contactUrl": {
+          "description": "A page for contacting the organization.",
+          "title": "Contacturl",
+          "type": "string"
+        },
+        "copyright": {
+          "description": "The copyright notice of the footer.",
+          "title": "Copyright",
+          "type": "string"
+        },
+        "corporateAddress": {
+          "description": "Its postal address, on one line, or empty.",
+          "title": "Corporateaddress",
+          "type": "string"
+        },
+        "corporateName": {
+          "description": "The organization that runs this platform.",
+          "title": "Corporatename",
+          "type": "string"
+        },
+        "environmentUrl": {
+          "description": "This platform's own url, e.g. https://platform.example.com.",
+          "title": "Environmenturl",
+          "type": "string"
+        },
+        "legalUrl": {
+          "description": "The legal page: terms, privacy and cookies.",
+          "title": "Legalurl",
+          "type": "string"
+        },
+        "logoUrl": {
+          "description": "The logo, an absolute url on the project's CDN.",
+          "title": "Logourl",
+          "type": "string"
+        },
+        "marketingSiteUrl": {
+          "description": "The organization's website.",
+          "title": "Marketingsiteurl",
+          "type": "string"
+        },
+        "primaryContact": {
+          "description": "The name of the platform's primary contact, or empty.",
+          "title": "Primarycontact",
+          "type": "string"
+        },
+        "productDescription": {
+          "description": "A one-sentence description of the product.",
+          "title": "Productdescription",
+          "type": "string"
+        },
+        "productName": {
+          "description": "The product's name, e.g. The Smarter Project.",
+          "title": "Productname",
+          "type": "string"
+        },
+        "projectDocsUrl": {
+          "description": "The documentation, docs.smarter.sh.",
+          "title": "Projectdocsurl",
+          "type": "string"
+        },
+        "projectWebsiteUrl": {
+          "description": "The Smarter project's website.",
+          "title": "Projectwebsiteurl",
+          "type": "string"
+        },
+        "supportEmail": {
+          "description": "The support email address, or empty.",
+          "title": "Supportemail",
+          "type": "string"
+        },
+        "supportHours": {
+          "description": "When support answers, or empty.",
+          "title": "Supporthours",
+          "type": "string"
+        },
+        "supportPhoneNumber": {
+          "description": "The support phone number, or empty.",
+          "title": "Supportphonenumber",
+          "type": "string"
+        },
+        "urlFacebook": {
+          "description": "The organization's Facebook page, or empty.",
+          "title": "Urlfacebook",
+          "type": "string"
+        },
+        "urlLinkedin": {
+          "description": "The organization's LinkedIn page, or empty.",
+          "title": "Urllinkedin",
+          "type": "string"
+        },
+        "urlSlack": {
+          "description": "An invitation to the project's Slack workspace, or empty.",
+          "title": "Urlslack",
+          "type": "string"
+        },
+        "urlTwitter": {
+          "description": "The organization's X/Twitter page, or empty.",
+          "title": "Urltwitter",
+          "type": "string"
+        }
+      },
+      "required": [
+        "productName",
+        "productDescription",
+        "corporateName",
+        "corporateAddress",
+        "supportEmail",
+        "supportPhoneNumber",
+        "supportHours",
+        "primaryContact",
+        "contactUrl",
+        "copyright",
+        "urlFacebook",
+        "urlTwitter",
+        "urlLinkedin",
+        "urlSlack",
+        "logoUrl",
+        "marketingSiteUrl",
+        "projectWebsiteUrl",
+        "projectDocsUrl",
+        "legalUrl",
+        "environmentUrl"
+      ],
+      "title": "ConsoleBranding",
+      "type": "object"
+    },
+    "ConsoleCookies": {
+      "additionalProperties": false,
+      "description": "The names and domain of Django's cookies, which the console's api calls send.",
+      "properties": {
+        "cookieDomain": {
+          "description": "The cookies' domain, or empty for the request's host.",
+          "title": "Cookiedomain",
+          "type": "string"
+        },
+        "csrfCookieName": {
+          "description": "The CSRF cookie, whose value is sent as X-CSRFToken.",
+          "title": "Csrfcookiename",
+          "type": "string"
+        },
+        "sessionCookieName": {
+          "description": "The session cookie.",
+          "title": "Sessioncookiename",
+          "type": "string"
+        }
+      },
+      "required": ["csrfCookieName", "sessionCookieName", "cookieDomain"],
+      "title": "ConsoleCookies",
+      "type": "object"
+    },
+    "ConsoleFlags": {
+      "additionalProperties": false,
+      "description": "The console's optional features: which pages exist, and which tabs and widgets show.",
+      "properties": {
+        "didYouKnow": {
+          "description": "Whether the header shows a Did you know? tip.",
+          "title": "Didyouknow",
+          "type": "boolean"
+        },
+        "manifestDropZone": {
+          "description": "Whether the manifest drop zone page exists.",
+          "title": "Manifestdropzone",
+          "type": "boolean"
+        },
+        "passthrough": {
+          "description": "Whether the Prompt Passthrough page exists.",
+          "title": "Passthrough",
+          "type": "boolean"
+        },
+        "proxy": {
+          "description": "Whether the Proxies pages exist.",
+          "title": "Proxy",
+          "type": "boolean"
+        },
+        "reactDebugMode": {
+          "description": "Whether the React apps log their debugging output.",
+          "title": "Reactdebugmode",
+          "type": "boolean"
+        },
+        "serverLogs": {
+          "description": "Whether the Server Logs tabs show.",
+          "title": "Serverlogs",
+          "type": "boolean"
+        },
+        "terminal": {
+          "description": "Whether the Terminal page exists for this user, a superuser.",
+          "title": "Terminal",
+          "type": "boolean"
+        },
+        "vectorstore": {
+          "description": "Whether the Vectorstores pages exist.",
+          "title": "Vectorstore",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "proxy",
+        "vectorstore",
+        "manifestDropZone",
+        "terminal",
+        "passthrough",
+        "serverLogs",
+        "didYouKnow",
+        "reactDebugMode"
+      ],
+      "title": "ConsoleFlags",
+      "type": "object"
+    },
+    "ConsoleLanguage": {
+      "additionalProperties": false,
+      "description": "The console's languages, and the one that this response, and the session, are in.",
+      "properties": {
+        "bidi": {
+          "description": "Whether the session's language is written right to left.",
+          "title": "Bidi",
+          "type": "boolean"
+        },
+        "current": {
+          "description": "The code of the session's language.",
+          "title": "Current",
+          "type": "string"
+        },
+        "languages": {
+          "description": "Every language the menu offers.",
+          "items": {
+            "$ref": "#/$defs/ConsoleLanguageOption"
+          },
+          "title": "Languages",
+          "type": "array"
+        }
+      },
+      "required": ["current", "bidi", "languages"],
+      "title": "ConsoleLanguage",
+      "type": "object"
+    },
+    "ConsoleLanguageOption": {
+      "additionalProperties": false,
+      "description": "A language that the console is translated into.",
+      "properties": {
+        "code": {
+          "description": "Its code, e.g. pt-br.",
+          "title": "Code",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name, in itself, e.g. Portugu\u00eas Brasileiro.",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": ["code", "name"],
+      "title": "ConsoleLanguageOption",
+      "type": "object"
+    },
+    "ConsoleOnboarding": {
+      "additionalProperties": false,
+      "description": "The state of the console's onboarding hints for the user.",
+      "properties": {
+        "enabled": {
+          "description": "Whether hints show by themselves.",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "seen": {
+          "description": "The hints that the user has seen, which no longer show by themselves.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Seen",
+          "type": "array"
+        }
+      },
+      "required": ["enabled", "seen"],
+      "title": "ConsoleOnboarding",
+      "type": "object"
+    },
+    "ConsoleSession": {
+      "additionalProperties": false,
+      "description": "Everything that the console needs to start, for the request's user, or for a visitor who isn't signed in.",
+      "properties": {
+        "account": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConsoleAccount"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The account the console acts for, or null."
+        },
+        "badges": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConsoleBadges"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The sidebar's counts, or null."
+        },
+        "branding": {
+          "$ref": "#/$defs/ConsoleBranding"
+        },
+        "cookies": {
+          "$ref": "#/$defs/ConsoleCookies"
+        },
+        "flags": {
+          "$ref": "#/$defs/ConsoleFlags"
+        },
+        "isAuthenticated": {
+          "description": "Whether the request has a signed-in user.",
+          "title": "Isauthenticated",
+          "type": "boolean"
+        },
+        "language": {
+          "$ref": "#/$defs/ConsoleLanguage"
+        },
+        "onboarding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConsoleOnboarding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The onboarding hints' state, or null."
+        },
+        "signIn": {
+          "$ref": "#/$defs/ConsoleSignIn"
+        },
+        "user": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConsoleUser"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The signed-in user, or null."
+        },
+        "version": {
+          "description": "The platform's version.",
+          "title": "Version",
+          "type": "string"
+        },
+        "welcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConsoleWelcome"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The welcome dialog's state, or null."
+        }
+      },
+      "required": [
+        "isAuthenticated",
+        "version",
+        "branding",
+        "signIn",
+        "language",
+        "cookies",
+        "flags",
+        "user",
+        "account",
+        "onboarding",
+        "welcome",
+        "badges"
+      ],
+      "title": "ConsoleSession",
+      "type": "object"
+    },
+    "ConsoleSignIn": {
+      "additionalProperties": false,
+      "description": "The ways to sign in or sign up that the sign-in pages offer.",
+      "properties": {
+        "doodle": {
+          "description": "Whether the sign-in pages show the doodle of the day.",
+          "title": "Doodle",
+          "type": "boolean"
+        },
+        "footerLinks": {
+          "description": "Whether the sign-in page shows its footer's links.",
+          "title": "Footerlinks",
+          "type": "boolean"
+        },
+        "github": {
+          "description": "Whether the Sign in with GitHub button shows.",
+          "title": "Github",
+          "type": "boolean"
+        },
+        "google": {
+          "description": "Whether the Sign in with Google button shows.",
+          "title": "Google",
+          "type": "boolean"
+        },
+        "signUp": {
+          "description": "Whether anyone may create an account: the sign-up page answers 404 if not.",
+          "title": "Signup",
+          "type": "boolean"
+        }
+      },
+      "required": ["google", "github", "signUp", "footerLinks", "doodle"],
+      "title": "ConsoleSignIn",
+      "type": "object"
+    },
+    "ConsoleUser": {
+      "additionalProperties": false,
+      "description": "The signed-in user.",
+      "properties": {
+        "email": {
+          "title": "Email",
+          "type": "string"
+        },
+        "firstName": {
+          "title": "Firstname",
+          "type": "string"
+        },
+        "isStaff": {
+          "title": "Isstaff",
+          "type": "boolean"
+        },
+        "isSuperuser": {
+          "title": "Issuperuser",
+          "type": "boolean"
+        },
+        "lastName": {
+          "title": "Lastname",
+          "type": "string"
+        },
+        "profileImageUrl": {
+          "description": "The user's avatar, or the default image.",
+          "title": "Profileimageurl",
+          "type": "string"
+        },
+        "userProfileCount": {
+          "description": "How many accounts the user belongs to.",
+          "title": "Userprofilecount",
+          "type": "integer"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "email",
+        "firstName",
+        "lastName",
+        "isSuperuser",
+        "isStaff",
+        "profileImageUrl",
+        "userProfileCount"
+      ],
+      "title": "ConsoleUser",
+      "type": "object"
+    },
+    "ConsoleWelcome": {
+      "additionalProperties": false,
+      "description": "The state of the welcome dialog for the user.",
+      "properties": {
+        "show": {
+          "description": "Whether it opens by itself now: it shows at startup, and hasn't been closed in this session.",
+          "title": "Show",
+          "type": "boolean"
+        },
+        "showAtStartup": {
+          "description": "Whether the dialog opens by itself each time the user signs in.",
+          "title": "Showatstartup",
+          "type": "boolean"
+        }
+      },
+      "required": ["showAtStartup", "show"],
+      "title": "ConsoleWelcome",
+      "type": "object"
+    }
+  },
+  "$id": "https://smarter.sh/schemas/console-session.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "What the web console needs to start, from GET /api/web/session/: the user, the account, the platform's branding, its sign-in options, features and languages, and the state of the welcome dialog and onboarding hints. Generated from smarter.apps.api.web.session.contract; do not edit.",
+  "title": "Smarter web console session contract"
+}

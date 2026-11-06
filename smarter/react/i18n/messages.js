@@ -30,7 +30,7 @@ gettext("Key");
 gettext("Shown only once, when the key is created.");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/DetailView/Component.tsx
 gettext("Smarter keeps only a hash of the key, so it can't be shown again. Its ID is its public identifier.");
-// Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+// Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-common/src/components/Loading/Component.tsx, react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-console/src/App.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 gettext("Loading...");
 // Translators: used in react/packages/smarter-authtoken-list/src/components/ListView/Component.tsx, react/packages/smarter-budget-list/src/components/BudgetList/Component.tsx, react/packages/smarter-connection-list/src/components/ListView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/DetailView/Component.tsx, react/packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, react/packages/smarter-guardrail-list/src/components/ListView/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/DetailView/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, react/packages/smarter-llmhost-list/src/components/ListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionDetailView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, react/packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, react/packages/smarter-provider-list/src/components/ListView/Component.tsx, react/packages/smarter-proxy-list/src/components/ListView/Component.tsx, react/packages/smarter-secret-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, react/packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 gettext("Name");
@@ -205,7 +205,7 @@ gettext("Hierarchy");
 gettext("Dependencies");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
 gettext("The detail of %(name)s could not be loaded: %(error)s");
-// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
+// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx, react/packages/smarter-console/src/App.tsx
 gettext("Try again");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/Component.tsx
 gettext("Browse the list");
@@ -241,7 +241,7 @@ gettext("Metadata");
 gettext("Owner");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx
 gettext("Owner email");
-// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+// Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 gettext("Account");
 // Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionDetailView/Component.tsx, react/packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx
 gettext("Version");
@@ -472,6 +472,20 @@ gettext("Rename: Rename this connection resource");
 gettext("Delete: You can't delete this connection, because other resources depend on it, or you don't have permission to delete it");
 // Translators: used in react/packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 gettext("Delete: Delete this connection resource");
+// Translators: used in react/packages/smarter-console/src/App.tsx
+gettext("The console couldn't reach the server.");
+// Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
+gettext("Welcome, %(name)s");
+// Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
+gettext("Open the dashboard");
+// Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+gettext("Sign In");
+// Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
+gettext("Sign in to Smarter");
+// Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
+gettext("Page not found");
+// Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
+gettext("Return Home");
 // Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
 gettext("Your Custom Domains");
 // Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
@@ -808,8 +822,6 @@ gettext("Superuser");
 gettext("Staff");
 // Translators: used in react/packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
 gettext("Remove Profile Image");
-// Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
-gettext("Sign In");
 // Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
 gettext("Welcome Tour");
 // Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx

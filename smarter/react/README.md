@@ -41,6 +41,9 @@ Current app packages include:
 - `smarter-budget-list`
 - `smarter-common`
 - `smarter-connection-list`
+- `smarter-console`: the single-page web console that replaces the apps above one page at a time
+  (ADR-035). `npm run dev -w @smarter/console` serves it at http://localhost:5173/, with the backend's
+  paths proxied to the Django dev server.
 - `smarter-custom-domain-list`
 - `smarter-dashboard`
 - `smarter-guardrail-list`

@@ -24,7 +24,7 @@ include .env
 SMARTER_CHAT_DIR := smarter/react/packages/smarter.sh-chat
 
 
-.PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	terraform-init terraform-plan terraform-apply \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
@@ -447,6 +447,15 @@ llmclient-architecture-contract:
 	docker cp smarter-app:/home/smarter_user/smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA)
 	cp smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmclient-architecture/contract/llmclient-architecture.schema.json
 	cd smarter/react/packages/smarter-llmclient-architecture && npm run contract:types
+
+# Regenerate the web console session's contract, GET /api/web/session/, from its Pydantic models, in the
+# smarter-app container, copy it into @smarter/console, and regenerate that package's TypeScript types.
+CONSOLE_SESSION_CONTRACT_SCHEMA := smarter/apps/api/web/session/console-session.schema.json
+console-session-contract:
+	docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py export_console_session_schema"
+	docker cp smarter-app:/home/smarter_user/smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA)
+	cp smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/react/packages/smarter-console/contract/console-session.schema.json
+	cd smarter/react/packages/smarter-console && npm run contract:types
 
 # Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-app
 # container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the
