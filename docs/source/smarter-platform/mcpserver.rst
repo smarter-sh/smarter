@@ -265,9 +265,9 @@ with something that the issue does not already say. ``create_issue`` takes optio
 who cannot push to the repository. ``close_issue`` closes an issue that a merged pull request
 resolved, with a comment that says why, and refuses unless GitHub says that the pull request was
 merged, so that an LLM never closes an issue on its judgment alone. They write as the user, with
-the user's own GitHub classic personal access token. The platform holds no GitHub credential that
-can write: the issue or comment is the user's, GitHub decides what the user may do, and its own
-limits apply.
+the user's own GitHub classic personal access token: the issue or comment is the user's, GitHub
+decides what the user may do, and its own limits apply. The public tools never use the platform's
+own GitHub token: only the staff-only ``create_bug_report`` does (see `Staff-Only Tools`_).
 
 The client sends the token in an ``Authorization: Bearer`` header. A request without one is not
 offered ``create_issue``, ``comment_on_issue``, ``close_issue`` or ``create_pull_request`` at all.
@@ -376,8 +376,8 @@ only the platform's staff, and records every tool call in an audit trail. The pl
 the active staff users of the Smarter account, which runs the platform. The admin of any other
 account is staff of that account only, even as a superuser, and the endpoint refuses them.
 
-Every staff-only tool only reads, and takes a required ``ticket`` argument: the help desk ticket, or
-the reason for the call, which is recorded in the audit trail.
+Every staff-only tool takes a required ``ticket`` argument: the help desk ticket, or the reason for
+the call, which is recorded in the audit trail. Every one only reads, except ``create_bug_report``.
 
 .. list-table::
    :header-rows: 1
@@ -422,6 +422,25 @@ the reason for the call, which is recorded in the audit trail.
        :doc:`Guardrails <../smarter-resources/smarter-guardrail>`, and the platform's internals (pod,
        node and host names, internal urls, log lines, stack traces, exception names, versions), and
        wording that tells whether an address has an account.
+   * - ``create_bug_report``
+     - Opens a GitHub issue for a bug in Smarter that the staff diagnosed, in the ``repository`` of
+       The Smarter Project that owns it, ``smarter`` by default, with a ``title``, a Markdown
+       ``body`` and ``labels``, ``bug`` by default. It writes with the platform's GitHub token,
+       ``GITHUB_TOKEN``, so the staff member needs none. It refuses a report that holds email
+       addresses, IP addresses, phone and card numbers, node names, cloud account ids or secrets,
+       because the issue is public. Its description tells the LLM to search the existing issues
+       first, to show the report to the staff member, and to call it only once they agree.
+
+``create_bug_report`` needs ``GITHUB_TOKEN`` (``smarter_settings.github_token``) to be a GitHub
+classic personal access token, ``ghp_...``, with the ``public_repo`` scope. Issues are written as
+the token's owner, so use a dedicated account, such as a bot. Without the token, it answers that bug
+reports are not configured, and the LLM gives the staff member the report to open themselves. See
+:mod:`smarter.apps.mcpserver.services.github.bug_reports`.
+
+A failed health check in ``platform_status`` says why it failed, e.g. ``TimeoutError: Timeout
+connecting to server``. A probe that answered a server error, e.g. ``Readiness probe failed: HTTP
+probe failed with statuscode: 500``, is pointed to the pod's own log: Kubernetes keeps only the
+status code, and the app server logs the traceback, as ``Internal Server Error: /readiness/``.
 
 The status tools read Kubernetes and metrics-server (the numbers that ``kubectl top`` shows), the
 EKS api, the platform's own database and Celery broker, and public status pages, when they are
@@ -474,8 +493,10 @@ Smarter Sysadmin
 Every platform has a built-in LLMClient for its staff, ``smarter_sysadmin``, whose chat in the
 Prompt Engineer Workbench answers help desk and operations questions with the staff-only tools, and
 explains what it finds from the code with the public tools. It gets them from two built-in
-MCPClients: ``smarter_operations``, which connects to the staff-only endpoint and allows all seven
-of its tools, and ``smarter_project``, which connects to the public endpoint.
+MCPClients: ``smarter_operations``, which connects to the staff-only endpoint and allows all eight
+of its tools, and ``smarter_project``, which connects to the public endpoint. When it diagnoses a bug
+in Smarter, it searches the existing issues, then offers to report it, shows the staff member the
+report, and opens it with ``create_bug_report`` once they agree.
 
 .. literalinclude:: /_example-manifests/smarter/mcp-clients/smarter-operations.yaml.tpl
     :language: yaml
@@ -533,13 +554,13 @@ applied by ``manage.py initialize_platform`` from the :doc:`example manifests re
 platform that applies them:
 
 - ``smarter_project`` connects to the public endpoint, ``/api/v1/mcp/smarter-project/``, and
-  allows eight of its read-only tools: ``get_repository_overview``, ``search_documentation``,
-  ``search_code``, ``read_file``, ``list_files``, ``get_manifest_schema``, ``search_blog`` and
-  ``read_blog_post``.
+  allows ten of its read-only tools: ``get_repository_overview``, ``search_documentation``,
+  ``search_code``, ``read_file``, ``list_files``, ``get_manifest_schema``, ``search_blog``,
+  ``read_blog_post``, ``search_issues`` and ``read_issue``.
 - ``smarter_project_github*`` each connect to the public endpoint of one repository, e.g.
   ``/api/v1/mcp/smarter-project/smarter-cli/``.
 - ``smarter_operations`` connects to the staff-only endpoint, ``/api/v1/mcp/smarter-operations/``,
-  and allows all seven of its tools. See `Smarter Sysadmin`_.
+  and allows all eight of its tools. See `Smarter Sysadmin`_.
 
 Their manifests, in its ``mcp-clients/`` folder, are templates, ``*.yaml.tpl``, whose
 ``endpointUrl`` is filled in when they are applied:

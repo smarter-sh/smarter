@@ -367,6 +367,27 @@ MAX_LABEL_LENGTH = 50
 """The longest label, in characters, that ``create_issue`` accepts, which is GitHub's limit."""
 
 
+def clean_labels(labels: list[str]) -> tuple[str, ...]:
+    """
+    Return an issue's labels, stripped of surrounding whitespace, without the blank ones.
+
+    ``create_issue`` and the staff-only ``create_bug_report`` call it before they open an issue.
+
+    :param labels: The labels, as the LLM gave them.
+    :returns: The labels.
+    :raises SmarterMCPServerToolError: If a label is longer than :data:`MAX_LABEL_LENGTH`.
+    """
+    label_list: list[str] = []
+    for label in labels:
+        name = label.strip()
+        if not name:
+            continue
+        if len(name) > MAX_LABEL_LENGTH:
+            raise SmarterMCPServerToolError(f"A label is at most {MAX_LABEL_LENGTH} characters: {name[:60]}")
+        label_list.append(name)
+    return tuple(label_list)
+
+
 class CreateIssueArguments(PublicToolArguments):
     """
     The arguments of ``create_issue``: the repository, which it requires, the title, the body and the labels.
@@ -433,7 +454,7 @@ class CreateIssueTool(PublicTool):
         """
         Open the issue that the call describes.
 
-        Labels are stripped of surrounding whitespace, and blank ones are dropped.
+        Labels are stripped of surrounding whitespace, and blank ones are dropped (see :func:`clean_labels`).
 
         :param arguments: The validated :class:`CreateIssueArguments`.
         :returns: The new issue's number, repository, author, title and url.
@@ -443,16 +464,7 @@ class CreateIssueTool(PublicTool):
         """
         arguments = cast(CreateIssueArguments, arguments)
         repository = cast(ProjectRepository, self.scope.resolve(arguments.repository, required=True))
-        label_list: list[str] = []
-        for label in arguments.labels:
-            name = label.strip()
-            if name:
-                label_list.append(name)
-        labels = tuple(label_list)
-        too_long = [label for label in labels if len(label) > MAX_LABEL_LENGTH]
-        if too_long:
-            first = too_long[0]
-            raise SmarterMCPServerToolError(f"A label is at most {MAX_LABEL_LENGTH} characters: {first[:60]}")
+        labels = clean_labels(arguments.labels)
         title = arguments.title.strip()
         body = arguments.body.strip()
         issue = issues.create_issue(repository, title, body, self.github_token, labels=labels)

@@ -44,7 +44,10 @@ class TestStaffEndpoint(OperationsTestBase):
         self.assertEqual([tool["name"] for tool in tools], [tool.name for tool in STAFF_TOOL_CLASSES])
         for tool in tools:
             self.assertIn("ticket", tool["inputSchema"]["required"], tool["name"])
-            self.assertTrue(tool["annotations"]["readOnlyHint"], tool["name"])
+            # every staff tool only reads, except the one that opens a bug report.
+            writes = tool["name"] == "create_bug_report"
+            self.assertEqual(tool["annotations"]["readOnlyHint"], not writes, tool["name"])
+        self.assertIn("create_bug_report", self.server.instructions())
 
     def test_tools_call(self):
         response = self.server.handle(

@@ -24,7 +24,7 @@ with the plugin, so that tool calls never depend on the availability of the remo
     One GitHub api request is made per GitHub-sourced skill, per apply. Without a token,
     GitHub api requests are anonymous, and so are rate limited to 60 per hour per client IP
     address, which hosts that share an address, such as GitHub Actions runners, exceed. Set
-    ``smarter_settings.github_api_token`` (``SMARTER_GITHUB_API_TOKEN``) to authenticate them.
+    ``smarter_settings.github_token`` (``GITHUB_TOKEN``) to authenticate them.
     The token is sent only to ``api.github.com``.
 
 .. note::
@@ -169,12 +169,12 @@ def github_api_headers() -> dict[str, str]:
     """
     The headers of a GitHub api request: its Accept header, and the token, if there is one.
 
-    :return: The headers. With ``smarter_settings.github_api_token``, they include its
+    :return: The headers. With ``smarter_settings.github_token``, they include its
         ``Authorization`` header.
     """
     headers = {"Accept": "application/vnd.github+json"}
-    if smarter_settings.github_api_token:
-        headers["Authorization"] = f"Bearer {smarter_settings.github_api_token.get_secret_value()}"
+    if smarter_settings.github_token:
+        headers["Authorization"] = f"Bearer {smarter_settings.github_token.get_secret_value()}"
     return headers
 
 

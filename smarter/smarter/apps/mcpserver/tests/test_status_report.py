@@ -4,14 +4,19 @@ from datetime import datetime, timezone
 from unittest import mock
 
 from smarter.apps.infrastructure.cluster_health import ClusterHealth
+from smarter.apps.mcpserver.services.status.cluster import WarningEvent
 from smarter.apps.mcpserver.services.status.feeds import ProviderStatus
-from smarter.apps.mcpserver.services.status.platform import DatabaseLoad
+from smarter.apps.mcpserver.services.status.platform import (
+    DatabaseLoad,
+    HealthCheckResult,
+)
 from smarter.apps.mcpserver.services.status.report import (
     QUEUE_BACKLOG,
     EksStatus,
     PlatformStatus,
     eks_status,
     platform_status,
+    probe_error_observations,
     service_observations,
     upstream_observations,
     utc,
@@ -62,20 +67,55 @@ class TestObservations(SmarterTestBase):
 
     def test_service_observations(self):
         """A failed check, a backlog, an unread queue and a busy database are observations."""
-        checks = [("Cache", True), ("Workers", False)]
+        checks = [
+            HealthCheckResult("Cache", True),
+            HealthCheckResult("Workers", False, "the check ran, and did not pass"),
+        ]
         depths = {"default": QUEUE_BACKLOG, "other": None, "quiet": 0}
         database = DatabaseLoad(connections=140, max_connections=150)
         found = service_observations(checks, depths, database)
         self.assertEqual(
             found,
             [
-                "The Workers health check failed.",
+                "The Workers health check failed: the check ran, and did not pass.",
                 f"{QUEUE_BACKLOG} tasks are waiting in the Celery queue default: the workers are behind.",
                 "The Celery queue other could not be read.",
                 "The database has 140 of 150 connections in use.",
             ],
         )
         self.assertEqual(service_observations([], {}, DatabaseLoad(connections=1, max_connections=150)), [])
+
+    def test_probe_error_observations(self):
+        """A probe that answered a server error points to the pod's log, once per pod; other events don't."""
+        last_seen = datetime(2026, 11, 6, 18, 33, 9, tzinfo=timezone.utc)
+        events = [
+            WarningEvent(
+                last_seen=last_seen,
+                object="pod/smarter-cf568b478-5s8zh",
+                reason="Unhealthy",
+                message="Readiness probe failed: HTTP probe failed with statuscode: 500",
+                count=21,
+            ),
+            WarningEvent(
+                last_seen=last_seen,
+                object="pod/smarter-cf568b478-5s8zh",
+                reason="Unhealthy",
+                message="Readiness probe failed: HTTP probe failed with statuscode: 503",
+                count=1,
+            ),
+            WarningEvent(
+                last_seen=last_seen,
+                object="pod/smarter-worker-5b7f794fb-xwvwg",
+                reason="Unhealthy",
+                message="Readiness probe errored and resulted in unknown state: rpc error: code = Canceled",
+                count=2,
+            ),
+        ]
+        found = probe_error_observations(events)
+        self.assertEqual(len(found), 1)
+        self.assertIn("pod/smarter-cf568b478-5s8zh's probe answered a server error (21 times, last at", found[0])
+        self.assertIn("search_logs", found[0])
+        self.assertIn("'Internal Server Error'", found[0])
 
     def test_upstream_observations(self):
         """A provider in trouble is an observation, and one whose page could not be read is not."""
