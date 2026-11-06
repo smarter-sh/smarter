@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.8...v0.42.9-alpha.1) (2026-11-06)
+
+### Bug Fixes
+
+* **prompt:** don't log the passthrough request body when its JSON is malformed ([4d39e0e](https://github.com/smarter-sh/smarter/commit/4d39e0e0dbfe4d426f131b1343a6bc241e7941c1)), closes [#933](https://github.com/smarter-sh/smarter/issues/933)
+* **prompt:** log a promptless chat response at DEBUG, not WARNING ([a243822](https://github.com/smarter-sh/smarter/commit/a24382273ebee4734857e98f40164c94843d510c)), closes [#934](https://github.com/smarter-sh/smarter/issues/934)
+
 ## [0.42.8](https://github.com/smarter-sh/smarter/compare/v0.42.7...v0.42.8) (2026-11-05)
 
 ### Bug Fixes
