@@ -34,9 +34,12 @@ that replace the views in phase 1: bugs 4 (side effects on GET) and 5 (rate limi
 the session provider, the sign-in guard, a first shell, and generated contract types; the account api
 (`login/`, `logout/`, `register/`, `password-reset-request/`, `password-reset/<uidb64>/<token>/`) with
 the per-address credentials rate limit, which closes bug 5; and the console's sign-in, sign-up, sign-out
-and password reset pages. Next: Django serving the console's `index.html` at `/login/`, `/register/`,
-`/password-reset-request/` and `/password-reset-link/...`, then deleting their Django views and templates;
-the shell's sidebar and user menu; and what follows a sign-up (activation).
+and password reset pages, with the Doodle. Django serves the console's `index.html` at `/login/`,
+`/register/`, `/password-reset-request/` and `/password-reset-link/<uidb64>/<token>/`
+(`smarter.apps.dashboard.views.console_app`), and their Django views, templates, scripts and the doodle's
+template tag are deleted. Next: the shell's sidebar and user menu; `/account/inactive/` and
+`/account/already-associated/`; signing out of Django's pages through the api (bug 4); and what follows a
+sign-up (activation).
 
 ## Development
 
@@ -104,11 +107,11 @@ The forms are Django forms defined inside their views.
 
 | Path                                                  | View                                                 | Ctx                                                    | POST does                                                | SPA route                    | New endpoint                                                   | Phase |
 | ----------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------- | ----- |
-| `/login/` (+ `/account/login/`)                       | `apps/account/views/authentication/login_view.py:38` | OAuth providers, sign-up and footer switches, branding | looks up email, `authenticate`, `login`, 302 `/`         | `/login`                     | `POST /api/web/account/login/`                                 | 1     |
+| `/login/` (moved)                                     | `apps/account/views/authentication/login_view.py:38` | OAuth providers, sign-up and footer switches, branding | looks up email, `authenticate`, `login`, 302 `/`         | `/login`                     | `POST /api/web/account/login/`                                 | 1     |
 | `/logout/` (+ `/account/logout/`)                     | `authentication/logout_view.py:21`                   | —                                                      | `logout` on GET or POST                                  | —                            | `POST /api/web/account/logout/`                                | 1     |
-| `/register/` (+ `/account/register/`)                 | `authentication/account_views.py:65`                 | —                                                      | creates the user, signs in, 302 to a missing `/welcome/` | `/register`                  | `POST /api/web/account/register/`, gated by the switch         | 1     |
-| `/password-reset-request/`                            | `views/password_management.py:36`                    | —                                                      | builds a token link, sends the reset email               | `/password-reset-request`    | `POST /api/web/account/password-reset-request/`                | 1     |
-| `/password-reset-link/<uidb64>/<token>/`              | `password_management.py:109`                         | token check                                            | sets the password, 302 `/login/`                         | same path (emailed)          | `GET`/`POST /api/web/account/password-reset/<uidb64>/<token>/` | 1     |
+| `/register/` (moved)                                  | `authentication/account_views.py:65`                 | —                                                      | creates the user, signs in, 302 to a missing `/welcome/` | `/register`                  | `POST /api/web/account/register/`, gated by the switch         | 1     |
+| `/password-reset-request/` (moved)                    | `views/password_management.py:36`                    | —                                                      | builds a token link, sends the reset email               | `/password-reset-request`    | `POST /api/web/account/password-reset-request/`                | 1     |
+| `/password-reset-link/<uidb64>/<token>/` (moved)      | `password_management.py:109`                         | token check                                            | sets the password, 302 `/login/`                         | same path (emailed)          | `GET`/`POST /api/web/account/password-reset/<uidb64>/<token>/` | 1     |
 | `/account/activate/<uidb64>/<token>/`                 | `account_views.py:221`                               | token check                                            | GET sets `is_active`                                     | same path (emailed)          | `POST /api/web/account/activate/<uidb64>/<token>/`             | 1     |
 | `/account/inactive/`                                  | `account_views.py:42`                                | branding                                               | —                                                        | same path (social pipeline)  | none                                                           | 1     |
 | `/account/already-associated/`                        | `authentication/social_auth.py:16`                   | branding                                               | —                                                        | same path (middleware)       | none                                                           | 1     |

@@ -2,7 +2,7 @@
 import { http, HttpResponse } from "msw";
 
 import type { ConsoleSession } from "@/contract.gen";
-import { SESSION_API_URL } from "@/lib/const";
+import { DOODLE_API_URL, SESSION_API_URL } from "@/lib/const";
 import { userSession, visitorSession } from "@/mocks/fixtures";
 
 /** GET /api/web/session/ answers with this session. */
@@ -32,3 +32,22 @@ export function accountErrorsHandler(
 ) {
   return http.post(url, () => HttpResponse.json({ detail, fieldErrors }, { status }));
 }
+
+/** GET /api/v1/doodles/today/ answers with a holiday's doodle. See smarter.apps.doodle.contract.models. */
+export const doodleHandler = http.get(DOODLE_API_URL, () =>
+  HttpResponse.json({
+    date: "2026-11-08",
+    region: "south-asia",
+    theme: "diwali",
+    title: "Diwali",
+    caption: "Happy Diwali!",
+    altText: "Glowing diyas line the ground below a Smarter LLMClient.",
+    linkUrl: "https://en.wikipedia.org/wiki/Diwali",
+    imageUrl: "/static/doodle/base.svg",
+    isDefault: false,
+    aiCredit: "",
+    learnHowUrl: "https://docs.smarter.sh/",
+    animated: false,
+    showCaption: true,
+  }),
+);

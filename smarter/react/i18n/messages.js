@@ -474,6 +474,14 @@ gettext("Delete: You can't delete this connection, because other resources depen
 gettext("Delete: Delete this connection resource");
 // Translators: used in react/packages/smarter-console/src/App.tsx
 gettext("The console couldn't reach the server.");
+// Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx, react/packages/smarter-doodle/src/App.tsx
+gettext("Learn more");
+// Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx
+gettext("Legal");
+// Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx
+gettext("Plans");
+// Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx
+gettext("Contact Us");
 // Translators: used in react/packages/smarter-console/src/lib/account.ts
 gettext("Your session has expired. Reload the page, and try again.");
 // Translators: used in react/packages/smarter-console/src/lib/account.ts
@@ -1030,11 +1038,9 @@ gettext("Drawn by a Smarter AI application.");
 gettext("Chosen by a Smarter AI application.");
 // Translators: used in react/packages/smarter-doodle/src/App.tsx
 gettext("Learn how");
-// Translators: used in react/packages/smarter-doodle/src/App.tsx
-gettext("Learn more");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("The publisher's trust badge");
-// Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js
+// Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("Dismiss");
 // Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 gettext("Working");
@@ -4132,29 +4138,3 @@ gettext("Serve LLMClients from your own branded domain, managed with a SAM manif
 gettext("What's New");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Recently added Smarter features");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/sign-in.js
-gettext("The password is required");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
-gettext("Please enter valid password");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
-gettext("The password confirmation is required");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
-gettext("The password and its confirm are not the same");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js
-gettext("Sorry, the email is incorrect, please try again.");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
-gettext("Ok, got it!");
-// Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
-gettext("Sorry, looks like there are some errors detected, please try again.");
-// Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
-gettext("Not a valid email address");
-// Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
-gettext("Please type your email address");
-// Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
-gettext("Check your email. We just sent you a password reset link.");
-// Translators: used in smarter/static/js/account/authentication/sign-in.js
-gettext("The value is not a valid email address");
-// Translators: used in smarter/static/js/account/authentication/sign-in.js
-gettext("Email address is required");
-// Translators: used in smarter/static/js/account/authentication/sign-in.js
-gettext("Email and/or password do not match.");

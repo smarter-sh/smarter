@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 22:29+0000\n"
+"POT-Creation-Date: 2026-11-06 22:58+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -26,17 +26,14 @@ msgid "The request is invalid."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/login_view.py
 msgid "Email and/or password do not match."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/account_views.py
 msgid "Registration is closed."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/account_views.py
 msgid "An account with this email address already exists. Please sign in."
 msgstr ""
 
@@ -45,7 +42,6 @@ msgid "Please correct the errors below."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/login_view.py
 msgid "An unknown error occurred. Please try again later."
 msgstr ""
 
@@ -60,7 +56,6 @@ msgid "Choose a new password."
 msgstr ""
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/password_management.py
 msgid "Passwords do not match."
 msgstr ""
 
@@ -111,10 +106,6 @@ msgstr ""
 msgid "Activate your account."
 msgstr ""
 
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "Received invalid responses."
-msgstr ""
-
 #: smarter/apps/account/views/dashboard/profile_image.py
 msgid "Choose an image to upload."
 msgstr ""
@@ -125,22 +116,6 @@ msgstr ""
 
 #: smarter/apps/account/views/dashboard/profile_image.py
 msgid "The image must be a PNG, JPEG, GIF or WebP file."
-msgstr ""
-
-#: smarter/apps/account/views/password_management.py
-msgid "Email address is invalid."
-msgstr ""
-
-#: smarter/apps/account/views/password_management.py
-msgid "Email sent."
-msgstr ""
-
-#: smarter/apps/account/views/password_management.py
-msgid "Missing uidb64 or token in URL."
-msgstr ""
-
-#: smarter/apps/account/views/password_management.py
-msgid "input form is invalid."
 msgstr ""
 
 #: smarter/apps/account/views/unsubscribe.py
@@ -226,19 +201,6 @@ msgstr ""
 msgid "Skip for now"
 msgstr ""
 
-#: smarter/templates/account/authentication/base.html
-#: smarter/templates/dashboard/footer.html
-msgid "Legal"
-msgstr ""
-
-#: smarter/templates/account/authentication/base.html
-msgid "Plans"
-msgstr ""
-
-#: smarter/templates/account/authentication/base.html
-msgid "Contact Us"
-msgstr ""
-
 #: smarter/templates/account/authentication/email/account-activation.html
 msgid "Activate Your Account"
 msgstr ""
@@ -313,102 +275,6 @@ msgstr ""
 
 #: smarter/templates/account/authentication/email/password-reset.html
 msgid "Or, talk to a human!"
-msgstr ""
-
-#: smarter/templates/account/authentication/new-password.html
-msgid "Password Reset"
-msgstr ""
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Password"
-msgstr ""
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Use 8 or more characters with a mix of letters, numbers & symbols."
-msgstr ""
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Repeat Password"
-msgstr ""
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Submit"
-msgstr ""
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Please wait..."
-msgstr ""
-
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-msgid "Forgot Password ?"
-msgstr ""
-
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Enter your email to reset your password."
-msgstr ""
-
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Email"
-msgstr ""
-
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Cancel"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/email/welcome.html
-msgid "Sign In"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in with Google"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in with GitHub"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Or with email"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-in.html
-msgid "Not a Member yet?"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign up"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign Up"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "I Accept the <a href=\"#\" class=\"ms-1 link-primary\">Terms</a>"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Already have an Account?"
-msgstr ""
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in"
 msgstr ""
 
 #: smarter/templates/account/authentication/social-auth-already-associated.html
@@ -627,6 +493,10 @@ msgstr ""
 msgid ""
 "If you have any questions, email me at <a href=\"mailto:%(support_email)s\" "
 "style=\"font-weight:600\">%(support_email)s</a>."
+msgstr ""
+
+#: smarter/templates/account/email/welcome.html
+msgid "Sign In"
 msgstr ""
 
 #: smarter/templates/account/email/welcome.html
@@ -931,6 +801,10 @@ msgstr ""
 
 #: smarter/templates/common/cookie-notice.html
 msgid "Close"
+msgstr ""
+
+#: smarter/templates/dashboard/footer.html
+msgid "Legal"
 msgstr ""
 
 #: smarter/templates/dashboard/navbar/theme-mode-menu-item.html

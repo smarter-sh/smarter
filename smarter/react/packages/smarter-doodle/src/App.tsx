@@ -1,13 +1,13 @@
 /**
- * The Doodle: the left panel of the sign-in pages. The logo, the doodle of the day, its caption, and
- * the project's name and description.
+ * The Doodle: the left panel of the web console's sign-in pages. The logo, the doodle of the day, its
+ * caption, and the project's name and description. @smarter/console renders it, inside an element with
+ * the smarter-doodle class.
  *
  * When a Smarter AI application chose or drew the doodle, a credit, with a link to how it works,
  * takes the place of the project's description.
  *
- * Until the doodle of the day arrives, and if it never does, the panel shows the base scene, as the
- * Django template does without JavaScript. The page's stylesheet, in
- * templates/account/authentication/base.html, styles the smarter-doodle-* classes for both.
+ * Until the doodle of the day arrives, and if it never does, the panel shows the base scene. App.css
+ * styles the smarter-doodle-* classes.
  *
  * :param appContext: The root element's attributes.
  * :param timeZone: The visitor's time zone. The browser's, by default.
@@ -15,9 +15,9 @@
 import { useEffect, useState } from "react";
 import { gettext } from "@smarter/common";
 
-import { browserTimeZone, fetchDoodle } from "@/lib/api";
-import { loggerPrefix } from "@/lib/const";
-import type { AppContext, DoodleApiResponse } from "@/lib/Types";
+import { browserTimeZone, fetchDoodle } from "./lib/api";
+import { loggerPrefix } from "./lib/const";
+import type { AppContext, DoodleApiResponse } from "./lib/Types";
 import "./App.css";
 
 function App({ appContext, timeZone = browserTimeZone() }: { appContext: AppContext; timeZone?: string }) {

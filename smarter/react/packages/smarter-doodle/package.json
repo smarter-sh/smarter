@@ -1,12 +1,15 @@
 {
   "name": "@smarter/doodle",
   "private": true,
-  "description": "The Doodle: the illustration of the day on the Smarter web console's sign-in page, decorated for holidays and days worth celebrating.",
+  "description": "The Doodle: the illustration of the day on the Smarter web console's sign-in pages, decorated for holidays and days worth celebrating. @smarter/console imports it.",
   "version": "0.1.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
-    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",

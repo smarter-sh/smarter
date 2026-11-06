@@ -1,11 +1,14 @@
 """Test :mod:`smarter.apps.docs.views.webserver`: robots.txt and sitemap.xml."""
 
+import tempfile
 from http import HTTPStatus
+from pathlib import Path
 
 from defusedxml import ElementTree
-from django.test import Client
+from django.test import Client, override_settings
 from waffle.testutils import override_switch
 
+from smarter.apps.dashboard.views.console_app import CONSOLE_INDEX_PATH
 from smarter.apps.docs.views.webserver import absolute_url, sitemap_pages
 from smarter.common.conf import smarter_settings
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -35,9 +38,23 @@ class TestSitemapXml(SmarterTestBase):
             self.assertTrue(loc.startswith(smarter_settings.environment_url.rstrip("/") + "/"), loc)
 
     def test_every_page_is_public(self):
-        """Every listed page answers an anonymous GET with 200: no 404s, redirects or login pages."""
+        """
+        Every listed page answers an anonymous GET with 200: no 404s, redirects or login pages.
+
+        The sign-up page is the single-page console's, so the test gives it a built console.
+        """
         base = smarter_settings.environment_url.rstrip("/")
-        for loc in self.sitemap_locs():
+        static_root = tempfile.TemporaryDirectory()
+        self.addCleanup(static_root.cleanup)
+        index_path = Path(static_root.name) / CONSOLE_INDEX_PATH
+        index_path.parent.mkdir(parents=True)
+        index_path.write_text("<!doctype html><title>console</title>", encoding="utf-8")
+        built = override_settings(STATIC_ROOT=static_root.name)
+        built.enable()
+        self.addCleanup(built.disable)
+        with override_switch(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION, active=True):
+            locs = self.sitemap_locs()
+        for loc in locs:
             with self.subTest(loc=loc):
                 response = self.client.get(loc.removeprefix(base))
                 self.assertEqual(response.status_code, HTTPStatus.OK)

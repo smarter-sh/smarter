@@ -32,7 +32,7 @@ export const visitorSession: ConsoleSession = {
   isAuthenticated: false,
   version: "0.42.11",
   branding,
-  signIn: { google: true, github: false, signUp: true, footerLinks: false, doodle: true },
+  signIn: { google: true, github: false, signUp: true, footerLinks: false, doodle: false },
   language: {
     current: "en",
     bidi: false,

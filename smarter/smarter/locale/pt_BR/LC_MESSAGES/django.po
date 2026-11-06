@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 22:29+0000\n"
+"POT-Creation-Date: 2026-11-06 22:58+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -25,17 +25,14 @@ msgid "The request is invalid."
 msgstr "A solicitação é inválida."
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/login_view.py
 msgid "Email and/or password do not match."
 msgstr "O e-mail e/ou a senha não correspondem."
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/account_views.py
 msgid "Registration is closed."
 msgstr "As inscrições estão fechadas."
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/account_views.py
 msgid "An account with this email address already exists. Please sign in."
 msgstr "Já existe uma conta com este endereço de e-mail. Faça login."
 
@@ -44,7 +41,6 @@ msgid "Please correct the errors below."
 msgstr "Corrija os erros abaixo."
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/authentication/login_view.py
 msgid "An unknown error occurred. Please try again later."
 msgstr "Ocorreu um erro desconhecido. Tente novamente mais tarde."
 
@@ -61,7 +57,6 @@ msgid "Choose a new password."
 msgstr "Escolha uma nova senha."
 
 #: smarter/apps/account/api/web/views.py
-#: smarter/apps/account/views/password_management.py
 msgid "Passwords do not match."
 msgstr "As senhas não coincidem."
 
@@ -119,10 +114,6 @@ msgstr "Usuário não encontrado. Entre para ativar sua conta."
 msgid "Activate your account."
 msgstr "Ative sua conta."
 
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "Received invalid responses."
-msgstr "Foram recebidas respostas inválidas."
-
 #: smarter/apps/account/views/dashboard/profile_image.py
 msgid "Choose an image to upload."
 msgstr "Escolha uma imagem para enviar."
@@ -134,22 +125,6 @@ msgstr "A imagem deve ter 2 MB ou menos."
 #: smarter/apps/account/views/dashboard/profile_image.py
 msgid "The image must be a PNG, JPEG, GIF or WebP file."
 msgstr "A imagem deve ser um arquivo PNG, JPEG, GIF ou WebP."
-
-#: smarter/apps/account/views/password_management.py
-msgid "Email address is invalid."
-msgstr "O endereço de e-mail é inválido."
-
-#: smarter/apps/account/views/password_management.py
-msgid "Email sent."
-msgstr "E-mail enviado."
-
-#: smarter/apps/account/views/password_management.py
-msgid "Missing uidb64 or token in URL."
-msgstr "uidb64 ou token ausente na URL."
-
-#: smarter/apps/account/views/password_management.py
-msgid "input form is invalid."
-msgstr "o formulário de entrada é inválido."
 
 #: smarter/apps/account/views/unsubscribe.py
 msgid ""
@@ -236,19 +211,6 @@ msgstr "Tentar novamente"
 msgid "Skip for now"
 msgstr "Pular por enquanto"
 
-#: smarter/templates/account/authentication/base.html
-#: smarter/templates/dashboard/footer.html
-msgid "Legal"
-msgstr "Jurídico"
-
-#: smarter/templates/account/authentication/base.html
-msgid "Plans"
-msgstr "Planos"
-
-#: smarter/templates/account/authentication/base.html
-msgid "Contact Us"
-msgstr "Fale conosco"
-
 #: smarter/templates/account/authentication/email/account-activation.html
 msgid "Activate Your Account"
 msgstr "Ative sua conta"
@@ -329,102 +291,6 @@ msgstr "Redefinir senha"
 #: smarter/templates/account/authentication/email/password-reset.html
 msgid "Or, talk to a human!"
 msgstr "Ou fale com uma pessoa!"
-
-#: smarter/templates/account/authentication/new-password.html
-msgid "Password Reset"
-msgstr "Redefinição de senha"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Password"
-msgstr "Senha"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Use 8 or more characters with a mix of letters, numbers & symbols."
-msgstr "Use 8 ou mais caracteres, misturando letras, números e símbolos."
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Repeat Password"
-msgstr "Repita a senha"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Submit"
-msgstr "Enviar"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Please wait..."
-msgstr "Aguarde..."
-
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-msgid "Forgot Password ?"
-msgstr "Esqueceu a senha?"
-
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Enter your email to reset your password."
-msgstr "Digite seu e-mail para redefinir sua senha."
-
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Email"
-msgstr "E-mail"
-
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Cancel"
-msgstr "Cancelar"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/email/welcome.html
-msgid "Sign In"
-msgstr "Entrar"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in with Google"
-msgstr "Entrar com o Google"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in with GitHub"
-msgstr "Entrar com o GitHub"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Or with email"
-msgstr "Ou com e-mail"
-
-#: smarter/templates/account/authentication/sign-in.html
-msgid "Not a Member yet?"
-msgstr "Ainda não é membro?"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign up"
-msgstr "Cadastre-se"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign Up"
-msgstr "Cadastre-se"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "I Accept the <a href=\"#\" class=\"ms-1 link-primary\">Terms</a>"
-msgstr "Eu aceito os <a href=\"#\" class=\"ms-1 link-primary\">Termos</a>"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Already have an Account?"
-msgstr "Já tem uma conta?"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in"
-msgstr "Entrar"
 
 #: smarter/templates/account/authentication/social-auth-already-associated.html
 msgid "Social Account Already Associated"
@@ -695,6 +561,10 @@ msgid ""
 msgstr ""
 "Se tiver alguma dúvida, me escreva em <a href=\"mailto:%(support_email)s\" "
 "style=\"font-weight:600\">%(support_email)s</a>."
+
+#: smarter/templates/account/email/welcome.html
+msgid "Sign In"
+msgstr "Entrar"
 
 #: smarter/templates/account/email/welcome.html
 msgid "What's included:"
@@ -1080,6 +950,10 @@ msgstr "Política de privacidade"
 #: smarter/templates/common/cookie-notice.html
 msgid "Close"
 msgstr "Fechar"
+
+#: smarter/templates/dashboard/footer.html
+msgid "Legal"
+msgstr "Jurídico"
 
 #: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
 msgid "Light"
@@ -1521,6 +1395,84 @@ msgstr "JSON Schemas do SAM"
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr "Sobre o contrato"
+
+#~ msgid "Received invalid responses."
+#~ msgstr "Foram recebidas respostas inválidas."
+
+#~ msgid "Email address is invalid."
+#~ msgstr "O endereço de e-mail é inválido."
+
+#~ msgid "Email sent."
+#~ msgstr "E-mail enviado."
+
+#~ msgid "Missing uidb64 or token in URL."
+#~ msgstr "uidb64 ou token ausente na URL."
+
+#~ msgid "input form is invalid."
+#~ msgstr "o formulário de entrada é inválido."
+
+#~ msgid "Plans"
+#~ msgstr "Planos"
+
+#~ msgid "Contact Us"
+#~ msgstr "Fale conosco"
+
+#~ msgid "Password Reset"
+#~ msgstr "Redefinição de senha"
+
+#~ msgid "Password"
+#~ msgstr "Senha"
+
+#~ msgid "Use 8 or more characters with a mix of letters, numbers & symbols."
+#~ msgstr "Use 8 ou mais caracteres, misturando letras, números e símbolos."
+
+#~ msgid "Repeat Password"
+#~ msgstr "Repita a senha"
+
+#~ msgid "Submit"
+#~ msgstr "Enviar"
+
+#~ msgid "Please wait..."
+#~ msgstr "Aguarde..."
+
+#~ msgid "Forgot Password ?"
+#~ msgstr "Esqueceu a senha?"
+
+#~ msgid "Enter your email to reset your password."
+#~ msgstr "Digite seu e-mail para redefinir sua senha."
+
+#~ msgid "Email"
+#~ msgstr "E-mail"
+
+#~ msgid "Cancel"
+#~ msgstr "Cancelar"
+
+#~ msgid "Sign in with Google"
+#~ msgstr "Entrar com o Google"
+
+#~ msgid "Sign in with GitHub"
+#~ msgstr "Entrar com o GitHub"
+
+#~ msgid "Or with email"
+#~ msgstr "Ou com e-mail"
+
+#~ msgid "Not a Member yet?"
+#~ msgstr "Ainda não é membro?"
+
+#~ msgid "Sign up"
+#~ msgstr "Cadastre-se"
+
+#~ msgid "Sign Up"
+#~ msgstr "Cadastre-se"
+
+#~ msgid "I Accept the <a href=\"#\" class=\"ms-1 link-primary\">Terms</a>"
+#~ msgstr "Eu aceito os <a href=\"#\" class=\"ms-1 link-primary\">Termos</a>"
+
+#~ msgid "Already have an Account?"
+#~ msgstr "Já tem uma conta?"
+
+#~ msgid "Sign in"
+#~ msgstr "Entrar"
 
 #, python-format
 #~ msgid "Invalid login attempt. Unknown user %(email)s"

@@ -13,6 +13,7 @@ import { userSession, visitorSession } from "@/mocks/fixtures";
 import {
   accountErrorsHandler,
   accountSessionHandler,
+  doodleHandler,
   sessionHandler,
   userSessionHandler,
   visitorSessionHandler,
@@ -88,6 +89,49 @@ describe("the sign-in page", () => {
     expect(await screen.findByRole("link", { name: "Sign in with GitHub" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Sign in with Google" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
+  });
+});
+
+describe("the sign-in pages' frame", () => {
+  it("shows the doodle of the day while its switch is on", async () => {
+    const signIn = { ...visitorSession.signIn, doodle: true };
+    server.use(sessionHandler({ ...visitorSession, signIn }), doodleHandler);
+    mountAt("/login");
+    expect(await screen.findByRole("link", { name: "Happy Diwali!" })).toHaveAttribute(
+      "href",
+      "https://en.wikipedia.org/wiki/Diwali",
+    );
+  });
+
+  it("shows the logo, name and description without the doodle", async () => {
+    server.use(visitorSessionHandler);
+    mountAt("/login");
+    expect(await screen.findByText(visitorSession.branding.productName)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Learn more" })).toHaveAttribute(
+      "href",
+      visitorSession.branding.projectWebsiteUrl,
+    );
+  });
+
+  it("shows the footer's links only while they are switched on", async () => {
+    server.use(visitorSessionHandler);
+    mountAt("/login");
+    await screen.findByLabelText("Email");
+    expect(screen.queryByRole("navigation", { name: "Legal" })).not.toBeInTheDocument();
+  });
+
+  it("links to the legal page, the plans and the contact page", async () => {
+    const signIn = { ...visitorSession.signIn, footerLinks: true };
+    server.use(sessionHandler({ ...visitorSession, signIn }));
+    mountAt("/login");
+    expect(await screen.findByRole("link", { name: "Legal" })).toHaveAttribute(
+      "href",
+      visitorSession.branding.legalUrl,
+    );
+    expect(screen.getByRole("link", { name: "Contact Us" })).toHaveAttribute(
+      "href",
+      visitorSession.branding.contactUrl,
+    );
   });
 });
 

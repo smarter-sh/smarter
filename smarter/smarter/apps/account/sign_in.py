@@ -1,10 +1,8 @@
 """
 Signing in with an email address and password, and signing up, for the console's sign-in pages and api.
 
-The server-rendered sign-in and sign-up pages, :class:`~smarter.apps.account.views.authentication.LoginView`
-and :class:`~smarter.apps.account.views.authentication.AccountRegisterView`, and the console's account api,
-:mod:`smarter.apps.account.api.web.views`, all sign users in through these functions, so that each failure
-is audited in the same way and the answers are the same.
+The console's account api, :mod:`smarter.apps.account.api.web.views`, signs users in through these functions,
+which record each failure in the login audit.
 """
 
 from typing import Optional

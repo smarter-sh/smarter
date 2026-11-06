@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 22:29+0000\n"
+"POT-Creation-Date: 2026-11-06 22:58+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -1054,6 +1054,22 @@ msgstr "Supprimer : supprimer cette ressource de connexion"
 #. Translators: used in react/packages/smarter-console/src/App.tsx
 msgid "The console couldn't reach the server."
 msgstr "La console n'a pas pu joindre le serveur."
+
+#. Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx, react/packages/smarter-doodle/src/App.tsx
+msgid "Learn more"
+msgstr "En savoir plus"
+
+#. Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx
+msgid "Legal"
+msgstr "Mentions légales"
+
+#. Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx
+msgid "Plans"
+msgstr "Forfaits"
+
+#. Translators: used in react/packages/smarter-console/src/components/AuthCard.tsx
+msgid "Contact Us"
+msgstr "Nous contacter"
 
 #. Translators: used in react/packages/smarter-console/src/lib/account.ts
 msgid "Your session has expired. Reload the page, and try again."
@@ -2439,15 +2455,11 @@ msgstr "Choisi par une application d'IA Smarter."
 msgid "Learn how"
 msgstr "Découvrez comment"
 
-#. Translators: used in react/packages/smarter-doodle/src/App.tsx
-msgid "Learn more"
-msgstr "En savoir plus"
-
 #. Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 msgid "The publisher's trust badge"
 msgstr "Le badge de confiance de l'éditeur"
 
-#. Translators: used in react/packages/smarter-extension-console/src/components/common.tsx, smarter/static/js/account/authentication/reset-password/reset-password.js
+#. Translators: used in react/packages/smarter-extension-console/src/components/common.tsx
 msgid "Dismiss"
 msgstr "Ignorer"
 
@@ -10146,59 +10158,46 @@ msgstr "Nouveautés"
 msgid "Recently added Smarter features"
 msgstr "Fonctionnalités Smarter ajoutées récemment"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/sign-in.js
-msgid "The password is required"
-msgstr "Le mot de passe est obligatoire"
+#~ msgid "The password is required"
+#~ msgstr "Le mot de passe est obligatoire"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
-msgid "Please enter valid password"
-msgstr "Veuillez saisir un mot de passe valide"
+#~ msgid "Please enter valid password"
+#~ msgstr "Veuillez saisir un mot de passe valide"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
-msgid "The password confirmation is required"
-msgstr "La confirmation du mot de passe est obligatoire"
+#~ msgid "The password confirmation is required"
+#~ msgstr "La confirmation du mot de passe est obligatoire"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js
-msgid "The password and its confirm are not the same"
-msgstr "Le mot de passe et sa confirmation ne correspondent pas"
+#~ msgid "The password and its confirm are not the same"
+#~ msgstr "Le mot de passe et sa confirmation ne correspondent pas"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js
-msgid "Sorry, the email is incorrect, please try again."
-msgstr "Désolé, l'e-mail est incorrect. Veuillez réessayer."
+#~ msgid "Sorry, the email is incorrect, please try again."
+#~ msgstr "Désolé, l'e-mail est incorrect. Veuillez réessayer."
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
-msgid "Ok, got it!"
-msgstr "OK, compris !"
+#~ msgid "Ok, got it!"
+#~ msgstr "OK, compris !"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/new-password.js, smarter/static/js/account/authentication/reset-password/reset-password.js, smarter/static/js/account/authentication/sign-in.js
-msgid "Sorry, looks like there are some errors detected, please try again."
-msgstr "Désolé, des erreurs ont été détectées. Veuillez réessayer."
+#~ msgid "Sorry, looks like there are some errors detected, please try again."
+#~ msgstr "Désolé, des erreurs ont été détectées. Veuillez réessayer."
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
-msgid "Not a valid email address"
-msgstr "Adresse e-mail non valide"
+#~ msgid "Not a valid email address"
+#~ msgstr "Adresse e-mail non valide"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
-msgid "Please type your email address"
-msgstr "Veuillez saisir votre adresse e-mail"
+#~ msgid "Please type your email address"
+#~ msgstr "Veuillez saisir votre adresse e-mail"
 
-#. Translators: used in smarter/static/js/account/authentication/reset-password/reset-password.js
-msgid "Check your email. We just sent you a password reset link."
-msgstr ""
-"Consultez vos e-mails. Nous venons de vous envoyer un lien de "
-"réinitialisation du mot de passe."
+#~ msgid "Check your email. We just sent you a password reset link."
+#~ msgstr ""
+#~ "Consultez vos e-mails. Nous venons de vous envoyer un lien de "
+#~ "réinitialisation du mot de passe."
 
-#. Translators: used in smarter/static/js/account/authentication/sign-in.js
-msgid "The value is not a valid email address"
-msgstr "La valeur n'est pas une adresse e-mail valide"
+#~ msgid "The value is not a valid email address"
+#~ msgstr "La valeur n'est pas une adresse e-mail valide"
 
-#. Translators: used in smarter/static/js/account/authentication/sign-in.js
-msgid "Email address is required"
-msgstr "L'adresse e-mail est obligatoire"
+#~ msgid "Email address is required"
+#~ msgstr "L'adresse e-mail est obligatoire"
 
-#. Translators: used in smarter/static/js/account/authentication/sign-in.js
-msgid "Email and/or password do not match."
-msgstr "L'adresse e-mail et/ou le mot de passe ne correspondent pas."
+#~ msgid "Email and/or password do not match."
+#~ msgstr "L'adresse e-mail et/ou le mot de passe ne correspondent pas."
 
 #~ msgid "Sign in to Smarter"
 #~ msgstr "Se connecter à Smarter"

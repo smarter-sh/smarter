@@ -1,10 +1,9 @@
 """
 Password reset links: making one, emailing it, and reading it back.
 
-A link is ``/password-reset-link/<uidb64>/<token>/``, which expires. The server-rendered password pages,
-:mod:`smarter.apps.account.views.password_management`, and the console's account api,
-:mod:`smarter.apps.account.api.web.views`, both use these functions. Emails already sent keep working:
-the link's path doesn't change when the console serves it.
+A link is ``/password-reset-link/<uidb64>/<token>/``, which expires. The console serves the link's page,
+and its account api, :mod:`smarter.apps.account.api.web.views`, uses these functions. Emails that were sent
+before the console served it keep working: the link's path is the same.
 """
 
 from http import HTTPStatus
