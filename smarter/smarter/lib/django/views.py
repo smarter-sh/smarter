@@ -10,6 +10,7 @@ from cache_results import lazy_cache
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http.response import HttpResponseBase
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
@@ -428,7 +429,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
             self._ready = True
         self.log_ready_status()
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponseBase:
         """
         Dispatch the request, redirecting to login if the user is anonymous.
 
@@ -479,7 +480,7 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
         if logger.should_log(logging.INFO):
             logger.info("%s.log_ready_status() is %s", self.formatted_class_name, self.ready_state)
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponseBase:
         """
         Dispatch the request and patch vary headers for successful responses.
 
@@ -536,7 +537,7 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
     both strict access control and cache prevention.
     """
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponseBase:
         """
         Redirect anonymous users to the login page and non-staff users to the admin login, then dispatch.
 
@@ -589,6 +590,10 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         SmarterRequestMixin.__init__(self, **kwargs)
+        self._throttle_checked: bool = False
+        """Whether :meth:`throttle` has checked this request against its rate limits."""
+        self._throttle_wait: Optional[int] = None
+        """The seconds to wait before retrying, from the check, or None if the request isn't throttled."""
 
     @classmethod
     def as_view(cls, **initkwargs):
@@ -643,7 +648,7 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         if not self.smarter_request:
             self.smarter_request = request
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponseBase:
         """
         Dispatch the request, authenticated or not, and vary the response by ``Cookie``.
 
@@ -670,8 +675,9 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         :param request: The HTTP request object.
         :returns: :meth:`throttled_response` if the request exceeded its rate limit, otherwise None.
         """
-        if not hasattr(self, "_throttle_wait"):
+        if not self._throttle_checked:
             self._throttle_wait = throttle_wait(request, self)
+            self._throttle_checked = True
         if self._throttle_wait is None:
             return None
         response = self.throttled_response(request, self._throttle_wait)

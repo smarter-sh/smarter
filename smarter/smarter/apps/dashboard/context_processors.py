@@ -68,14 +68,13 @@ Add the processors to your Django settings::
 import sys
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin
 
 from cache_results import cache_results
 from django.conf import settings
 from django.templatetags.static import static
 
-from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Account,
     UserProfile,
@@ -284,10 +283,9 @@ def sidebar(request: "HttpRequest") -> SmarterDictType:
     user = getattr(request, "user", None)
     if getattr(user, "is_superuser", False):
         # pylint: disable=import-outside-toplevel
-        from smarter.apps.llmtool.models import Extension
+        from smarter.apps.llmtool.extension.registry import update_count
 
-        extensions = Extension.objects.select_related("installed_version").exclude(latest_version="")
-        context = {**context, "extension_updates": sum(1 for extension in extensions if extension.update_available)}
+        context = {**context, "extension_updates": update_count()}
     return context
 
 

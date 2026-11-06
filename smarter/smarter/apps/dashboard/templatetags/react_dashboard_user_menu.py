@@ -19,6 +19,7 @@ from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
 from smarter.apps.account.utils import get_cached_avatar_url
 from smarter.apps.account.views.dashboard.urls import DashboardNamedUrls
 from smarter.lib import json
+from smarter.lib.django.i18n import console_languages
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
@@ -57,9 +58,8 @@ def languages_json() -> str:
     :rtype: str
     """
     languages = []
-    for code, _ in settings.LANGUAGES:
-        info = translation.get_language_info(code)
-        languages.append({"code": info["code"], "name": info["name_local"][:1].upper() + info["name_local"][1:]})
+    for code, name in console_languages():
+        languages.append({"code": code, "name": name})
     return json.dumps(languages)
 
 
