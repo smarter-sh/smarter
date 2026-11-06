@@ -65,15 +65,18 @@ spec:
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           resources:
             {{- toYaml ($infra.resources | default .Values.worker.resources) | nindent 12 }}
+          # liveness pings the worker through Redis, so that a worker whose process runs but which
+          # takes no task, e.g. after a Redis restart, is restarted (#940). Readiness and startup
+          # only check the process.
           livenessProbe:
             exec:
               command:
                 - /bin/sh
                 - -c
-                - "pgrep -f 'celery.*worker' > /dev/null"
+                - "python -m smarter.workers.liveness infrastructure@$HOSTNAME"
             initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 5
+            periodSeconds: 60
+            timeoutSeconds: 30
             failureThreshold: 3
             successThreshold: 1
           startupProbe:

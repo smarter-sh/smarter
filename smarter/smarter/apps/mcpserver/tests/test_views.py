@@ -281,6 +281,7 @@ class TestStaffEndpointView(OperationsTestBase):
                 "list_log_sources",
                 "user_support_snapshot",
                 "check_reply",
+                "create_bug_report",
             ],
         )
 

@@ -87,18 +87,50 @@ HEALTH_CHECKS: dict[str, Callable[[], bool]] = {
 }
 
 
+CHECK_DID_NOT_PASS = "the check ran, and did not pass"
+"""The error of a check that returned False rather than raising, e.g. no Celery worker answered its ping."""
+
+
 def run_health_checks() -> list[dict[str, object]]:
-    """Run each health check, and report a failure, or an exception, as unhealthy."""
+    """
+    Run each health check, and report a failure, or an exception, as unhealthy, with why.
+
+    Each result has the check's ``name``, whether it is ``healthy``, and its ``error``: an empty
+    string for a healthy check, the exception's class and message for one that raised, e.g.
+    ``TimeoutError: Timeout connecting to server``, or :data:`CHECK_DID_NOT_PASS`. The error is for
+    staff, e.g. Smarter Sysadmin's ``platform_status``: :class:`ServiceHealthView` leaves it out.
+
+    :returns: One result per check of :data:`HEALTH_CHECKS`, in its order.
+    """
     retval = []
     for name, check in HEALTH_CHECKS.items():
+        error = ""
         try:
             healthy = bool(check())
         # pylint: disable=broad-except
         except Exception as e:
             logger.warning("%s health check %s failed: %s", logger_prefix, name, e)
             healthy = False
-        retval.append({"name": name, "healthy": healthy})
+            error = f"{type(e).__name__}: {e}"
+        if not healthy and not error:
+            error = CHECK_DID_NOT_PASS
+        retval.append({"name": name, "healthy": healthy, "error": error})
     return retval
+
+
+def public_health_checks(checks: list[dict[str, object]]) -> list[dict[str, object]]:
+    """
+    Return the health checks without their errors, for the dashboard's widget.
+
+    An error can name internal hosts and services, which a dashboard user doesn't need.
+
+    :param checks: The results of :func:`run_health_checks`.
+    :returns: Each check's ``name``, and whether it is ``healthy``.
+    """
+    public = []
+    for check in checks:
+        public.append({"name": check["name"], "healthy": check["healthy"]})
+    return public
 
 
 @cache_results(timeout=HEALTH_CHECKS_CACHE_TIMEOUT)
@@ -206,7 +238,7 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
         if wants_refresh(request):
             logger.info("%s.post() refreshing the health checks", self.formatted_class_name)
             cached_health_checks.invalidate()
-        health_checks = current_health_checks()
+        health_checks = public_health_checks(current_health_checks())
         healthy = sum(1 for check in health_checks if check["healthy"])
         retval = {
             "smarter_version": smarter_settings.version,

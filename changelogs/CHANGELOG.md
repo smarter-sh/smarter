@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.10](https://github.com/smarter-sh/smarter/compare/v0.42.9...v0.42.10) (2026-11-06)
+
+### Bug Fixes
+
+* **celery:** recover workers, beat and app server from a Redis restart ([e5dd8ab](https://github.com/smarter-sh/smarter/commit/e5dd8ab14609eed95bb02e7ae351d34d89eccceb)), closes [#940](https://github.com/smarter-sh/smarter/issues/940) [#941](https://github.com/smarter-sh/smarter/issues/941) [#942](https://github.com/smarter-sh/smarter/issues/942) [#940](https://github.com/smarter-sh/smarter/issues/940) [#941](https://github.com/smarter-sh/smarter/issues/941)
+* **mcpserver:** add staff bug reports, and one GITHUB_TOKEN setting ([e7e6f97](https://github.com/smarter-sh/smarter/commit/e7e6f9744abd85ed74e670913b2296c38aa4838e)), closes [#942](https://github.com/smarter-sh/smarter/issues/942)
+
+## [0.42.10-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.9...v0.42.10-alpha.1) (2026-11-06)
+
+### Bug Fixes
+
+* **celery:** recover workers, beat and app server from a Redis restart ([e5dd8ab](https://github.com/smarter-sh/smarter/commit/e5dd8ab14609eed95bb02e7ae351d34d89eccceb)), closes [#940](https://github.com/smarter-sh/smarter/issues/940) [#941](https://github.com/smarter-sh/smarter/issues/941) [#942](https://github.com/smarter-sh/smarter/issues/942) [#940](https://github.com/smarter-sh/smarter/issues/940) [#941](https://github.com/smarter-sh/smarter/issues/941)
+* **mcpserver:** add staff bug reports, and one GITHUB_TOKEN setting ([e7e6f97](https://github.com/smarter-sh/smarter/commit/e7e6f9744abd85ed74e670913b2296c38aa4838e)), closes [#942](https://github.com/smarter-sh/smarter/issues/942)
+
 ## [0.42.9](https://github.com/smarter-sh/smarter/compare/v0.42.8...v0.42.9) (2026-11-06)
 
 ### Bug Fixes

@@ -14,8 +14,9 @@ from which its JSON Schema is generated. Its ``run`` validates the call, calls a
   :mod:`~smarter.apps.mcpserver.protocol.tools.manifests` and
   :mod:`~smarter.apps.mcpserver.protocol.tools.github`.
 - The staff-only tools: :mod:`~smarter.apps.mcpserver.protocol.tools.status`,
-  :mod:`~smarter.apps.mcpserver.protocol.tools.logs` and
-  :mod:`~smarter.apps.mcpserver.protocol.tools.helpdesk`.
+  :mod:`~smarter.apps.mcpserver.protocol.tools.logs`,
+  :mod:`~smarter.apps.mcpserver.protocol.tools.helpdesk` and
+  :mod:`~smarter.apps.mcpserver.protocol.tools.bug_reports`.
 - :mod:`~smarter.apps.mcpserver.protocol.tools.markdown`: the Markdown helpers that they share.
 
 .. note::
