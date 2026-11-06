@@ -665,12 +665,33 @@ Without it, redis-py waits forever, so a Redis that stalls would hold every requ
 every request reads its session from the cache.
 """
 
+REDIS_HEALTH_CHECK_INTERVAL = 25
+"""
+Seconds that a pooled Redis connection may sit idle before redis-py PINGs it, before reusing it.
+
+When Redis restarts, e.g. when its pod moves to another node, the connections in each process's
+pool still point at the old server. Without a health check, the first command on each of them fails,
+e.g. ``Error 32 while writing to socket. Broken pipe.``, and the request that sent it answers 500.
+With it, redis-py PINGs a connection that has been idle longer than this, finds that it is dead, and
+reconnects, so the request succeeds. The cache, the Celery broker and RedBeat use it.
+"""
+
 CACHE_OPTIONS = {
     "CLIENT_CLASS": "django_redis.client.DefaultClient",
     "SOCKET_CONNECT_TIMEOUT": CACHE_SOCKET_CONNECT_TIMEOUT,
     "SOCKET_TIMEOUT": CACHE_SOCKET_TIMEOUT,
+    "CONNECTION_POOL_KWARGS": {
+        "health_check_interval": REDIS_HEALTH_CHECK_INTERVAL,
+        "socket_keepalive": True,
+    },
 }
-"""The OPTIONS of the Redis cache in every environment."""
+"""
+The OPTIONS of the Redis cache in every environment.
+
+``CONNECTION_POOL_KWARGS`` makes each pooled connection survive a Redis restart: a health check
+before an idle connection is reused (see :data:`REDIS_HEALTH_CHECK_INTERVAL`), and TCP keepalive,
+so that the kernel notices a connection whose server vanished without closing it.
+"""
 
 CACHE_KEY_PREFIX = f"django{django.__version__}"
 """
@@ -764,6 +785,41 @@ See:
 - https://docs.celeryq.dev/en/stable/getting-started/brokers/redis.html
 - https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml
 - https://artifacthub.io/packages/helm/project-smarter/smarter
+"""
+
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "socket_timeout": 30,
+    "socket_connect_timeout": 5,
+    "socket_keepalive": True,
+    "health_check_interval": REDIS_HEALTH_CHECK_INTERVAL,
+}
+"""
+The options of Celery's Redis transport, so that a worker notices that Redis went away, and reconnects.
+
+A worker waits for tasks on one long-lived connection, with a blocking ``BRPOP``. When Redis
+restarts on another node without closing that connection, e.g. a spot node that is reclaimed, the
+connection is left half-open: without a socket timeout or keepalive, the worker waits on it forever,
+logs nothing, and runs no task until it is restarted (issue #940). ``socket_timeout`` turns that wait
+into an error that kombu handles by reconnecting. It must stay above the ``BRPOP`` timeout, 1 second
+by default. TCP keepalive and the health check find dead connections sooner.
+
+See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#broker-transport-options
+"""
+
+CELERY_REDBEAT_REDIS_OPTIONS = {
+    "socket_timeout": 30,
+    "socket_connect_timeout": 5,
+    "socket_keepalive": True,
+    "health_check_interval": REDIS_HEALTH_CHECK_INTERVAL,
+}
+"""
+The options of RedBeat's Redis connection, the scheduler of Celery Beat.
+
+Like :data:`CELERY_BROKER_TRANSPORT_OPTIONS`: after a Redis restart, Beat's stale connection made
+the extension of its lock fail with ``Broken pipe``, which crashed Beat (issue #940). The health
+check reconnects it first.
+
+See: https://redbeat.readthedocs.io/en/latest/config.html
 """
 
 CELERY_TASK_TIME_LIMIT = 30 * 60
