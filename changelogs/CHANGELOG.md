@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.42.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.42.10...v0.42.11-alpha.1) (2026-11-06)
+
+### Bug Fixes
+
+* **prompt:** log a config request for a deleted LLMClient below ERROR ([b4c4d90](https://github.com/smarter-sh/smarter/commit/b4c4d902fa65e745eac74542e2a872b9e74ae0f3)), closes [#897](https://github.com/smarter-sh/smarter/issues/897)
+
 ## [0.42.10](https://github.com/smarter-sh/smarter/compare/v0.42.9...v0.42.10) (2026-11-06)
 
 ### Bug Fixes
