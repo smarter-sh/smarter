@@ -63,6 +63,18 @@ class TestPassthroughViewBranches(TestAccountMixin):
         response = self.post(handler=MagicMock(), data="{not json")
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
+    def test_invalid_json_body_is_logged_without_the_body(self):
+        """A malformed body is a client error: a warning, and never the body, which holds the user's messages."""
+        marker = "private-chat-content"
+        data = '{"messages": [{"role": "user", "content": "' + marker + '"}]'
+        with patch.object(passthrough, "logger") as mock_logger:
+            response = self.post(handler=MagicMock(), data=data)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
+        for logged_call in mock_logger.method_calls:
+            self.assertNotIn(marker, str(logged_call))
+
     def test_unknown_provider_fails_the_request(self):
         with patch(
             f"{MODULE}.openai_compatible_client.get_passthrough_handler", side_effect=Provider.DoesNotExist("nope")

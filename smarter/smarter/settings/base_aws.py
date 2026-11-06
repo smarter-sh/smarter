@@ -23,6 +23,8 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": cache_location,
+        # See CACHE_KEY_PREFIX in base.py.
+        "KEY_PREFIX": CACHE_KEY_PREFIX,
         "OPTIONS": CACHE_OPTIONS,
     },
     # Sessions are in their own database of the same server, so that cache.clear() doesn't
