@@ -1,17 +1,13 @@
 """Django Account Authentication views."""
 
 import traceback
-from typing import Union
 
-from django import forms
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.utils.translation import gettext as _
 
 from smarter.apps.account.models import User, get_resolved_user
-from smarter.apps.account.sign_in import email_is_taken, sign_up
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.lib import logging
-from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
@@ -28,7 +24,6 @@ from smarter.lib.django.token_generators import (
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
-    redirect_and_expire_cache,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -61,98 +56,6 @@ class AccountInactiveView(SmarterNeverCachedWebView):
             kwargs,
         )
         return self.clean_http_response(request, template_path=self.template_path)
-
-
-class AccountRegisterView(SmarterNeverCachedWebView):
-    """
-    View for signing up.
-
-    Sign-up is open only while the ``ENABLE_ACCOUNT_REGISTRATION`` switch is active. Otherwise
-    the page and its form answer ``404``, as if they didn't exist.
-    """
-
-    class SignUpForm(forms.Form):
-        """Form for the sign-in page."""
-
-        email = forms.EmailField()
-        password = forms.CharField(widget=forms.PasswordInput)
-
-        def clean_email(self) -> str:
-            """
-            Reject an email address that another user already has, in any case.
-
-            :returns: The email address.
-            :raises forms.ValidationError: when a user already has it.
-            """
-            email = self.cleaned_data["email"]
-            if email_is_taken(email):
-                raise forms.ValidationError(_("An account with this email address already exists. Please sign in."))
-            return email
-
-    template_path = "account/authentication/sign-up.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        """
-        Answer ``404`` to every method while registration is switched off.
-
-        Hiding the sign-up link isn't enough: the form must refuse a POST too.
-
-        :param request: The request.
-        :returns: The view's response, or ``404``.
-        """
-        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION):
-            logger.debug("%s.dispatch() registration is switched off.", self.formatted_class_name)
-            return SmarterHttpResponseNotFound(request=request, error_message=_("Registration is closed."))
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
-        """
-        Render the sign-up form, or redirect a signed-in user to ``/``.
-
-        :param request: The request.
-        :returns: The rendered form, or the redirect.
-        """
-        logger.debug(
-            "%s.AccountRegisterView.get() called with request type: %s %s, args: %s, kwargs: %s",
-            self.formatted_class_name,
-            type(request),
-            request,
-            args,
-            kwargs,
-        )
-        user = get_resolved_user(request.user)
-        if user and hasattr(user, "is_authenticated") and user.is_authenticated:
-            return redirect_and_expire_cache(path="/")
-
-        form = AccountRegisterView.SignUpForm()
-        context = {"form": form}
-        return self.clean_http_response(request, template_path=self.template_path, context=context)
-
-    def post(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
-        """
-        Create a User from the sign-up form, sign them in, and redirect to ``/``.
-
-        The email address is also the username. An invalid form is rendered again.
-
-        :param request: The request, with the form's data.
-        :returns: The redirect, or the rendered form.
-        :raises Exception: when the new user cannot be authenticated, which is a bug.
-        """
-        logger.debug(
-            "%s.AccountRegisterView.post() called with request type: %s %s, args: %s, kwargs: %s",
-            self.formatted_class_name,
-            type(request),
-            request,
-            args,
-            kwargs,
-        )
-        form = AccountRegisterView.SignUpForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data["email"]
-            password = form.cleaned_data["password"]
-            sign_up(request, email, password)
-            return redirect_and_expire_cache(path="/")
-        return self.get(request=request)
 
 
 class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):

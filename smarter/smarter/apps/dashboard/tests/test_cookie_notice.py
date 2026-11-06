@@ -45,7 +45,7 @@ class TestCookieNotice(SmarterTestBase):
         self.assertIn("Cerrar", html)
 
     def test_every_page_has_the_notice(self):
-        """Base.html includes the notice, e.g. on the login page."""
-        response = Client().get(reverse("login_view"))
+        """Base.html includes the notice, e.g. on the inactive account page."""
+        response = Client().get(reverse("account:account_inactive"))
         self.assertEqual(response.status_code, 200)
         self.assertIn('id="smarter-cookie-notice"', response.content.decode())

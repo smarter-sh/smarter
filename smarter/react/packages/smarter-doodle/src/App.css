@@ -1,14 +1,103 @@
 /*
- * The Doodle's own styles: its fade-in. The panel's layout is the page's, in
- * templates/account/authentication/base.html, so that it is the same with and without JavaScript.
+ * The Doodle's styles: the panel that @smarter/console's sign-in pages put it in (smarter-doodle-aside),
+ * its layout (smarter-doodle), and the artwork's fade-in. On a phone, the panel shows only the logo; from
+ * 992px up, it shows the doodle, the title and the description too.
  */
+.smarter-doodle-aside {
+  background:
+    radial-gradient(ellipse at 50% 110%, rgba(255, 87, 51, 0.35) 0%, rgba(255, 87, 51, 0) 55%),
+    radial-gradient(ellipse at 10% 0%, rgba(79, 195, 247, 0.18) 0%, rgba(79, 195, 247, 0) 45%),
+    linear-gradient(160deg, #17123b 0%, #2a1c5a 55%, #3a1d4d 100%);
+}
+
+.smarter-doodle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1.5rem;
+  color: #ffffff;
+  text-align: center;
+}
+
+.smarter-doodle-logo img {
+  height: 100px;
+}
+
+.smarter-doodle-figure {
+  display: none;
+  margin: 2.5rem 0 2rem;
+  width: 100%;
+  max-width: 520px;
+}
+
 .smarter-doodle-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 520 / 340;
   opacity: 0.85;
   transition: opacity 0.6s ease-in;
 }
 
 .smarter-doodle-image-loaded {
   opacity: 1;
+}
+
+.smarter-doodle-caption {
+  margin-top: 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.smarter-doodle-caption a {
+  color: #ffc145;
+  text-decoration: none;
+}
+
+.smarter-doodle-caption a:hover {
+  text-decoration: underline;
+}
+
+.smarter-doodle-title,
+.smarter-doodle-description {
+  display: none;
+  color: #ffffff;
+}
+
+.smarter-doodle-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.smarter-doodle-description a {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+@media (min-width: 992px) {
+  .smarter-doodle-aside {
+    min-height: 100vh;
+  }
+
+  .smarter-doodle {
+    padding: 2.5rem;
+  }
+
+  .smarter-doodle-logo img {
+    height: 180px;
+  }
+
+  .smarter-doodle-figure {
+    display: block;
+  }
+
+  .smarter-doodle-title,
+  .smarter-doodle-description {
+    display: block;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

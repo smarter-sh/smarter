@@ -4,12 +4,12 @@
 from http import HTTPStatus
 
 from django.test import Client
-from waffle.testutils import override_switch
+from django.urls import resolve
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.urls.console import ConsoleReverseNames
 
 
@@ -32,12 +32,20 @@ class TestUrls(TestAccountMixin):
         self.assertEqual(response.status_code, status_code, url)
 
     def test_root_account_urls(self):
-        """Sign-in, sign-out, registration and password reset are served at the root."""
-        self.verify_response("login_view", HTTPStatus.OK)
+        """
+        Sign-out is Django's; sign-in, registration and password reset are the single-page console's pages.
+
+        See smarter.apps.dashboard.tests.test_console_app for the pages themselves.
+        """
         self.verify_response("logout_view", HTTPStatus.FOUND)
-        with override_switch(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION, active=True):
-            self.verify_response(ConsoleReverseNames.register_view, HTTPStatus.OK)
-        self.verify_response("account_password_reset_request", HTTPStatus.OK)
+        for name in (
+            ConsoleReverseNames.login_view,
+            ConsoleReverseNames.register_view,
+            "account_password_reset_request",
+        ):
+            with self.subTest(name=name):
+                view = resolve(reverse(name)).func
+                self.assertIs(view.view_class, ConsoleAppView)  # type: ignore[attr-defined]
 
     def test_retired_urls_are_gone(self):
         """

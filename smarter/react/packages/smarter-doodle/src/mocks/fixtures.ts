@@ -1,6 +1,6 @@
 /**
  * Example data for this package's stories and tests: the root element's attributes, and what the
- * doodle api returns. See templates/react/doodle.html and smarter.apps.doodle.api.v1.views.
+ * doodle api returns. See smarter.apps.doodle.api.v1.views.
  */
 import type { AppContext, DoodleApiResponse } from "@/lib/Types";
 

@@ -6,7 +6,7 @@ from pathlib import Path
 from django.conf import settings
 from django.template import engines
 from django.template.loader import render_to_string
-from django.test import Client, RequestFactory, override_settings
+from django.test import Client, RequestFactory
 from django.urls import reverse
 from django.utils import translation
 
@@ -134,7 +134,7 @@ class TestI18nViews(TestAccountMixin):
 
     def test_unsupported_language_falls_back_to_english(self):
         """A browser that asks for a language that isn't available gets English."""
-        response = self.client.get(reverse("login_view"), headers={"accept-language": "xx"})
+        response = self.client.get(reverse("account:account_inactive"), headers={"accept-language": "xx"})
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn('<html lang="en"', content)
@@ -144,7 +144,9 @@ class TestI18nViews(TestAccountMixin):
         """A browser that asks for a regional variant of Spanish gets the Spanish catalogs."""
         for accept_language in ("es-MX", "es-419", "es-AR,es;q=0.9,en;q=0.8"):
             with self.subTest(accept_language=accept_language):
-                response = self.client.get(reverse("login_view"), headers={"accept-language": accept_language})
+                response = self.client.get(
+                    reverse("account:account_inactive"), headers={"accept-language": accept_language}
+                )
                 self.assertEqual(response.status_code, 200)
                 content = response.content.decode()
                 self.assertIn('<html lang="es"', content)
@@ -152,17 +154,19 @@ class TestI18nViews(TestAccountMixin):
 
     def test_french_page(self):
         """A browser that asks for French gets the French catalogs."""
-        response = self.client.get(reverse("login_view"), headers={"accept-language": "fr-CA"})
+        response = self.client.get(reverse("account:account_inactive"), headers={"accept-language": "fr-CA"})
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn('<html lang="fr"', content)
-        self.assertIn("Se connecter", content)
+        self.assertIn("Votre compte est inactif.", content)
 
     def test_any_portuguese_variant_gets_brazilian_portuguese(self):
         """A browser that asks for any variant of Portuguese gets the Brazilian Portuguese catalogs."""
         for accept_language in ("pt-BR", "pt", "pt-PT,pt;q=0.9,en;q=0.8"):
             with self.subTest(accept_language=accept_language):
-                response = self.client.get(reverse("login_view"), headers={"accept-language": accept_language})
+                response = self.client.get(
+                    reverse("account:account_inactive"), headers={"accept-language": accept_language}
+                )
                 self.assertEqual(response.status_code, 200)
                 content = response.content.decode()
                 self.assertIn('<html lang="pt-br"', content)
@@ -184,13 +188,6 @@ class TestI18nViews(TestAccountMixin):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(translated, response.content.decode())
         del self.client.cookies[settings.LANGUAGE_COOKIE_NAME]
-
-    def test_pages_load_the_javascript_catalog(self):
-        """Pages load the JavaScript catalog before their own scripts."""
-        response = self.client.get(reverse("login_view"))
-        content = response.content.decode()
-        catalog = content.index(reverse("javascript-catalog"))
-        self.assertLess(catalog, content.index("sign-in.js"))
 
     def test_dashboard_loads_the_javascript_catalog(self):
         """The dashboard pages, which host the React apps, load the JavaScript catalog."""

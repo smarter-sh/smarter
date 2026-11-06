@@ -16,3 +16,9 @@ export const LOGIN_PATH = "/login";
 
 /** The query parameter that carries the route to return to after signing in. */
 export const NEXT_PARAMETER = "next";
+
+/** The doodle of the day, which the sign-in pages show. See smarter.apps.doodle.api.v1. */
+export const DOODLE_API_URL = "/api/v1/doodles/today/";
+
+/** The plain scene that the doodle shows until the day's arrives. See smarter.apps.doodle.const.BASE_SCENE_STATIC_PATH. */
+export const DOODLE_BASE_IMAGE_URL = "/static/doodle/base.svg";

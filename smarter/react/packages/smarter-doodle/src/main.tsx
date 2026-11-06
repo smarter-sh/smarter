@@ -1,9 +1,6 @@
 /**
- * Main entry point for the Doodle, the sign-in page's illustration of the day.
- *
- * See templates/react/doodle.html, which templates/account/authentication/base.html includes while
- * the enable_doodle waffle switch is active. The root element's content is the page without
- * JavaScript, which the app replaces.
+ * The entry point of the Doodle's dev page, index.html, which `npm run dev` serves to show the Doodle on
+ * its own. In the console, @smarter/console imports the component from src/index.ts instead.
  */
 import { createRoot } from "react-dom/client";
 
