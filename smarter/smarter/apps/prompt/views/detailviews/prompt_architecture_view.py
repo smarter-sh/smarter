@@ -53,7 +53,7 @@ class LLMClientArchitectureView(SmarterAuthenticatedNeverCachedWebView):
 
     **Example usage**::
 
-        GET /workbench/llm-clients/<str:hashed_id>/architecture/
+        GET /api/web/prompt/llm-clients/<str:hashed_id>/architecture/
         {"tree": {"kind": "LLMClient", "name": "stackademy_sql", "owner": "Ada Lovelace (ada)", ...,
                   "children": [{"kind": "SqlPlugin", ...}]},
          "styled": false,

@@ -282,6 +282,46 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             DashboardLogsApiReverseNames.stream,
         )
 
+    def llmclient_web_api_url(self, name: str) -> str:
+        """
+        The url of one of the llmclient's endpoints in the web console's api, ``/api/web/prompt/llm-clients/<hashed_id>/``.
+
+        :param name: The endpoint's url name, an attribute of
+            :class:`smarter.apps.prompt.api.web.urls.PromptApiWebReverseNames`.
+        :returns: The url, or an empty string if there is no llmclient.
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
+
+        if not self.llmclient:
+            return ""
+        url = reverse(f"{PromptApiWebReverseNames.namespace}:{name}", kwargs={"hashed_id": self.llmclient.hashed_id})
+        return url
+
+    @property
+    def chat_api_url(self) -> str:
+        """
+        The llmclient's url in the public api, to which Smarter Chat appends ``config/`` for its configuration.
+
+        Smarter Chat reads the configuration from ``/api/v1/llm-clients/<hashed_id>/config/``, the same
+        :class:`~smarter.apps.prompt.views.detailviews.PromptConfigView` that serves a deployed llmclient's
+        configuration, and sends prompts to the configuration's ``url_llmclient``.
+
+        :returns: e.g. ``/api/v1/llm-clients/rMTAwMDAwMQx/``, or an empty string if there is no llmclient.
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.llmclient.api.v1.urls import LLMClientApiV1ReverseViews
+
+        if not self.llmclient:
+            return ""
+        url = reverse(
+            f"{LLMClientApiV1ReverseViews.namespace}:{LLMClientApiV1ReverseViews.llmclient_view_by_hashed_id}",
+            kwargs={"hashed_id": self.llmclient.hashed_id},
+        )
+        return url
+
     @property
     def manifest_url(self) -> str:
         """
@@ -292,14 +332,9 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         :rtype: str
         """
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseNames
+        from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
 
-        if not self.llmclient:
-            return ""
-        return reverse(
-            f"{PromptReverseNames.namespace}:{PromptReverseNames.manifest_editor_by_hashed_id}",
-            kwargs={"hashed_id": self.llmclient.hashed_id},
-        )
+        return self.llmclient_web_api_url(PromptApiWebReverseNames.manifest_editor_by_hashed_id)
 
     @property
     def architecture_url(self) -> str:
@@ -311,14 +346,9 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         :rtype: str
         """
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseNames
+        from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
 
-        if not self.llmclient:
-            return ""
-        return reverse(
-            f"{PromptReverseNames.namespace}:{PromptReverseNames.architecture_by_hashed_id}",
-            kwargs={"hashed_id": self.llmclient.hashed_id},
-        )
+        return self.llmclient_web_api_url(PromptApiWebReverseNames.architecture_by_hashed_id)
 
     @property
     def deployment_url(self) -> str:
@@ -331,14 +361,9 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         :rtype: str
         """
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseNames
+        from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
 
-        if not self.llmclient:
-            return ""
-        return reverse(
-            f"{PromptReverseNames.namespace}:{PromptReverseNames.deployment_by_hashed_id}",
-            kwargs={"hashed_id": self.llmclient.hashed_id},
-        )
+        return self.llmclient_web_api_url(PromptApiWebReverseNames.deployment_by_hashed_id)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -487,7 +512,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         context = {
             "workbench": {
                 "root_id": self.root_id,
-                "llmclient_api_url": self.llmclient.sandbox_url,
+                "llmclient_api_url": self.chat_api_url,
                 "toggle_metadata": True,
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
                 "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter prompt session, not the Django session.

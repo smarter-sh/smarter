@@ -10,7 +10,7 @@ function root(attributes: Record<string, string>): HTMLElement {
 }
 
 const ATTRIBUTES = {
-  "smarter-llmclient-api-url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwMQx/",
+  "smarter-llmclient-api-url": "http://localhost:9357/api/v1/llm-clients/rMTAwMDAwMQx/",
   "smarter-toggle-metadata": "True",
   "smarter-csrf-cookie-name": "csrftoken",
   "smarter-session-cookie-name": "session_key",
@@ -19,9 +19,9 @@ const ATTRIBUTES = {
   "react-debug-mode": "False",
   "smarter-request-id": "abc",
   "smarter-log-stream-url": "",
-  "smarter-manifest-url": "/workbench/llm-clients/rMTAwMDAwMQx/manifest/editor/",
-  "smarter-architecture-url": "/workbench/llm-clients/rMTAwMDAwMQx/architecture/",
-  "smarter-deployment-url": "/workbench/llm-clients/rMTAwMDAwMQx/deployment/",
+  "smarter-manifest-url": "/api/web/prompt/llm-clients/rMTAwMDAwMQx/manifest/",
+  "smarter-architecture-url": "/api/web/prompt/llm-clients/rMTAwMDAwMQx/architecture/",
+  "smarter-deployment-url": "/api/web/prompt/llm-clients/rMTAwMDAwMQx/deployment/",
   "smarter-llmclient-list-url": "/workbench/",
   "smarter-apply-api-url": "/api/v1/cli/apply/",
   "smarter-validate-api-url": "/api/v1/cli/validate/",
@@ -36,8 +36,8 @@ describe("readConfig", () => {
     expect(config.debugMode).toBe(false);
     // an empty url is no tab.
     expect(config.logStreamUrl).toBeNull();
-    expect(config.manifestUrl).toBe("/workbench/llm-clients/rMTAwMDAwMQx/manifest/editor/");
-    expect(config.architectureUrl).toBe("/workbench/llm-clients/rMTAwMDAwMQx/architecture/");
+    expect(config.manifestUrl).toBe("/api/web/prompt/llm-clients/rMTAwMDAwMQx/manifest/");
+    expect(config.architectureUrl).toBe("/api/web/prompt/llm-clients/rMTAwMDAwMQx/architecture/");
     expect(config.cookieDomain).toBe(window.location.hostname);
     expect(config.session).toMatchObject({
       csrfCookieName: "csrftoken",

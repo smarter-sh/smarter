@@ -14,7 +14,7 @@ import type {
 } from "../lib/types";
 
 export const HASHED_ID = "rMTAwMDAzOQx";
-export const DEPLOYMENT_URL = `/workbench/llm-clients/${HASHED_ID}/deployment/`;
+export const DEPLOYMENT_URL = `/api/web/prompt/llm-clients/${HASHED_ID}/deployment/`;
 export const CREATE_URL = `${DEPLOYMENT_URL}api-keys/create/`;
 export const ATTACH_URL = `${DEPLOYMENT_URL}api-keys/attach/`;
 export const DETACH_URL = `${DEPLOYMENT_URL}api-keys/detach/`;

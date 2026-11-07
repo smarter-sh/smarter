@@ -152,7 +152,10 @@ Endpoints
      - Url
      - Served by
    * - Configuration, workbench
-     - ``https://<platform>/workbench/llm-clients/<hashed_id>/config/``
+     - The workbench's ``apiUrl`` is the LLMClient in the platform api, ``/api/v1/llm-clients/<hashed_id>/``,
+       so it reads ``/api/v1/llm-clients/<hashed_id>/config/``, below. The older
+       ``https://<platform>/workbench/llm-clients/<hashed_id>/config/`` is still served, and is the only
+       url whose configuration has ``sandbox_mode`` true
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_config_view.PromptConfigView`
    * - Configuration, deployed LLMClient
      - ``https://<name>.<account-number>.api.<domain>/config/`` (and ``/``), or the same paths on its
@@ -175,15 +178,16 @@ Endpoints
      - ``smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs``
    * - Manifest, workbench only
      - The ``smarter-manifest-url`` that Django passes the workbench:
-       ``/workbench/llm-clients/<hashed_id>/manifest/editor/``
+       ``/api/web/prompt/llm-clients/<hashed_id>/manifest/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`
    * - Architecture, workbench only
      - The ``smarter-architecture-url`` that Django passes the workbench:
-       ``/workbench/llm-clients/<hashed_id>/architecture/``
+       ``/api/web/prompt/llm-clients/<hashed_id>/architecture/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView`
    * - Deployment page, workbench only
      - The ``smarter-deployment-url`` that Django passes the workbench:
-       ``/workbench/llm-clients/<hashed_id>/deployment/``
+       ``/api/web/prompt/llm-clients/<hashed_id>/deployment/``, whose api key actions are its
+       ``api-keys/create/``, ``api-keys/attach/`` and ``api-keys/detach/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView`
 
 A page that embeds the chat therefore calls one host only: its LLMClient's.

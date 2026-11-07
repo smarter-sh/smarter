@@ -97,6 +97,25 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(self.web_id_url("rename", 1, new_name="x"), "/api/web/prompt/rename/1/x/")
         self.assertEqual(self.web_id_url("delete", 1), "/api/web/prompt/delete/1/")
 
+    def test_workbench_endpoints_are_in_the_web_api(self):
+        """Test that the workbench's endpoints are in the web console's api, and gone from /workbench/."""
+        hashed_id = self.resource.hashed_id
+        web_api = f"/api/web/prompt/llm-clients/{hashed_id}/"
+        endpoints = {
+            "manifest_editor_by_hashed_id": ("manifest/", "manifest/editor/"),
+            "architecture_by_hashed_id": ("architecture/", "architecture/"),
+            "deployment_by_hashed_id": ("deployment/", "deployment/"),
+            "deployment_api_key_create_by_hashed_id": ("deployment/api-keys/create/", "deployment/api-keys/create/"),
+            "deployment_api_key_attach_by_hashed_id": ("deployment/api-keys/attach/", "deployment/api-keys/attach/"),
+            "deployment_api_key_detach_by_hashed_id": ("deployment/api-keys/detach/", "deployment/api-keys/detach/"),
+        }
+        for name, (path, old_path) in endpoints.items():
+            with self.subTest(endpoint=name):
+                self.assertEqual(self.web_url(name, hashed_id=hashed_id), web_api + path)
+                self.assertFalse(hasattr(PromptReverseNames, name))
+                old_url = f"/workbench/llm-clients/{hashed_id}/{old_path}"
+                self.assertEqual(self.client.get(old_url).status_code, HTTPStatus.NOT_FOUND, old_url)
+
     def test_list_api_pending_filter(self):
         """Test that ?filter=pending lists only the LLMClients that aren't deployed, as the dashboard counts them."""
         deployed = self.throwaway("deployed")
@@ -113,7 +132,16 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual((pagination["filter"], pagination["filters"]), ("pending", ["pending"]))
 
     def test_detail(self):
-        super().test_detail()
+        """
+        The LLMClient's manifest page is still Django's, unlike every other kind's.
+
+        It moves into the console with the workbench (docs/spa-migration.md, section 5, step 3), and then
+        this override goes, so that the mixin's test checks that it is the console's page.
+        """
+        url = self.url(self.detail_view_name, hashed_id=self.resource.hashed_id)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertIn("common/manifest_detail.html", [template.name for template in response.templates])
 
     def test_config_other_account(self):
         """Test that another account's admin cannot read the LLMClient's configuration."""
@@ -146,10 +174,12 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertIn("react/workbench.html", [template.name for template in response.templates])
         workbench = response.context["workbench"]
         self.assertEqual(workbench["root_id"], "smarter-workbench-root")
-        self.assertEqual(workbench["llmclient_api_url"], self.resource.sandbox_url)
+        # Smarter Chat reads its configuration from the public api, <url>config/.
+        chat_api_url = f"/api/v1/llm-clients/{self.resource.hashed_id}/"
+        self.assertEqual(workbench["llmclient_api_url"], chat_api_url)
         content = response.content.decode()
         self.assertIn('id="smarter-workbench-root"', content)
-        self.assertIn(f'smarter-llmclient-api-url="{self.resource.sandbox_url}"', content)
+        self.assertIn(f'smarter-llmclient-api-url="{chat_api_url}"', content)
         self.assertIn(f'smarter-request-id="{workbench["smarter_request_id"]}"', content)
         # the Manifest tab's editor saves, validates and deletes the manifest with the cli api.
         self.assertIn('smarter-apply-api-url="/api/v1/cli/apply/"', content)
@@ -183,13 +213,13 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
             self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
         )
         manifest_url = response.context["workbench"]["manifest_url"]
-        self.assertEqual(manifest_url, self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertTrue(manifest_url.endswith("/manifest/editor/"), manifest_url)
+        self.assertEqual(manifest_url, self.web_url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(manifest_url, f"/api/web/prompt/llm-clients/{self.resource.hashed_id}/manifest/")
         self.assertIn(f'smarter-manifest-url="{manifest_url}"', response.content.decode())
 
     def test_manifest_editor(self):
         """Test that the manifest editor's data is the LLMClient's manifest, as JSON."""
-        response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.get(self.web_url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertEqual(response["Content-Type"], "application/json")
         manifest = yaml.safe_load(response.json()["manifest"])
@@ -201,7 +231,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def test_manifest_editor_not_found(self):
         """Test that the manifest editor's data is a 404 for an unknown LLMClient."""
         unknown = LLMClient(id=999999999)
-        response = self.client.get(self.url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
+        response = self.client.get(self.web_url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_workbench_architecture_url(self):
@@ -210,8 +240,8 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
             self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
         )
         architecture_url = response.context["workbench"]["architecture_url"]
-        self.assertEqual(architecture_url, self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(architecture_url, f"/workbench/llm-clients/{self.resource.hashed_id}/architecture/")
+        self.assertEqual(architecture_url, self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(architecture_url, f"/api/web/prompt/llm-clients/{self.resource.hashed_id}/architecture/")
         self.assertIn(f'smarter-architecture-url="{architecture_url}"', response.content.decode())
 
     def test_architecture(self):
@@ -228,7 +258,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         LLMClientGuardrails.objects.create(llmclient=self.resource, guardrail=guardrail)
         self.addCleanup(LLMClientGuardrails.objects.filter(llmclient=self.resource).delete)
 
-        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.get(self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertIn("no-cache", response["Cache-Control"])
@@ -257,7 +287,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         """Test that the architecture says whether the LLMClient's manifest styles its chat."""
         original = LLMClient.objects.get(pk=self.resource.pk).styles
         self.addCleanup(LLMClient.objects.filter(pk=self.resource.pk).update, styles=original)
-        url = self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id)
+        url = self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id)
 
         LLMClient.objects.filter(pk=self.resource.pk).update(styles={})
         self.assertFalse(self.client.get(url).json()["styled"])
@@ -268,7 +298,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         """Test that the LLMClient's api key is a SmarterAuthToken child of the tree's root, once it is attached."""
         self.detach_api_keys()
         LLMClientAPIKey.detach(self.resource)
-        url = self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id)
+        url = self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id)
         kinds = [
             child.kind for child in LLMClientArchitecture.model_validate(self.client.get(url).json()).tree.children
         ]
@@ -283,13 +313,13 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
 
     def test_architecture_is_get_only(self):
         """Test that the architecture refuses a POST."""
-        response = self.client.post(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.post(self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_architecture_not_found(self):
         """Test that the architecture is a 404 for an unknown LLMClient, and for another account's."""
         unknown = LLMClient(id=999999999)
-        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=unknown.hashed_id))
+        response = self.client.get(self.web_url("architecture_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(response.json(), {"error": "LLMClient not found."})
 
@@ -301,7 +331,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         other_admin_user.is_superuser = False
         other_admin_user.save()
         self.client.force_login(other_admin_user)
-        response = self.client.get(self.url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.get(self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_workbench_deployment_url(self):
@@ -310,13 +340,13 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
             self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
         )
         deployment_url = response.context["workbench"]["deployment_url"]
-        self.assertEqual(deployment_url, self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(deployment_url, f"/workbench/llm-clients/{self.resource.hashed_id}/deployment/")
+        self.assertEqual(deployment_url, self.web_url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        self.assertEqual(deployment_url, f"/api/web/prompt/llm-clients/{self.resource.hashed_id}/deployment/")
         self.assertIn(f'smarter-deployment-url="{deployment_url}"', response.content.decode())
 
     def get_deployment(self):
         """GET the deployment page's data, validated by its contract."""
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.get(self.web_url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         data = response.json()
         LLMClientDeploymentPage.model_validate(data)
@@ -327,7 +357,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         LLMClient.objects.filter(pk=self.resource.pk).update(deployed=True)
         self.addCleanup(LLMClient.objects.filter(pk=self.resource.pk).update, deployed=False)
         with patch("smarter.apps.llmclient.views.endpoints.waffle.switch_is_active", return_value=False):
-            response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+            response = self.client.get(self.web_url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         self.assertEqual(response["Content-Type"], "application/json")
         page = response.json()
@@ -339,7 +369,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
 
     def test_deployment_is_get_only(self):
         """Test that the deployment page refuses a POST: its api key actions have their own urls."""
-        response = self.client.post(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.post(self.web_url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_deployment_shows_the_owner_to_the_owner(self):
@@ -367,16 +397,16 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def test_deployment_not_found(self):
         """Test that the deployment page is a 404 for an unknown LLMClient, and for another account's."""
         unknown = LLMClient(id=999999999)
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=unknown.hashed_id))
+        response = self.client.get(self.web_url("deployment_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id="not-a-hashed-id"))
+        response = self.client.get(self.web_url("deployment_by_hashed_id", hashed_id="not-a-hashed-id"))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
         other_admin_user, _, _ = admin_user_factory()
         other_admin_user.is_superuser = False
         other_admin_user.save()
         self.client.force_login(other_admin_user)
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.get(self.web_url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         response = self.api_key_action("detach")
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
@@ -385,7 +415,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def api_key_action(self, action: str, body=None, hashed_id: str = ""):
         """POST one of the deployment page's api key actions: create, attach or detach."""
         name = f"deployment_api_key_{action}_by_hashed_id"
-        url = self.url(name, hashed_id=hashed_id or self.resource.hashed_id)
+        url = self.web_url(name, hashed_id=hashed_id or self.resource.hashed_id)
         return self.client.post(url, data=json.dumps(body or {}), content_type="application/json")
 
     def api_key(self, name: str) -> SmarterAuthToken:
@@ -402,7 +432,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def test_deployment_api_key_urls(self):
         """Test that the page's api key section names its actions' urls, beside the page's own."""
         api_keys = self.get_deployment()["apiKeys"]
-        base = f"/workbench/llm-clients/{self.resource.hashed_id}/deployment/api-keys/"
+        base = f"/api/web/prompt/llm-clients/{self.resource.hashed_id}/deployment/api-keys/"
         self.assertEqual(
             (api_keys["createUrl"], api_keys["attachUrl"], api_keys["detachUrl"]),
             (f"{base}create/", f"{base}attach/", f"{base}detach/"),
@@ -460,7 +490,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertTrue(secret.startswith(api_key.token_key))
         self.assertIn("no-cache", response["Cache-Control"])
         # shown once: not on the page.
-        response = self.client.get(self.url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
+        response = self.client.get(self.web_url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertNotIn(secret, response.content.decode())
 
         # a second key of the same name is refused, and so is an invalid name.
@@ -489,7 +519,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
                 self.assertEqual(response.json()["code"], "invalid_request")
         response = self.client.post(
-            self.url("deployment_api_key_create_by_hashed_id", hashed_id=self.resource.hashed_id),
+            self.web_url("deployment_api_key_create_by_hashed_id", hashed_id=self.resource.hashed_id),
             data="not json",
             content_type="application/json",
         )
@@ -500,7 +530,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         response = self.api_key_action("detach", hashed_id=LLMClient(id=999999999).hashed_id)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         response = self.client.get(
-            self.url("deployment_api_key_detach_by_hashed_id", hashed_id=self.resource.hashed_id)
+            self.web_url("deployment_api_key_detach_by_hashed_id", hashed_id=self.resource.hashed_id)
         )
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
