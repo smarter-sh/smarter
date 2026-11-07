@@ -8,6 +8,7 @@ from unittest.mock import patch
 from django.conf import settings
 from django.test import Client, override_settings
 
+from smarter.apps.account.models import User
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.dashboard.views.console_app import (
     CONSOLE_INDEX_PATH,
@@ -15,6 +16,7 @@ from smarter.apps.dashboard.views.console_app import (
     console_on_cdn,
     console_script,
     mark_console_uploaded,
+    with_silent_splash,
     with_static_url,
 )
 from smarter.lib.django.shortcuts import reverse
@@ -22,6 +24,12 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.urls.console import ConsoleReverseNames
 
 INDEX_HTML = '<!doctype html><html><body><div id="smarter-console-root"></div></body></html>'
+
+# a built page with its splash, as the console's index.html has it.
+SPLASH_INDEX_HTML = (
+    '<!doctype html><html><body><div id="smarter-splash" role="status"></div>'
+    '<div id="smarter-console-root"></div></body></html>'
+)
 
 # a built page's head, as Vite writes it: the theme's styles, the translations, the console's script and styles.
 BUILT_HEAD = (
@@ -86,6 +94,43 @@ class TestConsoleApp(SmarterTestBase):
 
     def test_index_html(self):
         self.assertEqual(console_index_html(), INDEX_HTML)
+
+
+class TestConsoleAppSplash(SmarterTestBase):
+    """A visitor who isn't signed in gets the page without its splash; a signed-in user gets the splash."""
+
+    def setUp(self):
+        super().setUp()
+        static_root = tempfile.TemporaryDirectory()
+        self.addCleanup(static_root.cleanup)
+        index_path = Path(static_root.name) / CONSOLE_INDEX_PATH
+        index_path.parent.mkdir(parents=True)
+        index_path.write_text(SPLASH_INDEX_HTML, encoding="utf-8")
+        built = override_settings(STATIC_ROOT=static_root.name)
+        built.enable()
+        self.addCleanup(built.disable)
+
+    def test_with_silent_splash(self):
+        """The splash's element gets the class that hides it; a page without a splash is unchanged."""
+        page = with_silent_splash(SPLASH_INDEX_HTML)
+        self.assertIn('<div id="smarter-splash" class="smarter-splash-silent" role="status">', page)
+        self.assertEqual(with_silent_splash(INDEX_HTML), INDEX_HTML)
+
+    def test_a_visitor_gets_no_splash(self):
+        """Whatever the path: a visitor is on their way to a sign-in page."""
+        for path in ("/login/", "/register/"):
+            with self.subTest(path=path):
+                page = Client().get(path).content.decode()
+                self.assertIn('class="smarter-splash-silent"', page)
+
+    def test_a_signed_in_user_gets_the_splash(self):
+        user = User.objects.create(username=f"test_console_splash_{self.hash_suffix}")
+        self.addCleanup(user.delete)
+        client = Client()
+        client.force_login(user)
+        page = client.get("/login/").content.decode()
+        self.assertIn('<div id="smarter-splash" role="status">', page)
+        self.assertNotIn("smarter-splash-silent", page)
 
 
 class TestConsoleAppNotBuilt(SmarterTestBase):

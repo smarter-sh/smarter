@@ -12,6 +12,9 @@ page's ``/static/`` urls become ``STATIC_URL``'s, and the scripts load their chu
 itself, the cookies and the api stay on the platform's host. ``initialize_platform`` uploads the files after a
 deployment's new pods start, so until it has uploaded this build, the page keeps its ``/static/`` urls, which the
 server itself serves from the image (:func:`console_on_cdn`).
+
+A visitor who isn't signed in gets the page without its splash (:func:`with_silent_splash`): they are on their
+way to a sign-in page, which shows without it.
 """
 
 import re
@@ -109,6 +112,29 @@ def with_static_url(html: str, static_url: str) -> str:
     return html
 
 
+SPLASH_ELEMENT = '<div id="smarter-splash"'
+"""The start of the splash's element in the console's built page."""
+
+SILENT_SPLASH_ELEMENT = '<div id="smarter-splash" class="smarter-splash-silent"'
+"""The same, with the class that hides the splash: the console's index.html defines it."""
+
+
+def with_silent_splash(html: str) -> str:
+    """
+    The console's page, with its splash hidden.
+
+    The splash shows while the console loads a signed-in user's session and first page. A visitor who isn't
+    signed in is on their way to a sign-in page, whatever the path, which shows as soon as its stylesheets
+    have loaded, without the splash. The page's own inline script does the same by path, for the sign-in
+    paths only: it can't tell that a visitor of ``/dashboard/`` isn't signed in.
+
+    :param html: The built page.
+    :returns: The page, with the splash's element marked silent, or unchanged when it has no splash.
+    """
+    silent = html.replace(SPLASH_ELEMENT, SILENT_SPLASH_ELEMENT, 1)
+    return silent
+
+
 def console_index_html() -> Optional[str]:
     """
     The console's built ``index.html``, from ``STATIC_ROOT``.
@@ -141,6 +167,8 @@ class ConsoleAppView(View):
         """
         Return the console's page, whatever the path's arguments, e.g. a password reset link's.
 
+        A visitor who isn't signed in gets it without the splash (:func:`with_silent_splash`).
+
         :param request: The request.
         :returns: The page, or 503 when the console hasn't been built, which ``make react-build`` fixes.
         """
@@ -158,5 +186,7 @@ class ConsoleAppView(View):
             )
         page = html
         if console_on_cdn(html):
-            page = with_static_url(html, settings.STATIC_URL)
+            page = with_static_url(page, settings.STATIC_URL)
+        if not request.user.is_authenticated:
+            page = with_silent_splash(page)
         return HttpResponse(page, content_type="text/html; charset=utf-8")
