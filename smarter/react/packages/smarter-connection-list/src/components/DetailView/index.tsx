@@ -1,2 +1,2 @@
-import DetailView from "@/components/DetailView/Component";
+import DetailView from "./Component";
 export default DetailView;

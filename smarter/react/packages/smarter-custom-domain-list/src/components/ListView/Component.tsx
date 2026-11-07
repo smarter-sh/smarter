@@ -30,12 +30,12 @@ import React, { useState, useEffect } from "react";
 import { formatDateTime, gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
-import type { CustomDomain, CustomDomainListViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
-import { StatusBar, VerificationBadge } from "@/components/StatusBar";
-import { loggerPrefix } from "@/lib/const";
+import type { CustomDomain, CustomDomainListViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
+import { StatusBar, VerificationBadge } from "../StatusBar";
+import { loggerPrefix } from "../../lib/const";
 
-import "@/components/ListView/styles.css";
+import "./styles.css";
 
 /**
  * LoadingText

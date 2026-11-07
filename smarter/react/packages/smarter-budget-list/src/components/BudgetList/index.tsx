@@ -1,2 +1,2 @@
-import BudgetList from "@/components/BudgetList/Component";
+import BudgetList from "./Component";
 export default BudgetList;

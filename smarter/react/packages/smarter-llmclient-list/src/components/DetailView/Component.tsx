@@ -24,9 +24,9 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { LLMClientCustomDomain, LLMClientDetailViewProps } from "@/lib/Types";
-import { StatusBar } from "@/components/StatusBar";
-import { Toolbar } from "@/components/Toolbar";
+import type { LLMClientCustomDomain, LLMClientDetailViewProps } from "../../lib/Types";
+import { StatusBar } from "../StatusBar";
+import { Toolbar } from "../Toolbar";
 
 /** The names of an llmclient's plugins, MCPClients or guardrails. */
 const names = (items?: Array<{ name: string }>) =>

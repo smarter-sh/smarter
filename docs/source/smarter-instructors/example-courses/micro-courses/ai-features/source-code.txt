@@ -210,11 +210,13 @@ Into the Product
      - `contract/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/contract/models.py>`__,
        `caching.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/caching.py>`__
    * - The page
-     - A small React app that Django hosts shows the doodle, its caption, and "Chosen by" or
-       "Drawn by a Smarter AI application" with a link that explains how.
+     - The single-page console's sign-in pages show the doodle, its caption, and "Chosen by" or
+       "Drawn by a Smarter AI application" with a link that explains how; until release v0.42.10, a
+       React app that Django hosted showed it, with a template tag.
        :doc:`/smarter-framework/developer-reference/react-integration`.
      - `smarter-doodle/src/App.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-doodle/src/App.tsx>`__,
-       `react_doodle.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/doodle/templatetags/react_doodle.py>`__
+       `AuthCard.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-console/src/components/AuthCard.tsx>`__,
+       `react_doodle.py <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/doodle/templatetags/react_doodle.py>`__
    * - Testing with the models patched
      - The editor's and artist's answers are patched in tests, with a test for every refusal and
        every failure. The app has well over a hundred tests.

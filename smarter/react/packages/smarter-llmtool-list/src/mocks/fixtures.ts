@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Extension, ExtensionListPage, LLMTool } from "@/lib/Types";
+import type { Extension, ExtensionListPage, LLMTool } from "../lib/Types";
 
 export const API_URL = "/api/web/llmtool/listview/";
 

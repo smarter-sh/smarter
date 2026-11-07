@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar vectorsearch={vectorsearch} />
  */
-import type { Vectorsearch } from "@/lib/Types";
+import type { Vectorsearch } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   vectorsearch: Vectorsearch;

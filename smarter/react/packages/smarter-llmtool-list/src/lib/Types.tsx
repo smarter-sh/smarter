@@ -122,8 +122,8 @@ export interface LLMToolListViewProps {
  * tab lists it, and a page of them: the api's contract, generated from the backend's Pydantic
  * models (smarter.apps.llmtool.views.listview.contract). See src/contract.gen.ts.
  */
-export type { ExtensionListItem as Extension, ExtensionListPage } from "@/contract.gen";
-import type { ExtensionListItem as Extension } from "@/contract.gen";
+export type { ExtensionListItem as Extension, ExtensionListPage } from "../contract.gen";
+import type { ExtensionListItem as Extension } from "../contract.gen";
 
 export interface ExtensionDetailViewProps {
   sessionContext: SessionContext;

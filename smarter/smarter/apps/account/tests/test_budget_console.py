@@ -12,6 +12,7 @@ from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
+from smarter.lib.unittest.resource_views import assert_console_page
 
 
 def url(name: str, **kwargs) -> str:
@@ -55,12 +56,10 @@ class TestBudgetConsole(TestAccountMixin):
         return [budget["name"] for budget in response.json()["objects"]]
 
     def test_list_view(self):
-        """Test that the list view renders the React app's root element."""
+        """Test that the list page is the single-page console's, at /budget/."""
+        self.assertEqual(url(BudgetReverseNames.listview), "/budget/")
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(url(BudgetReverseNames.listview))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("smarter-budget-list-root", response.content.decode())
-        self.assertIn(web_url(WebNames.budget_listview), response.content.decode())
+        assert_console_page(self, url(BudgetReverseNames.listview))
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""

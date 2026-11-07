@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar mcpclient={mcpclient} />
  */
-import type { MCPClient } from "@/lib/Types";
+import type { MCPClient } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   mcpclient: MCPClient;

@@ -1,90 +1,23 @@
-# Smarter Guardrails List React App
+# Smarter Guardrails List
 
-This is the source code for the Guardrails List app located
-at [http://localhost:9357/guardrail/](http://localhost:9357/guardrail/).
+The Guardrails list of the Smarter web console, at [/guardrail/](http://localhost:9357/guardrail/). The
+single-page console, `@smarter/console`, renders this package's `GuardrailList` at that path (see
+`smarter-console/src/lib/lists.ts`), with a session context whose api url is the list's. The
+package has no build of its own.
 
-This component is served by Django. See also:
-
-- [smarter.apps.guardrail.views.listview.view.GuardrailListView](../../smarter/apps/guardrail/views/listview/view.py)
-- [smarter.apps.guardrail.templatetags.react_guardrail_list.guardrail_list_react_assets](../../smarter/apps/guardrail/templatetags/react_guardrail_list.py)
-- [templates/react/guardrail-list.html](../../smarter/templates/react/guardrail-list.html)
+- Django page: [smarter.apps.guardrail.views.listview.view.GuardrailListView](../../../smarter/apps/guardrail/views/listview/view.py), a `ConsoleAppView` subclass that keeps the
+  page's url name, which the dashboard's global search links to.
+- List api: [smarter.apps.guardrail.views.listview.api](../../../smarter/apps/guardrail/views/listview/api.py).
 
 ## Screen Shot
 
 ![Guardrail List Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/guardrail-list-screenshot.png)
 
-## Setup
-
-### Running Locally
-
-This configures Vite to serve the app locally, with console.debug() output enabled.
-Run the app from from [http://localhost:5173/](http://localhost:5173/). Note
-that Django also should be running locally and be available at
-[http://localhost:9357](http://localhost:9357) in order for the React app to
-be able to fetch from the Django API endpoints.
+## Development
 
 ```console
-export NODE_ENV=development
-npm install
-npm run build
-npm run dev
-```
-
-### Running Locally From Django
-
-This configures Vite to generate a production React build, with the final build
-bundle collected into Django's static asset folder. Run the Django web console
-from [http://localhost:9357](http://localhost:9357)
-
-```console
-cd to/the/root/of/this/repo/
-
-# Causes React to generate a production-optimized build.
-export NODE_ENV=production
-
-# builds ALL React apps, and also run Django static asset collection
-make react-build
-
-# Builds the Django Docker container.
-make build
-
-# Starts the Django app container
-make run
-```
-
-### Production Build
-
-For production builds:
-
-```console
-export NODE_ENV=production
-npm install --include=dev
-npm run build
-npm run dev
-```
-
-The Smarter GitHub Action build workflow caches the React app build output to
-speed up the build process in the expected case where React source code has
-not changed.
-
-Note that the manifest.json file includes meta data that can be used for
-trouble shooting purposes.
-
-Example: `http://example.com/static/react/smarter-guardrail-list/manifest.json`
-
-```json
-{
-  "index.html": {
-    "file": "assets/index-A7LvGMNl.js",
-    "name": "index",
-    "src": "index.html",
-    "isEntry": true,
-    "css": ["assets/index-B011HLqe.css"]
-  },
-  "_custom": {
-    "buildTime": "2026-05-31T21:17:32.505Z",
-    "version": "0.2.2",
-    "buildEnv": "production"
-  }
-}
+cd smarter/react
+npm run dev -w @smarter/guardrail-list         # http://localhost:5173/, against the Django dev server at :9357
+npm run storybook -w @smarter/guardrail-list
+npm run test -w @smarter/guardrail-list
 ```

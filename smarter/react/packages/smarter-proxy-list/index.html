@@ -17,23 +17,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   </head>
   <body>
-    <!--
-    only used for development via 'npm run dev'. In production, this file is rendered
-    by Django.
-
-    See:
-    - smarter.apps.proxy.views.listview.view.ProxyListView
-    - smarter.apps.proxy.templatetags.react_proxy_list.proxy_list_react_assets
-    - templates/react/proxy-list.html
-    - http://example.com/proxy/proxies/
-    -->
-    <div
-      id="smarter-proxy-list-root"
-      smarter-proxy-list-api-url="/api/web/proxy/listview/"
-      django-cookie-domain="localhost"
-      django-csrf-cookie-name="csrftoken"
-      django-session-cookie-name="sessionid"
-    ></div>
+    <!-- the development page only (npm run dev): @smarter/console renders the list in the web console. -->
+    <div id="smarter-proxy-list-root"></div>
 
     <script type="module" src="/src/main.tsx"></script>
   </body>

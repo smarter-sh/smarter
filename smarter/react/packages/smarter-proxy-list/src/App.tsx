@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Proxy, ProxyListViewProps, ProxyDetailViewProps } from "@/lib/Types";
-import ListView from "@/components/ListView";
-import DetailView from "@/components/DetailView";
+import type { Proxy, ProxyListViewProps, ProxyDetailViewProps } from "./lib/Types";
+import ListView from "./components/ListView";
+import DetailView from "./components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Proxies") },
@@ -46,7 +46,7 @@ function App({ sessionContext }: AppProps) {
   );
   return (
     <>
-      <section className="mt-5 mb-5 container" id="proxy-list">
+      <section className="mt-5 mb-5" id="proxy-list">
         <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={proxyTabbedListViewContext} />
       </section>

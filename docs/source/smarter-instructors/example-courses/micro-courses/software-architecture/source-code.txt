@@ -198,7 +198,8 @@ Classic Patterns
      - `secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
        `secret/urls.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/urls.py>`__,
        `secret/views/detailview.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/views/detailview.py>`__,
-       `templates/react/secret-list.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/secret-list.html>`__
+       `templates/react/secret-list.html <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/secret-list.html>`__
+       (release v0.42.10: the single-page console renders the list now, :doc:`ADR 035 </adr/035-single-page-app>`)
    * - LAMP
      - Linux, Apache, MySQL and PHP (or Perl or Python): the open-source web stack named in 1998,
        on which much of the early web ran. Smarter is a descendant. The image is built on Debian

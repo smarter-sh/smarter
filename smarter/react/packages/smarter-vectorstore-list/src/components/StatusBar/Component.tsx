@@ -9,8 +9,8 @@
  * Usage:
  *   <StatusBar vectorstore={vectorstore} />
  */
-import type { Vectorstore } from "@/lib/Types";
-import { STATUS_BADGES } from "@/lib/format";
+import type { Vectorstore } from "../../lib/Types";
+import { STATUS_BADGES } from "../../lib/format";
 import { gettext, interpolate } from "@smarter/common";
 
 interface StatusbarProps {

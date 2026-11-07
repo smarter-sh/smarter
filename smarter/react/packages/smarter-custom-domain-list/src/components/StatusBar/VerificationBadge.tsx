@@ -10,7 +10,7 @@
  */
 import { formatDateTime, gettext, interpolate } from "@smarter/common";
 
-import type { CustomDomain, CustomDomainVerificationStatus } from "@/lib/Types";
+import type { CustomDomain, CustomDomainVerificationStatus } from "../../lib/Types";
 
 const BADGE_CLASSES: Record<CustomDomainVerificationStatus, string> = {
   "Not Verified": "badge badge-light-secondary text-gray-700",

@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { LLMHostCompute } from "@/lib/Types";
+import type { LLMHostCompute } from "../lib/Types";
 
 export const API_URL = "/api/web/llmhost/compute/listview/";
 

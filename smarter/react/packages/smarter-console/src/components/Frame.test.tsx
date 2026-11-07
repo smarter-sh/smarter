@@ -61,7 +61,7 @@ describe("the sidebar", () => {
     mountAt("/");
     const nav = await findSidebar();
     expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard");
-    expect(within(nav).getByRole("link", { name: "Budgets" })).toHaveAttribute("href", "/budget/");
+    expect(within(nav).getByRole("link", { name: "Budgets" })).toHaveAttribute("href", "/budget");
     for (const name of ["Terminal", "Proxies", "Vectorstores", "Infrastructure Resources", "Django Admin"]) {
       expect(within(nav).queryByRole("link", { name })).not.toBeInTheDocument();
     }

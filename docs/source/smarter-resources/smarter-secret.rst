@@ -55,7 +55,6 @@ Technical Reference
    secret/resources
    secret/serializers
    secret/signals
-   secret/templatetags
    secret/tasks
    secret/urls
    secret/views

@@ -9,7 +9,7 @@
  * Usage:
  *   <ExtensionStatusBar extension={extension} />
  */
-import type { Extension } from "@/lib/Types";
+import type { Extension } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 
 interface ExtensionStatusBarProps {

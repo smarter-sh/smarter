@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { AuthToken } from "@/lib/Types";
+import type { AuthToken } from "../lib/Types";
 
 export const API_URL = "/api/web/authtoken/listview/";
 

@@ -19,14 +19,14 @@ import {
 } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import { formatAmount } from "@/components/BudgetList/format";
-import type { Budget, BudgetListResponse, BudgetResourceStatus } from "@/lib/Types";
-import { loggerPrefix } from "@/lib/const";
+import { formatAmount } from "./format";
+import type { Budget, BudgetListResponse, BudgetResourceStatus } from "../../lib/Types";
+import { loggerPrefix } from "../../lib/const";
 
-import "@/components/BudgetList/styles.css";
+import "./styles.css";
 
 // recharts is a large dependency, so the chart is loaded in its own chunk.
-const ResourceChart = lazy(() => import("@/components/BudgetList/ResourceChart"));
+const ResourceChart = lazy(() => import("./ResourceChart"));
 
 function resourceLabel(status: BudgetResourceStatus): string {
   const { kind, name, recordLocator } = status.resource;

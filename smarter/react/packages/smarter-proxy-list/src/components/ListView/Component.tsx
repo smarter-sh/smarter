@@ -31,13 +31,13 @@ import React, { useState, useEffect } from "react";
 import { gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
-import type { Proxy, ProxyListViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
-import { StatusBar } from "@/components/StatusBar";
-import { loggerPrefix } from "@/lib/const";
-import { formatApiKey, upstreamHost } from "@/lib/format";
+import type { Proxy, ProxyListViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
+import { StatusBar } from "../StatusBar";
+import { loggerPrefix } from "../../lib/const";
+import { formatApiKey, upstreamHost } from "../../lib/format";
 
-import "@/components/ListView/styles.css";
+import "./styles.css";
 
 /**
  * LoadingText

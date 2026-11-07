@@ -4,8 +4,8 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import type { BudgetSeriesRow } from "@/components/BudgetList/format";
-import type { Budget, BudgetListResponse, BudgetResourceStatus } from "@/lib/Types";
+import type { BudgetSeriesRow } from "../components/BudgetList/format";
+import type { Budget, BudgetListResponse, BudgetResourceStatus } from "../lib/Types";
 
 export const API_URL = "/api/web/account/budget/listview/";
 export const SERIES_URL = "/api/web/dashboard/budgets/series/";

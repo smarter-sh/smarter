@@ -4,11 +4,14 @@
   "description": "A React component library for displaying a list of Secrets on the Smarter web console.",
   "version": "0.2.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mocks": "./src/mocks/handlers.ts"
+  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
-    "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "typecheck": "tsc -b",

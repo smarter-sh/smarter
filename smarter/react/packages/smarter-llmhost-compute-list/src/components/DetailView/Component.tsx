@@ -17,10 +17,10 @@
  */
 import { DetailField, DetailOverview, DetailSection, gettext, ResourceMetadataSection } from "@smarter/common";
 
-import type { LLMHostComputeDetailViewProps } from "@/lib/Types";
-import { formatGpus, formatPrice } from "@/lib/format";
-import { StatusBar } from "@/components/StatusBar";
-import { Toolbar } from "@/components/Toolbar";
+import type { LLMHostComputeDetailViewProps } from "../../lib/Types";
+import { formatGpus, formatPrice } from "../../lib/format";
+import { StatusBar } from "../StatusBar";
+import { Toolbar } from "../Toolbar";
 
 function DetailView({ sessionContext, object: compute, onRequery, filtering }: LLMHostComputeDetailViewProps) {
   return (

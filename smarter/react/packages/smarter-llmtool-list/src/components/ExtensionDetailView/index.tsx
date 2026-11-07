@@ -1,2 +1,2 @@
-import ExtensionDetailView from "@/components/ExtensionDetailView/Component";
+import ExtensionDetailView from "./Component";
 export default ExtensionDetailView;

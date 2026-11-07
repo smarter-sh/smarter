@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar authtoken={authtoken} />
  */
-import type { AuthToken } from "@/lib/Types";
+import type { AuthToken } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   authtoken: AuthToken;

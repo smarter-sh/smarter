@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Vectorsearch } from "@/lib/Types";
+import type { Vectorsearch } from "../lib/Types";
 
 export const API_URL = "/api/web/vectorsearch/listview/";
 

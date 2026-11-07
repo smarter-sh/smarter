@@ -16,8 +16,8 @@
  */
 import { DetailField, DetailOverview, DetailSection, gettext, ResourceMetadataSection } from "@smarter/common";
 
-import type { SecretDetailViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { SecretDetailViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 /** Whether a secret's expiration date has passed. A secret without one never expires. */
 function isExpired(expiresAt: string | null): boolean {

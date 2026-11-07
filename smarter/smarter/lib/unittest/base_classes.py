@@ -18,13 +18,13 @@ from smarter.lib.typing import SmarterDictType
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
-SERVER_RENDERED_PAGE = "/secret/"
+SERVER_RENDERED_PAGE = "/extensions/"
 """
 A console page that Django still renders, for tests of its frame.
 
 The frame is ``templates/dashboard/base.html``'s: the sidebar, the user menu, the welcome dialog, the onboarding
-hints and the tips. The dashboard moved into the single-page console, which serves ``/dashboard/`` as its
-``index.html`` (ADR-035).
+hints and the tips: the Extensions console's. The dashboard and the resource lists moved into the single-page
+console, which serves their paths with its ``index.html`` (ADR-035).
 """
 
 

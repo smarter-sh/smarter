@@ -18,8 +18,8 @@
  */
 import { DetailField, DetailOverview, DetailSection, gettext, ResourceMetadataSection } from "@smarter/common";
 
-import type { ConnectionDetailViewProps, ConnectionKind } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { ConnectionDetailViewProps, ConnectionKind } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 /** What a kind of connection connects to, in the language of the page. A kind that this app doesn't know is shown as it is. */
 function kindLabel(kind: ConnectionKind | string | null | undefined): string | null {

@@ -4,7 +4,7 @@
  */
 import { http, HttpResponse } from "msw";
 
-import type { LLMHost } from "@/lib/Types";
+import type { LLMHost } from "../lib/Types";
 
 import { ACTIONS_URL as BASE, API_URL, makeObject, ownedObjects, sharedObjects } from "./fixtures";
 

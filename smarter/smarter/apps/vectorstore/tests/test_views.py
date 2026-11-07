@@ -8,6 +8,7 @@ from smarter.apps.vectorstore.api.web.urls import (
 )
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames as Names
+from smarter.lib.unittest.resource_views import assert_console_page
 
 from .base_classes import VectorstoreTestBase
 
@@ -30,9 +31,8 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         self.addCleanup(self.client.logout)
 
     def test_list_page(self):
-        response = self.client.get(url(Names.listview))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("smarter-vectorstore-list-root", response.content.decode())
+        """Test that the list page is the single-page console's."""
+        assert_console_page(self, url(Names.listview))
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""

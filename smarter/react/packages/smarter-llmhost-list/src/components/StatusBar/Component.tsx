@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar llmhost={llmhost} />
  */
-import type { LLMHost } from "@/lib/Types";
+import type { LLMHost } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   llmhost: LLMHost;

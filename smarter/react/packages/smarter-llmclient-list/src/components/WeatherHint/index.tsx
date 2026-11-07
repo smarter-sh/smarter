@@ -1,3 +1,3 @@
-import WeatherHint from "@/components/WeatherHint/Component";
+import WeatherHint from "./Component";
 
 export default WeatherHint;

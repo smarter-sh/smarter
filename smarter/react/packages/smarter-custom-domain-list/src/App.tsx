@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { CustomDomain, CustomDomainListViewProps, CustomDomainDetailViewProps } from "@/lib/Types";
-import ListView from "@/components/ListView";
-import DetailView from "@/components/DetailView";
+import type { CustomDomain, CustomDomainListViewProps, CustomDomainDetailViewProps } from "./lib/Types";
+import ListView from "./components/ListView";
+import DetailView from "./components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Custom Domains") },
@@ -46,7 +46,7 @@ function App({ sessionContext }: AppProps) {
   );
   return (
     <>
-      <section className="mt-5 mb-5 container" id="custom-domain-list">
+      <section className="mt-5 mb-5" id="custom-domain-list">
         <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={customDomainTabbedListViewContext} />
       </section>

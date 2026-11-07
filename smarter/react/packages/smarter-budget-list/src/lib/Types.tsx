@@ -5,7 +5,7 @@
  */
 import type { Annotations, Tags, UserProfile } from "@smarter/common";
 
-import type { BudgetPeriod, BudgetUnit } from "@/components/BudgetList/format";
+import type { BudgetPeriod, BudgetUnit } from "../components/BudgetList/format";
 
 /** A spec.resources entry of a Budget manifest: a kind and name, or a record locator. */
 export type BudgetResourceRef = {

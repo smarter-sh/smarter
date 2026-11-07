@@ -24,10 +24,10 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { CustomDomainDnsRecord, CustomDomainDetailViewProps } from "@/lib/Types";
-import { StatusBar } from "@/components/StatusBar";
-import { VerificationBadge } from "@/components/StatusBar/VerificationBadge";
-import { Toolbar } from "@/components/Toolbar";
+import type { CustomDomainDnsRecord, CustomDomainDetailViewProps } from "../../lib/Types";
+import { StatusBar } from "../StatusBar";
+import { VerificationBadge } from "../StatusBar/VerificationBadge";
+import { Toolbar } from "../Toolbar";
 
 /** The domain's DNS records, as a zone file shows them: name, TTL, type and value. */
 function DnsRecords({ records }: { records: CustomDomainDnsRecord[] | null | undefined }) {

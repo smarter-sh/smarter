@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar provider={provider} />
  */
-import type { Provider } from "@/lib/Types";
+import type { Provider } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   provider: Provider;

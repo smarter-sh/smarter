@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Proxy } from "@/lib/Types";
+import type { Proxy } from "../lib/Types";
 
 export const API_URL = "/api/web/proxy/listview/";
 

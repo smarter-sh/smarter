@@ -23,8 +23,8 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { OrchestratorDetailViewProps, OrchestratorHarness } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { OrchestratorDetailViewProps, OrchestratorHarness } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 /** The orchestrator's harnesses, in the order in which they run. */
 function HarnessTable({ harnesses }: { harnesses: OrchestratorHarness[] }) {

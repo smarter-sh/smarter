@@ -139,7 +139,6 @@ class TestGuardrailResourceViews(ResourceViewsTestMixin, GuardrailTestBase):
     id_kwarg = "guardrail_id"
     invalidate_cache = staticmethod(invalidate_all_cached_guardrails_for_user_profile)
     resource_name_prefix = "test_guardrail_resource_views"
-    console_page = True
 
     @classmethod
     def create_resource(cls, name: str) -> Guardrail:

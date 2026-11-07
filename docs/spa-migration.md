@@ -61,20 +61,23 @@ The dashboard is the console's: `/dashboard` renders `@smarter/dashboard`'s `Das
 with no build) inside the frame, and `/` redirects to it. Django serves the console at `/dashboard/`, keeping the
 name `dashboard:dashboard`; `DashboardView`, `react/dashboard.html` and the `react_dashboard` template tag are
 deleted, which closes bug 10. The sidebar opens the console's pages in place (`CONSOLE_PAGE_PATHS`). Tests of
-Django's frame use `SERVER_RENDERED_PAGE` (`/secret/`).
+Django's frame use `SERVER_RENDERED_PAGE`.
 
 The console's frame now has what Django's has: the welcome dialog (`@smarter/welcome`, now importable) with its
 sidebar hint and the onboarding state from the session, the Did you know? tip, and a theme mode menu that stores the
 choice where the theme's JavaScript does, so the console and Django's pages share it. The dashboard route loads
 lazily, in its own chunk.
 
-The resource lists (section 3, phase 2) start with Guardrails, the pilot: `@smarter/guardrail-list` is import-only,
-and the console's `lib/lists` (`LIST_PAGES`) gives each moved list a lazy route at Django's path without the slash,
-with a session context whose `ApiUrl` is the list api. Django keeps `GuardrailListView`, now a `ConsoleAppView`
-subclass, so that `listview_registry()` still pairs the page with its list api for the global search; its template
-and template tag are deleted. `ResourceViewsTestMixin.console_page` tells the shared list tests. The courses that
-taught the Django hosting of the guardrail list link to those files at release v0.42.10. Next: the eleven similar
-lists, then budgets, infrastructure resources and LLM Clients.
+The resource lists (section 3, phase 2) are the console's, all sixteen. Each `@smarter/<kind>-list` is import-only,
+and the console's `lib/lists` (`LIST_PAGES`) gives each a lazy route at Django's path without the slash, with a
+session context whose `ApiUrl` is the list api, the onboarding state (the LLMClient list's weather hint), and a
+`visible` rule where the backend limits the page: proxies and vectorstores while their feature is on, the
+infrastructure resources for superusers. Django keeps each `<Kind>ListView`, now a `ConsoleAppView` subclass, so
+that `listview_registry()` still pairs the page with its list api for the global search; the templates and
+template tags are deleted, and `ResourceViewsTestMixin` checks that each list page is the console's. Tests of
+Django's frame use `SERVER_RENDERED_PAGE`, now the Extensions console. The courses link the deleted files at
+release v0.42.10, and `skills/smarter-django-react` teaches the console's lists. Next: the Extensions console, then
+the manifest detail pages (section 4).
 
 ## Development
 

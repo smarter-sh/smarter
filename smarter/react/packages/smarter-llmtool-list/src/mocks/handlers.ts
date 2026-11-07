@@ -4,7 +4,7 @@
  */
 import { http, HttpResponse } from "msw";
 
-import type { Extension, LLMTool } from "@/lib/Types";
+import type { Extension, LLMTool } from "../lib/Types";
 
 import {
   ACTIONS_URL as BASE,

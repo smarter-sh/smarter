@@ -25,10 +25,10 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { ProxyDetailViewProps } from "@/lib/Types";
-import { StatusBar } from "@/components/StatusBar";
-import { Toolbar } from "@/components/Toolbar";
-import { formatApiKey, formatAuth, proxyUrl } from "@/lib/format";
+import type { ProxyDetailViewProps } from "../../lib/Types";
+import { StatusBar } from "../StatusBar";
+import { Toolbar } from "../Toolbar";
+import { formatApiKey, formatAuth, proxyUrl } from "../../lib/format";
 
 function DetailView({ sessionContext, object: proxy, onRequery, filtering }: ProxyDetailViewProps) {
   const headers = proxy.headers && Object.keys(proxy.headers).length ? proxy.headers : null;

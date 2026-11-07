@@ -23,8 +23,8 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { VectorsearchDetailViewProps, VectorsearchSearchType } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { VectorsearchDetailViewProps, VectorsearchSearchType } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 /** The label of each search type. */
 function searchTypeLabel(searchType: VectorsearchSearchType): string {

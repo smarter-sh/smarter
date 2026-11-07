@@ -32,12 +32,12 @@ import { gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 import { formatDateTime } from "@smarter/common";
 
-import type { AuthToken, AuthTokenListViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
-import { StatusBar } from "@/components/StatusBar";
-import { loggerPrefix } from "@/lib/const";
+import type { AuthToken, AuthTokenListViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
+import { StatusBar } from "../StatusBar";
+import { loggerPrefix } from "../../lib/const";
 
-import "@/components/ListView/styles.css";
+import "./styles.css";
 
 /**
  * LoadingText

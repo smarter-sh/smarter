@@ -1,7 +1,7 @@
 /**
  * Formatting of Proxy attributes, shared by ListView, DetailView, StatusBar and Toolbar.
  */
-import type { Proxy } from "@/lib/Types";
+import type { Proxy } from "./Types";
 import { gettext, interpolate, ngettext } from "@smarter/common";
 
 /** The absolute URL of the Proxy's passthrough endpoint, to use as the base URL of the provider's SDK. */

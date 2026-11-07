@@ -9,8 +9,8 @@
  * Usage:
  *   <StatusBar compute={compute} />
  */
-import type { LLMHostCompute } from "@/lib/Types";
-import { formatNodes } from "@/lib/format";
+import type { LLMHostCompute } from "../../lib/Types";
+import { formatNodes } from "../../lib/format";
 import { gettext, interpolate } from "@smarter/common";
 
 interface StatusbarProps {

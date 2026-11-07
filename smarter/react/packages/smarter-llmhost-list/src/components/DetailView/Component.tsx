@@ -24,8 +24,8 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { HostStatus, LLMHost, LLMHostDetailViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { HostStatus, LLMHost, LLMHostDetailViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 /** The badge of each lifecycle status of an LLMHost's deployment. */
 const STATUS_BADGES: Record<HostStatus, { className: string; label: string }> = {
