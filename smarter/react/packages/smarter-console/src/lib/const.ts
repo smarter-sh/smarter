@@ -20,6 +20,10 @@ export const INACTIVE_PATH = "/account/inactive";
 /** The console's dashboard, its home. */
 export const DASHBOARD_PATH = "/dashboard";
 
+/** The Extensions console, and its api. See smarter.apps.llmtool.extension. */
+export const EXTENSIONS_PATH = "/extensions";
+export const EXTENSIONS_API_URL = "/api/web/llmtool/extensions/";
+
 /** The query parameter that carries the route to return to after signing in. */
 export const NEXT_PARAMETER = "next";
 

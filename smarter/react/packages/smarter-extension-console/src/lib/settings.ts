@@ -1,7 +1,7 @@
 /**
  * The settings form's values, and the request that saves them.
  */
-import type { ConfigureRequest, ExtensionSetting, SecretInput } from "@/lib/types";
+import type { ConfigureRequest, ExtensionSetting, SecretInput } from "./types";
 
 export type SettingValue = string | number | boolean | null;
 export type SecretChoice = { mode: "keep" | "value" | "existing" | "clear"; value: string; secretId: string };

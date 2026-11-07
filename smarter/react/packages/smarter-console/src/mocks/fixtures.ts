@@ -42,7 +42,7 @@ export const userSidebar: ConsoleSidebar = {
   orchestrators: "/orchestrator/",
   apiKeys: "/authtoken/",
   customDomains: "/llmclient/custom-domains/",
-  extensions: "/llm-tools/extensions/",
+  extensions: "/extensions/",
   plugins: "/llm-tools/",
   mcpclients: "/mcpclient/",
   connections: "/connection/",

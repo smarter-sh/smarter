@@ -12,7 +12,7 @@ import type {
   ExtensionSummary,
   RegistryExtension,
   RegistryResponse,
-} from "@/lib/types";
+} from "../lib/types";
 
 export const API_URL = "/api/web/llmtool/extensions/";
 export const LIST_URL = "/extensions/";

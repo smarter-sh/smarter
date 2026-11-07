@@ -26,7 +26,7 @@ export type {
   RegistryVersionInfo,
   SecretInput,
   SecretRef,
-} from "@/contract.gen";
+} from "../contract.gen";
 
 /**
  * What the app knows about the page that hosts it, from its root element's attributes.
