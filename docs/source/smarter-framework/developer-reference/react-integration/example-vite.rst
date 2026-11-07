@@ -1,8 +1,6 @@
 Example Vite Build Configuration
 ==================================
 
-
-
-.. literalinclude:: ../../../../../smarter/react/packages/smarter-workbench/vite.config.ts
+.. literalinclude:: ../../../../../smarter/react/packages/smarter-console/vite.config.ts
    :language: ts
-   :caption: Vite Build Configuration for the Prompt Engineer's Workbench
+   :caption: Vite build configuration of the single-page web console, @smarter/console
