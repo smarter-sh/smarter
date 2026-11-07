@@ -27,6 +27,7 @@ from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
 from smarter.apps.account.oauth import github_oauth_enabled, google_oauth_enabled
 from smarter.apps.account.utils import get_cached_avatar_url
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.web.session.contract import (
     ConsoleAccount,
     ConsoleBadges,
@@ -286,6 +287,16 @@ def sidebar(user: User, console_flags: ConsoleFlags) -> ConsoleSidebar:
     )
 
 
+def sam_kinds() -> list[str]:
+    """
+    Every SAM kind, sorted by name, for the console's docs pages.
+
+    :returns: The kinds, e.g. ``["Account", "ApiConnection", ...]``.
+    """
+    kinds = SAMKinds.all()
+    return sorted(kinds)
+
+
 def console_session(request: HttpRequest) -> ConsoleSession:
     """
     Everything the console needs to start, for the request's user.
@@ -307,6 +318,7 @@ def console_session(request: HttpRequest) -> ConsoleSession:
         language=language(),
         cookies=cookies(),
         flags=flags(user),
+        sam_kinds=sam_kinds(),
         user=None,
         account=None,
         onboarding=None,

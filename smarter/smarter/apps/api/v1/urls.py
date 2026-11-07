@@ -8,6 +8,7 @@ delegates route handling to app-specific URL modules.
 
 - ``accounts/``: User account management endpoints.
 - ``llmclients/``: LLMClient CRUD and related operations.
+- ``openapi.json``: The api's OpenAPI 3.1 document (public), :mod:`smarter.apps.api.v1.contract.views`.
 - ``cli/``: Brokered services for CLI workflows.
 - ``demos/``: Fictional data for the platform's example resources, e.g. the Stackademy course catalogue.
 - ``mcp/``: The MCPServer's two endpoints: its public tools, which read the project's documentation
@@ -36,6 +37,7 @@ from django.urls import include, path
 from smarter.apps.account.api.v1 import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.api.v1.cli import urls as cli_urls
+from smarter.apps.api.v1.contract.views import ApiV1OpenApiJsonView
 from smarter.apps.api.v1.demos import urls as demos_urls
 from smarter.apps.api.v1.tests import urls as tests_urls
 from smarter.apps.connection.api.v1 import urls as connection_urls
@@ -69,6 +71,7 @@ from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.journal.api.v1 import urls as journal_urls
 from smarter.lib.journal.const import namespace as journal_namespace
@@ -81,10 +84,26 @@ logger = logging.getLogger(__name__)
 
 app_name = namespace
 
+
+class ApiV1ReverseNames:
+    """
+    The names of the routes at the root of ``/api/v1/``.
+
+    e.g. ``reverse(ApiV1ReverseNames.namespace, ApiV1ReverseNames.openapi_json)``.
+    """
+
+    namespace = f"api:{namespace}"
+    openapi_json = to_snake_case(ApiV1OpenApiJsonView.__name__)
+
+
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
     # for LLMClients of the form https://example.3141-5926-5359.alpha.api.example.com
     # path("", include(llmclient_urls)),
+    # -------------------------------------------
+    # the api's OpenAPI document
+    # -------------------------------------------
+    path("openapi.json", ApiV1OpenApiJsonView.as_view(), name=ApiV1ReverseNames.openapi_json),
     # -------------------------------------------
     # the main API
     # -------------------------------------------

@@ -82,6 +82,7 @@ export const visitorSession: ConsoleSession = {
     didYouKnow: true,
     reactDebugMode: false,
   },
+  samKinds: ["ApiConnection", "LLMClient", "Secret"],
   user: null,
   account: null,
   onboarding: null,

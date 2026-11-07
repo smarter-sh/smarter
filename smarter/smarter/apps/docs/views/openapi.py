@@ -1,51 +1,36 @@
 """
-The Smarter api's OpenAPI document, and a page that renders it, in the docs app.
+The page that renders the Smarter api's OpenAPI document, in the docs app.
 
-The document is the committed ``openapi.json`` of :mod:`smarter.apps.api.v1.contract`: the typed
-OpenAPI 3.1 contract of the cli api, the chat api and the REST reads, from which clients and SDKs
-are generated. The page renders it with Scalar, which is vendored in
-``static/assets/plugins/custom/scalar/``.
+The document itself is served by the api, at ``/api/v1/openapi.json``
+(:mod:`smarter.apps.api.v1.contract.views`). The page renders it with Scalar, which is vendored in
+``static/assets/plugins/custom/scalar/``. ``/docs/openapi.json``, the document's earlier address,
+redirects to the api's, so that existing links and generated clients keep working.
 
 Both are public: the document describes the api, and holds no data.
 """
 
-import json
+from django.http import HttpRequest
+from django.views.generic import RedirectView
 
-from django.http import HttpRequest, JsonResponse
-
-from smarter.apps.api.v1.contract.const import OPENAPI_PATH
-from smarter.lib.django.views import SmarterView, SmarterWebHtmlView
-from smarter.lib.typing import SmarterDictType
-
-
-def openapi_document(request: HttpRequest) -> SmarterDictType:
-    """
-    The committed OpenAPI document, whose first server is the platform that serves it.
-
-    The committed document's servers are the default platform's and a local one. This platform's
-    own ``/api/v1``, relative to the document's url, is added before them, so that a viewer's
-    requests, e.g. Scalar's "Test Request", go to the platform that the reader is on.
-
-    :param request: The request for the document.
-    :type request: HttpRequest
-    :returns: The document.
-    :rtype: SmarterDictType
-    """
-    with open(OPENAPI_PATH, encoding="utf-8") as file:
-        document = json.load(file)
-    document["servers"] = [
-        {"url": request.build_absolute_uri("/api/v1"), "description": "This platform."},
-        *document.get("servers", []),
-    ]
-    return document
+from smarter.apps.api.v1.urls import ApiV1ReverseNames
+from smarter.lib.django.shortcuts import reverse
+from smarter.lib.django.views import SmarterWebHtmlView
 
 
-class DocsOpenApiJsonView(SmarterView):
-    """The Smarter api's OpenAPI 3.1 document, as JSON."""
+class DocsOpenApiJsonView(RedirectView):
+    """``/docs/openapi.json``: a permanent redirect to the api's document, ``/api/v1/openapi.json``."""
 
-    def get(self, request: HttpRequest, *args, **kwargs):
-        """Return the document."""
-        return JsonResponse(openapi_document(request), json_dumps_params={"indent": 2})
+    permanent = True
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs) -> str:
+        """
+        The api's document.
+
+        :returns: Its path, ``/api/v1/openapi.json``, plus the request's query string.
+        """
+        self.url = reverse(ApiV1ReverseNames.namespace, ApiV1ReverseNames.openapi_json)
+        return super().get_redirect_url(*args, **kwargs)
 
 
 class DocsOpenApiView(SmarterWebHtmlView):
@@ -55,7 +40,8 @@ class DocsOpenApiView(SmarterWebHtmlView):
 
     def get(self, request: HttpRequest, *args, **kwargs):
         """Render the page."""
-        return self.clean_http_response(request, template_path=self.template_path, context={})
+        context = {"openapi_json_url": reverse(ApiV1ReverseNames.namespace, ApiV1ReverseNames.openapi_json)}
+        return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-__all__ = ["DocsOpenApiJsonView", "DocsOpenApiView", "openapi_document"]
+__all__ = ["DocsOpenApiJsonView", "DocsOpenApiView"]

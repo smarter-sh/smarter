@@ -38,7 +38,7 @@
                 <code>Token &lt;api key&gt;</code>, to try the operations against this platform.{% endblocktranslate %}
               </p>
               <p class="fs-5">
-                <a href="{% url 'docs:openapi-json' %}" download="openapi.json">{% translate "Download openapi.json" %}</a>
+                <a href="{{ openapi_json_url }}" download="openapi.json">{% translate "Download openapi.json" %}</a>
                 &nbsp;·&nbsp;
                 <a href="{% url 'docs:json_schemas' %}">{% translate "SAM JSON Schemas" %}</a>
                 &nbsp;·&nbsp;
@@ -70,7 +70,7 @@
     // Scalar-hosted AI agent or developer tools (share, deploy), so "Test Request" goes straight to
     // this platform. See static/assets/plugins/custom/scalar/README.md.
     window.Scalar.createApiReference("#openapi-reference", {
-      url: "{% url 'docs:openapi-json' %}",
+      url: "{{ openapi_json_url }}",
       proxyUrl: "",
       telemetry: false,
       withDefaultFonts: false,

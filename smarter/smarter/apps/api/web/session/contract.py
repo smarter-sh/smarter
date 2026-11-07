@@ -4,7 +4,7 @@ The contract of the web console's session api, ``GET /api/web/session/``, as Pyd
 The single-page console (:doc:`ADR-035 </adr/035-single-page-app>`) calls it when it starts, and again
 after the user signs in, signs out or changes profile. It replaces what Django's context processors and
 the React apps' template tags put into each server-rendered page: who the user is, the account that the
-console acts for, the platform's branding, which sign-in options and features are on, the languages,
+console acts for, the platform's branding, which sign-in options and features are on, the languages, the SAM kinds,
 and the state of the welcome dialog and onboarding hints. The JSON is camelCase.
 
 A request without a signed-in user gets a :class:`ConsoleSession` whose ``user``, ``account``,
@@ -168,9 +168,9 @@ class ConsoleBadges(ConsoleSessionModel):
 
 class ConsoleSidebar(ConsoleSessionModel):
     """
-    The urls of the sidebar's links, reversed by the backend, which serves their pages until they move into the.
+    The urls of the sidebar's links, reversed by the backend.
 
-    console. A link that the platform or the user doesn't have is null, and the sidebar leaves it out.
+    A link that the platform or the user doesn't have is null, and the sidebar leaves it out.
     """
 
     dashboard: str = Field(..., description="The dashboard.")
@@ -213,6 +213,13 @@ class ConsoleSession(ConsoleSessionModel):
     language: ConsoleLanguage
     cookies: ConsoleCookies
     flags: ConsoleFlags
+    sam_kinds: list[str] = Field(
+        ...,
+        description=(
+            "Every SAM kind, sorted by name, e.g. LLMClient: the docs pages list each one's example manifest "
+            "and JSON Schema."
+        ),
+    )
     user: Optional[ConsoleUser] = Field(..., description="The signed-in user, or null.")
     account: Optional[ConsoleAccount] = Field(..., description="The account the console acts for, or null.")
     onboarding: Optional[ConsoleOnboarding] = Field(..., description="The onboarding hints' state, or null.")
