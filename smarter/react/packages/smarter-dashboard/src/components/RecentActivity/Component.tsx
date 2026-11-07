@@ -20,8 +20,8 @@
 import type { SessionContext } from "@smarter/common";
 import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";
 
-import useDashboardApi from "@/hooks/useDashboardApi";
-import "@/components/RecentActivity/styles.css";
+import useDashboardApi from "../../hooks/useDashboardApi";
+import "./styles.css";
 
 interface ActivityItem {
   created_at: string;

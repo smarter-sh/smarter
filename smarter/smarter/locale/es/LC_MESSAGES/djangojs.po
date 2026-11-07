@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 00:06+0000\n"
+"POT-Creation-Date: 2026-11-07 00:41+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -1258,14 +1258,6 @@ msgid ""
 msgstr ""
 "La cuenta social que intentaste asociar ya está vinculada a otro usuario de "
 "esta plataforma."
-
-#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
-msgid "Welcome, %(name)s"
-msgstr "Te damos la bienvenida, %(name)s"
-
-#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
-msgid "Open the dashboard"
-msgstr "Abrir el panel"
 
 #. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
 msgid "Your account isn't active"
@@ -10178,6 +10170,12 @@ msgstr "Novedades"
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Recently added Smarter features"
 msgstr "Funciones de Smarter agregadas recientemente"
+
+#~ msgid "Welcome, %(name)s"
+#~ msgstr "Te damos la bienvenida, %(name)s"
+
+#~ msgid "Open the dashboard"
+#~ msgstr "Abrir el panel"
 
 #~ msgid "The password is required"
 #~ msgstr "La contraseña es obligatoria"

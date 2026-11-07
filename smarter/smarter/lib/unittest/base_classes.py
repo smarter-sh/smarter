@@ -18,6 +18,15 @@ from smarter.lib.typing import SmarterDictType
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
+SERVER_RENDERED_PAGE = "/secret/"
+"""
+A console page that Django still renders, for tests of its frame.
+
+The frame is ``templates/dashboard/base.html``'s: the sidebar, the user menu, the welcome dialog, the onboarding
+hints and the tips. The dashboard moved into the single-page console, which serves ``/dashboard/`` as its
+``index.html`` (ADR-035).
+"""
+
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """

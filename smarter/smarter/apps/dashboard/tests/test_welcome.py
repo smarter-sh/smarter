@@ -15,6 +15,7 @@ from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
 
 
 class TestWelcomeApiViews(TestAccountMixin):
@@ -132,7 +133,7 @@ class TestWelcomeApiViews(TestAccountMixin):
     def test_console_pages_mount_the_dialog(self):
         """Test that a console page opens the dialog for a new user, and doesn't once they have closed it."""
         self.client.force_login(self.non_admin_user)
-        page = self.client.get("/dashboard/")
+        page = self.client.get(SERVER_RENDERED_PAGE)
         self.assertEqual(page.status_code, HTTPStatus.OK)
         content = page.content.decode()
         self.assertIn('id="smarter-welcome-root"', content)
@@ -142,7 +143,7 @@ class TestWelcomeApiViews(TestAccountMixin):
         # @smarter/dashboard-user-menu React app.
         self.assertIn('id="smarter-dashboard-user-menu-root"', content)
         self.post(self.dismiss_url)
-        content = self.client.get("/dashboard/").content.decode()
+        content = self.client.get(SERVER_RENDERED_PAGE).content.decode()
         self.assertIn('smarter-welcome-show="false"', content)
         self.assertIn('smarter-welcome-show-at-startup="false"', content)
 
@@ -150,10 +151,10 @@ class TestWelcomeApiViews(TestAccountMixin):
         """Test that, with Show at startup ticked, the dialog opens by itself once per session, i.e. per sign-in."""
         self.client.force_login(self.non_admin_user)
         self.post(self.dismiss_url, {"showAtStartup": True})
-        content = self.client.get("/dashboard/").content.decode()
+        content = self.client.get(SERVER_RENDERED_PAGE).content.decode()
         self.assertIn('smarter-welcome-show="false"', content)
         self.assertIn('smarter-welcome-show-at-startup="true"', content)
         # signing in again starts a new session.
         self.client.logout()
         self.client.force_login(self.non_admin_user)
-        self.assertIn('smarter-welcome-show="true"', self.client.get("/dashboard/").content.decode())
+        self.assertIn('smarter-welcome-show="true"', self.client.get(SERVER_RENDERED_PAGE).content.decode())

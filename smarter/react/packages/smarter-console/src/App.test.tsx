@@ -2,7 +2,9 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { dashboardHandlers } from "@smarter/dashboard/mocks";
 
 import { server } from "@test/server";
 
@@ -12,6 +14,11 @@ import { sessionErrorHandler, sessionHandler, userSessionHandler, visitorSession
 import { useConsoleSession } from "@/session/context";
 import { routes } from "@/router";
 import { nextRoute } from "@/lib/next";
+
+// a signed-in user lands on the dashboard, whose widgets call the dashboard api.
+beforeEach(() => {
+  server.use(...dashboardHandlers);
+});
 
 function mountAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -24,7 +31,7 @@ describe("the console", () => {
     server.use(userSessionHandler);
     mountAt("/");
     expect(screen.getByRole("status")).toHaveTextContent("Loading...");
-    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Dashboard" })).toBeInTheDocument();
   });
 
   it("frames a signed-in user's pages with the sidebar and the user menu", async () => {
@@ -37,10 +44,16 @@ describe("the console", () => {
       "data-smarter-onboarding",
       "sidebar-llmclients",
     );
-    expect(screen.getByRole("link", { name: "Open the dashboard" })).toHaveAttribute(
-      "href",
-      "http://localhost:9357/dashboard/",
-    );
+  });
+
+  it("is home at the dashboard, which the sidebar opens in place", async () => {
+    server.use(userSessionHandler);
+    const router = mountAt("/");
+    expect(await screen.findByRole("region", { name: "Dashboard" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/dashboard");
+    const sidebar = screen.getByRole("navigation", { name: "Main" });
+    expect(within(sidebar).getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard");
+    expect(within(sidebar).getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
   });
 
   it("sends a visitor to sign in, and remembers where they were going", async () => {
@@ -65,27 +78,19 @@ describe("the console", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("The console couldn't reach the server.");
     server.use(userSessionHandler);
     await userEvent.setup().click(screen.getByRole("button", { name: "Try again" }));
-    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Dashboard" })).toBeInTheDocument();
   });
 
   it("sets the page's language from the session", async () => {
     server.use(userSessionHandler);
     mountAt("/");
-    await screen.findByRole("heading", { name: "Welcome, Ada" });
+    await screen.findByRole("region", { name: "Dashboard" });
     expect(document.documentElement.lang).toBe("en");
     expect(document.documentElement.dir).toBe("ltr");
   });
 });
 
 describe("the console's fallbacks", () => {
-  it("greets a user without a first name by username, and shows no account without a profile", async () => {
-    const user = { ...userSession.user!, firstName: "" };
-    server.use(sessionHandler({ ...userSession, user, account: null }));
-    mountAt("/");
-    expect(await screen.findByRole("heading", { name: "Welcome, ada" })).toBeInTheDocument();
-    expect(screen.queryByLabelText("Account")).not.toBeInTheDocument();
-  });
-
   it("names the user menu with the username of a user without an email", async () => {
     const user = { ...userSession.user!, email: "" };
     server.use(sessionHandler({ ...userSession, user }));
@@ -97,7 +102,7 @@ describe("the console's fallbacks", () => {
     const language = { ...userSession.language, current: "ar", bidi: true };
     server.use(sessionHandler({ ...userSession, language }));
     mountAt("/");
-    await screen.findByRole("heading", { name: "Welcome, Ada" });
+    await screen.findByRole("region", { name: "Dashboard" });
     expect(document.documentElement.dir).toBe("rtl");
   });
 

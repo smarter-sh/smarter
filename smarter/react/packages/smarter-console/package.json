@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@smarter/common": "^0.2.0",
+    "@smarter/dashboard": "^0.3.0",
     "@smarter/dashboard-user-menu": "^0.1.0",
     "@smarter/doodle": "^0.1.0",
     "react": "^19.3.0",

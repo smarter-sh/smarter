@@ -21,8 +21,8 @@
 import type { SessionContext } from "@smarter/common";
 import { gettext, interpolateNodes, Loading } from "@smarter/common";
 
-import useDashboardApi from "@/hooks/useDashboardApi";
-import "@/components/QuickActions/styles.css";
+import useDashboardApi from "../../hooks/useDashboardApi";
+import "./styles.css";
 
 interface QuickAction {
   name: string;

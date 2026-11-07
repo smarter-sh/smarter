@@ -14,6 +14,7 @@ from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
     SmarterReactTemplateTagManager,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
 
 SWITCH = SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_DID_YOU_KNOW
 MANAGER = "smarter.apps.dashboard.templatetags.react_didyouknow.templatetag_manager"
@@ -31,7 +32,7 @@ class TestReactDidYouKnow(TestAccountMixin):
     def page(self) -> str:
         self.client.force_login(self.non_admin_user)
         with patch(f"{MANAGER}.reactapp_build_assets", ASSETS):
-            response = self.client.get("/dashboard/")
+            response = self.client.get(SERVER_RENDERED_PAGE)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         return response.content.decode()
 

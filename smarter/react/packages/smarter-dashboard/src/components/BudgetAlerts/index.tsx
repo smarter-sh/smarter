@@ -1,3 +1,3 @@
-import BudgetAlerts from "@/components/BudgetAlerts/Component";
+import BudgetAlerts from "./Component";
 
 export default BudgetAlerts;

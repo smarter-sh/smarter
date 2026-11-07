@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 00:06+0000\n"
+"POT-Creation-Date: 2026-11-07 00:41+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -1208,14 +1208,6 @@ msgstr ""
 msgid ""
 "The social account you tried to associate is already linked to another user "
 "on this platform."
-msgstr ""
-
-#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
-msgid "Welcome, %(name)s"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
-msgid "Open the dashboard"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx

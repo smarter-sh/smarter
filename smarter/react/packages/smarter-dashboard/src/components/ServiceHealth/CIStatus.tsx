@@ -17,7 +17,7 @@
 import { useState } from "react";
 import { gettext } from "@smarter/common";
 
-import { repositoryUrl as validRepositoryUrl } from "@/components/ServiceHealth/repository";
+import { repositoryUrl as validRepositoryUrl } from "./repository";
 
 /** The workflows whose badges show: [alt text, workflow file]. */
 const WORKFLOWS: [string, string][] = [

@@ -13,7 +13,7 @@ from django.utils import translation
 from smarter.apps.account.models.account_contact import unsubscribe_token
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.templatetags.smarter_i18n import to_locale
-from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE, SmarterTestBase
 
 TEMPLATES_DIR = Path(settings.BASE_DIR) / "templates"
 UNTRANSLATED = re.compile(r'^msgstr(\[\d+\])? ""\n(?!")', re.MULTILINE)
@@ -191,10 +191,10 @@ class TestI18nViews(TestAccountMixin):
                 self.assertIn(translated, response.content.decode())
         del self.client.cookies[settings.LANGUAGE_COOKIE_NAME]
 
-    def test_dashboard_loads_the_javascript_catalog(self):
-        """The dashboard pages, which host the React apps, load the JavaScript catalog."""
+    def test_console_pages_load_the_javascript_catalog(self):
+        """The console pages that Django renders, which host the React apps, load the JavaScript catalog."""
         self.client.force_login(self.non_admin_user)
-        response = self.client.get("/dashboard/", follow=True)
+        response = self.client.get(SERVER_RENDERED_PAGE, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(reverse("javascript-catalog"), response.content.decode())
         self.client.logout()

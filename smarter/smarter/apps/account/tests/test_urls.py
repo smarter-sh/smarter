@@ -35,7 +35,9 @@ class TestUrls(TestAccountMixin):
 
     def test_console_pages(self):
         """
-        Sign-in, registration, password reset and the account's lifecycle pages are the single-page console's.
+        Sign-in, registration, password reset, the account's lifecycle pages and the dashboard are the.
+
+        single-page console's.
 
         See smarter.apps.dashboard.tests.test_console_app for the pages themselves.
         """
@@ -45,6 +47,7 @@ class TestUrls(TestAccountMixin):
             "account_password_reset_request",
             f"{AccountReverseNames.namespace}:{AccountReverseNames.ACCOUNT_INACTIVE}",
             f"{AccountReverseNames.namespace}:{AccountReverseNames.ACCOUNT_ALREADY_ASSOCIATED}",
+            "dashboard:dashboard",
         ):
             with self.subTest(name=name):
                 view = resolve(reverse(name)).func

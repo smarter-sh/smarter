@@ -12,7 +12,7 @@ import { gettext } from "@smarter/common";
 import { Link, useLocation } from "react-router";
 
 import type { ConsoleSession } from "@/contract.gen";
-import { activeSidebarItem, sidebarSections, type SidebarItem } from "@/lib/sidebar";
+import { activeSidebarItem, consolePath, isConsolePage, sidebarSections, type SidebarItem } from "@/lib/sidebar";
 
 interface SidebarProps {
   session: ConsoleSession;
@@ -31,27 +31,48 @@ interface ItemLinkProps {
 
 function ItemLink({ item, url, active, badge }: ItemLinkProps) {
   const external = "href" in item;
+  const className = `menu-link${active ? " active" : ""}`;
+  const content = (
+    <>
+      <span className="menu-icon">
+        <i className={`ki-outline ${item.icon} fs-2`} aria-hidden="true" />
+      </span>
+      <span className="menu-title">{item.label}</span>
+      {badge > 0 && (
+        <span className="menu-badge">
+          <span className="badge badge-warning" title={gettext("Updates available")}>
+            {badge}
+          </span>
+        </span>
+      )}
+    </>
+  );
+  // a page that has moved into the console opens in place; any other loads the backend's page.
+  if (!external && isConsolePage(url)) {
+    return (
+      <div className="menu-item">
+        <Link
+          className={className}
+          to={consolePath(url)}
+          aria-current={active ? "page" : undefined}
+          data-smarter-onboarding={item.onboarding}
+        >
+          {content}
+        </Link>
+      </div>
+    );
+  }
   return (
     <div className="menu-item">
       <a
-        className={`menu-link${active ? " active" : ""}`}
+        className={className}
         href={url}
         aria-current={active ? "page" : undefined}
         target={external ? "_blank" : undefined}
         rel={external ? "noreferrer" : undefined}
         data-smarter-onboarding={item.onboarding}
       >
-        <span className="menu-icon">
-          <i className={`ki-outline ${item.icon} fs-2`} aria-hidden="true" />
-        </span>
-        <span className="menu-title">{item.label}</span>
-        {badge > 0 && (
-          <span className="menu-badge">
-            <span className="badge badge-warning" title={gettext("Updates available")}>
-              {badge}
-            </span>
-          </span>
-        )}
+        {content}
       </a>
     </div>
   );

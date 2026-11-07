@@ -35,18 +35,18 @@
  *       cookieDomain=".smarter.sh"
  *     />
  */
-import type { AppContextInterface } from "@/main";
+import type { AppContextInterface } from "../../Types";
 
-import "@/components/Dashboard/styles.css";
-import MyResources from "@/components/MyResources/Component";
-import ServiceHealth from "@/components/ServiceHealth/Component";
-import QuickActions from "@/components/QuickActions/Component";
-import GlobalSearch from "@/components/GlobalSearch/Component";
-import GettingStarted from "@/components/GettingStarted/Component";
-import RecentActivity from "@/components/RecentActivity/Component";
-import BudgetAlerts from "@/components/BudgetAlerts/Component";
-import UserCharges from "@/components/TokenUsage";
-import BudgetVsActual from "@/components/BudgetVsActual";
+import "./styles.css";
+import MyResources from "../MyResources/Component";
+import ServiceHealth from "../ServiceHealth/Component";
+import QuickActions from "../QuickActions/Component";
+import GlobalSearch from "../GlobalSearch/Component";
+import GettingStarted from "../GettingStarted/Component";
+import RecentActivity from "../RecentActivity/Component";
+import BudgetAlerts from "../BudgetAlerts/Component";
+import UserCharges from "../TokenUsage";
+import BudgetVsActual from "../BudgetVsActual";
 import { gettext } from "@smarter/common";
 import {
   Cli,
@@ -64,8 +64,9 @@ import {
 function Dashboard({ appContext }: { appContext: AppContextInterface }) {
   return (
     <>
-      <section id="kt_app_content" aria-label={gettext("Dashboard")} className="app-content flex-column-fluid">
-        <div id="kt_app_content_container" className="app-container container-xxl">
+      {/* the console's layout gives the page the theme's app-content and app-container. */}
+      <section aria-label={gettext("Dashboard")}>
+        <div>
           {appContext.budgetsApiUrl && (
             <BudgetAlerts sessionContext={appContext.sessionContext} apiUrl={appContext.budgetsApiUrl} />
           )}

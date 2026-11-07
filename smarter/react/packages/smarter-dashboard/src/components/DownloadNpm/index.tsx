@@ -1,3 +1,3 @@
-import DownloadNpm from "@/components/DownloadNpm/Component";
+import DownloadNpm from "./Component";
 
 export default DownloadNpm;

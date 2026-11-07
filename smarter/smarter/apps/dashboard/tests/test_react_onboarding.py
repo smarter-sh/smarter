@@ -16,6 +16,7 @@ from smarter.apps.dashboard.templatetags import react_onboarding
 from smarter.apps.dashboard.views.views.api import onboarding
 from smarter.lib import json
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
 
 SWITCH = SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_ONBOARDING_HINTS
 
@@ -57,7 +58,7 @@ class TestReactOnboarding(TestAccountMixin):
         )
         self.client.force_login(self.non_admin_user)
         with override_switch(SWITCH, active=True):
-            response = self.client.get("/dashboard/")
+            response = self.client.get(SERVER_RENDERED_PAGE)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.content.decode()
         self.assertIn('data-smarter-onboarding="sidebar-llmclients"', content)

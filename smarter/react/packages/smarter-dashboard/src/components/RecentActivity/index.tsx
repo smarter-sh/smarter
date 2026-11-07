@@ -1,3 +1,3 @@
-import RecentActivity from "@/components/RecentActivity/Component";
+import RecentActivity from "./Component";
 
 export default RecentActivity;

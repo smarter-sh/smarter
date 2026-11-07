@@ -18,14 +18,17 @@
 {% if user.is_authenticated %}
 <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
   class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-  <!--begin:Menu link Logout-->
-  <a href="{% url 'logout_view' %}" class="menu-link">
-    <span class="menu-link">
+  <!--
+  signing out is a POST to the console's account api. static/js/smarter-base.js sends it, then goes to the sign-in
+  page; without JavaScript, the form's own POST signs the user out too.
+  -->
+  <form method="post" action="{% url 'api:web:account:sign_out_api_view' %}" data-smarter-sign-out="{% url 'login_view' %}">
+    {% csrf_token %}
+    <button type="submit" class="menu-link border-0 bg-transparent">
       <span class="menu-title">{% translate "Logout" %}</span>
       <span class="menu-arrow d-lg-none"></span>
-    </span>
-  </a>
-  <!--end:Menu link Logout-->
+    </button>
+  </form>
 </div>
 {% endif %}
 <!--end:Menu item Logout-->

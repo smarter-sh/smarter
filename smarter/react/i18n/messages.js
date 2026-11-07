@@ -578,10 +578,6 @@ gettext("Back to sign in");
 gettext("Social Account Already Associated");
 // Translators: used in react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx
 gettext("The social account you tried to associate is already linked to another user on this platform.");
-// Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
-gettext("Welcome, %(name)s");
-// Translators: used in react/packages/smarter-console/src/routes/HomePage.tsx
-gettext("Open the dashboard");
 // Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
 gettext("Your account isn't active");
 // Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx

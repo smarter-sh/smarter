@@ -1,72 +1,19 @@
+/**
+ * The development page of the dashboard (`npm run dev`), with the example context of src/mocks/fixtures.ts. Its
+ * widgets call the Django dev server's dashboard api, through vite.config.ts's proxy, as the signed-in user of
+ * localhost:9357. In the web console, @smarter/console renders the package's component (src/index.ts).
+ */
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix, projectName, projectVersion } from "@/const";
-import App from "@/App.tsx";
+import App from "./App";
+import { appContext } from "./mocks/fixtures";
 
 const rootEl = document.getElementById("smarter-dashboard-root");
-if (!rootEl) throw new Error("Root element not found");
+if (!rootEl) throw new Error("The dashboard's root element was not found.");
 
-const csrfCookieName = rootEl.getAttribute("smarter-csrf-cookie-name");
-const djangoSessionCookieName = rootEl.getAttribute("smarter-django-session-cookie-name");
-const cookieDomain = rootEl.getAttribute("smarter-cookie-domain") || window.location.hostname;
-
-const myResourcesApiUrl = rootEl.getAttribute("smarter-my-resources-api-url");
-const serviceHealthApiUrl = rootEl.getAttribute("smarter-service-health-api-url");
-const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "true";
-const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
-const chargesApiUrl = rootEl.getAttribute("smarter-charges-api-url") || "";
-const budgetsApiUrl = rootEl.getAttribute("smarter-budgets-api-url") || "";
-const activityApiUrl = rootEl.getAttribute("smarter-activity-api-url") || "";
-const gettingStartedApiUrl = rootEl.getAttribute("smarter-getting-started-api-url") || "";
-const quickActionsApiUrl = rootEl.getAttribute("smarter-quick-actions-api-url") || "";
-const globalSearchApiUrl = rootEl.getAttribute("smarter-global-search-api-url") || "";
-
-const smarterClient = projectName;
-const smarterClientVersion = projectVersion;
-const smarterCapabilities = ["custom"];
-
-if (!myResourcesApiUrl) throw new Error("My Resources API URL not found in root element attributes");
-if (!serviceHealthApiUrl) throw new Error("Service Health API URL not found in root element attributes");
-if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
-if (!djangoSessionCookieName) throw new Error("Django session cookie name not found in root element attributes");
-if (!cookieDomain) throw new Error("Cookie domain not found in root element attributes");
-if (!smarterRequestId) throw new Error("Smarter request ID not found in root element attributes");
-if (!chargesApiUrl) throw new Error("Charges API url not found in root element attributes");
-
-const sessionContext: SessionContext = {
-  ApiUrl: myResourcesApiUrl,
-  csrfCookieName,
-  djangoSessionCookieName,
-  cookieDomain,
-  debugMode,
-  smarterClient,
-  smarterClientVersion,
-  smarterRequestId,
-  smarterCapabilities,
-};
-export interface AppContextInterface {
-  sessionContext: SessionContext;
-  myResourcesApiUrl: string;
-  serviceHealthApiUrl: string;
-  chargesApiUrl: string;
-  budgetsApiUrl: string;
-  activityApiUrl: string;
-  gettingStartedApiUrl: string;
-  quickActionsApiUrl: string;
-  globalSearchApiUrl: string;
-}
-
-const appContext: AppContextInterface = {
-  sessionContext,
-  myResourcesApiUrl,
-  serviceHealthApiUrl,
-  chargesApiUrl,
-  budgetsApiUrl,
-  activityApiUrl,
-  gettingStartedApiUrl,
-  quickActionsApiUrl,
-  globalSearchApiUrl,
-};
-console.debug(loggerPrefix, "appContext initialized with values:", appContext);
-createRoot(rootEl).render(<App appContext={appContext} />);
+createRoot(rootEl).render(
+  <StrictMode>
+    <App appContext={appContext} />
+  </StrictMode>,
+);

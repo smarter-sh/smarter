@@ -21,6 +21,7 @@ from smarter.apps.dashboard.templatetags.react_dashboard_user_menu import (
 )
 from smarter.lib import json
 from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
+from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
 
 MANAGER = "smarter.apps.dashboard.templatetags.react_dashboard_user_menu.templatetag_manager"
 ASSETS = ReactAppAssets(css=["assets/index.css"], js=["assets/index.js"])
@@ -128,7 +129,7 @@ class TestReactDashboardUserMenu(TestAccountMixin):
     def test_console_pages_mount_the_menu(self):
         self.client.force_login(self.non_admin_user)
         with patch(f"{MANAGER}.reactapp_build_assets", ASSETS):
-            response = self.client.get("/dashboard/")
+            response = self.client.get(SERVER_RENDERED_PAGE)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.content.decode()
         self.assertIn('id="smarter-dashboard-user-menu-root"', content)

@@ -42,7 +42,7 @@ export function Layout() {
           />
           <div id="kt_app_main" className="app-main flex-column flex-row-fluid">
             <main id="kt_app_content" className="app-content flex-column-fluid">
-              <div className="app-container container-fluid">
+              <div id="kt_app_content_container" className="app-container container-xxl">
                 <Outlet />
               </div>
             </main>
