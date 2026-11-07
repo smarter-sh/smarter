@@ -72,6 +72,9 @@ class LLMClientDetailView(DocsBaseView):
     .. note::
 
         The llmclient name and kind must be provided and valid. Otherwise, a "not found" response is returned.
+        So is it when the user may not read the llmclient, by the resource api's rule,
+        :func:`smarter.apps.dashboard.resource_detail.readable_instance`: e.g. another account's llmclient,
+        or a staff-only one for a user who is not the platform's staff.
 
     .. seealso::
 
@@ -142,6 +145,23 @@ class LLMClientDetailView(DocsBaseView):
             # const is easiest.
             self.kind = SAMKinds.LLM_CLIENT
         except LLMClient.DoesNotExist:
+            return SmarterHttpResponseNotFound(
+                request=request, error_message=f"LLMClient with id {llmclient_id} not found"
+            )
+
+        # the manifest is described as its owner, below, so the user must first be allowed to read the
+        # llmclient, by the resource api's rule. Otherwise the answer is the same 404 as for an unknown id, so
+        # that another account's llmclient can't be discovered.
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.resource_detail import readable_instance
+
+        if readable_instance(request.user, self.llmclient.record_locator) is None:
+            logger.debug(
+                "%s.get() - %s may not read %s. Returning 404.",
+                self.formatted_class_name,
+                request.user,
+                self.llmclient.record_locator,
+            )
             return SmarterHttpResponseNotFound(
                 request=request, error_message=f"LLMClient with id {llmclient_id} not found"
             )
