@@ -80,7 +80,9 @@ tests call, and the endpoints of the :doc:`MCPServer </smarter-platform/mcpserve
 whose protocol the Model Context Protocol specification defines, are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
 
-Every Smarter platform serves its document, at ``/docs/openapi.json``, and renders it with
+Every Smarter platform serves its document, at ``/api/v1/openapi.json``
+(:mod:`smarter.apps.api.v1.contract.views`; ``/docs/openapi.json``, its earlier address, redirects
+there), and renders it with
 `Scalar <https://github.com/scalar/scalar>`__, which the platform ships in its static files, at
 ``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The page calls
 none of Scalar's hosted services. The served document lists the platform's own ``/api/v1`` as its

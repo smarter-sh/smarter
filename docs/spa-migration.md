@@ -158,6 +158,13 @@ and the Django-React guide uses it as that pattern's example. `@smarter/onboardi
 `<script id="smarter-onboarding">` when no state is passed; no page writes one now. Next: the docs pages (section 6,
 phase 3).
 
+The docs pages' backend (section 6, step 1): the api serves its OpenAPI document at `/api/v1/openapi.json`
+(`smarter.apps.api.v1.contract.views`, `ApiV1ReverseNames`), with the platform's own server first, as before, and
+`/docs/openapi.json` redirects there permanently, keeping its query string, because the SDK docs and generated
+clients use it. The Scalar page reads the api's address. The session lists every SAM kind (`samKinds`, sorted), for
+the docs pages' lists of example manifests and JSON Schemas, which call the public cli api,
+`/api/v1/cli/example-manifest/<kind>/` and `json-schema/<kind>/`. Next: the docs pages in the console (step 2).
+
 ## Development
 
 - The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with
