@@ -83,13 +83,15 @@ Only the ``.po`` files are committed. The Docker image compiles them to the ``.m
 reads, with ``manage.py compilemessages``. The English catalogs have empty translations, because
 gettext shows the source text of an untranslated message.
 
-Django's ``makemessages`` finds the messages in templates and Python code. The ``xgettext`` that it
-runs can't parse TypeScript and JSX, so ``smarter/react/i18n/extract.ts`` finds the React apps' and
-the static scripts' calls with the TypeScript compiler instead, and writes each distinct message as
-one plain JavaScript call to ``smarter/react/i18n/messages.js``. ``makemessages`` reads that file for
-the ``djangojs`` domain. Each message is preceded by a ``Translators:`` comment that lists the files
-that use it, which appears in ``djangojs.po``. A test, ``smarter/react/i18n/extract.test.ts``, fails
-when ``messages.js`` is out of date.
+Django's ``makemessages`` finds the messages in templates and Python code. The web console is its own
+repository, `smarter-console <https://github.com/smarter-sh/smarter-console>`__, whose
+``i18n/extract.ts`` finds its ``gettext()`` calls with the TypeScript compiler, which the ``xgettext``
+that ``makemessages`` runs can't parse, and writes each distinct message as one plain JavaScript call
+to ``i18n/messages.js``. Each release of the console carries that file, and ``make console`` installs
+the pinned release's in ``smarter/console/i18n/``, where ``makemessages`` reads it for the ``djangojs``
+domain. Each message is preceded by a ``Translators:`` comment that lists the console's files that use
+it, which appears in ``djangojs.po``. The console's own test fails when its ``messages.js`` is out of
+date. A new console message shows in English until this repository's catalogs have its translation.
 
 Marking Text for Translation
 ----------------------------
@@ -145,14 +147,15 @@ After changing marked text, regenerate the catalogs, with the containers running
 
 .. code-block:: console
 
+   make console                # the pinned console release, with its messages.js
    make build && make run      # in another terminal, or in the background
    make i18n-messages
 
-``make i18n-messages`` runs ``npm run i18n:extract``, then the ``update_console_messages`` management
+``make i18n-messages`` copies the console's ``messages.js`` into the ``smarter-api`` container, then runs the
+``update_console_messages`` management
 command in the ``smarter-api`` container, which runs ``makemessages`` for both domains and every
 language in ``settings.LANGUAGES``, keeping the translations already in the ``.po`` files, then
-``compilemessages``. It copies the catalogs back to the host. Commit the changed ``.po`` files and
-``messages.js``. ``make i18n-messages LANGUAGE=es`` updates one language, and so does
+``compilemessages``. It copies the catalogs back to the host. Commit the changed ``.po`` files. ``make i18n-messages LANGUAGE=es`` updates one language, and so does
 ``LANGUAGE=pt-br``, whose catalogs the command writes to ``locale/pt_BR``.
 
 Adding a Language

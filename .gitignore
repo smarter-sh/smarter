@@ -124,3 +124,6 @@ smarter/smarter/locale/**/*.mo
 *.tfstate
 *.tfstate.*
 tfplan
+
+# the web console's messages.js, which make console installs from the pinned release
+smarter/console/
