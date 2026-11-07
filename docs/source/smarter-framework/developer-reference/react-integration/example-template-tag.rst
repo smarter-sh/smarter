@@ -1,6 +1,6 @@
 Example Django Template Tag for React Integration
 ============================================================
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/dashboard/templatetags/react_dashboard_user_menu.py
+.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/templatetags/react_llmclient_deployment.py
    :language: python
-   :caption: The template tags of the user menu, a widget of Django's console frame
+   :caption: The template tag of the page at a deployed LLMClient's url, which mounts @smarter/llmclient-deployment

@@ -143,6 +143,21 @@ brokered request through `DocsBaseView`. `react/workbench.html`, `common/manifes
 Django-React guide describes the console. `DocsBaseView` stays for the docs pages. Next: Django's console frame
 (section 5, step 4).
 
+Django's console frame is retired (section 5, step 4), which finishes section 5 and phase 2: every console page,
+and its frame, is the console's. Deleted: `templates/dashboard/` (base, header, sidebar, footer, navbar), the
+`templates/react/` widgets (user menu, Did you know?, onboarding, welcome) and their template tags, the `sidebar`
+context processor and `active_sidebar_item()`, `onboarding_context()`, and `smarter.lib.unittest.server_rendered_page`.
+`sidebar_context()` stays, for the session api and the dashboard's quick actions; the `base`, `branding` and
+`footer` processors stay for `base.html` and the docs pages' frame (`cms/base.html`). The frame's tests moved to
+what the console reads: the session api's tests check the onboarding state, the Did you know? switch, the welcome
+dialog after a dismiss, the selected profile's account and the Budgets link; the console's `index.html` loads the
+JavaScript catalog. `@smarter/dashboard-user-menu`, `@smarter/welcome` and `@smarter/manifest-editor` are
+import-only, and `@smarter/didyouknow` keeps only its library build. The template-tag pattern remains for one page
+outside the console, a deployed LLMClient's host's (`llmclient/endpoints.html`, `@smarter/llmclient-deployment`),
+and the Django-React guide uses it as that pattern's example. `@smarter/onboarding` still falls back to a JSON
+`<script id="smarter-onboarding">` when no state is passed; no page writes one now. Next: the docs pages (section 6,
+phase 3).
+
 ## Development
 
 - The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with
