@@ -235,8 +235,9 @@ The other endpoints
        ``budgets/<record locator>/series/``, ``activity/``, ``getting-started/``,
        ``quick-actions/``, ``search/``
      - The dashboard's widgets, and its global search. See :doc:`Dashboard <react-integration/dashboard>`.
-   * - ``/api/web/dashboard/resource/<kind>/<record locator>/``
-     - A resource's manifest, hierarchy and dependents, for a list row's detail. See
+   * - ``/api/web/dashboard/resource/<kind>/<record locator>/``, ``resource/<record locator>/``
+     - A resource's manifest, hierarchy and dependents, for a list row's detail, and for the console's
+       manifest pages, which know only the record locator: the kind is then the resource's own. See
        :doc:`Resource Detail <smarter-dashboard/resource_detail>`.
    * - ``/api/web/dashboard/welcome/``, ``welcome/dismiss/``, ``onboarding/seen/``
      - The welcome card and the onboarding tour.
