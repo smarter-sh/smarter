@@ -13,7 +13,9 @@ console and the page that a deployed LLMClient's host shows, and ``i18n/messages
 translatable messages. This script replaces ``smarter/smarter/static/react/`` with the builds, where
 ``collectstatic`` and the Docker build pick them up, and installs ``messages.js`` in
 ``smarter/console/i18n/``, where ``manage.py update_console_messages`` (``make i18n-messages``) reads it into
-the djangojs catalogs. A build without ``messages.js`` installs with a warning.
+the djangojs catalogs. A build without ``messages.js`` installs with a warning. The installed version, or
+``local`` for a local build, is written to ``smarter/console/version.txt``, which the backend's tests read to
+compare their expectations with that release's source (``smarter.lib.unittest.console_source``).
 CI's build (build.yml), the Python tests (test.yml) and ``make console`` run it.
 
 ``--from-dir`` copies a local build instead, ``dist/`` of a smarter-console checkout after its
@@ -69,13 +71,14 @@ def unpack(tarball: bytes, into: Path) -> None:
         archive.extractall(into, filter="data")
 
 
-def install(build: Path, static_dir: Path = STATIC_DIR, i18n_dir: Path = I18N_DIR) -> Path:
+def install(build: Path, static_dir: Path = STATIC_DIR, i18n_dir: Path = I18N_DIR, version: str = "local") -> Path:
     """
-    Replace the static folder's react/ with a build's, and install its messages.js, if it has one.
+    Replace the static folder's react/ with a build's, install its messages.js, if it has one, and record its version.
 
     :param build: A folder that holds react/@smarter/<package>/, and i18n/messages.js, e.g. smarter-console's dist/.
     :param static_dir: Django's static folder.
-    :param i18n_dir: Where update_console_messages reads messages.js.
+    :param i18n_dir: Where update_console_messages reads messages.js. Its parent gets version.txt.
+    :param version: The release's version, e.g. 1.0.3, or local for a local build.
     :returns: The console's page, in the static folder.
     :raises FileNotFoundError: When the build has no console page, before anything is changed.
     """
@@ -90,6 +93,8 @@ def install(build: Path, static_dir: Path = STATIC_DIR, i18n_dir: Path = I18N_DI
         shutil.copyfile(messages, i18n_dir / "messages.js")
     else:
         print(f"Warning: {build} has no {MESSAGES}, which make i18n-messages needs.", file=sys.stderr)
+    i18n_dir.parent.mkdir(parents=True, exist_ok=True)
+    (i18n_dir.parent / "version.txt").write_text(version + "\n", encoding="utf-8")
     return static_dir / CONSOLE_PAGE
 
 
@@ -114,7 +119,7 @@ def main(argv: list[str] | None = None) -> int:
         tarball = download(url)
         with tempfile.TemporaryDirectory() as unpacked:
             unpack(tarball, Path(unpacked))
-            page = install(Path(unpacked), args.static_dir, args.i18n_dir)
+            page = install(Path(unpacked), args.static_dir, args.i18n_dir, version)
         print(f"Installed the web console {version} from {url}: {page}")
         return 0
     except (OSError, tarfile.TarError) as error:
