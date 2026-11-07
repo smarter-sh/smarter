@@ -51,7 +51,7 @@ A store that prefers not to install an app can paste the embed script's tag befo
 
 .. code-block:: html
 
-  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js"
+  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@1/dist/embed.js"
     data-chatbot="https://shop-bot.3141-5926-5359.api.example.com/" async></script>
 
 A theme update or a new theme loses it, which the app's embed doesn't.

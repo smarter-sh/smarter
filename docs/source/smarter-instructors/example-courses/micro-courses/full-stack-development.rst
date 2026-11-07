@@ -31,11 +31,11 @@ seams between them are where students learn the most:
   exported as a `JSON Schema
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/contract/chat-contract.schema.json>`__
   and turned into the `TypeScript types
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__ of the
-  `smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__ component, so the two sides cannot
+  <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__ of the
+  `smarter.sh-chat <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter.sh-chat>`__ component, so the two sides cannot
   drift apart without a failing test.
 - **Real failure modes.** A missing build manifest renders an empty page with no console error,
-  and ``make build`` without ``make react-build`` reuses stale static files. Students learn to
+  and ``make build`` without ``make collectstatic`` reuses stale static files. Students learn to
   diagnose the problems that this architecture actually has.
 
 Students can follow a feature from database column to pixel, in a clear, complete example of a
@@ -54,8 +54,8 @@ end to end; CI and releases; and performance and caching.
 - The guardrail list page, end to end:
   `apps/guardrail/views/listview/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/views/listview>`__,
   `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/guardrail-list.html>`__
-  and `smarter/react/packages/smarter-guardrail-list/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-guardrail-list>`__.
-- `smarter/react/packages/smarter-common/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-common>`__,
+  and `smarter/react/packages/smarter-guardrail-list/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-guardrail-list>`__.
+- `smarter/react/packages/smarter-common/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-common>`__,
   for ``fetchDjangoUrl`` and ``SessionContext``.
 - `smarter/smarter/apps/prompt/contract/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/contract>`__,
   the chat API's contract.

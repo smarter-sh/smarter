@@ -27,8 +27,9 @@ At a Glance
      - Developers who know some Python and some JavaScript, and want to connect a back end to a
        front end in a real application.
    * - **Deployment**
-     - Each student runs Smarter from source, installed and working **before** the bootcamp, with
-       ``make react-install`` done.
+     - Each student runs Smarter from source, installed and working **before** the bootcamp, and with
+       `smarter-console <https://github.com/smarter-sh/smarter-console>`__, the web console's
+       repository, cloned beside it with ``make install`` done.
    * - **Cost**
      - Free, apart from small model charges.
 
@@ -119,7 +120,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        study shows the platform's tests validating real responses against the document.
    * - 9
      - 45
-     - **Lab 4: Rebuild and verify.** Run ``make react-build``, restart the app, and verify the new
+     - **Lab 4: Rebuild and verify.** Run ``make build`` in smarter-console, then
+       ``make console-local``, ``make collectstatic`` and ``make build`` in smarter, restart the app, and verify the new
        column in the real console. Ungraded.
    * - 10
      - 45

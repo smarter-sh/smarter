@@ -4,7 +4,8 @@ Working tracker for [ADR-035](source/adr/035-single-page-app.rst). It lists ever
 what it needs from the backend, where it goes, and in which phase. Delete this file when the
 repository splits.
 
-Paths are relative to `smarter/smarter/` (Django) and `smarter/react/packages/` (React) unless they
+Paths are relative to `smarter/smarter/` (Django) and `smarter/react/packages/` (React, which is now
+smarter-sh/smarter-console's `packages/`) unless they
 start with `docs/` or `helm/`. "Ctx" is data from the database or settings, which needs JSON. URLs,
 cookie names and element ids become frontend constants and aren't listed.
 
@@ -17,7 +18,7 @@ cookie names and element ids become frontend constants and aren't listed.
 | 2   | Existing React pages  | Dashboard, list pages, manifest detail pages, workbench, extensions, drop zone, terminal, passthrough are SPA routes                                                                      |
 | 3   | Docs pages            | `/docs/` pages are SPA routes; schemas, examples and `openapi.json` come from `/api/v1/`                                                                                                  |
 | 4   | Static files on a CDN | One origin; with `SMARTER_STATIC_FILES_ON_CDN`, static files on the environment's bucket and CDN, the console's page on the platform host (ADR-035, point 8)                              |
-| 5   | Split the repository  | Console and backend in separate repositories; Helm, CI and skills follow                                                                                                                  |
+| 5   | Split the repository  | Done: smarter-sh/smarter-console, released as a tarball that this repository pins; CI, npm publishing, contracts and skills follow                                                        |
 
 Phase 0 can ship to `alpha` on its own, and so can each page in phases 1 to 3.
 
@@ -195,13 +196,28 @@ permissions are confirmed (PutObject, PutObjectAcl, GetObject and ListBucket on 
 needed no change, since `cdn.<platform>`'s `/static/*` behavior already routes to the bucket, honors Cache-Control
 and answers CORS. Next: phase 5, split the repository.
 
+Phase 5 is done: the web console is its own repository, [smarter-sh/smarter-console](https://github.com/smarter-sh/smarter-console),
+imported with its history (`git filter-repo --subdirectory-filter smarter/react`), and `smarter/react` is gone from
+this one. The console releases with semantic-release, as 1.x, and each GitHub release attaches
+`smarter-console-<version>.tar.gz`: the builds (`react/@smarter/<package>/`, the console and the deployed LLMClient
+page) and `i18n/messages.js`. Here, `smarter-console-version.txt` pins a release, and `scripts/fetch_console.py`
+(`make console`, CI's build and tests; `make console-local` for a local build) installs it in `static/react/` and
+`console/i18n/`, and records its version in `console/version.txt`, from which the tests that check the two
+repositories agree (the onboarding hints, the passthrough's templates) read that release's files on GitHub
+(`smarter.lib.unittest.console_source`). The backend still owns the contracts' JSON Schemas; the console's
+`make contracts` copies them, and smarter-sh/automation's weekly API Contract Sync proposes the copy. The catalogs of
+the console's messages stay here (`make i18n-messages` reads the release's `messages.js`). `@smarter.sh/ui-chat` and
+`@smarter.sh/ui-widgets` are published from smarter-console, with its version (1.0.3 the first), so the backend's
+embed snippet loads `ui-chat@1`. This repository's Tests run only the Python suite, and main requires only
+`python-report`. The Did You Know? job reads smarter-console's facts. The migration is complete.
+
 ## Development
 
-- The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with
-  `npm run dev -w @smarter/console` in `smarter/react`, then open `http://localhost:5173/`.
+- The SPA is `@smarter/console`, in smarter-sh/smarter-console's `packages/smarter-console`. Run it with
+  `npm run dev -w @smarter/console` in a smarter-console checkout, then open `http://localhost:5173/`.
 - Vite proxies `/api/`, `/admin/`, `/social-auth/`, `/static/`, `/jsi18n/`, `/i18n/` and `/ws/` to
-  `http://localhost:9357/`, so the session and CSRF cookies are first-party.
-- The Django console keeps running at `http://localhost:9357/` for pages not yet migrated.
+  `http://localhost:9357/`, this repository's `make run`, so the session and CSRF cookies are first-party.
+- `make console-local CONSOLE_DIST=../smarter-console/dist` serves a local console build from this backend.
 
 ## 1. The frame: context processors and the session endpoint
 

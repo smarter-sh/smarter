@@ -1,7 +1,9 @@
 Every lecture, lab and assignment in this course follows features through the files below, from
 the database to the browser. Every reference is to the ``main`` branch of
 `github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`__, so
-that students can open each one during class. Python paths are under ``smarter/smarter/``.
+that students can open each one during class, except the React files, which moved to their own
+repository, `smarter-console <https://github.com/smarter-sh/smarter-console>`__, after release
+v0.42.10, and are referenced at that release. Python paths are under ``smarter/smarter/``.
 
 One List Page, Database to Pixel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,15 +47,15 @@ The guardrail list page is the reference. Every list page in the console is buil
      - `smarter-guardrail-list/src/main.tsx <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/packages/smarter-guardrail-list/src/main.tsx>`__
    * - The API call
      - ``fetchDjangoUrl`` posts to Django with the session cookie and the CSRF token.
-     - `smarter-common/src/lib/django.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-common/src/lib/django.tsx>`__
+     - `smarter-common/src/lib/django.tsx <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/packages/smarter-common/src/lib/django.tsx>`__
    * - The server's answer
      - Session-authenticated, never-cached views that list the guardrails a user owns or can
        see, and clone, rename or delete one.
      - `guardrail/views/listview/api.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/api.py>`__
    * - The pixels
      - The list and card views, the toolbar and the status bar, with typed API objects.
-     - `smarter-guardrail-list/src/components/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-guardrail-list/src/components>`__,
-       `src/lib/Types.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/lib/Types.tsx>`__
+     - `smarter-guardrail-list/src/components/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-guardrail-list/src/components>`__,
+       `src/lib/Types.tsx <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/packages/smarter-guardrail-list/src/lib/Types.tsx>`__
    * - The pattern, written down
      - The view, template, template tag, data attributes, ``SessionContext``, the list, clone,
        rename and delete contract, the Vite build, and the sidebar link, as a checklist.
@@ -81,7 +83,7 @@ A Typed Contract Across the Stack
      - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``chat-contract``)
    * - TypeScript types
      - Generated from the schema, and tested against example payloads.
-     - `smarter.sh-chat: src/contract.gen.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__
+     - `smarter.sh-chat: src/contract.gen.ts <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/packages/smarter.sh-chat/src/contract.gen.ts>`__
 
 Building, Testing and Shipping
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,9 +96,12 @@ Building, Testing and Shipping
      - What Smarter does
      - Where to look
    * - Builds
-     - ``make react-build`` builds every app with Vite, collects static files and rebuilds the
-       image. ``make build`` alone reuses the old static files, so a new page renders empty.
-     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``react-build``)
+     - smarter-console's ``make build`` builds the console with Vite; ``make console`` installs a
+       pinned release of it (``make console-local``, a local build), ``make collectstatic`` collects
+       it, and ``make build`` rebuilds the image. ``make build`` alone reuses the old static files,
+       so a new build is missing.
+     - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``console``,
+       ``console-local``), `scripts/fetch_console.py <https://github.com/smarter-sh/smarter/blob/main/scripts/fetch_console.py>`__
    * - Testing the back end
      - Shared mixins that test any resource's list, clone, rename and delete views.
      - `lib/unittest/resource_views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/unittest/resource_views.py>`__,
@@ -104,8 +109,8 @@ Building, Testing and Shipping
    * - Testing the front end
      - Vitest and Testing Library, with MSW handlers and fixtures that mirror the server's
        responses.
-     - `smarter-guardrail-list/src/mocks/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-guardrail-list/src/mocks>`__,
-       `src/App.test.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/App.test.tsx>`__
+     - `smarter-guardrail-list/src/mocks/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-guardrail-list/src/mocks>`__,
+       `src/App.test.tsx <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/packages/smarter-guardrail-list/src/App.test.tsx>`__
    * - CI
      - The ``python`` and ``react`` jobs, run side by side.
      - `test.yml <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/test.yml>`__

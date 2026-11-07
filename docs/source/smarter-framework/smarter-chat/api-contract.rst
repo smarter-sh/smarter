@@ -43,8 +43,10 @@ The models are used, not just documented:
   (``src/contract.test.ts``), so its tests can't pass against responses that the backend never sends.
 
 After changing a model, run ``make chat-contract``, which regenerates the schema and the examples in
-the ``smarter-api`` container, copies it into Smarter Chat, and regenerates the TypeScript types. Commit
-both repositories.
+the ``smarter-api`` container, and commit them. Then, in
+`smarter-console <https://github.com/smarter-sh/smarter-console>`__, Smarter Chat's repository,
+``make contracts`` copies the schema into Smarter Chat and regenerates the TypeScript types;
+smarter-sh/automation's weekly API Contract Sync proposes the same copy as a pull request.
 
 .. literalinclude:: ../../../../smarter/smarter/apps/prompt/contract/chat-contract.schema.json
    :language: json
@@ -676,8 +678,8 @@ Changing the Contract Safely
    the chat. Add the new shape beside the old one, and remove the old one only in a new version of
    the contract, which clients ask for with a new capability.
 4. **A new request header** must be added to ``CORS_ALLOW_HEADERS``, or pages on other domains break.
-5. Run ``make chat-contract``, and update Smarter Chat's code and fixtures until ``make test`` passes
-   there, then update this page.
+5. Run ``make chat-contract``, then ``make contracts`` in smarter-console, and update Smarter Chat's
+   code and fixtures until ``make test`` passes there, then update this page.
 
 
 Technical Reference

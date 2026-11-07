@@ -3,7 +3,8 @@ How the Web Console Hosts It
 
 In the web console, Smarter Chat is the chat of the LLMClient prompt engineering workbench, at
 ``/workbench/llm-clients/<hashed_id>/prompt/``. The workbench is the platform's own React package,
-``@smarter/workbench`` (``smarter/react/packages/smarter-workbench``), which imports
+``@smarter/workbench`` (``packages/smarter-workbench`` in
+`smarter-sh/smarter-console <https://github.com/smarter-sh/smarter-console>`__), which imports
 ``SmarterChat`` from the ``@smarter.sh/ui-chat`` npm package, as any React application does, and puts
 the developer Console beside it. It is a page of the single-page console, ``@smarter/console``
 (:doc:`ADR-035 </adr/035-single-page-app>`, and
@@ -142,12 +143,15 @@ served, and is the only url whose configuration has ``sandbox_mode`` true.
 Builds and Static Files
 -----------------------
 
-The workbench is bundled by the console's build, ``npm run build -w @smarter/console``, into
-``smarter/smarter/static/react/@smarter/console/``, in a chunk of its own. It imports Smarter Chat's
+The workbench is bundled by the console's build, ``npm run build -w @smarter/console`` in
+smarter-console, into ``dist/react/@smarter/console/``, in a chunk of its own. It imports Smarter Chat's
 built library, ``packages/smarter.sh-chat/dist/``, as npm users do, so ``npm run build:deps`` builds the
-library first; ``make react-build``, ``make react-test`` and ``make react-lint`` run it. ``collectstatic``
-copies the console's build into ``staticfiles``, from which it is served. In development, use
-``make react-build``.
+library first; smarter-console's ``make build``, ``make test`` and ``make lint`` run it. Each
+smarter-console release ships the build, and the Smarter repository installs the release that
+``smarter-console-version.txt`` pins, with ``make console``, into
+``smarter/smarter/static/react/@smarter/console/``. ``collectstatic`` copies it into ``staticfiles``,
+from which it is served. To try an unreleased change, ``make build`` in smarter-console, then
+``make console-local CONSOLE_DIST=../smarter-console/dist`` in the Smarter repository.
 
 
 Technical Reference

@@ -22,11 +22,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | -------------------------------------- | ---------------------------------------------------------------------------------- |
 | `smarter-development`                  | You're making any change. Start here.                                              |
 | `smarter-sam-resource`                 | You're adding or changing a resource kind (manifest, broker, model).               |
-| `smarter-django-react`                 | You're building a React app that Django hosts, e.g. a console list page.           |
-| `smarter-react-testing`                | You're writing Storybook stories, Vitest tests, or fixing ESLint/Prettier.         |
-| `smarter-chat-development`             | You're changing Smarter Chat (`@smarter.sh/ui-chat`). Start here for the chat.     |
-| `smarter-chat-testing`                 | You're writing or running Smarter Chat's tests or stories, or `check:dist`.        |
-| `smarter-chat-embed`                   | You're changing Smarter Chat's embed script, its options or its build.             |
+| `smarter-django-react`                 | You're changing a console page's backend: its view, list api, session, build.      |
 | `smarter-python-testing`               | You're writing or running Django unit tests, or raising coverage.                  |
 | `smarter-docker-environment`           | Code must run in the containers (tests, migrations, `manage.py`).                  |
 | `smarter-infrastructure-safety`        | Code touches Kubernetes, AWS, Route53, ACM, LLM providers, or Celery tasks.        |
@@ -46,7 +42,7 @@ change, and its table says which narrower skill to load for each kind of task.
 | `smarter-code-quality`                 | You're about to finish a change and need to run the pre-commit hooks.              |
 | `smarter-git-commits`                  | You've been asked to write a commit message.                                       |
 | `smarter-extension-registry`           | An extension has a new release to publish to the extension registry.               |
-| `smarter-project-repositories`         | A task reaches into the cli, an SDK, vscode-yaml, smarter-chat or another repo.    |
+| `smarter-project-repositories`         | A task reaches into smarter-console (React, Smarter Chat), the cli, an SDK, ...    |
 | `smarter-course-design`                | You're designing a course for the Free Course Catalog in the docs.                 |
 | `blog.smarter.sh-release-announcement` | You're writing a release announcement post for blog.smarter.sh.                    |
 | `blog.smarter.sh-blog-post`            | You're writing any other article for blog.smarter.sh.                              |

@@ -44,13 +44,13 @@ The **Tests** workflow (`.github/workflows/test.yml`, on pull requests to `main`
 | Job                     | What its failure means                                                         |
 | ----------------------- | ------------------------------------------------------------------------------ |
 | `fingerprint`           | The cache key step. Rare; read its log.                                        |
-| `react`                 | `make react-test` and lint of `smarter/react`. Vitest failures.                |
 | `python (shard N of 8)` | One eighth of the Django test suite, built from scratch in its own containers. |
 | `python-report`         | Fails whenever any shard failed. Never the cause: find the shard that failed.  |
 
 A shard's failure is either a test failure (`FAILED (failures=…, errors=…)`), or the platform failing
 to start before the tests ran (no `Ran N tests` line: read the shard's setup steps, e.g. migrations,
-`initialize_platform`). The other workflows (build, deploy, publish) are described in `build.yml`.
+`initialize_platform`, or _Install the web console_, which fails when the release that
+`smarter-console-version.txt` pins can't be downloaded). The other workflows (build, deploy, publish) are described in `build.yml`.
 
 ## 3. Is it new?
 
@@ -72,8 +72,9 @@ Run the failed test by its dotted name in the smarter-api container (see `smarte
 docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.lib.drf.tests.test_listview_api"
 ```
 
-Then run its whole package, and the pre-commit hooks on the files you changed. React failures:
-`npx vitest run --project <package>` in `smarter/react`.
+Then run its whole package, and the pre-commit hooks on the files you changed. React tests run in
+smarter-sh/smarter-console's own CI, not here: a failure there is that repository's (its checkout is
+`../smarter-console`, with `make test`).
 
 ## 5. Report
 

@@ -49,14 +49,17 @@ Research first, outline second. The code decides what the course can teach.
 
 - Find the subject in `smarter/smarter/` (apps, `lib/`, `common/`), the
   `Makefile`, `docker-compose.yml`, `helm/`, `.github/workflows/`, `skills/`,
-  `docs/source/` (including the ADRs in `docs/source/adr/`) and the React
-  workspace in `smarter/react/packages/`.
+  `docs/source/` (including the ADRs in `docs/source/adr/`). The web console's
+  React workspace was `smarter/react/packages/` until release v0.42.10; link
+  its files there at that tag (`blob/v0.42.10/smarter/react/...`), or at their
+  new home in `smarter-console`.
 - Search the other public repositories, cloned next to this one
   (`../<repo>`; clone any that are missing):
 
   | Repository               | What's there                                                    |
   | ------------------------ | --------------------------------------------------------------- |
   | `smarter-infrastructure` | Terraform for AWS: EKS, networking, DNS, the production cluster |
+  | `smarter-console`        | The web console (React, TypeScript, Vite) and Smarter Chat      |
   | `smarter-cli`            | The Go command-line interface, packaged for each OS             |
   | `smarter-python`         | The Python API client library on PyPI                           |
   | `smarter-deploy`         | The Docker quickstart for running the platform                  |
@@ -68,8 +71,8 @@ Research first, outline second. The code decides what the course can teach.
   live integrations: built-in LLMClients chatting through Smarter Chat's
   embed script. It is the real-world example of embedding the chat in a web
   page (`src/common/chatbots.js`, `src/components/site/SmarterChatEmbed.jsx`).
-  Smarter Chat itself, the React component, is in this repository, in
-  `smarter/react/packages/smarter.sh-chat`. The `smarter-chat` and
+  Smarter Chat itself, the React component, is in `smarter-console`, in
+  `packages/smarter.sh-chat`. The `smarter-chat` and
   `web-integration-example` repositories are archived: don't link them.
 
   **`account-manager` is private. Never link it or describe its contents.**

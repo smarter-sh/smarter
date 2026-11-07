@@ -5,8 +5,10 @@ Guidance for Claude Code (and other coding agents) working in this repository.
 Smarter is a Django platform for building and running LLM applications. Its
 resources (LLMClients, Plugins, Guardrails, Secrets, Custom Domains, ...) are
 declared in YAML manifests (SAM, the Smarter Application Manifest), applied
-through the `smarter` CLI or the REST API, and managed in a web console whose
-pages are small React apps that Django hosts.
+through the `smarter` CLI or the REST API, and managed in a web console, a
+single-page React app that Django serves. The console's source is its own
+repository, smarter-sh/smarter-console (a checkout sits next to this one); this
+repository installs a pinned release of its build.
 
 Detailed know-how lives in the Agent Skills under `skills/` (symlinked to
 `.claude/skills`). **Load `smarter-development` first for any change.** Its
@@ -66,7 +68,7 @@ holds only what applies to nearly every task.
 | `smarter/smarter/apps/<app>`          | Django apps, one per resource family (llmclient, plugin, secret, ...)     |
 | `smarter/smarter/apps/infrastructure` | Cloud-agnostic service layer for DNS, certificates, Kubernetes, email     |
 | `smarter/smarter/lib`                 | Framework code: django, drf, manifest brokers, journal, unittest helpers  |
-| `smarter/react/packages`              | npm workspace: one React app per console page, plus `smarter-common`      |
+| `smarter-console-version.txt`         | The pinned web console release, which `make console` installs             |
 | `docs/source`                         | Sphinx docs, published to docs.smarter.sh                                 |
 | `skills/`                             | Agent Skills for developing this repository                               |
 | `.github/workflows/`                  | Pipeline: test (PRs to main), then build, deploy, publish (see build.yml) |
@@ -120,17 +122,20 @@ make coverage
 # Lint changed files (zsh doesn't word-split $FILES, so use xargs)
 source venv/bin/activate && git diff --name-only | xargs pre-commit run --files
 
-# React
-make react-test
-make react-lint
-make react-build   # npm build + collectstatic + image build
+# The web console (smarter-sh/smarter-console)
+make console                                          # the pinned release, into smarter/smarter/static/react/
+make console-local CONSOLE_DIST=../smarter-console/dist   # a local build instead
+make collectstatic && make build                      # then into the image
 ```
 
-After React changes, use `make react-build`, not `make build`. `make build`
-uses the host's previously collected `smarter/staticfiles/`, so a new React
-app has no `manifest.json` and its page renders an empty root with no console
-errors. The template tag caches a missing manifest, so restart `smarter-api`
-after fixing staticfiles.
+React code, its tests, lint and Storybook live in smarter-console (its
+`make test`, `make lint`, `make build`; load its `smarter-console-development`
+skill). After installing a console build, run `make collectstatic` before
+`make build`: `make build` uses the host's previously collected
+`smarter/staticfiles/`, so without it the console answers 503, and the
+deployed LLMClient page renders an empty root with no console errors. The
+template tag caches a missing manifest, so restart `smarter-api` after fixing
+staticfiles.
 
 ## Conventions
 

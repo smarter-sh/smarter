@@ -27,8 +27,9 @@ At a Glance
    * - **Students**
      - Developers who know some Python and some JavaScript.
    * - **Deployment**
-     - Each student runs Smarter from source, installed before Live session 1, with
-       ``make react-install`` done.
+     - Each student runs Smarter from source, installed before Live session 1, and with
+       `smarter-console <https://github.com/smarter-sh/smarter-console>`__, the web console's
+       repository, cloned beside it with ``make install`` done.
    * - **Workload**
      - 3 hours of instruction and 4 to 6 hours of assignments each week.
    * - **Cost**
@@ -79,7 +80,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        attributes (:doc:`/smarter-framework/developer-reference/react-integration`).
    * - 1
      - Lecture 3 (30 min)
-     - **Builds and static files.** The Vite manifest, ``collectstatic``, ``make react-build``, and
+     - **Builds and static files.** The Vite manifest, ``collectstatic``, ``make console``, ``make console-local``, and
        the classic failure modes.
    * - 1
      - Live session 1 (90 min)
