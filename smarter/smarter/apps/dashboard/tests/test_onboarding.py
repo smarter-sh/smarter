@@ -82,26 +82,6 @@ class TestOnboardingSeenView(TestAccountMixin):
         with mock.patch.object(onboarding, "get_resolved_user", return_value=None):
             self.assertEqual(self.client.post(self.url).status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_context(self):
-        """Test the page's onboarding state, for a signed-in user, with the switch on and off, and for none."""
-        with override_switch(SWITCH, active=True):
-            context = onboarding.onboarding_context(self.non_admin_user, self.url)
-        self.assertTrue(context.enabled)
-        self.assertEqual(context.seen, [])
-        self.assertEqual(context.api_url, self.url)
-        self.post({"hint": "llmclient_weather", "outcome": "dismissed"})
-        with override_switch(SWITCH, active=False):
-            context = onboarding.onboarding_context(self.non_admin_user, self.url)
-        self.assertFalse(context.enabled)
-        self.assertEqual(context.seen, [OnboardingHints.LLMCLIENT_WEATHER])
-        self.assertEqual(
-            set(context.model_dump(by_alias=True)), {"enabled", "apiUrl", "seen", "csrfCookieName", "cookieDomain"}
-        )
-        with override_switch(SWITCH, active=True):
-            context = onboarding.onboarding_context(AnonymousUser(), self.url)
-        self.assertFalse(context.enabled)
-        self.assertEqual(context.seen, [])
-
     def test_react_package_knows_the_same_hints_and_outcomes(self):
         """Test that @smarter/onboarding's OnboardingHints and OnboardingOutcomes are the model's choices."""
         source = REACT_CONST.read_text(encoding="utf-8")

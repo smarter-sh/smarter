@@ -244,7 +244,7 @@ def sidebar(user: User, console_flags: ConsoleFlags) -> ConsoleSidebar:
     """
     The sidebar's links, for the user.
 
-    The urls are those of the server-rendered sidebar, :func:`smarter.apps.dashboard.context_processors.sidebar_context`,
+    The urls are :func:`smarter.apps.dashboard.context_processors.sidebar_context`'s,
     which is cached. A link that the platform or the user doesn't have is None.
 
     :param user: The signed-in user.

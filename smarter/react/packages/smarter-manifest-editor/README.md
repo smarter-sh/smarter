@@ -3,8 +3,8 @@
 The manifest editor of the Smarter web console. It renders a resource's manifest as YAML, in a
 Monaco editor, and saves, clones and deletes the resource.
 
-It replaces the read-only manifest of `templates/common/manifest_detail.html`, which every
-manifest detail page renders, e.g. `smarter.apps.guardrail.views.detailview.GuardrailDetailView`.
+The web console's manifest pages render it, e.g. a Guardrail's, `/guardrail/guardrails/<hashed id>/`, and so does
+the Prompt Engineer's Workbench, in its Console's Manifest tab.
 
 ## Features
 
@@ -24,13 +24,12 @@ the cli, e.g. a delete is refused while other resources depend on the resource.
 
 ## Integration
 
-- `smarter.apps.dashboard.templatetags.react_manifest_editor` provides the app's assets, from its
-  Vite `manifest.json`, and the root element's settings: the cli api urls and the cookie names.
-- `templates/common/manifest_editor.html` renders the root element, and the manifest, as YAML,
-  with Django's `json_script` filter. Every manifest detail page includes it, from
-  `templates/common/manifest_detail.html`.
-- `src/index.ts` exports the editor as a component, `ManifestEditor`, for the web console's other
-  apps. The Prompt Engineer's Workbench (`@smarter/workbench`) renders it in its Console's Manifest
+- `src/index.ts` exports the editor as a component, `ManifestEditor`. The single-page console
+  (`@smarter/console`) renders it on every manifest page (`src/routes/ManifestPage.tsx`), with the manifest
+  that the resource api returns, the cli api's urls, and a session context from the console's session; after
+  a delete, it goes back to the resource's list. The package has no build of its own: the console's build
+  bundles it, and `index.html` and `src/main.tsx` are a development page.
+- The Prompt Engineer's Workbench (`@smarter/workbench`) renders it in its Console's Manifest
   tab, for the LLMClient's manifest: `onSaved` reloads the chat's configuration, and `onDeleted`
   leaves for the LLM Clients list. The package's source uses relative imports, so that another
   package's build can import it, as `@smarter/common`'s does.
@@ -39,6 +38,5 @@ the cli, e.g. a delete is refused while other resources depend on the resource.
 
 ```console
 npm run dev     # Vite dev server, with index.html's example manifest
-npm run build   # builds into smarter/static/react/@smarter/manifest-editor/
 npm run lint
 ```

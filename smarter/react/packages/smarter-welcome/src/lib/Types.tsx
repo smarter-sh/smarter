@@ -1,6 +1,6 @@
 /**
- * Types of the welcome dialog: what main.tsx reads from the root element, and what the Django
- * welcome api returns. See smarter.apps.dashboard.views.views.api.welcome.
+ * Types of the welcome dialog: its context, which the console builds from its session, and what the
+ * Django welcome api returns. See smarter.apps.dashboard.views.views.api.welcome.
  */
 import type { SessionContext } from "@smarter/common";
 import type { OnboardingContext } from "@smarter/onboarding";
@@ -24,7 +24,7 @@ export interface WelcomeApiResponse {
   urls: WelcomeUrls;
 }
 
-/** The root element's attributes. See templates/react/welcome.html. */
+/** The dialog's context, which the console builds from its session (src/lib/welcome.ts in @smarter/console). */
 export interface AppContext {
   sessionContext: SessionContext;
   /** Returns the dialog's state and links. */
@@ -42,8 +42,9 @@ export interface AppContext {
   /** The folder of the Keen dozzy-1 illustrations, ending in a slash. */
   illustrationsUrl: string;
   /**
-   * The page's onboarding state. By default, the one that templates/react/onboarding.html writes into the
-   * page. Tests and stories pass their own.
+   * The onboarding state, for the sidebar hint: the console passes its session's. Without it, the one that a
+   * page writes into itself, if any (see readOnboardingContext in @smarter/onboarding). Tests and stories pass
+   * their own.
    */
   onboarding?: OnboardingContext | null;
 }

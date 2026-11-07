@@ -1,7 +1,7 @@
 /**
  * The frame of the console's signed-in pages: the header with the user menu, the sidebar, the page, the footer,
- * and the welcome dialog, with its sidebar hint. It is the theme's own app layout, the one the backend's
- * templates/dashboard/base.html renders, so that a theme styles both alike through its variables. See lib/theme.
+ * and the welcome dialog, with its sidebar hint. It is the theme's own app layout (Keen's), so that a theme styles it
+ * through its variables. See lib/theme.
  */
 import { Welcome } from "@smarter/welcome";
 import { useEffect, useMemo, useState } from "react";

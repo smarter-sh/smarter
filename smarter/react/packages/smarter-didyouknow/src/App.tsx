@@ -1,7 +1,8 @@
 /**
- * The note below the web console's title: Did you know?, and the fact of the day, in small text on one
- * line. The title bar, templates/dashboard/header.html, includes it on every console page while the
- * enable_web_console_did_you_know waffle switch is active.
+ * The note below the title of this package's development page and stories: Did you know?, and the fact
+ * of the day, in small text on one line. In the web console, @smarter/console renders DidYouKnow in its
+ * header, with its own class names, while the session's didYouKnow flag (the
+ * enable_web_console_did_you_know waffle switch) is on.
  *
  * It is a consumer of this package's DidYouKnow component, as the welcome dialog is, and its styles
  * are its own, in App.css.

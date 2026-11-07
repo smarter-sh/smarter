@@ -10,7 +10,7 @@
  * Welcome Tour opens the welcome dialog, the @smarter/welcome app, which listens for clicks on elements
  * with the data-smarter-welcome-open attribute.
  *
- * :param appContext: The root element's attributes.
+ * :param appContext: The menu's context, which the console builds from its session.
  * :param onSwitched: Passed to the Change Profile dialog. Reloads the page by default.
  * :param onSignedOut: Called with the sign-in page's url once Sign Out has signed the user out, with the
  *   console's account api. Goes to that page by default.

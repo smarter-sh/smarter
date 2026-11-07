@@ -1,7 +1,7 @@
 /**
- * The welcome dialog's context, and the onboarding hints' state, from the console's session. On the pages that
- * Django still renders, templates/react/welcome.html and templates/react/onboarding.html write the same values into
- * the page. See smarter.apps.dashboard.views.views.api.welcome and onboarding.
+ * The welcome dialog's context, and the onboarding hints' state, from the console's session. The console passes them
+ * as props to @smarter/welcome and to the packages that show hints. See smarter.apps.dashboard.views.views.api.welcome
+ * and onboarding.
  */
 import { OnboardingHints, type OnboardingContext, type OnboardingHint } from "@smarter/onboarding";
 import type { WelcomeContext } from "@smarter/welcome";

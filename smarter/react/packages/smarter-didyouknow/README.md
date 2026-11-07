@@ -6,11 +6,10 @@ Did you know? trivia about The Smarter Project. The package is both:
   (`randomFact()`), the fact of the day (`factOfTheDay()`, the same from midnight to midnight UTC), and
   `DidYouKnow`, an unstyled note whose consumers style it with class names. The
   [welcome dialog](../smarter-welcome) uses it.
-- an app, `src/main.tsx`, that shows the fact of the day below the web console's title. See:
-  - [templates/react/didyouknow.html](../../../smarter/templates/react/didyouknow.html), which
-    [templates/dashboard/header.html](../../../smarter/templates/dashboard/header.html) includes
-  - [smarter.apps.dashboard.templatetags.react_didyouknow](../../../smarter/apps/dashboard/templatetags/react_didyouknow.py)
-  - the `enable_web_console_did_you_know` waffle switch, which turns the note on and off
+- the tip in the web console's header: `@smarter/console` renders `DidYouKnow` there, with the fact of
+  the day and its own class names, while its session's `flags.didYouKnow` is on, i.e. while the
+  `enable_web_console_did_you_know` waffle switch is active. `src/App.tsx` and `src/main.tsx` are a
+  development page only (`npm run dev`), which shows the same note below a title.
 
 Each fact is something that the project's repositories show, so that it stays true. A fact that
 mentions a resource links to it.
@@ -18,7 +17,8 @@ mentions a resource links to it.
 ## Setup
 
 ```console
-npm run build:lib                                   # the library, for @smarter/welcome
+npm run build:lib                                   # the library, for @smarter/welcome and @smarter/console
+npm run dev                                         # the development page
 make react-storybook APP=smarter-didyouknow         # Storybook
 make react-build                                    # everything, for Django
 ```

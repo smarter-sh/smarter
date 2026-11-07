@@ -38,8 +38,9 @@ const providerTabbedListViewContext: ProviderTabbedViewContext = {
 interface AppProps {
   sessionContext: SessionContext;
   /**
-   * The page's onboarding state, for the hint on the Get Weather LLMClient. By default, the one that
-   * templates/react/onboarding.html writes into the page. Tests and stories pass their own.
+   * The onboarding state, for the hint on the Get Weather LLMClient: the console passes its session's.
+   * Without it, the one that a page writes into itself, if any (see readOnboardingContext in
+   * @smarter/onboarding). Tests and stories pass their own.
    */
   onboarding?: OnboardingContext | null;
 }

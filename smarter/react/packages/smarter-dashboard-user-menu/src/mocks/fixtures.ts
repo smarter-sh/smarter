@@ -1,7 +1,7 @@
 /**
- * Example data for this package's stories and tests: the root element's attributes, and what the
- * console's account api's user profile and profile image endpoints return. See
- * templates/react/dashboard-user-menu.html, smarter.apps.account.api.web.user_profiles and
+ * Example data for this package's development page, stories and tests: the menu's context, as the
+ * console builds it from its session, and what the console's account api's user profile and profile
+ * image endpoints return. See smarter.apps.account.api.web.user_profiles and
  * smarter.apps.account.api.web.profile_image.
  */
 import type { SessionContext } from "@smarter/common";

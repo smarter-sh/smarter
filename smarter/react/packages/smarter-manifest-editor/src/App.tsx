@@ -2,7 +2,7 @@
  * Manifest Editor
  *
  * Views and edits a Smarter manifest, and saves, clones and deletes its resource with the
- * cli api. It replaces the read-only manifest of templates/common/manifest_detail.html.
+ * cli api. The console's manifest pages and the workbench's Manifest tab render it.
  *
  * As the user edits it, it checks the manifest's YAML syntax, and then validates it against its
  * SAM model with the cli api's validate command, and marks the errors in the editor.

@@ -1,6 +1,8 @@
 /**
- * The onboarding state of the page, which templates/react/onboarding.html writes into each console page as
- * JSON, from smarter.apps.dashboard.views.views.api.onboarding.OnboardingContext.
+ * The onboarding state: the session's onboarding (ConsoleOnboarding, smarter.apps.api.web.session). The console
+ * builds it from its session and passes it as a prop to the packages that show hints. readOnboardingContext() is their
+ * fallback without one: it reads the state from a JSON script element, if a page writes one, which none of the
+ * console's pages do.
  */
 import { ONBOARDING_CONTEXT_ID, OnboardingHints, type OnboardingHint } from "./const";
 

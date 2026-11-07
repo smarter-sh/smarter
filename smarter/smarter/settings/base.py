@@ -1076,7 +1076,6 @@ TEMPLATES = [
                 "smarter.apps.dashboard.context_processors.static_version",
                 "smarter.apps.dashboard.context_processors.base",
                 "smarter.apps.dashboard.context_processors.footer",
-                "smarter.apps.dashboard.context_processors.sidebar",
             ],
         },
     },

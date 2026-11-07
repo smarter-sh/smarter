@@ -3,13 +3,12 @@
 This is the source code for the Dashboard app located
 at [http://localhost:9357/dashboard/](http://localhost:9357/dashboard/).
 
-This component is served by Django in production. See:
-
-- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
-  which the Dockerfile copies into the image.
-- [smarter.apps.dashboard.views.views.dashboard.DashboardView](../../smarter/apps/dashboard/views/views/dashboard.py)
-- [smarter.apps.dashboard.templatetags.react_dashboard.dashboard_react_assets](../../smarter/apps/dashboard/templatetags/react_dashboard.py)
-- [templates/react/dashboard.html](../../smarter/templates/react/dashboard.html)
+In the web console, `@smarter/console` imports this package (`src/index.ts`) and renders its `Dashboard`
+at `/dashboard`, with a context built from the console's session (`src/lib/dashboard.ts` and
+`src/routes/DashboardPage.tsx` there). The package has no build of its own: its `index.html` and
+`src/main.tsx` are a development page only (`npm run dev`). Django answers the path with the console's
+page, `smarter.apps.dashboard.views.console_app.ConsoleAppView` (ADR-035), and the widgets' data comes
+from the dashboard api, `smarter.apps.dashboard.views.views.api`.
 
 ## Developer Setup and Guide
 
@@ -23,76 +22,28 @@ be able to fetch from the Django API endpoints.
 ```console
 export NODE_ENV=development
 npm install
-npm run build
 npm run dev
 ```
-
-Build artifacts are persisted to smarter/smarter/static/react/smarter-dashboard/.
 
 ### Running Locally From Django
 
-This configures Vite to generate a production React build, with the final build
-bundle collected into Django's static asset folder. Run the Django web console
-from http://localhost:9357/
+This builds the console, which imports this package, and collects it into Django's
+static asset folder. Run the Django web console from http://localhost:9357/
 
 ```console
-# Direct React to generate a production-optimized build.
+cd to/the/root/of/this/repo/
+
+# Causes React to generate a production-optimized build.
 export NODE_ENV=production
 
-# Move to this source code on your local file system.
-cd smarter/react/smarter-dashboard
+# builds ALL React apps, and also run Django static asset collection
+make react-build
 
-# build to smarter/smarter/static/react/smarter-dashboard/
-# on your local file system.
-npm run build
-
-# Copy smarter/smarter/static/react/smarter-dashboard/ to
-# Django's static file server location on your local file system.
-  smarter/staticfiles/react/smarter-dashboard/
-make collectstatic
-
-# Build Docker container
+# Builds the Django Docker container.
 make build
 
-# Start the Django app container.
-# From inside the running Docker container you'll find your build artifacts at
-# /home/smarter_user/smarter/staticfiles/react/smarter-dashboard/
+# Starts the Django app container
 make run
-```
-
-### Production Build
-
-For production builds:
-
-```console
-export NODE_ENV=production
-npm install --include=dev
-npm run build
-npm run dev
-```
-
-The Smarter GitHub Action build workflow caches the React app build output to
-speed up the build process in the expected case where React source code has
-not changed.
-
-Note that the manifest.json file includes meta data that can be used for
-trouble shooting purposes. http://example.com/static/react/smarter-dashboard/manifest.json
-
-```json
-{
-  "index.html": {
-    "file": "assets/index-A7LvGMNl.js",
-    "name": "index",
-    "src": "index.html",
-    "isEntry": true,
-    "css": ["assets/index-B011HLqe.css"]
-  },
-  "_custom": {
-    "buildTime": "2026-05-31T21:17:32.505Z",
-    "version": "0.2.2",
-    "buildEnv": "production"
-  }
-}
 ```
 
 ### Generate Storybook

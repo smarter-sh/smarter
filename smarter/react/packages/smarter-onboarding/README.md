@@ -13,8 +13,10 @@ Its consumers: [@smarter/welcome](../smarter-welcome) (the sidebar hint),
 [@smarter/llmclient-list](../smarter-llmclient-list) (the Get Weather hint) and
 [@smarter/workbench](../smarter-workbench) (the tour). See also:
 
-- [templates/react/onboarding.html](../../../smarter/templates/react/onboarding.html), which writes each
-  page's onboarding state, and [smarter.apps.dashboard.templatetags.react_onboarding](../../../smarter/apps/dashboard/templatetags/react_onboarding.py)
+- `@smarter/console`, which builds the onboarding state from its session (`src/lib/welcome.ts` there) and
+  passes it as a prop to the packages that show hints. Without that prop, `useOnboarding()` falls back to
+  `readOnboardingContext()`, which reads the state from a JSON script element if a page writes one; none
+  of the console's pages do.
 - [smarter.apps.dashboard.views.views.api.onboarding](../../../smarter/apps/dashboard/views/views/api/onboarding.py),
   the api that records what a user did with a hint, in the `OnboardingHint` model
 - the `enable_web_console_onboarding_hints` waffle switch

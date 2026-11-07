@@ -1,7 +1,7 @@
 /**
  * The user menu, as a component, for the web console's other React apps: the single-page console
- * (@smarter/console) renders it in its header, from the console's session. main.tsx mounts it on the pages
- * that Django still renders, from the attributes of templates/react/dashboard-user-menu.html.
+ * (@smarter/console) renders it in its header, from the console's session (src/lib/userMenu.ts there).
+ * main.tsx renders it on the package's development page, from src/mocks/fixtures.ts.
  *
  * The package's source uses relative imports, so that another package's build can import it.
  */

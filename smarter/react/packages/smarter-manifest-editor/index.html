@@ -15,12 +15,8 @@
   </head>
   <body>
     <!--
-    only used for development via 'npm run dev'. In production, this file is rendered
-    by Django.
-
-    See:
-    - smarter.apps.dashboard.templatetags.react_manifest_editor
-    - templates/common/manifest_detail.html, e.g. smarter.apps.guardrail.views.detailview.GuardrailDetailView
+    the development page only (npm run dev): @smarter/console renders the editor on its manifest pages. The
+    attributes below configure this page's example only.
     -->
     <script id="smarter-manifest-editor-data" type="application/json">
       "apiVersion: smarter.sh/v1\nkind: Guardrail\nmetadata:\n  name: example_guardrail\n  description: An example Guardrail.\n  version: 1.0.0\nspec:\n  config:\n    stage: input\n    strategy: keyword\n    keywords:\n    - ignore all previous instructions\n    action: block\nstatus:\n  dependencies: []\n"
