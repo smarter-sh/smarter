@@ -1,190 +1,229 @@
 Django-React Integration
 ========================
 
-Smarter integrates `React <https://react.dev/>`__ applications directly into Django's server-rendered
-architecture rather than treating React as a separate single-page
-application. This approach preserves Django's strengths in authentication,
-session management, template rendering, routing, and deployment while
-enabling modern, highly interactive user interfaces. The core design principle
-is that React build artifacts are treated as ordinary Django static assets that
-leverage Django's existing serving and management of authentication and session data.
-This approach has scaled extremely well. As of Q4-2026, Smarter hosts more than 30
-independent React applications within a single Django deployment, each with its own
-runtime configuration, API endpoints, and authentication context.
+Smarter's web console is a single-page `React <https://react.dev/>`__ application,
+``@smarter/console`` (``smarter/react/packages/smarter-console``), that Django serves
+(:doc:`ADR-035 </adr/035-single-page-app>`). Every console page, from the dashboard and the
+resource lists to the manifest pages, the Extensions console, the manifest drop zone, the
+Prompt Passthrough, the Terminal and the Prompt Engineer's Workbench, is a route of the
+console. Django keeps what it is good at: authentication, sessions, CSRF protection,
+permissions, url routing of the backend, static file management and deployment. React handles
+everything the browser shows.
+
+The design principle is that the console's build is an ordinary Django static asset.
+`Vite.js <https://vite.dev/>`__ compiles the console into versioned JavaScript and CSS bundles
+and an ``index.html``, and emits them into Django's static file hierarchy, where
+``collectstatic`` picks them up like any other file. The console then talks to Django through
+two apis: the :doc:`web console api <web-console-api>` under ``/api/web/``, which uses the
+browser's Django session, and the public Smarter api under ``/api/v1/``.
+
+Request Lifecycle
+-----------------
+
+The following sequence describes how a console page reaches the browser:
+
+1. A user requests a console url, e.g. ``/workbench/llm-clients/<hashed_id>/prompt/``.
+2. Django routes the request to the page's view, a subclass of
+   :class:`~smarter.apps.dashboard.views.console_app.ConsoleAppView`.
+3. The view answers with the console's built ``index.html``, whatever the page.
+4. The browser downloads the console's scripts and styles, whose hashed names Vite wrote into
+   ``index.html``.
+5. The console mounts onto ``#smarter-console-root`` and loads its session from
+   ``GET /api/web/session/``.
+6. The console's router matches the path, and loads the page's code, a chunk of its own.
+7. The page builds its component's props from the session and the route's parameters.
+8. The component calls the backend's apis under ``/api/web/`` and ``/api/v1/``.
+
+Once the console has loaded, moving between its pages doesn't ask Django for a page at all:
+the router renders the next route in place, and only the apis are called.
+
+The Single-Page Console
+-----------------------
+
+Django Serves the Console
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each console page keeps a Django url pattern and its url name, so that emails, settings,
+templates and ``reverse()`` calls that name a page keep working. The page's view is
+:class:`~smarter.apps.dashboard.views.console_app.ConsoleAppView`, or a one-line subclass of it
+that exists only to keep its name, such as
+:class:`~smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView` or a
+resource's ``<Kind>ListView``. ``ConsoleAppView`` answers ``GET`` and ``HEAD`` with the console's
+``index.html``, read from ``STATIC_ROOT/react/@smarter/console/`` on each request, and:
+
+* is never cached, so that a deployment's new build takes effect at once. The scripts and
+  styles that ``index.html`` names have hashed names and are cached as other static files are.
+* sets the CSRF cookie, which the console's first POST needs.
+* answers 503 *The web console hasn't been built* when ``index.html`` is missing, and logs an
+  error. ``make react-build`` builds and collects the console.
+
+Because Django serves the console from its own origin, the console's requests carry the
+browser's Django session cookie and CSRF token like any form post would, and no token needs to
+be handed to React.
+
+The Router and Lazy Routes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The console's entry point, ``src/main.tsx``, creates a browser router from the routes in
+``src/router.tsx`` and mounts the app. The sign-in, sign-up and password reset pages are routes
+of their own; every other page is a child of a ``RequireAuth`` layout, which sends a visitor who
+isn't signed in to the sign-in page, and draws the console's frame: the header, the sidebar and
+the user menu.
+
+Nearly every page loads lazily, with React Router's ``lazy``, so that its code is a chunk of its
+own that the browser downloads the first time the page is opened. The resource lists
+(``lib/lists``) and the manifest pages (``lib/manifestPages``) are tables of routes, one entry
+per kind, each at the path that Django serves:
+
+.. code-block:: tsx
+
+  // the Prompt Engineer's Workbench, with Smarter Chat and the Console's editor, in a chunk of its own.
+  {
+    path: WORKBENCH_PATH,
+    lazy: async () => ({ Component: (await import("@/routes/WorkbenchPage")).WorkbenchPage }),
+  },
+
+Import-Only Packages
+~~~~~~~~~~~~~~~~~~~~
+
+The React code of a page lives in a package of the npm workspace in ``smarter/react/packages``,
+e.g. ``@smarter/workbench``, ``@smarter/guardrail-list`` or ``@smarter/terminal-emulator``. These
+packages are *import-only*: they have no build of their own, and the console's build bundles
+them. A package becomes import-only when:
+
+* its source uses relative imports only, so that another package's build can compile it.
+* ``src/index.ts`` exports its component, and the types of its props.
+* its ``package.json`` points ``"main"`` and ``"exports"`` at ``./src/index.ts``, and exports
+  ``./mocks``, its `MSW <https://mswjs.io/>`__ handlers, for the console's stories and tests.
+* it has no ``build`` script. Its ``main.tsx``, ``index.html`` and ``vite.config.ts`` remain for
+  its development page only (``npm run dev``).
+
+The page's component receives everything it needs as props. The console's route builds them,
+rather than Django rendering them into a template.
+
+Props From the Session
+~~~~~~~~~~~~~~~~~~~~~~
+
+``GET /api/web/session/``
+(:class:`~smarter.apps.api.web.session.views.ConsoleSessionView`) tells the console who is using
+it and how the platform is set up: the user, their profile and account, the cookie names and
+domain, the sidebar's links, the onboarding state, and the feature flags, such as
+``reactDebugMode``, ``serverLogs`` or ``terminal``. Its contract is the Pydantic model
+:class:`~smarter.apps.api.web.session.contract.ConsoleSession`, from which the console's
+TypeScript types (``src/contract.gen.ts``) are generated. ``SessionProvider`` loads it once, when
+the console starts, and pages read it with ``useConsoleSession()``.
+
+A page turns the session into its component's props. ``lib/djangoSession.ts`` builds the
+``SessionContext`` of ``@smarter/common`` that every package's api calls use, with the CSRF and
+session cookie names, the cookie domain, the debug flag and a new request id. A flag that is off
+hides its page: the tool pages (``routes/ToolPages``) show *Page not found* while the session's
+``manifestDropZone``, ``passthrough`` or ``terminal`` is off.
+
+An Example: The Prompt Engineer's Workbench
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The LLMClient prompt engineering workbench is a good example. It is a highly interactive
+application, with streaming chat responses, live server logs, a manifest editor and complex
+state, and every layer of the integration shows in it.
+
+**Django.** A url pattern routes ``/workbench/llm-clients/<hashed_id>/prompt/`` to
+:class:`~smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView`, a
+``ConsoleAppView``. It answers with the console's ``index.html``, like every other page, and it
+needs no template and no context.
+
+**The route.** The console's router matches ``WORKBENCH_PATH``,
+``/workbench/llm-clients/:id/prompt``, and loads ``src/routes/WorkbenchPage.tsx``. The page first
+asks the resource api, ``/api/web/dashboard/resource/llmclient-<hashed_id>/``, whether the user
+may read the LLMClient. On a 404, for an unknown LLMClient, another account's, or a staff-only
+one, it shows *Page not found*, by the same rule as the console's manifest pages.
+
+**The configuration.** ``src/lib/workbench.ts`` builds the workbench's ``WorkbenchConfig`` from
+the hashed id and the session: the chat's ``apiUrl``, the LLMClient in the public api,
+``/api/v1/llm-clients/<hashed_id>/``, from whose ``config/`` the chat reads its configuration;
+the Manifest, Architecture and Deployment tabs' urls in the web console api,
+``/api/web/prompt/llm-clients/<hashed_id>/``; the apply, validate and delete apis; the Server Logs
+stream, while the session's ``serverLogs`` is on; the cookie names; and the router's ``navigate``,
+with which the workbench returns to the LLM Clients list after its LLMClient is deleted.
+
+**The package.** ``@smarter/workbench`` renders the chat, :doc:`Smarter Chat <../smarter-chat>`
+(the ``@smarter.sh/ui-chat`` npm package), and the developer Console beside it. From its own
+perspective, the integration boundary is one prop: it neither knows how its code was built and
+served, nor which Django view answered the url.
 
 .. note::
 
-  The web console is moving into a single-page app, ``@smarter/console``
-  (:doc:`ADR-035 </adr/035-single-page-app>`). The dashboard, the resource lists, the manifest
-  pages, the Extensions console, the manifest drop zone, the Prompt Passthrough and the Terminal
-  are already its pages: their packages are imported by the console rather than built on their
-  own, and Django answers their paths with the console's ``index.html``. The Prompt Engineer's
-  Workbench is the page that Django still hosts as this guide describes.
+   No console page references a static asset's file name, and no Django template names a
+   console page's script. Vite writes the hashed names into ``index.html`` and into the chunks
+   that load each other.
 
-React applications are compiled by `Vite.js <https://vite.dev/>`__ into versioned JavaScript and CSS
-bundles and emitted directly into Django's static file hierarchy. At runtime,
-Django discovers and loads these assets through a manifest-driven integration
-layer that automatically resolves hashed filenames, shared chunks, vendor
-bundles, and code-split dependencies.
+The Template-Tag Pattern of Django's Frame
+------------------------------------------
 
-As a result, Django remains responsible for request routing, authentication,
-template rendering, runtime configuration, static asset management, and
-deployment orchestration, while React remains focused exclusively on frontend
-behavior and presentation logic. Frontend and backend development can
-therefore proceed largely independently while still participating in a
-unified deployment model.
+Before the console, each page was a Django template that mounted one React app, and Django's
+own frame, ``templates/dashboard/base.html``, still works this way. No console page uses it; the
+next step of the migration retires it. Its widgets are React apps that the frame's templates
+mount through template tags: the user menu (``@smarter/dashboard-user-menu``), the **Did you
+know?** tip (``@smarter/didyouknow``), onboarding (``@smarter/onboarding``) and the welcome dialog
+(``@smarter/welcome``). The console imports the same packages into its own frame, and builds
+their props from the session.
+
+.. important::
+
+   A new page is a console page: an import-only package and a route of ``@smarter/console``,
+   served by a ``ConsoleAppView``. Never add a new Django template for a page.
 
 .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.002.png
   :alt: View, Template, and React Component Integration
   :width: 100%
 
-Request Lifecycle
------------------
+An Example: The User Menu
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following sequence describes how a React application is rendered within
-the Django runtime:
+The frame's navbar, ``templates/dashboard/navbar.html``, includes
+``templates/react/dashboard-user-menu.html``, which loads
+:mod:`smarter.apps.dashboard.templatetags.react_dashboard_user_menu`. Its two tags do the work:
 
-1. A user requests a Django URL.
-2. Django routes the request to a view.
-3. The view generates runtime configuration and template context.
-4. A custom template tag loads and analyzes the React build's manifest.json file.
-5. JavaScript and CSS dependencies are recursively discovered.
-6. Django renders the template and injects the required asset references.
-7. The browser downloads the React bundles.
-8. React IIFE (Immediately Invoked Function Expression) mounts onto a designated DOM element.
-9. React reads runtime configuration from HTML attributes.
-10. React begins communicating with backend APIs, the :doc:`web console api <web-console-api>`
-    under ``/api/web/``.
+* ``dashboard_user_menu_react_assets`` returns the app's JavaScript and CSS files, from its
+  ``manifest.json``.
+* ``dashboard_user_menu`` returns the root element's attributes: the cookie names and domain,
+  who the user is, their profile image, their account, the languages, and the urls of the
+  menu's apis, reversed with Django's ``reverse()`` so that routing stays in Django.
 
-This architecture creates a lightweight integration boundary between Django
-and React without requiring hardcoded asset references, inline bootstrap
-scripts, environment-specific templates, or additional initialization APIs.
-
-The remainder of this guide follows a complete implementation example and
-then examines each integration layer in detail, including manifest analysis,
-template tags, Vite configuration, runtime context propagation, and
-deployment considerations.
-
-An Example: The Prompt Engineer's Workbench
-------------------------------------------------
-
-The LLMClient prompt engineering workbench is a good example, in that it is a highly
-interactive React application that involves streaming chat responses, live server logs,
-complex state management, and tight integration with Django's authentication and
-server-side context management. Functionality of this nature could only be implemented in a
-frontend framework like React.
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.001.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-
-Django Objects
-~~~~~~~~~~~~~~~~~
-
-The workbench begins with a standard Django request lifecycle.
-A URL pattern routes incoming requests for the pattern ``/workbench/llm-clients/<hashed_id>/prompt/`` to the
-Django view class :class:`~smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView`.
-The view is also responsible for generating and providing the API endpoints that the React application will
-use: the LLMClient's own url, from which it reads the chat's configuration, its manifest, and the apply, validate and delete apis.
-Rather than hardcoding endpoint URLs, the view uses Django's :func:`reverse()`
-function and Django URL namespaces to generate the correct endpoint at runtime.
-This ensures that routing remains centralized within Django, that it remains
-future-proofed against code refactoring, and that it assists code contributors in
-understanding how frontend and backend routing are connected without
-duplicating URL definitions across templates and React components.
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.003.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-The view's primary responsibilities are straightforward:
-
-* Select the template to render.
-* Generate runtime configuration required by the frontend.
-* Provide template context.
-
-The template then renders the initial HTML response and provides a DOM
-mounting point for the React application.
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.004.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-In addition to rendering the mounting element, the template performs two
-important integration tasks. First, it serializes runtime configuration
-generated by the view into custom HTML attributes attached to the mounting
-element (see example below). These attributes become the transport mechanism through which Django
-passes configuration data into React during application initialization.
+The template renders the root element, with that configuration in custom HTML attributes:
 
 .. code-block:: html
 
   <div
-    id="smarter-workbench-root"
-    smarter-llmclient-api-url="https://alpha.platform.example.com/workbench/llm-clients/rMTAwx/"
-    smarter-cookie-domain="alpha.platform.example.com"
+    id="smarter-dashboard-user-menu-root"
     smarter-csrf-cookie-name="csrftoken"
     smarter-django-session-cookie-name="sessionid"
+    smarter-cookie-domain="platform.example.com"
+    smarter-profile-image-api-url="/api/web/account/profile-image/"
+    ...
   >
 
-.. note::
+and the ``<link>`` and ``<script>`` elements of the app's assets:
 
-    In this integration scheme, React does not technically require session nor csrf data in order to function,
-    since React is served by Django and therefore shares the same origin. However,
-    we pass these values in the interest of future-proofing against the possibility
-    of serving React from a different origin, which would require explicit handling of
-    authentication and CSRF tokens in API requests.
+.. code-block:: jinja
 
-Second, the template invokes a custom Django template tag that analyzes
-the React build's manifest.json file and injects the required
-<script> and <link> elements for the application's JavaScript
-and CSS assets (see annotations in bright green below). This process is
-explained in detail later in this article.
+  {% dashboard_user_menu_react_assets as user_menu_assets %}
+  {% for js_file in user_menu_assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/dashboard-user-menu/' %}{{ js_file }}"></script>
+  {% endfor %}
 
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.005.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-Once the page has loaded, React mounts onto the designated DOM element (see annotations in orange above) and,
-reads the runtime configuration exposed through the custom HTML attributes,
-and begins communicating with Django APIs. From React's perspective, the
-integration boundary is intentionally simple. The component receives configuration
-values and API endpoints as props and remains completely unaware of how assets
-were built, how the manifest was analyzed, or how JavaScript and CSS bundles
-were injected into the page.
-
-.. note::
-
-   The React application never references static asset filenames directly.
-   Asset discovery is performed entirely by Django through manifest analysis.
-
-This separation of responsibilities is central to the architecture.
-React focuses exclusively on frontend behavior, state management, and user
-interaction, while Django and the build pipeline handle routing, asset
-discovery, deployment, and runtime integration.
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.006.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
+The package's ``main.tsx`` finds the root element, reads the attributes, builds its
+``SessionContext`` and renders the app. This is what the console replaces: there, the same
+configuration comes from the session api instead of from attributes.
 
 React Build Manifest
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
-A React build’s manifest.json file is generated by
-`Vite.js <https://vite.dev/>`__ and serves as the authoritative source of
-truth for all JavaScript and CSS assets produced during the build process.
-The manifest is necessary because production asset filenames are generated
-with content-based hashes for browser cache invalidation. As a result, the names of
-the generated files cannot be known in advance and should never be hardcoded
-into Django templates. Instead, Django analyzes the manifest at runtime to
-determine which assets must be loaded for a given React application, including
-JavaScript bundles, stylesheets, shared chunks, and third-party dependencies. The
-exact contents of a manifest vary from application to application,
-depending on the number of dependencies, vendor libraries, code-split
-modules, and build optimizations included in the React project.
-
-The following example shows the manifest of an application that imports
-xterm.js:
+A widget's script names cannot be written into a template, because Vite gives every production
+file a content-based hash for browser cache invalidation. Instead, the widget's build writes a
+``manifest.json`` file, the authoritative list of the JavaScript and CSS files it produced, and
+Django reads it at render time. Its exact contents vary with the application's dependencies,
+vendor libraries and code-split modules. The following example shows the manifest of an
+application that imports xterm.js:
 
 .. code-block:: json
 
@@ -227,384 +266,161 @@ xterm.js:
     }
   }
 
-Every entry except ``_custom`` is a chunk generated by Vite. ``_custom`` is
-build information that Smarter's Vite configuration adds after the build
-(see below).
+Every entry except ``_custom`` is a chunk generated by Vite. ``_custom`` is build information
+that the widgets' Vite configuration adds after the build, with its ``addCustomManifestData``
+plugin: the build time, the package's version and the build's ``NODE_ENV``.
 
-Within Smarter’s React build conventions, a single manifest entry is
-designated as the application’s primary entry point and contains the
-"isEntry": true property. This entry serves as the root of the dependency
-graph. Rather than injecting only the entry-point asset into the template, Django
-recursively traverses the manifest to discover all required dependencies.
-This includes imported JavaScript chunks, shared runtime modules, vendor
-bundles, and associated CSS assets. The resulting asset list represents the
-complete set of files required to initialize the React application correctly.
-This recursive dependency analysis is performed by custom Django template
-tags (see above), allowing templates to remain completely independent of the manifest’s
-internal structure and the dynamically generated asset filenames.
+One entry, marked ``"isEntry": true``, is the application's entry point and the root of the
+dependency graph. Rather than loading only the entry point's file, Django traverses the manifest
+recursively to find every file the application needs: imported chunks, shared runtime modules,
+vendor bundles and their CSS.
 
-Django doesn't read the manifest as loose JSON. When it loads a
-``manifest.json`` file, it validates the file against the Pydantic model
-:class:`~smarter.lib.django.templatetags.smarter_react_contract.ViteManifest`:
-each chunk is a
-:class:`~smarter.lib.django.templatetags.smarter_react_contract.ViteManifestChunk`,
-and ``_custom`` is a
-:class:`~smarter.lib.django.templatetags.smarter_react_contract.ReactAppBuildInfo`.
-Chunks accept fields that Vite or Rolldown add in newer versions, so a Vite
-upgrade doesn't break page rendering. ``_custom`` is Smarter's own shape and
-accepts only its three fields. A manifest that is missing, isn't JSON, or
-doesn't match the model is logged as an error and treated as absent, and the
-page then renders without the React application's assets.
+Django doesn't read the manifest as loose JSON. It validates the file against the Pydantic model
+:class:`~smarter.lib.django.templatetags.smarter_react_contract.ViteManifest`: each chunk is a
+:class:`~smarter.lib.django.templatetags.smarter_react_contract.ViteManifestChunk`, and
+``_custom`` is a
+:class:`~smarter.lib.django.templatetags.smarter_react_contract.ReactAppBuildInfo`. Chunks accept
+fields that Vite or Rolldown add in newer versions, so a Vite upgrade doesn't break page
+rendering. ``_custom`` is Smarter's own shape and accepts only its three fields. A manifest that
+is missing, isn't JSON, or doesn't match the model is logged as an error and treated as absent,
+and the page then renders without the widget's assets.
 
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.007.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
+Django Template Tags
+~~~~~~~~~~~~~~~~~~~~
 
+`Custom Django template tags <https://docs.djangoproject.com/en/6.0/howto/custom-template-tags/>`__
+keep the manifest's structure out of the templates. Each widget's tag module creates a
+:class:`~smarter.lib.django.templatetags.smarter_react_templatetag_manager.SmarterReactTemplateTagManager`
+for its package, which loads the ``manifest.json`` file, finds the entry point, collects its
+dependencies, and returns a
+:class:`~smarter.lib.django.templatetags.smarter_react_contract.ReactAppAssets` model with
+``js`` and ``css`` attributes. The entry point's own files come first, followed by those of its
+imports. The template renders a ``<script>`` or ``<link>`` element for each, with no knowledge of
+how the assets were generated. This approach:
+
+* eliminates hardcoded asset filenames.
+* supports cache-safe hashed build artifacts.
+* resolves code-split dependencies automatically.
+* keeps manifest traversal out of templates.
+
+See :doc:`SmarterReactTemplateTagManager <lib/django/templatetags>`, which also documents the
+Pydantic models of the manifest and of the assets.
 
 Vite Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------
 
-A few more points about `Vite.js <https://vite.dev/>`__ are merited.
-Vite is responsible for compiling React applications, generating production
-assets, optimizing bundles, and producing the ``manifest.json`` file that
-Django uses for runtime asset discovery. Because the manifest is derived
-entirely from the build process, its structure and contents are determined by
-the Vite configuration. Within Smarter, Vite serves as the bridge between React development and
-Django deployment. Rather than requiring React applications to understand
-deployment environments, static asset locations, or runtime
-integration details, these concerns are centralized within the build
-configuration itself.
+`Vite.js <https://vite.dev/>`__ compiles the React code, optimizes the bundles, and writes them
+where Django serves them. Rather than requiring React code to understand deployment
+environments, static asset locations or runtime integration, these concerns are centralized in
+the build configuration. The console's configuration,
+``smarter/react/packages/smarter-console/vite.config.ts``, addresses these requirements:
 
-To support Django integration, the Vite configuration addresses several
-requirements:
-
-- **Manifest Generation**
-    Generates a ``manifest.json`` file that maps source entry points to
-    versioned JavaScript, CSS, and dependency assets.
-- **Development Proxying**
-    Proxies API requests and selected static resources from the Vite
-    development server to the Django development server, allowing React
-    applications to run locally while interacting with a live Django backend.
-- **Build Information**
-    The ``addCustomManifestData`` plugin adds a ``_custom`` entry to
-    ``manifest.json`` with the build time, the package's version, and the
-    build's ``NODE_ENV``. Its fields must match
-    :class:`~smarter.lib.django.templatetags.smarter_react_contract.ReactAppBuildInfo`,
-    or Django rejects the manifest.
 - **Static Asset Integration**
-    Emits production build artifacts directly into Django’s static file
-    hierarchy so that React assets participate naturally in the
-    ``collectstatic`` workflow.
-- **Security Compatibility**
-    Preserves compatibility with Django authentication, CSRF protection,
-    session cookies, and same-origin security policies.
+    Writes ``index.html`` and its assets into Django's static file hierarchy,
+    ``smarter/static/react/@smarter/console/``, with the base url ``/static/react/@smarter/console/``,
+    so that they take part in the ``collectstatic`` workflow and ``ConsoleAppView`` finds
+    ``index.html`` in ``STATIC_ROOT``.
+- **Hashed File Names**
+    Names every script, chunk and stylesheet ``assets/[name]-[hash]``, so that browsers can cache
+    them for as long as they like.
+- **Code Splitting**
+    Writes each lazy route, and the import-only packages it uses, into a chunk of its own.
+- **Development Proxying**
+    Serves the console at ``http://localhost:5173/`` with ``npm run dev``, and proxies every path
+    that belongs to the backend (``/api``, ``/admin``, ``/social-auth``, ``/i18n``, ``/jsi18n``,
+    ``/static`` and the ``/ws`` WebSocket) to the Django dev server at ``http://localhost:9357``, so
+    that the browser sees one origin and Django's session and CSRF cookies work as they do in
+    production.
 - **Production Hardening**
-    Removes console.debug() statements from production bundles to reduce
-    unnecessary console output and prevent accidental disclosure of debugging
-    information.
-- **Caching Optimization**
-    Separates large third-party dependencies such as xterm.js into
-    dedicated bundles so that vendor assets can remain cached independently
-    from application-specific code.
-- **Developer Experience**
-    Supports hot module replacement (HMR) and rapid incremental rebuilds
-    while maintaining compatibility with Django’s runtime environment.
+    Removes ``console.debug()`` calls from production builds, with the Oxc minifier, so that
+    debugging output can't disclose sensitive information.
 
-The following example illustrates the Vite configuration of an application
-that Django hosts.
-
-.. code-block:: javascript
+.. code-block:: typescript
 
   export default defineConfig(({ command }: ConfigEnv) => ({
-    plugins: [
-      react(),
-      addCustomManifestData,
-    ],
-    // We use esbuild to remove console.debug statements in production builds
-    // in order to avoid leaking potentially sensitive information in
-    // production environments.
-    esbuild: {
-      pure: ["console.debug"],
-    },
-    // Builds are also saved into the Django static directory so that these
-    // files can be included in the Django collectstatic process and served by
-    // Django at runtime in local development environments. For development
-    // we need to be able to support serving these files both from the Vite
-    // dev server as well as the Django dev server. We set the base to '/'
-    // so that Vite's dev server can serve these files. Separately, we persist
-    // the actual build files to the Django static directory and set up a proxy
-    // in the Vite dev server to forward requests to the Django dev server.
+    plugins: [react()],
     base: command === "serve" ? "/" : `/static/react/${packageName}/`,
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
+        "@": path.resolve(import.meta.dirname, "./src"),
       },
     },
     build: {
-      minify: "esbuild" as const,
-      // ------------------------------------------------------------------------
-      // The manifest is needed for hosting builds from Django (both dev and prod).
-      // It is used by Django templatetags to determine the correct file names to include
-      // in the HTML template. This is necessary because Vite includes a
-      // hash in the file names for cache busting.
-      // ------------------------------------------------------------------------
       manifest: "manifest.json",
-      // ------------------------------------------------------------------------
-      // we're placing our build output in the primary Django static directory so
-      // that these files are automatically included in the Django collectstatic
-      // process and served by Django at runtime.
-      //
-      // In development, we rely on Vite's dev server to serve these files, so we
-      // set the outDir to a directory that is not used by the Django dev server.
-      // ------------------------------------------------------------------------
       outDir: `../../../smarter/static/react/${packageName}`,
       emptyOutDir: true,
-      // ------------------------------------------------------------------------
-      // We want to bundle xterm.js and its addons separately from the rest of the
-      // application code in order to optimize caching. This way, if we make changes
-      // to our application code, the xterm.js bundle can still be cached by the
-      // browser and won't need to be re-downloaded.
-      // ------------------------------------------------------------------------
-      rollupOptions: {
+      rolldownOptions: {
         output: {
           entryFileNames: "assets/[name]-[hash].js",
           chunkFileNames: "assets/[name]-[hash].js",
           assetFileNames: "assets/[name]-[hash][extname]",
-          manualChunks(id: string) {
-            if (id.includes("node_modules/xterm") || id.includes("node_modules/@xterm")) {
-              return "xterm";
-            }
-            return undefined;
+          // The Oxc minifier's way of removing console.debug() calls, which can log sensitive data.
+          minify: {
+            compress: {
+              treeshake: {
+                manualPureFunctions: ["console.debug"],
+              },
+            },
           },
         },
       },
     },
-    // Django collects static files and serves them from /static/
-    // We need to create proxy servers in React's dev environment
-    // so that these requests are served from the Django dev server instead
-    // of the React dev server.
-    //
-    // Most of these cases stem from <link> elements added to this index.html
-    // containing platform-wide stylesheets and scripts that originate from
-    // and are served by the Django dev server. These are added to index.html
-    // in order to keep this React dev environment as close to the runtime
-    // environment as possible.
     server: {
-      proxy: {
-        "/api": "http://localhost:9357",
-        "/assets": {
-          target: "http://localhost:9357", // Django dev server
-          changeOrigin: true,
-          rewrite: (path: string) => `/static${path}`,
-        },
-        "/common-styles.css": {
-          target: "http://localhost:9357",
-          changeOrigin: true,
-          rewrite: (path: string) => `/static${path}`,
-        },
-        "/dashboard/": "http://localhost:9357",
-        [`/static/react/${packageName}/`]: {
-          target: "http://localhost:5173",
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(new RegExp(`^/static/react/${packageName}/`), "/"),
-        },
-        "/static": {
-          target: "http://localhost:9357",
-          changeOrigin: true,
-        },
-        "/workbench/": "http://localhost:9357",
-      },
+      port: 5173,
+      strictPort: true,
+      proxy: backendProxy(),
     },
   }));
 
-
-Django Template Tags
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-`Custom Django template tags <https://docs.djangoproject.com/en/6.0/howto/custom-template-tags/>`__ provide the integration layer between Django
-templates and React build artifacts. As described in the previous section,
-the workbench's React build process generates a ``manifest.json``
-file that contains the complete dependency graph for a React application,
-including JavaScript bundles, stylesheets, shared chunks, and vendor
-dependencies. Django templates should not need to understand the structure
-of this manifest or the details of dependency traversal. Instead, Smarter
-encapsulates this logic within reusable template tags.
-
-At render time, a template tag loads the appropriate ``manifest.json`` file,
-identifies the application’s entry point, recursively discovers all required
-dependencies, and returns the resulting JavaScript and CSS asset lists to the
-template, as a
-:class:`~smarter.lib.django.templatetags.smarter_react_contract.ReactAppAssets`
-model with ``js`` and ``css`` attributes. The entry point's own files come
-first, followed by those of its imports. The template can then render the appropriate ``<script>`` and
-``<link>`` elements without any knowledge of how the assets were generated or
-how the dependency graph is structured. This approach provides several advantages:
-
-* Eliminates hardcoded asset filenames.
-* Supports cache-safe hashed build artifacts.
-* Automatically resolves code-split dependencies.
-* Keeps manifest traversal logic out of templates.
-* Allows React applications to participate naturally in Django’s rendering process.
-
-The following example illustrates how the workbench's template
-retrieves the CSS and JavaScript assets associated with its React build.
-
-.. code-block:: jinja
-
-  {% extends "dashboard/base.html" %}
-  {% load static %}
-  {% load react_workbench %}
-
-
-.. code-block:: jinja
-
-  {% block style_extra %}
-    {{ block.super }}
-
-    {% workbench_react_assets as assets %}
-    {% for css_file in assets.css %}
-      <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/workbench/' %}{{ css_file }}">
-    {% endfor %}
-  {% endblock %}
-
-.. code-block:: jinja
-
-  {% block javascript_extra %}
-    {{ block.super }}
-
-    {% workbench_react_assets as assets %}
-    {% for js_file in assets.js %}
-      <script class="smarter" type="module" src="{% static 'react/@smarter/workbench/' %}{{ js_file }}"></script>
-    {% endfor %}
-  {% endblock %}
-
-From the template’s perspective, the interaction is intentionally simple.
-The template requests a collection of CSS and JavaScript assets and renders
-them. The details of manifest loading, dependency traversal, asset ordering,
-and filename resolution remain encapsulated within the template tag
-implementation.
-
-See :doc:`SmarterReactTemplateTagManager <lib/django/templatetags>`, which
-also documents the Pydantic models of the manifest and of the assets.
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.008.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.010.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-
-Django Template
-~~~~~~~~~~~~~~~~~~
-
-The Django template for the workbench serves as the final integration
-point between Django and React. It is responsible for assembling the HTML
-required to initialize the React application and making server-side configuration
-available to the frontend runtime. Specifically, the template performs three functions:
-
-1. Provide a DOM mounting point for the React application.
-2. Inject the JavaScript and CSS assets required by the React build.
-3. Transport runtime configuration generated by the Django view into React.
-
-The JavaScript and CSS assets are generated by the custom template tags
-described in the previous section. These tags analyze the React build's
-``manifest.json`` file and produce the ``<script>`` and ``<link>`` elements
-required to load the application and all of its dependencies.
-The template also renders a DOM element that serves as the mounting point for
-the React application. In addition to providing a location where React can
-attach itself to the page, this element exposes runtime configuration values
-generated by the Django view through custom HTML attributes.
-Typical configuration values include:
-
-* API endpoint URLs
-* Session and CSRF cookie names
-* Cookie domains
-* Feature flags
-* Environment-specific settings
-* Other application configuration required at runtime
-
-The following example illustrates the mounting element used by the
-workbench:
-
-.. code-block:: html
-
-  <div
-    id="smarter-workbench-root"
-    smarter-llmclient-api-url="https://alpha.platform.example.com/workbench/llm-clients/rMTAwx/"
-    smarter-cookie-domain="alpha.platform.example.com"
-    smarter-csrf-cookie-name="csrftoken"
-    smarter-django-session-cookie-name="sessionid"
-  >
-
-During initialization, React locates the mounting element, reads the
-configuration values from its attributes, and converts them into component
-props supplied to the application’s root component. This pattern creates a clean
-separation between Django and React. Django remains responsible for generating
-runtime configuration, while React remains focused on application behavior and
-presentation. Neither side requires knowledge of the other’s internal
-implementation details.
-
-The template is also responsible for invoking the custom template tags
-described in the previous section. These tags analyze the React build’s
-``manifest.json`` file and generate the ``<script>`` and ``<link>`` elements
-required to load the application’s JavaScript and CSS assets.
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.009.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
+An import-only package's ``vite.config.ts``, such as
+``smarter/react/packages/smarter-workbench/vite.config.ts``, is for its development page only: it
+has no ``build`` section, and proxies ``/api`` and ``/static`` to the Django dev server. The frame
+widgets' configurations also write a ``manifest.json`` with the ``_custom`` build information
+that Django's template tags validate.
 
 Build, Deployment, and CI/CD Considerations
----------------------------------------------
+-------------------------------------------
 
-React applications are organized as a single npm workspace containing multiple
-independent packages. Each package produces its own ``manifest.json`` file and
-associated build assets, which are emitted directly into a dedicated location
-within Django’s static file hierarchy such as:
+The React code is a single npm workspace, ``smarter/react``, with one package per page or
+widget. ``npm run build`` in the workspace builds, in order, the libraries that others import
+(``@smarter/common``, ``@smarter/didyouknow``'s and ``@smarter/onboarding``'s libraries,
+``@smarter.sh/ui-widgets`` and ``@smarter.sh/ui-chat``), then every package that has a ``build``
+script: the console, which bundles every page package, and the frame's widgets, each into its
+own folder of Django's static file hierarchy, such as:
 
 .. code-block:: text
 
-  static/react/@smarter/workbench/
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-npm-workspace.png
-  :alt: React npm Workspace Structure
-  :width: 100%
-
-This build layout reflects a fundamental architectural principle described
-throughout this guide:
+  static/react/@smarter/console/
+  static/react/@smarter/dashboard-user-menu/
 
 .. note::
 
   React build artifacts are treated as ordinary Django static assets.
 
-  From Django’s perspective, compiled React bundles are no different from any
-  other static resource such as CSS, images, or JavaScript files. Once generated,
-  they participate in the standard Django static asset workflow, including
-  collectstatic, static file serving, and cache management.
+  From Django's perspective, compiled React bundles are no different from any other static
+  resource such as CSS, images, or JavaScript files. Once generated, they participate in the
+  standard Django static asset workflow, including collectstatic, static file serving, and cache
+  management.
 
-  Because React assets are generated before Django is deployed, the frontend
-  build process remains cleanly separated from the Django runtime. React
-  applications can be developed, versioned, tested, and rebuilt independently
-  while still integrating seamlessly into Django’s deployment pipeline.
+  Because React assets are generated before Django is deployed, the frontend build remains
+  cleanly separated from the Django runtime. React code can be developed, versioned, tested, and
+  rebuilt independently while still integrating into Django's deployment pipeline.
 
 CORS
-~~~~~~
+~~~~
 
-@smarter/common includes a set of custom HTTP headers in all API requests. These
-are included in smarter.settings.base.py as part of the CORS_ALLOW_HEADERS list.
-Note that CORS is switch-enabled, meaning that this switch must be enabled
-in order for the any React component to be able to make API requests to the
-Django backend.
+``@smarter/common`` sends a set of custom HTTP headers with every api request (see
+``smarter/react/packages/smarter-common/src/lib/django.tsx``). They are listed in
+``CORS_ALLOW_HEADERS`` in ``smarter.settings.base``, so that a cross-origin request, e.g. from the
+embedded Smarter Chat, may carry them. CORS is switch-enabled: the ``enable_middleware_cors``
+waffle switch must be on for a React app on another origin to call the backend.
 
 .. code-block:: typescript
 
-    const requestHeaders = {
+  const requestHeaders = {
     Accept: applicationJson,
-    Authorization: `Bearer ${djangoSessionTokenValue}`,
+    "X-CSRFToken": csrftokenValue!,
     "Content-Type": applicationJson,
-    "X-CSRFToken": csrftokenValue,
     "X-Smarter-Client": sessionContext.smarterClient,
     "X-Smarter-ClientVersion": sessionContext.smarterClientVersion,
     "X-Smarter-ClientType": "react",
@@ -612,63 +428,49 @@ Django backend.
     "X-Smarter-Capabilities": capabilities,
   };
 
-
-
 Operational Considerations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Source Control Exclusion
-    Compiled React build artifacts are intentionally
-    excluded from the Git repository and are never committed to source control.
-    Build outputs are considered ephemeral deployment artifacts and must therefore
-    be regenerated as part of the build process.
+    Compiled React build artifacts are intentionally excluded from the Git repository and are
+    never committed to source control. Build outputs are ephemeral deployment artifacts and are
+    regenerated as part of the build process.
 * Build Prerequisites
-    Because Django templates and template tags depend
-    on the existence of ``manifest.json`` and its associated static assets, the
-    React build process must execute successfully at least once before the Django
-    application can correctly render React-integrated pages. Keep this in mind
-    when for example, you are tinkering with versions in ``package.json``.
+    Django can serve no console page until the console has been built and collected: until then
+    every page answers 503. The frame's template tags, likewise, depend on their widgets'
+    ``manifest.json``. Keep this in mind when, for example, you are changing versions in
+    ``package.json``.
+* Rebuilding After React Changes
+    Use ``make react-build``, which builds the workspace, runs ``collectstatic`` and rebuilds the
+    Docker image, rather than ``make build`` alone, which uses the static files collected earlier.
 * CI/CD Pipeline Initialization
-    GitHub Actions workflows begin with a clean
-    repository checkout that does not contain compiled frontend assets. Accordingly,
-    React build steps must run early in the workflow before Docker builds,
-    collectstatic, integration tests, or deployment stages that depend on
-    these assets.
-
-    .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/gha-build-workflow-for-react.png
-       :alt: View, Template, and React Component Integration
-       :width: 100%
-
+    GitHub Actions workflows begin with a clean checkout that contains no compiled frontend
+    assets. Accordingly, the React build (the ``react-build`` action of ``build.yml``, which
+    restores the build from a cache when the React source is unchanged) runs early, before
+    Docker builds, collectstatic, integration tests, or deployment stages that depend on it.
 * Static File Synchronization
-    During local development, developers should remain aware of the distinction
-    between Vite’s live development server, Django’s static asset directories,
-    and the Django staticfiles runtime directory. Stale build artifacts can
-    occasionally lead to confusing runtime behavior if these environments become
-    out of sync.
+    During local development, be aware of the distinction between Vite's development server,
+    Django's static asset directories, and the Django staticfiles runtime directory. Stale build
+    artifacts can lead to confusing runtime behavior if these become out of sync.
 * Container Build Dependencies
-    Docker images intended to serve React-enabled
-    Django pages must be built only after the frontend asset pipeline has completed.
-    This ensures that all compiled React bundles and ``manifest.json`` metadata are available
-    inside the container image at runtime.
+    Docker images that serve the console must be built only after the frontend build has
+    completed, so that ``index.html``, the compiled bundles and the widgets' ``manifest.json``
+    files are inside the image at runtime.
 * Published Packages
-    :doc:`Smarter Chat <../smarter-chat>`, the React app of the LLMClient
-    prompt engineering workbench, is also published to npm, as ``@smarter.sh/ui-chat``,
-    and so is ``@smarter.sh/ui-widgets``. Both are ordinary packages of the workspace
-    (``smarter/react/packages/smarter.sh-chat`` and ``smarter/react/packages/smarter.sh-widgets``),
-    built, tested and served like every other, and GitHub Actions publishes them with each
-    Smarter release, under the platform's version (``uiChatRelease.yml`` and
-    ``uiWidgetsRelease.yml``).
+    :doc:`Smarter Chat <../smarter-chat>`, the chat of the Prompt Engineer's Workbench, is also
+    published to npm, as ``@smarter.sh/ui-chat``, and so is ``@smarter.sh/ui-widgets``. Both are
+    packages of the workspace (``smarter/react/packages/smarter.sh-chat`` and
+    ``smarter/react/packages/smarter.sh-widgets``) that build on their own, as libraries that the
+    console's pages import, and GitHub Actions publishes them with each Smarter release, under the
+    platform's version (``uiChatRelease.yml`` and ``uiWidgetsRelease.yml``).
 * Convenience Tooling
-    Smarter provides helper commands such as `make react-build` and `make react-build-ci`
-    to simplify common frontend integration workflows and to keep Django’s
-    static directories aligned with current React build outputs.
+    ``make react-build`` and ``make react-build-ci`` simplify the common frontend workflows and
+    keep Django's static directories aligned with the current React build.
 
-Collectively, these conventions provide a predictable and highly reproducible
-deployment model that works consistently across local development environments,
-CI/CD workflows, Docker container builds, and production infrastructure. The
-result is a React integration architecture that preserves the operational
-simplicity of Django deployments while still enabling modern frontend build
-pipelines and advanced React development workflows.
+Collectively, these conventions give a predictable, reproducible deployment model that works
+the same way in local development, CI/CD workflows, Docker image builds and production. The
+result keeps the operational simplicity of a Django deployment while the web console is a
+modern single-page application.
 
 .. toctree::
   :maxdepth: 1
