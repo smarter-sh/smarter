@@ -17,6 +17,18 @@ import { PasswordResetRequestPage } from "@/routes/PasswordResetRequestPage";
 import { RegisterPage } from "@/routes/RegisterPage";
 import { RequireAuth } from "@/routes/RequireAuth";
 import { DASHBOARD_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
+import { LIST_PAGES, type ListPage as ListPageConfig } from "@/lib/lists";
+
+/** A list's route: its package loads in a chunk of its own, when the list is first opened. */
+function listRoute(page: ListPageConfig): RouteObject {
+  return {
+    path: page.path,
+    lazy: async () => {
+      const [{ ListPage }, List] = await Promise.all([import("@/routes/ListPage"), page.load()]);
+      return { Component: () => <ListPage page={page} List={List} /> };
+    },
+  };
+}
 
 export const routes: RouteObject[] = [
   // the pages of a visitor who isn't signed in.
@@ -45,6 +57,7 @@ export const routes: RouteObject[] = [
         // the dashboard and its widgets load in a chunk of their own, which the sign-in pages don't need.
         lazy: async () => ({ Component: (await import("@/routes/DashboardPage")).DashboardPage }),
       },
+      ...LIST_PAGES.map(listRoute),
       { path: "*", element: <NotFoundPage /> },
     ],
   },

@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Guardrail } from "@/lib/Types";
+import type { Guardrail } from "../lib/Types";
 
 export const API_URL = "/api/web/guardrail/listview/";
 

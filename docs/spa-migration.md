@@ -66,7 +66,15 @@ Django's frame use `SERVER_RENDERED_PAGE` (`/secret/`).
 The console's frame now has what Django's has: the welcome dialog (`@smarter/welcome`, now importable) with its
 sidebar hint and the onboarding state from the session, the Did you know? tip, and a theme mode menu that stores the
 choice where the theme's JavaScript does, so the console and Django's pages share it. The dashboard route loads
-lazily, in its own chunk. Next: the resource list pages (section 3).
+lazily, in its own chunk.
+
+The resource lists (section 3, phase 2) start with Guardrails, the pilot: `@smarter/guardrail-list` is import-only,
+and the console's `lib/lists` (`LIST_PAGES`) gives each moved list a lazy route at Django's path without the slash,
+with a session context whose `ApiUrl` is the list api. Django keeps `GuardrailListView`, now a `ConsoleAppView`
+subclass, so that `listview_registry()` still pairs the page with its list api for the global search; its template
+and template tag are deleted. `ResourceViewsTestMixin.console_page` tells the shared list tests. The courses that
+taught the Django hosting of the guardrail list link to those files at release v0.42.10. Next: the eleven similar
+lists, then budgets, infrastructure resources and LLM Clients.
 
 ## Development
 

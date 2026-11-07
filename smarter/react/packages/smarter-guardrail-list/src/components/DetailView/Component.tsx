@@ -23,8 +23,8 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { GuardrailDetailViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { GuardrailDetailViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 function DetailView({ sessionContext, object: guardrail, onRequery, filtering }: GuardrailDetailViewProps) {
   return (

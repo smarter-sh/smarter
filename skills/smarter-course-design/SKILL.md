@@ -152,7 +152,9 @@ Every reference to code is a link a student can click during class.
   `` :doc:`Budget </smarter-resources/smarter-budget>` ``, never a
   docs.smarter.sh URL. ADRs are `` :doc:`ADR 031 </adr/031-pydantic-over-json>` ``.
 
-Rules: always `main`, never `alpha` or a SHA in a blob link; no line-number
+Rules: always `main`, never `alpha` or a SHA in a blob link, except a stable release tag
+(`blob/v0.42.10/...`) for a file that a later change removed, e.g. the Django templates that hosted the
+React apps before the single-page console (ADR-035), with a sentence that says why; no line-number
 anchors (they drift); anonymous links (`__`, two underscores) so repeated link
 text doesn't clash; link text is the file name or a short path. Inside a
 schedule cell, plain ` ``literal`` ` paths are fine when `source-code.txt`
