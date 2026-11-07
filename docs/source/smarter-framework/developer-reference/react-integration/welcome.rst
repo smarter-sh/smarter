@@ -44,7 +44,9 @@ While the dialog is closed, the app shows the first of the
 Unlike the other React components, which each have their own page,
 ``@smarter/welcome`` is mounted on every web console page:
 ``templates/dashboard/base.html`` includes ``templates/react/welcome.html`` for
-signed-in users. Its illustrations are the Keen theme's ``dozzy-1`` set, which
+signed-in users. The single-page console (:doc:`ADR-035 </adr/035-single-page-app>`) renders the same
+component in its frame, ``Welcome`` from the package's ``src/index.ts``, with its state, ``show`` and
+``showAtStartup``, and the onboarding state, from the console's session. Its illustrations are the Keen theme's ``dozzy-1`` set, which
 has a version of each for the dark theme. The dialog is a modal: Escape, its
 close button, Skip tour and a click outside of it close it, the arrow keys move
 between its steps, and Tab keeps the focus inside it.

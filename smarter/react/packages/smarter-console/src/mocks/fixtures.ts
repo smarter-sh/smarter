@@ -106,7 +106,8 @@ export const userSession: ConsoleSession = {
   },
   account: { accountNumber: "3141-5926-5359", name: "Analytical Engines" },
   onboarding: { enabled: true, seen: [] },
-  welcome: { showAtStartup: true, show: true },
+  // closed, so that each page's test needn't answer its api: a test of the dialog opens it.
+  welcome: { showAtStartup: true, show: false },
   badges: { extensionUpdates: 0 },
   sidebar: userSidebar,
 };

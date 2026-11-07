@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 00:41+0000\n"
+"POT-Creation-Date: 2026-11-07 00:47+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -1034,6 +1034,22 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/components/Sidebar.tsx
 msgid "Hide the sidebar"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "Light"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "Dark"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "System"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "Theme"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/lib/account.ts

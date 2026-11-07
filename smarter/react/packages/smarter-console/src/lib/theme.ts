@@ -63,3 +63,52 @@ function isBelowLg(): boolean {
 export function useBelowLg(): boolean {
   return useSyncExternalStore(subscribe, isBelowLg, () => false);
 }
+
+/** The theme's modes: light, dark, or the system's. */
+export type ThemeMode = "light" | "dark" | "system";
+
+/** Where the theme's own JavaScript, on the pages that Django renders, keeps the user's choice: light, dark or system. */
+export const THEME_MODE_KEY = "data-bs-theme-mode";
+
+/** Where it keeps the theme in effect, light or dark, which index.html applies before the first paint. */
+export const THEME_KEY = "data-bs-theme";
+
+function storedItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    // storage may be blocked.
+    return null;
+  }
+}
+
+/** The user's choice of mode, as the theme's JavaScript stored it; light by default. */
+export function themeMode(): ThemeMode {
+  const mode = storedItem(THEME_MODE_KEY);
+  if (mode === "dark" || mode === "system") return mode;
+  return "light";
+}
+
+/** The theme a mode puts in effect: the system's for "system". */
+export function resolveThemeMode(mode: ThemeMode): "light" | "dark" {
+  if (mode !== "system") return mode;
+  if (typeof window.matchMedia !== "function") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+/**
+ * Choose a mode: apply its theme, and store both, as the theme's JavaScript does, so that the pages that Django
+ * renders open in the same mode.
+ *
+ * @param mode - The mode.
+ */
+export function setThemeMode(mode: ThemeMode): void {
+  const theme = resolveThemeMode(mode);
+  document.documentElement.setAttribute(THEME_KEY, theme);
+  try {
+    localStorage.setItem(THEME_MODE_KEY, mode);
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    // storage may be blocked: the mode lasts until the page is reloaded.
+  }
+}

@@ -53,7 +53,9 @@ A hint finds what it points to by a ``data-smarter-onboarding`` attribute, e.g.
 ``templates/dashboard/sidebar.html``, or by a css selector. Each console page
 holds the hints' state as JSON, which ``templates/dashboard/base.html`` writes
 with ``templates/react/onboarding.html`` for signed-in users, so that a hint
-needs no request before it shows. The rings and notes use the welcome dialog's
+needs no request before it shows. The single-page console takes the same state from
+its session's ``onboarding``, and passes it to the welcome dialog; its sidebar's link has the same
+``data-smarter-onboarding`` attribute. The rings and notes use the welcome dialog's
 orange accent and its warm gradient, with a Keen icon badge, an arrow that
 points at the element, and, in a tour, a progress bar. They follow the light
 and dark themes, and keep still for users who prefer reduced motion.

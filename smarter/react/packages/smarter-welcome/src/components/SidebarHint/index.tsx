@@ -1,3 +1,3 @@
-import SidebarHint from "@/components/SidebarHint/Component";
+import SidebarHint from "./Component";
 
 export default SidebarHint;

@@ -13,9 +13,9 @@
 import { createRoot } from "react-dom/client";
 import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix, projectName, projectVersion } from "@/lib/const";
-import type { AppContext } from "@/lib/Types";
-import App from "@/App";
+import { loggerPrefix, projectName, projectVersion } from "./lib/const";
+import type { AppContext } from "./lib/Types";
+import App from "./App";
 
 const rootEl = document.getElementById("smarter-welcome-root");
 if (!rootEl) throw new Error("Root element not found");

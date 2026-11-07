@@ -492,6 +492,14 @@ gettext("Sidebar");
 gettext("Main");
 // Translators: used in react/packages/smarter-console/src/components/Sidebar.tsx
 gettext("Hide the sidebar");
+// Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+gettext("Light");
+// Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+gettext("Dark");
+// Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+gettext("System");
+// Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+gettext("Theme");
 // Translators: used in react/packages/smarter-console/src/lib/account.ts
 gettext("Your session has expired. Reload the page, and try again.");
 // Translators: used in react/packages/smarter-console/src/lib/account.ts

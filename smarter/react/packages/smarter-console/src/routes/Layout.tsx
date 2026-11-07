@@ -1,20 +1,25 @@
 /**
- * The frame of the console's signed-in pages: the header with the user menu, the sidebar, the page, and the
- * footer. It is the theme's own app layout, the one the backend's templates/dashboard/base.html renders, so that a
- * theme styles both alike through its variables. See lib/theme.
+ * The frame of the console's signed-in pages: the header with the user menu, the sidebar, the page, the footer,
+ * and the welcome dialog, with its sidebar hint. It is the theme's own app layout, the one the backend's
+ * templates/dashboard/base.html renders, so that a theme styles both alike through its variables. See lib/theme.
  */
-import { useEffect, useState } from "react";
+import { Welcome } from "@smarter/welcome";
+import { useEffect, useMemo, useState } from "react";
 import { Outlet } from "react-router";
 
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 import { useAppLayout, useBelowLg } from "@/lib/theme";
+import { welcomeContext } from "@/lib/welcome";
 import { useConsoleSession } from "@/session/context";
 
 export function Layout() {
   const { session } = useConsoleSession();
   const drawer = useBelowLg();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // the welcome dialog's context, made once per session: it opens by itself, and the user menu's Welcome Tour
+  // opens it again.
+  const welcome = useMemo(() => (session ? welcomeContext(session) : null), [session]);
   useAppLayout();
 
   // Escape closes the sidebar's drawer.
@@ -54,6 +59,7 @@ export function Layout() {
           </div>
         </div>
       </div>
+      {welcome && <Welcome appContext={welcome} />}
     </div>
   );
 }

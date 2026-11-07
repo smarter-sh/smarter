@@ -28,7 +28,9 @@ after its link, so that it looks the part where it is shown:
   ``templates/dashboard/header.html``, includes ``templates/react/didyouknow.html``
   on every console page, which mounts the app only while the
   ``enable_web_console_did_you_know`` waffle switch is active. The switch is
-  active by default. Like the title, the note is hidden on a phone.
+  active by default. Like the title, the note is hidden on a phone. The single-page console's header
+  renders the component itself while the session's ``flags.didYouKnow`` is on, from the lg
+  breakpoint up, styled with the theme's utility classes.
 
 To add a fact, add it to ``didYouKnowFacts()`` in
 ``smarter-didyouknow/src/lib/facts.ts``, with its link if it mentions a

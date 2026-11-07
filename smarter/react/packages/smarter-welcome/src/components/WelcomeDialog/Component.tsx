@@ -24,10 +24,10 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboard
 import { gettext, interpolate, interpolateNodes } from "@smarter/common";
 import { DidYouKnow as DidYouKnowNote } from "@smarter/didyouknow";
 
-import { pickDidYouKnow, type DidYouKnow } from "@/components/WelcomeDialog/didYouKnow";
-import { welcomeSteps } from "@/components/WelcomeDialog/steps";
-import type { WelcomeUrls } from "@/lib/Types";
-import "@/components/WelcomeDialog/styles.css";
+import { pickDidYouKnow, type DidYouKnow } from "./didYouKnow";
+import { welcomeSteps } from "./steps";
+import type { WelcomeUrls } from "../../lib/Types";
+import "./styles.css";
 
 interface WelcomeDialogProps {
   firstName: string;
