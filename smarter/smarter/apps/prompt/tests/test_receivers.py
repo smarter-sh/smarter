@@ -32,8 +32,6 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
         """The passthrough api never has a Prompt, so a response without one is expected: no warning, no history."""
         with patch.object(receivers, "logger") as mock_logger:
             with patch.object(receivers, "create_prompt_history") as mock_task:
-                receivers.handle_chat_response_success(
-                    sender=SmarterTestBase, prompt=None, request=None, response=None
-                )
+                receivers.handle_chat_response_success(sender=SmarterTestBase, prompt=None, request=None, response=None)
         mock_logger.warning.assert_not_called()
         mock_task.delay.assert_not_called()
