@@ -1,10 +1,31 @@
 /**
- * The user menu's requests to Django: the user profile apis, which take and return JSON, and the
- * profile image api, which takes a multipart form, or a DELETE.
+ * The user menu's requests to the console's account api, /api/web/account/: the user profile apis, which
+ * return JSON, and the profile image api, which takes a multipart form, or a DELETE.
  */
 import { fetchDjangoUrl, getCookie, gettext, interpolate, type SessionContext } from "@smarter/common";
 
 import type { ProfileImageApiResponse, UserProfilesApiResponse } from "./Types";
+
+/** The user profile apis' response, or their error message, else their status. */
+async function userProfilesResponse(response: Response): Promise<UserProfilesApiResponse> {
+  const data = (await response.json().catch(() => ({}))) as Partial<UserProfilesApiResponse> & { error?: string };
+  if (!response.ok) {
+    throw new Error(data.error || interpolate(gettext("Request failed: %(status)s"), { status: response.status }));
+  }
+  return data as UserProfilesApiResponse;
+}
+
+/**
+ * GET the user's profiles, and which one the console acts as.
+ *
+ * @param url - The user profiles api's url.
+ * @returns The user's profiles.
+ * @throws Error with the api's error message, if it answers with one, else its status.
+ */
+export async function getUserProfiles(url: string): Promise<UserProfilesApiResponse> {
+  const response = await fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } });
+  return userProfilesResponse(response);
+}
 
 /**
  * POST a JSON body to one of the user profile apis.
@@ -21,11 +42,7 @@ export async function postUserProfiles(
   body: object = {},
 ): Promise<UserProfilesApiResponse> {
   const response = await fetchDjangoUrl(sessionContext, url, JSON.stringify(body));
-  const data = (await response.json().catch(() => ({}))) as Partial<UserProfilesApiResponse> & { error?: string };
-  if (!response.ok) {
-    throw new Error(data.error || interpolate(gettext("Request failed: %(status)s"), { status: response.status }));
-  }
-  return data as UserProfilesApiResponse;
+  return userProfilesResponse(response);
 }
 
 /**

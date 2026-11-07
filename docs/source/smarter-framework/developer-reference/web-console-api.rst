@@ -201,6 +201,14 @@ whole form, and the messages of each field, which the console shows beside it.
      - Emails a password reset link, and answers the same whether or not the address has an account.
    * - ``password-reset/<uidb64>/<token>/``
      - ``GET`` checks an emailed link; ``POST`` sets the new password, which must pass the validators.
+   * - ``profile-image/``
+     - The user menu's profile image: ``POST`` uploads the signed-in user's own image, a multipart form;
+       ``DELETE`` removes it. See :doc:`smarter-dashboard/views/authentication/profile_image`.
+   * - ``user-profiles/``
+     - ``GET`` lists the user's profiles, one per account, and which one the console acts as.
+   * - ``user-profiles/select/``
+     - ``POST`` chooses the profile that the console acts as, for the rest of the session. See
+       :doc:`react-integration/dashboard-user-menu`.
 
 Signing in, signing up and asking for an activation or password reset link are limited to ten a
 minute per IP address, by :class:`~smarter.lib.drf.throttling.SmarterCredentialsRateThrottle`, on top
@@ -253,7 +261,6 @@ A few console endpoints remain beside their pages:
 
 - the workbench's chat endpoints, ``/workbench/llm-clients/<hashed_id>/config/`` and ``prompt/``,
   which a deployed LLMClient's own host serves too, and its Deployment tab's api key actions;
-- the user menu's profile image and profile endpoints, under ``/account/dashboard/``;
 - the Terminal's WebSocket, ``ws/terminal/``.
 
 Adding an endpoint

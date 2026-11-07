@@ -68,6 +68,8 @@ class TestUrls(TestAccountMixin):
             "/account/logout/",
             "/logout/",
             "/account/activation/",
+            "/account/dashboard/profile-image/",
+            "/account/dashboard/user-profiles/",
             "/account/register/",
             "/account/api-keys/",
             "/account/users/",

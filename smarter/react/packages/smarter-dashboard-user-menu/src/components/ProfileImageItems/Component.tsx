@@ -8,7 +8,7 @@
  * upload shows the api's reason below the items.
  *
  * :param sessionContext: The cookies of the requests.
- * :param apiUrl: The profile image api, smarter.apps.account.views.dashboard.profile_image.
+ * :param apiUrl: The profile image api, smarter.apps.account.api.web.profile_image.
  * :param fileInputId: The id of the file input, which the menu header's image is a label for too.
  * :param onChange: Called with the url of the image that the console shows now.
  */

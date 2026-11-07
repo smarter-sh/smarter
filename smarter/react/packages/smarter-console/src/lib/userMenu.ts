@@ -7,15 +7,15 @@ import type { SessionContext } from "@smarter/common";
 import type { AppContext } from "@smarter/dashboard-user-menu";
 
 import type { ConsoleSession } from "@/contract.gen";
-import { accountUrls } from "@/lib/account";
+import { ACCOUNT_API, accountUrls } from "@/lib/account";
 import { LOGIN_PATH, projectName, projectVersion } from "@/lib/const";
 
-/** The backend's urls that the user menu calls. They move to /api/web/account/ in a later step of ADR-035. */
+/** The backend's urls that the user menu calls: Django's set_language view, and the console's account api. */
 export const userMenuUrls = {
   setLanguage: "/i18n/setlang/",
-  profileImageApi: "/account/dashboard/profile-image/",
-  userProfilesApi: "/account/dashboard/user-profiles/",
-  userProfileSelectApi: "/account/dashboard/user-profiles/select/",
+  profileImageApi: `${ACCOUNT_API}/profile-image/`,
+  userProfilesApi: `${ACCOUNT_API}/user-profiles/`,
+  userProfileSelectApi: `${ACCOUNT_API}/user-profiles/select/`,
 };
 
 /** A new id for the user menu's requests, which the backend logs: 32 hex digits. */

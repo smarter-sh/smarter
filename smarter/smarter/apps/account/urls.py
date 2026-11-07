@@ -2,7 +2,6 @@
 
 from django.urls import include, path
 
-from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
@@ -56,7 +55,6 @@ urlpatterns = [
     path("already-associated/", ConsoleAppView.as_view(), name=AccountReverseNames.ACCOUNT_ALREADY_ASSOCIATED),
     path("inactive/", ConsoleAppView.as_view(), name=AccountReverseNames.ACCOUNT_INACTIVE),
     path("activate/<uidb64>/<token>/", ConsoleAppView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATE),
-    path("dashboard/", include(account_dashboard_urls)),
     path("unsubscribe/<str:token>/", AccountUnsubscribeView.as_view(), name=AccountReverseNames.unsubscribe),
 ]
 

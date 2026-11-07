@@ -14,11 +14,9 @@ from django.templatetags.static import static
 from django.utils import translation
 
 from smarter.apps.account.api.web.urls import AccountApiWebReverseNames
-from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
 from smarter.apps.account.utils import get_cached_avatar_url
-from smarter.apps.account.views.dashboard.urls import DashboardNamedUrls
 from smarter.lib import json
 from smarter.lib.django.i18n import console_languages
 from smarter.lib.django.shortcuts import reverse
@@ -94,8 +92,8 @@ def dashboard_user_menu(context: RequestContext) -> dict[str, str | bool | int]:
         # not cached, so that a profile in a newly joined account offers Change Profile at once.
         user_profile_count = UserProfile.objects.filter(user=user).count()
 
-    def account_url(name: str) -> str:
-        return reverse(account_namespace, name, urlconf=settings.ROOT_URLCONF)
+    def account_api_url(name: str) -> str:
+        return reverse(AccountApiWebReverseNames.namespace, name, urlconf=settings.ROOT_URLCONF)
 
     return {
         "root_id": "smarter-dashboard-user-menu-root",
@@ -119,13 +117,11 @@ def dashboard_user_menu(context: RequestContext) -> dict[str, str | bool | int]:
         "current_language": translation.get_language() or settings.LANGUAGE_CODE,
         "set_language_url": reverse("set_language", urlconf=settings.ROOT_URLCONF),
         "next_url": request.get_full_path(),
-        "profile_image_api_url": account_url(DashboardNamedUrls.ACCOUNT_PROFILE_IMAGE),
-        "user_profiles_api_url": account_url(DashboardNamedUrls.ACCOUNT_USER_PROFILES),
-        "user_profile_select_api_url": account_url(DashboardNamedUrls.ACCOUNT_USER_PROFILE_SELECT),
+        "profile_image_api_url": account_api_url(AccountApiWebReverseNames.profile_image),
+        "user_profiles_api_url": account_api_url(AccountApiWebReverseNames.user_profiles),
+        "user_profile_select_api_url": account_api_url(AccountApiWebReverseNames.user_profile_select),
         "login_url": settings.LOGIN_URL,
-        "logout_url": reverse(
-            AccountApiWebReverseNames.namespace, AccountApiWebReverseNames.sign_out, urlconf=settings.ROOT_URLCONF
-        ),
+        "logout_url": account_api_url(AccountApiWebReverseNames.sign_out),
         "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
         "smarter_request_id": uuid.uuid4().hex,
     }
