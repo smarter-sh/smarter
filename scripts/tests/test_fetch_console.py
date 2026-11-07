@@ -26,6 +26,7 @@ def make_tarball(files: dict[str, str]) -> bytes:
 
 
 A_RELEASE = {
+    "i18n/messages.js": 'gettext("Dashboard");\n',
     "react/@smarter/console/index.html": "<!doctype html><title>console</title>",
     "react/@smarter/console/assets/index-abc12345.js": "console.log(1);",
     "react/@smarter/llmclient-deployment/manifest.json": "{}",
@@ -54,7 +55,16 @@ class TestFetchConsole(unittest.TestCase):
     def run_main(self, *args: str) -> tuple[int, str, str]:
         """Run the script with the test's static folder and releases, and return its exit code and output."""
         out, err = io.StringIO(), io.StringIO()
-        argv = [*args, "--static-dir", str(self.static), "--releases-url", self.releases_url]
+        self.i18n = self.root / "console" / "i18n"
+        argv = [
+            *args,
+            "--static-dir",
+            str(self.static),
+            "--i18n-dir",
+            str(self.i18n),
+            "--releases-url",
+            self.releases_url,
+        ]
         with redirect_stdout(out), redirect_stderr(err):
             code = fetch_console.main(argv)
         return code, out.getvalue(), err.getvalue()
@@ -65,6 +75,7 @@ class TestFetchConsole(unittest.TestCase):
         self.assertIn("Installed the web console 1.2.0", out)
         self.assertTrue((self.static / "react/@smarter/console/index.html").is_file())
         self.assertTrue((self.static / "react/@smarter/llmclient-deployment/manifest.json").is_file())
+        self.assertEqual((self.i18n / "messages.js").read_text(), 'gettext("Dashboard");\n')
         # the old builds are gone, and Django's own static files are not.
         self.assertFalse((self.static / "react/@smarter/old-list").exists())
         self.assertEqual((self.static / "js/smarter-base.js").read_text(), "base")
@@ -106,6 +117,17 @@ class TestFetchConsole(unittest.TestCase):
         code, _, _ = self.run_main("--version", "3.0.0")
         self.assertEqual(code, 1)
         self.assertFalse((self.root / "escaped.txt").exists())
+
+    def test_a_build_without_messages_installs_with_a_warning(self):
+        """An older release, or a local make build, has no messages.js: the builds install, and it says so."""
+        (self.releases / "v1.0.1").mkdir()
+        without_messages = {k: v for k, v in A_RELEASE.items() if not k.startswith("i18n/")}
+        (self.releases / "v1.0.1" / "smarter-console-1.0.1.tar.gz").write_bytes(make_tarball(without_messages))
+        code, _, err = self.run_main("--version", "1.0.1")
+        self.assertEqual(code, 0)
+        self.assertIn("make i18n-messages needs", err)
+        self.assertTrue((self.static / "react/@smarter/console/index.html").is_file())
+        self.assertFalse((self.i18n / "messages.js").exists())
 
     def test_installs_a_local_build(self):
         dist = self.root / "dist"

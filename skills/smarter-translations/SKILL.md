@@ -1,6 +1,6 @@
 ---
 name: smarter-translations
-description: Use when adding or changing any text that the Smarter web console shows (Django templates, Python view messages, React apps, smarter/static/js), when a test says smarter/react/i18n/messages.js is out of date, when regenerating the .po message catalogs (make i18n-messages), or when adding a language such as Spanish. Covers the gettext pipeline (django and djangojs domains), gettext/interpolate/interpolateNodes in @smarter/common, the TypeScript extractor, the update_console_messages command, the rules that keep messages translatable, and the steps to add a language.
+description: Use when adding or changing any text that the Smarter web console shows (Django templates, Python view messages, React apps, smarter/static/js), when a new smarter-console release brings new messages, when regenerating the .po message catalogs (make i18n-messages), or when adding a language such as Spanish. Covers the gettext pipeline (django and djangojs domains), gettext/interpolate/interpolateNodes in @smarter/common, the TypeScript extractor, the update_console_messages command, the rules that keep messages translatable, and the steps to add a language.
 ---
 
 # Smarter Translations (i18n)
@@ -19,9 +19,9 @@ The Sphinx docs and the api's responses are not translated. The user-facing expl
 | JS catalog `<script>`, `<html lang>`    | `smarter/smarter/templates/base.html`                                           |
 | Language menu (shown with 2+ languages) | `smarter/react/packages/smarter-dashboard-user-menu` (the user menu)            |
 | React runtime                           | `smarter/react/packages/smarter-common/src/lib/i18n.tsx`                        |
-| React/static-js extractor               | `smarter/react/i18n/extract.ts` → `smarter/react/i18n/messages.js`              |
+| The console's messages                  | smarter-console's `i18n/messages.js`, in each release → `smarter/console/i18n/` |
 | makemessages + compilemessages          | `apps/dashboard/management/commands/update_console_messages.py`                 |
-| Tests                                   | `apps/dashboard/tests/test_i18n.py`, `smarter/react/i18n/extract.test.ts`       |
+| Tests                                   | `apps/dashboard/tests/test_i18n.py`, smarter-console's `i18n/extract.test.ts`   |
 
 ## Marking text
 
@@ -57,18 +57,22 @@ The Sphinx docs and the api's responses are not translated. The user-facing expl
 
 ## Regenerating the catalogs
 
-After changing marked text (otherwise `extract.test.ts` fails in `make react-test`):
+After changing marked text in Django's templates or Python, or after bumping `smarter-console-version.txt`
+to a console release with new messages (the console marks and extracts its own, into its `i18n/messages.js`;
+see its README):
 
 ```console
+make console                # the pinned console release, with its messages.js, into smarter/console/i18n/
 make build && make run      # run_in_background: true, then wait for the 302
 make i18n-messages          # or LANGUAGE=es for one language
 ```
 
-It runs `npm run i18n:extract`, copies `messages.js` into smarter-api, runs
+It copies `smarter/console/i18n/messages.js` into smarter-api, runs
 `manage.py update_console_messages` there (makemessages for `django` from the project root, and for
-`djangojs` from `react/i18n` only, then compilemessages), and copies `smarter/smarter/locale` back.
-A second run changes only `POT-Creation-Date`. Commit the `.po` files and `messages.js`; `*.mo` is
-gitignored and the Dockerfile compiles it.
+`djangojs` from `console/i18n` only, then compilemessages), and copies `smarter/smarter/locale` back.
+Without `messages.js`, the command and the make target say to run `make console`. A second run changes
+only `POT-Creation-Date`. Commit the `.po` files; `messages.js` and `*.mo` are gitignored, and the
+Dockerfile compiles the `.mo` files.
 
 ## Adding a language
 

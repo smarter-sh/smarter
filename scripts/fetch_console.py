@@ -9,8 +9,11 @@ Usage::
 
 The web console is its own repository, smarter-sh/smarter-console (ADR-035). Each of its releases
 attaches ``smarter-console-<version>.tar.gz``, its ``dist/`` folder: ``react/@smarter/<package>/``, the
-console and the page that a deployed LLMClient's host shows. This script replaces
-``smarter/smarter/static/react/`` with it, where ``collectstatic`` and the Docker build pick it up.
+console and the page that a deployed LLMClient's host shows, and ``i18n/messages.js``, the console's
+translatable messages. This script replaces ``smarter/smarter/static/react/`` with the builds, where
+``collectstatic`` and the Docker build pick them up, and installs ``messages.js`` in
+``smarter/console/i18n/``, where ``manage.py update_console_messages`` (``make i18n-messages``) reads it into
+the djangojs catalogs. A build without ``messages.js`` installs with a warning.
 CI's build (build.yml), the Python tests (test.yml) and ``make console`` run it.
 
 ``--from-dir`` copies a local build instead, ``dist/`` of a smarter-console checkout after its
@@ -32,8 +35,10 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 VERSION_FILE = REPOSITORY_ROOT / "smarter-console-version.txt"
 STATIC_DIR = REPOSITORY_ROOT / "smarter" / "smarter" / "static"
+I18N_DIR = REPOSITORY_ROOT / "smarter" / "console" / "i18n"
 RELEASES_URL = "https://github.com/smarter-sh/smarter-console/releases/download"
 CONSOLE_PAGE = Path("react") / "@smarter" / "console" / "index.html"
+MESSAGES = Path("i18n") / "messages.js"
 TIMEOUT_SECONDS = 120
 
 
@@ -64,20 +69,27 @@ def unpack(tarball: bytes, into: Path) -> None:
         archive.extractall(into, filter="data")
 
 
-def install(build: Path, static_dir: Path = STATIC_DIR) -> Path:
+def install(build: Path, static_dir: Path = STATIC_DIR, i18n_dir: Path = I18N_DIR) -> Path:
     """
-    Replace the static folder's react/ with a build's.
+    Replace the static folder's react/ with a build's, and install its messages.js, if it has one.
 
-    :param build: A folder that holds react/@smarter/<package>/, e.g. smarter-console's dist/.
+    :param build: A folder that holds react/@smarter/<package>/, and i18n/messages.js, e.g. smarter-console's dist/.
     :param static_dir: Django's static folder.
+    :param i18n_dir: Where update_console_messages reads messages.js.
     :returns: The console's page, in the static folder.
-    :raises FileNotFoundError: When the build has no console page, before the static folder is changed.
+    :raises FileNotFoundError: When the build has no console page, before anything is changed.
     """
     if not (build / CONSOLE_PAGE).is_file():
         raise FileNotFoundError(f"{build} has no {CONSOLE_PAGE}: it is not a build of smarter-console.")
     target = static_dir / "react"
     shutil.rmtree(target, ignore_errors=True)
     shutil.copytree(build / "react", target)
+    messages = build / MESSAGES
+    if messages.is_file():
+        i18n_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(messages, i18n_dir / "messages.js")
+    else:
+        print(f"Warning: {build} has no {MESSAGES}, which make i18n-messages needs.", file=sys.stderr)
     return static_dir / CONSOLE_PAGE
 
 
@@ -88,12 +100,13 @@ def main(argv: list[str] | None = None) -> int:
     source.add_argument("--version", help="a release, e.g. 1.2.0; the default is smarter-console-version.txt's")
     source.add_argument("--from-dir", type=Path, help="a local build, e.g. ../smarter-console/dist")
     parser.add_argument("--static-dir", type=Path, default=STATIC_DIR, help=argparse.SUPPRESS)
+    parser.add_argument("--i18n-dir", type=Path, default=I18N_DIR, help=argparse.SUPPRESS)
     parser.add_argument("--releases-url", default=RELEASES_URL, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
     try:
         if args.from_dir:
-            page = install(args.from_dir, args.static_dir)
+            page = install(args.from_dir, args.static_dir, args.i18n_dir)
             print(f"Installed the web console's local build from {args.from_dir}: {page}")
             return 0
         version = (args.version or pinned_version()).removeprefix("v")
@@ -101,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
         tarball = download(url)
         with tempfile.TemporaryDirectory() as unpacked:
             unpack(tarball, Path(unpacked))
-            page = install(Path(unpacked), args.static_dir)
+            page = install(Path(unpacked), args.static_dir, args.i18n_dir)
         print(f"Installed the web console {version} from {url}: {page}")
         return 0
     except (OSError, tarfile.TarError) as error:

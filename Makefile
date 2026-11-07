@@ -21,7 +21,6 @@ include .env
 
 # Smarter Chat, the React app of the LLMClient prompt workbench, is a package of the React
 # workspace, published to npm as @smarter.sh/ui-chat.
-SMARTER_CHAT_DIR := smarter/react/packages/smarter.sh-chat
 
 
 .PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
@@ -395,9 +394,9 @@ react-storybook:
 	cd smarter/react/packages/$(or $(APP),smarter-dashboard) && npm run storybook
 
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
-# (smarter.apps.prompt.contract.models), in the smarter-api container, and copy the schema into
-# Smarter Chat, which generates its TypeScript types from it. Run it after changing the
-# models, and commit the changes.
+# (smarter.apps.prompt.contract.models), in the smarter-api container. Run it after changing the
+# models, and commit the changes. smarter-console copies the schema into Smarter Chat, which generates
+# its TypeScript types from it, with its make contracts.
 CHAT_CONTRACT_SCHEMA := smarter/apps/prompt/contract/chat-contract.schema.json
 CHAT_CONTRACT_EXAMPLE := smarter/apps/prompt/contract/chat-contract.example.json
 chat-contract:
@@ -405,66 +404,57 @@ chat-contract:
 	docker cp smarter-api:/home/smarter_user/smarter/$(CHAT_CONTRACT_SCHEMA) smarter/$(CHAT_CONTRACT_SCHEMA)
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_example"
 	docker cp smarter-api:/home/smarter_user/smarter/$(CHAT_CONTRACT_EXAMPLE) smarter/$(CHAT_CONTRACT_EXAMPLE)
-	cp smarter/$(CHAT_CONTRACT_SCHEMA) $(SMARTER_CHAT_DIR)/contract/chat-contract.schema.json
-	cd $(SMARTER_CHAT_DIR) && npm run contract:types
 
 # Regenerate the web console's message catalogs, smarter/smarter/locale/<language>/LC_MESSAGES/django.po
-# (Django templates and Python) and djangojs.po (the React apps), for every language in settings.LANGUAGES,
-# or only LANGUAGE=<code>, and compile them, in the smarter-api container. Translations already in the
-# .po files are kept. Run make build first, so that the container has the current templates and code.
+# (Django templates and Python) and djangojs.po (the web console's messages, from the pinned smarter-console
+# release's messages.js, which make console installs in smarter/console/i18n/), for every language in
+# settings.LANGUAGES, or only LANGUAGE=<code>, and compile them, in the smarter-api container. Translations
+# already in the .po files are kept. Run make build first, so that the container has the current templates and code.
 I18N_LOCALE_DIR := smarter/locale
+CONSOLE_MESSAGES := smarter/console/i18n/messages.js
 i18n-messages:
-	cd smarter/react && npm run i18n:extract
-	docker cp smarter/react/i18n/messages.js smarter-api:/home/smarter_user/smarter/react/i18n/messages.js
+	@test -f $(CONSOLE_MESSAGES) || { echo >&2 "$(CONSOLE_MESSAGES) is missing: run make console."; exit 1; }
+	docker exec smarter-api mkdir -p /home/smarter_user/smarter/console/i18n
+	docker cp $(CONSOLE_MESSAGES) smarter-api:/home/smarter_user/$(CONSOLE_MESSAGES)
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py update_console_messages $(if $(LANGUAGE),--language $(LANGUAGE),)"
 	mkdir -p smarter/$(I18N_LOCALE_DIR)
 	docker cp smarter-api:/home/smarter_user/smarter/$(I18N_LOCALE_DIR)/. smarter/$(I18N_LOCALE_DIR)/
 
 # Regenerate the web console's Extensions api contract from its Pydantic models, in the smarter-api
-# container, copy it into @smarter/extension-console, and regenerate that package's TypeScript types.
+# container. smarter-console copies it into @smarter/extension-console with its make contracts.
 EXTENSION_CONTRACT_SCHEMA := smarter/apps/llmtool/extension/extension-console.schema.json
 extension-contract:
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_console_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/$(EXTENSION_CONTRACT_SCHEMA)
-	cp smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/react/packages/smarter-extension-console/contract/extension-console.schema.json
-	cd smarter/react/packages/smarter-extension-console && npm run contract:types
 
 # Regenerate the LLMTool list's Extensions tab api contract from its Pydantic models, in the
-# smarter-api container, copy it into @smarter/llmtool-list, and regenerate that package's TypeScript types.
+# smarter-api container. smarter-console copies it into @smarter/llmtool-list with its make contracts.
 LLMTOOL_LIST_CONTRACT_SCHEMA := smarter/apps/llmtool/views/listview/extension-list.schema.json
 llmtool-list-contract:
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_list_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA)
-	cp smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmtool-list/contract/extension-list.schema.json
-	cd smarter/react/packages/smarter-llmtool-list && npm run contract:types
 
 # Regenerate the LLMClient deployment page's contract from its Pydantic models, in the smarter-api
-# container, copy it into @smarter/llmclient-deployment, and regenerate that package's TypeScript types.
+# container. smarter-console copies it into @smarter/llmclient-deployment with its make contracts.
 LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA := smarter/apps/llmclient/views/llmclient-deployment.schema.json
 llmclient-deployment-contract:
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_deployment_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA)
-	cp smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmclient-deployment/contract/llmclient-deployment.schema.json
-	cd smarter/react/packages/smarter-llmclient-deployment && npm run contract:types
 
 # Regenerate the contract of the workbench's Architecture tab, an LLMClient's tree of SAM resources, from its
-# Pydantic models, in the smarter-api container, copy it into @smarter/llmclient-architecture, and regenerate
-# that package's TypeScript types.
+# Pydantic models, in the smarter-api container. smarter-console copies it into @smarter/llmclient-architecture
+# with its make contracts.
 LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA := smarter/apps/prompt/views/detailviews/llmclient-architecture.schema.json
 llmclient-architecture-contract:
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_architecture_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA)
-	cp smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/react/packages/smarter-llmclient-architecture/contract/llmclient-architecture.schema.json
-	cd smarter/react/packages/smarter-llmclient-architecture && npm run contract:types
 
 # Regenerate the web console session's contract, GET /api/web/session/, from its Pydantic models, in the
-# smarter-api container, copy it into @smarter/console, and regenerate that package's TypeScript types.
+# smarter-api container. smarter-console copies it into @smarter/console with its make contracts.
 CONSOLE_SESSION_CONTRACT_SCHEMA := smarter/apps/api/web/session/console-session.schema.json
 console-session-contract:
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_console_session_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA)
-	cp smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/react/packages/smarter-console/contract/console-session.schema.json
-	cd smarter/react/packages/smarter-console && npm run contract:types
 
 # Regenerate the Smarter api contract from the platform's Pydantic models, in the smarter-api
 # container: the SAM JSON Schemas and examples (one per kind) and the api's OpenAPI document, which the
