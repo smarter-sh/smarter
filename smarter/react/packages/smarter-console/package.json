@@ -33,6 +33,7 @@
     "@smarter/llmhost-compute-list": "^0.2.0",
     "@smarter/llmhost-list": "^0.2.0",
     "@smarter/llmtool-list": "^0.3.0",
+    "@smarter/manifest-editor": "^0.1.0",
     "@smarter/mcpclient-list": "^0.2.0",
     "@smarter/onboarding": "^0.1.0",
     "@smarter/orchestrator-list": "^0.2.0",

@@ -12,7 +12,11 @@ from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.views.budget.urls import BudgetReverseNames
 from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
-from smarter.lib.unittest.resource_views import assert_console_page
+from smarter.lib.unittest.resource_views import (
+    assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
+)
 
 
 def url(name: str, **kwargs) -> str:
@@ -100,14 +104,18 @@ class TestBudgetConsole(TestAccountMixin):
         self.assertFalse(Budget.objects.filter(pk=self.other.pk).exists())
 
     def test_detail_view(self):
-        """Test that the detail view renders the manifest of a visible budget, and hides the others."""
+        """
+        Test the manifest page: the console's, whose resource api reads the user's budgets only.
+
+        It returns the manifest of a budget attached to the user, and hides the others.
+        """
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(url(BudgetReverseNames.detailview, hashed_id=self.budget.hashed_id))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(self.budget.name, response.content.decode())
-        self.assertIn("periodicLimit", response.content.decode())
-        response = self.client.get(url(BudgetReverseNames.detailview, hashed_id=self.other.hashed_id))
-        self.assertEqual(response.status_code, 404)
+        assert_no_resource(self, self.other.record_locator)
+        detail = resource_detail_json(self, self.budget.record_locator)
+        self.assertEqual(detail["name"], self.budget.name)
+        self.assertIn(self.budget.name, detail["manifest"] or "", detail["manifestError"])
+        self.assertIn("periodicLimit", detail["manifest"] or "")
+        assert_console_page(self, url(BudgetReverseNames.detailview, hashed_id=self.budget.hashed_id))
 
     def test_sidebar_links_to_budgets(self):
         """Test that the sidebar of a console page links to Budgets.

@@ -6,7 +6,9 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./mocks/monaco": "./src/mocks/MonacoEditor.tsx",
+    "./mocks": "./src/mocks/handlers.ts"
   },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
