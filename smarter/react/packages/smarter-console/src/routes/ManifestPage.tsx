@@ -6,71 +6,32 @@
  */
 import { gettext } from "@smarter/common";
 import { ManifestEditor } from "@smarter/manifest-editor";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 
-import { ApiError, getJson } from "@/lib/api";
 import { djangoSessionContext } from "@/lib/djangoSession";
 import {
   KIND_PLACEHOLDER,
   manifestEditorUrls,
   recordLocator,
-  resourceUrl,
   type ManifestPage as ManifestPageConfig,
 } from "@/lib/manifestPages";
+import { useResource } from "@/lib/useResource";
 import { NotFoundPage } from "@/routes/NotFoundPage";
 import { useConsoleSession } from "@/session/context";
-
-/** What the page reads of the resource api's answer. See smarter.apps.dashboard.resource_detail.ResourceDetail. */
-interface ResourceManifest {
-  kind: string;
-  name: string | null;
-  recordLocator: string;
-  manifest: string | null;
-  manifestError: string;
-}
-
-type Loaded =
-  | { state: "loading"; locator: string }
-  | { state: "found"; locator: string; resource: ResourceManifest }
-  | { state: "not-found"; locator: string }
-  | { state: "error"; locator: string; message: string };
 
 export function ManifestPage({ page }: { page: ManifestPageConfig }) {
   const { session } = useConsoleSession();
   const { id = "" } = useParams();
   const navigate = useNavigate();
-  const locator = recordLocator(page, id);
-  const [loaded, setLoaded] = useState<Loaded>({ state: "loading", locator });
+  const current = useResource(recordLocator(page, id));
   const sessionContext = useMemo(
     () => (session ? djangoSessionContext(session, manifestEditorUrls.apply) : null),
     [session],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    getJson<ResourceManifest>(resourceUrl(locator)).then(
-      (resource) => {
-        if (!cancelled) setLoaded({ state: "found", locator, resource });
-      },
-      (e: unknown) => {
-        if (cancelled) return;
-        if (e instanceof ApiError && e.status === 404) {
-          setLoaded({ state: "not-found", locator });
-        } else {
-          setLoaded({ state: "error", locator, message: gettext("The manifest could not be loaded.") });
-        }
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [locator]);
-
   if (!session || !sessionContext) return null;
   if (page.visible && !page.visible(session)) return <NotFoundPage />;
-  // a page whose id changed shows that it is loading, not the previous resource.
-  const current: Loaded = loaded.locator === locator ? loaded : { state: "loading", locator };
   if (current.state === "loading") {
     return (
       <p role="status" className="mt-5">
@@ -82,7 +43,7 @@ export function ManifestPage({ page }: { page: ManifestPageConfig }) {
   if (current.state === "error") {
     return (
       <div role="alert" className="alert alert-danger mt-5">
-        {current.message}
+        {gettext("The manifest could not be loaded.")}
       </div>
     );
   }

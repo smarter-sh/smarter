@@ -69,7 +69,12 @@ from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.drf.urls import AuthTokenReverseNames
 from smarter.lib.logging.redis_log_handler import session_key_context
 from smarter.lib.manifest.models import SAMDependencyTreeNode
-from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
+from smarter.lib.unittest.resource_views import (
+    ResourceViewsTestMixin,
+    assert_console_page,
+    assert_no_resource,
+    resource_api_url,
+)
 
 PLATFORM_HOST = urlparse(smarter_settings.environment_platform_url).netloc
 DEPLOYMENT_VIEW_MODULE = "smarter.apps.prompt.views.detailviews.prompt_deployment_view"
@@ -132,18 +137,6 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         pagination = self.post(url)["pagination"]
         self.assertEqual((pagination["filter"], pagination["filters"]), ("pending", ["pending"]))
 
-    def test_detail(self):
-        """
-        The LLMClient's manifest page is still Django's, unlike every other kind's.
-
-        It moves into the console with the workbench (docs/spa-migration.md, section 5, step 3), and then
-        this override goes, so that the mixin's test checks that it is the console's page.
-        """
-        url = self.url(self.detail_view_name, hashed_id=self.resource.hashed_id)
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertIn("common/manifest_detail.html", [template.name for template in response.templates])
-
     def test_config_other_account(self):
         """Test that another account's admin cannot read the LLMClient's configuration."""
         other_admin_user, _, _ = admin_user_factory()
@@ -167,56 +160,15 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(self.client.get(url).status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_workbench(self):
-        """Test that the prompt workbench page renders the workbench's root element, configured for the LLMClient."""
-        response = self.client.get(
-            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertIn("react/workbench.html", [template.name for template in response.templates])
-        workbench = response.context["workbench"]
-        self.assertEqual(workbench["root_id"], "smarter-workbench-root")
-        # Smarter Chat reads its configuration from the public api, <url>config/.
-        chat_api_url = f"/api/v1/llm-clients/{self.resource.hashed_id}/"
-        self.assertEqual(workbench["llmclient_api_url"], chat_api_url)
-        content = response.content.decode()
-        self.assertIn('id="smarter-workbench-root"', content)
-        self.assertIn(f'smarter-llmclient-api-url="{chat_api_url}"', content)
-        self.assertIn(f'smarter-request-id="{workbench["smarter_request_id"]}"', content)
-        # the Manifest tab's editor saves, validates and deletes the manifest with the cli api.
-        self.assertIn('smarter-apply-api-url="/api/v1/cli/apply/"', content)
-        self.assertIn('smarter-validate-api-url="/api/v1/cli/validate/"', content)
-        self.assertIn('smarter-delete-api-url="/api/v1/cli/delete/__kind__/"', content)
-        self.assertIn('smarter-kind-placeholder="__kind__"', content)
-        self.assertIn(f'smarter-llmclient-list-url="{self.url("listview")}"', content)
-        # the app is built into Django's static files, not loaded from a CDN.
-        self.assertNotIn("app-loader.js", content)
+        """
+        The workbench is the console's page, which configures it from the hashed id and its session.
 
-    def test_workbench_log_stream_url(self):
-        """Test that the workbench passes the user's server log stream to its Console, when it is enabled."""
-        url = self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id)
-        enabled = "smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled"
-
-        with patch(enabled, return_value=True):
-            response = self.client.get(url, HTTP_HOST=PLATFORM_HOST)
-        log_stream_url = response.context["workbench"]["log_stream_url"]
-        self.assertTrue(log_stream_url.endswith("/api/web/dashboard/logs/stream/"), log_stream_url)
-        self.assertIn(f'smarter-log-stream-url="{log_stream_url}"', response.content.decode())
-
-        # without a log stream, the Console has no "Server Logs" tab.
-        with patch(enabled, return_value=False):
-            response = self.client.get(url, HTTP_HOST=PLATFORM_HOST)
-        self.assertEqual(response.context["workbench"]["log_stream_url"], "")
-        self.assertIn('smarter-log-stream-url=""', response.content.decode())
-
-    def test_workbench_manifest_url(self):
-        """Test that the workbench passes the url of the LLMClient's manifest, for its Console's Manifest tab."""
-        response = self.client.get(
-            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
-        )
-        manifest_url = response.context["workbench"]["manifest_url"]
-        self.assertEqual(manifest_url, self.web_url("manifest_editor_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(manifest_url, f"/api/web/prompt/llm-clients/{self.resource.hashed_id}/manifest/")
-        self.assertIn(f'smarter-manifest-url="{manifest_url}"', response.content.decode())
+        Its chat reads the configuration from the public api, beside the LLMClient's prompt api.
+        """
+        assert_console_page(self, self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id))
+        api = f"/api/v1/llm-clients/{self.resource.hashed_id}/"
+        self.assertEqual(urlparse(self.resource.url_chat_config).path, api + "config/")
+        self.assertEqual(urlparse(self.resource.url_llmclient).path, api + "prompt/")
 
     def test_manifest_editor(self):
         """Test that the manifest editor's data is the LLMClient's manifest, as JSON."""
@@ -230,10 +182,14 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(response["X-Frame-Options"], "DENY")
 
     def manifest_statuses(self, llmclient: LLMClient) -> tuple[int, int]:
-        """GET the LLMClient's manifest page and the workbench's manifest endpoint, as the signed-in user."""
-        page = self.client.get(self.url("manifest_by_hashed_id", hashed_id=llmclient.hashed_id))
+        """
+        GET the LLMClient from the resource api and the workbench's manifest endpoint, as the signed-in user.
+
+        The console's manifest page and workbench show Page not found when the resource api answers 404.
+        """
+        resource = self.client.get(resource_api_url(llmclient.record_locator))
         endpoint = self.client.get(self.web_url("manifest_editor_by_hashed_id", hashed_id=llmclient.hashed_id))
-        return page.status_code, endpoint.status_code
+        return resource.status_code, endpoint.status_code
 
     def test_manifest_of_another_account_is_not_found(self):
         """A user may not read the manifest of another account's LLMClient: both routes answer 404, as for an unknown id."""
@@ -265,16 +221,6 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         unknown = LLMClient(id=999999999)
         response = self.client.get(self.web_url("manifest_editor_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_workbench_architecture_url(self):
-        """Test that the workbench passes the url of the LLMClient's architecture, for its Architecture tab."""
-        response = self.client.get(
-            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
-        )
-        architecture_url = response.context["workbench"]["architecture_url"]
-        self.assertEqual(architecture_url, self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(architecture_url, f"/api/web/prompt/llm-clients/{self.resource.hashed_id}/architecture/")
-        self.assertIn(f'smarter-architecture-url="{architecture_url}"', response.content.decode())
 
     def test_architecture(self):
         """Test that the architecture is the LLMClient's tree, as JSON: each resource with its owner and manifest page."""
@@ -365,16 +311,6 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.client.force_login(other_admin_user)
         response = self.client.get(self.web_url("architecture_by_hashed_id", hashed_id=self.resource.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_workbench_deployment_url(self):
-        """Test that the workbench passes the url of the LLMClient's deployment page, for its Deployment tab."""
-        response = self.client.get(
-            self.url("chat_by_hashed_id", hashed_id=self.resource.hashed_id), HTTP_HOST=PLATFORM_HOST
-        )
-        deployment_url = response.context["workbench"]["deployment_url"]
-        self.assertEqual(deployment_url, self.web_url("deployment_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(deployment_url, f"/api/web/prompt/llm-clients/{self.resource.hashed_id}/deployment/")
-        self.assertIn(f'smarter-deployment-url="{deployment_url}"', response.content.decode())
 
     def get_deployment(self):
         """GET the deployment page's data, validated by its contract."""
@@ -602,12 +538,13 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(raised.exception.code, "not_account_admin")
         self.assertEqual(raised.exception.status, HTTPStatus.FORBIDDEN)
 
-    def test_detail_page_may_not_be_framed(self):
-        """Test that the manifest detail page may not be framed."""
-        response = self.client.get(self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertEqual(response["X-Frame-Options"], "DENY")
-        self.assertIn("dashboard/base.html", [template.name for template in response.templates])
+    def test_pages_may_not_be_framed(self):
+        """Test that the manifest page and the workbench, the console's pages, may not be framed."""
+        for name in ("manifest_by_hashed_id", "chat_by_hashed_id"):
+            with self.subTest(page=name):
+                response = self.client.get(self.url(name, hashed_id=self.resource.hashed_id))
+                self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+                self.assertEqual(response["X-Frame-Options"], "DENY")
 
     def test_staff_only(self):
         """A staff-only LLMClient has no configuration for anyone but the platform's staff."""
@@ -621,10 +558,9 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
 
     def test_workbench_and_config_not_found(self):
-        """Test that the workbench page and config api are a 404 for an unknown LLMClient."""
+        """Test that the resource api, which the console's workbench asks first, and the config api are a 404 for an unknown LLMClient."""
         unknown = LLMClient(id=999999999)
-        response = self.client.get(self.url("chat_by_hashed_id", hashed_id=unknown.hashed_id), HTTP_HOST=PLATFORM_HOST)
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        assert_no_resource(self, unknown.record_locator)
         response = self.client.post(self.url("config_by_hashed_id", hashed_id=unknown.hashed_id))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 

@@ -7,15 +7,24 @@
 import { Loading } from "@smarter/common";
 import { ManifestEditor } from "@smarter/manifest-editor";
 
-import TabError from "@/components/Console/TabError";
-import { useTabData } from "@/components/Console/useTabData";
-import { fetchManifest } from "@/lib/api";
-import type { WorkbenchConfig } from "@/lib/types";
+import TabError from "./TabError";
+import { useTabData } from "./useTabData";
+import { fetchManifest } from "../../lib/api";
+import type { WorkbenchConfig } from "../../lib/types";
 
 interface ManifestTabProps {
   workbench: WorkbenchConfig;
   /** Called when the editor saves the manifest. */
   onSaved?: () => void;
+}
+
+/** Go to a page with the host's navigate, if it gave one, else by loading it. */
+function goTo(workbench: WorkbenchConfig, url: string) {
+  if (workbench.navigate) {
+    workbench.navigate(url);
+    return;
+  }
+  window.location.assign(url);
 }
 
 function ManifestTab({ workbench, onSaved }: ManifestTabProps) {
@@ -32,7 +41,7 @@ function ManifestTab({ workbench, onSaved }: ManifestTabProps) {
         deleteApiUrl={workbench.deleteApiUrl}
         kindPlaceholder={workbench.kindPlaceholder}
         onSaved={() => onSaved?.()}
-        onDeleted={() => window.location.assign(workbench.llmclientListUrl)}
+        onDeleted={() => goTo(workbench, workbench.llmclientListUrl)}
       />
     </div>
   );

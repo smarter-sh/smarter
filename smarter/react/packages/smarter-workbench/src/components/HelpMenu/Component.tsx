@@ -13,8 +13,8 @@
 import { gettext, useDropdown } from "@smarter/common";
 import { HeaderButton } from "@smarter.sh/ui-chat";
 
-import { DocsIcon, HelpIcon, TourIcon } from "@/components/icons";
-import "@/components/HelpMenu/styles.css";
+import { DocsIcon, HelpIcon, TourIcon } from "../icons";
+import "./styles.css";
 
 interface HelpMenuProps {
   onDocs?: () => void;

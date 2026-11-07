@@ -14,5 +14,3 @@ The backend modules that host Smarter Chat and answer its requests. See
    technical-reference/progress
    technical-reference/cors
    technical-reference/workbench-view
-   technical-reference/django-template
-   technical-reference/template-tags

@@ -32,7 +32,7 @@ export const session: SessionContext = {
   smarterCapabilities: ["custom"],
 };
 
-/** The workbench's configuration, as main.tsx reads it from the root element, with every tab. */
+/** The workbench's configuration, as the console builds it, with every tab. */
 export const workbench: WorkbenchConfig = {
   apiUrl: API_URL,
   toggleMetadata: true,

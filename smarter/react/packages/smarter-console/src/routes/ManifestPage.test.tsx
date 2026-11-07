@@ -120,8 +120,12 @@ describe("the manifest pages", () => {
     const secret = MANIFEST_PAGES.find((page) => page.prefix === "secret")!;
     expect(recordLocator(secret, "rMTAwx")).toBe("secret-rMTAwx");
     expect(resourceUrl("secret-rMTAwx")).toBe("/api/web/dashboard/resource/secret-rMTAwx/");
+    // an LLMClient's page is its workbench's manifest/, beside its prompt/.
+    const llmclient = MANIFEST_PAGES.find((page) => page.prefix === "llmclient")!;
+    expect(llmclient.path).toBe("/workbench/llm-clients/:id/manifest");
+    expect(recordLocator(llmclient, "rMTAwx")).toBe("llmclient-rMTAwx");
     for (const page of MANIFEST_PAGES) {
-      expect(page.path).toMatch(/\/:id$/);
+      expect(page.path).toMatch(/\/:id(\/|$)/);
       expect(page.prefix).toMatch(/^[a-z]+$/);
     }
   });

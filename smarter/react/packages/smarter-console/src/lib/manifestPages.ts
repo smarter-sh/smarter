@@ -26,6 +26,7 @@ export const MANIFEST_PAGES: ManifestPage[] = [
   { path: "/connection/connections/sql-connection/:id", prefix: "sqlconnection", listPath: "/connection" },
   { path: "/guardrail/guardrails/:id", prefix: "guardrail", listPath: "/guardrail" },
   { path: "/llm-tools/plugins/:id", prefix: "pluginmeta", listPath: "/llm-tools" },
+  { path: "/workbench/llm-clients/:id/manifest", prefix: "llmclient", listPath: "/workbench" },
   { path: "/llmclient/custom-domains/:id", prefix: "llmclientcustomdomain", listPath: "/llmclient/custom-domains" },
   { path: "/llmhost/compute/:id", prefix: "llmhostcompute", listPath: "/llmhost/compute" },
   { path: "/llmhost/llmhosts/:id", prefix: "llmhost", listPath: "/llmhost" },

@@ -20,6 +20,7 @@ import { DASHBOARD_PATH, EXTENSIONS_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/li
 import { LIST_PAGES, type ListPage as ListPageConfig } from "@/lib/lists";
 import { MANIFEST_PAGES, type ManifestPage as ManifestPageConfig } from "@/lib/manifestPages";
 import { DROPZONE_PATH, PASSTHROUGH_PATH, TERMINAL_PATH } from "@/lib/tools";
+import { WORKBENCH_PATH } from "@/lib/workbench";
 
 /** A list's route: its package loads in a chunk of its own, when the list is first opened. */
 function listRoute(page: ListPageConfig): RouteObject {
@@ -93,6 +94,11 @@ export const routes: RouteObject[] = [
       {
         path: `${EXTENSIONS_PATH}/:slug`,
         lazy: async () => ({ Component: (await import("@/routes/ExtensionsPage")).ExtensionsPage }),
+      },
+      // the Prompt Engineer's Workbench, with Smarter Chat and the Console's editor, in a chunk of its own.
+      {
+        path: WORKBENCH_PATH,
+        lazy: async () => ({ Component: (await import("@/routes/WorkbenchPage")).WorkbenchPage }),
       },
       { path: "*", element: <NotFoundPage /> },
     ],

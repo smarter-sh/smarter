@@ -2,11 +2,11 @@
 import type { SessionContext } from "@smarter/common";
 
 /**
- * The workbench's configuration, from its root element's attributes, which Django renders: see
- * templates/react/workbench.html, and smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView.
+ * The workbench's configuration. The single-page console (@smarter/console) builds it from the LLMClient's hashed id
+ * and its session; the development page (main.tsx) uses the fixtures'.
  */
 export interface WorkbenchConfig {
-  /** The LLMClient's api, for the chat: its sandbox url. */
+  /** The LLMClient in the platform api, /api/v1/llm-clients/<hashed id>/, to which the chat appends config/. */
   apiUrl: string;
   /** Show the chat's Sandbox / Production mode switch, and start in sandbox mode. */
   toggleMetadata: boolean;
@@ -26,6 +26,8 @@ export interface WorkbenchConfig {
   deploymentUrl: string | null;
   /** The LLM Clients list, where the workbench goes after its LLMClient is deleted. */
   llmclientListUrl: string;
+  /** Go to a page of the host, e.g. the router's navigate. Without it, the browser loads the page. */
+  navigate?: (url: string) => void;
   /** The cli api's urls, with which the manifest editor saves, validates and deletes the manifest. */
   applyApiUrl: string;
   validateApiUrl: string;

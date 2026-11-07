@@ -2,17 +2,18 @@ How the Web Console Hosts It
 ============================
 
 In the web console, Smarter Chat is the chat of the LLMClient prompt engineering workbench, at
-``/workbench/llm-clients/<hashed_id>/prompt/``. The workbench is the platform's own React app,
+``/workbench/llm-clients/<hashed_id>/prompt/``. The workbench is the platform's own React package,
 ``@smarter/workbench`` (``smarter/react/packages/smarter-workbench``), which imports
 ``SmarterChat`` from the ``@smarter.sh/ui-chat`` npm package, as any React application does, and puts
-the developer Console beside it. It is hosted exactly as the web console's other React apps are (see
-:doc:`Django-React Integration <../developer-reference/react-integration>`): Django renders a page
-with the app's root element, the root element's attributes configure the app, and the app takes
-over from there.
+the developer Console beside it. It is a page of the single-page console, ``@smarter/console``
+(:doc:`ADR-035 </adr/035-single-page-app>`, and
+:doc:`Django-React Integration <../developer-reference/react-integration>`): the console renders the
+workbench's component at the page's route, configured from the url's hashed id and the console's
+session.
 
 
-The View, the Template and the Template Tag
--------------------------------------------
+The Page
+--------
 
 .. list-table::
    :header-rows: 1
@@ -21,84 +22,78 @@ The View, the Template and the Template Tag
    * - Piece
      - Role
    * - :py:class:`PromptWorkbenchView <smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView>`
-     - Requires a logged-in user, finds the LLMClient, and renders ``react/workbench.html`` with a
-       ``workbench`` context of the values below.
-   * - ``templates/react/workbench.html``
-     - Extends the dashboard's base template, includes the app's css and JavaScript files, and
-       renders the root element, whose attributes are the ``workbench`` context.
-   * - :py:mod:`react_workbench <smarter.apps.prompt.templatetags.react_workbench>`
-     - The ``workbench_react_assets`` template tag, which reads the Vite ``manifest.json`` in
-       ``static/react/@smarter/workbench/`` to find the build's hashed file names.
-   * - ``src/main.tsx``, in ``@smarter/workbench``
-     - Reads the root element's attributes, and renders the workbench: ``SmarterChat``, and the
-       Console beside it.
+     - Django's view of the path, a ``ConsoleAppView``: it answers with the console's page, and keeps the
+       url name that ``LLMClient.workbench_url`` reverses.
+   * - ``src/routes/WorkbenchPage.tsx``, in ``@smarter/console``
+     - The console's route, ``/workbench/llm-clients/:id/prompt``, loaded lazily, so that the chat and the
+       Console's editor are in a chunk of their own. It asks the resource api for the LLMClient,
+       ``/api/web/dashboard/resource/llmclient-<hashed_id>/``, first, and shows Page not found when the
+       api answers 404: an unknown LLMClient, another account's, or a staff-only one for a user who is not
+       the platform's staff.
+   * - ``src/lib/workbench.ts``, in ``@smarter/console``
+     - ``workbenchConfig()``: the workbench's configuration, below, from the hashed id and the session.
+   * - ``src/index.ts``, in ``@smarter/workbench``
+     - Exports the ``Workbench`` component and its ``WorkbenchConfig``: ``SmarterChat``, and the Console
+       beside it. The package has no build of its own; its ``main.tsx`` is a development page.
 
 
-The Root Element
-----------------
-
-``main.tsx`` throws an error if a required attribute is missing, so the page fails loudly rather
-than rendering a broken workbench.
+The Configuration
+-----------------
 
 .. list-table::
    :header-rows: 1
-   :widths: 34 66
+   :widths: 30 70
 
-   * - Attribute
+   * - Field
      - Value
-   * - ``id``
-     - ``smarter-workbench-root``
-   * - ``smarter-llmclient-api-url``
-     - The LLMClient's ``sandbox_url``, ``https://<platform>/workbench/llm-clients/<hashed_id>/``, the
-       chat's ``apiUrl``. Required.
-   * - ``smarter-toggle-metadata``
-     - ``True``: the chat shows the Sandbox / Production mode switch (``toggleMetadata``).
-   * - ``smarter-csrf-cookie-name``
-     - Django's ``CSRF_COOKIE_NAME``. Required.
-   * - ``smarter-session-cookie-name``
-     - ``SMARTER_CHAT_SESSION_KEY_NAME``, the cookie of the chat session's key (not Django's
-       session). Required.
-   * - ``smarter-django-session-cookie-name``
-     - Django's ``SESSION_COOKIE_NAME``. Required.
-   * - ``smarter-cookie-domain``
-     - Django's ``SESSION_COOKIE_DOMAIN``, or the page's hostname if empty.
-   * - ``react-debug-mode``
-     - The ``ENABLE_REACTAPP_DEBUG_MODE`` waffle switch, which turns on logging to the browser
-       console.
-   * - ``smarter-request-id``
-     - A unique id of the page request, sent back as the ``X-Smarter-RequestId`` header. Required.
-   * - ``smarter-log-stream-url``
-     - The url of the user's server log stream, or empty when log viewing in the browser is disabled
-       (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), in which case the Console has no Server Logs tab.
-   * - ``smarter-manifest-url``
-     - The path of the LLMClient's manifest, as JSON,
+   * - ``apiUrl``
+     - The LLMClient in the platform api, ``/api/v1/llm-clients/<hashed_id>/``, the chat's ``apiUrl``: the
+       chat reads its configuration from ``config/`` there.
+   * - ``toggleMetadata``
+     - ``true``: the chat shows the Sandbox / Production mode switch.
+   * - ``csrfCookieName``, ``cookieDomain``
+     - Django's CSRF cookie, and the cookies' domain, from the session, or the page's hostname.
+   * - ``sessionCookieName``
+     - ``session_key``, ``SMARTER_CHAT_SESSION_KEY_NAME``: the cookie of the chat session's key (not
+       Django's session).
+   * - ``debugMode``
+     - The session's ``reactDebugMode``, the ``ENABLE_REACTAPP_DEBUG_MODE`` waffle switch, which turns on
+       logging to the browser console.
+   * - ``smarterRequestId``
+     - A new id of the page's requests, sent as the ``X-Smarter-RequestId`` header.
+   * - ``logStreamUrl``
+     - The user's server log stream, ``/api/web/dashboard/logs/stream/``, while the session's
+       ``serverLogs`` is on; otherwise null, and the Console has no Server Logs tab.
+   * - ``manifestUrl``
+     - ``/api/web/prompt/llm-clients/<hashed_id>/manifest/``,
        :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`,
        which the Console's Manifest tab fetches when it is first opened, and edits with the
-       ``@smarter/manifest-editor`` component, the editor of every manifest detail page.
-   * - ``smarter-architecture-url``
-     - The path of the LLMClient's architecture, as JSON,
+       ``@smarter/manifest-editor`` component, the editor of every manifest page.
+   * - ``architectureUrl``
+     - ``/api/web/prompt/llm-clients/<hashed_id>/architecture/``,
        :py:class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView`,
        which the Console's Architecture tab fetches when it is first opened, and draws with the
        ``@smarter/llmclient-architecture`` component: the tree of the SAM resources that the LLMClient is
        built from, as cards that open each resource's manifest page, whether its chat is styled, and the
        web console's Guardrails, Plugins, Extensions, MCPClients and API Keys pages, for its next steps. Its data is
        :py:mod:`~smarter.apps.prompt.views.detailviews.architecture_contract`.
-   * - ``smarter-deployment-url``
-     - The path of the LLMClient's deployment page's data,
+   * - ``deploymentUrl``
+     - ``/api/web/prompt/llm-clients/<hashed_id>/deployment/``,
        :py:class:`~smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView`,
        which the Console's Deployment tab fetches when it is first opened, and renders with the
        ``@smarter/llmclient-deployment`` component: the content of the page at a deployed LLMClient's
        url, with its owner and its api key. Its data is
        :py:mod:`~smarter.apps.llmclient.views.deployment_contract`.
-   * - ``smarter-llmclient-list-url``
-     - The LLM Clients list, where the workbench goes when its Manifest tab deletes the LLMClient.
-       Required.
-   * - ``smarter-apply-api-url``, ``smarter-validate-api-url``, ``smarter-delete-api-url``,
-       ``smarter-kind-placeholder``
+   * - ``llmclientListUrl``, ``navigate``
+     - The LLM Clients list, ``/workbench``, and the console router's ``navigate``, with which the
+       workbench goes to the list when its Manifest tab deletes the LLMClient.
+   * - ``applyApiUrl``, ``validateApiUrl``, ``deleteApiUrl``, ``kindPlaceholder``
      - The cli api's urls, with which the Manifest tab's editor saves, validates and deletes the
-       manifest, as every manifest page's editor does. Required.
+       manifest, as every manifest page's editor does.
+   * - ``session``
+     - The ``SessionContext`` of the Console's own requests, from the console's session.
 
-Boolean attributes are compared case-insensitively with ``"true"``, so Django's ``True`` works.
+The guided tour's onboarding state is the console session's too.
 
 
 The Chat and the Console
@@ -122,41 +117,40 @@ The workbench passes the chat its props, and follows it with the props that
   to its button through ``HeaderButton``'s ``ref``.
 
 Changing what the chat passes to the workbench is a change in both repositories: a prop of
-``SmarterChat`` in Smarter Chat, released, and the workbench here. Changing only what Django passes to
-the workbench is a change here: the view's context, the template, and the workbench's
-``src/lib/session.ts``.
+``SmarterChat`` in Smarter Chat, released, and the workbench here. Changing only what the console
+passes to the workbench is a change here: ``WorkbenchConfig`` in the workbench's ``src/lib/types.ts``,
+and ``workbenchConfig()`` in the console's ``src/lib/workbench.ts``.
 
 
 Authentication in the Workbench
 -------------------------------
 
-The workbench page and its requests are authenticated by the web console's Django session. The
-chat's requests are sent with ``credentials: "include"``, so the browser adds the session cookie, and
-the chat adds the ``X-CSRFToken`` header from the CSRF cookie. Its ``apiUrl`` is on the platform's
-own domain, so the configuration request is same-origin. The prompt request, to the LLMClient's
-``url_llmclient``, is also on the platform domain, under ``/api/v1/``. The Console's Manifest,
-Architecture and Deployment tabs fetch their data from the platform's own domain, with the same session.
+The workbench and its requests are authenticated by the web console's Django session. The chat's
+requests are sent with ``credentials: "include"``, so the browser adds the session cookie, and the chat
+adds the ``X-CSRFToken`` header from the CSRF cookie. Its ``apiUrl`` is on the platform's own domain, so
+the configuration request is same-origin. The prompt request, to the LLMClient's ``url_llmclient``, is
+also on the platform domain, under ``/api/v1/``. The Console's Manifest, Architecture and Deployment tabs
+fetch their data from the web console's api, with the same session, and answer 404 for an LLMClient that
+the user may not read.
 
-A workbench url is a sandbox url: the LLMClient requires an authenticated user there whether it is
-deployed or not, and the configuration's ``sandbox_mode`` is ``true``.
+The configuration comes from the platform api, so its ``sandbox_mode`` is ``false``, and its
+``meta_data.is_authentication_required`` says whether the LLMClient has an active api key; neither the
+chat nor the workbench reads them. The older ``/workbench/llm-clients/<hashed_id>/config/`` is still
+served, and is the only url whose configuration has ``sandbox_mode`` true.
 
 
 Builds and Static Files
 -----------------------
 
-``npm run build``, in the React workspace, builds Smarter Chat's library first, into
-``packages/smarter.sh-chat/dist/``, and then the workbench, which imports it, into
-``smarter/smarter/static/react/@smarter/workbench/``, with a ``manifest.json`` that has a ``_custom``
-entry of the build's time, version and environment. ``collectstatic`` copies it into
-``staticfiles``, from which it is served. In development, use ``make react-build``, and restart
-``smarter-api`` afterwards: the template tag caches the manifest, including a missing one. The
-workbench's tests and type check import the library too, so ``make react-test`` and
-``make react-lint`` build it first (``npm run build:deps``).
+The workbench is bundled by the console's build, ``npm run build -w @smarter/console``, into
+``smarter/smarter/static/react/@smarter/console/``, in a chunk of its own. It imports Smarter Chat's
+built library, ``packages/smarter.sh-chat/dist/``, as npm users do, so ``npm run build:deps`` builds the
+library first; ``make react-build``, ``make react-test`` and ``make react-lint`` run it. ``collectstatic``
+copies the console's build into ``staticfiles``, from which it is served. In development, use
+``make react-build``.
 
 
 Technical Reference
 -------------------
 
 - :doc:`Workbench view <technical-reference/workbench-view>`
-- :doc:`Django template <technical-reference/django-template>`
-- :doc:`Template tags <technical-reference/template-tags>`

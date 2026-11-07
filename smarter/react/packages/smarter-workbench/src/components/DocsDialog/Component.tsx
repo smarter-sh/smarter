@@ -9,9 +9,9 @@
  */
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 
-import { docSections, type DocSection } from "@/components/DocsDialog/data";
+import { docSections, type DocSection } from "./data";
 import { gettext } from "@smarter/common";
-import "@/components/DocsDialog/styles.css";
+import "./styles.css";
 
 interface DocsDialogProps {
   onClose: () => void;

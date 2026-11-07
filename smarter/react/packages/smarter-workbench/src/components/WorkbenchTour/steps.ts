@@ -10,7 +10,7 @@
 import { gettext } from "@smarter/common";
 import type { TourStep } from "@smarter/onboarding";
 
-import { MenuItems } from "@/components/Console/enums";
+import { MenuItems } from "../Console/enums";
 
 /** The Console's tab for the menu item, scoped to the Console, whose tabs' ids are its menu items. */
 const consoleTab = (item: string) => `#chatapp_console [id="${item}"]`;

@@ -1,3 +1,3 @@
-import HelpMenu from "@/components/HelpMenu/Component";
+import HelpMenu from "./Component";
 
 export default HelpMenu;

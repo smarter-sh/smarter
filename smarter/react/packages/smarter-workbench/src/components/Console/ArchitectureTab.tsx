@@ -7,10 +7,10 @@ import { useState } from "react";
 import { Loading } from "@smarter/common";
 import { LLMClientArchitecture } from "@smarter/llmclient-architecture";
 
-import TabError from "@/components/Console/TabError";
-import { useTabData } from "@/components/Console/useTabData";
-import { fetchArchitecture } from "@/lib/api";
-import type { WorkbenchConfig } from "@/lib/types";
+import TabError from "./TabError";
+import { useTabData } from "./useTabData";
+import { fetchArchitecture } from "../../lib/api";
+import type { WorkbenchConfig } from "../../lib/types";
 
 function ArchitectureTree({ url, onReload }: { url: string; onReload: () => void }) {
   const { data: architecture, error } = useTabData(() => fetchArchitecture(url));

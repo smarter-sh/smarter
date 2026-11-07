@@ -5,7 +5,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { gettext } from "@smarter/common";
 
-import { loggerPrefix } from "@/lib/const";
+import { loggerPrefix } from "../../lib/const";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
