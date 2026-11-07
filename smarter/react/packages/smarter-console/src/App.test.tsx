@@ -39,12 +39,9 @@ describe("the console", () => {
     mountAt("/");
     expect(await screen.findByRole("button", { name: "ada@example.com" })).toBeInTheDocument();
     const sidebar = screen.getByRole("navigation", { name: "Main" });
-    // a list that has moved into the console opens in place; a page that hasn't loads the backend's.
+    // the console's pages open in place, the docs pages included.
     expect(within(sidebar).getByRole("link", { name: "Secrets" })).toHaveAttribute("href", "/secret");
-    expect(within(sidebar).getByRole("link", { name: "Example Manifests" })).toHaveAttribute(
-      "href",
-      "/docs/manifests/",
-    );
+    expect(within(sidebar).getByRole("link", { name: "Example Manifests" })).toHaveAttribute("href", "/docs/manifests");
     expect(within(sidebar).getByRole("link", { name: "LLM Clients" })).toHaveAttribute(
       "data-smarter-onboarding",
       "sidebar-llmclients",

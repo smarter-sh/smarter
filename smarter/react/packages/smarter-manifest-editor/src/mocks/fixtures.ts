@@ -1,6 +1,6 @@
 /**
  * Example data for this package's stories and tests: a manifest, as the web console's manifest
- * detail page gives it to the editor. See smarter.apps.docs.views.base.DocsBaseView.
+ * detail page gives it to the editor, from the resource api (smarter.apps.dashboard.resource_detail).
  */
 import type { SessionContext } from "@smarter/common";
 

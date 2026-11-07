@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 04:00+0000\n"
+"POT-Creation-Date: 2026-11-07 13:39+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -427,7 +427,7 @@ msgstr "Semaine du %(date)s"
 msgid "Failed to load the budget series (%(status)s)."
 msgstr "Impossible de charger la série du budget (%(status)s)."
 
-#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+#. Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-console/src/routes/DocsPages.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Loading…"
 msgstr "Chargement…"
 
@@ -1119,7 +1119,7 @@ msgstr "Une erreur inconnue est survenue. Veuillez réessayer plus tard."
 msgid "Workbench"
 msgstr "Atelier"
 
-#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/Dashboard/Component.tsx
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-dashboard/src/components/Dashboard/Component.tsx
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
@@ -1175,7 +1175,7 @@ msgstr "Clés d'API"
 msgid "Custom Domains"
 msgstr "Domaines personnalisés"
 
-#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
 msgid "Tools"
 msgstr "Outils"
 
@@ -1215,11 +1215,11 @@ msgstr "Garde-fous"
 msgid "Secrets"
 msgstr "Secrets"
 
-#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-provider-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-provider-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 msgid "Documentation"
 msgstr "Documentation"
 
-#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx
 msgid "Read the Docs"
 msgstr "Lire la documentation"
 
@@ -1231,7 +1231,7 @@ msgstr "Site web du projet"
 msgid "Example Manifests"
 msgstr "Exemples de manifestes"
 
-#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx
 msgid "OpenAPI Contract"
 msgstr "Contrat OpenAPI"
 
@@ -1283,6 +1283,204 @@ msgstr ""
 "Le compte social que vous avez tenté d'associer est déjà lié à un autre "
 "utilisateur de cette plateforme."
 
+#. Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx
+msgid "Manifests"
+msgstr "Manifestes"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "JSON Schemas"
+msgstr "Schémas JSON"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Sign In"
+msgstr "Se connecter"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Smarter CLI"
+msgstr "CLI Smarter"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "VS Code Extension"
+msgstr "Extension VS Code"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx
+msgid "npm React Chat Component"
+msgstr "Composant de chat React sur npm"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx
+msgid "Python SDK on PyPI"
+msgstr "SDK Python sur PyPI"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Smarter Manifests"
+msgstr "Manifestes Smarter"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"A Smarter manifest is a YAML document that describes one resource of your "
+"platform: an LLMClient, a plugin, a connection, a secret, and so on. "
+"Manifests are modeled on Kubernetes manifests: you keep them in files, apply "
+"them, and the platform creates or updates the resource to match."
+msgstr ""
+"Un manifeste Smarter est un document YAML qui décrit une ressource de votre "
+"plateforme : un LLMClient, un plugin, une connexion, un secret, etc. Les "
+"manifestes suivent le modèle des manifestes Kubernetes : vous les gardez "
+"dans des fichiers, vous les appliquez, et la plateforme crée ou met à jour "
+"la ressource pour qu'elle corresponde."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Anatomy of a manifest"
+msgstr "Anatomie d'un manifeste"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"Every manifest has the same parts: %(apiVersion)s, the version of the "
+"manifest format; %(kind)s, the kind of resource; %(metadata)s, its name, "
+"description, version, tags and annotations; %(spec)s, its configuration, "
+"which is different for each kind; and %(status)s, its read-only state, which "
+"the platform fills in."
+msgstr ""
+"Chaque manifeste a les mêmes parties : %(apiVersion)s, la version du format "
+"de manifeste ; %(kind)s, le type de ressource ; %(metadata)s, son nom, sa "
+"description, sa version, ses étiquettes et ses annotations ; %(spec)s, sa "
+"configuration, qui diffère pour chaque type ; et %(status)s, son état en "
+"lecture seule, que la plateforme remplit."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "The layout of a manifest"
+msgstr "La structure d'un manifeste"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Applying a manifest"
+msgstr "Appliquer un manifeste"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"Apply a manifest with the %(cli)s. To start from an example, open a kind "
+"below, or print one with the CLI:"
+msgstr ""
+"Appliquez un manifeste avec la %(cli)s. Pour partir d'un exemple, ouvrez un "
+"type ci-dessous, ou affichez-en un avec la CLI :"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Smarter CLI commands"
+msgstr "Commandes de la CLI Smarter"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Example manifests"
+msgstr "Exemples de manifestes"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Each kind of resource has an example manifest."
+msgstr "Chaque type de ressource a un exemple de manifeste."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"The manifest format, smarter.sh/v1, is published as a JSON Schema of each "
+"kind, which editors and other tools validate manifests against. See %"
+"(schemas)s."
+msgstr ""
+"Le format de manifeste, smarter.sh/v1, est publié sous forme d'un schéma "
+"JSON pour chaque type, auquel les éditeurs et d'autres outils confrontent "
+"les manifestes. Voir %(schemas)s."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Validation"
+msgstr "Validation"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"Check a manifest before you apply it, in your own code or in a CI pipeline."
+msgstr ""
+"Vérifiez un manifeste avant de l'appliquer, dans votre propre code ou dans "
+"un pipeline de CI."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Editor support"
+msgstr "Prise en charge des éditeurs"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"The %(extension)s uses them for autocompletion, hover help and validation of "
+"manifest files, and other editors can too."
+msgstr ""
+"L'%(extension)s les utilise pour l'autocomplétion, l'aide au survol et la "
+"validation des fichiers de manifeste, et d'autres éditeurs le peuvent aussi."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Smarter VS Code extension"
+msgstr "extension VS Code de Smarter"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Code generation"
+msgstr "Génération de code"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"Generate the types of your language from them, rather than writing them by "
+"hand."
+msgstr ""
+"Générez-en les types de votre langage, plutôt que de les écrire à la main."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx, react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+msgid "Integrations"
+msgstr "Intégrations"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Build your own tools that read or write Smarter manifests."
+msgstr ""
+"Créez vos propres outils qui lisent ou écrivent des manifestes Smarter."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "Manifest JSON Schemas"
+msgstr "Schémas JSON des manifestes"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"Each kind of Smarter manifest has a JSON Schema (draft 2020-12) that "
+"describes the smarter.sh/v1 format exactly: every field, its type, whether "
+"it is required, and what it means."
+msgstr ""
+"Chaque type de manifeste Smarter a un schéma JSON (draft 2020-12) qui décrit "
+"exactement le format smarter.sh/v1 : chaque champ, son type, s'il est "
+"obligatoire, et ce qu'il signifie."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "What they are for"
+msgstr "À quoi ils servent"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid ""
+"The api returns each one at %(url)s, and the %(manifests)s show an example "
+"of each kind that follows it."
+msgstr ""
+"L'api renvoie chacun à %(url)s, et les %(manifests)s montrent un exemple de "
+"chaque type qui le respecte."
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "example manifests"
+msgstr "exemples de manifestes"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "%(kind)s example manifest"
+msgstr "Exemple de manifeste %(kind)s"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "%(kind)s JSON Schema"
+msgstr "Schéma JSON %(kind)s"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "All example manifests"
+msgstr "Tous les exemples de manifestes"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "All JSON Schemas"
+msgstr "Tous les schémas JSON"
+
+#. Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+msgid "%(title)s couldn't be loaded. Try again later."
+msgstr "Impossible de charger : %(title)s. Réessayez plus tard."
+
 #. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
 msgid "Your account isn't active"
 msgstr "Votre compte n'est pas actif"
@@ -1306,10 +1504,6 @@ msgstr ""
 #. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
 msgid "Email"
 msgstr "E-mail"
-
-#. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
-msgid "Sign In"
-msgstr "Se connecter"
 
 #. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
 msgid "Sign in with Google"
@@ -1346,6 +1540,42 @@ msgstr "Page introuvable"
 #. Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
 msgid "Return Home"
 msgstr "Retour à l'accueil"
+
+#. Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+msgid "Smarter OpenAPI Contract"
+msgstr "Contrat OpenAPI de Smarter"
+
+#. Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+msgid ""
+"The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat "
+"api, and the REST reads. Generate a client or an SDK from it, in any "
+"language. Authorize with an api key, as %(token)s, to try the operations "
+"against this platform."
+msgstr ""
+"Le document OpenAPI 3.1 typé de l'api Smarter : l'api de la cli, l'api de "
+"chat et les lectures REST. Générez-en un client ou un SDK, dans n'importe "
+"quel langage. Authentifiez-vous avec une clé d'api, sous la forme %(token)s, "
+"pour essayer les opérations sur cette plateforme."
+
+#. Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+msgid "Download openapi.json"
+msgstr "Télécharger openapi.json"
+
+#. Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+msgid "SAM JSON Schemas"
+msgstr "Schémas JSON SAM"
+
+#. Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+msgid "About the contract"
+msgstr "À propos du contrat"
+
+#. Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+msgid ""
+"The OpenAPI reference couldn't be loaded. Download openapi.json to read the "
+"document."
+msgstr ""
+"Impossible de charger la référence OpenAPI. Téléchargez openapi.json pour "
+"lire le document."
 
 #. Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
 msgid "Send a new link"
@@ -9994,10 +10224,6 @@ msgstr "Parcourir les cours gratuits"
 msgid "Instructor Guide"
 msgstr "Guide du formateur"
 
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
-msgid "Integrations"
-msgstr "Intégrations"
-
 #. Translators: a headline. %(span)s is its highlighted last words, translated separately.
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
 msgid "Put your chatbot %(span)s"
@@ -10159,10 +10385,6 @@ msgstr "Complétion et aide au survol"
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 msgid "Apply and deploy from the editor"
 msgstr "Appliquer et déployer depuis l'éditeur"
-
-#. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "VS Code Extension"
-msgstr "Extension VS Code"
 
 #. Translators: a headline. %(span)s is its highlighted last words, translated separately.
 #. Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx

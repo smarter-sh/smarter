@@ -33,6 +33,8 @@ export default defineConfig([
     "storybook/public",
     "**/.storybook/public",
     "i18n/messages.js",
+    // Scalar's vendored, minified build, which the console's OpenAPI page loads.
+    "**/public/scalar",
   ]),
   {
     files: ["**/*.{ts,tsx}"],

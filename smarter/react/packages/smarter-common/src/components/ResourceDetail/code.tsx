@@ -6,6 +6,8 @@
  */
 import { Fragment, type ReactNode } from "react";
 
+import "./code.css";
+
 /** A line of code, as text and highlighted spans. */
 export type CodeLine = ReactNode[];
 

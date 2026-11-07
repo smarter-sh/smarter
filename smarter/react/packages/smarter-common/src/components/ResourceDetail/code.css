@@ -1,0 +1,106 @@
+/*
+ * Source code, as the web console shows it everywhere: CodeBlock (./code.tsx), in the resource detail's Manifest and
+ * Details tabs, and on the console's docs pages.
+ */
+
+/* source code is charcoal, in light and dark mode, as it is everywhere in the web console. */
+.smarter-code-block {
+  max-height: 60vh;
+  padding: 0.85rem 0;
+  margin: 0;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #cdd6f4;
+  text-align: left;
+  counter-reset: code-line;
+  background: #1e1e2e;
+  border-radius: 0.6rem;
+}
+
+/* the theme's code is inline, which would add an empty line box above and below the lines. */
+.smarter-code-block > code {
+  display: block;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  box-shadow: none;
+}
+
+/* a code field of the details is shorter than the manifest, and scrolls. */
+.smarter-code-block-field {
+  max-height: 24rem;
+}
+
+.smarter-code-block:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.smarter-code-line {
+  display: block;
+  padding-right: 1.25rem;
+  white-space: pre;
+}
+
+.smarter-code-line::before {
+  display: inline-block;
+  width: 3.25rem;
+  padding-right: 1rem;
+  margin-right: 1rem;
+  color: #6b6b80;
+  text-align: right;
+  content: counter(code-line);
+  counter-increment: code-line;
+  border-right: 1px solid #2f2f42;
+  user-select: none;
+}
+
+/* the highlighters' tokens: YAML's, and the code-* of JSON, CSS and SQL. */
+.smarter-code-block .yaml-key,
+.smarter-code-block .code-key {
+  color: #89b4fa;
+}
+
+.smarter-code-block .yaml-string,
+.smarter-code-block .code-string {
+  color: #a6e3a1;
+}
+
+.smarter-code-block .yaml-number,
+.smarter-code-block .code-number {
+  color: #fab387;
+}
+
+.smarter-code-block .yaml-literal,
+.smarter-code-block .code-literal,
+.smarter-code-block .code-keyword {
+  color: #cba6f7;
+}
+
+.smarter-code-block .code-selector {
+  color: #f9e2af;
+}
+
+.smarter-code-block .code-function {
+  color: #89dceb;
+}
+
+.smarter-code-block .code-param {
+  color: #f5c2e7;
+}
+
+.smarter-code-block .yaml-comment,
+.smarter-code-block .code-comment {
+  font-style: italic;
+  color: #7f849c;
+}
+
+.smarter-code-block .yaml-punctuation,
+.smarter-code-block .code-punctuation {
+  color: #9399b2;
+}

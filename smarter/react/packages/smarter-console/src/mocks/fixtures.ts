@@ -53,7 +53,7 @@ export const userSidebar: ConsoleSidebar = {
   secrets: "/secret/",
   exampleManifests: "/docs/manifests/",
   openapi: "/docs/openapi/",
-  jsonSchemas: "/docs/json-schema/",
+  jsonSchemas: "/docs/json-schemas/",
   infrastructureResources: null,
   admin: null,
 };

@@ -178,7 +178,7 @@ ngettext("%(count)s token", "%(count)s tokens", 1);
 gettext("Week of %(date)s");
 // Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx
 gettext("Failed to load the budget series (%(status)s).");
-// Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+// Translators: used in react/packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, react/packages/smarter-console/src/routes/DocsPages.tsx, react/packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, react/packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, react/packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 gettext("Loading…");
 // Translators: used in react/packages/smarter-common/src/components/Loading/Component.tsx
 gettext("Loading");
@@ -506,7 +506,7 @@ gettext("Your session has expired. Reload the page, and try again.");
 gettext("An unknown error occurred. Please try again later.");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
 gettext("Workbench");
-// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/Dashboard/Component.tsx
+// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-dashboard/src/components/Dashboard/Component.tsx
 gettext("Dashboard");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
 gettext("Prompt Passthrough");
@@ -534,7 +534,7 @@ gettext("Orchestrators");
 gettext("API Keys");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-custom-domain-list/src/App.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Custom Domains");
-// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
 gettext("Tools");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 gettext("Extensions");
@@ -554,15 +554,15 @@ gettext("Governance");
 gettext("Guardrails");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-secret-list/src/App.tsx
 gettext("Secrets");
-// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-provider-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-provider-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 gettext("Documentation");
-// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx
 gettext("Read the Docs");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
 gettext("Project Web Site");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
 gettext("Example Manifests");
-// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+// Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-console/src/routes/DocsLayout.tsx
 gettext("OpenAPI Contract");
 // Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
 gettext("Json Schemas");
@@ -586,6 +586,80 @@ gettext("Back to sign in");
 gettext("Social Account Already Associated");
 // Translators: used in react/packages/smarter-console/src/routes/AlreadyAssociatedPage.tsx
 gettext("The social account you tried to associate is already linked to another user on this platform.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx
+gettext("Manifests");
+// Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("JSON Schemas");
+// Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+gettext("Sign In");
+// Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Smarter CLI");
+// Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+gettext("VS Code Extension");
+// Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx
+gettext("npm React Chat Component");
+// Translators: used in react/packages/smarter-console/src/routes/DocsLayout.tsx
+gettext("Python SDK on PyPI");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Smarter Manifests");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("A Smarter manifest is a YAML document that describes one resource of your platform: an LLMClient, a plugin, a connection, a secret, and so on. Manifests are modeled on Kubernetes manifests: you keep them in files, apply them, and the platform creates or updates the resource to match.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Anatomy of a manifest");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Every manifest has the same parts: %(apiVersion)s, the version of the manifest format; %(kind)s, the kind of resource; %(metadata)s, its name, description, version, tags and annotations; %(spec)s, its configuration, which is different for each kind; and %(status)s, its read-only state, which the platform fills in.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("The layout of a manifest");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Applying a manifest");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Apply a manifest with the %(cli)s. To start from an example, open a kind below, or print one with the CLI:");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Smarter CLI commands");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Example manifests");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Each kind of resource has an example manifest.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("The manifest format, smarter.sh/v1, is published as a JSON Schema of each kind, which editors and other tools validate manifests against. See %(schemas)s.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Validation");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Check a manifest before you apply it, in your own code or in a CI pipeline.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Editor support");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("The %(extension)s uses them for autocompletion, hover help and validation of manifest files, and other editors can too.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Smarter VS Code extension");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Code generation");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Generate the types of your language from them, rather than writing them by hand.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx, react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
+gettext("Integrations");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Build your own tools that read or write Smarter manifests.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Manifest JSON Schemas");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("Each kind of Smarter manifest has a JSON Schema (draft 2020-12) that describes the smarter.sh/v1 format exactly: every field, its type, whether it is required, and what it means.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("What they are for");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("The api returns each one at %(url)s, and the %(manifests)s show an example of each kind that follows it.");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("example manifests");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("%(kind)s example manifest");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("%(kind)s JSON Schema");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("All example manifests");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("All JSON Schemas");
+// Translators: used in react/packages/smarter-console/src/routes/DocsPages.tsx
+gettext("%(title)s couldn't be loaded. Try again later.");
 // Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
 gettext("Your account isn't active");
 // Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx
@@ -594,8 +668,6 @@ gettext("If you signed up with a password, follow the link that we emailed you t
 gettext("If you signed in with Google or GitHub, an administrator activates your account.");
 // Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
 gettext("Email");
-// Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
-gettext("Sign In");
 // Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
 gettext("Sign in with Google");
 // Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx
@@ -614,6 +686,18 @@ gettext("The manifest could not be loaded.");
 gettext("Page not found");
 // Translators: used in react/packages/smarter-console/src/routes/NotFoundPage.tsx
 gettext("Return Home");
+// Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+gettext("Smarter OpenAPI Contract");
+// Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+gettext("The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat api, and the REST reads. Generate a client or an SDK from it, in any language. Authorize with an api key, as %(token)s, to try the operations against this platform.");
+// Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+gettext("Download openapi.json");
+// Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+gettext("SAM JSON Schemas");
+// Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+gettext("About the contract");
+// Translators: used in react/packages/smarter-console/src/routes/OpenApiPage.tsx
+gettext("The OpenAPI reference couldn't be loaded. Download openapi.json to read the document.");
 // Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
 gettext("Send a new link");
 // Translators: used in react/packages/smarter-console/src/routes/PasswordResetPage.tsx
@@ -4069,8 +4153,6 @@ gettext("Every micro course, three ways");
 gettext("Browse the free courses");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/Instructors/Component.tsx
 gettext("Instructor Guide");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
-gettext("Integrations");
 // Translators: a headline. %(span)s is its highlighted last words, translated separately.
 // Translators: used in react/packages/smarter.sh-widgets/src/components/Integrations/Component.tsx
 gettext("Put your chatbot %(span)s");
@@ -4149,8 +4231,6 @@ gettext("Quick fixes for misspelled keys");
 gettext("Completion and hover help");
 // Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 gettext("Apply and deploy from the editor");
-// Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
-gettext("VS Code Extension");
 // Translators: a headline. %(span)s is its highlighted last words, translated separately.
 // Translators: used in react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
 gettext("Get the %(span)s");

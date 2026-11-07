@@ -1,351 +1,45 @@
-"""URL configuration for dashboard legal pages."""
+"""
+URL configuration of the docs app, ``/docs/``: the pages of the example manifests, the JSON Schemas and the OpenAPI.
+
+document, which the single-page console shows (see :mod:`smarter.apps.docs.views.views`), and the OpenAPI
+document's earlier address.
+"""
 
 from django.shortcuts import redirect
 from django.urls import path
 
-from smarter.apps.api.v1.manifests.enum import SAMKinds
-
 from .const import namespace
-from .utils import json_schema_name, json_schema_path, manifest_name, manifest_path
-from .views.json_schema import (
-    DocsJsonSchemaAccountView,
-    DocsJsonSchemaApiConnectionView,
-    DocsJsonSchemaApiKeyView,
-    DocsJsonSchemaApiView,
-    DocsJsonSchemaBudgetView,
-    DocsJsonSchemaCustomDomainView,
-    DocsJsonSchemaGuardrailView,
-    DocsJsonSchemaImageSearchView,
-    DocsJsonSchemaLLMClientView,
-    DocsJsonSchemaLLMHostComputeView,
-    DocsJsonSchemaLLMHostView,
-    DocsJsonSchemaMCPClientView,
-    DocsJsonSchemaOrchestratorView,
-    DocsJsonSchemaPluginView,
-    DocsJsonSchemaPromptView,
-    DocsJsonSchemaProviderView,
-    DocsJsonSchemaProxyView,
-    DocsJsonSchemaSecretView,
-    DocsJsonSchemaSkillView,
-    DocsJsonSchemaSqlConnectionView,
-    DocsJsonSchemaSqlView,
-    DocsJsonSchemaUserView,
-    DocsJsonSchemaVectorsearchView,
-    DocsJsonSchemaVectorstoreView,
-    DocsJsonSchemaWebsearchView,
-)
-from .views.manifest import (
-    DocsExampleManifestAccountView,
-    DocsExampleManifestApiConnectionView,
-    DocsExampleManifestApiKeyView,
-    DocsExampleManifestApiView,
-    DocsExampleManifestBudgetView,
-    DocsExampleManifestCustomDomainView,
-    DocsExampleManifestGuardrailView,
-    DocsExampleManifestImageSearchView,
-    DocsExampleManifestLLMClientView,
-    DocsExampleManifestLLMHostComputeView,
-    DocsExampleManifestLLMHostView,
-    DocsExampleManifestMCPClientView,
-    DocsExampleManifestOrchestratorView,
-    DocsExampleManifestPluginView,
-    DocsExampleManifestPromptView,
-    DocsExampleManifestProviderView,
-    DocsExampleManifestProxyView,
-    DocsExampleManifestSecretView,
-    DocsExampleManifestSkillView,
-    DocsExampleManifestSqlConnectionView,
-    DocsExampleManifestSqlView,
-    DocsExampleManifestUserView,
-    DocsExampleManifestVectorsearchView,
-    DocsExampleManifestVectorstoreView,
-    DocsExampleManifestWebsearchView,
-)
 from .views.openapi import DocsOpenApiJsonView, DocsOpenApiView
-from .views.views import JsonSchemasView, ManifestsView
+from .views.views import (
+    DocsExampleManifestsView,
+    DocsExampleManifestView,
+    DocsJsonSchemasView,
+    DocsJsonSchemaView,
+)
 
 
 class DocsReverseNames:
-    """Centralized reverse view names for the docs app."""
+    """The names of the docs app's urls, e.g. ``reverse(DocsReverseNames.namespace, DocsReverseNames.openapi)``."""
 
     namespace = namespace
     example_manifests = "example_manifests"
+    example_manifest = "example_manifest"
     openapi = "openapi"
     openapi_json = "openapi-json"
     json_schemas = "json_schemas"
+    json_schema = "json_schema"
 
 
 app_name = namespace
 urlpatterns = [
     path("", lambda request: redirect(namespace + ":example_manifests", permanent=False), name="docs-home"),
-    # -------------------------------------------------------------------------
-    # Documentation generators
-    # -------------------------------------------------------------------------
-    # the typed OpenAPI 3.1 contract, smarter.apps.api.v1.contract.openapi.json
+    # the OpenAPI document's page, and its earlier address, which redirects to the api's.
     path("openapi/", DocsOpenApiView.as_view(), name=DocsReverseNames.openapi),
     path("openapi.json", DocsOpenApiJsonView.as_view(), name=DocsReverseNames.openapi_json),
-    # -------------------------------------------------------------------------
-    # JSON Schemas
-    # -------------------------------------------------------------------------
-    path(
-        json_schema_path(SAMKinds.ACCOUNT.value),
-        DocsJsonSchemaAccountView.as_view(),
-        name=json_schema_name(SAMKinds.ACCOUNT.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.API_CONNECTION.value),
-        DocsJsonSchemaApiConnectionView.as_view(),
-        name=json_schema_name(SAMKinds.API_CONNECTION.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.API_PLUGIN.value),
-        DocsJsonSchemaApiView.as_view(),
-        name=json_schema_name(SAMKinds.API_PLUGIN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.AUTH_TOKEN.value),
-        DocsJsonSchemaApiKeyView.as_view(),
-        name=json_schema_name(SAMKinds.AUTH_TOKEN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.BUDGET.value),
-        DocsJsonSchemaBudgetView.as_view(),
-        name=json_schema_name(SAMKinds.BUDGET.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CUSTOM_DOMAIN.value),
-        DocsJsonSchemaCustomDomainView.as_view(),
-        name=json_schema_name(SAMKinds.CUSTOM_DOMAIN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.GUARDRAIL.value),
-        DocsJsonSchemaGuardrailView.as_view(),
-        name=json_schema_name(SAMKinds.GUARDRAIL.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.LLM_CLIENT.value),
-        DocsJsonSchemaLLMClientView.as_view(),
-        name=json_schema_name(SAMKinds.LLM_CLIENT.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.LLM_HOST.value),
-        DocsJsonSchemaLLMHostView.as_view(),
-        name=json_schema_name(SAMKinds.LLM_HOST.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.LLM_HOST_COMPUTE.value),
-        DocsJsonSchemaLLMHostComputeView.as_view(),
-        name=json_schema_name(SAMKinds.LLM_HOST_COMPUTE.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.MCP_CLIENT.value),
-        DocsJsonSchemaMCPClientView.as_view(),
-        name=json_schema_name(SAMKinds.MCP_CLIENT.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.ORCHESTRATOR.value),
-        DocsJsonSchemaOrchestratorView.as_view(),
-        name=json_schema_name(SAMKinds.ORCHESTRATOR.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.PROMPT.value),
-        DocsJsonSchemaPromptView.as_view(),
-        name=json_schema_name(SAMKinds.PROMPT.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.PROVIDER.value),
-        DocsJsonSchemaProviderView.as_view(),
-        name=json_schema_name(SAMKinds.PROVIDER.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.PROXY.value),
-        DocsJsonSchemaProxyView.as_view(),
-        name=json_schema_name(SAMKinds.PROXY.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.SECRET.value),
-        DocsJsonSchemaSecretView.as_view(),
-        name=json_schema_name(SAMKinds.SECRET.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.STATIC_PLUGIN.value),
-        DocsJsonSchemaPluginView.as_view(),
-        name=json_schema_name(SAMKinds.STATIC_PLUGIN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.SQL_CONNECTION.value),
-        DocsJsonSchemaSqlConnectionView.as_view(),
-        name=json_schema_name(SAMKinds.SQL_CONNECTION.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.SKILL_PLUGIN.value),
-        DocsJsonSchemaSkillView.as_view(),
-        name=json_schema_name(SAMKinds.SKILL_PLUGIN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.WEBSEARCH_PLUGIN.value),
-        DocsJsonSchemaWebsearchView.as_view(),
-        name=json_schema_name(SAMKinds.WEBSEARCH_PLUGIN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
-        DocsJsonSchemaImageSearchView.as_view(),
-        name=json_schema_name(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.SQL_PLUGIN.value),
-        DocsJsonSchemaSqlView.as_view(),
-        name=json_schema_name(SAMKinds.SQL_PLUGIN.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.USER.value),
-        DocsJsonSchemaUserView.as_view(),
-        name=json_schema_name(SAMKinds.USER.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.VECTORSEARCH.value),
-        DocsJsonSchemaVectorsearchView.as_view(),
-        name=json_schema_name(SAMKinds.VECTORSEARCH.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.VECTORSTORE.value),
-        DocsJsonSchemaVectorstoreView.as_view(),
-        name=json_schema_name(SAMKinds.VECTORSTORE.value),
-    ),
-    # -------------------------------------------------------------------------
-    # example manifests
-    # -------------------------------------------------------------------------
-    path(
-        manifest_path(SAMKinds.ACCOUNT.value),
-        DocsExampleManifestAccountView.as_view(),
-        name=manifest_name(SAMKinds.ACCOUNT.value),
-    ),
-    path(
-        manifest_path(SAMKinds.API_CONNECTION.value),
-        DocsExampleManifestApiConnectionView.as_view(),
-        name=manifest_name(SAMKinds.API_CONNECTION.value),
-    ),
-    path(
-        manifest_path(SAMKinds.API_PLUGIN.value),
-        DocsExampleManifestApiView.as_view(),
-        name=manifest_name(SAMKinds.API_PLUGIN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.AUTH_TOKEN.value),
-        DocsExampleManifestApiKeyView.as_view(),
-        name=manifest_name(SAMKinds.AUTH_TOKEN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.BUDGET.value),
-        DocsExampleManifestBudgetView.as_view(),
-        name=manifest_name(SAMKinds.BUDGET.value),
-    ),
-    path(
-        manifest_path(SAMKinds.CUSTOM_DOMAIN.value),
-        DocsExampleManifestCustomDomainView.as_view(),
-        name=manifest_name(SAMKinds.CUSTOM_DOMAIN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.GUARDRAIL.value),
-        DocsExampleManifestGuardrailView.as_view(),
-        name=manifest_name(SAMKinds.GUARDRAIL.value),
-    ),
-    path(
-        manifest_path(SAMKinds.LLM_CLIENT.value),
-        DocsExampleManifestLLMClientView.as_view(),
-        name=manifest_name(SAMKinds.LLM_CLIENT.value),
-    ),
-    path(
-        manifest_path(SAMKinds.LLM_HOST.value),
-        DocsExampleManifestLLMHostView.as_view(),
-        name=manifest_name(SAMKinds.LLM_HOST.value),
-    ),
-    path(
-        manifest_path(SAMKinds.LLM_HOST_COMPUTE.value),
-        DocsExampleManifestLLMHostComputeView.as_view(),
-        name=manifest_name(SAMKinds.LLM_HOST_COMPUTE.value),
-    ),
-    path(
-        manifest_path(SAMKinds.MCP_CLIENT.value),
-        DocsExampleManifestMCPClientView.as_view(),
-        name=manifest_name(SAMKinds.MCP_CLIENT.value),
-    ),
-    path(
-        manifest_path(SAMKinds.ORCHESTRATOR.value),
-        DocsExampleManifestOrchestratorView.as_view(),
-        name=manifest_name(SAMKinds.ORCHESTRATOR.value),
-    ),
-    path(
-        manifest_path(SAMKinds.PROMPT.value),
-        DocsExampleManifestPromptView.as_view(),
-        name=manifest_name(SAMKinds.PROMPT.value),
-    ),
-    path(
-        manifest_path(SAMKinds.PROVIDER.value),
-        DocsExampleManifestProviderView.as_view(),
-        name=manifest_name(SAMKinds.PROVIDER.value),
-    ),
-    path(
-        manifest_path(SAMKinds.PROXY.value),
-        DocsExampleManifestProxyView.as_view(),
-        name=manifest_name(SAMKinds.PROXY.value),
-    ),
-    path(
-        manifest_path(SAMKinds.SECRET.value),
-        DocsExampleManifestSecretView.as_view(),
-        name=manifest_name(SAMKinds.SECRET.value),
-    ),
-    path(
-        manifest_path(SAMKinds.SKILL_PLUGIN.value),
-        DocsExampleManifestSkillView.as_view(),
-        name=manifest_name(SAMKinds.SKILL_PLUGIN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.WEBSEARCH_PLUGIN.value),
-        DocsExampleManifestWebsearchView.as_view(),
-        name=manifest_name(SAMKinds.WEBSEARCH_PLUGIN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
-        DocsExampleManifestImageSearchView.as_view(),
-        name=manifest_name(SAMKinds.IMAGE_SEARCH_PLUGIN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.SQL_CONNECTION.value),
-        DocsExampleManifestSqlConnectionView.as_view(),
-        name=manifest_name(SAMKinds.SQL_CONNECTION.value),
-    ),
-    path(
-        manifest_path(SAMKinds.SQL_PLUGIN.value),
-        DocsExampleManifestSqlView.as_view(),
-        name=manifest_name(SAMKinds.SQL_PLUGIN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.STATIC_PLUGIN.value),
-        DocsExampleManifestPluginView.as_view(),
-        name=manifest_name(SAMKinds.STATIC_PLUGIN.value),
-    ),
-    path(
-        manifest_path(SAMKinds.USER.value),
-        DocsExampleManifestUserView.as_view(),
-        name=manifest_name(SAMKinds.USER.value),
-    ),
-    path(
-        manifest_path(SAMKinds.VECTORSEARCH.value),
-        DocsExampleManifestVectorsearchView.as_view(),
-        name=manifest_name(SAMKinds.VECTORSEARCH.value),
-    ),
-    path(
-        manifest_path(SAMKinds.VECTORSTORE.value),
-        DocsExampleManifestVectorstoreView.as_view(),
-        name=manifest_name(SAMKinds.VECTORSTORE.value),
-    ),
-    # -------------------------------------------------------------------------
-    # manifests landing page
-    # -------------------------------------------------------------------------
-    path("manifests/", ManifestsView.as_view(), name=DocsReverseNames.example_manifests),
-    # -------------------------------------------------------------------------
-    # json schemas landing page
-    # -------------------------------------------------------------------------
-    path("json-schemas/", JsonSchemasView.as_view(), name=DocsReverseNames.json_schemas),
+    # the example manifests, and each kind's, e.g. /docs/manifest/llmclient/, which the smarter cli's help links.
+    path("manifests/", DocsExampleManifestsView.as_view(), name=DocsReverseNames.example_manifests),
+    path("manifest/<str:kind>/", DocsExampleManifestView.as_view(), name=DocsReverseNames.example_manifest),
+    # the JSON Schemas, and each kind's, e.g. /docs/json-schema/llmclient/.
+    path("json-schemas/", DocsJsonSchemasView.as_view(), name=DocsReverseNames.json_schemas),
+    path("json-schema/<str:kind>/", DocsJsonSchemaView.as_view(), name=DocsReverseNames.json_schema),
 ]

@@ -1,18 +1,19 @@
 /**
  * The sidebar's sections and items. The backend sends each item's url in the session's sidebar, or null when
  * the platform or the user doesn't have it (smarter.apps.api.web.session.views.sidebar); the console decides
- * the order, the labels and the icons. Until a page moves into the console, its url is the backend's page.
+ * the order, the labels and the icons.
  */
 import { gettext, interpolate } from "@smarter/common";
 
 import type { ConsoleBranding, ConsoleSidebar } from "@/contract.gen";
 import { DASHBOARD_PATH, EXTENSIONS_PATH } from "@/lib/const";
+import { JSON_SCHEMAS_PATH, MANIFESTS_PATH, OPENAPI_PATH } from "@/lib/docs";
 import { DROPZONE_PATH, PASSTHROUGH_PATH, TERMINAL_PATH } from "@/lib/tools";
 import { LIST_PAGES } from "@/lib/lists";
 
 /**
- * The paths of the pages that have moved into the console, which the sidebar opens in place. Until a page moves,
- * the sidebar's link to it loads the backend's page.
+ * The paths of the console's pages that the sidebar opens in place. Any other link, e.g. Django admin, loads the
+ * backend's page.
  */
 export const CONSOLE_PAGE_PATHS = [
   DASHBOARD_PATH,
@@ -20,6 +21,9 @@ export const CONSOLE_PAGE_PATHS = [
   DROPZONE_PATH,
   PASSTHROUGH_PATH,
   TERMINAL_PATH,
+  MANIFESTS_PATH,
+  JSON_SCHEMAS_PATH,
+  OPENAPI_PATH,
   ...LIST_PAGES.map((page) => page.path),
 ];
 
