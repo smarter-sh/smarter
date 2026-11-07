@@ -18,10 +18,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import { useOnboarding } from "@smarter/onboarding";
 
-import SidebarHint from "@/components/SidebarHint";
-import WelcomeDialog from "@/components/WelcomeDialog";
-import { loggerPrefix } from "@/lib/const";
-import type { AppContext, WelcomeApiResponse, WelcomeUrls } from "@/lib/Types";
+import SidebarHint from "./components/SidebarHint";
+import WelcomeDialog from "./components/WelcomeDialog";
+import { loggerPrefix } from "./lib/const";
+import type { AppContext, WelcomeApiResponse, WelcomeUrls } from "./lib/Types";
 
 /** The attribute of the elements that open the dialog, e.g. the user menu's Welcome Tour item. */
 export const OPEN_ATTRIBUTE = "data-smarter-welcome-open";

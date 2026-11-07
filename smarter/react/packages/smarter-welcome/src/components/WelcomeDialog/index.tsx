@@ -1,3 +1,3 @@
-import WelcomeDialog from "@/components/WelcomeDialog/Component";
+import WelcomeDialog from "./Component";
 
 export default WelcomeDialog;

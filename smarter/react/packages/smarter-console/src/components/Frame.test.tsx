@@ -5,14 +5,24 @@ import { createMemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { dashboardHandlers } from "@smarter/dashboard/mocks";
+import { welcomeHandlers } from "@smarter/welcome/mocks";
 
 import { server } from "@test/server";
 
 import App from "@/App";
 import type { ConsoleSession } from "@/contract.gen";
 import { activeSidebarItem, CHANGELOG_URL } from "@/lib/sidebar";
-import { APP_BODY_CLASS, APP_LAYOUT_ATTRIBUTES, belowLgQuery } from "@/lib/theme";
+import {
+  APP_BODY_CLASS,
+  APP_LAYOUT_ATTRIBUTES,
+  belowLgQuery,
+  resolveThemeMode,
+  THEME_KEY,
+  THEME_MODE_KEY,
+  themeMode,
+} from "@/lib/theme";
 import { userMenuContext } from "@/lib/userMenu";
+import { onboardingContext, welcomeContext } from "@/lib/welcome";
 import { userSession, userSidebar } from "@/mocks/fixtures";
 import { sessionHandler } from "@/mocks/handlers";
 import { routes } from "@/router";
@@ -123,7 +133,8 @@ describe("the theme's layout", () => {
     narrowWindow();
     mountAt("/");
     const user = userEvent.setup();
-    const aside = await screen.findByRole("complementary", { hidden: true });
+    // the closed drawer is aria-hidden, which has no accessible name: find it by its label.
+    const aside = await screen.findByLabelText("Sidebar");
     expect(aside).toHaveClass("drawer", "drawer-start");
     expect(aside).not.toHaveClass("drawer-on");
 
@@ -155,5 +166,79 @@ describe("the user menu's context", () => {
     expect(context.user.username).toBe("");
     expect(context.accountName).toBe("");
     expect(context.userProfileCount).toBe(0);
+  });
+});
+
+describe("the welcome dialog", () => {
+  it("opens by itself when the session says so, and the user menu's Welcome Tour opens it again", async () => {
+    server.use(...welcomeHandlers);
+    mountAt("/", { ...userSession, welcome: { showAtStartup: true, show: true } });
+    const user = userEvent.setup();
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "ada@example.com" }));
+    await user.click(screen.getByRole("button", { name: "Welcome Tour" }));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("stays closed when the session says so", async () => {
+    mountAt("/");
+    await findSidebar();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("takes its context, and the onboarding state, from the session", () => {
+    const context = welcomeContext({
+      ...userSession,
+      onboarding: { enabled: true, seen: ["sidebar_llmclients", "no-such-hint"] },
+    });
+    expect(context?.apiUrl).toBe("/api/web/dashboard/welcome/");
+    expect(context?.dismissApiUrl).toBe("/api/web/dashboard/welcome/dismiss/");
+    expect(context?.firstName).toBe(userSession.user!.firstName);
+    expect(context?.onboarding?.apiUrl).toBe("/api/web/dashboard/onboarding/seen/");
+    // a hint that the console doesn't know is dropped.
+    expect(context?.onboarding?.seen).toEqual(["sidebar_llmclients"]);
+    expect(welcomeContext({ ...userSession, welcome: null })).toBeNull();
+    expect(onboardingContext({ ...userSession, onboarding: null })).toBeNull();
+  });
+});
+
+describe("the header", () => {
+  it("shows the Did you know? tip while its switch is on", async () => {
+    mountAt("/");
+    expect(await screen.findByRole("complementary", { name: "Did you know?" })).toBeInTheDocument();
+  });
+
+  it("leaves the tip out while its switch is off", async () => {
+    mountAt("/", { ...userSession, flags: { ...userSession.flags, didYouKnow: false } });
+    await findSidebar();
+    expect(screen.queryByRole("complementary", { name: "Did you know?" })).not.toBeInTheDocument();
+  });
+
+  it("switches the theme's mode, and stores it where the theme's JavaScript does", async () => {
+    mountAt("/");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Theme" }));
+    await user.click(screen.getByRole("button", { name: "Dark" }));
+    expect(document.documentElement).toHaveAttribute("data-bs-theme", "dark");
+    expect(localStorage.getItem(THEME_MODE_KEY)).toBe("dark");
+    expect(localStorage.getItem(THEME_KEY)).toBe("dark");
+    expect(themeMode()).toBe("dark");
+    await user.click(screen.getByRole("button", { name: "Theme" }));
+    expect(screen.getByRole("button", { name: "Dark" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Light" }));
+    expect(document.documentElement).toHaveAttribute("data-bs-theme", "light");
+  });
+
+  it("follows the system's mode for System", () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
+    expect(resolveThemeMode("system")).toBe("dark");
+    expect(resolveThemeMode("light")).toBe("light");
+    localStorage.setItem(THEME_MODE_KEY, "nonsense");
+    expect(themeMode()).toBe("light");
   });
 });

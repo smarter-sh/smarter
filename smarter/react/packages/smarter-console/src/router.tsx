@@ -8,7 +8,6 @@ import { Navigate, type RouteObject } from "react-router";
 
 import { ActivatePage } from "@/routes/ActivatePage";
 import { AlreadyAssociatedPage } from "@/routes/AlreadyAssociatedPage";
-import { DashboardPage } from "@/routes/DashboardPage";
 import { InactivePage } from "@/routes/InactivePage";
 import { Layout } from "@/routes/Layout";
 import { LoginPage } from "@/routes/LoginPage";
@@ -41,7 +40,11 @@ export const routes: RouteObject[] = [
     children: [
       // the dashboard is the console's home.
       { index: true, element: <Navigate to={DASHBOARD_PATH} replace /> },
-      { path: DASHBOARD_PATH, element: <DashboardPage /> },
+      {
+        path: DASHBOARD_PATH,
+        // the dashboard and its widgets load in a chunk of their own, which the sign-in pages don't need.
+        lazy: async () => ({ Component: (await import("@/routes/DashboardPage")).DashboardPage }),
+      },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

@@ -61,8 +61,12 @@ The dashboard is the console's: `/dashboard` renders `@smarter/dashboard`'s `Das
 with no build) inside the frame, and `/` redirects to it. Django serves the console at `/dashboard/`, keeping the
 name `dashboard:dashboard`; `DashboardView`, `react/dashboard.html` and the `react_dashboard` template tag are
 deleted, which closes bug 10. The sidebar opens the console's pages in place (`CONSOLE_PAGE_PATHS`). Tests of
-Django's frame use `SERVER_RENDERED_PAGE` (`/secret/`). Next: the welcome dialog, the onboarding hints, the
-Did you know? tip and the theme mode menu, which Django's frame has and the console's doesn't yet.
+Django's frame use `SERVER_RENDERED_PAGE` (`/secret/`).
+
+The console's frame now has what Django's has: the welcome dialog (`@smarter/welcome`, now importable) with its
+sidebar hint and the onboarding state from the session, the Did you know? tip, and a theme mode menu that stores the
+choice where the theme's JavaScript does, so the console and Django's pages share it. The dashboard route loads
+lazily, in its own chunk. Next: the resource list pages (section 3).
 
 ## Development
 

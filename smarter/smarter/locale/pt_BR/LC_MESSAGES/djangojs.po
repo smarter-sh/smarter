@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 00:41+0000\n"
+"POT-Creation-Date: 2026-11-07 00:47+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -1078,6 +1078,22 @@ msgstr "Principal"
 #. Translators: used in react/packages/smarter-console/src/components/Sidebar.tsx
 msgid "Hide the sidebar"
 msgstr "Ocultar a barra lateral"
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "Light"
+msgstr "Claro"
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "Dark"
+msgstr "Escuro"
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "System"
+msgstr "Sistema"
+
+#. Translators: used in react/packages/smarter-console/src/components/ThemeModeMenu.tsx
+msgid "Theme"
+msgstr "Tema"
 
 #. Translators: used in react/packages/smarter-console/src/lib/account.ts
 msgid "Your session has expired. Reload the page, and try again."

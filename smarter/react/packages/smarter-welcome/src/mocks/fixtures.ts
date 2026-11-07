@@ -5,7 +5,7 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import type { AppContext, WelcomeApiResponse } from "@/lib/Types";
+import type { AppContext, WelcomeApiResponse } from "../lib/Types";
 
 export const sessionContext: SessionContext = {
   ApiUrl: "/api/web/dashboard/welcome/",
