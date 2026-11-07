@@ -143,8 +143,7 @@ export function sidebarSections(branding: ConsoleBranding, version: string): Sid
 
 /**
  * The item of a page: the one whose url is the longest that begins the page's path, so that a resource's own
- * pages, e.g. /secret/secrets/rMTAwx/, show under their list's item, /secret/. The same rule as the backend's
- * smarter.apps.dashboard.context_processors.active_sidebar_item.
+ * pages, e.g. /secret/secrets/rMTAwx/, show under their list's item, /secret/.
  *
  * @param path - The page's path.
  * @param sidebar - The session's sidebar.

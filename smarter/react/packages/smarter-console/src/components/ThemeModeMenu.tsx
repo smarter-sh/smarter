@@ -1,7 +1,7 @@
 /**
- * The header's theme mode menu: Light, Dark or System. It does what templates/dashboard/navbar/theme-mode-menu-item.html
- * does with the theme's JavaScript, which the console doesn't load: it applies the mode, and stores it where that
- * JavaScript does, so that the console and the pages that Django renders open in the same mode. See lib/theme.
+ * The header's theme mode menu: Light, Dark or System. It does what the theme's own JavaScript does, which the
+ * console doesn't load: it applies the mode, and stores it where that JavaScript does, so that the console and the
+ * pages that Django still renders from templates/base.html open in the same mode. See lib/theme.
  */
 import { gettext, useDropdown } from "@smarter/common";
 import { useState } from "react";

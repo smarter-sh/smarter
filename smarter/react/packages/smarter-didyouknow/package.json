@@ -19,7 +19,7 @@
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
     "build:lib": "rm -rf dist && tsc -p tsconfig.build.json",
-    "build": "npm run build:lib && tsc -b && vite build",
+    "build": "npm run build:lib",
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",

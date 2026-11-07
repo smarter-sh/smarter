@@ -1,7 +1,6 @@
 /**
- * The user menu's context, from the console's session. The user menu (@smarter/dashboard-user-menu) is also
- * mounted on the pages that the backend still renders, from the attributes of its template; in the console it
- * takes the same values from the session.
+ * The user menu's context, from the console's session: the header renders the user menu
+ * (@smarter/dashboard-user-menu) with it.
  */
 import type { AppContext } from "@smarter/dashboard-user-menu";
 

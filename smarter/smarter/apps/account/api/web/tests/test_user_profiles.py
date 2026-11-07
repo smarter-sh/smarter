@@ -24,9 +24,9 @@ from smarter.apps.account.utils import (
     get_cached_account_for_user,
     get_cached_avatar_url,
 )
+from smarter.apps.api.web.urls import ApiWebReverseNames
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
-from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 OAUTH_IMAGE = "https://example.com/second-account-picture.png"
 
@@ -104,13 +104,17 @@ class TestUserProfiles(TestAccountMixin):
         self.assertEqual(self.client.session[SELECTED_USER_PROFILE_SESSION_KEY], self.non_admin_user_profile.pk)
         data = self.get(self.url)
         self.assertEqual([p["isCurrent"] for p in data["userProfiles"]], [False, True])
-        page = get_server_rendered_page(self.client)
-        self.assertEqual(page.status_code, HTTPStatus.OK)
-        self.assertIn(f'smarter-account-name="{self.account.company_name}"', page.content.decode())
+        # the console's session, from which every page knows the account it acts for.
+        self.assertEqual(self.session_account()["name"], self.account.company_name)
 
         self.post(self.select_url, {"userProfileId": self.second_profile.pk})
-        page = get_server_rendered_page(self.client)
-        self.assertIn(f'smarter-account-name="{self.second_account.company_name}"', page.content.decode())
+        self.assertEqual(self.session_account()["name"], self.second_account.company_name)
+
+    def session_account(self) -> dict:
+        """The account of the console's session, GET /api/web/session/."""
+        response = self.client.get(reverse(f"{ApiWebReverseNames.namespace}:{ApiWebReverseNames.console_session_view}"))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        return response.json()["account"]
 
     def test_select_refuses_another_users_profile(self):
         data = self.post(self.select_url, {"userProfileId": self.user_profile.pk}, status=HTTPStatus.NOT_FOUND)

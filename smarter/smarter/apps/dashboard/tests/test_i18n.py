@@ -13,8 +13,8 @@ from django.utils import translation
 from smarter.apps.account.models.account_contact import unsubscribe_token
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.templatetags.smarter_i18n import to_locale
+from smarter.apps.dashboard.views.console_app import console_index_html
 from smarter.lib.unittest.base_classes import SmarterTestBase
-from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 TEMPLATES_DIR = Path(settings.BASE_DIR) / "templates"
 UNTRANSLATED = re.compile(r'^msgstr(\[\d+\])? ""\n(?!")', re.MULTILINE)
@@ -192,13 +192,11 @@ class TestI18nViews(TestAccountMixin):
                 self.assertIn(translated, response.content.decode())
         del self.client.cookies[settings.LANGUAGE_COOKIE_NAME]
 
-    def test_console_pages_load_the_javascript_catalog(self):
-        """The console pages that Django renders, which host the React apps, load the JavaScript catalog."""
-        self.client.force_login(self.non_admin_user)
-        response = get_server_rendered_page(self.client, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(reverse("javascript-catalog"), response.content.decode())
-        self.client.logout()
+    def test_the_console_loads_the_javascript_catalog(self):
+        """The console's page, which every console path answers with, loads the JavaScript catalog."""
+        html = console_index_html()
+        self.assertIsNotNone(html)
+        self.assertIn(f'src="{reverse("javascript-catalog")}"', html)
 
 
 class TestToLocaleFilter(SmarterTestBase):

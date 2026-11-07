@@ -1,25 +1,24 @@
-"""Test the welcome dialog's api views, :mod:`smarter.apps.dashboard.views.views.api.welcome`, and its template tags."""
+"""Test the welcome dialog's api views, :mod:`smarter.apps.dashboard.views.views.api.welcome`, and its state in the session."""
 
 from http import HTTPStatus
 from unittest import mock
 
-from django.contrib.auth.models import AnonymousUser
-from django.test import Client, RequestFactory
+from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.dashboard.templatetags.react_welcome import welcome_dialog
+from smarter.apps.api.web.session.contract import ConsoleSession, ConsoleWelcome
+from smarter.apps.api.web.urls import ApiWebReverseNames
 from smarter.apps.dashboard.views.views.api import welcome
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
-from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 
 class TestWelcomeApiViews(TestAccountMixin):
-    """Test WelcomeView and WelcomeDismissView, and the welcome dialog's root element on console pages."""
+    """Test WelcomeView and WelcomeDismissView, and the welcome dialog's state in the console's session."""
 
     def setUp(self):
         super().setUp()
@@ -110,51 +109,32 @@ class TestWelcomeApiViews(TestAccountMixin):
                     self.client.force_login(self.non_admin_user)
                     self.assertEqual(self.client.post(url).status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_welcome_dialog_tag(self):
-        """Test the root element's attributes, for a new user, and for a request without a signed-in user."""
-        request = RequestFactory().get("/dashboard/")
-        request.user = self.non_admin_user
-        attributes = welcome_dialog({"request": request})
-        self.assertTrue(attributes["show"])
-        self.assertTrue(attributes["show_at_startup"])
-        self.assertEqual(attributes["first_name"], self.non_admin_user.first_name or "")
-        request.session = {welcome.WELCOME_SHOWN_SESSION_KEY: True}
-        attributes = welcome_dialog({"request": request})
-        self.assertFalse(attributes["show"])
-        self.assertTrue(attributes["show_at_startup"])
-        del request.session
-        self.assertEqual(attributes["dismiss_api_url"], self.dismiss_url)
-        request.user = AnonymousUser()
-        attributes = welcome_dialog({"request": request})
-        self.assertFalse(attributes["show"])
-        self.assertFalse(attributes["show_at_startup"])
-        self.assertEqual(attributes["first_name"], "")
+    def session_welcome(self) -> ConsoleWelcome:
+        """The welcome dialog's state in the console's session, which the console's frame reads."""
+        response = self.client.get(reverse(f"{ApiWebReverseNames.namespace}:{ApiWebReverseNames.console_session_view}"))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        welcome_state = ConsoleSession.model_validate(response.json()).welcome
+        self.assertIsNotNone(welcome_state)
+        return welcome_state  # type: ignore[return-value]
 
-    def test_console_pages_mount_the_dialog(self):
-        """Test that a console page opens the dialog for a new user, and doesn't once they have closed it."""
+    def test_the_console_opens_the_dialog_until_it_is_closed(self):
+        """Test that the console opens the dialog for a new user, and doesn't once they have closed it."""
         self.client.force_login(self.non_admin_user)
-        page = get_server_rendered_page(self.client)
-        self.assertEqual(page.status_code, HTTPStatus.OK)
-        content = page.content.decode()
-        self.assertIn('id="smarter-welcome-root"', content)
-        self.assertIn('smarter-welcome-show="true"', content)
-        self.assertIn(f'smarter-welcome-dismiss-api-url="{self.dismiss_url}"', content)
-        # the user menu's Welcome Tour item, which reopens the dialog, is rendered by the
-        # @smarter/dashboard-user-menu React app.
-        self.assertIn('id="smarter-dashboard-user-menu-root"', content)
+        state = self.session_welcome()
+        self.assertTrue(state.show)
         self.post(self.dismiss_url)
-        content = get_server_rendered_page(self.client).content.decode()
-        self.assertIn('smarter-welcome-show="false"', content)
-        self.assertIn('smarter-welcome-show-at-startup="false"', content)
+        state = self.session_welcome()
+        self.assertFalse(state.show)
+        self.assertFalse(state.show_at_startup)
 
     def test_shows_once_per_session_at_startup(self):
         """Test that, with Show at startup ticked, the dialog opens by itself once per session, i.e. per sign-in."""
         self.client.force_login(self.non_admin_user)
         self.post(self.dismiss_url, {"showAtStartup": True})
-        content = get_server_rendered_page(self.client).content.decode()
-        self.assertIn('smarter-welcome-show="false"', content)
-        self.assertIn('smarter-welcome-show-at-startup="true"', content)
+        state = self.session_welcome()
+        self.assertFalse(state.show)
+        self.assertTrue(state.show_at_startup)
         # signing in again starts a new session.
         self.client.logout()
         self.client.force_login(self.non_admin_user)
-        self.assertIn('smarter-welcome-show="true"', get_server_rendered_page(self.client).content.decode())
+        self.assertTrue(self.session_welcome().show)

@@ -18,11 +18,15 @@ The Prompt Engineer's Workbench of the Smarter web console, at
 
 ## Integration
 
-- `smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView` renders
-  `templates/react/workbench.html`, whose root element's attributes are the workbench's configuration
-  (`src/lib/session.ts`).
-- `smarter.apps.prompt.templatetags.react_workbench` provides the app's assets, from its Vite `manifest.json`.
-- `LLMClientManifestEditorView`, `LLMClientArchitectureView` and `LLMClientDeploymentView` return the Manifest,
+- `@smarter/console` imports this package (`src/index.ts`) and renders `Workbench` at
+  `/workbench/llm-clients/:id/prompt` (`src/routes/WorkbenchPage.tsx` there), with a `WorkbenchConfig` built from
+  the hashed id and the console's session (`src/lib/workbench.ts` there), and the session's onboarding state for
+  the tour. The package has no build of its own: its `index.html` and `src/main.tsx` are a development page only.
+- Django answers the path with the console's page:
+  `smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView`, a `ConsoleAppView` (ADR-035)
+  that keeps the url name that `LLMClient.workbench_url` reverses.
+- `LLMClientManifestEditorView`, `LLMClientArchitectureView` and `LLMClientDeploymentView`, under
+  `/api/web/prompt/llm-clients/<hashed_id>/` (`smarter.apps.prompt.api.web.urls`), return the Manifest,
   Architecture and Deployment tabs' data, as JSON.
 
 ## Development
@@ -30,7 +34,7 @@ The Prompt Engineer's Workbench of the Smarter web console, at
 ```console
 npm run build:deps    # in smarter/react: @smarter/common, and Smarter Chat's library, which the workbench imports
 npm run dev           # Vite dev server, with index.html's example LLMClient
-npm run build         # builds into smarter/static/react/@smarter/workbench/
+make react-build      # in the repo's root: builds the console, which imports the workbench
 npm run test
 npm run lint
 ```

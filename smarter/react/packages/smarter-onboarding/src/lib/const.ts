@@ -22,9 +22,12 @@ export type OnboardingOutcome = (typeof OnboardingOutcomes)[keyof typeof Onboard
 
 /**
  * The attribute that marks an element that a hint points to, e.g. data-smarter-onboarding="sidebar-llmclients"
- * on the sidebar's LLM Clients link, in templates/dashboard/sidebar.html.
+ * on the console sidebar's LLM Clients link (src/lib/sidebar.ts in @smarter/console).
  */
 export const ONBOARDING_TARGET_ATTRIBUTE = "data-smarter-onboarding";
 
-/** The id of the JSON script element that templates/react/onboarding.html writes into each console page. */
+/**
+ * The id of the JSON script element that readOnboardingContext() reads, if a page writes one. None of the console's
+ * pages do: the console passes its session's onboarding state as a prop.
+ */
 export const ONBOARDING_CONTEXT_ID = "smarter-onboarding";

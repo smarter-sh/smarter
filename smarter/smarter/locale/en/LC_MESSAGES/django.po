@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 00:19+0000\n"
+"POT-Creation-Date: 2026-11-07 04:18+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -632,7 +632,6 @@ msgid ""
 msgstr ""
 
 #: smarter/templates/account/email/welcome.html smarter/templates/cms/base.html
-#: smarter/templates/dashboard/sidebar.html
 #: smarter/templates/docs/json-schemas.html
 msgid "Documentation"
 msgstr ""
@@ -698,12 +697,10 @@ msgid "The Smarter Project"
 msgstr ""
 
 #: smarter/templates/cms/base/footer.html
-#: smarter/templates/dashboard/footer.html
 msgid "About"
 msgstr ""
 
 #: smarter/templates/cms/base/footer.html
-#: smarter/templates/dashboard/footer.html
 msgid "Support"
 msgstr ""
 
@@ -712,12 +709,10 @@ msgid "Sales"
 msgstr ""
 
 #: smarter/templates/cms/base/header.html
-#: smarter/templates/dashboard/header.html
 msgid "Show sidebar menu"
 msgstr ""
 
 #: smarter/templates/cms/base/header.html
-#: smarter/templates/dashboard/navbar.html
 msgid "Show header menu"
 msgstr ""
 
@@ -726,7 +721,6 @@ msgid "API"
 msgstr ""
 
 #: smarter/templates/cms/base/menu/api.html
-#: smarter/templates/dashboard/sidebar.html
 msgid "OpenAPI Contract"
 msgstr ""
 
@@ -765,168 +759,6 @@ msgstr ""
 
 #: smarter/templates/common/cookie-notice.html
 msgid "Close"
-msgstr ""
-
-#: smarter/templates/dashboard/footer.html
-msgid "Legal"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "Light"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "Dark"
-msgstr ""
-
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "System"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Workbench"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Dashboard"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Prompt Passthrough"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Apply Manifest"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Terminal"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Models"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Providers"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Proxies"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Hosts"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Host Compute"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Harnesses"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Clients"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Orchestrators"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "API Keys"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Custom Domains"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Tools"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Extensions"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Updates available"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Tools"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "MCP Clients"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Connections"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "RAG"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Vectorsearches"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Vectorstores"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Governance"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Budgets"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Guardrails"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Secrets"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Read the Docs"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Project Web Site"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-#: smarter/templates/docs/manifests.html
-msgid "Example Manifests"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Json Schemas"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-#, python-format
-msgid "GitHub Change Log %(version)s"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Settings"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Infrastructure Resources"
-msgstr ""
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Django Admin"
 msgstr ""
 
 #: smarter/templates/docs/base/sidebar/stay-connected.html
@@ -1095,6 +927,10 @@ msgid ""
 "YAML format. Start with an example manifest, here or from the Smarter CLI. "
 "Tweak it to suit your needs. Then use the Smarter CLI to apply it. That's "
 "it! It doesn't get any simpler."
+msgstr ""
+
+#: smarter/templates/docs/manifests.html
+msgid "Example Manifests"
 msgstr ""
 
 #: smarter/templates/docs/manifests.html

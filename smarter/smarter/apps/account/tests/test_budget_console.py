@@ -11,12 +11,12 @@ from smarter.apps.account.models import Budget, Charge, ChargeTypes
 from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.views.budget.urls import BudgetReverseNames
+from smarter.apps.api.web.urls import ApiWebReverseNames
 from smarter.lib.unittest.resource_views import (
     assert_console_page,
     assert_no_resource,
     resource_detail_json,
 )
-from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 
 def url(name: str, **kwargs) -> str:
@@ -118,11 +118,8 @@ class TestBudgetConsole(TestAccountMixin):
         assert_console_page(self, url(BudgetReverseNames.detailview, hashed_id=self.budget.hashed_id))
 
     def test_sidebar_links_to_budgets(self):
-        """Test that the sidebar of a console page links to Budgets.
-
-        The console's dashboard calls the budgets api.
-        """
+        """Test that the console's sidebar, from its session, links to Budgets."""
         self.client.force_login(self.non_admin_user)
-        response = get_server_rendered_page(self.client)
+        response = self.client.get(reverse(f"{ApiWebReverseNames.namespace}:{ApiWebReverseNames.console_session_view}"))
         self.assertEqual(response.status_code, 200)
-        self.assertIn(url(BudgetReverseNames.listview), response.content.decode())
+        self.assertEqual(response.json()["sidebar"]["budgets"], url(BudgetReverseNames.listview))

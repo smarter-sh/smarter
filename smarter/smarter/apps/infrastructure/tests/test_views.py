@@ -12,7 +12,6 @@ from smarter.apps.infrastructure.urls import InfrastructureReverseNames
 from smarter.apps.infrastructure.views.listview import DEFAULT_PAGE_SIZE, summary
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import assert_console_page
-from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 
 def url(name: str) -> str:
@@ -51,11 +50,8 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
         super().tearDown()
 
     def test_list_view(self):
-        """The list page is the single-page console's, and the sidebar of a page that Django renders links to it."""
+        """The list page is the single-page console's; the session api's tests check that its sidebar link is a superuser's."""
         self.client.force_login(self.admin_user)
-        content = get_server_rendered_page(self.client).content.decode()
-        # the sidebar links to the page, for superusers.
-        self.assertIn(f'href="{url(InfrastructureReverseNames.listview)}"', content)
         assert_console_page(self, url(InfrastructureReverseNames.listview))
 
     def test_web_api_paths(self):

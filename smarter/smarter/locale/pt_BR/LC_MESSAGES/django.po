@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 00:19+0000\n"
+"POT-Creation-Date: 2026-11-07 04:18+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -770,7 +770,6 @@ msgstr ""
 "banco de dados SQL e de uma API REST."
 
 #: smarter/templates/account/email/welcome.html smarter/templates/cms/base.html
-#: smarter/templates/dashboard/sidebar.html
 #: smarter/templates/docs/json-schemas.html
 msgid "Documentation"
 msgstr "Documentação"
@@ -846,12 +845,10 @@ msgid "The Smarter Project"
 msgstr "The Smarter Project"
 
 #: smarter/templates/cms/base/footer.html
-#: smarter/templates/dashboard/footer.html
 msgid "About"
 msgstr "Sobre"
 
 #: smarter/templates/cms/base/footer.html
-#: smarter/templates/dashboard/footer.html
 msgid "Support"
 msgstr "Suporte"
 
@@ -860,12 +857,10 @@ msgid "Sales"
 msgstr "Vendas"
 
 #: smarter/templates/cms/base/header.html
-#: smarter/templates/dashboard/header.html
 msgid "Show sidebar menu"
 msgstr "Mostrar menu lateral"
 
 #: smarter/templates/cms/base/header.html
-#: smarter/templates/dashboard/navbar.html
 msgid "Show header menu"
 msgstr "Mostrar menu do cabeçalho"
 
@@ -874,7 +869,6 @@ msgid "API"
 msgstr "API"
 
 #: smarter/templates/cms/base/menu/api.html
-#: smarter/templates/dashboard/sidebar.html
 msgid "OpenAPI Contract"
 msgstr "Contrato OpenAPI"
 
@@ -914,168 +908,6 @@ msgstr "Política de privacidade"
 #: smarter/templates/common/cookie-notice.html
 msgid "Close"
 msgstr "Fechar"
-
-#: smarter/templates/dashboard/footer.html
-msgid "Legal"
-msgstr "Jurídico"
-
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "Light"
-msgstr "Claro"
-
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "Dark"
-msgstr "Escuro"
-
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "System"
-msgstr "Sistema"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Workbench"
-msgstr "Área de trabalho"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Dashboard"
-msgstr "Painel"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Prompt Passthrough"
-msgstr "Repasse de prompts"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Apply Manifest"
-msgstr "Aplicar manifesto"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Terminal"
-msgstr "Terminal"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Models"
-msgstr "Modelos"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Providers"
-msgstr "Provedores"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Proxies"
-msgstr "Proxies"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Hosts"
-msgstr "Hosts LLM"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Host Compute"
-msgstr "Computação de hosts LLM"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Harnesses"
-msgstr "Harnesses"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Clients"
-msgstr "Clientes LLM"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Orchestrators"
-msgstr "Orquestradores"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "API Keys"
-msgstr "Chaves de API"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Custom Domains"
-msgstr "Domínios personalizados"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Tools"
-msgstr "Ferramentas"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Extensions"
-msgstr "Extensões"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Updates available"
-msgstr "Atualizações disponíveis"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Tools"
-msgstr "Ferramentas de LLM"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "MCP Clients"
-msgstr "Clientes MCP"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Connections"
-msgstr "Conexões"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "RAG"
-msgstr "RAG"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Vectorsearches"
-msgstr "Pesquisas vetoriais"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Vectorstores"
-msgstr "Bancos vetoriais"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Governance"
-msgstr "Governança"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Budgets"
-msgstr "Orçamentos"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Guardrails"
-msgstr "Guardrails"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Secrets"
-msgstr "Segredos"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Read the Docs"
-msgstr "Leia a documentação"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Project Web Site"
-msgstr "Site do projeto"
-
-#: smarter/templates/dashboard/sidebar.html
-#: smarter/templates/docs/manifests.html
-msgid "Example Manifests"
-msgstr "Manifestos de exemplo"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Json Schemas"
-msgstr "JSON Schemas"
-
-#: smarter/templates/dashboard/sidebar.html
-#, python-format
-msgid "GitHub Change Log %(version)s"
-msgstr "Changelog do GitHub %(version)s"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Settings"
-msgstr "Configurações"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Infrastructure Resources"
-msgstr "Recursos de infraestrutura"
-
-#: smarter/templates/dashboard/sidebar.html
-msgid "Django Admin"
-msgstr "Admin do Django"
 
 #: smarter/templates/docs/base/sidebar/stay-connected.html
 msgid "Stay <br> Connected"
@@ -1305,6 +1137,10 @@ msgstr ""
 "use a CLI do Smarter para aplicá-lo. Pronto! Não tem como ser mais simples."
 
 #: smarter/templates/docs/manifests.html
+msgid "Example Manifests"
+msgstr "Manifestos de exemplo"
+
+#: smarter/templates/docs/manifests.html
 msgid "There are nearly two dozen kinds of Smarter resources."
 msgstr "Existem quase duas dezenas de tipos de recursos do Smarter."
 
@@ -1359,6 +1195,124 @@ msgstr "JSON Schemas do SAM"
 #: smarter/templates/docs/openapi.html
 msgid "About the contract"
 msgstr "Sobre o contrato"
+
+#~ msgid "Legal"
+#~ msgstr "Jurídico"
+
+#~ msgid "Light"
+#~ msgstr "Claro"
+
+#~ msgid "Dark"
+#~ msgstr "Escuro"
+
+#~ msgid "System"
+#~ msgstr "Sistema"
+
+#~ msgid "Workbench"
+#~ msgstr "Área de trabalho"
+
+#~ msgid "Dashboard"
+#~ msgstr "Painel"
+
+#~ msgid "Prompt Passthrough"
+#~ msgstr "Repasse de prompts"
+
+#~ msgid "Apply Manifest"
+#~ msgstr "Aplicar manifesto"
+
+#~ msgid "Terminal"
+#~ msgstr "Terminal"
+
+#~ msgid "Models"
+#~ msgstr "Modelos"
+
+#~ msgid "Providers"
+#~ msgstr "Provedores"
+
+#~ msgid "Proxies"
+#~ msgstr "Proxies"
+
+#~ msgid "LLM Hosts"
+#~ msgstr "Hosts LLM"
+
+#~ msgid "LLM Host Compute"
+#~ msgstr "Computação de hosts LLM"
+
+#~ msgid "Harnesses"
+#~ msgstr "Harnesses"
+
+#~ msgid "LLM Clients"
+#~ msgstr "Clientes LLM"
+
+#~ msgid "Orchestrators"
+#~ msgstr "Orquestradores"
+
+#~ msgid "API Keys"
+#~ msgstr "Chaves de API"
+
+#~ msgid "Custom Domains"
+#~ msgstr "Domínios personalizados"
+
+#~ msgid "Tools"
+#~ msgstr "Ferramentas"
+
+#~ msgid "Extensions"
+#~ msgstr "Extensões"
+
+#~ msgid "Updates available"
+#~ msgstr "Atualizações disponíveis"
+
+#~ msgid "LLM Tools"
+#~ msgstr "Ferramentas de LLM"
+
+#~ msgid "MCP Clients"
+#~ msgstr "Clientes MCP"
+
+#~ msgid "Connections"
+#~ msgstr "Conexões"
+
+#~ msgid "RAG"
+#~ msgstr "RAG"
+
+#~ msgid "Vectorsearches"
+#~ msgstr "Pesquisas vetoriais"
+
+#~ msgid "Vectorstores"
+#~ msgstr "Bancos vetoriais"
+
+#~ msgid "Governance"
+#~ msgstr "Governança"
+
+#~ msgid "Budgets"
+#~ msgstr "Orçamentos"
+
+#~ msgid "Guardrails"
+#~ msgstr "Guardrails"
+
+#~ msgid "Secrets"
+#~ msgstr "Segredos"
+
+#~ msgid "Read the Docs"
+#~ msgstr "Leia a documentação"
+
+#~ msgid "Project Web Site"
+#~ msgstr "Site do projeto"
+
+#~ msgid "Json Schemas"
+#~ msgstr "JSON Schemas"
+
+#, python-format
+#~ msgid "GitHub Change Log %(version)s"
+#~ msgstr "Changelog do GitHub %(version)s"
+
+#~ msgid "Settings"
+#~ msgstr "Configurações"
+
+#~ msgid "Infrastructure Resources"
+#~ msgstr "Recursos de infraestrutura"
+
+#~ msgid "Django Admin"
+#~ msgstr "Admin do Django"
 
 #~ msgid "User not found. Please log in to activate your account."
 #~ msgstr "Usuário não encontrado. Entre para ativar sua conta."

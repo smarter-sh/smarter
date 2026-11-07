@@ -13,6 +13,12 @@ from smarter.apps.api.web.session import views
 from smarter.apps.api.web.session.contract import ConsoleSession
 from smarter.apps.api.web.urls import ApiWebReverseNames
 from smarter.apps.dashboard.context_processors import sidebar_context
+from smarter.apps.dashboard.models import (
+    OnboardingHint,
+    OnboardingHints,
+    OnboardingOutcomes,
+)
+from smarter.apps.dashboard.views.views.api import onboarding
 from smarter.apps.dashboard.views.views.api.welcome import WELCOME_SHOWN_SESSION_KEY
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -154,6 +160,32 @@ class TestConsoleSessionView(TestAccountMixin):
         self.assertIsNone(sidebar.prompt_passthrough)
         self.assertEqual(staff.admin, links["admin"])
         self.assertIsNone(staff.infrastructure_resources)
+
+    def test_onboarding_lists_the_hints_that_the_user_has_seen(self):
+        """The onboarding state follows its switch, and lists the hints that the user has clicked or dismissed."""
+        hint = OnboardingHint.objects.create(
+            user=self.non_admin_user, hint=OnboardingHints.SIDEBAR_LLMCLIENTS, outcome=OnboardingOutcomes.CLICKED
+        )
+        self.addCleanup(onboarding.seen_onboarding_hints.invalidate, self.non_admin_user.id)
+        self.addCleanup(hint.delete)
+        onboarding.seen_onboarding_hints.invalidate(self.non_admin_user.id)
+        self.client.force_login(self.non_admin_user)
+        switch = SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_ONBOARDING_HINTS
+        with override_switch(switch, active=True):
+            state = self.get_session().onboarding
+        self.assertTrue(state.enabled)  # type: ignore[union-attr]
+        self.assertEqual(state.seen, ["sidebar_llmclients"])  # type: ignore[union-attr]
+        with override_switch(switch, active=False):
+            self.assertFalse(self.get_session().onboarding.enabled)  # type: ignore[union-attr]
+
+    def test_did_you_know_follows_its_switch(self):
+        """The header's Did you know? tip shows while its switch is on."""
+        self.client.force_login(self.non_admin_user)
+        switch = SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_DID_YOU_KNOW
+        with override_switch(switch, active=True):
+            self.assertTrue(self.get_session().flags.did_you_know)
+        with override_switch(switch, active=False):
+            self.assertFalse(self.get_session().flags.did_you_know)
 
     def test_welcome_shows_once_per_session(self):
         """The welcome dialog opens by itself until it is closed in this session."""

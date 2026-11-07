@@ -1,7 +1,7 @@
 /**
- * Example data for this package's stories and tests: what the Django welcome api returns, and the
- * root element's attributes. See smarter.apps.dashboard.views.views.api.welcome and
- * templates/react/welcome.html.
+ * Example data for this package's development page, stories and tests: what the Django welcome api
+ * returns, and the dialog's context, as the console builds it from its session. See
+ * smarter.apps.dashboard.views.views.api.welcome.
  */
 import type { SessionContext } from "@smarter/common";
 

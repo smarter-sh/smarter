@@ -38,7 +38,7 @@
   text-decoration: underline;
 }
 
-/* the title is hidden below the lg breakpoint, templates/dashboard/header.html, and so is the note. */
+/* the console's header hides its tip below the lg breakpoint, and so does this note. */
 @media (max-width: 991.98px) {
   .smarter-didyouknow-header {
     display: none;

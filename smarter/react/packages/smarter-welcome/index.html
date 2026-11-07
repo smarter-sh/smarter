@@ -14,29 +14,8 @@
     <link href="/common-styles.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
-    <!--
-    only used for development via 'npm run dev'. In production, this file is rendered
-    by Django.
-
-    See:
-    - smarter.apps.dashboard.templatetags.react_welcome
-    - templates/react/welcome.html, which templates/dashboard/base.html includes
-    - smarter.apps.dashboard.views.views.api.welcome
-    -->
-    <a href="#" data-smarter-welcome-open="true">Welcome Tour</a>
-    <div
-      id="smarter-welcome-root"
-      smarter-csrf-cookie-name="csrftoken"
-      smarter-django-session-cookie-name="sessionid"
-      smarter-cookie-domain="localhost"
-      smarter-welcome-api-url="/api/web/dashboard/welcome/"
-      smarter-welcome-dismiss-api-url="/api/web/dashboard/welcome/dismiss/"
-      smarter-welcome-show="true"
-      smarter-first-name="Ada"
-      smarter-logo-url="/static/images/logo/smarter-crop.png"
-      smarter-illustrations-url="/static/assets/media/illustrations/dozzy-1/"
-      smarter-request-id="dev-request-id"
-    ></div>
+    <!-- the development page only (npm run dev): @smarter/console renders the welcome dialog in the web console's frame. -->
+    <div id="smarter-welcome-root"></div>
 
     <script type="module" src="/src/main.tsx"></script>
   </body>

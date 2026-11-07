@@ -1,8 +1,6 @@
 /**
- * Main entry point for the Did you know? note below the web console's title.
- *
- * See templates/react/didyouknow.html, which templates/dashboard/header.html includes while the
- * enable_web_console_did_you_know waffle switch is active.
+ * The development page of the Did you know? note (`npm run dev`). In the web console, @smarter/console renders the
+ * package's component (its library, dist/) in its header while the session's didYouKnow flag is on.
  */
 import { createRoot } from "react-dom/client";
 

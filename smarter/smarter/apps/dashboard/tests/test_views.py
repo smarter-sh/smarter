@@ -28,7 +28,6 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.resource_views import assert_console_page
-from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 DASHBOARD = DashboardReverseNames.namespace
 TERMINAL_ENABLED = "smarter.apps.dashboard.views.terminal_emulator.enabled.terminal_enabled"
@@ -84,27 +83,28 @@ class TestDashboardReactViews(TestAccountMixin):
             self.assertEqual(self.client.get(url).status_code, HTTPStatus.NOT_FOUND)
 
     def test_sidebar_terminal(self):
-        """Test that the sidebar's Terminal item is shown to superusers only, while the terminal is enabled."""
+        """
+        Test that the sidebar's links have the Terminal while the terminal is enabled.
+
+        The session api gives it to superusers only: see smarter.apps.api.web.session.tests.
+        """
         terminal = reverse(
             DASHBOARD, DashboardTerminalReverseNames.namespace, DashboardTerminalReverseNames.terminal_emulator_view
         )
-        item = f'href="{terminal}"'.encode()
         self.addCleanup(sidebar_context.invalidate)
         for enabled in (True, False):
             sidebar_context.invalidate()
             with patch(SETTINGS, SettingsWith(enable_web_console_terminal=enabled)):
-                content = get_server_rendered_page(self.client).content
-                self.assertEqual(item in content, enabled)
-                self.assertEqual(b">Terminal</span>" in content, enabled)
-        sidebar_context.invalidate()
-        self.client.force_login(self.non_admin_user)
-        with patch(SETTINGS, SettingsWith(enable_web_console_terminal=True)):
-            self.assertNotIn(item, get_server_rendered_page(self.client).content)
+                links = sidebar_context()["sidebar"]
+            self.assertEqual(links.get("terminal") == terminal, enabled)
 
     def test_sidebar_has_no_server_logs(self):
-        """Test that the sidebar has no Server Logs item: the server logs are a tab of the Prompt Passthrough."""
+        """Test that the sidebar has no Server Logs link: the server logs are a tab of the Prompt Passthrough."""
+        sidebar_context.invalidate()
+        self.addCleanup(sidebar_context.invalidate)
         with patch("smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled", return_value=True):
-            self.assertNotIn(b">Server Logs</span>", get_server_rendered_page(self.client).content)
+            links = sidebar_context()["sidebar"]
+        self.assertFalse([name for name in links if "log" in name])
 
     def test_server_logs_are_not_found_while_disabled(self):
         """Test that the log stream is a 404 while server logs are disabled."""

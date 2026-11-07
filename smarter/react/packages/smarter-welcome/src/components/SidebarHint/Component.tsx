@@ -20,7 +20,7 @@ import {
   type Onboarding,
 } from "@smarter/onboarding";
 
-/** The sidebar's LLM Clients link, in templates/dashboard/sidebar.html. */
+/** The console sidebar's LLM Clients link (src/lib/sidebar.ts in @smarter/console). */
 const SIDEBAR_LLMCLIENTS_SELECTOR = onboardingSelector("sidebar-llmclients");
 
 const HINT = OnboardingHints.SIDEBAR_LLMCLIENTS;

@@ -1,7 +1,7 @@
 /**
- * Types of the user menu: what main.tsx reads from the root element, and what the Django apis
- * return. See smarter.apps.dashboard.templatetags.react_dashboard_user_menu,
- * smarter.apps.account.api.web.profile_image and smarter.apps.account.api.web.user_profiles.
+ * Types of the user menu: its context, which the console builds from its session, and what the
+ * Django apis return. See smarter.apps.account.api.web.profile_image and
+ * smarter.apps.account.api.web.user_profiles.
  */
 import type { SessionContext } from "@smarter/common";
 
@@ -39,7 +39,7 @@ export interface MenuUrls {
   logout: string;
 }
 
-/** The root element's attributes. See templates/react/dashboard-user-menu.html. */
+/** The menu's context, which the console builds from its session (src/lib/userMenu.ts in @smarter/console). */
 export interface AppContext {
   sessionContext: SessionContext;
   /** Whether a user is signed in. An anonymous menu has only the Sign In item and the languages. */
