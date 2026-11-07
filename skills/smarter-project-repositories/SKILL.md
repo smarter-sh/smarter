@@ -58,7 +58,7 @@ anything there, and follow its rules, not this repository's.
 
 ## The contracts they copy
 
-The SDKs, the cli and smarter-vscode-yaml each have `make contracts`, which runs
+The SDKs, the cli, smarter-vscode-yaml and smarter-console each have `make contracts`, which runs
 their `scripts/sync-contracts.sh ../smarter [git ref]` to copy this repository's
 committed contracts into their own tree. Their tests then check their models and
 requests against the copy:
@@ -70,11 +70,15 @@ requests against the copy:
 | `smarter-golang`      | the same                                                       | `testdata/contracts/`, `testdata/sam/`     |
 | `smarter-cli`         | openapi.json, the authority on its commands' routes and kinds  | `testdata/contracts/`                      |
 | `smarter-vscode-yaml` | SAM schemas and examples, openapi.json                         | `contract/`, `contract/sam/`               |
+| `smarter-console`     | the console endpoints' JSON Schemas (session, chat, ...)       | `packages/<package>/contract/`             |
 
-Smarter Chat needs no copy step of its own: `make chat-contract` regenerates the
-chat contract's JSON Schema in the backend and in its package,
-`smarter/react/packages/smarter.sh-chat/contract/`, together with the package's
-TypeScript types, all in this repository's tree.
+smarter-console's copies are the JSON Schemas of what the web console reads: the session, Smarter
+Chat's api, the Extensions console, the LLM tool list, a deployed LLMClient's page and the workbench's
+Architecture tab. Its `make contracts` regenerates each package's TypeScript types from them. This
+repository's `make chat-contract`, `make console-session-contract` and the other `*-contract` targets
+regenerate and commit the schemas here; the console copies them. Every week, smarter-sh/automation's
+API Contract Sync checks each of these repositories against this one's latest release, and opens a pull
+request where a copy is out of date.
 
 The source files are listed in each `sync-contracts.sh`. They're generated here
 by `make api-contract` and `make chat-contract` (see `smarter-api-contract`).
