@@ -57,7 +57,9 @@ Official website: https://smarter.sh/
 
 - https://github.com/smarter-sh/smarter-deploy
 
-- https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat
+- https://github.com/smarter-sh/smarter-console
+
+- https://github.com/smarter-sh/smarter-console/tree/main/packages/smarter.sh-chat
 
 ## Blog
 

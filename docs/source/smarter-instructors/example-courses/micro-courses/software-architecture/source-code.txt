@@ -23,7 +23,7 @@ The Twelve Factors
        image that installs them into an isolated virtual environment.
        :doc:`ADR 015 </adr/015-dependency-management>`.
      - `smarter/requirements/ <https://github.com/smarter-sh/smarter/tree/main/smarter/requirements>`__,
-       `package.json <https://github.com/smarter-sh/smarter/blob/main/smarter/react/package.json>`__,
+       `package.json <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/package.json>`__,
        `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__
    * - III. Config
      - Every setting is read from the environment, then validated and typed by a Pydantic
@@ -187,7 +187,7 @@ Classic Patterns
        renders the view and handles the user's actions, and JSON API views act on the models.
        :doc:`ADR 019 </adr/019-react>` still limits React to the Workbench; the packages show how
        far the code has moved since.
-     - `react/packages/smarter-secret-list/src/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-secret-list/src>`__,
+     - `react/packages/smarter-secret-list/src/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-secret-list/src>`__,
        `secret/views/listview/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/secret/views/listview>`__
    * - Model-View-Template
      - Django's own version of MVC, which its FAQ calls MTV. The Django *view* does the

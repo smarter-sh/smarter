@@ -86,7 +86,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Installation triage. Live trace of a list page from URL to component. Start Assignment 1.
    * - 2
      - Lecture 4
-     - **Builds and static files.** The Vite manifest, ``collectstatic``, ``make react-build``, and
+     - **Builds and static files.** The Vite manifest, ``collectstatic``, ``make console``, ``make console-local``, and
        failure modes.
    * - 2
      - Lecture 5
@@ -304,7 +304,7 @@ template tag, the sidebar link, a new React package, and the list, clone, rename
 **What students turn in:**
 
 - A pull request with the Django and React changes, Django tests, Vitest tests and stories.
-- The page working in the console after ``make react-build``, shown in a recording.
+- The page working in the console after ``make console-local``, shown in a recording.
 - A six-minute demonstration in Live session 4.
 
 **How it is graded (100 points):**

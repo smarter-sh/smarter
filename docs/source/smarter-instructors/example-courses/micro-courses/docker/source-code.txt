@@ -28,9 +28,10 @@ The Image
    * - Build arguments
      - ``ENVIRONMENT`` and ``DOCKER_COLLECT_STATIC_FILES`` change what is built:
        ``make build`` skips collecting static assets, so a rebuild takes seconds, and
-       ``make react-build`` collects the React apps as well.
+       ``make console`` and ``make collectstatic`` put the web console's build in the static
+       files first.
      - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__
-       (``docker-build``, ``docker-build-for-react``)
+       (``docker-build``, ``console``)
    * - Data baked into the image
      - The WordNet corpus for plugin selection by synonym is downloaded at build time, so the
        running container never needs to fetch it.

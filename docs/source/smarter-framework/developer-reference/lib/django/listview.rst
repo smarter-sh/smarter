@@ -29,7 +29,7 @@ The browser cache
 -----------------
 
 The React side is shared by every list, in the ``@smarter/common`` package
-(``smarter/react/packages/smarter-common``):
+(`packages/smarter-common <https://github.com/smarter-sh/smarter-console/tree/main/packages/smarter-common>`__ in the web console's repository):
 
 - ``src/lib/cache.tsx`` stores pages in the browser's ``localStorage``, which outlives the browser
   tab, so a new tab or a return visit paints at once. ``makeCacheKey()`` names a page by the list

@@ -17,8 +17,8 @@ The Sphinx docs and the api's responses are not translated. The user-facing expl
 | Catalogs (`.po` committed, `.mo` not)   | `smarter/smarter/locale/<lang>/LC_MESSAGES/django.po`, `djangojs.po`            |
 | `/i18n/setlang/`, `/jsi18n/`            | `smarter/smarter/urls/console.py`                                               |
 | JS catalog `<script>`, `<html lang>`    | `smarter/smarter/templates/base.html`                                           |
-| Language menu (shown with 2+ languages) | `smarter/react/packages/smarter-dashboard-user-menu` (the user menu)            |
-| React runtime                           | `smarter/react/packages/smarter-common/src/lib/i18n.tsx`                        |
+| Language menu (shown with 2+ languages) | smarter-console's `packages/smarter-dashboard-user-menu` (the user menu)        |
+| React runtime                           | smarter-console's `packages/smarter-common/src/lib/i18n.tsx`                    |
 | The console's messages                  | smarter-console's `i18n/messages.js`, in each release → `smarter/console/i18n/` |
 | makemessages + compilemessages          | `apps/dashboard/management/commands/update_console_messages.py`                 |
 | Tests                                   | `apps/dashboard/tests/test_i18n.py`, smarter-console's `i18n/extract.test.ts`   |

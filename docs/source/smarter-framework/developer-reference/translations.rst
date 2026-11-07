@@ -77,7 +77,8 @@ The catalogs are in ``smarter/smarter/locale/<language>/LC_MESSAGES/``:
    * - ``django.po``
      - The Django templates, and the Python code.
    * - ``djangojs.po``
-     - The React apps in ``smarter/react/packages``, and ``smarter/static/js``.
+     - The web console's messages, from the installed smarter-console release's ``messages.js``, and
+       ``smarter/static/js``.
 
 Only the ``.po`` files are committed. The Docker image compiles them to the ``.mo`` files that Django
 reads, with ``manage.py compilemessages``. The English catalogs have empty translations, because

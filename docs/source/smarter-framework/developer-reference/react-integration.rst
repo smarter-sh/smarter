@@ -2,8 +2,9 @@ Django-React Integration
 ========================
 
 Smarter's web console is a single-page `React <https://react.dev/>`__ application,
-``@smarter/console`` (``smarter/react/packages/smarter-console``), that Django serves
-(:doc:`ADR-035 </adr/035-single-page-app>`). Every console page, from the dashboard and the
+``@smarter/console``, that Django serves (:doc:`ADR-035 </adr/035-single-page-app>`). Its source,
+an npm workspace of the console and the packages it is built from, is a repository of its own,
+`smarter-sh/smarter-console <https://github.com/smarter-sh/smarter-console>`__. Every console page, from the dashboard and the
 resource lists to the manifest pages, the Extensions console, the manifest drop zone, the
 Prompt Passthrough, the Terminal and the Prompt Engineer's Workbench, is a route of the
 console. Django keeps what it is good at: authentication, sessions, CSRF protection,
@@ -12,8 +13,10 @@ everything the browser shows.
 
 The design principle is that the console's build is an ordinary Django static asset.
 `Vite.js <https://vite.dev/>`__ compiles the console into versioned JavaScript and CSS bundles
-and an ``index.html``, and emits them into Django's static file hierarchy, where
-``collectstatic`` picks them up like any other file. The console then talks to Django through
+and an ``index.html``, and each smarter-console release ships them. This repository pins a
+release in ``smarter-console-version.txt``, and ``make console`` unpacks it into Django's static
+file hierarchy, ``smarter/smarter/static/react/``, where ``collectstatic`` picks it up like any
+other file. The console then talks to Django through
 two apis: the :doc:`web console api <web-console-api>` under ``/api/web/``, which uses the
 browser's Django session, and the public Smarter api under ``/api/v1/``.
 
@@ -55,7 +58,7 @@ resource's ``<Kind>ListView``. ``ConsoleAppView`` answers ``GET`` and ``HEAD`` w
   styles that ``index.html`` names have hashed names and are cached as other static files are.
 * sets the CSRF cookie, which the console's first POST needs.
 * answers 503 *The web console hasn't been built* when ``index.html`` is missing, and logs an
-  error. ``make react-build`` builds and collects the console.
+  error. ``make console`` installs the console, and ``make collectstatic`` collects it.
 
 Because Django serves the console from its own origin, the console's requests carry the
 browser's Django session cookie and CSRF token like any form post would, and no token needs to
@@ -86,8 +89,8 @@ per kind, each at the path that Django serves:
 Import-Only Packages
 ~~~~~~~~~~~~~~~~~~~~
 
-The React code of a page lives in a package of the npm workspace in ``smarter/react/packages``,
-e.g. ``@smarter/workbench``, ``@smarter/guardrail-list`` or ``@smarter/terminal-emulator``. These
+The React code of a page lives in a package of smarter-console's npm workspace, in
+``packages/``, e.g. ``@smarter/workbench``, ``@smarter/guardrail-list`` or ``@smarter/terminal-emulator``. These
 packages are *import-only*: they have no build of their own, and the console's build bundles
 them. A package becomes import-only when:
 
@@ -221,9 +224,9 @@ and the ``<link>`` and ``<script>`` elements of the app's assets:
 
 The package's ``main.tsx`` finds the root element, reads the data that its attribute names, and
 renders the app, with no session: the page has no actions. Unlike a console page, the package
-has a ``build`` script of its own, which writes its app into
-``static/react/@smarter/llmclient-deployment/``, and its ``main`` and ``exports`` still point at
-``src/index.ts``, so that the workbench can import its component.
+has a ``build`` script of its own, whose app each smarter-console release ships, and ``make console``
+installs into ``static/react/@smarter/llmclient-deployment/``. Its ``main`` and ``exports`` still
+point at ``src/index.ts``, so that the workbench can import its component.
 
 React Build Manifest
 ~~~~~~~~~~~~~~~~~~~~
@@ -323,13 +326,14 @@ Vite Configuration
 where Django serves them. Rather than requiring React code to understand deployment
 environments, static asset locations or runtime integration, these concerns are centralized in
 the build configuration. The console's configuration,
-``smarter/react/packages/smarter-console/vite.config.ts``, addresses these requirements:
+`packages/smarter-console/vite.config.ts <https://github.com/smarter-sh/smarter-console/blob/main/packages/smarter-console/vite.config.ts>`__,
+addresses these requirements:
 
 - **Static Asset Integration**
-    Writes ``index.html`` and its assets into Django's static file hierarchy,
-    ``smarter/static/react/@smarter/console/``, with the base url ``/static/react/@smarter/console/``,
-    so that they take part in the ``collectstatic`` workflow and ``ConsoleAppView`` finds
-    ``index.html`` in ``STATIC_ROOT``.
+    Writes ``index.html`` and its assets into ``dist/react/@smarter/console/``, the layout of
+    Django's static file hierarchy, with the base url ``/static/react/@smarter/console/``, so that,
+    once ``make console`` installs them into ``smarter/smarter/static/react/``, they take part in the
+    ``collectstatic`` workflow and ``ConsoleAppView`` finds ``index.html`` in ``STATIC_ROOT``.
 - **Hashed File Names**
     Names every script, chunk and stylesheet ``assets/[name]-[hash]``, so that browsers can cache
     them for as long as they like.
@@ -357,7 +361,7 @@ the build configuration. The console's configuration,
     },
     build: {
       manifest: "manifest.json",
-      outDir: `../../../smarter/static/react/${packageName}`,
+      outDir: `../../dist/react/${packageName}`,
       emptyOutDir: true,
       rolldownOptions: {
         output: {
@@ -383,7 +387,8 @@ the build configuration. The console's configuration,
   }));
 
 An import-only package's ``vite.config.ts``, such as
-``smarter/react/packages/smarter-workbench/vite.config.ts``, is for its development page only: it
+`packages/smarter-workbench/vite.config.ts <https://github.com/smarter-sh/smarter-console/blob/main/packages/smarter-workbench/vite.config.ts>`__,
+is for its development page only: it
 has no ``build`` section, and proxies ``/api`` and ``/static`` to the Django dev server.
 ``@smarter/llmclient-deployment``'s configuration also writes a ``manifest.json``, with the
 ``_custom`` build information that its template tag validates.
@@ -391,13 +396,13 @@ has no ``build`` section, and proxies ``/api`` and ``/static`` to the Django dev
 Build, Deployment, and CI/CD Considerations
 -------------------------------------------
 
-The React code is a single npm workspace, ``smarter/react``, with one package per page or
-widget. ``npm run build`` in the workspace builds, in order, the libraries that others import
+The React code is a single npm workspace, smarter-console, with one package per page or
+widget. ``make build`` in that repository builds, in order, the libraries that others import
 (``@smarter/common``, ``@smarter/didyouknow``'s and ``@smarter/onboarding``'s libraries,
 ``@smarter.sh/ui-widgets`` and ``@smarter.sh/ui-chat``), then every package that has a ``build``
 script. Besides those libraries (``@smarter.sh/ui-chat``'s ``build`` adds its embed script), only
-two packages have one, and both are apps, each built into its own folder of Django's static file
-hierarchy: the console, which bundles every page package and the packages of its frame (the
+two packages have one, and both are apps, each built into its own folder of ``dist/react/``, the
+layout of Django's static file hierarchy: the console, which bundles every page package and the packages of its frame (the
 user menu, **Did you know?**, onboarding and the welcome dialog), and the deployed LLMClient's
 page:
 
@@ -416,14 +421,16 @@ page:
   management.
 
   Because React assets are generated before Django is deployed, the frontend build remains
-  cleanly separated from the Django runtime. React code can be developed, versioned, tested, and
-  rebuilt independently while still integrating into Django's deployment pipeline.
+  cleanly separated from the Django runtime. The console is developed, versioned, tested and
+  released in its own repository, and the backend installs a pinned release of it: each
+  release attaches ``smarter-console-<version>.tar.gz``, with ``react/``, the builds, and
+  ``i18n/messages.js``, the console's translatable messages (see :doc:`translations`).
 
 CORS
 ~~~~
 
 ``@smarter/common`` sends a set of custom HTTP headers with every api request (see
-``smarter/react/packages/smarter-common/src/lib/django.tsx``). They are listed in
+`packages/smarter-common/src/lib/django.tsx <https://github.com/smarter-sh/smarter-console/blob/main/packages/smarter-common/src/lib/django.tsx>`__). They are listed in
 ``CORS_ALLOW_HEADERS`` in ``smarter.settings.base``, so that a cross-origin request, e.g. from the
 embedded Smarter Chat, may carry them. CORS is switch-enabled: the ``enable_middleware_cors``
 waffle switch must be on for a React app on another origin to call the backend.
@@ -446,21 +453,25 @@ Operational Considerations
 
 * Source Control Exclusion
     Compiled React build artifacts are intentionally excluded from the Git repository and are
-    never committed to source control. Build outputs are ephemeral deployment artifacts and are
-    regenerated as part of the build process.
+    never committed to source control. ``make console`` installs them from the pinned release, and
+    replaces ``smarter/smarter/static/react/`` each time.
 * Build Prerequisites
     Django can serve no console page until the console has been built and collected: until then
     every page answers 503. The deployed LLMClient's page, likewise, depends on its app's
-    ``manifest.json``. Keep this in mind when, for example, you are changing versions in
-    ``package.json``.
-* Rebuilding After React Changes
-    Use ``make react-build``, which builds the workspace, runs ``collectstatic`` and rebuilds the
-    Docker image, rather than ``make build`` alone, which uses the static files collected earlier.
+    ``manifest.json``.
+* Upgrading the Console
+    Change the version in ``smarter-console-version.txt``, then ``make console``,
+    ``make collectstatic`` and ``make build``. ``make build`` alone uses the static files collected
+    earlier.
+* Trying an Unreleased Console Change
+    Run ``make build`` in a smarter-console checkout, then
+    ``make console-local CONSOLE_DIST=../smarter-console/dist`` here, which installs that build
+    instead of the pinned release.
 * CI/CD Pipeline Initialization
     GitHub Actions workflows begin with a clean checkout that contains no compiled frontend
-    assets. Accordingly, the React build (the ``react-build`` action of ``build.yml``, which
-    restores the build from a cache when the React source is unchanged) runs early, before
-    Docker builds, collectstatic, integration tests, or deployment stages that depend on it.
+    assets. Accordingly, the build (``build.yml``) and the Python tests (``test.yml``) install the
+    pinned release first, with ``scripts/fetch_console.py``, before Docker builds, collectstatic,
+    integration tests, or deployment stages that depend on it. A failed download fails the build.
 * Static File Synchronization
     During local development, be aware of the distinction between Vite's development server,
     Django's static asset directories, and the Django staticfiles runtime directory. Stale build
@@ -472,13 +483,10 @@ Operational Considerations
 * Published Packages
     :doc:`Smarter Chat <../smarter-chat>`, the chat of the Prompt Engineer's Workbench, is also
     published to npm, as ``@smarter.sh/ui-chat``, and so is ``@smarter.sh/ui-widgets``. Both are
-    packages of the workspace (``smarter/react/packages/smarter.sh-chat`` and
-    ``smarter/react/packages/smarter.sh-widgets``) that build on their own, as libraries that the
-    console's pages import, and GitHub Actions publishes them with each Smarter release, under the
-    platform's version (``uiChatRelease.yml`` and ``uiWidgetsRelease.yml``).
-* Convenience Tooling
-    ``make react-build`` and ``make react-build-ci`` simplify the common frontend workflows and
-    keep Django's static directories aligned with the current React build.
+    packages of smarter-console (``packages/smarter.sh-chat`` and ``packages/smarter.sh-widgets``)
+    that build on their own, as libraries that the console's pages import, and its GitHub Actions
+    publish them when a smarter-console release changes them, under the console's version
+    (``uiChatRelease.yml`` and ``uiWidgetsRelease.yml``).
 
 Collectively, these conventions give a predictable, reproducible deployment model that works
 the same way in local development, CI/CD workflows, Docker image builds and production. The

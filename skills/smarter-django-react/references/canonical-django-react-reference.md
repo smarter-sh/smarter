@@ -1,30 +1,31 @@
 # Canonical Django + React Reference
 
 The Guardrail list page is the reference. Read these files together. Each one
-names the others' identifiers, so read them as a set.
+names the others' identifiers, so read them as a set. Paths that start with
+`packages/` are in smarter-sh/smarter-console (a checkout at `../smarter-console`).
 
 | Layer                                                   | File                                                                                                                                                                          |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sidebar URL                                             | `smarter/smarter/apps/dashboard/context_processors.py` (`"guardrails": reverse(...)`), sent as `ConsoleSidebar.guardrails` by `smarter/smarter/apps/api/web/session/views.py` |
-| Sidebar item                                            | `smarter/react/packages/smarter-console/src/lib/sidebar.ts` (`key: "guardrails"`)                                                                                             |
-| Console route                                           | `smarter/react/packages/smarter-console/src/lib/lists.ts` (`LIST_PAGES`), `src/router.tsx` (`listRoute`) and `src/routes/ListPage.tsx`                                        |
+| Sidebar item                                            | `packages/smarter-console/src/lib/sidebar.ts` (`key: "guardrails"`)                                                                                                           |
+| Console route                                           | `packages/smarter-console/src/lib/lists.ts` (`LIST_PAGES`), `src/router.tsx` (`listRoute`) and `src/routes/ListPage.tsx`                                                      |
 | URL names and routes                                    | `smarter/smarter/apps/guardrail/urls.py` (`GuardrailReverseNames`)                                                                                                            |
 | Page view                                               | `smarter/smarter/apps/guardrail/views/listview/view.py` (`GuardrailListView(ConsoleAppView)`)                                                                                 |
 | List, clone, rename, delete api                         | `smarter/smarter/apps/guardrail/views/listview/api.py`                                                                                                                        |
 | Serializer (`can_delete`, `manifest_url`, `detail_url`) | `smarter/smarter/apps/guardrail/serializers.py` and its base, `MetaDataWithOwnershipModelSerializer` in `smarter/smarter/apps/account/serializers.py`                         |
-| React export                                            | `smarter/react/packages/smarter-guardrail-list/src/index.ts` (`GuardrailList`)                                                                                                |
-| React app                                               | `smarter/react/packages/smarter-guardrail-list/src/App.tsx` and `src/components/`                                                                                             |
-| Development page                                        | `smarter/react/packages/smarter-guardrail-list/src/main.tsx` and `vite.config.ts`                                                                                             |
-| Shared React code                                       | `smarter/react/packages/smarter-common/src/lib/{django,load,actionUrl,Types}.tsx` and `src/components/TabbedListView`                                                         |
+| React export                                            | `packages/smarter-guardrail-list/src/index.ts` (`GuardrailList`)                                                                                                              |
+| React app                                               | `packages/smarter-guardrail-list/src/App.tsx` and `src/components/`                                                                                                           |
+| Development page                                        | `packages/smarter-guardrail-list/src/main.tsx` and `vite.config.ts`                                                                                                           |
+| Shared React code                                       | `packages/smarter-common/src/lib/{django,load,actionUrl,Types}.tsx` and `src/components/TabbedListView`                                                                       |
 | Python tests                                            | `smarter/smarter/apps/guardrail/tests/test_views.py` (`ResourceViewsTestMixin`)                                                                                               |
-| Console tests                                           | `smarter/react/packages/smarter-console/src/routes/ListPage.test.tsx`                                                                                                         |
+| Console tests                                           | `packages/smarter-console/src/routes/ListPage.test.tsx`                                                                                                                       |
 
 The one page that Django still renders with a React app, a deployed LLMClient's host's page, has a template tag
 (`smarter/smarter/apps/llmclient/templatetags/react_llmclient_deployment.py`, through the manager in
 `smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py`), a template
 (`smarter/smarter/templates/llmclient/endpoints.html`) and a `main.tsx` that reads the root element's
-attributes. Every console page had the same, until it moved into the console: the list pages until release
-v0.42.10.
+attributes (`packages/smarter-llmclient-deployment/src/main.tsx`). Every console page had the same, until it
+moved into the console: the list pages until release v0.42.10.
 
 ## The names that must agree
 

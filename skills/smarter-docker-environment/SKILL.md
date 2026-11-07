@@ -87,10 +87,11 @@ until [ "$(curl -s -o /dev/null -w '%{http_code}' localhost:9357/)" = "302" ]; d
 docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
 ```
 
-`make build` doesn't collect static files. After a React change, use
-`make react-build` instead (see `smarter-django-react`). It is safe to run
-without asking: its build output isn't tracked, and it changes no
-infrastructure.
+`make build` doesn't collect static files. After installing a web console
+build (`make console`, or `make console-local` for a local smarter-console
+build), run `make collectstatic` before `make build` (see
+`smarter-django-react`). These are safe to run without asking: their output
+isn't tracked, and they change no infrastructure.
 
 **When a rebuild isn't possible**, e.g. while the user is running the stack
 themselves, [scripts/sync-changed-files.sh](scripts/sync-changed-files.sh)

@@ -50,8 +50,8 @@ unless they start with `docs/`.
 | List page view                     | `apps/llmclient/views/listview/view.py` (`CustomDomainListView(ConsoleAppView)`)                                  |
 | List, clone, rename, delete api    | `apps/llmclient/views/listview/api.py`                                                                            |
 | URL names                          | `apps/llmclient/urls.py`: `LLMClientReverseNames.custom_domain_*`                                                 |
-| React package                      | `smarter/react/packages/smarter-custom-domain-list/` (import-only: `src/index.ts`)                                |
-| Console route                      | `smarter/react/packages/smarter-console/src/lib/lists.ts` (`LIST_PAGES`)                                          |
+| React package                      | smarter-console's `packages/smarter-custom-domain-list/` (import-only: `src/index.ts`)                            |
+| Console route                      | smarter-console's `packages/smarter-console/src/lib/lists.ts` (`LIST_PAGES`)                                      |
 | Sidebar                            | `apps/dashboard/context_processors.py` (`sidebar_context()`), `ConsoleSidebar` and the console's `lib/sidebar.ts` |
 | Dashboard count                    | `apps/dashboard/views/views/api/my_resources.py`: `get_custom_domains()`                                          |
 
@@ -84,4 +84,4 @@ and JSON Schema from the cli api, through its broker. `apps/docs/urls.py` has on
 | Views             | `apps/llmclient/tests/test_custom_domain_views.py`                                                  |
 | Verification task | `apps/llmclient/tests/test_verify_custom_domain.py`                                                 |
 | Example loader    | `apps/account/management/tests/test_load_from_github.py`                                            |
-| React             | `smarter/react/packages/smarter-custom-domain-list/src/**/*.test.tsx` and stories                   |
+| React             | smarter-console's `packages/smarter-custom-domain-list/src/**/*.test.tsx` and stories               |

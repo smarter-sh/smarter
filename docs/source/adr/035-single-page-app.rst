@@ -81,6 +81,15 @@ The web console becomes a single-page app (SPA), and Django serves only the back
    registration gated by its switch on the server, no side effects on GET, and rate limits on
    password reset.
 
+.. note::
+
+   The repository split is done. The console's npm workspace is
+   `smarter-sh/smarter-console <https://github.com/smarter-sh/smarter-console>`__, where
+   ``@smarter/console`` is ``packages/smarter-console``, and Smarter Chat and
+   ``@smarter.sh/ui-widgets`` are published to npm from there, with the console's version. Each
+   console release attaches its build, and this repository pins one in
+   ``smarter-console-version.txt``, which ``make console`` and CI install into Django's static files.
+
 Alternatives Considered
 -----------------------
 - **Keep ADR-019.** The least work, but the console can't leave the backend's repository.
