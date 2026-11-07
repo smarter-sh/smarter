@@ -55,13 +55,11 @@ unless they start with `docs/`.
 | Sidebar                            | `apps/dashboard/context_processors.py` (`sidebar_context()`), `ConsoleSidebar` and the console's `lib/sidebar.ts` |
 | Dashboard count                    | `apps/dashboard/views/views/api/my_resources.py`: `get_custom_domains()`                                          |
 
-## 6. Docs app (JSON schema and example manifest served by Django)
+## 6. Docs pages (nothing to add)
 
-| Step                  | File                                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| JSON schema view      | `apps/docs/views/json_schema.py`: `DocsJsonSchemaCustomDomainView`                             |
-| Example manifest view | `apps/docs/views/manifest.py`: `DocsExampleManifestCustomDomainView`                           |
-| Routes                | `apps/docs/urls.py`: `json_schema_path(SAMKinds.CUSTOM_DOMAIN.value)` and `manifest_path(...)` |
+The console's docs pages list every kind in `SAMKinds` (the session's `samKinds`), and read a kind's example manifest
+and JSON Schema from the cli api, through its broker. `apps/docs/urls.py` has one route for every kind's pages,
+`manifest/<str:kind>/` and `json-schema/<str:kind>/`, so a new kind needs no docs view or route.
 
 ## 7. Example manifests
 

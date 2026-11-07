@@ -165,6 +165,21 @@ clients use it. The Scalar page reads the api's address. The session lists every
 the docs pages' lists of example manifests and JSON Schemas, which call the public cli api,
 `/api/v1/cli/example-manifest/<kind>/` and `json-schema/<kind>/`. Next: the docs pages in the console (step 2).
 
+The docs pages are the console's (section 6, steps 2 and 3, done together, so that no Django page pointed at the moved
+Scalar), which finishes phase 3. They are public, in their own frame (`routes/DocsLayout`: the docs' links, the theme
+mode menu, Sign In or Dashboard, and the project's tools beside a page), lazily loaded: `/docs/manifests` and
+`/docs/json-schemas` list the session's `samKinds`, `/docs/manifest/:kind` and `/docs/json-schema/:kind` read the
+public cli api and show YAML or JSON with `@smarter/common`'s `CodeBlock` (now exported, with its own stylesheet), and
+`/docs/openapi` loads Scalar, now in the console's `public/scalar/`, on its first visit (`lib/scalar`). The landing
+pages' copy was rewritten plainly, without the old sales language, and translated. The sidebar opens the three docs
+pages in place. Django's 50 per-kind views and url names became two routes, `manifest/<str:kind>/` and
+`json-schema/<str:kind>/`, `ConsoleAppView` subclasses that answer 404 for a kind that isn't one; the landing and
+OpenAPI pages keep their url names. The per-kind pages no longer need a sign-in, as the api they show never did.
+Deleted: `DocsBaseView` and its brokered requests, `templates/docs/`, the docs frame `templates/cms/` and
+`static/cms/`, and `smarter-base.js`'s sign-out handler, which only the docs menu used; that closes bug 12 (the menu's
+`/docs/cli` link). `generate_example_manifests` writes every kind's example from `sam_example()`. A new SAM kind needs
+no docs code. Next: phase 4, separate hosts.
+
 ## Development
 
 - The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with

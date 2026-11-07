@@ -82,9 +82,9 @@ whose protocol the Model Context Protocol specification defines, are listed in
 
 Every Smarter platform serves its document, at ``/api/v1/openapi.json``
 (:mod:`smarter.apps.api.v1.contract.views`; ``/docs/openapi.json``, its earlier address, redirects
-there), and renders it with
-`Scalar <https://github.com/scalar/scalar>`__, which the platform ships in its static files, at
-``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The page calls
+there). The web console renders it with
+`Scalar <https://github.com/scalar/scalar>`__, which the console ships, on its public page
+``/docs/openapi/``, which its sidebar links to as *OpenAPI Contract*. The page calls
 none of Scalar's hosted services. The served document lists the platform's own ``/api/v1`` as its
 first server, so that the page's *Test Request* sends requests to the platform that you are
 reading it on. Authorize with an api key, as ``Token <api key>``.
