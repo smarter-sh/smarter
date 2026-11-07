@@ -6,17 +6,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { gettext, interpolate, interpolateNodes, Modal, WorkbenchHelp } from "@smarter/common";
 
-import { Documentation, Notice, Spinner, TrustBadge } from "@/components/common";
-import type { NoticeState } from "@/components/common";
-import * as api from "@/lib/api";
-import { errorText } from "@/lib/api";
+import { Documentation, Notice, Spinner, TrustBadge } from "./common";
+import type { NoticeState } from "./common";
+import * as api from "../lib/api";
+import { errorText } from "../lib/api";
 import type {
   ConsoleContext,
   ExtensionListResponse,
   ExtensionSummary,
   RegistryExtension,
   RegistryResponse,
-} from "@/lib/types";
+} from "../lib/types";
 
 type Tab = "installed" | "browse";
 

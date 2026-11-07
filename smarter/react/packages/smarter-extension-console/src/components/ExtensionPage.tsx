@@ -7,12 +7,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { formatDateTime, gettext, interpolate, interpolateNodes } from "@smarter/common";
 
-import { Documentation, Fact, Notice, Spinner, TrustBadge } from "@/components/common";
-import type { NoticeState } from "@/components/common";
-import SettingsForm from "@/components/SettingsForm";
-import * as api from "@/lib/api";
-import { errorText } from "@/lib/api";
-import type { AccountRef, ActionResponse, ConsoleContext, ExtensionDetail } from "@/lib/types";
+import { Documentation, Fact, Notice, Spinner, TrustBadge } from "./common";
+import type { NoticeState } from "./common";
+import SettingsForm from "./SettingsForm";
+import * as api from "../lib/api";
+import { errorText } from "../lib/api";
+import type { AccountRef, ActionResponse, ConsoleContext, ExtensionDetail } from "../lib/types";
 
 type Tab = "overview" | "tools" | "settings" | "availability" | "versions" | "resources";
 

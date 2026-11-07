@@ -16,7 +16,7 @@ import { PasswordResetPage } from "@/routes/PasswordResetPage";
 import { PasswordResetRequestPage } from "@/routes/PasswordResetRequestPage";
 import { RegisterPage } from "@/routes/RegisterPage";
 import { RequireAuth } from "@/routes/RequireAuth";
-import { DASHBOARD_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
+import { DASHBOARD_PATH, EXTENSIONS_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
 import { LIST_PAGES, type ListPage as ListPageConfig } from "@/lib/lists";
 
 /** A list's route: its package loads in a chunk of its own, when the list is first opened. */
@@ -58,6 +58,15 @@ export const routes: RouteObject[] = [
         lazy: async () => ({ Component: (await import("@/routes/DashboardPage")).DashboardPage }),
       },
       ...LIST_PAGES.map(listRoute),
+      // the Extensions console, and an extension's page, in a chunk of their own.
+      {
+        path: EXTENSIONS_PATH,
+        lazy: async () => ({ Component: (await import("@/routes/ExtensionsPage")).ExtensionsPage }),
+      },
+      {
+        path: `${EXTENSIONS_PATH}/:slug`,
+        lazy: async () => ({ Component: (await import("@/routes/ExtensionsPage")).ExtensionsPage }),
+      },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

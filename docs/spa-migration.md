@@ -76,8 +76,13 @@ infrastructure resources for superusers. Django keeps each `<Kind>ListView`, now
 that `listview_registry()` still pairs the page with its list api for the global search; the templates and
 template tags are deleted, and `ResourceViewsTestMixin` checks that each list page is the console's. Tests of
 Django's frame use `SERVER_RENDERED_PAGE`, now the Extensions console. The courses link the deleted files at
-release v0.42.10, and `skills/smarter-django-react` teaches the console's lists. Next: the Extensions console, then
-the manifest detail pages (section 4).
+release v0.42.10, and `skills/smarter-django-react` teaches the console's lists.
+
+The Extensions console is the console's too: `/extensions` and `/extensions/:slug` render
+`@smarter/extension-console` (now import-only) with `canEdit` from the session and the router's `navigate`. The api
+refuses an extension that the user's account may not use, as Django's detail view did. Django keeps
+`ExtensionListView` and `ExtensionDetailView` as `ConsoleAppView` subclasses; the templates and the template tag are
+deleted. `SERVER_RENDERED_PAGE` is the Prompt Passthrough. Next: the manifest detail pages (section 4).
 
 ## Development
 

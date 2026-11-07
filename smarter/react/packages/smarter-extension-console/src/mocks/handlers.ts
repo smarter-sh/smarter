@@ -4,7 +4,7 @@
  */
 import { http, HttpResponse } from "msw";
 
-import type { ExtensionDetail, ExtensionListResponse, RegistryResponse } from "@/lib/types";
+import type { ExtensionDetail, ExtensionListResponse, RegistryResponse } from "../lib/types";
 
 import { API_URL, accounts, action, detail, listResponse, makeDetail, makeSummary, registryResponse } from "./fixtures";
 

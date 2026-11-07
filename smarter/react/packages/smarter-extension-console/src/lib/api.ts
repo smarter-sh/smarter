@@ -15,7 +15,7 @@ import type {
   ExtensionDetailResponse,
   ExtensionListResponse,
   RegistryResponse,
-} from "@/lib/types";
+} from "./types";
 
 /** A failed request: the api's error message, and the HTTP status. */
 export class ApiError extends Error {

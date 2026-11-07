@@ -7,10 +7,10 @@
  */
 import { useState } from "react";
 
-import { Spinner } from "@/components/common";
-import { configureRequest, initialValue } from "@/lib/settings";
-import type { SecretChoice } from "@/lib/settings";
-import type { ConfigureRequest, ExtensionDetail, ExtensionSetting } from "@/lib/types";
+import { Spinner } from "./common";
+import { configureRequest, initialValue } from "../lib/settings";
+import type { SecretChoice } from "../lib/settings";
+import type { ConfigureRequest, ExtensionDetail, ExtensionSetting } from "../lib/types";
 import { gettext, interpolate, interpolateNodes } from "@smarter/common";
 
 type Props = {

@@ -1,21 +1,19 @@
 /**
- * Main entry point of the Smarter Extensions app. One app renders both of the web console's
- * Extensions pages, depending on the root element that the page's template provides:
- *
- * - #smarter-extension-list-root: the Extensions list, and the registry.
- * - #smarter-extension-detail-root: an extension's page.
- *
- * See smarter.apps.llmtool.extension.views and templates/react/extension-{list,detail}.html.
+ * The development page of the Extensions console (`npm run dev`), with the example context of src/mocks/fixtures.ts:
+ * the list, as a superuser. It calls the Django dev server's api, through vite.config.ts's proxy, as the signed-in
+ * user of localhost:9357. In the web console, @smarter/console renders the package's component (src/index.ts).
  */
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import App from "@/App";
-import { loggerPrefix } from "@/lib/const";
-import { DETAIL_ROOT_ID, LIST_ROOT_ID, readContext } from "@/lib/session";
+import App from "./App";
+import { listContext } from "./mocks/fixtures";
 
-const rootEl = document.getElementById(LIST_ROOT_ID) || document.getElementById(DETAIL_ROOT_ID);
-if (!rootEl) throw new Error("The Extensions app's root element was not found.");
+const rootEl = document.getElementById("smarter-extension-console-root");
+if (!rootEl) throw new Error("The Extensions console's root element was not found.");
 
-const context = readContext(rootEl);
-console.debug(`${loggerPrefix} context:`, context);
-createRoot(rootEl).render(<App context={context} />);
+createRoot(rootEl).render(
+  <StrictMode>
+    <App context={listContext} />
+  </StrictMode>,
+);

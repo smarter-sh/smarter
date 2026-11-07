@@ -1,5 +1,5 @@
 /** The signed-in frame: the sidebar's links, its active item and badge, the drawer, and the theme's layout. */
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -104,8 +104,10 @@ describe("the sidebar", () => {
   });
 
   it("finds the item whose url is the longest that begins the path", () => {
-    expect(activeSidebarItem("/llm-tools/extensions/weather/", userSidebar)).toBe("extensions");
-    expect(activeSidebarItem("/llm-tools/", userSidebar)).toBe("plugins");
+    // /llmhost/compute/ is under /llmhost/, and the longer url wins.
+    expect(activeSidebarItem("/llmhost/compute/", userSidebar)).toBe("llmhostcompute");
+    expect(activeSidebarItem("/llmhost/", userSidebar)).toBe("llmhost");
+    expect(activeSidebarItem("/extensions/weather/", userSidebar)).toBe("extensions");
     expect(activeSidebarItem("/", userSidebar)).toBeNull();
     // a console route has no trailing slash.
     expect(activeSidebarItem("/dashboard", userSidebar)).toBe("dashboard");
@@ -116,7 +118,8 @@ describe("the theme's layout", () => {
   it("turns on the theme's app layout while the frame is shown", async () => {
     mountAt("/");
     await findSidebar();
-    expect(document.body).toHaveClass(APP_BODY_CLASS);
+    // the layout's effect sets them after the frame renders.
+    await waitFor(() => expect(document.body).toHaveClass(APP_BODY_CLASS));
     for (const [name, value] of Object.entries(APP_LAYOUT_ATTRIBUTES)) {
       expect(document.body).toHaveAttribute(name, value);
     }
