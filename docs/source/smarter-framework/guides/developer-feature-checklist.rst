@@ -45,9 +45,7 @@ Smarter / SAM Checklist
 5. Add waffle logging and feature switches as necessary to :class:`smarter.lib.django.waffle.SmarterWaffleSwitches`
 6. Ensure that the web console's sidebar links to your feature's page: add its url to :func:`smarter.apps.dashboard.context_processors.sidebar_context` and to the session's :class:`smarter.apps.api.web.session.contract.ConsoleSidebar`, and its item to the console's :file:`smarter/react/packages/smarter-console/src/lib/sidebar.ts`
 7. Ensure that exceptions are properly handled and that you have inherited from :class:`smarter.common.exceptions.SmarterException`
-8. Add your feature's JSON schema view to smarter.apps.docs.views.json_schema and register it in smarter.apps.docs.urls
-9. Add your feature's example manifest view to smarter.apps.docs.views.manifest and register it in smarter.apps.docs.urls
-10. Add your feature's Broker to smarter.apps.api.v1.cli.brokers.Brokers
+8. Add your feature's Broker to smarter.apps.api.v1.cli.brokers.Brokers. The docs pages, ``/docs/manifest/<kind>/`` and ``/docs/json-schema/<kind>/``, then show the new kind's example manifest and JSON Schema: they list every kind in :class:`~smarter_types.kinds.SAMKinds`, and read both from the cli api.
 
 
 Style Guide Checklist

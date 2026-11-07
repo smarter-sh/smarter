@@ -289,10 +289,11 @@ SMARTER_REF=<ref>`, into `test/data/` and `testdata/`), regenerate their SAM
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.
 - **Every platform serves the committed `openapi.json`** at `/api/v1/openapi.json`
   (`smarter.apps.api.v1.contract.views`; `/docs/openapi.json` redirects there), with its own `/api/v1` added as the first
-  server, and renders it with Scalar, vendored in
-  `smarter/smarter/static/assets/plugins/custom/scalar/` (its README says how to
-  upgrade it, and which settings keep it off Scalar's hosted services), at `/docs/openapi/`,
-  the sidebar's _OpenAPI Contract_ link. It reads the file, so `make api-contract`
+  server. The console's OpenAPI page, `/docs/openapi/` (the sidebar's _OpenAPI
+  Contract_ link), renders it with Scalar, vendored in the console's
+  `smarter/react/packages/smarter-console/public/scalar/` (its README says how to
+  upgrade it), and configured in the console's `src/lib/scalar.ts` to call none of
+  Scalar's hosted services. It reads the file, so `make api-contract`
   is all it needs.
 
 To check the document with an independent validator, without adding a

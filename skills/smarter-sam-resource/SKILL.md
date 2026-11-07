@@ -95,8 +95,9 @@ summary:
    `views/listview/api.py`, and `urls.py` with a `<App>ReverseNames` class.
 7. **React list page**: a templatetag, a Django template, a React package, and
    the sidebar link. See `smarter-django-react`.
-8. **Docs app**: a JSON schema view and an example manifest view in
-   `smarter/smarter/apps/docs/views/`, routed in `smarter/smarter/apps/docs/urls.py`.
+8. **Docs pages**: nothing to add. The console's `/docs/manifest/<kind>/` and
+   `/docs/json-schema/<kind>/` cover every kind in `SAMKinds`, from the broker's
+   `example_manifest()` and `schema()` through the cli api.
 9. **Example manifests** (if any): once the kind is released and its JSON
    Schema published, add a folder for it to
    [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests)

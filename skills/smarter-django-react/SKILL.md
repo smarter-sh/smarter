@@ -1,6 +1,6 @@
 ---
 name: smarter-django-react
-description: Use when building or changing a React app of the Smarter web console, especially a resource list page (smarter-<kind>-list), which the single-page console (@smarter/console) renders, as it does every page: the manifest pages, the workbench (routes/WorkbenchPage), the Extensions console, and the Prompt Passthrough, Terminal and manifest drop zone (routes/ToolPages). The console renders its frame too (sidebar, header, user menu, tips, onboarding, welcome), from its session. Covers the console's list routes (lib/lists), the Django page class that keeps a page's url name, a console page that loads one resource (lib/useResource), the template tag of the one page Django still renders (a deployed LLMClient's host), SessionContext and fetchDjangoUrl in @smarter/common, the list/clone/rename/delete API contract, importable packages, and the sidebar link.
+description: Use when building or changing a React app of the Smarter web console, especially a resource list page (smarter-<kind>-list), which the single-page console (@smarter/console) renders, as it does every page: the manifest pages, the workbench (routes/WorkbenchPage), the Extensions console, the Prompt Passthrough, Terminal and manifest drop zone (routes/ToolPages), and the public docs pages (routes/DocsLayout, DocsPages, OpenApiPage). The console renders its frame too (sidebar, header, user menu, tips, onboarding, welcome), from its session. Covers the console's list routes (lib/lists), the Django page class that keeps a page's url name, a console page that loads one resource (lib/useResource), the template tag of the one page Django still renders (a deployed LLMClient's host), SessionContext and fetchDjangoUrl in @smarter/common, the list/clone/rename/delete API contract, importable packages, and the sidebar link.
 ---
 
 # Smarter Django + React
@@ -73,6 +73,18 @@ The workbench (`/workbench/llm-clients/:id/prompt`) is the example:
    the router's `navigate` for the package's own navigation.
 4. **Django**: the page's view is a `ConsoleAppView` subclass that keeps its url name; its JSON endpoints are in
    `/api/web/<app>/` and refuse a resource the user may not read with the same 404.
+
+## A public page: the docs
+
+The docs pages (`/docs/...`) are the console's routes outside `RequireAuth`, in their own frame,
+`routes/DocsLayout`, so a visitor reads them without signing in. Their data must be public too: the
+session's `samKinds`, the cli api's `example-manifest` and `json-schema` commands, and
+`/api/v1/openapi.json`. Django serves the console at each path with a `ConsoleAppView` subclass
+(`smarter.apps.docs.views`); a path with an argument, such as a kind, checks it and answers 404 for
+one that doesn't exist. Show code with `@smarter/common`'s `CodeBlock` and its highlighters
+(`highlightYaml`, `highlightJson`, `asYaml`, `prettyJson`). A large third-party script, such as Scalar
+on the OpenAPI page, goes in the console's `public/` and is loaded by the one page that uses it
+(`lib/scalar`), so the other pages never download it.
 
 ## A page that Django renders: a deployed LLMClient's host
 

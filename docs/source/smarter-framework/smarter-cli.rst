@@ -170,7 +170,8 @@ A brokered entity consists of the following:
 - `Transformer <../smarter/smarter/apps/account/manifest/transformers/secret.py>`__.
   Transformers map data to/from a Smarter manifest and a Django object
   relational model (ORM).
-- `Docs url endpoints <../smarter/smarter/apps/docs/urls.py>`__.
+- `Docs pages <../smarter/smarter/apps/docs/urls.py>`__, which the web console shows for every kind,
+  from the cli api's ``example-manifest`` and ``json-schema`` commands.
   Examples: ``https://platform.example.com/docs/manifest/secret/`` and
   ``https://platform.example.com/docs/json-schema/secret/``
 - `Kind
@@ -178,13 +179,13 @@ A brokered entity consists of the following:
 - `Broker
   registration <../smarter/smarter/apps/api/v1/cli/brokers.py>`__. The
   Broker class implements an enumeration of all resource ``Kinds``.
-- `Json Schema docs
-  view <../smarter/smarter/apps/docs/views/json_schema.py>`__. Json
+- `Json Schema
+  command <../smarter/smarter/apps/api/v1/cli/views/schema.py>`__. Json
   schemas describe the Pydantic data model for the brokered resource.
   These are used for data-driven apps and services, such as the VS Code
   extension for Smarter manifests
-- `Manifest docs
-  view <../smarter/smarter/apps/docs/views/manifest.py>`__. All brokers
+- `Example manifest
+  command <../smarter/smarter/apps/api/v1/cli/views/manifest.py>`__. All brokers
   implement an ``example_manifest()`` method which, intuitively,
   generates a valid example Smarter yaml manifest for the ``Kind`` of
   resource.
