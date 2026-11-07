@@ -111,6 +111,18 @@ is gone: tests of the frame call `get_server_rendered_page()` (`smarter.lib.unit
 renders `dashboard/base.html` alone, at a path of a test-only urlconf that adds it to the console's. Next: the
 workbench's endpoints (section 5, step 2).
 
+The workbench's endpoints (section 5, step 2) are in the apis. Its chat's `apiUrl` is the LLMClient in the public
+api, `/api/v1/llm-clients/<hashed_id>/`, whose `config/` is the same `PromptConfigView`; prompts already went to
+`/api/v1/llm-clients/<hashed_id>/prompt/` (`url_llmclient`). Compared for the same user, LLMClient and host, the two
+configurations differ only in `sandbox_mode` and `meta_data.is_authentication_required`, which a workbench url sets
+to true; neither the chat nor the workbench reads them, and both routes refuse an anonymous visitor alike.
+`/workbench/llm-clients/<hashed_id>/config/` is still routed, and `/workbench/llm-clients/<hashed_id>/` is still the
+always-404 base of `sandbox_url`, which the api reports. The Manifest, Architecture and Deployment tabs' endpoints and
+the api key actions moved to `/api/web/prompt/llm-clients/<hashed_id>/` (`manifest/`, which was `manifest/editor/`,
+`architecture/`, `deployment/` and `deployment/api-keys/{create,attach,detach}/`), named in
+`PromptApiWebReverseNames`; the old paths answer 404. They keep their methods (GET for the three tabs). Next: the
+workbench and the LLMClient's manifest page in the console (section 5, step 3).
+
 ## Development
 
 - The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with

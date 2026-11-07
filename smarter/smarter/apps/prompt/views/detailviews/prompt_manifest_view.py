@@ -248,7 +248,7 @@ class LLMClientManifestEditorView(LLMClientDetailView):
 
     **Example usage**::
 
-        GET /workbench/llm-clients/<str:hashed_id>/manifest/editor/
+        GET /api/web/prompt/llm-clients/<str:hashed_id>/manifest/
         {"manifest": "apiVersion: smarter.sh/v1\\nkind: LLMClient\\n..."}
     """
 

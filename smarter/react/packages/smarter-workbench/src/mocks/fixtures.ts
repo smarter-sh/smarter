@@ -10,13 +10,13 @@ import type { SessionContext } from "@smarter/common";
 import type { WorkbenchConfig } from "@/lib/types";
 
 const HASHED_ID = "rMTAwMDAwMQx";
-export const API_URL = `http://localhost:9357/workbench/llm-clients/${HASHED_ID}/`;
+export const API_URL = `http://localhost:9357/api/v1/llm-clients/${HASHED_ID}/`;
 export const CONFIG_URL = `${API_URL}config/`;
 export const PROMPT_URL = `http://localhost:9357/api/v1/llm-clients/${HASHED_ID}/prompt/`;
 export const LOG_STREAM_URL = "http://localhost:9357/api/web/dashboard/logs/stream/";
-export const MANIFEST_URL = `/workbench/llm-clients/${HASHED_ID}/manifest/editor/`;
-export const ARCHITECTURE_URL = `/workbench/llm-clients/${HASHED_ID}/architecture/`;
-export const DEPLOYMENT_URL = `/workbench/llm-clients/${HASHED_ID}/deployment/`;
+export const MANIFEST_URL = `/api/web/prompt/llm-clients/${HASHED_ID}/manifest/`;
+export const ARCHITECTURE_URL = `/api/web/prompt/llm-clients/${HASHED_ID}/architecture/`;
+export const DEPLOYMENT_URL = `/api/web/prompt/llm-clients/${HASHED_ID}/deployment/`;
 export const LLMCLIENT_LIST_URL = "/workbench/";
 export const SESSION_KEY = "e019a5c1cb2c1cb87992d2d03bccaf44c9d98406b46de5516a4fa03650038ac8";
 

@@ -248,6 +248,11 @@ The other endpoints
      - The user's server log stream, when ``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS`` is true.
    * - ``/api/web/dashboard/terminal/ticket/``
      - A one-time ticket that opens the Terminal's WebSocket.
+   * - ``/api/web/prompt/llm-clients/<hashed_id>/manifest/``, ``architecture/``, ``deployment/``,
+       ``deployment/api-keys/create/``, ``attach/`` and ``detach/``
+     - The Prompt Engineer's Workbench's Manifest, Architecture and Deployment tabs, and the
+       Deployment tab's api key actions. The workbench's chat reads its configuration from the
+       public api, ``/api/v1/llm-clients/<hashed_id>/config/``, as Smarter Chat does on any page.
    * - ``/api/web/llmtool/extensions/``
      - The Extensions console: ``list/``, ``registry/``, ``check-updates/``, ``install/``,
        ``upload/`` and ``accounts/``, then each extension's ``<slug>/``, with its ``enable/``,
@@ -258,11 +263,9 @@ The other endpoints
 Not yet in the web console api
 ------------------------------
 
-A few console endpoints remain beside their pages:
-
-- the workbench's chat endpoints, ``/workbench/llm-clients/<hashed_id>/config/`` and ``prompt/``,
-  which a deployed LLMClient's own host serves too, and its Deployment tab's api key actions;
-- the Terminal's WebSocket, ``ws/terminal/``.
+One console endpoint remains beside its page: the Terminal's WebSocket, ``ws/terminal/``.
+The workbench's chat uses the public api, ``/api/v1/llm-clients/<hashed_id>/config/`` and
+``prompt/``, which a deployed LLMClient's own host serves too.
 
 Adding an endpoint
 ------------------
