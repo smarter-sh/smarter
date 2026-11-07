@@ -420,6 +420,14 @@
           ],
           "description": "The onboarding hints' state, or null."
         },
+        "samKinds": {
+          "description": "Every SAM kind, sorted by name, e.g. LLMClient: the docs pages list each one's example manifest and JSON Schema.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Samkinds",
+          "type": "array"
+        },
         "sidebar": {
           "anyOf": [
             {
@@ -470,6 +478,7 @@
         "language",
         "cookies",
         "flags",
+        "samKinds",
         "user",
         "account",
         "onboarding",
@@ -482,7 +491,7 @@
     },
     "ConsoleSidebar": {
       "additionalProperties": false,
-      "description": "The urls of the sidebar's links, reversed by the backend, which serves their pages until they move into the\nconsole. A link that the platform or the user doesn't have is null, and the sidebar leaves it out.",
+      "description": "The urls of the sidebar's links, reversed by the backend.\n\nA link that the platform or the user doesn't have is null, and the sidebar leaves it out.",
       "properties": {
         "admin": {
           "anyOf": [

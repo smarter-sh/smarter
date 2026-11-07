@@ -307,6 +307,10 @@ export interface ConsoleSession {
    */
   onboarding: ConsoleOnboarding | null;
   /**
+   * Every SAM kind, sorted by name, e.g. LLMClient: the docs pages list each one's example manifest and JSON Schema.
+   */
+  samKinds: string[];
+  /**
    * The sidebar's links, or null.
    */
   sidebar: ConsoleSidebar | null;
@@ -325,8 +329,9 @@ export interface ConsoleSession {
   welcome: ConsoleWelcome | null;
 }
 /**
- * The urls of the sidebar's links, reversed by the backend, which serves their pages until they move into the
- * console. A link that the platform or the user doesn't have is null, and the sidebar leaves it out.
+ * The urls of the sidebar's links, reversed by the backend.
+ *
+ * A link that the platform or the user doesn't have is null, and the sidebar leaves it out.
  *
  * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
  * via the `definition` "ConsoleSidebar".

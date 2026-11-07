@@ -9,6 +9,7 @@ from django.test import Client, RequestFactory
 from waffle.testutils import override_switch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.web.session import views
 from smarter.apps.api.web.session.contract import ConsoleSession
 from smarter.apps.api.web.urls import ApiWebReverseNames
@@ -62,6 +63,12 @@ class TestConsoleSessionView(TestAccountMixin):
         self.assertEqual(session.cookies.csrf_cookie_name, settings.CSRF_COOKIE_NAME)
         self.assertTrue(session.branding.product_name)
         self.assertGreaterEqual(len(session.language.languages), 1)
+
+    def test_sam_kinds(self):
+        """Anyone gets every SAM kind, sorted by name, for the docs pages."""
+        session = self.get_session()
+        self.assertEqual(session.sam_kinds, sorted(SAMKinds.all()))
+        self.assertIn("LLMClient", session.sam_kinds)
 
     def test_sets_the_csrf_cookie_and_is_never_cached(self):
         """The first call gives the console a CSRF token for its first POST, and is never cached."""

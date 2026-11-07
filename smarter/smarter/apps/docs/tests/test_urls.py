@@ -88,9 +88,12 @@ class TestDocsUrls(SmarterTestBase):
         self.assertNotIn('href="/logout/"', content)
 
     def test_url_openapi_json(self) -> None:
-        """Test url for the OpenAPI document."""
+        """The OpenAPI document's earlier url redirects, permanently, to the api's."""
         url = reverse(namespace, DocsReverseNames.openapi_json)
-        self.process_url(url)
+        self.assertEqual(url, "/docs/openapi.json")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
+        self.assertEqual(response["Location"], "/api/v1/openapi.json")
 
     def test_drf_yasg_pages_are_gone(self) -> None:
         """The Swagger and Redoc pages that drf-yasg generated were replaced by the OpenAPI contract."""
