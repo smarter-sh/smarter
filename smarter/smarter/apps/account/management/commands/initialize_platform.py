@@ -3,6 +3,7 @@ import logging
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from smarter.apps.dashboard.views.console_app import mark_console_uploaded
 from smarter.apps.llmclient.const import (
     EXAMPLE_MANIFESTS_REPOSITORY_URL,
     STACKADEMY_REPOSITORY_URL,
@@ -116,6 +117,8 @@ class Command(SmarterCommand):
                 # its CDN serves. It adds and replaces files, and deletes none, so a page that a browser opened
                 # before this deployment keeps loading its scripts. See smarter.lib.django.static_storage.
                 call_command("collectstatic", interactive=False, verbosity=0)
+                # only now do the console's pages point at the CDN: until then, the server serves this build.
+                mark_console_uploaded()
             except (Exception, SystemExit) as e:
                 # fatal: this deployment's pages would load scripts that the CDN doesn't have.
                 logger.error("Failed to upload the static files to the CDN's bucket: %s", e)

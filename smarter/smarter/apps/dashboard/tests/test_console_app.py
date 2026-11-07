@@ -3,6 +3,7 @@
 import tempfile
 from http import HTTPStatus
 from pathlib import Path
+from unittest.mock import patch
 
 from django.conf import settings
 from django.test import Client, override_settings
@@ -11,6 +12,9 @@ from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.dashboard.views.console_app import (
     CONSOLE_INDEX_PATH,
     console_index_html,
+    console_on_cdn,
+    console_script,
+    mark_console_uploaded,
     with_static_url,
 )
 from smarter.lib.django.shortcuts import reverse
@@ -27,6 +31,7 @@ BUILT_HEAD = (
     '<link rel="modulepreload" crossorigin href="/static/react/@smarter/console/assets/hooks-GXK4GItp.js">'
 )
 CDN_STATIC_URL = "https://cdn.platform.example.com/static/"
+CONSOLE_APP = "smarter.apps.dashboard.views.console_app"
 
 
 class TestConsoleApp(SmarterTestBase):
@@ -111,15 +116,66 @@ class TestConsoleAppOnTheCdn(SmarterTestBase):
         """With the server's own /static/, the page is unchanged."""
         self.assertEqual(with_static_url(BUILT_HEAD, "/static/"), BUILT_HEAD)
 
-    def test_the_page_uses_static_url(self):
-        """The console's page, as Django serves it, has STATIC_URL's urls."""
+    def built_page(self, static_root: str) -> None:
+        """Write a built page, with BUILT_HEAD, into a STATIC_ROOT."""
+        index_path = Path(static_root) / CONSOLE_INDEX_PATH
+        index_path.parent.mkdir(parents=True)
+        index_path.write_text(f"<!doctype html><html><head>{BUILT_HEAD}</head></html>", encoding="utf-8")
+
+    def test_console_script(self):
+        """The page's main script names its build."""
+        self.assertEqual(console_script(BUILT_HEAD), "react/@smarter/console/assets/index-DlE53XQD.js")
+        self.assertIsNone(console_script(INDEX_HTML))
+
+    def test_the_page_uses_static_url_once_its_build_is_uploaded(self):
+        """The console's page, as Django serves it, has STATIC_URL's urls once its build is on the CDN."""
         with tempfile.TemporaryDirectory() as static_root:
-            index_path = Path(static_root) / CONSOLE_INDEX_PATH
-            index_path.parent.mkdir(parents=True)
-            index_path.write_text(f"<!doctype html><html><head>{BUILT_HEAD}</head></html>", encoding="utf-8")
+            self.built_page(static_root)
             with override_settings(STATIC_ROOT=static_root, STATIC_URL=CDN_STATIC_URL):
-                response = Client().get("/login/")
+                with patch(f"{CONSOLE_APP}.is_uploaded", return_value=True) as uploaded:
+                    response = Client().get("/login/")
+        uploaded.assert_called_once_with("react/@smarter/console/assets/index-DlE53XQD.js")
         self.assertEqual(response.status_code, HTTPStatus.OK)
         page = response.content.decode()
         self.assertIn(f'src="{CDN_STATIC_URL}react/@smarter/console/assets/index-DlE53XQD.js"', page)
         self.assertNotIn('"/static/', page)
+
+    def test_the_server_serves_a_build_that_is_not_uploaded_yet(self):
+        """A deployment's new pods start before initialize_platform uploads their build: they serve it themselves."""
+        with tempfile.TemporaryDirectory() as static_root:
+            self.built_page(static_root)
+            with override_settings(STATIC_ROOT=static_root, STATIC_URL=CDN_STATIC_URL):
+                with patch(f"{CONSOLE_APP}.is_uploaded", return_value=False):
+                    response = Client().get("/login/")
+        page = response.content.decode()
+        self.assertIn('src="/static/react/@smarter/console/assets/index-DlE53XQD.js"', page)
+        self.assertNotIn(CDN_STATIC_URL, page)
+
+    def test_without_the_cdn_nothing_is_asked(self):
+        """With the server's own /static/, the page never asks whether its build is uploaded."""
+        with patch(f"{CONSOLE_APP}.is_uploaded") as uploaded:
+            self.assertFalse(console_on_cdn(BUILT_HEAD))
+        uploaded.assert_not_called()
+        with override_settings(STATIC_URL=CDN_STATIC_URL):
+            self.assertFalse(console_on_cdn(INDEX_HTML))
+
+    def test_mark_console_uploaded(self):
+        """Initialize_platform records the built page's main script, after its upload."""
+        with tempfile.TemporaryDirectory() as static_root:
+            self.built_page(static_root)
+            with override_settings(STATIC_ROOT=static_root):
+                with patch(f"{CONSOLE_APP}.mark_uploaded") as mark:
+                    script = mark_console_uploaded()
+        self.assertEqual(script, "react/@smarter/console/assets/index-DlE53XQD.js")
+        mark.assert_called_once_with(script)
+
+    def test_mark_console_uploaded_without_a_build(self):
+        """Without a built console, or one without a script, there is nothing to record."""
+        with tempfile.TemporaryDirectory() as static_root:
+            with override_settings(STATIC_ROOT=static_root), patch(f"{CONSOLE_APP}.mark_uploaded") as mark:
+                self.assertIsNone(mark_console_uploaded())
+                index_path = Path(static_root) / CONSOLE_INDEX_PATH
+                index_path.parent.mkdir(parents=True)
+                index_path.write_text(INDEX_HTML, encoding="utf-8")
+                self.assertIsNone(mark_console_uploaded())
+        mark.assert_not_called()
