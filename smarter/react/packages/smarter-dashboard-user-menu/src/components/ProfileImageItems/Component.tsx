@@ -15,8 +15,8 @@
 import { useState, type ChangeEvent } from "react";
 import { gettext, type SessionContext } from "@smarter/common";
 
-import { sendProfileImage } from "@/lib/api";
-import { loggerPrefix } from "@/lib/const";
+import { sendProfileImage } from "../../lib/api";
+import { loggerPrefix } from "../../lib/const";
 
 interface ProfileImageItemsProps {
   sessionContext: SessionContext;

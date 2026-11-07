@@ -306,6 +306,10 @@ export interface ConsoleSession {
    * The onboarding hints' state, or null.
    */
   onboarding: ConsoleOnboarding | null;
+  /**
+   * The sidebar's links, or null.
+   */
+  sidebar: ConsoleSidebar | null;
   signIn: ConsoleSignIn;
   /**
    * The signed-in user, or null.
@@ -319,6 +323,119 @@ export interface ConsoleSession {
    * The welcome dialog's state, or null.
    */
   welcome: ConsoleWelcome | null;
+}
+/**
+ * The urls of the sidebar's links, reversed by the backend, which serves their pages until they move into the
+ * console. A link that the platform or the user doesn't have is null, and the sidebar leaves it out.
+ *
+ * This interface was referenced by `SmarterWebConsoleSessionContract`'s JSON-Schema
+ * via the `definition` "ConsoleSidebar".
+ */
+export interface ConsoleSidebar {
+  /**
+   * The Django admin, for a staff user.
+   */
+  admin: string | null;
+  /**
+   * The API Keys list.
+   */
+  apiKeys: string;
+  /**
+   * The Budgets list.
+   */
+  budgets: string;
+  /**
+   * The Connections list.
+   */
+  connections: string;
+  /**
+   * The Custom Domains list.
+   */
+  customDomains: string;
+  /**
+   * The dashboard.
+   */
+  dashboard: string;
+  /**
+   * The example manifests.
+   */
+  exampleManifests: string;
+  /**
+   * The Extensions console.
+   */
+  extensions: string;
+  /**
+   * The Guardrails list.
+   */
+  guardrails: string;
+  /**
+   * The Infrastructure Resources list, for a superuser.
+   */
+  infrastructureResources: string | null;
+  /**
+   * The SAM JSON Schemas.
+   */
+  jsonSchemas: string;
+  /**
+   * The LLM Hosts list.
+   */
+  llmhost: string;
+  /**
+   * The LLM Host Compute list.
+   */
+  llmhostcompute: string;
+  /**
+   * The manifest drop zone, while it is enabled.
+   */
+  manifestDropZone: string | null;
+  /**
+   * The MCP Clients list.
+   */
+  mcpclients: string;
+  /**
+   * The OpenAPI contract.
+   */
+  openapi: string;
+  /**
+   * The Orchestrators list.
+   */
+  orchestrators: string;
+  /**
+   * The LLM Tools list.
+   */
+  plugins: string;
+  /**
+   * The Prompt Passthrough, while it is enabled.
+   */
+  promptPassthrough: string | null;
+  /**
+   * The Providers list.
+   */
+  providers: string;
+  /**
+   * The Proxies list, while proxies are enabled.
+   */
+  proxies: string | null;
+  /**
+   * The Secrets list.
+   */
+  secrets: string;
+  /**
+   * The Terminal, for a superuser, while it is enabled.
+   */
+  terminal: string | null;
+  /**
+   * The Vectorsearches list.
+   */
+  vectorsearches: string;
+  /**
+   * The Vectorstores list, while vectorstores are enabled.
+   */
+  vectorstores: string | null;
+  /**
+   * The LLMClients list, the Prompt Engineer's Workbench.
+   */
+  workbench: string;
 }
 /**
  * The ways to sign in or sign up that the sign-in pages offer.

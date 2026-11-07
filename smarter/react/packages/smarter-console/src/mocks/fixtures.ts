@@ -2,7 +2,7 @@
  * Sessions, as GET /api/web/session/ returns them, for the stories and tests. src/contract.test.ts checks
  * them against the backend's schema, so that no test passes against data that the backend never sends.
  */
-import type { ConsoleSession } from "@/contract.gen";
+import type { ConsoleSession, ConsoleSidebar } from "@/contract.gen";
 
 const branding: ConsoleSession["branding"] = {
   productName: "The Smarter Project",
@@ -28,6 +28,36 @@ const branding: ConsoleSession["branding"] = {
 };
 
 /** What a visitor who isn't signed in gets. */
+/** The sidebar's links of a user who isn't staff, on a platform without proxies, vectorstores or the terminal. */
+export const userSidebar: ConsoleSidebar = {
+  dashboard: "/dashboard/",
+  promptPassthrough: "/dashboard/passthrough/",
+  manifestDropZone: "/dashboard/dropzone/",
+  terminal: null,
+  providers: "/provider/",
+  proxies: null,
+  llmhost: "/llmhost/",
+  llmhostcompute: "/llmhost/compute/",
+  workbench: "/workbench/",
+  orchestrators: "/orchestrator/",
+  apiKeys: "/authtoken/",
+  customDomains: "/llmclient/custom-domains/",
+  extensions: "/llm-tools/extensions/",
+  plugins: "/llm-tools/",
+  mcpclients: "/mcpclient/",
+  connections: "/connection/",
+  vectorsearches: "/vectorsearch/",
+  vectorstores: null,
+  budgets: "/budget/",
+  guardrails: "/guardrail/",
+  secrets: "/secret/",
+  exampleManifests: "/docs/manifests/",
+  openapi: "/docs/openapi/",
+  jsonSchemas: "/docs/json-schema/",
+  infrastructureResources: null,
+  admin: null,
+};
+
 export const visitorSession: ConsoleSession = {
   isAuthenticated: false,
   version: "0.42.11",
@@ -57,6 +87,7 @@ export const visitorSession: ConsoleSession = {
   onboarding: null,
   welcome: null,
   badges: null,
+  sidebar: null,
 };
 
 /** What a signed-in user gets. */
@@ -77,4 +108,5 @@ export const userSession: ConsoleSession = {
   onboarding: { enabled: true, seen: [] },
   welcome: { showAtStartup: true, show: true },
   badges: { extensionUpdates: 0 },
+  sidebar: userSidebar,
 };

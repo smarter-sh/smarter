@@ -37,10 +37,12 @@ from smarter.apps.api.web.session.contract import (
     ConsoleLanguageOption,
     ConsoleOnboarding,
     ConsoleSession,
+    ConsoleSidebar,
     ConsoleSignIn,
     ConsoleUser,
     ConsoleWelcome,
 )
+from smarter.apps.dashboard.context_processors import sidebar_context
 from smarter.apps.dashboard.views.terminal_emulator.enabled import (
     server_logs_enabled,
     terminal_enabled,
@@ -238,13 +240,59 @@ def welcome(request: HttpRequest, user: User) -> ConsoleWelcome:
     return ConsoleWelcome(show_at_startup=show_at_startup, show=show)
 
 
+def sidebar(user: User, console_flags: ConsoleFlags) -> ConsoleSidebar:
+    """
+    The sidebar's links, for the user.
+
+    The urls are those of the server-rendered sidebar, :func:`smarter.apps.dashboard.context_processors.sidebar_context`,
+    which is cached. A link that the platform or the user doesn't have is None.
+
+    :param user: The signed-in user.
+    :param console_flags: The console's optional features, for the user.
+    :returns: The links.
+    """
+    links = sidebar_context()["sidebar"]
+    prompt_passthrough = links["prompt_passthrough"] if console_flags.passthrough else None
+    terminal = links.get("terminal") if console_flags.terminal else None
+    infrastructure_resources = links["infrastructure_resources"] if user.is_superuser else None
+    admin = links["admin"] if user.is_staff else None
+    return ConsoleSidebar(
+        dashboard=links["dashboard"],
+        prompt_passthrough=prompt_passthrough,
+        manifest_drop_zone=links.get("manifest_drop_zone"),
+        terminal=terminal,
+        providers=links["providers"],
+        proxies=links.get("proxies"),
+        llmhost=links["llmhost"],
+        llmhostcompute=links["llmhostcompute"],
+        workbench=links["workbench"],
+        orchestrators=links["orchestrators"],
+        api_keys=links["api_keys"],
+        custom_domains=links["custom_domains"],
+        extensions=links["extensions"],
+        plugins=links["plugins"],
+        mcpclients=links["mcpclients"],
+        connections=links["connections"],
+        vectorsearches=links["vectorsearches"],
+        vectorstores=links.get("vectorstores"),
+        budgets=links["budgets"],
+        guardrails=links["guardrails"],
+        secrets=links["secrets"],
+        example_manifests=links["example_manifests"],
+        openapi=links["openapi"],
+        json_schemas=links["json_schemas"],
+        infrastructure_resources=infrastructure_resources,
+        admin=admin,
+    )
+
+
 def console_session(request: HttpRequest) -> ConsoleSession:
     """
     Everything the console needs to start, for the request's user.
 
     :param request: The request.
-    :returns: The session. Without a signed-in user, its user, account, onboarding, welcome and
-        badges are None.
+    :returns: The session. Without a signed-in user, its user, account, onboarding, welcome, badges
+        and sidebar are None.
     """
     resolved_user = get_resolved_user(request.user) if hasattr(request, "user") else None
     user = None
@@ -264,6 +312,7 @@ def console_session(request: HttpRequest) -> ConsoleSession:
         onboarding=None,
         welcome=None,
         badges=None,
+        sidebar=None,
     )
     if user is None:
         return session
@@ -278,6 +327,7 @@ def console_session(request: HttpRequest) -> ConsoleSession:
     )
     session.welcome = welcome(request, user)
     session.badges = ConsoleBadges(extension_updates=extension_updates)
+    session.sidebar = sidebar(user, session.flags)
     return session
 
 

@@ -1,3 +1,3 @@
-import LanguageMenu from "@/components/LanguageMenu/Component";
+import LanguageMenu from "./Component";
 
 export default LanguageMenu;

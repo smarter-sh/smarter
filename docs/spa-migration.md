@@ -45,7 +45,14 @@ account api adds `activate/<uidb64>/<token>/` (POST, signs in) and `activation-r
 403 for the right password of an account that is waiting. The console serves `/account/activate/...`,
 `/account/inactive/` and `/account/already-associated/`, and their Django views and templates are deleted,
 with `/account/activation/`. The user menu signs out with `POST /api/web/account/logout/`, and Django's
-`/logout/` is gone, which closes bug 4. Next: the shell's sidebar and user menu.
+`/logout/` is gone, which closes bug 4.
+
+The frame: the console's signed-in pages have the sidebar and the user menu, in the theme's own app layout
+(`Layout`, `components/Sidebar`, `components/Header`, `lib/theme`). The session api sends the sidebar's links
+(`ConsoleSidebar`), null for those the platform or user doesn't have. The user menu is
+`@smarter/dashboard-user-menu`'s `UserMenu`, which the package now exports; the console builds its context from
+the session (`lib/userMenu`). Until a page moves into the console, its link is the backend's page. Next: the
+user menu's endpoints move to `/api/web/account/`, then the dashboard.
 
 ## Development
 
@@ -317,6 +324,10 @@ Security first. Fix these in phase 0 or in the endpoint that replaces the view.
 - **Self-registration stays.** `/register/` is ported, gated on the server by
   `ENABLE_ACCOUNT_REGISTRATION`.
 - **Router:** React Router.
+- **Styling follows the theme's variables.** The console uses the theme's own classes and layout (Keen's app
+  layout, turned on with `<body>` attributes, and Bootstrap's utilities), and its own CSS, if any, reads the
+  theme's CSS variables (`--bs-*`, `--bs-app-*`) instead of fixed colors and sizes, so that a theme customizes
+  the console by overriding variables. Breakpoints come from `--bs-breakpoint-*`.
 - **Email verification.** A password sign-up is inactive until its user follows the emailed activation
   link. Users that social sign-in creates stay inactive until an administrator activates them.
 

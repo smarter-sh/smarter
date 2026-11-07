@@ -1,3 +1,3 @@
-import ChangeProfile from "@/components/ChangeProfile/Component";
+import ChangeProfile from "./Component";
 
 export default ChangeProfile;

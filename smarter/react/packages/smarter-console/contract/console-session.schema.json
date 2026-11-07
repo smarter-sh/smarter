@@ -420,6 +420,17 @@
           ],
           "description": "The onboarding hints' state, or null."
         },
+        "sidebar": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConsoleSidebar"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The sidebar's links, or null."
+        },
         "signIn": {
           "$ref": "#/$defs/ConsoleSignIn"
         },
@@ -463,9 +474,225 @@
         "account",
         "onboarding",
         "welcome",
-        "badges"
+        "badges",
+        "sidebar"
       ],
       "title": "ConsoleSession",
+      "type": "object"
+    },
+    "ConsoleSidebar": {
+      "additionalProperties": false,
+      "description": "The urls of the sidebar's links, reversed by the backend, which serves their pages until they move into the\nconsole. A link that the platform or the user doesn't have is null, and the sidebar leaves it out.",
+      "properties": {
+        "admin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Django admin, for a staff user.",
+          "title": "Admin"
+        },
+        "apiKeys": {
+          "description": "The API Keys list.",
+          "title": "Apikeys",
+          "type": "string"
+        },
+        "budgets": {
+          "description": "The Budgets list.",
+          "title": "Budgets",
+          "type": "string"
+        },
+        "connections": {
+          "description": "The Connections list.",
+          "title": "Connections",
+          "type": "string"
+        },
+        "customDomains": {
+          "description": "The Custom Domains list.",
+          "title": "Customdomains",
+          "type": "string"
+        },
+        "dashboard": {
+          "description": "The dashboard.",
+          "title": "Dashboard",
+          "type": "string"
+        },
+        "exampleManifests": {
+          "description": "The example manifests.",
+          "title": "Examplemanifests",
+          "type": "string"
+        },
+        "extensions": {
+          "description": "The Extensions console.",
+          "title": "Extensions",
+          "type": "string"
+        },
+        "guardrails": {
+          "description": "The Guardrails list.",
+          "title": "Guardrails",
+          "type": "string"
+        },
+        "infrastructureResources": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Infrastructure Resources list, for a superuser.",
+          "title": "Infrastructureresources"
+        },
+        "jsonSchemas": {
+          "description": "The SAM JSON Schemas.",
+          "title": "Jsonschemas",
+          "type": "string"
+        },
+        "llmhost": {
+          "description": "The LLM Hosts list.",
+          "title": "Llmhost",
+          "type": "string"
+        },
+        "llmhostcompute": {
+          "description": "The LLM Host Compute list.",
+          "title": "Llmhostcompute",
+          "type": "string"
+        },
+        "manifestDropZone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The manifest drop zone, while it is enabled.",
+          "title": "Manifestdropzone"
+        },
+        "mcpclients": {
+          "description": "The MCP Clients list.",
+          "title": "Mcpclients",
+          "type": "string"
+        },
+        "openapi": {
+          "description": "The OpenAPI contract.",
+          "title": "Openapi",
+          "type": "string"
+        },
+        "orchestrators": {
+          "description": "The Orchestrators list.",
+          "title": "Orchestrators",
+          "type": "string"
+        },
+        "plugins": {
+          "description": "The LLM Tools list.",
+          "title": "Plugins",
+          "type": "string"
+        },
+        "promptPassthrough": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Prompt Passthrough, while it is enabled.",
+          "title": "Promptpassthrough"
+        },
+        "providers": {
+          "description": "The Providers list.",
+          "title": "Providers",
+          "type": "string"
+        },
+        "proxies": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Proxies list, while proxies are enabled.",
+          "title": "Proxies"
+        },
+        "secrets": {
+          "description": "The Secrets list.",
+          "title": "Secrets",
+          "type": "string"
+        },
+        "terminal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Terminal, for a superuser, while it is enabled.",
+          "title": "Terminal"
+        },
+        "vectorsearches": {
+          "description": "The Vectorsearches list.",
+          "title": "Vectorsearches",
+          "type": "string"
+        },
+        "vectorstores": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Vectorstores list, while vectorstores are enabled.",
+          "title": "Vectorstores"
+        },
+        "workbench": {
+          "description": "The LLMClients list, the Prompt Engineer's Workbench.",
+          "title": "Workbench",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dashboard",
+        "promptPassthrough",
+        "manifestDropZone",
+        "terminal",
+        "providers",
+        "proxies",
+        "llmhost",
+        "llmhostcompute",
+        "workbench",
+        "orchestrators",
+        "apiKeys",
+        "customDomains",
+        "extensions",
+        "plugins",
+        "mcpclients",
+        "connections",
+        "vectorsearches",
+        "vectorstores",
+        "budgets",
+        "guardrails",
+        "secrets",
+        "exampleManifests",
+        "openapi",
+        "jsonSchemas",
+        "infrastructureResources",
+        "admin"
+      ],
+      "title": "ConsoleSidebar",
       "type": "object"
     },
     "ConsoleSignIn": {

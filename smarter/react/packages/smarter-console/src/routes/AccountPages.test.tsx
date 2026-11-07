@@ -3,16 +3,16 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { createMemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { server } from "@test/server";
 
 import App from "@/App";
 import { accountUrls } from "@/lib/account";
+import { SESSION_API_URL } from "@/lib/const";
 import { userSession, visitorSession } from "@/mocks/fixtures";
 import {
   accountErrorsHandler,
-  accountSessionHandler,
   doodleHandler,
   sessionHandler,
   userSessionHandler,
@@ -153,22 +153,35 @@ describe("the sign-in pages' frame", () => {
 });
 
 describe("signing out", () => {
-  it("returns to the sign-in page", async () => {
-    server.use(userSessionHandler, accountSessionHandler(accountUrls.signOut, visitorSession));
+  it("signs out from the user menu, and returns to the sign-in page", async () => {
+    let signedOut = false;
+    server.use(
+      http.get(SESSION_API_URL, () => HttpResponse.json(signedOut ? visitorSession : userSession)),
+      http.post(accountUrls.signOut, () => {
+        signedOut = true;
+        return HttpResponse.json(visitorSession);
+      }),
+    );
     const router = mountAt("/");
-    await userEvent.setup().click(await screen.findByRole("button", { name: "Sign Out" }));
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "ada@example.com" }));
+    await user.click(screen.getByRole("button", { name: "Sign Out" }));
     expect(await screen.findByRole("heading", { name: "Sign In" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/login");
   });
 
-  it("stays signed in when signing out fails", async () => {
+  it("stays signed in, and says why, when signing out fails", async () => {
     server.use(
       userSessionHandler,
-      http.post(accountUrls.signOut, () => HttpResponse.error()),
+      http.post(accountUrls.signOut, () => HttpResponse.json({ detail: "Forbidden" }, { status: 403 })),
     );
+    vi.spyOn(console, "error").mockImplementation(() => {});
     mountAt("/");
-    await userEvent.setup().click(await screen.findByRole("button", { name: "Sign Out" }));
-    expect(await screen.findByRole("button", { name: "Sign Out" })).toBeEnabled();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "ada@example.com" }));
+    await user.click(screen.getByRole("button", { name: "Sign Out" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Request failed: 403");
+    expect(screen.getByRole("button", { name: "Sign Out" })).toBeEnabled();
   });
 });
 

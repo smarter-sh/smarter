@@ -4,6 +4,10 @@
   "description": "The user menu at the top right of every Smarter web console page.",
   "version": "0.1.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
     "build": "tsc -b && vite build",

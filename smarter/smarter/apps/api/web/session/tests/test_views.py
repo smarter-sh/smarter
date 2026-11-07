@@ -12,6 +12,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.web.session import views
 from smarter.apps.api.web.session.contract import ConsoleSession
 from smarter.apps.api.web.urls import ApiWebReverseNames
+from smarter.apps.dashboard.context_processors import sidebar_context
 from smarter.apps.dashboard.views.views.api.welcome import WELCOME_SHOWN_SESSION_KEY
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -50,6 +51,7 @@ class TestConsoleSessionView(TestAccountMixin):
         self.assertIsNone(session.onboarding)
         self.assertIsNone(session.welcome)
         self.assertIsNone(session.badges)
+        self.assertIsNone(session.sidebar)
         self.assertFalse(session.flags.terminal)
         self.assertEqual(session.cookies.csrf_cookie_name, settings.CSRF_COOKIE_NAME)
         self.assertTrue(session.branding.product_name)
@@ -119,6 +121,39 @@ class TestConsoleSessionView(TestAccountMixin):
         self.assertFalse(session.flags.terminal)
         self.assertEqual(session.badges.extension_updates, 0)  # type: ignore[union-attr]
         update_count.assert_not_called()
+
+    def test_sidebar(self):
+        """A user's sidebar has the server-rendered sidebar's urls, without a superuser's or staff's items."""
+        self.client.force_login(self.non_admin_user)
+        session = self.get_session()
+        links = sidebar_context()["sidebar"]
+        sidebar = session.sidebar
+        self.assertIsNotNone(sidebar)
+        self.assertEqual(sidebar.dashboard, links["dashboard"])  # type: ignore[union-attr]
+        self.assertEqual(sidebar.secrets, links["secrets"])  # type: ignore[union-attr]
+        self.assertEqual(sidebar.api_keys, links["api_keys"])  # type: ignore[union-attr]
+        self.assertIsNone(sidebar.terminal)  # type: ignore[union-attr]
+        self.assertIsNone(sidebar.infrastructure_resources)  # type: ignore[union-attr]
+        self.assertIsNone(sidebar.admin)  # type: ignore[union-attr]
+
+    def test_sidebar_of_a_superuser_and_of_a_staff_user(self):
+        """A superuser gets the terminal, while it is on, and the infrastructure; staff get the admin."""
+        links = {
+            **sidebar_context()["sidebar"],
+            "terminal": "/dashboard/terminal/",
+            "prompt_passthrough": "/dashboard/passthrough/",
+        }
+        superuser = mock.Mock(is_superuser=True, is_staff=False)
+        console_flags = views.flags(None).model_copy(update={"terminal": True, "passthrough": False})
+        with mock.patch.object(views, "sidebar_context", return_value={"sidebar": links}):
+            sidebar = views.sidebar(superuser, console_flags)
+            staff = views.sidebar(mock.Mock(is_superuser=False, is_staff=True), console_flags)
+        self.assertEqual(sidebar.terminal, "/dashboard/terminal/")
+        self.assertEqual(sidebar.infrastructure_resources, links["infrastructure_resources"])
+        self.assertIsNone(sidebar.admin)
+        self.assertIsNone(sidebar.prompt_passthrough)
+        self.assertEqual(staff.admin, links["admin"])
+        self.assertIsNone(staff.infrastructure_resources)
 
     def test_welcome_shows_once_per_session(self):
         """The welcome dialog opens by itself until it is closed in this session."""
