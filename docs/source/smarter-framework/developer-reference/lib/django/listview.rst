@@ -12,13 +12,15 @@ queries however many resources it holds, and it caches the page.
 Two caches, one request
 -----------------------
 
-A list is cached twice: in the browser, by the React list, and on the server, by its list api.
+A list is cached twice: in the browser, by the web console, and on the server, by its list api.
 When a user opens a list, pages it, sorts it or comes back to it:
 
-1. **The React list paints at once, from the browser's cache**, if it holds that page, with a small
-   *Refreshing* spinner beside the view toggle. Otherwise it shows its loading skeleton.
+1. **The React list paints at once, from the console's cache**, if it holds that page, with a small
+   *Refreshing* spinner. Otherwise it shows its loading skeleton, or, while it pages, sorts or
+   searches, the rows that it showed.
 2. **It asks the list api for the page anyway** (stale-while-revalidate), and replaces what it
-   painted with the response, which it writes back to the browser's cache.
+   painted with the response, so that a change made elsewhere, e.g. in the manifest editor or with
+   the CLI, shows. An unchanged page doesn't render again.
 3. **The list api answers from Redis**, if it holds the page for that user, and builds it from the
    database otherwise, in a few queries, then caches it.
 
@@ -31,22 +33,20 @@ The browser cache
 The React side is shared by every list, in the ``@smarter/common`` package
 (`packages/smarter-common <https://github.com/smarter-sh/smarter-console/tree/main/packages/smarter-common>`__ in the web console's repository):
 
-- ``src/lib/cache.tsx`` stores pages in the browser's ``localStorage``, which outlives the browser
-  tab, so a new tab or a return visit paints at once. ``makeCacheKey()`` names a page by the list
-  api's url, the tab (``owned`` or ``shared``), and the page's number, ordering and filter. Searches
-  are never cached. Each entry holds the page's objects and its ``pagination``, so the pagination
-  controls paint with it.
-- ``sessionScope()`` adds a hash of the session's CSRF cookie to every key. Django rotates the CSRF
-  token at every login, so a page cached for one user is never shown to the next user of the same
-  browser, and the token itself is never stored.
-- ``readCache()`` and ``writeCache()`` treat a private window, blocked site data or a full quota as a
-  cache miss, never an error. ``pruneCache()`` runs on each write: it removes entries older than a
-  week, and keeps only the most recent hundred.
+- The console's cache is `TanStack Query <https://tanstack.com/query>`__, in memory: the console's
+  in-place navigation keeps it from page to page, and a reload of the browser tab starts it empty.
+  ``src/lib/query.tsx`` makes its client (``createSmarterQueryClient()``), and ``listQueryKey()``
+  names every page of a list by the list api's url. TabbedListView adds the tab (``owned`` or
+  ``shared``) and the page's number, search, ordering and narrowing.
+- The console starts the cache empty whenever the signed-in user or their account changes, so a
+  page cached for one user is never shown to another, and a list outside the console, e.g. in
+  Storybook, gets a cache of its own (``SmarterQueryProvider``).
 - ``TabbedListView`` (``src/components/TabbedListView``), the tabs, toolbar and pagination of every
   list, opens a row's detail when the row is chosen (see
-  :doc:`../../smarter-dashboard/resource_detail`), reads the cache whenever a tab's page, ordering or filter changes, and marks the tab
-  ``isRefreshing`` while it shows a cached page. Its Refresh button asks the api for a fresh page
-  with ``?invalidate_cache=true``, which also makes the user's cached pages on the server stale.
+  :doc:`../../smarter-dashboard/resource_detail`), loads each tab's page as a query, and marks the
+  tab ``isRefreshing`` while it shows a cached page. Its Refresh button, and a clone, rename or
+  delete, mark every page of the list stale, and ask the api for a fresh page with
+  ``?invalidate_cache=true``, which also makes the user's cached pages on the server stale.
 
 The server cache
 ----------------
