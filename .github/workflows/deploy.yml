@@ -56,7 +56,7 @@ env:
   SMARTER_ENABLE_WEB_CONSOLE_TERMINAL: "true"
   # true: each deployment uploads the static files to the environment's S3 bucket, and pages load them from its
   # CDN, cdn.<platform>. See smarter.lib.django.static_storage.
-  SMARTER_STATIC_FILES_ON_CDN: "false"
+  SMARTER_STATIC_FILES_ON_CDN: "true"
   VERSION: "latest"
   SLACK_CHANNEL: "smarter"
 
