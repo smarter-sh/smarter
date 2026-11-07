@@ -10,14 +10,14 @@ cookie names and element ids become frontend constants and aren't listed.
 
 ## Phases
 
-| #   | Phase                | Done when                                                                                                                                                                                 |
-| --- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0   | Clean up             | Dead pages and templates deleted, duplicate mounts removed, security fixes in (see [Delete](#delete) and [Bugs](#bugs-found-along-the-way))                                               |
-| 1   | Foundation           | `@smarter/console` builds and runs; `/api/web/session/`; the app shell (header, sidebar, user menu, footer); sign-in and the account flows; Django serves `index.html` for migrated paths |
-| 2   | Existing React pages | Dashboard, list pages, manifest detail pages, workbench, extensions, drop zone, terminal, passthrough are SPA routes                                                                      |
-| 3   | Docs pages           | `/docs/` pages are SPA routes; schemas, examples and `openapi.json` come from `/api/v1/`                                                                                                  |
-| 4   | Separate hosts       | Backend at `api.<platform>`, SPA static on a CDN, shared cookie domain, CSRF, CORS, ingress                                                                                               |
-| 5   | Split the repository | Console and backend in separate repositories; Helm, CI and skills follow                                                                                                                  |
+| #   | Phase                 | Done when                                                                                                                                                                                 |
+| --- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | Clean up              | Dead pages and templates deleted, duplicate mounts removed, security fixes in (see [Delete](#delete) and [Bugs](#bugs-found-along-the-way))                                               |
+| 1   | Foundation            | `@smarter/console` builds and runs; `/api/web/session/`; the app shell (header, sidebar, user menu, footer); sign-in and the account flows; Django serves `index.html` for migrated paths |
+| 2   | Existing React pages  | Dashboard, list pages, manifest detail pages, workbench, extensions, drop zone, terminal, passthrough are SPA routes                                                                      |
+| 3   | Docs pages            | `/docs/` pages are SPA routes; schemas, examples and `openapi.json` come from `/api/v1/`                                                                                                  |
+| 4   | Static files on a CDN | One origin; with `SMARTER_STATIC_FILES_ON_CDN`, static files on the environment's bucket and CDN, the console's page on the platform host (ADR-035, point 8)                              |
+| 5   | Split the repository  | Console and backend in separate repositories; Helm, CI and skills follow                                                                                                                  |
 
 Phase 0 can ship to `alpha` on its own, and so can each page in phases 1 to 3.
 
@@ -178,7 +178,22 @@ OpenAPI pages keep their url names. The per-kind pages no longer need a sign-in,
 Deleted: `DocsBaseView` and its brokered requests, `templates/docs/`, the docs frame `templates/cms/` and
 `static/cms/`, and `smarter-base.js`'s sign-out handler, which only the docs menu used; that closes bug 12 (the menu's
 `/docs/cli` link). `generate_example_manifests` writes every kind's example from `sam_example()`. A new SAM kind needs
-no docs code. Next: phase 4, separate hosts.
+no docs code. Next: phase 4.
+
+Phase 4 kept one origin (option A), rather than moving the backend to `api.<platform>`: a shared session cookie
+would have needed a parent domain that also reaches the deployed LLMClients under `*.api.platform.<root>`, every
+console request would have been cross-origin, and every install would have needed a CDN. ADR-035 point 8 now says
+so. While `SMARTER_STATIC_FILES_ON_CDN` is on, `STATIC_URL` is `cdn.<platform>/static/` and the static files are on
+the environment's bucket (`smarter.lib.django.static_storage`: a year's cache for the React apps' hashed build output,
+an hour for the rest); `initialize_platform` uploads them with `collectstatic`, a fatal step, and then records the
+console's build (`mark_console_uploaded()`). The init job is a post-upgrade hook, so new pods serve pages before the
+upload: `ConsoleAppView` rewrites the page's `/static/` urls to the CDN only once its build is recorded (or found
+in the bucket after a cache flush), and the pods serve it until then. Vite's `renderBuiltUrl` makes the console's
+scripts load their chunks, styles and Scalar relative to themselves. The deploy workflow passes the setting to the
+chart (`smarter-static-files-on-cdn`), and turns it on for every environment, now that the deploy user's S3
+permissions are confirmed (PutObject, PutObjectAcl, GetObject and ListBucket on the bucket); smarter-infrastructure
+needed no change, since `cdn.<platform>`'s `/static/*` behavior already routes to the bucket, honors Cache-Control
+and answers CORS. Next: phase 5, split the repository.
 
 ## Development
 
@@ -420,22 +435,13 @@ Security first. Fix these in phase 0 or in the endpoint that replaces the view.
 
 ## Phase 4 findings: separate hosts
 
-- **Cookies.** `SESSION_COOKIE_DOMAIN` and `CSRF_COOKIE_DOMAIN` are `environment_platform_domain`
-  (`settings/base.py:251,403`), not a parent domain, so they don't reach `api.<platform>`. A parent
-  domain must not leak into deployed LLMClient hosts under `*.api.platform.<root>`.
-- **Host routing.** `hosts.py` matches `api.<root>` and `<env>.api.<root>`, but on AWS the api domain
-  is `<env>.api.platform.<root>`, so the api host is served by the console urlconf today. Verify on a
-  deployed host.
-- **CSRF.** `CSRF_TRUSTED_ORIGINS` in `settings/base.py:308` has no scheme (AWS and local override it).
-- **CORS.** `CORS_ALLOWED_ORIGIN_REGEXES` are hard-coded to `smarter.sh` patterns that don't match
-  `api.platform.smarter.sh`. Traefik's CORS middleware on the platform and api ingresses
-  (`../smarter-infrastructure/aws/terraform/smarter/templates/traefik-middleware-cors.yaml.tpl`)
-  answers before Django.
-- **Ingress.** No ingress in `helm/`; both are in smarter-infrastructure
-  (`kubernetes-ingress.tf:19-50`) and send every path on each host to Django.
-- **WebSocket.** `ws/terminal/` checks `AllowedHostsOriginValidator`; the SPA's origin must be allowed.
-- **Cookie flags.** `SESSION_COOKIE_HTTPONLY=False` and `CSRF_COOKIE_SECURE=False` on AWS
-  (`base_aws.py:75,80`). The SPA doesn't need to read the session cookie, so it can be HttpOnly.
+Phase 4 kept one origin (ADR-035 point 8), so these findings, from when it planned separate hosts, no longer apply.
+They are kept for the record: a parent-domain session cookie would reach the deployed LLMClient hosts under
+`*.api.platform.<root>`; `hosts.py` doesn't match the AWS api domain `<env>.api.platform.<root>`;
+`CSRF_TRUSTED_ORIGINS` in `settings/base.py` has no scheme (AWS and local override it); the CORS regexes don't match
+`api.platform.smarter.sh`; the ingresses send every path on each host to Django; and the Terminal's WebSocket checks
+its origin. Two remain worth a look on their own: `SESSION_COOKIE_HTTPONLY=False` and `CSRF_COOKIE_SECURE=False` on
+AWS (`base_aws.py`); the console doesn't read the session cookie, so it can be HttpOnly.
 
 ## Translations
 

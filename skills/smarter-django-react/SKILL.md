@@ -264,3 +264,13 @@ template tag then finds no `manifest.json` and emits no script tags.
   restart the containers: follow it with `make run` in the background.
 - The template tag caches a missing manifest for the life of the process, so
   restart `smarter-api` after fixing the static files.
+
+## Static files on the CDN
+
+With `SMARTER_STATIC_FILES_ON_CDN` on (AWS only, off locally), `STATIC_URL` is `cdn.<platform>/static/`,
+and `ConsoleAppView` rewrites the console page's `/static/` urls to it once `initialize_platform` has
+uploaded that build (`smarter.lib.django.static_storage`, `mark_console_uploaded()`). Until then the
+pods serve it. So a console's scripts must never hard-code `/static/`: Vite's `renderBuiltUrl` makes
+chunks, styles and fonts load relative to the script, and a file in the console's `public/` is found
+with `new URL("../<file>", import.meta.url)` in a build (see `SCALAR_SCRIPT_URL` in `lib/docs.ts`). Never
+upload to the bucket from a test: `initialize_platform`'s `collectstatic` is patched in its tests.
