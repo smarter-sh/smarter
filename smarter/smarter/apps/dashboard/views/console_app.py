@@ -9,9 +9,12 @@ it keep working. See ``docs/spa-migration.md``.
 
 While ``SMARTER_STATIC_FILES_ON_CDN`` is on, the page's scripts and styles come from the environment's CDN: the
 page's ``/static/`` urls become ``STATIC_URL``'s, and the scripts load their chunks relative to themselves. The page
-itself, the cookies and the api stay on the platform's host.
+itself, the cookies and the api stay on the platform's host. ``initialize_platform`` uploads the files after a
+deployment's new pods start, so until it has uploaded this build, the page keeps its ``/static/`` urls, which the
+server itself serves from the image (:func:`console_on_cdn`).
 """
 
+import re
 from http import HTTPStatus
 from pathlib import Path
 from typing import Optional
@@ -24,6 +27,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from smarter.lib import logging
+from smarter.lib.django.static_storage import is_uploaded, mark_uploaded
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -33,6 +37,58 @@ CONSOLE_INDEX_PATH = Path("react") / "@smarter" / "console" / "index.html"
 
 BUILT_STATIC_URL = "/static/"
 """The prefix of the urls of the console's built page, which Vite's ``base`` sets."""
+
+
+CONSOLE_SCRIPT = re.compile(r'<script type="module"[^>]* src="/static/(react/@smarter/console/assets/[^"]+\.js)"')
+"""The console's main script in its built page, relative to the static files' root."""
+
+
+def console_script(html: str) -> Optional[str]:
+    """
+    The console's main script, which names its build: Vite gives it the hash of its content.
+
+    :param html: The built page.
+    :returns: Its name relative to the static files' root, e.g. ``react/@smarter/console/assets/index-DlE53XQD.js``,
+        or None for a page that has none.
+    """
+    match = CONSOLE_SCRIPT.search(html)
+    if match is None:
+        return None
+    return match.group(1)
+
+
+def console_on_cdn(html: str) -> bool:
+    """
+    Whether the console's page loads its scripts and styles from the CDN.
+
+    :param html: The built page.
+    :returns: True while ``STATIC_URL`` is the CDN's and this build is on its bucket; False otherwise, when the
+        server serves them from ``/static/``.
+    """
+    if settings.STATIC_URL == BUILT_STATIC_URL:
+        return False
+    script = console_script(html)
+    if script is None:
+        return False
+    return is_uploaded(script)
+
+
+def mark_console_uploaded() -> Optional[str]:
+    """
+    Record that the console's build is on the CDN's bucket.
+
+    ``initialize_platform`` calls it once it has uploaded the static files.
+
+    :returns: The build's main script, or None when the console isn't built.
+    """
+    html = console_index_html()
+    if html is None:
+        return None
+    script = console_script(html)
+    if script is None:
+        return None
+    mark_uploaded(script)
+    return script
 
 
 def with_static_url(html: str, static_url: str) -> str:
@@ -100,5 +156,7 @@ class ConsoleAppView(View):
                 status=HTTPStatus.SERVICE_UNAVAILABLE,
                 content_type="text/plain; charset=utf-8",
             )
-        page = with_static_url(html, settings.STATIC_URL)
+        page = html
+        if console_on_cdn(html):
+            page = with_static_url(html, settings.STATIC_URL)
         return HttpResponse(page, content_type="text/html; charset=utf-8")

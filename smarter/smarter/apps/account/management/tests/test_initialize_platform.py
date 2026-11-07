@@ -190,7 +190,9 @@ class TestInitializePlatform(CommandTestBase):
         with (
             patch(f"{MODULE}.call_command", side_effect=call) as called,
             patch(f"{MODULE}.smarter_settings") as settings,
+            patch(f"{MODULE}.mark_console_uploaded") as mark_console_uploaded,
         ):
+            self.mark_console_uploaded = mark_console_uploaded
             settings.environment = SmarterEnvironments.LOCAL
             settings.root_domain = "example.com"
             settings.admin_username = "admin"
@@ -204,11 +206,14 @@ class TestInitializePlatform(CommandTestBase):
         names = self.run_with_static_files_on_cdn(True, lambda name, **kwargs: None)
         self.assertIn("collectstatic", names)
         self.assertLess(names.index("collectstatic"), names.index("initialize_waffle"))
+        # then, and only then, the console's pages point at the CDN.
+        self.mark_console_uploaded.assert_called_once_with()
 
     def test_leaves_the_static_files_alone_while_the_server_serves_them(self):
         """Without the CDN, the image's own static files are served, and nothing is uploaded."""
         names = self.run_with_static_files_on_cdn(False, lambda name, **kwargs: None)
         self.assertNotIn("collectstatic", names)
+        self.mark_console_uploaded.assert_not_called()
 
     def test_static_files_upload_failure_is_fatal(self):
         """A failed upload lets the remaining steps run, then fails: the pages would load missing scripts."""
@@ -219,3 +224,5 @@ class TestInitializePlatform(CommandTestBase):
 
         with self.assertRaisesRegex(CommandError, "these steps failed: collectstatic"):
             self.run_with_static_files_on_cdn(True, call)
+        # the pages keep loading this build from the server.
+        self.mark_console_uploaded.assert_not_called()
