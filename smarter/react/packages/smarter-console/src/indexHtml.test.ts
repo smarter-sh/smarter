@@ -18,6 +18,14 @@ describe("index.html", () => {
     expect(app).toBeGreaterThan(catalog);
   });
 
+  it("sets the theme's mode before the theme's stylesheets", () => {
+    // the theme defines its colors and layout variables under [data-bs-theme=light] and [data-bs-theme=dark].
+    const mode = html.indexOf('setAttribute("data-bs-theme"');
+    const theme = html.indexOf("style.bundle.css");
+    expect(mode).toBeGreaterThan(-1);
+    expect(theme).toBeGreaterThan(mode);
+  });
+
   it("has the root element that main.tsx mounts the console in", () => {
     expect(html).toContain('id="smarter-console-root"');
   });

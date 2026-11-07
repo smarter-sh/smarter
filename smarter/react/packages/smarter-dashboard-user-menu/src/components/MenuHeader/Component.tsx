@@ -12,7 +12,7 @@
  */
 import { gettext } from "@smarter/common";
 
-import type { MenuUser } from "@/lib/Types";
+import type { MenuUser } from "../../lib/Types";
 
 interface MenuHeaderProps {
   user: MenuUser;

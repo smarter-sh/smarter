@@ -13,7 +13,7 @@
 import { useId, useState } from "react";
 import { gettext } from "@smarter/common";
 
-import type { Language } from "@/lib/Types";
+import type { Language } from "../../lib/Types";
 
 interface LanguageMenuProps {
   languages: Language[];

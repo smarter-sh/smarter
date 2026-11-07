@@ -24,6 +24,13 @@ The menu is the ``@smarter/dashboard-user-menu`` React app, which
 classes itself, rather than through the theme's JavaScript: the profile image is
 a button that opens and closes it, and Escape or a click outside it closes it.
 
+The single-page console (:doc:`ADR-035 </adr/035-single-page-app>`) renders the
+same component in its header: the package exports ``UserMenu`` from
+``src/index.ts``, and its source uses relative imports so that the console's
+build can import it. The console builds the menu's context from its session,
+``GET /api/web/session/``, rather than from a template's attributes. See
+:doc:`../web-console-api`.
+
 Change Profile
 --------------
 

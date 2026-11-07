@@ -18,13 +18,13 @@
 import { useId, useState } from "react";
 import { getCookie, gettext, useDropdown } from "@smarter/common";
 
-import ChangeProfile from "@/components/ChangeProfile";
-import LanguageMenu from "@/components/LanguageMenu";
-import MenuHeader from "@/components/MenuHeader";
-import ProfileImageItems from "@/components/ProfileImageItems";
-import { signOut } from "@/lib/api";
-import { loggerPrefix } from "@/lib/const";
-import type { AppContext } from "@/lib/Types";
+import ChangeProfile from "../ChangeProfile";
+import LanguageMenu from "../LanguageMenu";
+import MenuHeader from "../MenuHeader";
+import ProfileImageItems from "../ProfileImageItems";
+import { signOut } from "../../lib/api";
+import { loggerPrefix } from "../../lib/const";
+import type { AppContext } from "../../lib/Types";
 
 interface UserMenuProps {
   appContext: AppContext;

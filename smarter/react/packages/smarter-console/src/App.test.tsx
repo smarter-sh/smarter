@@ -1,5 +1,5 @@
 /** The console's start: loading its session, then routing a visitor and a signed-in user. */
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
@@ -27,11 +27,16 @@ describe("the console", () => {
     expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
   });
 
-  it("shows a signed-in user their account", async () => {
+  it("frames a signed-in user's pages with the sidebar and the user menu", async () => {
     server.use(userSessionHandler);
     mountAt("/");
-    expect(await screen.findByText("ada@example.com")).toBeInTheDocument();
-    expect(screen.getByLabelText("Account")).toHaveTextContent("Analytical Engines · 3141-5926-5359");
+    expect(await screen.findByRole("button", { name: "ada@example.com" })).toBeInTheDocument();
+    const sidebar = screen.getByRole("navigation", { name: "Main" });
+    expect(within(sidebar).getByRole("link", { name: "Secrets" })).toHaveAttribute("href", "/secret/");
+    expect(within(sidebar).getByRole("link", { name: "LLM Clients" })).toHaveAttribute(
+      "data-smarter-onboarding",
+      "sidebar-llmclients",
+    );
     expect(screen.getByRole("link", { name: "Open the dashboard" })).toHaveAttribute(
       "href",
       "http://localhost:9357/dashboard/",
@@ -81,11 +86,11 @@ describe("the console's fallbacks", () => {
     expect(screen.queryByLabelText("Account")).not.toBeInTheDocument();
   });
 
-  it("shows the username of a user without an email", async () => {
+  it("names the user menu with the username of a user without an email", async () => {
     const user = { ...userSession.user!, email: "" };
     server.use(sessionHandler({ ...userSession, user }));
     mountAt("/");
-    expect(await screen.findByText("ada", { selector: "div" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "ada" })).toBeInTheDocument();
   });
 
   it("writes a right-to-left language right to left", async () => {

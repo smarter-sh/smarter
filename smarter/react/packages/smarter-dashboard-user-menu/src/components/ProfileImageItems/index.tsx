@@ -1,3 +1,3 @@
-import ProfileImageItems from "@/components/ProfileImageItems/Component";
+import ProfileImageItems from "./Component";
 
 export default ProfileImageItems;

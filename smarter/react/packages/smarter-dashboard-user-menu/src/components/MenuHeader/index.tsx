@@ -1,3 +1,3 @@
-import MenuHeader from "@/components/MenuHeader/Component";
+import MenuHeader from "./Component";
 
 export default MenuHeader;

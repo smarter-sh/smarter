@@ -151,9 +151,15 @@ The session
 ``GET /api/web/session/`` tells the console who is using it and how the platform is set up, in one
 call: the signed-in user, the account the console acts for, the platform's branding, which ways to
 sign in are offered, which optional features are on, the languages, the state of the welcome dialog
-and the onboarding hints, and the sidebar's badge counts. A visitor who isn't signed in gets the same
-response with ``user``, ``account``, ``onboarding``, ``welcome`` and ``badges`` set to ``null``, which
-is all that the sign-in pages need. It is the one GET of this api, so that the console can call it
+and the onboarding hints, and the sidebar's links and badge counts. A visitor who isn't signed in gets
+the same response with ``user``, ``account``, ``onboarding``, ``welcome``, ``badges`` and ``sidebar`` set
+to ``null``, which is all that the sign-in pages need.
+
+The sidebar's links are the urls of the server-rendered sidebar's
+(:func:`~smarter.apps.dashboard.context_processors.sidebar_context`). The backend decides which the user
+has: a link that the platform has turned off, e.g. Proxies, or that the user may not use, e.g. the
+Terminal and Infrastructure Resources for a superuser only and the Django admin for staff, is ``null``.
+The console decides the sections, their order, the labels and the icons. It is the one GET of this api, so that the console can call it
 before it has a CSRF token, and it sets the CSRF cookie. It is never cached.
 
 The single-page console (:doc:`ADR-035 </adr/035-single-page-app>`) calls it when it starts, and

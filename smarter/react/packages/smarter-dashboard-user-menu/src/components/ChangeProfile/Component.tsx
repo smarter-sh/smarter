@@ -16,9 +16,9 @@
 import { useEffect, useState } from "react";
 import { formatDateTime, gettext, interpolate, Modal, type SessionContext } from "@smarter/common";
 
-import { postUserProfiles } from "@/lib/api";
-import { loggerPrefix } from "@/lib/const";
-import type { UserProfileChoice } from "@/lib/Types";
+import { postUserProfiles } from "../../lib/api";
+import { loggerPrefix } from "../../lib/const";
+import type { UserProfileChoice } from "../../lib/Types";
 
 interface ChangeProfileProps {
   sessionContext: SessionContext;

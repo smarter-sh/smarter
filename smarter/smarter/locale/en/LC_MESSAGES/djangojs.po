@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 23:34+0000\n"
+"POT-Creation-Date: 2026-11-07 00:06+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -250,7 +250,7 @@ msgstr ""
 msgid "Delete: Delete this authtoken resource"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+#. Translators: used in react/packages/smarter-budget-list/src/App.tsx, react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-llmclient-deployment/src/components/Hero.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
 msgid "Budgets"
 msgstr ""
 
@@ -518,7 +518,7 @@ msgstr ""
 msgid "Owner email"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+#. Translators: used in react/packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, react/packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, react/packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Account"
 msgstr ""
 
@@ -830,7 +830,7 @@ msgstr ""
 msgid "Shared Connections"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-connection-list/src/App.tsx
+#. Translators: used in react/packages/smarter-connection-list/src/App.tsx, react/packages/smarter-console/src/lib/sidebar.ts
 msgid "Connections"
 msgstr ""
 
@@ -1016,12 +1016,172 @@ msgstr ""
 msgid "Contact Us"
 msgstr ""
 
+#. Translators: used in react/packages/smarter-console/src/components/Header.tsx
+msgid "Show the sidebar"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/Sidebar.tsx
+msgid "Updates available"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/Sidebar.tsx
+msgid "Sidebar"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/Sidebar.tsx
+msgid "Main"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/components/Sidebar.tsx
+msgid "Hide the sidebar"
+msgstr ""
+
 #. Translators: used in react/packages/smarter-console/src/lib/account.ts
 msgid "Your session has expired. Reload the page, and try again."
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/lib/account.ts
 msgid "An unknown error occurred. Please try again later."
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
+msgid "Workbench"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/Dashboard/Component.tsx
+msgid "Dashboard"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Prompt Passthrough"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Apply Manifest"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
+msgid "Terminal"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Models"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-provider-list/src/App.tsx
+msgid "Providers"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-proxy-list/src/App.tsx
+msgid "Proxies"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-llmhost-list/src/App.tsx
+msgid "LLM Hosts"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-llmhost-compute-list/src/App.tsx
+msgid "LLM Host Compute"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx
+msgid "Harnesses"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
+msgid "LLM Clients"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-orchestrator-list/src/App.tsx
+msgid "Orchestrators"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
+msgid "API Keys"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-custom-domain-list/src/App.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Custom Domains"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
+msgid "Tools"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
+msgid "Extensions"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "LLM Tools"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx
+msgid "MCP Clients"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "RAG"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Vectorsearches"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-vectorstore-list/src/App.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
+msgid "Vectorstores"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Governance"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-guardrail-list/src/App.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx
+msgid "Guardrails"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-secret-list/src/App.tsx
+msgid "Secrets"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-provider-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
+msgid "Documentation"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Read the Docs"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Project Web Site"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Example Manifests"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "OpenAPI Contract"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Json Schemas"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "GitHub Change Log %(version)s"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
+msgid "Settings"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts, react/packages/smarter-infrastructure-resource-list/src/App.tsx
+msgid "Infrastructure Resources"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-console/src/lib/sidebar.ts
+msgid "Django Admin"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/ActivatePage.tsx
@@ -1076,10 +1236,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/InactivePage.tsx, react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/PasswordResetRequestPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx
 msgid "Email"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-console/src/routes/Layout.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
-msgid "Sign Out"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-console/src/routes/LoginPage.tsx, react/packages/smarter-console/src/routes/RegisterPage.tsx, react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
@@ -1172,10 +1328,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
 msgid "Shared Custom Domains"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx, react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid "Custom Domains"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-custom-domain-list/src/App.tsx
@@ -1477,10 +1629,6 @@ msgstr ""
 msgid "%(label)s: %(amount)s of %(amount2)s"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/Dashboard/Component.tsx
-msgid "Dashboard"
-msgstr ""
-
 #. Translators: used in react/packages/smarter-dashboard/src/components/DownloadNpm/Component.tsx
 msgid "Download Npm"
 msgstr ""
@@ -1546,24 +1694,12 @@ msgstr[1] ""
 msgid "See all %(count)s in %(list)s"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-guardrail-list/src/App.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/SmarterProject.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx
-msgid "Guardrails"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-secret-list/src/App.tsx
-msgid "Secrets"
-msgstr ""
-
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx
 msgid "VectorStores"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmhost-compute-list/src/components/DetailView/Component.tsx
 msgid "LLMHosts"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionList.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmtool-list/src/App.tsx, react/packages/smarter.sh-widgets/src/components/Extensions/Component.tsx, react/packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
-msgid "Extensions"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
@@ -1584,14 +1720,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx
 msgid "%(my_resources_pending_deployments)s pending"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
-msgid "LLM Clients"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-extension-console/src/components/ExtensionPage.tsx, react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx, react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx, react/packages/smarter-mcpclient-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx
-msgid "Tools"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard/src/components/MyResources/Component.tsx, react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
@@ -1875,6 +2003,10 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
 msgid "Welcome Tour"
+msgstr ""
+
+#. Translators: used in react/packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Sign Out"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-dashboard-user-menu/src/lib/api.ts
@@ -2467,10 +2599,6 @@ msgid "Overview"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
-msgid "Settings"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-extension-console/src/components/ExtensionPage.tsx
 msgid "Availability"
 msgstr ""
 
@@ -2960,10 +3088,6 @@ msgid "Delete: Delete this guardrail resource"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-infrastructure-resource-list/src/App.tsx
-msgid "Infrastructure Resources"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-infrastructure-resource-list/src/App.tsx
 msgid ""
 "The ledger of the cloud resources that the platform has created, whichever "
 "cloud provider created them: DNS zones and records, TLS certificates, and "
@@ -3320,10 +3444,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
 msgid "Browse your api keys"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx, react/packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, react/packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
-msgid "API Keys"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-llmclient-architecture/src/components/GettingStarted.tsx
@@ -4398,10 +4518,6 @@ msgid "The plugins attached to this llmclient."
 msgstr ""
 
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx
-msgid "MCP Clients"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/DetailView/Component.tsx
 msgid "The MCPClients whose MCP servers' tools this llmclient offers the LLM."
 msgstr ""
 
@@ -4614,10 +4730,6 @@ msgstr ""
 msgid "Open the prompt workbench of %(name)s"
 msgstr ""
 
-#. Translators: used in react/packages/smarter-llmclient-list/src/components/ListView/Component.tsx
-msgid "Workbench"
-msgstr ""
-
 #. Translators: used in react/packages/smarter-llmclient-list/src/components/StatusBar/Component.tsx
 msgid "Ready: LLMClient is ready to serve requests"
 msgstr ""
@@ -4761,10 +4873,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
 msgid "Shared LLMHost Compute"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
-msgid "LLM Host Compute"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-llmhost-compute-list/src/App.tsx
@@ -5011,10 +5119,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-llmhost-list/src/App.tsx
 msgid "Shared LLMHosts"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-llmhost-list/src/App.tsx
-msgid "LLM Hosts"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-llmhost-list/src/App.tsx
@@ -6193,10 +6297,6 @@ msgid "Shared Orchestrators"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-orchestrator-list/src/App.tsx
-msgid "Orchestrators"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-orchestrator-list/src/App.tsx
 msgid ""
 "Orchestrators are a standardized interface for coordinating multiple "
 "LLMClients (ie 'Harnesses') toward a shared agentic objective. Rather than "
@@ -6237,10 +6337,6 @@ msgstr ""
 msgid ""
 "The most times that the orchestration loop may run: a guard against runaway "
 "loops."
-msgstr ""
-
-#. Translators: used in react/packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx
-msgid "Harnesses"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx
@@ -6634,10 +6730,6 @@ msgid "Shared Providers"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-provider-list/src/App.tsx
-msgid "Providers"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-provider-list/src/App.tsx
 msgid ""
 "Providers connect third-party LLM providers to the Smarter Platform. Rather "
 "than wiring each provider in through manual, one-off configuration, it "
@@ -6698,10 +6790,6 @@ msgstr ""
 msgid ""
 "Whether the provider belongs to the platform's administrator, rather than to "
 "an account."
-msgstr ""
-
-#. Translators: used in react/packages/smarter-provider-list/src/components/DetailView/Component.tsx, react/packages/smarter.sh-widgets/src/components/Cli/Component.tsx, react/packages/smarter.sh-widgets/src/components/McpServer/Component.tsx, react/packages/smarter.sh-widgets/src/components/Sdk/Component.tsx, react/packages/smarter.sh-widgets/src/components/VSCodeExtension/Component.tsx
-msgid "Documentation"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-provider-list/src/components/DetailView/Component.tsx
@@ -6849,10 +6937,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-proxy-list/src/App.tsx
 msgid "Shared Proxies"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-proxy-list/src/App.tsx
-msgid "Proxies"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-proxy-list/src/App.tsx
@@ -7382,10 +7466,6 @@ msgstr ""
 msgid "The log stream disconnected. Reconnecting..."
 msgstr ""
 
-#. Translators: used in react/packages/smarter-terminal-emulator/src/components/Hero/Component.tsx, react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
-msgid "Terminal"
-msgstr ""
-
 #. Translators: used in react/packages/smarter-terminal-emulator/src/components/Terminal/Component.tsx
 msgid "connecting"
 msgstr ""
@@ -7722,10 +7802,6 @@ msgstr ""
 
 #. Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx
 msgid "Shared Vectorstores"
-msgstr ""
-
-#. Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx, react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
-msgid "Vectorstores"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-vectorstore-list/src/App.tsx
@@ -8097,10 +8173,6 @@ msgstr ""
 msgid ""
 "Chatbots, agents and harnesses, each with its own LLM, system prompt and "
 "tools."
-msgstr ""
-
-#. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx
-msgid "LLM Tools"
 msgstr ""
 
 #. Translators: used in react/packages/smarter-welcome/src/components/WelcomeDialog/steps.tsx

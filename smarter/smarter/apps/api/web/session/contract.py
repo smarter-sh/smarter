@@ -8,7 +8,7 @@ console acts for, the platform's branding, which sign-in options and features ar
 and the state of the welcome dialog and onboarding hints. The JSON is camelCase.
 
 A request without a signed-in user gets a :class:`ConsoleSession` whose ``user``, ``account``,
-``onboarding``, ``welcome`` and ``badges`` are ``null``: what the sign-in pages need, and nothing about
+``onboarding``, ``welcome``, ``badges`` and ``sidebar`` are ``null``: what the sign-in pages need, and nothing about
 any user.
 
 ``manage.py export_console_session_schema`` writes the models' JSON Schema to
@@ -166,6 +166,43 @@ class ConsoleBadges(ConsoleSessionModel):
     )
 
 
+class ConsoleSidebar(ConsoleSessionModel):
+    """
+    The urls of the sidebar's links, reversed by the backend, which serves their pages until they move into the.
+
+    console. A link that the platform or the user doesn't have is null, and the sidebar leaves it out.
+    """
+
+    dashboard: str = Field(..., description="The dashboard.")
+    prompt_passthrough: Optional[str] = Field(..., description="The Prompt Passthrough, while it is enabled.")
+    manifest_drop_zone: Optional[str] = Field(..., description="The manifest drop zone, while it is enabled.")
+    terminal: Optional[str] = Field(..., description="The Terminal, for a superuser, while it is enabled.")
+    providers: str = Field(..., description="The Providers list.")
+    proxies: Optional[str] = Field(..., description="The Proxies list, while proxies are enabled.")
+    llmhost: str = Field(..., description="The LLM Hosts list.")
+    llmhostcompute: str = Field(..., description="The LLM Host Compute list.")
+    workbench: str = Field(..., description="The LLMClients list, the Prompt Engineer's Workbench.")
+    orchestrators: str = Field(..., description="The Orchestrators list.")
+    api_keys: str = Field(..., description="The API Keys list.")
+    custom_domains: str = Field(..., description="The Custom Domains list.")
+    extensions: str = Field(..., description="The Extensions console.")
+    plugins: str = Field(..., description="The LLM Tools list.")
+    mcpclients: str = Field(..., description="The MCP Clients list.")
+    connections: str = Field(..., description="The Connections list.")
+    vectorsearches: str = Field(..., description="The Vectorsearches list.")
+    vectorstores: Optional[str] = Field(..., description="The Vectorstores list, while vectorstores are enabled.")
+    budgets: str = Field(..., description="The Budgets list.")
+    guardrails: str = Field(..., description="The Guardrails list.")
+    secrets: str = Field(..., description="The Secrets list.")
+    example_manifests: str = Field(..., description="The example manifests.")
+    openapi: str = Field(..., description="The OpenAPI contract.")
+    json_schemas: str = Field(..., description="The SAM JSON Schemas.")
+    infrastructure_resources: Optional[str] = Field(
+        ..., description="The Infrastructure Resources list, for a superuser."
+    )
+    admin: Optional[str] = Field(..., description="The Django admin, for a staff user.")
+
+
 class ConsoleSession(ConsoleSessionModel):
     """Everything that the console needs to start, for the request's user, or for a visitor who isn't signed in."""
 
@@ -181,6 +218,7 @@ class ConsoleSession(ConsoleSessionModel):
     onboarding: Optional[ConsoleOnboarding] = Field(..., description="The onboarding hints' state, or null.")
     welcome: Optional[ConsoleWelcome] = Field(..., description="The welcome dialog's state, or null.")
     badges: Optional[ConsoleBadges] = Field(..., description="The sidebar's counts, or null.")
+    sidebar: Optional[ConsoleSidebar] = Field(..., description="The sidebar's links, or null.")
 
 
 RESPONSE_MODELS: tuple[type[BaseModel], ...] = (ConsoleSession,)
@@ -232,6 +270,7 @@ __all__ = [
     "ConsoleOnboarding",
     "ConsoleSession",
     "ConsoleSessionModel",
+    "ConsoleSidebar",
     "ConsoleSignIn",
     "ConsoleUser",
     "ConsoleWelcome",

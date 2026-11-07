@@ -9,6 +9,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
 
+    <!--
+      the theme's mode, light, dark or system, before the first paint: the theme defines its colors and layout
+      variables under [data-bs-theme=light] and [data-bs-theme=dark], so without it they are undefined. The same
+      choice, in localStorage, as the backend's templates/base.html.
+    -->
+    <script>
+      (function () {
+        var mode = "light";
+        try {
+          mode = localStorage.getItem("data-bs-theme") || mode;
+        } catch (e) {
+          // storage may be blocked: keep the default.
+        }
+        if (mode === "system") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-bs-theme", mode);
+      })();
+    </script>
+
     <!-- the console's theme, served by the backend until the console has its own styles. -->
     <link href="/static/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/static/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
