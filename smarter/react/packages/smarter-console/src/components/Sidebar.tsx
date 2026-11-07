@@ -101,8 +101,13 @@ export function Sidebar({ session, open, drawer, onClose }: SidebarProps) {
             <img alt="" src={session.branding.logoUrl} className="h-25px app-sidebar-logo-default" />
           </Link>
         </div>
-        <div className="app-sidebar-menu overflow-hidden flex-column-fluid">
-          <nav className="app-sidebar-wrapper hover-scroll-overlay-y my-5" aria-label={gettext("Main")}>
+        {/*
+          the menu takes the sidebar's height below the logo, and scrolls. Keen's own sidebar gets its height from
+          Keen's JavaScript, which the console doesn't load: flex-grow-1 with overflow-hidden lets the menu shrink
+          to what is left, and h-100 gives the scrolling wrapper that height.
+        */}
+        <div className="app-sidebar-menu overflow-hidden flex-grow-1">
+          <nav className="app-sidebar-wrapper hover-scroll-overlay-y h-100 py-5" aria-label={gettext("Main")}>
             <div className="menu menu-column menu-rounded menu-sub-indention px-3 fw-semibold fs-6">{sections}</div>
           </nav>
         </div>

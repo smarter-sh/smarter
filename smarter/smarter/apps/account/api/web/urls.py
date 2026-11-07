@@ -14,6 +14,11 @@ its root element, and the app calls them with the browser's Django session and C
 
 from django.urls import path
 
+from smarter.apps.account.api.web.profile_image import ProfileImageView
+from smarter.apps.account.api.web.user_profiles import (
+    UserProfileSelectView,
+    UserProfilesView,
+)
 from smarter.apps.account.api.web.views import (
     ActivateApiView,
     ActivationResendApiView,
@@ -60,6 +65,9 @@ class AccountApiWebReverseNames:
     activation_resend = to_snake_case(ActivationResendApiView.__name__)
     password_reset_request = to_snake_case(PasswordResetRequestApiView.__name__)
     password_reset = to_snake_case(PasswordResetApiView.__name__)
+    profile_image = to_snake_case(ProfileImageView.__name__)
+    user_profiles = to_snake_case(UserProfilesView.__name__)
+    user_profile_select = to_snake_case(UserProfileSelectView.__name__)
 
 
 urlpatterns = [
@@ -81,6 +89,14 @@ urlpatterns = [
         "password-reset/<uidb64>/<token>/",
         PasswordResetApiView.as_view(),
         name=AccountApiWebReverseNames.password_reset,
+    ),
+    # the user menu's: see smarter.apps.account.api.web.profile_image and user_profiles.
+    path("profile-image/", ProfileImageView.as_view(), name=AccountApiWebReverseNames.profile_image),
+    path("user-profiles/", UserProfilesView.as_view(), name=AccountApiWebReverseNames.user_profiles),
+    path(
+        "user-profiles/select/",
+        UserProfileSelectView.as_view(),
+        name=AccountApiWebReverseNames.user_profile_select,
     ),
     path("budget/listview/", BudgetListApiView.as_view(), name=AccountApiWebReverseNames.budget_listview),
     path(

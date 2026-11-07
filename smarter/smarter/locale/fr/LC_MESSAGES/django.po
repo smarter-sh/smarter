@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 23:34+0000\n"
+"POT-Creation-Date: 2026-11-07 00:19+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -19,6 +19,18 @@ msgstr ""
 #: smarter/apps/account/activation.py
 msgid "Activate your account."
 msgstr "Activez votre compte."
+
+#: smarter/apps/account/api/web/profile_image.py
+msgid "Choose an image to upload."
+msgstr "Choisissez une image à téléverser."
+
+#: smarter/apps/account/api/web/profile_image.py
+msgid "The image must be 2 MB or smaller."
+msgstr "L’image doit faire 2 Mo ou moins."
+
+#: smarter/apps/account/api/web/profile_image.py
+msgid "The image must be a PNG, JPEG, GIF or WebP file."
+msgstr "L’image doit être un fichier PNG, JPEG, GIF ou WebP."
 
 #: smarter/apps/account/api/web/views.py
 msgid "An unknown error occurred. Please try again later."
@@ -61,8 +73,8 @@ msgstr "Veuillez corriger les erreurs ci-dessous."
 msgid ""
 "We have emailed you a link to activate your account. Follow it to sign in."
 msgstr ""
-"Nous vous avons envoyé par e-mail un lien pour activer votre compte. "
-"Suivez-le pour vous connecter."
+"Nous vous avons envoyé par e-mail un lien pour activer votre compte. Suivez-"
+"le pour vous connecter."
 
 #: smarter/apps/account/api/web/views.py
 msgid ""
@@ -131,18 +143,6 @@ msgstr "Rejoignez la communauté Smarter sur Slack"
 #: smarter/apps/account/password_reset.py
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
-
-#: smarter/apps/account/views/dashboard/profile_image.py
-msgid "Choose an image to upload."
-msgstr "Choisissez une image à téléverser."
-
-#: smarter/apps/account/views/dashboard/profile_image.py
-msgid "The image must be 2 MB or smaller."
-msgstr "L’image doit faire 2 Mo ou moins."
-
-#: smarter/apps/account/views/dashboard/profile_image.py
-msgid "The image must be a PNG, JPEG, GIF or WebP file."
-msgstr "L’image doit être un fichier PNG, JPEG, GIF ou WebP."
 
 #: smarter/apps/account/views/unsubscribe.py
 msgid ""

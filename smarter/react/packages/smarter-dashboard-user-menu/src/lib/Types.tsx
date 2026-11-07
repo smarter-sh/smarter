@@ -1,7 +1,7 @@
 /**
  * Types of the user menu: what main.tsx reads from the root element, and what the Django apis
  * return. See smarter.apps.dashboard.templatetags.react_dashboard_user_menu,
- * smarter.apps.account.views.dashboard.profile_image and smarter.apps.account.views.dashboard.user_profiles.
+ * smarter.apps.account.api.web.profile_image and smarter.apps.account.api.web.user_profiles.
  */
 import type { SessionContext } from "@smarter/common";
 
@@ -58,7 +58,7 @@ export interface AppContext {
   urls: MenuUrls;
 }
 
-/** One of the user's profiles. See UserProfileChoice in smarter.apps.account.views.dashboard.user_profiles. */
+/** One of the user's profiles. See UserProfileChoice in smarter.apps.account.api.web.user_profiles. */
 export interface UserProfileChoice {
   id: number;
   accountNumber: string;

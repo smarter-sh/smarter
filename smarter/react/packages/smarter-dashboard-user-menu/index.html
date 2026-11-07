@@ -21,8 +21,8 @@
     See:
     - smarter.apps.dashboard.templatetags.react_dashboard_user_menu
     - templates/react/dashboard-user-menu.html, which templates/dashboard/navbar.html includes
-    - smarter.apps.account.views.dashboard.user_profiles
-    - smarter.apps.account.views.dashboard.profile_image
+    - smarter.apps.account.api.web.user_profiles
+    - smarter.apps.account.api.web.profile_image
     -->
     <div class="d-flex justify-content-end p-5">
       <div
@@ -45,9 +45,9 @@
         smarter-current-language="en"
         smarter-set-language-url="/i18n/setlang/"
         smarter-next-url="/dashboard/"
-        smarter-profile-image-api-url="/account/dashboard/profile-image/"
-        smarter-user-profiles-api-url="/account/dashboard/user-profiles/"
-        smarter-user-profile-select-api-url="/account/dashboard/user-profiles/select/"
+        smarter-profile-image-api-url="/api/web/account/profile-image/"
+        smarter-user-profiles-api-url="/api/web/account/user-profiles/"
+        smarter-user-profile-select-api-url="/api/web/account/user-profiles/select/"
         smarter-login-url="/login/"
         smarter-logout-url="/api/web/account/logout/"
         smarter-request-id="dev-request-id"

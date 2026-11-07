@@ -1,4 +1,8 @@
-"""Views for the authenticated user's profile image."""
+"""
+The user menu's profile image, under the console's account api, ``/api/web/account/profile-image/``: the.
+
+signed-in user uploads (``POST``) or removes (``DELETE``) their own image.
+"""
 
 from http import HTTPStatus
 

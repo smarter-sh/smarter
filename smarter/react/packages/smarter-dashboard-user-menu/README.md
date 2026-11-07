@@ -18,8 +18,8 @@ This component is served by Django, on every console page. See also:
 - [templates/react/dashboard-user-menu.html](../../../smarter/templates/react/dashboard-user-menu.html), which
   [templates/dashboard/navbar.html](../../../smarter/templates/dashboard/navbar.html) includes
 - [smarter.apps.dashboard.templatetags.react_dashboard_user_menu](../../../smarter/apps/dashboard/templatetags/react_dashboard_user_menu.py)
-- [smarter.apps.account.views.dashboard.profile_image](../../../smarter/apps/account/views/dashboard/profile_image.py)
-- [smarter.apps.account.views.dashboard.user_profiles](../../../smarter/apps/account/views/dashboard/user_profiles.py)
+- [smarter.apps.account.api.web.profile_image](../../../smarter/apps/account/api/web/profile_image.py)
+- [smarter.apps.account.api.web.user_profiles](../../../smarter/apps/account/api/web/user_profiles.py)
   and [smarter.apps.account.profile_selection](../../../smarter/apps/account/profile_selection.py), which
   explains how the chosen profile applies to each request
 

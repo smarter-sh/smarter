@@ -1,5 +1,5 @@
 """
-Test the user menu's Change Profile item: :mod:`smarter.apps.account.views.dashboard.user_profiles`.
+Test the user menu's Change Profile item: :mod:`smarter.apps.account.api.web.user_profiles`.
 
 Also tests how the chosen profile applies to a request, through
 :mod:`smarter.apps.account.profile_selection`: UserProfile.get_selected_object(),
@@ -12,7 +12,8 @@ from http import HTTPStatus
 from django.test import Client, RequestFactory
 from django.urls import reverse
 
-from smarter.apps.account.const import namespace
+from smarter.apps.account.api.web.profile_image import ProfileImageView
+from smarter.apps.account.api.web.urls import AccountApiWebReverseNames
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.profile_selection import (
     SELECTED_USER_PROFILE_SESSION_KEY,
@@ -23,8 +24,6 @@ from smarter.apps.account.utils import (
     get_cached_account_for_user,
     get_cached_avatar_url,
 )
-from smarter.apps.account.views.dashboard.profile_image import ProfileImageView
-from smarter.apps.account.views.dashboard.urls import DashboardNamedUrls
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
@@ -57,8 +56,10 @@ class TestUserProfiles(TestAccountMixin):
         self.client = Client()
         self.client.force_login(self.non_admin_user)
         self.addCleanup(self.client.logout)
-        self.url = reverse(f"{namespace}:{DashboardNamedUrls.ACCOUNT_USER_PROFILES}")
-        self.select_url = reverse(f"{namespace}:{DashboardNamedUrls.ACCOUNT_USER_PROFILE_SELECT}")
+        self.url = reverse(f"{AccountApiWebReverseNames.namespace}:{AccountApiWebReverseNames.user_profiles}")
+        self.select_url = reverse(
+            f"{AccountApiWebReverseNames.namespace}:{AccountApiWebReverseNames.user_profile_select}"
+        )
 
     def select(self, user_profile_id: int | None) -> object:
         """Set the request's chosen profile, as the middleware does, until the test ends."""
@@ -71,13 +72,20 @@ class TestUserProfiles(TestAccountMixin):
         self.assertEqual(response.status_code, status, response.content[:300])
         return json.loads(response.content)
 
+    def get(self, url: str) -> SmarterDictType:
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+        return json.loads(response.content)
+
     def test_urls(self):
-        """The views are routed under the account dashboard, where the user menu's profile image is."""
-        self.assertEqual(self.url, "/account/dashboard/user-profiles/")
-        self.assertEqual(self.select_url, "/account/dashboard/user-profiles/select/")
+        """The views are routed in the console's account api; the list is a GET, and choosing one a POST."""
+        self.assertEqual(self.url, "/api/web/account/user-profiles/")
+        self.assertEqual(self.select_url, "/api/web/account/user-profiles/select/")
+        self.assertEqual(self.client.post(self.url).status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(self.client.get(self.select_url).status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_lists_the_profiles_newest_first_and_the_newest_is_current(self):
-        data = self.post(self.url)
+        data = self.get(self.url)
         profiles = data["userProfiles"]
         self.assertEqual([p["id"] for p in profiles], [self.second_profile.pk, self.non_admin_user_profile.pk])
         self.assertEqual(
@@ -93,7 +101,7 @@ class TestUserProfiles(TestAccountMixin):
         data = self.post(self.select_url, {"userProfileId": self.non_admin_user_profile.pk})
         self.assertEqual([p["isCurrent"] for p in data["userProfiles"]], [False, True])
         self.assertEqual(self.client.session[SELECTED_USER_PROFILE_SESSION_KEY], self.non_admin_user_profile.pk)
-        data = self.post(self.url)
+        data = self.get(self.url)
         self.assertEqual([p["isCurrent"] for p in data["userProfiles"]], [False, True])
         page = self.client.get("/dashboard/")
         self.assertEqual(page.status_code, HTTPStatus.OK)
@@ -117,9 +125,12 @@ class TestUserProfiles(TestAccountMixin):
 
     def test_anonymous_requests_are_refused(self):
         self.client.logout()
-        for url in (self.url, self.select_url):
-            with self.subTest(url=url):
-                response = self.client.post(url, data="{}", content_type="application/json")
+        responses = (
+            self.client.get(self.url),
+            self.client.post(self.select_url, data="{}", content_type="application/json"),
+        )
+        for response in responses:
+            with self.subTest(url=response.request["PATH_INFO"]):
                 self.assertNotEqual(response.status_code, HTTPStatus.OK)
                 self.assertNotIn(b"userProfiles", response.content)
 
@@ -162,7 +173,7 @@ class TestUserProfiles(TestAccountMixin):
 
     def test_profile_image_belongs_to_the_chosen_profile(self):
         """The user menu uploads the image of the profile that the console acts as."""
-        request = RequestFactory().post("/account/dashboard/profile-image/")
+        request = RequestFactory().post("/api/web/account/profile-image/")
         request.user = self.non_admin_user
         view = ProfileImageView()
         self.assertEqual(view.own_user_profile(request).pk, self.second_profile.pk)

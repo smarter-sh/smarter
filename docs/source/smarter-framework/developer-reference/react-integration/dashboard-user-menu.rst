@@ -62,7 +62,7 @@ ignores it: the key acts as its own user.
 API
 ---
 
-.. automodule:: smarter.apps.account.views.dashboard.user_profiles
+.. automodule:: smarter.apps.account.api.web.user_profiles
    :members:
    :show-inheritance:
    :no-index:

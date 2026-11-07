@@ -53,7 +53,7 @@ describe("ChangeProfile", () => {
     const user = userEvent.setup();
     const bodies: unknown[] = [];
     server.use(
-      http.post(appContext.urls.userProfilesApi, () => HttpResponse.json(userProfiles)),
+      http.get(appContext.urls.userProfilesApi, () => HttpResponse.json(userProfiles)),
       http.post(appContext.urls.userProfileSelectApi, async ({ request }) => {
         bodies.push(await request.json());
         return HttpResponse.json(switchedUserProfiles);
@@ -69,7 +69,7 @@ describe("ChangeProfile", () => {
   it("shows the select api's error, and lets the user try again", async () => {
     const user = userEvent.setup();
     server.use(
-      http.post(appContext.urls.userProfilesApi, () => HttpResponse.json(userProfiles)),
+      http.get(appContext.urls.userProfilesApi, () => HttpResponse.json(userProfiles)),
       http.post(appContext.urls.userProfileSelectApi, () =>
         HttpResponse.json({ error: "Not one of your profiles." }, { status: 404 }),
       ),
@@ -88,7 +88,7 @@ describe("ChangeProfile", () => {
   });
 
   it("shows the status of a failed request without a JSON body", async () => {
-    server.use(http.post(appContext.urls.userProfilesApi, () => new HttpResponse("oops", { status: 500 })));
+    server.use(http.get(appContext.urls.userProfilesApi, () => new HttpResponse("oops", { status: 500 })));
     renderDialog();
     expect(await screen.findByRole("alert")).toHaveTextContent("Request failed: 500");
   });

@@ -15,7 +15,8 @@ import type {
 } from "@/contract.gen";
 import { ApiError, getJson, postJson } from "@/lib/api";
 
-const ACCOUNT_API = "/api/web/account";
+/** The console's account api. See smarter.apps.account.api.web.urls. */
+export const ACCOUNT_API = "/api/web/account";
 
 export const accountUrls = {
   signIn: `${ACCOUNT_API}/login/`,

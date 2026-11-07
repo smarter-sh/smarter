@@ -1,12 +1,14 @@
 """
-Views for the user menu's **Change Profile** item, in the ``@smarter/dashboard-user-menu`` React app.
+The user menu's **Change Profile** item, in the ``@smarter/dashboard-user-menu`` React app, under the console's.
+
+account api, ``/api/web/account/``.
 
 A user can have more than one UserProfile, one per account, e.g. a student who is enrolled in two
 courses at once. The web console acts as one of them at a time: the one that the user chose, for this
 session, else their newest. See :mod:`smarter.apps.account.profile_selection`.
 
-- ``user-profiles/`` lists the user's profiles, and which one the console acts as.
-- ``user-profiles/select/`` chooses the one that it acts as, for the rest of the session.
+- ``GET user-profiles/`` lists the user's profiles, and which one the console acts as.
+- ``POST user-profiles/select/`` chooses the one that it acts as, for the rest of the session.
 """
 
 from datetime import datetime
@@ -135,7 +137,9 @@ class UserProfilesView(SmarterAuthenticatedNeverCachedWebView):
         }
     """
 
-    def post(self, request, *args, **kwargs) -> http.JsonResponse:
+    http_method_names = ["get"]
+
+    def get(self, request, *args, **kwargs) -> http.JsonResponse:
         """
         Return the user's UserProfiles, and which one is current.
 
@@ -163,6 +167,8 @@ class UserProfileSelectView(SmarterAuthenticatedNeverCachedWebView):
     that of :class:`UserProfilesView`, with the chosen profile current. The React app reloads the page,
     so that everything on it belongs to the chosen profile's account.
     """
+
+    http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs) -> http.JsonResponse:
         """

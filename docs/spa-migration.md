@@ -51,8 +51,11 @@ The frame: the console's signed-in pages have the sidebar and the user menu, in 
 (`Layout`, `components/Sidebar`, `components/Header`, `lib/theme`). The session api sends the sidebar's links
 (`ConsoleSidebar`), null for those the platform or user doesn't have. The user menu is
 `@smarter/dashboard-user-menu`'s `UserMenu`, which the package now exports; the console builds its context from
-the session (`lib/userMenu`). Until a page moves into the console, its link is the backend's page. Next: the
-user menu's endpoints move to `/api/web/account/`, then the dashboard.
+the session (`lib/userMenu`). Until a page moves into the console, its link is the backend's page.
+
+The user menu's endpoints moved from `/account/dashboard/` to the account api: `profile-image/`,
+`user-profiles/` (now a `GET`) and `user-profiles/select/`, in `smarter.apps.account.api.web.profile_image` and
+`user_profiles`. The old paths answer 404. Next: the dashboard.
 
 ## Development
 

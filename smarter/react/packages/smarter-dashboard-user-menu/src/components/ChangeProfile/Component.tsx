@@ -16,7 +16,7 @@
 import { useEffect, useState } from "react";
 import { formatDateTime, gettext, interpolate, Modal, type SessionContext } from "@smarter/common";
 
-import { postUserProfiles } from "../../lib/api";
+import { getUserProfiles, postUserProfiles } from "../../lib/api";
 import { loggerPrefix } from "../../lib/const";
 import type { UserProfileChoice } from "../../lib/Types";
 
@@ -43,7 +43,7 @@ function ChangeProfile({
 
   useEffect(() => {
     let cancelled = false;
-    postUserProfiles(sessionContext, userProfilesApiUrl)
+    getUserProfiles(userProfilesApiUrl)
       .then((data) => {
         if (!cancelled) setUserProfiles(data.userProfiles);
       })

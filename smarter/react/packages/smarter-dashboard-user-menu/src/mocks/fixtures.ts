@@ -1,14 +1,15 @@
 /**
  * Example data for this package's stories and tests: the root element's attributes, and what the
- * Django user profile and profile image apis return. See templates/react/dashboard-user-menu.html,
- * smarter.apps.account.views.dashboard.user_profiles and smarter.apps.account.views.dashboard.profile_image.
+ * console's account api's user profile and profile image endpoints return. See
+ * templates/react/dashboard-user-menu.html, smarter.apps.account.api.web.user_profiles and
+ * smarter.apps.account.api.web.profile_image.
  */
 import type { SessionContext } from "@smarter/common";
 
 import type { AppContext, UserProfilesApiResponse } from "@/lib/Types";
 
 export const sessionContext: SessionContext = {
-  ApiUrl: "/account/dashboard/profile-image/",
+  ApiUrl: "/api/web/account/profile-image/",
   csrfCookieName: "csrftoken",
   djangoSessionCookieName: "sessionid",
   cookieDomain: "localhost",
@@ -47,9 +48,9 @@ export const appContext: AppContext = {
   urls: {
     setLanguage: "/i18n/setlang/",
     next: "/dashboard/",
-    profileImageApi: "/account/dashboard/profile-image/",
-    userProfilesApi: "/account/dashboard/user-profiles/",
-    userProfileSelectApi: "/account/dashboard/user-profiles/select/",
+    profileImageApi: "/api/web/account/profile-image/",
+    userProfilesApi: "/api/web/account/user-profiles/",
+    userProfileSelectApi: "/api/web/account/user-profiles/select/",
     login: "/login/",
     logout: "/api/web/account/logout/",
   },

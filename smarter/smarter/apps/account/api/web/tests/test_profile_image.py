@@ -1,5 +1,5 @@
 """
-Test the profile image: :mod:`smarter.apps.account.views.dashboard.profile_image`, UserProfile.avatar_url and get_cached_avatar_url().
+Test the profile image: :mod:`smarter.apps.account.api.web.profile_image`, UserProfile.avatar_url and get_cached_avatar_url().
 
 Uploads are written to an in-memory storage, never to the S3 bucket that the
 local containers are configured for.
@@ -15,6 +15,8 @@ from django.templatetags.static import static
 from django.test import RequestFactory, override_settings
 from PIL import Image
 
+from smarter.apps.account.api.web import profile_image
+from smarter.apps.account.api.web.profile_image import ProfileImageView
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.models.user_profile import (
     DEFAULT_PROFILE_IMAGE,
@@ -22,8 +24,6 @@ from smarter.apps.account.models.user_profile import (
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_avatar_url
-from smarter.apps.account.views.dashboard import profile_image
-from smarter.apps.account.views.dashboard.profile_image import ProfileImageView
 from smarter.lib import json
 
 OAUTH_IMAGE = "https://example.com/oauth-picture.png"
@@ -60,7 +60,7 @@ class TestProfileImage(TestAccountMixin):
         return UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
 
     def call(self, method: str, data=None):
-        request = getattr(self.factory, method)("/account/dashboard/profile-image/", data=data or {})
+        request = getattr(self.factory, method)("/api/web/account/profile-image/", data=data or {})
         SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
         request.user = self.non_admin_user
         return ProfileImageView.as_view()(request)
