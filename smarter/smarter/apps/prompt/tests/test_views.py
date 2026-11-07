@@ -17,6 +17,7 @@ from django.test import RequestFactory, override_settings
 
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
+    mortal_user_factory,
     platform_staff_profile_factory,
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -227,6 +228,37 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(manifest["metadata"]["name"], self.resource.name)
         # an ordinary page of the console, which no frame may display.
         self.assertEqual(response["X-Frame-Options"], "DENY")
+
+    def manifest_statuses(self, llmclient: LLMClient) -> tuple[int, int]:
+        """GET the LLMClient's manifest page and the workbench's manifest endpoint, as the signed-in user."""
+        page = self.client.get(self.url("manifest_by_hashed_id", hashed_id=llmclient.hashed_id))
+        endpoint = self.client.get(self.web_url("manifest_editor_by_hashed_id", hashed_id=llmclient.hashed_id))
+        return page.status_code, endpoint.status_code
+
+    def test_manifest_of_another_account_is_not_found(self):
+        """A user may not read the manifest of another account's LLMClient: both routes answer 404, as for an unknown id."""
+        other_user, other_account, _ = mortal_user_factory()
+        # not factory_account_teardown(), which would delete every test account, this class's too.
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_user.delete)
+        self.client.force_login(other_user)
+        self.assertEqual(self.manifest_statuses(self.resource), (HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND))
+
+    def test_manifest_of_a_colleague(self):
+        """A user may read the manifest of an LLMClient of their own account."""
+        self.client.force_login(self.non_admin_user)
+        self.assertEqual(self.manifest_statuses(self.resource), (HTTPStatus.OK, HTTPStatus.OK))
+
+    def test_manifest_of_a_staff_only_llmclient(self):
+        """Only the platform's staff may read the manifest of a staff-only LLMClient, as the resource api decides."""
+        staff_only = self.throwaway("staff")
+        LLMClient.objects.filter(pk=staff_only.pk).update(staff_only=True)
+        self.client.force_login(self.non_admin_user)
+        self.assertEqual(self.manifest_statuses(staff_only), (HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND))
+        self.client.force_login(self.admin_user)
+        profile = platform_staff_profile_factory(self.admin_user)
+        self.addCleanup(profile.delete)
+        self.assertEqual(self.manifest_statuses(staff_only), (HTTPStatus.OK, HTTPStatus.OK))
 
     def test_manifest_editor_not_found(self):
         """Test that the manifest editor's data is a 404 for an unknown LLMClient."""
