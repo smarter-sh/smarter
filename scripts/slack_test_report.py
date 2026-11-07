@@ -4,20 +4,18 @@
 Usage::
 
     python3 -I scripts/slack_test_report.py --title "Tests #160" \\
-        --react-result success --react-results vitest-results.json \\
-        --react-coverage coverage-summary.json \\
         --python-result success --python-results shards --python-coverage coverage.json \\
-        --slack-bot-result success [--react-passed-before] [--python-passed-before] \\
+        --slack-bot-result success [--python-passed-before] \\
         [--repo smarter-sh/smarter] [--ref alpha] [--actor someone] [--pr-title "..."] [--pr-url URL] [--run-url URL] \\
         | python3 -I scripts/slack_post.py --channel smarter
 
 The GitHub app for Slack only says whether a run succeeded. This message also gives what the
-run's job summaries show: the React tests (Vitest's JSON report), the Python tests
-(the shards' JUnit XML reports), each suite's coverage, and the names of the tests that failed.
+run's job summaries show: the Python tests (the shards' JUnit XML reports), their coverage, and the
+names of the tests that failed. The web console's tests are smarter-sh/smarter-console's.
 
 A ``--*-result`` is the job's result as GitHub reports it (``success``, ``failure``, ``cancelled``
 or ``skipped``). A missing or unreadable report is left out of the message, never an error: a job
-that failed early writes none. ``--*-passed-before`` says that the suite was skipped because its
+that failed early writes none. ``--python-passed-before`` says that the suite was skipped because its
 files are unchanged from the base branch, or passed in an earlier run (see the workflow's
 fingerprint job).
 
@@ -76,42 +74,6 @@ def read_json(path: str | None) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
-def vitest_report(results_path: str | None, coverage_path: str | None) -> SuiteReport | None:
-    """
-    Return the React suite's report, from Vitest's JSON reporter and its coverage summary.
-
-    :param results_path: The file written by ``--reporter=json --outputFile.json=...``.
-    :param coverage_path: ``coverage/coverage-summary.json``, written by the json-summary
-        coverage reporter.
-    :returns: None when there is no readable results file.
-    """
-    data = read_json(results_path)
-    if data is None:
-        return None
-    report = SuiteReport()
-    for test_file in data.get("testResults") or []:
-        name = Path(str(test_file.get("name", ""))).name
-        for test in test_file.get("assertionResults") or []:
-            status = test.get("status")
-            if status == "passed":
-                report.passed += 1
-            elif status == "failed":
-                report.failed += 1
-                report.failures.append(f"{name} › {test.get('fullName') or test.get('title', '')}")
-            else:  # pending, skipped, todo
-                report.skipped += 1
-        # A file that fails to load has no tests, only a failed status and a message.
-        if test_file.get("status") == "failed" and not test_file.get("assertionResults"):
-            report.failed += 1
-            report.failures.append(f"{name} (did not load)")
-    coverage = read_json(coverage_path)
-    if coverage is not None:
-        percent = (coverage.get("total") or {}).get("lines", {}).get("pct")
-        if isinstance(percent, (int, float)):
-            report.coverage = f"{percent:.1f}%"
-    return report
-
-
 def junit_report(results_dir: str | None, coverage_path: str | None) -> SuiteReport | None:
     """
     Return the Python suite's report, from the shards' JUnit XML reports and the combined coverage.
@@ -159,7 +121,7 @@ def suite_lines(name: str, result: str, passed_before: bool, report: SuiteReport
     """
     Return the message's lines for one suite: a summary line, then the tests that failed.
 
-    :param name: The suite's name in the message, e.g. ``React``.
+    :param name: The suite's name in the message, e.g. ``Python``.
     :param result: The job's result.
     :param passed_before: Whether the suite was skipped because its files are unchanged.
     :param report: What the suite's reports say, if they could be read.
@@ -186,13 +148,9 @@ def suite_lines(name: str, result: str, passed_before: bool, report: SuiteReport
     return lines
 
 
-def message(args: argparse.Namespace, react: SuiteReport | None, python: SuiteReport | None) -> str:
-    """Return the Slack message: a heading with the repository, the pull request, one block per suite, and a link to the run."""
-    passed = (
-        suite_passed(args.react_result, args.react_passed_before)
-        and suite_passed(args.python_result, args.python_passed_before)
-        and suite_passed(args.slack_bot_result, False)
-    )
+def message(args: argparse.Namespace, python: SuiteReport | None) -> str:
+    """Return the Slack message: a heading with the repository, the pull request, the suite's block, and a link to the run."""
+    passed = suite_passed(args.python_result, args.python_passed_before) and suite_passed(args.slack_bot_result, False)
     heading = f"{':white_check_mark:' if passed else ':x:'} *{escape(args.title)} {'passed' if passed else 'failed'}*"
     context = [
         f"<{GITHUB_URL}/{args.repo}|{escape(args.repo)}>" if args.repo else "",
@@ -205,7 +163,6 @@ def message(args: argparse.Namespace, react: SuiteReport | None, python: SuiteRe
     lines = [heading]
     if args.pr_title and args.pr_url:
         lines.append(f"<{args.pr_url}|{escape(shorten(args.pr_title))}>")
-    lines.extend(suite_lines("React", args.react_result, args.react_passed_before, react))
     lines.extend(suite_lines("Python", args.python_result, args.python_passed_before, python))
     if not suite_passed(args.slack_bot_result, False):
         lines.append(f":x: *Slack bot*: {args.slack_bot_result}")
@@ -218,10 +175,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Return the command line's arguments."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--title", required=True, help="The run's name, e.g. 'Tests #160'.")
-    parser.add_argument("--react-result", required=True)
-    parser.add_argument("--react-results", help="Vitest's JSON report.")
-    parser.add_argument("--react-coverage", help="Vitest's coverage-summary.json.")
-    parser.add_argument("--react-passed-before", action="store_true")
     parser.add_argument("--python-result", required=True)
     parser.add_argument("--python-results", help="A directory holding the shards' JUnit XML reports.")
     parser.add_argument("--python-coverage", help="The combined coverage, as coverage json writes it.")
@@ -242,9 +195,8 @@ def main(argv: list[str] | None = None) -> int:
     Returns the exit code.
     """
     args = parse_args(argv)
-    react = vitest_report(args.react_results, args.react_coverage)
     python = junit_report(args.python_results, args.python_coverage)
-    print(message(args, react, python))
+    print(message(args, python))
     return 0
 
 

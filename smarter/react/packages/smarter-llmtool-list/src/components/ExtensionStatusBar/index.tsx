@@ -1,1 +1,0 @@
-export { ExtensionStatusBar } from "./Component";
