@@ -1602,6 +1602,26 @@ from the various Django apps and store them in a single location for serving.
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#static-root
 """
 
+if smarter_settings.static_files_on_cdn:
+    if smarter_settings.aws_is_configured:
+        STORAGES["staticfiles"] = {
+            "BACKEND": "smarter.lib.django.static_storage.SmarterStaticFilesStorage",
+            "OPTIONS": {**STORAGES["default"]["OPTIONS"], "location": "static"},
+        }
+        cdn_url = smarter_settings.environment_cdn_url.rstrip("/")
+        STATIC_URL = f"{cdn_url}/static/"
+    else:
+        logger.warning(
+            "%s SMARTER_STATIC_FILES_ON_CDN is on, but AWS is not configured: the server serves the static files.",
+            logger_prefix,
+        )
+"""
+While ``SMARTER_STATIC_FILES_ON_CDN`` is on, the static files are on the environment's S3 bucket, under ``static/``,
+and ``STATIC_URL`` is its CDN's, e.g. ``https://cdn.platform.example.com/static/``.
+``initialize_platform`` uploads them on each deployment. Pages, cookies and the api stay on the platform's
+own host. See :mod:`smarter.lib.django.static_storage` and :doc:`ADR-035 </adr/035-single-page-app>`.
+"""
+
 STATICFILES_DIRS = [BASE_DIR / "static"]
 """
 A list of directories where Django will also look for static files, in addition.

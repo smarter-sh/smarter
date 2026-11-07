@@ -15,11 +15,17 @@ export const OPENAPI_PATH = "/docs/openapi";
 /** The api's OpenAPI document. See smarter.apps.api.v1.contract.views. */
 export const OPENAPI_JSON_URL = "/api/v1/openapi.json";
 
+/** Scalar's build, relative to the console's built scripts, which Vite writes into assets/. */
+const SCALAR_FROM_ASSETS = "../scalar/standalone.js";
+
 /**
  * Scalar's vendored build, which renders the OpenAPI document: the console ships it (public/scalar/), and the
- * OpenAPI page loads it, so that no other page downloads its 4 MB.
+ * OpenAPI page loads it, so that no other page downloads its 4 MB. A build finds it beside its own scripts, which
+ * may be on the CDN (SMARTER_STATIC_FILES_ON_CDN); Vite's dev server serves it at its base.
  */
-export const SCALAR_SCRIPT_URL = `${import.meta.env.BASE_URL}scalar/standalone.js`;
+export const SCALAR_SCRIPT_URL = import.meta.env.DEV
+  ? `${import.meta.env.BASE_URL}scalar/standalone.js`
+  : new URL(SCALAR_FROM_ASSETS, import.meta.url).href;
 
 /** About the api contract, in the project's documentation. */
 export const API_CONTRACT_DOCS_URL = "https://docs.smarter.sh/smarter-framework/smarter-api/api-contract.html";

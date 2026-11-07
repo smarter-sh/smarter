@@ -110,6 +110,17 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         fatal: list[str] = []
 
+        if smarter_settings.static_files_on_cdn:
+            try:
+                # the static files, the web console's scripts among them, to the environment's S3 bucket, which
+                # its CDN serves. It adds and replaces files, and deletes none, so a page that a browser opened
+                # before this deployment keeps loading its scripts. See smarter.lib.django.static_storage.
+                call_command("collectstatic", interactive=False, verbosity=0)
+            except (Exception, SystemExit) as e:
+                # fatal: this deployment's pages would load scripts that the CDN doesn't have.
+                logger.error("Failed to upload the static files to the CDN's bucket: %s", e)
+                fatal.append("collectstatic")
+
         try:
             call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
         except (Exception, SystemExit) as e:

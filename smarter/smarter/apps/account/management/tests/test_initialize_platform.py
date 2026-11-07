@@ -184,3 +184,38 @@ class TestInitializePlatform(CommandTestBase):
         logger.error.assert_any_call(
             "Failed to load the example manifests from %s: %s", EXAMPLE_MANIFESTS_REPOSITORY_URL, ANY
         )
+
+    def run_with_static_files_on_cdn(self, on_cdn: bool, call):
+        """Run the command with SMARTER_STATIC_FILES_ON_CDN set, and its sub-commands patched with ``call``."""
+        with (
+            patch(f"{MODULE}.call_command", side_effect=call) as called,
+            patch(f"{MODULE}.smarter_settings") as settings,
+        ):
+            settings.environment = SmarterEnvironments.LOCAL
+            settings.root_domain = "example.com"
+            settings.admin_username = "admin"
+            settings.admin_password = None
+            settings.static_files_on_cdn = on_cdn
+            self.run_command("initialize_platform")
+        return [c.args[0] for c in called.call_args_list]
+
+    def test_uploads_the_static_files_while_they_are_on_the_cdn(self):
+        """While the static files are on the CDN, collectstatic uploads them, before the platform's other steps."""
+        names = self.run_with_static_files_on_cdn(True, lambda name, **kwargs: None)
+        self.assertIn("collectstatic", names)
+        self.assertLess(names.index("collectstatic"), names.index("initialize_waffle"))
+
+    def test_leaves_the_static_files_alone_while_the_server_serves_them(self):
+        """Without the CDN, the image's own static files are served, and nothing is uploaded."""
+        names = self.run_with_static_files_on_cdn(False, lambda name, **kwargs: None)
+        self.assertNotIn("collectstatic", names)
+
+    def test_static_files_upload_failure_is_fatal(self):
+        """A failed upload lets the remaining steps run, then fails: the pages would load missing scripts."""
+
+        def call(name, **kwargs):
+            if name == "collectstatic":
+                raise RuntimeError("bucket")
+
+        with self.assertRaisesRegex(CommandError, "these steps failed: collectstatic"):
+            self.run_with_static_files_on_cdn(True, call)

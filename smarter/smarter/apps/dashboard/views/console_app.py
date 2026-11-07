@@ -6,6 +6,10 @@ into ``STATIC_ROOT``, as it does every React app's build. Until the console move
 ADR-035), Django serves its ``index.html`` at the paths of the pages that have moved, e.g. ``/login/``, and the
 console's router shows the page. A path keeps its url name, so that emails, settings and templates that reverse
 it keep working. See ``docs/spa-migration.md``.
+
+While ``SMARTER_STATIC_FILES_ON_CDN`` is on, the page's scripts and styles come from the environment's CDN: the
+page's ``/static/`` urls become ``STATIC_URL``'s, and the scripts load their chunks relative to themselves. The page
+itself, the cookies and the api stay on the platform's host.
 """
 
 from http import HTTPStatus
@@ -26,6 +30,27 @@ logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CONSOLE_INDEX_PATH = Path("react") / "@smarter" / "console" / "index.html"
 """The console's page, relative to ``STATIC_ROOT``."""
+
+BUILT_STATIC_URL = "/static/"
+"""The prefix of the urls of the console's built page, which Vite's ``base`` sets."""
+
+
+def with_static_url(html: str, static_url: str) -> str:
+    """
+    The console's page, with its scripts' and styles' urls under ``static_url``.
+
+    :param html: The built page, whose urls start with ``/static/``.
+    :param static_url: Django's ``STATIC_URL``, e.g. ``https://cdn.platform.example.com/static/``.
+    :returns: The page, with each ``src`` and ``href`` attribute's ``/static/`` replaced by ``static_url``,
+        or unchanged while ``static_url`` is ``/static/``.
+    """
+    if static_url == BUILT_STATIC_URL:
+        return html
+    for attribute in ("src", "href"):
+        built = f'{attribute}="{BUILT_STATIC_URL}'
+        served = f'{attribute}="{static_url}'
+        html = html.replace(built, served)
+    return html
 
 
 def console_index_html() -> Optional[str]:
@@ -75,4 +100,5 @@ class ConsoleAppView(View):
                 status=HTTPStatus.SERVICE_UNAVAILABLE,
                 content_type="text/plain; charset=utf-8",
             )
-        return HttpResponse(html, content_type="text/html; charset=utf-8")
+        page = with_static_url(html, settings.STATIC_URL)
+        return HttpResponse(page, content_type="text/html; charset=utf-8")
