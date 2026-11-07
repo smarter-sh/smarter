@@ -1,6 +1,6 @@
 ---
 name: smarter-api-contract
-description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the OpenAPI document of the Smarter api (openapi.json), which covers the cli api, the chat api and every family of REST routes under /api/v1, and which each platform serves at /docs/openapi.json and renders at /docs/openapi/ - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a covered route or its response, when a test says the contract is out of date or a route is undocumented, or when adding a kind, a cli command, or a new family of routes. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a route or a whole family, streaming responses, the design decisions in openapi.py, and the downstream SDKs.
+description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the OpenAPI document of the Smarter api (openapi.json), which covers the cli api, the chat api and every family of REST routes under /api/v1, and which each platform serves at /api/v1/openapi.json and renders at /docs/openapi/ - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a covered route or its response, when a test says the contract is out of date or a route is undocumented, or when adding a kind, a cli command, or a new family of routes. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a route or a whole family, streaming responses, the design decisions in openapi.py, and the downstream SDKs.
 ---
 
 # The Smarter API Contract
@@ -287,8 +287,8 @@ SMARTER_REF=<ref>`, into `test/data/` and `testdata/`), regenerate their SAM
   date. It posts to #general on Slack. A release that changes the contract
   therefore reaches the SDKs within a week, even if nobody runs `make contracts`.
 - A **TypeScript** client: `npx openapi-typescript .../contract/openapi.json -o smarter.d.ts`.
-- **Every platform serves the committed `openapi.json`** at `/docs/openapi.json`
-  (`smarter.apps.docs.views.openapi`), with its own `/api/v1` added as the first
+- **Every platform serves the committed `openapi.json`** at `/api/v1/openapi.json`
+  (`smarter.apps.api.v1.contract.views`; `/docs/openapi.json` redirects there), with its own `/api/v1` added as the first
   server, and renders it with Scalar, vendored in
   `smarter/smarter/static/assets/plugins/custom/scalar/` (its README says how to
   upgrade it, and which settings keep it off Scalar's hosted services), at `/docs/openapi/`,
