@@ -4,7 +4,7 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import type { LLMProvider } from "@/components/LLMProviders";
+import type { LLMProvider } from "../components/LLMProviders";
 
 export const API_URL = "/api/v1/prompts/passthrough/";
 export const PROVIDER_API_URL = "/api/web/dashboard/passthrough/providers/";

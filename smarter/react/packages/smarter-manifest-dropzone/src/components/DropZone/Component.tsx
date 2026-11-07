@@ -18,11 +18,11 @@ import { load } from "js-yaml";
 import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
-import DropZoneModal from "@/components/Modal";
-import type { ApplyResult } from "@/components/Modal";
+import { loggerPrefix } from "../../const";
+import DropZoneModal from "../Modal";
+import type { ApplyResult } from "../Modal";
 
-import "@/components/DropZone/styles.css";
+import "./styles.css";
 
 type DropZoneProps = {
   sessionContext: SessionContext;

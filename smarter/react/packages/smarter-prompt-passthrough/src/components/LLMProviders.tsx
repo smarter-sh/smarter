@@ -5,7 +5,7 @@
  * The function uses the AbortController to cancel the fetch request if the function
  * is called again before the fetch completes.
  *****************************************************************************/
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../const";
 import { gettext, interpolate } from "@smarter/common";
 /** A user, as the provider api describes one. */
 export interface LLMProviderUser {

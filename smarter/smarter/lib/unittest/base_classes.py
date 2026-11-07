@@ -18,15 +18,6 @@ from smarter.lib.typing import SmarterDictType
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
-SERVER_RENDERED_PAGE = "/dashboard/passthrough/"
-"""
-A console page that Django still renders, for tests of its frame.
-
-The frame is ``templates/dashboard/base.html``'s: the sidebar, the user menu, the welcome dialog, the onboarding
-hints and the tips: the Prompt Passthrough's, which is on by default. The dashboard, the resource lists and the
-Extensions console moved into the single-page console, which serves their paths with its ``index.html`` (ADR-035).
-"""
-
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """

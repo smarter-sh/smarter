@@ -19,6 +19,7 @@ import { RequireAuth } from "@/routes/RequireAuth";
 import { DASHBOARD_PATH, EXTENSIONS_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
 import { LIST_PAGES, type ListPage as ListPageConfig } from "@/lib/lists";
 import { MANIFEST_PAGES, type ManifestPage as ManifestPageConfig } from "@/lib/manifestPages";
+import { DROPZONE_PATH, PASSTHROUGH_PATH, TERMINAL_PATH } from "@/lib/tools";
 
 /** A list's route: its package loads in a chunk of its own, when the list is first opened. */
 function listRoute(page: ListPageConfig): RouteObject {
@@ -71,6 +72,19 @@ export const routes: RouteObject[] = [
       },
       ...LIST_PAGES.map(listRoute),
       ...MANIFEST_PAGES.map(manifestRoute),
+      // the tool pages, each in a chunk of its own.
+      {
+        path: DROPZONE_PATH,
+        lazy: async () => ({ Component: (await import("@/routes/ToolPages")).DropzonePage }),
+      },
+      {
+        path: PASSTHROUGH_PATH,
+        lazy: async () => ({ Component: (await import("@/routes/ToolPages")).PassthroughPage }),
+      },
+      {
+        path: TERMINAL_PATH,
+        lazy: async () => ({ Component: (await import("@/routes/ToolPages")).TerminalPage }),
+      },
       // the Extensions console, and an extension's page, in a chunk of their own.
       {
         path: EXTENSIONS_PATH,

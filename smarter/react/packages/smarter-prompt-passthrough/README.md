@@ -1,16 +1,12 @@
 # Smarter Prompt Passthrough app. React + TypeScript + Vite
 
 This is the source code for the LLM API prompt passthrough
-app located at [http://localhost:9357/dashboard/passthrough/](http://localhost:9357/
-workbench/passthrough/).
+page, [http://localhost:9357/dashboard/passthrough/](http://localhost:9357/dashboard/passthrough/).
 
-This component is served by Django in production. See:
-
-- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
-  which the Dockerfile copies into the image.
-- [smarter.apps.prompt.views.passthrough.view.PromptPassthroughView](../../smarter/apps/prompt/views/passthrough/view.py)
-- [smarter.apps.prompt.templatetags.react_prompt_passthrough.prompt_passthrough_react_assets](../../smarter/apps/prompt/templatetags/react_prompt_passthrough.py)
-- [templates/react/prompt-passthrough.html](../../smarter/templates/react/prompt-passthrough.html)
+In the web console, `@smarter/console` imports this package (`src/index.ts`) and renders it at
+`/dashboard/passthrough`, with a context built from the console's session. The package has no build of
+its own: its `index.html` and `src/main.tsx` are a development page only (`npm run dev`). Django
+answers the path with the console's page, `smarter.apps.dashboard.views.passthrough.view.PromptPassthroughView`, a `ConsoleAppView` (ADR-035).
 
 ## Setup
 

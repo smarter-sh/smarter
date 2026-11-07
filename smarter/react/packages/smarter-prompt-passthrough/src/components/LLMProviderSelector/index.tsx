@@ -1,3 +1,3 @@
-import LLMProviderSelector from "@/components/LLMProviderSelector/Component";
+import LLMProviderSelector from "./Component";
 
 export default LLMProviderSelector;

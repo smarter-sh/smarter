@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { promptTemplates } from "@/components/Prompt/templates";
-import "@/components/TemplateSelector/styles.css";
+import { promptTemplates } from "../Prompt/templates";
+import "./styles.css";
 import { gettext } from "@smarter/common";
 
 interface TemplateSelectorProps {

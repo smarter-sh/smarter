@@ -1,4 +1,4 @@
-import type { LLMProvider } from "@/components/LLMProviders";
+import type { LLMProvider } from "../LLMProviders";
 import { gettext } from "@smarter/common";
 
 interface ProviderLinksProps {

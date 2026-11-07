@@ -21,9 +21,9 @@ import type * as monaco from "monaco-editor";
 import { gettext } from "@smarter/common";
 import { ToolbarButton } from "@smarter/serverlogs";
 
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../../const";
 
-import "@/components/EditorViewToolbar/styles.css";
+import "./styles.css";
 
 const COPIED_MILLISECONDS = 1500;
 

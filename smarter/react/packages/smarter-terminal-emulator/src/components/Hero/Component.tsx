@@ -1,4 +1,4 @@
-import "@/components/Hero/styles.css";
+import "./styles.css";
 import { gettext } from "@smarter/common";
 
 function Hero() {

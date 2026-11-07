@@ -1,5 +1,5 @@
-import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest/Component";
+import LLMProviderPassthroughRequest from "./Component";
 
 export default LLMProviderPassthroughRequest;
 
-export type { ProviderPassthroughRequestProps } from "@/components/LLMProviderPassthroughRequest/Component";
+export type { ProviderPassthroughRequestProps } from "./Component";

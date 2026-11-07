@@ -1,15 +1,12 @@
 # Smarter DropZone app. React + TypeScript + Vite
 
-This is the source code for the DropZone app located
-at [http://localhost:9357/drop-zone/](http://localhost:9357/drop-zone/).
+This is the source code for the manifest drop zone,
+[http://localhost:9357/dashboard/dropzone/](http://localhost:9357/dashboard/dropzone/).
 
-This component is served by Django in production. See:
-
-- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
-  which the Dockerfile copies into the image.
-- [smarter.apps.drop-zone.views.views.drop-zone.DashboardView](../../smarter/apps/drop-zone/views/views/drop-zone.py)
-- [smarter.apps.drop-zone.templatetags.react_dashboard.dashboard_react_assets](../../smarter/apps/drop-zone/templatetags/react_dashboard.py)
-- [templates/react/drop-zone.html](../../smarter/templates/react/drop-zone.html)
+In the web console, `@smarter/console` imports this package (`src/index.ts`) and renders it at
+`/dashboard/dropzone`, with a context built from the console's session. The package has no build of
+its own: its `index.html` and `src/main.tsx` are a development page only (`npm run dev`). Django
+answers the path with the console's page, `smarter.apps.dashboard.views.dropzone.view.DropzoneView`, a `ConsoleAppView` (ADR-035).
 
 ## Developer Setup and Guide
 

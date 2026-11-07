@@ -4,8 +4,8 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import Hero from "@/components/Hero";
-import TerminalEmulator from "@/components/Terminal";
+import Hero from "./components/Hero";
+import TerminalEmulator from "./components/Terminal";
 
 interface AppProps {
   sessionContext: SessionContext;

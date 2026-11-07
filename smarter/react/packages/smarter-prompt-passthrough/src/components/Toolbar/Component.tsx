@@ -1,5 +1,5 @@
 // ToolbarButton component for rendering toolbar buttons
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../../const";
 
 interface ToolbarButtonProps {
   onClick: () => void;

@@ -1,15 +1,12 @@
 # Smarter Terminal Emulator app. React + TypeScript + Vite
 
-This is the source code for the Terminal Emulator app located
-at [http://localhost:9357/workbench/smarter-terminal-emulator/](http://localhost:9357/workbench/smarter-terminal-emulator/).
+This is the source code for the web console's Terminal, a superuser's bash shell in the server's
+container, [http://localhost:9357/dashboard/terminal/](http://localhost:9357/dashboard/terminal/).
 
-This component is served by Django in production. See:
-
-- builds are written by Vite into Django's static asset folder, smarter/smarter/static/react/,
-  which the Dockerfile copies into the image.
-- [smarter.apps.prompt.views.listview.view.PromptListView](../../smarter/apps/prompt/views/listview/view.py)
-- [smarter.apps.prompt.templatetags.react_llmclient_list.llmclient_list_react_assets](../../smarter/apps/prompt/templatetags/react_llmclient_list.py)
-- [templates/react/llmclient-list.html](../../smarter/templates/react/llmclient-list.html)
+In the web console, `@smarter/console` imports this package (`src/index.ts`) and renders it at
+`/dashboard/terminal`, with a context built from the console's session. The package has no build of
+its own: its `index.html` and `src/main.tsx` are a development page only (`npm run dev`). Django
+answers the path with the console's page, `smarter.apps.dashboard.views.terminal_emulator.reactapp.TerminalEmulatorView`, a `ConsoleAppView` (ADR-035).
 
 ## Setup
 

@@ -1,6 +1,6 @@
 import { useId, type ReactNode } from "react";
 
-import type { LLMProvider, LLMProviderUser } from "@/components/LLMProviders";
+import type { LLMProvider, LLMProviderUser } from "../LLMProviders";
 import { currentLanguage, gettext, interpolate } from "@smarter/common";
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" };

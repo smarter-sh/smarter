@@ -97,6 +97,20 @@ dialogs already did, and an ownerless one, a Budget, as its reader, as the old p
 subclasses; `common/manifest_detail.html`, the editor's template tag and `DocsBaseView` stay for the workbench.
 Next: the workbench and the other React pages (section 5).
 
+The manifest drop zone, the Prompt Passthrough and the Terminal (section 5, step 1) are the console's. Their
+packages, `@smarter/drop-zone`, `@smarter/prompt-passthrough` and `@smarter/terminal-emulator`, are import-only, each
+with a `./mocks` export; the console's `routes/ToolPages` renders them at `/dashboard/dropzone`,
+`/dashboard/passthrough` and `/dashboard/terminal`, with their urls from `lib/tools`, and shows Page not found while
+the session's flag is off (`manifestDropZone`, `passthrough`, `terminal`, which is on for a superuser only); the
+Passthrough's Server Logs tab follows `serverLogs`. Django keeps `DropzoneView`, `PromptPassthroughView` and
+`TerminalEmulatorView` as `ConsoleAppView` subclasses, the Terminal's still behind `require_terminal`, and their urls
+are still registered only while their settings are on. The three templates and template tags are deleted, and the
+Django-React guide's worked example is now the workbench, the one page Django still hosts that way. Its pages, and
+the LLMClient's manifest page, are the last in Django's frame, and each needs an LLMClient, so `SERVER_RENDERED_PAGE`
+is gone: tests of the frame call `get_server_rendered_page()` (`smarter.lib.unittest.server_rendered_page`), which
+renders `dashboard/base.html` alone, at a path of a test-only urlconf that adds it to the console's. Next: the
+workbench's endpoints (section 5, step 2).
+
 ## Development
 
 - The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with

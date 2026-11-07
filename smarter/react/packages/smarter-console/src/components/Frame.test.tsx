@@ -78,7 +78,8 @@ describe("the sidebar", () => {
     };
     mountAt("/", { ...userSession, sidebar: sidebarLinks, badges: { extensionUpdates: 2 } });
     const nav = await findSidebar();
-    expect(within(nav).getByRole("link", { name: "Terminal" })).toHaveAttribute("href", "/dashboard/terminal/");
+    // The Terminal is a console page, so the sidebar links to its route.
+    expect(within(nav).getByRole("link", { name: "Terminal" })).toHaveAttribute("href", "/dashboard/terminal");
     expect(within(nav).getByRole("link", { name: "Django Admin" })).toHaveAttribute("href", "/admin/");
     expect(within(nav).getByText("Settings")).toBeInTheDocument();
     expect(within(nav).getByTitle("Updates available")).toHaveTextContent("2");

@@ -7,13 +7,21 @@ import { gettext, interpolate } from "@smarter/common";
 
 import type { ConsoleBranding, ConsoleSidebar } from "@/contract.gen";
 import { DASHBOARD_PATH, EXTENSIONS_PATH } from "@/lib/const";
+import { DROPZONE_PATH, PASSTHROUGH_PATH, TERMINAL_PATH } from "@/lib/tools";
 import { LIST_PAGES } from "@/lib/lists";
 
 /**
  * The paths of the pages that have moved into the console, which the sidebar opens in place. Until a page moves,
  * the sidebar's link to it loads the backend's page.
  */
-export const CONSOLE_PAGE_PATHS = [DASHBOARD_PATH, EXTENSIONS_PATH, ...LIST_PAGES.map((page) => page.path)];
+export const CONSOLE_PAGE_PATHS = [
+  DASHBOARD_PATH,
+  EXTENSIONS_PATH,
+  DROPZONE_PATH,
+  PASSTHROUGH_PATH,
+  TERMINAL_PATH,
+  ...LIST_PAGES.map((page) => page.path),
+];
 
 /** The project's change log, which the Documentation section links to. */
 export const CHANGELOG_URL = "https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md";

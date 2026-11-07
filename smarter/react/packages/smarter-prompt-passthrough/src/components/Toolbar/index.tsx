@@ -1,3 +1,3 @@
-import Toolbar from "@/components/Toolbar/Component";
+import Toolbar from "./Component";
 
 export default Toolbar;

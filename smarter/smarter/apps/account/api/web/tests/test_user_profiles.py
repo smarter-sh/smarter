@@ -26,7 +26,7 @@ from smarter.apps.account.utils import (
 )
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
-from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
+from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 OAUTH_IMAGE = "https://example.com/second-account-picture.png"
 
@@ -104,12 +104,12 @@ class TestUserProfiles(TestAccountMixin):
         self.assertEqual(self.client.session[SELECTED_USER_PROFILE_SESSION_KEY], self.non_admin_user_profile.pk)
         data = self.get(self.url)
         self.assertEqual([p["isCurrent"] for p in data["userProfiles"]], [False, True])
-        page = self.client.get(SERVER_RENDERED_PAGE)
+        page = get_server_rendered_page(self.client)
         self.assertEqual(page.status_code, HTTPStatus.OK)
         self.assertIn(f'smarter-account-name="{self.account.company_name}"', page.content.decode())
 
         self.post(self.select_url, {"userProfileId": self.second_profile.pk})
-        page = self.client.get(SERVER_RENDERED_PAGE)
+        page = get_server_rendered_page(self.client)
         self.assertIn(f'smarter-account-name="{self.second_account.company_name}"', page.content.decode())
 
     def test_select_refuses_another_users_profile(self):

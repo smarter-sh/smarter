@@ -1,14 +1,14 @@
 import React from "react";
 import Editor from "@monaco-editor/react";
 import type { editor as monaco } from "monaco-editor";
-import Toolbar from "@/components/Toolbar";
-import EditorViewToolbar from "@/components/EditorViewToolbar";
-import LLMProviderSelector from "@/components/LLMProviderSelector";
-import TemplateSelector from "@/components/TemplateSelector/";
+import Toolbar from "../Toolbar";
+import EditorViewToolbar from "../EditorViewToolbar";
+import LLMProviderSelector from "../LLMProviderSelector";
+import TemplateSelector from "../TemplateSelector";
 
-import { type LLMProvider } from "@/components/LLMProviders";
+import { type LLMProvider } from "../LLMProviders";
 
-import "@/components/LLMProviderPassthroughRequest/styles.css";
+import "./styles.css";
 import { gettext } from "@smarter/common";
 
 export interface ProviderPassthroughRequestProps {
