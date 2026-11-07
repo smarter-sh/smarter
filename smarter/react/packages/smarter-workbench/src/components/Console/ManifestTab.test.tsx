@@ -33,6 +33,15 @@ describe("ManifestTab", () => {
     }
   });
 
+  it("leaves with the host's navigate, when it gives one", async () => {
+    server.use(...tabHandlers);
+    const user = userEvent.setup();
+    const navigate = vi.fn();
+    render(<ManifestTab workbench={{ ...workbench, navigate }} />);
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
+    expect(navigate).toHaveBeenCalledWith(LLMCLIENT_LIST_URL);
+  });
+
   it("saves without a parent that listens", async () => {
     server.use(...tabHandlers);
     const user = userEvent.setup();

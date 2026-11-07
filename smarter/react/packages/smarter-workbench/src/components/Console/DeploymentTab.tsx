@@ -6,10 +6,10 @@
 import { Loading } from "@smarter/common";
 import { DeploymentPage } from "@smarter/llmclient-deployment";
 
-import TabError from "@/components/Console/TabError";
-import { useTabData } from "@/components/Console/useTabData";
-import { fetchDeploymentPage } from "@/lib/api";
-import type { WorkbenchConfig } from "@/lib/types";
+import TabError from "./TabError";
+import { useTabData } from "./useTabData";
+import { fetchDeploymentPage } from "../../lib/api";
+import type { WorkbenchConfig } from "../../lib/types";
 
 function DeploymentTab({ workbench }: { workbench: WorkbenchConfig }) {
   const { data: page, error } = useTabData(() => fetchDeploymentPage(workbench.deploymentUrl ?? ""));

@@ -1,3 +1,3 @@
-import DocsDialog from "@/components/DocsDialog/Component";
+import DocsDialog from "./Component";
 
 export default DocsDialog;

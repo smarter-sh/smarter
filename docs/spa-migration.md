@@ -123,6 +123,26 @@ the api key actions moved to `/api/web/prompt/llm-clients/<hashed_id>/` (`manife
 `PromptApiWebReverseNames`; the old paths answer 404. They keep their methods (GET for the three tabs). Next: the
 workbench and the LLMClient's manifest page in the console (section 5, step 3).
 
+Checking the workbench's access rule before step 3 found that the LLMClient's manifest page and the Manifest tab's
+endpoint described any LLMClient to any signed-in user, another account's and staff-only ones included (released
+since v0.33.5). That was fixed first, on its own: both now refuse a user who may not read the LLMClient with the
+resource api's rule.
+
+The workbench and the LLMClient's manifest page (section 5, step 3) are the console's, so every console page is.
+`@smarter/workbench` is import-only (`Workbench`, `WorkbenchConfig`, a `./mocks` export, a development page; its
+styles are imported by `App`), and `WorkbenchConfig` has an optional `navigate`, which its Manifest tab uses after
+a delete. The console's `routes/WorkbenchPage` renders it lazily at `/workbench/llm-clients/:id/prompt`, configured
+by `lib/workbench` from the hashed id and the session, after asking the resource api for `llmclient-<id>`: a 404
+shows Page not found. That is stricter than Django's page, which opened for any signed-in user (with no data for
+one who may not read the LLMClient). `lib/useResource` is that request, shared with `ManifestPage`. The LLMClient's
+manifest page is one more `MANIFEST_PAGES` entry, `/workbench/llm-clients/:id/manifest`. Django's
+`PromptWorkbenchView` and `LLMClientDetailView` are `ConsoleAppView` subclasses; the Manifest tab's endpoint,
+`LLMClientManifestEditorView`, uses `readable_llmclient()` and the resource api's `manifest_yaml()`, instead of a
+brokered request through `DocsBaseView`. `react/workbench.html`, `common/manifest_detail.html`,
+`common/manifest_editor.html`, the `react_workbench` and `react_manifest_editor` template tags are deleted, and the
+Django-React guide describes the console. `DocsBaseView` stays for the docs pages. Next: Django's console frame
+(section 5, step 4).
+
 ## Development
 
 - The SPA is `@smarter/console` (`smarter/react/packages/smarter-console`). Run it with

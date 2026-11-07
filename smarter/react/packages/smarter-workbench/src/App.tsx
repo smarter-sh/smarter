@@ -29,16 +29,21 @@ import {
   type TourOutcome,
 } from "@smarter/onboarding";
 import { DEBUG_LOG_LEVEL } from "@smarter/serverlogs";
+// the chat's styles, and KaTeX's, which the chat library leaves to the page, so that its fonts are files that the
+// browser downloads only when a message has math.
+import "@smarter.sh/ui-chat/dist/ui-chat.css";
+import "katex/dist/katex.min.css";
 
-import Console from "@/components/Console";
-import { initialMenuItem, VERBOSE_MENU_ITEMS, type MenuItem } from "@/components/Console/enums";
-import DocsDialog from "@/components/DocsDialog";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import HelpMenu from "@/components/HelpMenu";
-import { ConsoleIcon } from "@/components/icons";
-import { workbenchTourSteps } from "@/components/WorkbenchTour/steps";
-import { useChatWidth, useConsoleVisible } from "@/lib/layout";
-import type { WorkbenchConfig } from "@/lib/types";
+import Console from "./components/Console";
+import { initialMenuItem, VERBOSE_MENU_ITEMS, type MenuItem } from "./components/Console/enums";
+import DocsDialog from "./components/DocsDialog";
+import ErrorBoundary from "./components/ErrorBoundary";
+import HelpMenu from "./components/HelpMenu";
+import { ConsoleIcon } from "./components/icons";
+import { workbenchTourSteps } from "./components/WorkbenchTour/steps";
+import { useChatWidth, useConsoleVisible } from "./lib/layout";
+import type { WorkbenchConfig } from "./lib/types";
+import "./styles.css";
 
 /** The chat's message input, once the chat is ready for a message. */
 const CHAT_READY = ".cs-message-input:not(.cs-message-input--disabled)";
@@ -46,11 +51,11 @@ const CHAT_READY = ".cs-message-input:not(.cs-message-input--disabled)";
 /** The welcome dialog, which the tour waits for the user to close. See @smarter/welcome. */
 const WELCOME_DIALOG = ".smarter-welcome-backdrop";
 
-interface AppProps {
+export interface AppProps {
   workbench: WorkbenchConfig;
   /**
-   * The page's onboarding state, for the guided tour. By default, the one that templates/react/onboarding.html
-   * writes into the page. Tests and stories pass their own.
+   * The onboarding state, for the guided tour: the console passes its session's. Without it, the one that a
+   * backend page writes into the page, if any.
    */
   onboarding?: OnboardingContext | null;
 }

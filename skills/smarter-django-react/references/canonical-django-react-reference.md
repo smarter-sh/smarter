@@ -19,11 +19,11 @@ names the others' identifiers, so read them as a set.
 | Python tests                                            | `smarter/smarter/apps/guardrail/tests/test_views.py` (`ResourceViewsTestMixin`)                                                                                               |
 | Console tests                                           | `smarter/react/packages/smarter-console/src/routes/ListPage.test.tsx`                                                                                                         |
 
-A page that Django still hosts, e.g. the workbench, has a template tag
-(`smarter/smarter/apps/prompt/templatetags/react_workbench.py`, through the manager in
+A widget of Django's frame, e.g. the user menu, has a template tag
+(`smarter/smarter/apps/dashboard/templatetags/react_dashboard_user_menu.py`, through the manager in
 `smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py`), a template
-(`smarter/smarter/templates/react/workbench.html`) and a `main.tsx` that reads the root element's
-attributes. The list pages had the same, until release v0.42.10.
+(`smarter/smarter/templates/react/dashboard-user-menu.html`) and a `main.tsx` that reads the root element's
+attributes. Every page had the same, until it moved into the console: the list pages until release v0.42.10.
 
 ## The names that must agree
 

@@ -8,13 +8,13 @@ import ReactJsonView from "@microlink/react-json-view";
 import { gettext } from "@smarter/common";
 import { ServerLogs, logStreamUrlForChat, useLogStream } from "@smarter/serverlogs";
 
-import ArchitectureTab from "@/components/Console/ArchitectureTab";
-import { consoleData, type ConsoleConfig } from "@/components/Console/data";
-import DeploymentTab from "@/components/Console/DeploymentTab";
-import { initialMenuItem, MenuItems, type MenuItem } from "@/components/Console/enums";
-import ManifestTab from "@/components/Console/ManifestTab";
-import type { WorkbenchConfig } from "@/lib/types";
-import "@/components/Console/styles.css";
+import ArchitectureTab from "./ArchitectureTab";
+import { consoleData, type ConsoleConfig } from "./data";
+import DeploymentTab from "./DeploymentTab";
+import { initialMenuItem, MenuItems, type MenuItem } from "./enums";
+import ManifestTab from "./ManifestTab";
+import type { WorkbenchConfig } from "../../lib/types";
+import "./styles.css";
 
 interface ConsoleProps {
   /** The workbench's configuration, from its root element. */

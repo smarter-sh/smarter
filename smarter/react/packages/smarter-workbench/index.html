@@ -15,36 +15,11 @@
   </head>
   <body class="app-default">
     <!--
-    only used for development via 'npm run dev'. In production, this file is rendered by Django. Log in to the web
-    console at http://localhost:9357 first, so that the session and CSRF cookies exist, and replace the
-    LLMClient's hashed id (rMTAwMDAwMQx) with one of yours.
-
-    See:
-    - smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView
-    - smarter.apps.prompt.templatetags.react_workbench.workbench_react_assets
-    - templates/react/workbench.html
+    the development page only (npm run dev): @smarter/console renders the workbench in the web console. Log in to the
+    web console at http://localhost:9357 first, so that the session and CSRF cookies exist, and replace the hashed id
+    in src/mocks/fixtures.ts (rMTAwMDAwMQx) with one of your LLMClients'.
     -->
-    <div
-      id="smarter-workbench-root"
-      style="height: 88vh"
-      smarter-llmclient-api-url="http://localhost:9357/api/v1/llm-clients/rMTAwMDAwMQx/"
-      smarter-toggle-metadata="true"
-      smarter-csrf-cookie-name="csrftoken"
-      smarter-session-cookie-name="session_key"
-      smarter-django-session-cookie-name="sessionid"
-      smarter-cookie-domain="localhost"
-      react-debug-mode="true"
-      smarter-request-id="local-development"
-      smarter-log-stream-url="/api/web/dashboard/logs/stream/"
-      smarter-manifest-url="/api/web/prompt/llm-clients/rMTAwMDAwMQx/manifest/"
-      smarter-architecture-url="/api/web/prompt/llm-clients/rMTAwMDAwMQx/architecture/"
-      smarter-deployment-url="/api/web/prompt/llm-clients/rMTAwMDAwMQx/deployment/"
-      smarter-llmclient-list-url="/workbench/"
-      smarter-apply-api-url="/api/v1/cli/apply/"
-      smarter-validate-api-url="/api/v1/cli/validate/"
-      smarter-delete-api-url="/api/v1/cli/delete/__kind__/"
-      smarter-kind-placeholder="__kind__"
-    ></div>
+    <div id="smarter-workbench-root" style="height: 88vh"></div>
 
     <script type="module" src="/src/main.tsx"></script>
   </body>
