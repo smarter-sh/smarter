@@ -30,7 +30,7 @@ SMARTER_CHAT_DIR := smarter/react/packages/smarter.sh-chat
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
-	react-install react-build react-build-ci react-test react-lint react-storybook \
+	console console-local react-install react-build react-build-ci react-test react-lint react-storybook \
 	helm-update \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
@@ -50,8 +50,7 @@ init:
 	make check-python							# verify Python 3.14 is installed
 	make docker-check							# verify Docker is installed and running
 	make python-init							# create/replace Python virtual environment and install dependencies
-	make react-install							# install npm dependencies for React frontend apps
-	make react-build							# build React frontend apps and collect static files
+	make console								# the web console's pinned release, into smarter/smarter/static/react/
 	make collectstatic							# collect static files for the Django admin interface and other components
 	make docker-build 			                # build the Smarter containers, including building the React frontend components
 	make docker-init							# initialize MariaDB and create the smarter database
@@ -350,6 +349,16 @@ python-requirements:
 # ---------------------------------------------------------
 # React
 # ---------------------------------------------------------
+# The web console, smarter-sh/smarter-console: its release that smarter-console-version.txt pins, into
+# smarter/smarter/static/react/, where collectstatic and the Docker build pick it up. See scripts/fetch_console.py.
+console:
+	python3 -I scripts/fetch_console.py
+
+# A local build of the web console instead, to try a console change here before it is released:
+# make build in a smarter-console checkout, then make console-local CONSOLE_DIST=../smarter-console/dist
+console-local:
+	python3 -I scripts/fetch_console.py --from-dir $(or $(CONSOLE_DIST),../smarter-console/dist)
+
 react-install:
 	cd smarter/react && npm install --include=dev
 
@@ -559,6 +568,8 @@ help:
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
 	@echo 'python-requirements    - Compile and update Python dependency files'
 	@echo '<************************** React **************************>'
+	@echo 'console                - Install the pinned release of the web console into the static folder'
+	@echo 'console-local          - Install a local smarter-console build: CONSOLE_DIST=../smarter-console/dist'
 	@echo 'react-install          - Install npm dependencies for React frontend apps'
 	@echo 'react-build            - Build all React frontend apps and collect static files'
 	@echo 'react-build-ci         - Build all React frontend apps using CI settings'

@@ -59,7 +59,7 @@
 # How a shard builds the platform
 #
 # It runs the steps of make init one at a time, on a bare GitHub runner:
-# make python-init (the venv), the React build, make collectstatic, make
+# make python-init (the venv), make console, make collectstatic, make
 # docker-build (the smarter image), then make docker-init, which starts the
 # containers on a new, empty database, migrates it and initializes the
 # platform. The runner first frees disk space for the images, and gets what
@@ -74,8 +74,6 @@
 #
 #   venv/                                   Python version + requirements/local.txt
 #   node_modules/ (repository root)         Node version + package-lock.json
-#   smarter/react node_modules, and the     see .github/actions/react-build,
-#     React build                           which build.yml shares
 #   the smarter image's layers              BuildKit's GitHub Actions cache
 #
 # Only shard 1 saves the caches. They are saved with actions/cache/save as
@@ -418,7 +416,7 @@ jobs:
 
       #------------------------------------------------------------------------
       # Prerequisites for `make init`: python3.14 (check-python, python-init),
-      # Node/npm (python-init, react-install, react-build) and the
+      # Node/npm (python-init) and the
       # docker-compose v1 command name, which GitHub-hosted runners no longer
       # ship. The shim forwards to the Docker Compose v2 plugin.
       #
@@ -666,13 +664,13 @@ jobs:
           key: ${{ steps.root-node-modules.outputs.cache-primary-key }}
 
       #========================================================================
-      # make react-install, then the npm build step of make react-build
-      #
-      # Shared with build.yml, so that both use the same cache entries. See
-      # .github/actions/react-build/action.yml.
+      # make console: the web console's pinned release, from
+      # smarter-sh/smarter-console, into smarter/smarter/static/react/, as
+      # build.yml does. The tests of the console's pages read its index.html.
       #========================================================================
-      - name: Build React components
-        uses: ./.github/actions/react-build
+      - name: Install the web console
+        shell: bash
+        run: python3 -I scripts/fetch_console.py
 
       #========================================================================
       # make collectstatic
